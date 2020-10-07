@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -88,7 +89,7 @@ export class CompositionsMain {
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
 
-    const module = this.schema.parseModule(file.path);
+    const module = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
     return module.exports.map((exportModel) => {
       return new Composition(exportModel.identifier, file.relative);
     });

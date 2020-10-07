@@ -1,0 +1,83 @@
+$d30: #878c9a;
+$b70: #0d2de3;
+
+.graph {
+  :global {
+    .react-flow__edge-path {
+      stroke: $d30;
+      stroke-width: 2px;
+    }
+
+    // creates space between the handles and lines
+    .react-flow__handle {
+      background: none;
+      border: none;
+
+      &-bottom {
+        bottom: -4px;
+      }
+      &-top {
+        top: -4px;
+      }
+      &-left {
+        left: -4px;
+      }
+      &-right {
+        right: -4px;
+      }
+    }
+
+    .react-flow__arrowhead polyline {
+      stroke: $d30;
+      stroke-width: 2px;
+    }
+
+    // show labels for labels, on hover
+    .react-flow__edge {
+      pointer-events: all !important;
+      &:hover {
+        .react-flow__edge-textbg,
+        .react-flow__edge-text {
+          transition: all 300ms;
+          opacity: 1;
+        }
+      }
+    }
+
+    .react-flow__edge-textbg {
+      fill: #414141;
+    }
+
+    .react-flow__edge-text {
+      fill: white;
+    }
+
+    .react-flow__edge-textbg,
+    .react-flow__edge-text {
+      opacity: 0;
+    }
+  }
+}
+
+.minimap {
+  right: 24px;
+  bottom: 24px;
+  box-shadow: var(--shadow-faint);
+  background: white !important; // override inline styles from package
+  border-radius: 5px;
+
+  :global {
+    .react-flow__minimap-mask {
+      stroke: $b70;
+      stroke-width: 4px;
+      fill: transparent;
+    }
+  }
+}
+
+.controls {
+  box-shadow: var(--shadow-faint);
+
+  left: 24px;
+  bottom: 24px;
+}

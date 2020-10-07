@@ -7,9 +7,12 @@ import {
   PackageManager,
   PackageManagerInstallOptions,
   PackageManagerResolveRemoteVersionOptions,
+  ResolvedPackageVersion,
+  Registries,
+  Registry,
 } from '@teambit/dependency-resolver';
-import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
 import { Logger } from '@teambit/logger';
+import { omit } from 'lodash';
 import { PkgMain } from '@teambit/pkg';
 import { join } from 'path';
 import userHome from 'user-home';
@@ -58,7 +61,7 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies');
-    await install(rootManifest, componentsManifests, storeDir);
+    await install(rootManifest, componentsManifests, storeDir, this.logger);
     this.logger.consoleSuccess('installing dependencies');
   }
 
@@ -85,5 +88,26 @@ export class PnpmPackageManager implements PackageManager {
     const { resolveRemoteVersion } = require('./lynx');
     const storeDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
     return resolveRemoteVersion(packageName, options.rootDir, storeDir);
+  }
+
+  async getRegistries(): Promise<Registries> {
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const { getRegistries } = require('./get-registries');
+    const pnpmRegistry = await getRegistries();
+    const defaultRegistry = new Registry(
+      pnpmRegistry.default.uri,
+      pnpmRegistry.default.alwaysAuth,
+      pnpmRegistry.default.authHeaderValue
+    );
+
+    const pnpmScoped = omit(pnpmRegistry, ['default']);
+    const scopesRegistries = Object.keys(pnpmScoped).reduce((acc, scopedRegName) => {
+      const scopedReg = pnpmScoped[scopedRegName];
+      const name = scopedRegName.replace('@', '');
+      acc[name] = new Registry(scopedReg.uri, scopedReg.alwaysAuth, scopedReg.authHeaderValue);
+      return acc;
+    }, {});
+
+    return new Registries(defaultRegistry, scopesRegistries);
   }
 }

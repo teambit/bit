@@ -6,3 +6,4 @@ export type { GraphqlMain } from './graphql.main.runtime';
 export type { GraphqlUI } from './graphql.ui.runtime';
 export default GraphqlAspect;
 export { GraphqlAspect };
+export { GraphQlError } from './graphql-error';

@@ -13,6 +13,10 @@ export class ComponentMap<T> {
     return this.hashMap.get(component.id.toString());
   }
 
+  get components() {
+    return this.toArray().map(([component]) => component);
+  }
+
   /**
    * get a value for a component.
    */

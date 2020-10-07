@@ -226,12 +226,13 @@ export class ScopeMain implements ComponentFactory {
     if (!modelComponent) return undefined;
 
     // :TODO move to head snap once we have it merged, for now using `latest`.
-    const latest = modelComponent.latest();
-    const version = await modelComponent.loadVersion(latest, this.legacyScope.objects);
+    const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
+    const newId = id.changeVersion(versionStr);
+    const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
     const snap = this.createSnapFromVersion(version);
 
     return new Component(
-      id,
+      newId,
       snap,
       await this.createStateFromVersion(id, version),
       await this.getTagMap(modelComponent),
@@ -406,9 +407,9 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       config
     );
-    if (scope.legacyScope.isBare) {
+    cli.registerOnStart(async () => {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
-    }
+    });
 
     express.register([new PutRoute(scope), new FetchRoute(scope)]);
     // @ts-ignore - @ran to implement the missing functions and remove it

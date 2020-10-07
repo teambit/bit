@@ -1,6 +1,6 @@
 import { Separator } from '@teambit/documenter.ui.separator';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink } from '@teambit/react-router/nav-link';
+import { NavLink } from '@teambit/react-router';
 import classNames from 'classnames';
 import React from 'react';
 

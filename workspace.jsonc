@@ -65,6 +65,7 @@
         "@teambit/documenter.types.docs-file": "0.0.7",
         "@teambit/documenter.ui.consumable-link": "^0.0.5",
         "@teambit/documenter.ui.heading": "^0.0.5",
+        "@teambit/documenter.ui.import-action": "0.0.3",
         "@teambit/documenter.ui.label-list": "^0.0.5",
         "@teambit/documenter.ui.linked-heading": "^0.0.6",
         "@teambit/documenter.ui.property-table": "^0.0.7",
@@ -77,7 +78,7 @@
         "@teambit/evangelist.elements.image": "^0.0.3",
         "@teambit/evangelist.elements.x-button": "0.0.2",
         "@teambit/evangelist.input.input": "^0.0.3",
-        "@teambit/evangelist.surfaces.dropdown": "0.0.3",
+        "@teambit/evangelist.surfaces.dropdown": "0.0.4",
         "@teambit/evangelist.surfaces.tooltip": "0.0.3",
         "@teambit/evangelist.theme.icon-font": "^0.0.2",
         "@teambit/explorer.ui.component-card": "^0.0.2",
@@ -86,6 +87,9 @@
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/node-fetch": "2.5.7",
+        "@yarnpkg/cli": "2.3.1",
+        "@yarnpkg/core": "2.2.2",
+        "@yarnpkg/fslib": "2.2.2",
         "ansi-to-html": "^0.6.14",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
@@ -109,7 +113,9 @@
         "copy-to-clipboard": "^3.3.1",
         "core-js": "^3.6.5",
         "cors": "^2.8.5",
+        "credentials-by-uri": "2.0.0",
         "cross-spawn": "^7.0.3",
+        "dagre": "0.8.5",
         "didyoumean": "^1.2.1",
         "eslint-import-resolver-node": "0.3.4",
         "express": "^4.17.1",
@@ -120,7 +126,6 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
-        "graphql": "^15.1.0",
         "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
@@ -158,6 +163,7 @@
         "react-dev-utils": "^10.2.1",
         "react-dom": "^16.13.1",
         "react-error-overlay": "^6.0.7",
+        "react-flow-renderer": "6.0.0",
         "react-hot-loader": "^4.12.21",
         "react-live": "^2.2.2",
         "react-router-dom": "^5.2.0",
@@ -192,6 +198,8 @@
         "@types/classnames": "^2.2.10",
         "@types/cors": "^2.8.6",
         "@types/cross-spawn": "^6.0.2",
+        "@types/get-port": "^4.2.0",
+        "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
         "@types/puppeteer": "^3.0.1",
         "@types/react": "16.9.43",
@@ -211,10 +219,9 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.36",
+        "bit-bin": "14.8.9-dev.46",
         "graphql": "^14.3.1",
-        "react-dom": "^16.13.1",
-        "@babel/runtime": "^7.11.2"
+        "react-dom": "^16.13.1"
       }
     }
   },
@@ -242,9 +249,8 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.36",
-            "react-dom": "^16.13.1",
-            "graphql": "^14.3.1"
+            "bit-bin": "14.8.9-dev.46",
+            "react-dom": "^16.13.1"
           }
         }
       }
@@ -275,13 +281,14 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.36",
+            "bit-bin": "14.8.9-dev.46",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
             "browserslist": "^4",
             "reflect-metadata": "^0.1.13",
-            "mz": "^2.7.0"
+            "mz": "^2.7.0",
+            "react-refresh": "^0.8.2"
           },
           "devDependencies": {
             "@types/react": "^16.9.43",
@@ -293,7 +300,17 @@
             "bit-bin": "-",
             "browserslist": "-",
             "graphql": "-",
-            "react": "-"
+            "react": "-",
+            "react-dom": "-"
+          }
+        }
+      }
+    },
+    "extensions/jest": {
+      "teambit.bit/dependency-resolver": {
+        "policy": {
+          "peerDependencies": {
+            "jest": "^26.0.1"
           }
         }
       }
