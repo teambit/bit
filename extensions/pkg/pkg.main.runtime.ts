@@ -94,7 +94,7 @@ export class PkgMain {
       componentAspect
     );
 
-    builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
+    builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, logPublisher));
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {

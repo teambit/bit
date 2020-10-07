@@ -174,7 +174,7 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getPipe(): BuildTask[] {
+  getBuildPipe(): BuildTask[] {
     return [this.compiler.task, this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
   }
 

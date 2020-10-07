@@ -36,14 +36,15 @@ export type BuilderConfig = {
 };
 
 export class BuilderMain {
-  tagTasks: BuildTask[] = [];
   constructor(
     private envs: EnvsMain,
     private workspace: Workspace,
-    private service: BuilderService,
+    private buildService: BuilderService,
+    private deployService: BuilderService,
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
-    private taskSlot: TaskSlot,
+    private buildTaskSlot: TaskSlot,
+    private deployTaskSlot: TaskSlot,
     private storageResolversSlot: StorageResolverSlot
   ) {}
 
@@ -106,13 +107,16 @@ export class BuilderMain {
   }
 
   async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
-    this.tagTasks.forEach((task) => this.registerTask(task));
     // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
+    const deployEnvsExecutionResults = await this.deploy(components);
+    deployEnvsExecutionResults.throwErrorsIfExist();
     const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
-    await this.storeArtifacts(buildPipelineResults);
-    return this.pipelineResultsToAspectList(components, buildPipelineResults);
+    const deployPipelineResults = this.getPipelineResults(deployEnvsExecutionResults);
+    const allPipeLineResults = [...buildPipelineResults, ...deployPipelineResults];
+    await this.storeArtifacts(allPipeLineResults);
+    return this.pipelineResultsToAspectList(components, allPipeLineResults);
   }
 
   /**
@@ -143,7 +147,14 @@ export class BuilderMain {
     const idsStr = components.map((c) => c.id.toString());
     await this.workspace.createNetwork(idsStr, isolateOptions);
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.run(this.service);
+    const buildResult = await envs.run(this.buildService);
+
+    return buildResult;
+  }
+
+  async deploy(components: Component[]) {
+    const envs = await this.envs.createEnvironment(components);
+    const buildResult = await envs.run(this.deployService);
 
     return buildResult;
   }
@@ -152,16 +163,17 @@ export class BuilderMain {
    * register a build task to apply on all component build pipelines.
    * build happens on `bit build` and as part of `bit tag --persist`.
    */
-  registerTask(task: BuildTask) {
-    this.taskSlot.register(task);
+  registerBuildTask(task: BuildTask) {
+    this.buildTaskSlot.register(task);
     return this;
   }
 
   /**
-   * build task that doesn't get executed on `bit build`, only on `bit tag --persist'
+   * deploy task that doesn't get executed on `bit build`, only on `bit tag --persist'.
+   * the deploy-pipeline is running once the build-pipeline has completed.
    */
-  registerTaskOnTagOnly(task: BuildTask) {
-    this.tagTasks.push(task);
+  registerDeployTask(task: BuildTask) {
+    this.deployTaskSlot.register(task);
   }
 
   /**
@@ -181,7 +193,7 @@ export class BuilderMain {
     return extensionArtifacts;
   }
 
-  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>()];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -206,18 +218,28 @@ export class BuilderMain {
       GraphqlMain
     ],
     config,
-    [taskSlot, storageResolversSlot]: [TaskSlot, StorageResolverSlot]
+    [buildTaskSlot, storageResolversSlot, deployTaskSlot]: [TaskSlot, StorageResolverSlot, TaskSlot]
   ) {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const builderService = new BuilderService(workspace, logger, taskSlot, artifactFactory);
+    const buildService = new BuilderService(workspace, logger, buildTaskSlot, 'getBuildPipe', 'build', artifactFactory);
+    const deployService = new BuilderService(
+      workspace,
+      logger,
+      deployTaskSlot,
+      'getDeployPipe',
+      'deploy',
+      artifactFactory
+    );
     const builder = new BuilderMain(
       envs,
       workspace,
-      builderService,
+      buildService,
+      deployService,
       scope,
       aspectLoader,
-      taskSlot,
+      buildTaskSlot,
+      deployTaskSlot,
       storageResolversSlot
     );
 
