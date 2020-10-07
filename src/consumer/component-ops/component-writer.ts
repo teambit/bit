@@ -8,6 +8,7 @@ import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TES
 import ShowDoctorError from '../../error/show-doctor-error';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
+import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { getPathRelativeRegardlessCWD, pathNormalizeToLinux, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
@@ -31,6 +32,7 @@ export type ComponentWriterProps = {
   isolated?: boolean;
   origin: ComponentOrigin;
   consumer: Consumer | undefined;
+  scope?: Scope | undefined;
   bitMap: BitMap;
   ignoreBitDependencies?: boolean | BitIds;
   deleteBitDirContent?: boolean;
@@ -49,6 +51,7 @@ export default class ComponentWriter {
   isolated: boolean | undefined;
   origin: ComponentOrigin;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
+  scope?: Scope | undefined;
   bitMap: BitMap;
   ignoreBitDependencies: boolean | BitIds;
   deleteBitDirContent: boolean | undefined;
@@ -66,6 +69,7 @@ export default class ComponentWriter {
     isolated = false,
     origin,
     consumer,
+    scope = consumer?.scope,
     bitMap,
     ignoreBitDependencies = true,
     deleteBitDirContent,
@@ -82,6 +86,7 @@ export default class ComponentWriter {
     this.isolated = isolated;
     this.origin = origin;
     this.consumer = consumer;
+    this.scope = scope;
     this.bitMap = bitMap;
     this.ignoreBitDependencies = ignoreBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
@@ -205,16 +210,16 @@ export default class ComponentWriter {
    * that are set in package.json.files[], to have a similar structure of a package.
    */
   private async populateArtifacts() {
-    if (this.isolated) {
-      // in capsule, do not write artifacts, they get created by build-pipeline
-      // return;
+    if (!this.scope) {
+      // when capsules are written via the workspace, do not write artifacts, they get created by
+      // build-pipeline. when capsules are written via the scope, we do need the dists.
+      return;
     }
     const extensionsNamesForArtifacts = ['teambit.bit/compiler'];
     const extensionDataEntries = extensionsNamesForArtifacts.map((extName) =>
       this.component.extensions.findExtension(extName)
     );
-    const scope = this.consumer?.scope;
-    if (!scope) throw new Error(`unable to populate artifacts for ${this.component.name}, the consumer is undefined`);
+    const scope = this.scope;
     const artifactsVinyl = await Promise.all(
       extensionDataEntries.map((extDataEntry) =>
         extDataEntry?.artifacts.getVinylsAndImportIfMissing(this.component.scope as string, scope)
