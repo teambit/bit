@@ -1,6 +1,4 @@
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { Artifacts } from 'bit-bin/dist/consumer/component/sources/artifacts';
 import { ComponentID } from './id';
 
 export type Serializable = {
@@ -37,11 +35,7 @@ export class AspectEntry {
 
   get artifacts() {
     // @ts-ignore todo: this is going to be completely changed very soon.
-    return this.legacy.artifacts;
-  }
-
-  set artifacts(val: Array<AbstractVinyl>) {
-    this.legacy.artifacts = new Artifacts(val);
+    return this.legacy.artifacts.vinyls;
   }
 
   transform(newData: SerializableMap): AspectEntry {
