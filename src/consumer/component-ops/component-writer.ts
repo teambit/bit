@@ -126,7 +126,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
-    this.populateArtifacts();
+    await this.populateArtifacts();
     return this.component;
   }
 
@@ -200,17 +200,28 @@ export default class ComponentWriter {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  private populateArtifacts() {
+  private async populateArtifacts() {
     if (this.isolated) {
       // in capsule, do not write artifacts, they get created by build-pipeline
       return;
     }
-    const artifactsVinyl: ArtifactVinyl[] = R.flatten(this.component.extensions.map((e) => e.artifacts));
+    const extensionsNamesForArtifacts = ['teambit.bit/compiler'];
+    const extensionDataEntries = extensionsNamesForArtifacts.map((extName) =>
+      this.component.extensions.findExtension(extName)
+    );
+    const scope = this.consumer?.scope;
+    if (!scope) throw new Error(`unable to populate artifacts for ${this.component.name}, the consumer is undefined`);
+    const artifactsVinyl = await Promise.all(
+      extensionDataEntries.map((extDataEntry) =>
+        extDataEntry?.artifacts.getVinylsAndImportIfMissing(this.component.scope as string, scope)
+      )
+    );
+    const artifactsVinylFlattened: ArtifactVinyl[] = R.flatten(artifactsVinyl).filter((vinyl) => vinyl);
     const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {
-      artifactsVinyl.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
+      artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
-    this.component.dataToPersist.addManyFiles(artifactsVinyl);
+    this.component.dataToPersist.addManyFiles(artifactsVinylFlattened);
   }
 
   private getArtifactsDir() {

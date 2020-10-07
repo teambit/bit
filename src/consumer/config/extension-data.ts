@@ -3,10 +3,8 @@ import R, { forEachObjIndexed } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { BitId, BitIds } from '../../bit-id';
-import Source from '../../scope/models/source';
 import { sortObject } from '../../utils';
-import { AbstractVinyl } from '../component/sources';
-import { ArtifactVinyl } from '../component/sources/artifact';
+import { Artifacts } from '../component/sources/artifacts';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
@@ -22,7 +20,7 @@ export class ExtensionDataEntry {
     public config: { [key: string]: any } = {},
     public data: { [key: string]: any } = {},
     // TODO: rename to files and make sure it only includes abstract vinyl
-    public artifacts: Array<AbstractVinyl | { relativePath: string; file: Source }> = [],
+    public artifacts: Artifacts = new Artifacts(),
     public newExtensionId: any = undefined
   ) {}
 
@@ -46,16 +44,13 @@ export class ExtensionDataEntry {
   }
 
   clone(): ExtensionDataEntry {
-    const clonedArtifacts = this.artifacts.map((artifact) => {
-      return artifact instanceof ArtifactVinyl ? artifact.clone() : artifact;
-    });
     return new ExtensionDataEntry(
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
       R.clone(this.config),
       R.clone(this.data),
-      clonedArtifacts
+      this.artifacts.clone()
     );
   }
 
@@ -151,19 +146,6 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   clone(): ExtensionDataList {
     const extensionDataEntries = this.map((extensionData) => extensionData.clone());
     return new ExtensionDataList(...extensionDataEntries);
-  }
-
-  toModelObjects(): ExtensionDataList {
-    const cloned = this.clone();
-    cloned.forEach((extensionDataEntry) => {
-      extensionDataEntry.artifacts = extensionDataEntry.artifacts.map((artifact) => {
-        return {
-          file: artifact.file.hash(),
-          relativePath: artifact.relativePath,
-        };
-      });
-    });
-    return cloned;
   }
 
   _filterLegacy(): ExtensionDataList {

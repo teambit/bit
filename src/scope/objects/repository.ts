@@ -95,6 +95,11 @@ export default class Repository {
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
   }
 
+  async has(ref: Ref): Promise<boolean> {
+    const objectPath = this.objectPath(ref);
+    return fs.pathExists(objectPath);
+  }
+
   load(ref: Ref, throws = false): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     // @ts-ignore @todo: fix! it should return BitObject | null.

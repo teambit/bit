@@ -1,4 +1,5 @@
-import { mapSeries } from 'bluebird';
+import { mapSeries, filter } from 'bluebird';
+import groupArray from 'group-array';
 import R from 'ramda';
 
 import { Scope } from '..';
@@ -16,6 +17,7 @@ import ComponentVersion from '../component-version';
 import { ComponentNotFound, DependencyNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { PermissionDenied, RemoteScopeNotFound } from '../network/exceptions';
+import { Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
@@ -153,7 +155,7 @@ export default class ScopeComponentsImporter {
 
   async importLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    const objectList = await remotes.fetch(remoteLaneIds, this.scope, undefined, undefined, true);
+    const objectList = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
     const bitObjects = await objectList.toBitObjects();
     const lanes = bitObjects.getLanes();
     await Promise.all(
@@ -200,10 +202,11 @@ export default class ScopeComponentsImporter {
   async componentsToComponentsObjects(
     components: Array<VersionDependencies | ComponentVersion>,
     clientVersion: string | null | undefined,
-    collectParents: boolean
+    collectParents: boolean,
+    collectArtifacts: boolean
   ): Promise<ObjectItem[]> {
     const allObject = await mapSeries(components, (component) =>
-      component.toObjects(this.scope.objects, clientVersion, collectParents)
+      component.toObjects(this.scope.objects, clientVersion, collectParents, collectArtifacts)
     );
     return R.flatten(allObject);
   }
@@ -261,7 +264,7 @@ export default class ScopeComponentsImporter {
     }
     logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
     const objectList = await remotes.fetch(
-      left.map((defLeft) => defLeft.id),
+      groupByScopeName(left.map((defLeft) => defLeft.id)),
       this.scope,
       undefined,
       context
@@ -291,7 +294,7 @@ export default class ScopeComponentsImporter {
     if (component && localFetch) {
       return this.componentToVersionDependencies(component, id);
     }
-    const objectList = await remotes.fetch([id], this.scope, undefined, context);
+    const objectList = await remotes.fetch(groupByScopeName([id]), this.scope, undefined, context);
     await this.scope.writeManyComponentsToModel(objectList, true, [id]);
     return this._getExternal({ id, remotes, localFetch: true });
   }
@@ -311,7 +314,7 @@ export default class ScopeComponentsImporter {
     if (component && localFetch) {
       return component.toComponentVersion(id.version as string);
     }
-    const objectList = await remotes.fetch([id], this.scope, true, context);
+    const objectList = await remotes.fetch(groupByScopeName([id]), this.scope, { withoutDependencies: true }, context);
     await this.scope.writeManyComponentsToModel(objectList, true, [id]);
     const versionDependencies = await this._getExternal({ id, remotes, localFetch: true });
     return versionDependencies.component;
@@ -351,12 +354,7 @@ export default class ScopeComponentsImporter {
         `${left.length} left. Fetching them from a remote`
       );
       return remotes
-        .fetch(
-          left.map((def) => def.id),
-          this.scope,
-          true,
-          context
-        )
+        .fetch(groupByScopeName(left.map((def) => def.id)), this.scope, { withoutDependencies: true }, context)
         .then((objectList) => {
           return this.scope.writeManyComponentsToModel(objectList, undefined, ids);
         })
@@ -377,4 +375,36 @@ export default class ScopeComponentsImporter {
       return component.toComponentVersion(id.version);
     });
   }
+
+  /**
+   * currently used for import artifacts, but can be used to import any arbitrary array of hashes.
+   * it takes care to remove any duplications and check whether the object exists locally before
+   * going to the remote
+   */
+  async importManyObjects(groupedHashes: { [scopeName: string]: string[] }) {
+    const groupedHashedMissing = {};
+    await Promise.all(
+      Object.keys(groupedHashes).map(async (scopeName) => {
+        const uniqueHashes: string[] = R.uniq(groupedHashes[scopeName]);
+        const missing = await filter(uniqueHashes, async (hash) => !(await this.scope.objects.has(new Ref(hash))));
+        if (missing.length) {
+          groupedHashedMissing[scopeName] = missing;
+        }
+      })
+    );
+    if (R.isEmpty(groupedHashedMissing)) return;
+    const remotes = await getScopeRemotes(this.scope);
+    const objectList = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
+    const bitObjectsList = await objectList.toBitObjects();
+    this.scope.objects.addMany(bitObjectsList.getAll());
+    this.scope.objects.persist();
+  }
+}
+
+function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName: string]: string[] } {
+  const grouped = groupArray(ids, 'scope');
+  Object.keys(grouped).forEach((scopeName) => {
+    grouped[scopeName] = grouped[scopeName].map((id) => id.toString());
+  });
+  return grouped;
 }

@@ -10,7 +10,7 @@ export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data);
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;

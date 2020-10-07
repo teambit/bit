@@ -14,7 +14,6 @@ import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
 import GeneralError from '../../../error/general-error';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
@@ -40,6 +39,7 @@ import { Network } from '../network';
 import keyGetter from './key-getter';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -512,16 +512,12 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(
-    ids: Array<BitId | RemoteLaneId>,
-    noDeps = false,
-    idsAreLanes = false,
-    context?: Record<string, any>
-  ): Promise<ObjectList> {
+  async fetch(idsStr: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectList> {
     let options = '';
-    const idsStr = ids.map((id) => id.toString());
-    if (noDeps) options = '--no-dependencies';
-    if (idsAreLanes) options += ' --lanes';
+    const { type, withoutDependencies, includeArtifacts } = fetchOptions;
+    if (type !== 'component') options = ` --type ${type}`;
+    if (withoutDependencies) options += ' --no-dependencies';
+    if (includeArtifacts) options += ' --include-artifacts';
     const str = await this.exec(`_fetch ${options}`, idsStr, context);
     const parseResponse = () => {
       try {

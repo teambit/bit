@@ -15,7 +15,6 @@ import {
 import ConsumerComponent from '../../consumer/component';
 import { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import { Dist, License, SourceFile } from '../../consumer/component/sources';
-import { ArtifactVinyl } from '../../consumer/component/sources/artifact';
 import ComponentOverrides from '../../consumer/config/component-overrides';
 import SpecsResults from '../../consumer/specs-results';
 import GeneralError from '../../error/general-error';
@@ -568,6 +567,7 @@ export default class Component extends BitObject {
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
+    // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -584,11 +584,6 @@ export default class Component extends BitObject {
     ]);
 
     const extensions = version.extensions.clone();
-    await Promise.all(
-      extensions.map(async (extension) => {
-        extension.artifacts = await Promise.all(extension.artifacts.map(loadFileInstance(ArtifactVinyl)));
-      })
-    );
 
     const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
