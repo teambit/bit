@@ -3,6 +3,7 @@ import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { ScopeLabels } from '@teambit/staged-components.scope-labels';
 import { ScopeTitle } from '@teambit/staged-components.scope-title';
 import { AccountObj, UserAvatar } from '@teambit/staged-components.workspace-components.avatar';
+import { Contributors } from './contributors';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -34,11 +35,7 @@ export function ScopeDetails({
         <ScopeLabels visibility={visibility} license={license} />
       </div>
       <Subtitle>{description}</Subtitle>
-      <div className={styles.contributors}>
-        {contributors.map((user, index) => {
-          return <UserAvatar key={index} size={32} account={user} className={styles.avatar} />;
-        })}
-      </div>
+      <Contributors contributors={contributors} />
       <ConsumableLink
         title="Export to this scope"
         link={`bit export ${owner}.${scopeName}`}

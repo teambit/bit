@@ -3863,6 +3863,21 @@
     "staged-components/scope-details": {
         "files": [
             {
+                "relativePath": "contributors/contributors.module.scss",
+                "test": false,
+                "name": "contributors.module.scss"
+            },
+            {
+                "relativePath": "contributors/contributors.tsx",
+                "test": false,
+                "name": "contributors.tsx"
+            },
+            {
+                "relativePath": "contributors/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "index.ts",
                 "test": false,
                 "name": "index.ts"

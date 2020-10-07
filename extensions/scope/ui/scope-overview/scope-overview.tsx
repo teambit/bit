@@ -11,6 +11,54 @@ export function ScopeOverview() {
   const scope = useContext(ScopeContext);
   const { components } = scope;
   const { owner, name } = scope.parseName();
+
+  const contributors = [
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+    {
+      profileImage:
+        'https://s.gravatar.com/avatar/73b1eb2c6b5acfe3f196b19d70f1a902?rating=g&default=blank&size=35&w=35&h=35&fill=fillmax&bg=fff',
+      name: 'oded',
+    },
+  ];
   return (
     <div className={styles.container}>
       <ScopeDetails
@@ -18,7 +66,7 @@ export function ScopeOverview() {
         scopeName={name} // should be refactored to use ScopeID.
         visibility="private" // visibility should be extended by a slot registered by bit.dev
         license="MIT" // refactor to be in license aspect and expose through a slot.
-        contributors={[]} // should be provided by bit.dev
+        contributors={contributors} // should be provided by bit.dev
         description={scope.description}
       />
       <Separator />
