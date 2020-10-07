@@ -36,7 +36,7 @@ export class AspectEntry {
   }
 
   get artifacts() {
-    // @ts-ignore todo: @Ran, what do you expect this to be?
+    // @ts-ignore todo: this is going to be completely changed very soon.
     return this.legacy.artifacts;
   }
 
