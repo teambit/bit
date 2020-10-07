@@ -376,6 +376,11 @@ export default class ScopeComponentsImporter {
     });
   }
 
+  /**
+   * currently used for import artifacts, but can be used to import any arbitrary array of hashes.
+   * it takes care to remove any duplications and check whether the object exists locally before
+   * going to the remote
+   */
   async importManyObjects(groupedHashes: { [scopeName: string]: string[] }) {
     const groupedHashedMissing = {};
     await Promise.all(

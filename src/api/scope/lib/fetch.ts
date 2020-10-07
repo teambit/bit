@@ -1,5 +1,5 @@
 import { BitIds } from '../../../bit-id';
-import { FETCH_OPTIONS, POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
+import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
@@ -8,6 +8,9 @@ import { loadScope, Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 import { Ref } from '../../../scope/objects';
 import { ObjectList, ObjectItem } from '../../../scope/objects/object-list';
+
+export type FETCH_TYPE = 'component' | 'lane' | 'object';
+export type FETCH_OPTIONS = { type: FETCH_TYPE; withoutDependencies: boolean; includeArtifacts: boolean };
 
 const HooksManagerInstance = HooksManager.getInstance();
 

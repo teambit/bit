@@ -10,9 +10,10 @@ import { ComponentLogs } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
-import { CFG_USER_TOKEN_KEY, FETCH_OPTIONS } from '../../../constants';
+import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 
 export class Http implements Network {
   constructor(private scopeUrl: string) {}

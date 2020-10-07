@@ -1,5 +1,5 @@
+import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { BitId } from '../bit-id';
-import { FETCH_OPTIONS } from '../constants';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';

@@ -9,7 +9,7 @@ import { getSync } from '../../../api/consumer/lib/global-config';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
 import { BitId } from '../../../bit-id';
 import globalFlags from '../../../cli/global-flags';
-import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT, FETCH_OPTIONS } from '../../../constants';
+import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
@@ -39,6 +39,7 @@ import { Network } from '../network';
 import keyGetter from './key-getter';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';

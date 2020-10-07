@@ -1,6 +1,6 @@
 import { migrate } from '../../../api/consumer';
 import { fetch } from '../../../api/scope';
-import { FETCH_OPTIONS, FETCH_TYPE } from '../../../constants';
+import { FETCH_OPTIONS, FETCH_TYPE } from '../../../api/scope/lib/fetch';
 import logger from '../../../logger/logger';
 import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../../scope/objects/object-list';

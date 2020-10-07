@@ -447,6 +447,3 @@ export enum Extensions {
   compiler = 'teambit.bit/compiler',
   envs = 'teambit.bit/envs',
 }
-
-export type FETCH_TYPE = 'component' | 'lane' | 'object';
-export type FETCH_OPTIONS = { type: FETCH_TYPE; withoutDependencies: boolean; includeArtifacts: boolean };

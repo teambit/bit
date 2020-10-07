@@ -1,7 +1,7 @@
 import { groupBy, prop } from 'ramda';
+import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 
 import { BitId } from '../bit-id';
-import { FETCH_OPTIONS } from '../constants';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import DependencyGraph from '../scope/graph/scope-graph';

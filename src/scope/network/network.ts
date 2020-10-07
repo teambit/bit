@@ -1,5 +1,5 @@
+import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import { BitId, BitIds } from '../../bit-id';
-import { FETCH_OPTIONS } from '../../constants';
 import Component from '../../consumer/component';
 import { ListScopeResult } from '../../consumer/component/components-list';
 import DependencyGraph from '../graph/scope-graph';
