@@ -10,6 +10,7 @@ import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
   Registries,
+  Registry,
   // PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
@@ -159,15 +160,34 @@ export class YarnPackageManager implements PackageManager {
   private async getScopedRegistries(registries: Registries) {
     const scopedRegistries = Object.keys(registries.scopes).reduce((acc, scopeName) => {
       const regDef = registries.scopes[scopeName];
+      const authProp = this.getAuthProp(regDef);
       acc[scopeName] = {
-        npmAuthToken: regDef.token,
         npmRegistryServer: regDef.uri,
         npmAlwaysAuth: regDef.alwaysAuth,
       };
+      if (authProp) {
+        acc[scopeName][authProp.keyName] = authProp.value;
+      }
 
       return acc;
     }, {});
     return scopedRegistries;
+  }
+
+  private getAuthProp(registry: Registry) {
+    if (registry.token) {
+      return {
+        keyName: 'npmAuthToken',
+        value: registry.token,
+      };
+    }
+    if (registry.baseToken) {
+      return {
+        keyName: 'npmAuthIdent',
+        value: registry.baseToken,
+      };
+    }
+    return undefined;
   }
 
   private getCacheFolder(options: PackageManagerInstallOptions) {
@@ -181,27 +201,27 @@ export class YarnPackageManager implements PackageManager {
     const config = await Configuration.find(rootDirPath, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries(registries);
     const defaultRegistry = registries.defaultRegistry;
+    const defaultAuthProp = this.getAuthProp(defaultRegistry);
     const cacheFolder = this.getCacheFolder(installOptions);
+
+    const data = {
+      nodeLinker: 'node-modules',
+      installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
+      cacheFolder,
+      pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
+      bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+      npmScopes: scopedRegistries,
+      virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
+      npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
+      npmAlwaysAuth: defaultRegistry.alwaysAuth,
+      // enableInlineBuilds: true,
+      globalFolder: `${rootDirPath}/.yarn/global`,
+    };
+    if (defaultAuthProp) {
+      data[defaultAuthProp.keyName] = defaultAuthProp.value;
+    }
     // TODO: node-modules is hardcoded now until adding support for pnp.
-    config.use(
-      '<bit>',
-      {
-        nodeLinker: 'node-modules',
-        installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
-        cacheFolder,
-        pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
-        bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
-        npmScopes: scopedRegistries,
-        virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
-        npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
-        npmAuthToken: defaultRegistry.token,
-        npmAlwaysAuth: defaultRegistry.alwaysAuth,
-        // enableInlineBuilds: true,
-        globalFolder: `${rootDirPath}/.yarn/global`,
-      },
-      rootDirPath,
-      {}
-    );
+    config.use('<bit>', data, rootDirPath, {});
 
     return config;
   }

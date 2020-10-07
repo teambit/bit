@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import { flatten } from 'ramda';
+import { Artifacts } from 'bit-bin/dist/consumer/component/sources/artifacts';
 import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { AspectEntry, Component, ComponentID } from '@teambit/component';
 import { StorageResolver } from './storage-resolver';
@@ -14,7 +15,7 @@ export class DefaultResolver implements StorageResolver {
     const artifactsGrouped = this.groupArtifactsByTaskId(artifacts);
     Object.keys(artifactsGrouped).forEach((taskId) => {
       const aspectEntry = this.getAspectEntry(component, taskId);
-      aspectEntry.artifacts = this.transformToVinyl(artifactsGrouped[taskId]);
+      aspectEntry.legacy.artifacts = new Artifacts(this.transformToVinyl(artifactsGrouped[taskId]));
     });
   }
 
