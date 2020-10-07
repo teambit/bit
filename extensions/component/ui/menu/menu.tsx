@@ -43,6 +43,12 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         <MenuNav navigationSlot={navigationSlot} />
       </div>
       <div className={styles.rightSide}>
+        {widgetLinks &&
+          widgetLinks.map(([id, widget]) => (
+            <TopBarWidgetLink key={id} href={widget.href} className={styles.widget}>
+              {widget.children}
+            </TopBarWidgetLink>
+          ))}
         {/* 
         {versionList.length > 0 && <ImportAction copyLink={componentFullName} componentName={component.id.name} />} 
         */}
@@ -50,12 +56,6 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />
         </span> */}
-        {widgetLinks &&
-          widgetLinks.map(([id, widget]) => (
-            <TopBarWidgetLink key={id} href={widget.href} className={styles.widget}>
-              <Icon className={classnames(styles.icon)} of="changelog" />
-            </TopBarWidgetLink>
-          ))}
         {/* <MainDropdown /> */}
       </div>
     </div>

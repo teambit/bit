@@ -4,11 +4,12 @@
   align-items: center;
   text-decoration: none;
   transition: color 300ms;
-  padding: 12px 15px;
-  border-radius: 5px;
+  padding: 7px;
+  border-radius: 6px;
   color: var(--text-highlight);
+  background-color: var(--bg-color);
 
   &.active {
-    background-color: white;
+    color: var(--base-highlight);
   }
 }

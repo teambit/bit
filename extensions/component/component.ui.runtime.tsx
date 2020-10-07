@@ -113,7 +113,7 @@ export class ComponentUI {
     const section = new AspectSection();
 
     componentUI.registerRoute(section.route);
-    componentUI.registerNavigation(section.navigationLink, section.order);
+    componentUI.registerWidget(section.navigationLink);
     return componentUI;
   }
 }
