@@ -8,6 +8,7 @@ import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/compo
 import { CustomResolvedPath } from '../../consumer/component/consumer-component';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { SourceFile } from '../../consumer/component/sources';
+import { ArtifactRef, Artifacts } from '../../consumer/component/sources/artifacts';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Results } from '../../consumer/specs-results/specs-results';
@@ -21,6 +22,7 @@ import { PathLinux, PathLinuxRelative } from '../../utils/path';
 import { isHash } from '../../version/version-parser';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
+import { ObjectItem } from '../objects/object-list';
 import Repository from '../objects/repository';
 import validateVersionInstance from '../version-validator';
 import Source from './source';
@@ -293,8 +295,27 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
-    const withoutParents = this.refsWithoutParents();
-    return [...this.parents, ...withoutParents].filter((ref) => ref);
+    return this.refsWithOptions();
+  }
+
+  refsWithOptions(includeParents = true, includeArtifacts = true): Ref[] {
+    const allRefs: Ref[] = [];
+    const extractRefsFromFiles = (files) => {
+      const refs = files ? files.map((file) => file.file) : [];
+      return refs;
+    };
+    const files = extractRefsFromFiles(this.files);
+    const dists = extractRefsFromFiles(this.dists);
+    allRefs.push(...files);
+    allRefs.push(...dists);
+    if (includeParents) {
+      allRefs.push(...this.parents);
+    }
+    if (includeArtifacts) {
+      const artifacts = R.flatten(this.extensions.map((e) => e.artifacts.refs.map((r) => r.ref)));
+      allRefs.push(...artifacts);
+    }
+    return allRefs;
   }
 
   refsWithoutParents(): Ref[] {
@@ -308,9 +329,8 @@ export default class Version extends BitObject {
     return [...dists, ...files, ...artifacts].filter((ref) => ref);
   }
 
-  async collectRawWithoutParents(repo: Repository): Promise<Buffer[]> {
-    const refs = this.refsWithoutParents();
-    return Promise.all(refs.map((ref) => ref.loadRaw(repo)));
+  async collectManyObjects(repo: Repository, refs: Ref[]): Promise<ObjectItem[]> {
+    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
   }
 
   toObject() {
@@ -378,10 +398,8 @@ export default class Version extends BitObject {
             // @ts-ignore
             extensionClone.extensionId = ext.extensionId.serialize();
           }
-          extensionClone.artifacts = extensionClone.artifacts.map((file) => ({
-            file: file.file.toString(),
-            relativePath: file.relativePath,
-          }));
+          // @ts-ignore
+          extensionClone.artifacts = extensionClone.artifacts.toModelObjects();
           return extensionClone;
         }),
         packageDependencies: this.packageDependencies,
@@ -489,7 +507,6 @@ export default class Version extends BitObject {
         test: file.test,
       };
     };
-    // @ts-ignore
     const _getExtensions = (exts = []): ExtensionDataList => {
       if (exts.length) {
         const newExts = exts.map((extension: any) => {
@@ -498,9 +515,9 @@ export default class Version extends BitObject {
             const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
             return entry;
           }
-          const artifacts = (extension.artifacts || []).map((a) => ({
-            file: Ref.from(a.file),
+          const artifacts: ArtifactRef[] = (extension.artifacts || []).map((a) => ({
             relativePath: a.relativePath,
+            ref: Ref.from(a.file),
           }));
           const entry = new ExtensionDataEntry(
             extension.id,
@@ -508,7 +525,7 @@ export default class Version extends BitObject {
             extension.name,
             extension.config,
             extension.data,
-            artifacts
+            Artifacts.fromModel(artifacts)
           );
           return entry;
         });
@@ -572,7 +589,6 @@ export default class Version extends BitObject {
     flattenedDependencies,
     flattenedDevDependencies,
     specsResults,
-    extensions,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
@@ -581,7 +597,6 @@ export default class Version extends BitObject {
     dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
     specsResults: Results | undefined;
-    extensions: ExtensionDataList;
   }) {
     const parseFile = (file) => {
       return {
@@ -632,7 +647,7 @@ export default class Version extends BitObject {
       overrides: component.overrides.componentOverridesData,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
-      extensions: extensions.toModelObjects(),
+      extensions: component.extensions,
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;

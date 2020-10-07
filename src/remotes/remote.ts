@@ -1,15 +1,16 @@
+import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { BitId } from '../bit-id';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
-import { RemoteLaneId } from '../lane-id/lane-id';
+import logger from '../logger/logger';
 import ComponentObjects from '../scope/component-objects';
-import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import DependencyGraph from '../scope/graph/scope-graph';
 import { LaneData } from '../scope/lanes/lanes';
 import { ComponentLogs } from '../scope/models/model-component';
 import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
+import { ObjectList } from '../scope/objects/object-list';
 import { cleanBang, isBitUrl } from '../utils';
 import { InvalidRemote } from './exceptions';
 
@@ -71,14 +72,12 @@ export default class Remote {
   }
 
   fetch(
-    ids: BitId[] | RemoteLaneId[],
-    withoutDeps: boolean,
+    ids: string[],
+    fetchOptions: FETCH_OPTIONS,
     context?: Record<string, any>,
-    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES,
-    idsAreLanes = false
-  ): Promise<CompsAndLanesObjects> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.connect(strategiesNames).then((network) => network.fetch(ids, withoutDeps, idsAreLanes, context));
+    strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
+  ): Promise<ObjectList> {
+    return this.connect(strategiesNames).then((network) => network.fetch(ids, fetchOptions, context));
   }
 
   latestVersions(
@@ -98,9 +97,12 @@ export default class Remote {
     return connect(this.host).then((network) => network.push(componentObjects));
   }
 
-  pushMany(components: CompsAndLanesObjects, context: Record<string, any> | null | undefined): Promise<string[]> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return connect(this.host).then((network) => network.pushMany(components, context));
+  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
+    const network = await connect(this.host);
+    logger.debug(`[-] Running pushMany on a remote`);
+    const results = await network.pushMany(objectList, context);
+    logger.debug('[-] Returning from a remote');
+    return results;
   }
   deleteMany(
     ids: string[],

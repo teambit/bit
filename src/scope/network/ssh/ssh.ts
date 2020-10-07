@@ -14,13 +14,11 @@ import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
 import GeneralError from '../../../error/general-error';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
 import ComponentObjects from '../../component-objects';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
@@ -39,6 +37,9 @@ import {
 import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 import { Network } from '../network';
 import keyGetter from './key-getter';
+import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -380,14 +381,13 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(compsAndLanesObjects: CompsAndLanesObjects, context?: Record<string, any>): Promise<string[]> {
+  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', compsAndLanesObjects.toString(), context).then((data: string) => {
-      const { payload, headers } = this._unpack(data);
-      checkVersionCompatibility(headers.version);
-      return payload.ids;
-    });
+    const data = await this.exec('_put', objectList.toJsonString(), context);
+    const { payload, headers } = this._unpack(data);
+    checkVersionCompatibility(headers.version);
+    return payload.ids;
   }
 
   deleteMany(
@@ -512,29 +512,32 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(
-    ids: Array<BitId | RemoteLaneId>,
-    noDeps = false,
-    idsAreLanes = false,
-    context?: Record<string, any>
-  ): Promise<CompsAndLanesObjects> {
+  async fetch(idsStr: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectList> {
     let options = '';
-    const idsStr = ids.map((id) => id.toString());
-    if (noDeps) options = '--no-dependencies';
-    if (idsAreLanes) options += ' --lanes';
-    return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
-      const parseResponse = () => {
-        try {
-          const results = JSON.parse(str);
-          return results;
-        } catch (err) {
-          throw new SSHInvalidResponse(str);
-        }
-      };
-      const { payload, headers } = parseResponse();
-      checkVersionCompatibility(headers.version);
+    const { type, withoutDependencies, includeArtifacts } = fetchOptions;
+    if (type !== 'component') options = ` --type ${type}`;
+    if (withoutDependencies) options += ' --no-dependencies';
+    if (includeArtifacts) options += ' --include-artifacts';
+    const str = await this.exec(`_fetch ${options}`, idsStr, context);
+    const parseResponse = () => {
+      try {
+        const results = JSON.parse(str);
+        return results;
+      } catch (err) {
+        throw new SSHInvalidResponse(str);
+      }
+    };
+    const { payload, headers } = parseResponse();
+    checkVersionCompatibility(headers.version);
+    const format = headers.format;
+    if (!format) {
+      // this is an old version that doesn't have the "format" header
       const componentObjects = CompsAndLanesObjects.fromString(payload);
-      return componentObjects;
-    });
+      return componentObjects.toObjectList();
+    }
+    if (format === FETCH_FORMAT_OBJECT_LIST) {
+      return ObjectList.fromJsonString(payload);
+    }
+    throw new Error(`ssh.fetch, format "${format}" is not supported`);
   }
 }

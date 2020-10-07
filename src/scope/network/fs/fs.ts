@@ -1,14 +1,14 @@
 import { deprecate, fetch, put, remove, undeprecate } from '../../../api/scope';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import ComponentObjects from '../../component-objects';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
+import { ObjectList } from '../../objects/object-list';
 import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -35,13 +35,8 @@ export default class Fs implements Network {
     return Promise.resolve(this.getScope().describe());
   }
 
-  push(componentObjects: ComponentObjects): Promise<string[]> {
-    return this.pushMany([componentObjects]);
-  }
-
-  pushMany(components: ComponentObjects[]): Promise<string[]> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return put({ path: this.scopePath, compsAndLanesObjects: components });
+  pushMany(objectList: ObjectList): Promise<string[]> {
+    return put({ path: this.scopePath, objectList });
   }
 
   deleteMany(
@@ -64,14 +59,8 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  fetch(ids: Array<BitId | RemoteLaneId>, noDependencies = false, idsAreLanes = false): Promise<CompsAndLanesObjects> {
-    const idsStr = ids.map((id) => id.toString());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return fetch(this.scopePath, idsStr, noDependencies, idsAreLanes).then((bitsMatrix) => {
-      // if (noDependencies) return bitsMatrix;
-      // return flatten(bitsMatrix); // todo: check when this flatten is needed
-      return bitsMatrix;
-    });
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
+    return fetch(this.scopePath, ids, fetchOptions);
   }
 
   latestVersions(componentIds: BitId[]): Promise<string[]> {
