@@ -567,9 +567,8 @@ export default class Component extends BitObject {
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
-    const scopeMetaP = scopeName
-      ? ScopeMeta.fromScopeName(this.scope || scopeName).load(repository)
-      : Promise.resolve();
+    // @todo: this is weird. why the scopeMeta would be taken from the current scope and not he component scope?
+    const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
