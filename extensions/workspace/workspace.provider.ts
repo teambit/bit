@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
-import { ComponentMain } from '@teambit/component';
+import { ComponentMain, Component } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
@@ -119,6 +119,11 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     graphql
   );
+
+  // Move to deps resolver main runtime once we switch ws<> deps resolver direction
+  workspace.onComponentLoad((component: Component) => {
+    return dependencyResolver.extractDepsFromLegacy(component);
+  });
 
   ManyComponentsWriter.registerExternalInstaller({
     install: workspace.install.bind(workspace),

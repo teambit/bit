@@ -9,5 +9,6 @@ import { Dependency, SerializedDependency } from './dependency';
 // }
 
 export interface DependencyFactory {
+  type: string;
   parse: <T extends Dependency, U extends SerializedDependency>(serializedDependency: U) => T;
 }

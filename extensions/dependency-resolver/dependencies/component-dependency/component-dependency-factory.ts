@@ -12,6 +12,8 @@ import { DependencyFactory } from '../dependency-factory';
 // }
 
 export class ComponentDependencyFactory implements DependencyFactory {
+  type: 'component';
+
   parse<ComponentDependency, S extends SerializedComponentDependency>(serialized: S): ComponentDependency {
     const id = ComponentID.fromObject(serialized.componentId);
     return (new ComponentDependency(
