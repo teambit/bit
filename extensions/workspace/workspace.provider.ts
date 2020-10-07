@@ -120,11 +120,6 @@ export default async function provideWorkspace(
     graphql
   );
 
-  // Move to deps resolver main runtime once we switch ws<> deps resolver direction
-  workspace.onComponentLoad((component: Component) => {
-    return dependencyResolver.extractDepsFromLegacy(component);
-  });
-
   ManyComponentsWriter.registerExternalInstaller({
     install: workspace.install.bind(workspace),
   });
@@ -157,7 +152,11 @@ export default async function provideWorkspace(
     };
   });
 
-  onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
+  onComponentLoadSlot.register(async (component: Component) => {
+    await workspace.getEnvSystemDescriptor.bind(workspace);
+    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
+    return dependencyResolver.extractDepsFromLegacy(component);
+  });
 
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));

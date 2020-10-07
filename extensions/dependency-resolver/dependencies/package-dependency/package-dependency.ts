@@ -1,4 +1,6 @@
 import { BaseDependency } from '../base-dependency';
-import { SerializedDependency, DependencyLifecycleType, Dependency } from '../dependency';
+import { SerializedDependency, Dependency } from '../dependency';
+
+export interface SerializedPackageDependency extends SerializedDependency {}
 
 export class PackageDependency extends BaseDependency implements Dependency {}

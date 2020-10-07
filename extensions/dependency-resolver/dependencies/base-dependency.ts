@@ -1,4 +1,4 @@
-import { Dependency, DependencyLifecycleType } from './dependency';
+import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
 
 export abstract class BaseDependency implements Dependency {
   constructor(
@@ -24,7 +24,7 @@ export abstract class BaseDependency implements Dependency {
     return this._lifecycle;
   }
 
-  serialize() {
+  serialize(): SerializedDependency {
     return {
       id: this.id,
       version: this.version,

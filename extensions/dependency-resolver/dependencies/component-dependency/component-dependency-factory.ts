@@ -12,7 +12,11 @@ import { DependencyFactory } from '../dependency-factory';
 // }
 
 export class ComponentDependencyFactory implements DependencyFactory {
-  type: 'component';
+  type: string;
+
+  constructor() {
+    this.type = 'component';
+  }
 
   parse<ComponentDependency, S extends SerializedComponentDependency>(serialized: S): ComponentDependency {
     const id = ComponentID.fromObject(serialized.componentId);

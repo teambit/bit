@@ -15,7 +15,7 @@ import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
-import R, { forEachObjIndexed } from 'ramda';
+import R, { forEachObjIndexed, flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries } from './registry';
@@ -47,7 +47,7 @@ import {
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
-export type DependencyFactorySlot = SlotRegistry<DependencyFactory>;
+export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
 
@@ -136,8 +136,8 @@ export class DependencyResolverMain {
     this.packageManagerSlot.register(packageManager);
   }
 
-  registerDependencyFactory(factory: DependencyFactory) {
-    this.dependencyFactorySlot.register(factory);
+  registerDependencyFactory(factories: DependencyFactory[]) {
+    this.dependencyFactorySlot.register(factories);
   }
 
   getDependencies(component: Component): DependencyGraph {
@@ -374,15 +374,16 @@ export class DependencyResolverMain {
   }
 
   /**
-   * This function called on component load in order to calculate the dependnecies based on the legacy (consumer) component
-   * and write them to the dependnecyResolver data.
+   * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
+   * and write them to the dependencyResolver data.
    * Do not use this function for other purpose.
-   * If you want to get the component dependnecies call getDependencies (which will give you the dependencies from the data itself)
+   * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
+   * TODO: once we switch deps resolver <> workspace relation we should make it private
    * @param component
    */
   async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
     const legacyComponent: LegacyComponent = component.state._consumer;
-    const factories = this.dependencyFactorySlot.values();
+    const factories = flatten(this.dependencyFactorySlot.values());
     const factoriesMap = factories.reduce((acc, factory) => {
       acc[factory.type] = factory;
       return acc;
@@ -433,9 +434,8 @@ export class DependencyResolverMain {
       dependencyFactorySlot
     );
 
-    dependencyResolver.registerDependencyFactory(new ComponentDependencyFactory());
     // TODO: move to pkg
-    dependencyResolver.registerDependencyFactory(new PackageDependencyFactory());
+    dependencyResolver.registerDependencyFactory([new PackageDependencyFactory(), new ComponentDependencyFactory()]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
     LegacyComponent.registerOnComponentOverridesLoading(

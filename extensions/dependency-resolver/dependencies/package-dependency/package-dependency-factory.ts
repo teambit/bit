@@ -7,7 +7,11 @@ export class PackageDependencyFactory implements DependencyFactory {
   // parse<PackageDependency, SerializedDependency>(serialized: SerializedDependency): PackageDependency {
   //   return new PackageDependency(serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType);
   // }
-  type: 'package';
+  type: string;
+
+  constructor() {
+    this.type = 'package';
+  }
 
   parse<PackageDependency, S extends SerializedDependency>(serialized: S): PackageDependency {
     // return new PackageDependency(serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType) as unknown as PackageDependency;
