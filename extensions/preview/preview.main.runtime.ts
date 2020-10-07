@@ -173,7 +173,7 @@ export class PreviewMain {
       },
     ]);
 
-    // if (!config.disabled) builder.registerTask(new PreviewTask(bundler, preview));
+    if (!config.disabled) builder.registerBuildTask(new PreviewTask(bundler, preview));
 
     return preview;
   }
