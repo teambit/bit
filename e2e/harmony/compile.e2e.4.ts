@@ -25,6 +25,7 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();

@@ -4,12 +4,12 @@ import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
-import { ArtifactVinyl } from '../../consumer/component/sources/artifact';
+import { ArtifactSource } from '../../consumer/component/sources/artifacts';
 import { ExtensionDataList } from '../../consumer/config';
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
-import { PathLinux, pathNormalizeToLinux, PathOsBased } from '../../utils/path';
+import { PathLinux, PathOsBased } from '../../utils/path';
 import { isHash } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
@@ -183,26 +183,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
   }
 
-  private transformArtifactsFromVinylToSource(
-    extensions: ExtensionDataList
-  ): { extensions: ExtensionDataList; artifacts: Array<{ relativePath: string; file: Source }> } {
-    const extensionsCloned = extensions.clone();
-    const artifacts: any[] = [];
-    extensionsCloned.forEach((extensionDataEntry) => {
-      const artifactsSource = extensionDataEntry.artifacts.map((artifact) => {
-        if (!(artifact instanceof ArtifactVinyl)) {
-          throw new Error(`sources: expect artifact to by Vinyl at this point, got ${artifact}`);
-        }
-
-        return {
-          relativePath: pathNormalizeToLinux(artifact.relative),
-          file: artifact.toSourceAsLinuxEOL(),
-        };
-      });
+  private transformArtifactsFromVinylToSource(extensions: ExtensionDataList): ArtifactSource[] {
+    const artifacts: ArtifactSource[] = [];
+    extensions.forEach((extensionDataEntry) => {
+      const artifactsSource = extensionDataEntry.artifacts.fromVinylsToSources();
+      extensionDataEntry.artifacts.populateRefsFromSources(artifactsSource);
       artifacts.push(...artifactsSource);
-      extensionDataEntry.artifacts = artifactsSource;
     });
-    return { extensions: extensionsCloned, artifacts };
+    return artifacts;
   }
 
   /**
@@ -230,7 +218,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     force?: boolean;
     verbose?: boolean;
     specsResults?: any;
-  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any; artifacts: any }> {
+  }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
       if (!files) return null;
@@ -266,7 +254,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       isCompileSet
     );
 
-    const { extensions, artifacts } = this.transformArtifactsFromVinylToSource(clonedComponent.extensions);
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
@@ -304,21 +291,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       flattenedDevDependencies,
       specsResults,
-      extensions,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
 
-    return { version, files, dists, compilerFiles, testerFiles, artifacts };
+    return { version, files, dists, compilerFiles, testerFiles };
   }
 
   async enrichSource(consumerComponent: ConsumerComponent) {
     const objectRepo = this.objects();
     const component = await this.findOrAddComponent(consumerComponent);
     const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
-    const { extensions, artifacts } = this.transformArtifactsFromVinylToSource(consumerComponent.extensions);
-    artifacts.forEach((file) => objectRepo.add(file.file));
-    version.extensions = extensions.toModelObjects();
+    const artifacts = this.transformArtifactsFromVinylToSource(consumerComponent.extensions);
+    version.extensions = consumerComponent.extensions;
+    artifacts.forEach((file) => objectRepo.add(file.source));
     objectRepo.add(version);
 
     return consumerComponent;
@@ -351,8 +337,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         `unable to snap/tag "${component.name}", it is unmerged with conflicts. please run "bit merge <id> --resolve"`
       );
     }
+    const artifacts = this.transformArtifactsFromVinylToSource(source.extensions);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const { version, files, dists, compilerFiles, testerFiles, artifacts } = await this.consumerComponentToVersion({
+    const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
       flattenedDependencies,
@@ -376,9 +363,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (dists) dists.forEach((dist) => objectRepo.add(dist.file));
     if (compilerFiles) compilerFiles.forEach((file) => objectRepo.add(file.file));
     if (testerFiles) testerFiles.forEach((file) => objectRepo.add(file.file));
-    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.file));
+    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
 
     return component;
+  }
+
+  putModelComponent(component: ModelComponent) {
+    const repo: Repository = this.objects();
+    repo.add(component);
   }
 
   put({ component, objects }: ComponentTree): ModelComponent {
@@ -404,6 +396,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (isObjectShouldBeAdded(obj)) repo.add(obj);
     });
     return component;
+  }
+
+  putObjects(objects: BitObject[]) {
+    const repo: Repository = this.objects();
+    objects.forEach((obj) => repo.add(obj));
   }
 
   /**
@@ -545,19 +542,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * hasn't changed.
    */
   async merge(
-    { component, objects }: ComponentTree,
+    component: ModelComponent,
+    versionObjects: Version[],
     inScope = false,
     local = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
     const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
     // @ts-ignore
-    const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
+    // const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
     const allHashes = await getAllVersionHashesByVersionsObjects(component, versionObjects, false);
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
-      this.put({ component, objects });
+      this.putModelComponent(component);
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
     const existingComponentHead = existingComponent.getHead();
@@ -593,7 +591,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (local) mergedComponent.remoteHead = componentHead;
       }
 
-      this.put({ component: mergedComponent, objects });
+      this.putModelComponent(mergedComponent);
       return { mergedComponent, mergedVersions };
     }
 
@@ -624,7 +622,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * do not update the lane object. only save the data on the refs/remote/lane-name.
    */
   async mergeLane(
-    { lane, objects }: LaneTree,
+    lane: Lane,
     local: boolean
   ): Promise<Array<{ mergedComponent: ModelComponent; mergedVersions: string[] } | ComponentNeedsUpdate>> {
     const repo = this.objects();
@@ -671,7 +669,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       })
     );
     repo.add(existingLane);
-    objects.forEach((obj) => repo.add(obj));
+    // objects.forEach((obj) => repo.add(obj));
     return mergeResults;
   }
 }

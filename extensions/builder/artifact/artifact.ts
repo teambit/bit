@@ -26,6 +26,8 @@ export class Artifact {
 
     /**
      * the declaring task.
+     * todo: change this to taskDescriptor that has only the metadata of the task, so it could be
+     * saved into the model.
      */
     readonly task: BuildTask,
 
@@ -51,6 +53,13 @@ export class Artifact {
    */
   get description() {
     return this.def.description;
+  }
+
+  /**
+   * aspect id (string) that generated the artifact
+   */
+  get generatedBy(): string {
+    return this.def.generatedBy || this.task.id;
   }
 
   /**

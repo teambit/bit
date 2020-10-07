@@ -8,7 +8,6 @@ import LaneId, { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { filterObject, getStringifyArgs, sha1 } from '../../utils';
 import { hasVersionByRef } from '../component-ops/traverse-versions';
-import LaneObjects from '../lane-objects';
 import { BitObject, Ref, Repository } from '../objects';
 import { Version } from '.';
 
@@ -149,18 +148,6 @@ export default class Lane extends BitObject {
   }
   toLaneId() {
     return new LaneId({ name: this.name });
-  }
-  collectObjects(repo: Repository): Promise<LaneObjects> {
-    return Promise.all([this.asRaw(repo), this.collectRaw(repo)])
-      .then(([rawComponent, objects]) => new LaneObjects(rawComponent, objects))
-      .catch((err) => {
-        if (err.code === 'ENOENT') {
-          throw new Error(
-            `fatal: an object of "${this.id()}" was not found at ${err.path}\nplease try to re-import the lane`
-          );
-        }
-        throw err;
-      });
   }
   collectObjectsById(repo: Repository): Promise<Array<{ id: BitId; objects: BitObject[] }>> {
     return Promise.all(
