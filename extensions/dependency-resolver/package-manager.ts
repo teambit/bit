@@ -1,6 +1,6 @@
 import { ComponentMap } from '@teambit/component';
-
-import { DependenciesObjectDefinition, RegistriesMap } from './types';
+import { Registries } from './registry';
+import { DependenciesObjectDefinition } from './types';
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
@@ -45,5 +45,5 @@ export interface PackageManager {
     options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion>;
 
-  getRegistries?(): Promise<RegistriesMap>;
+  getRegistries?(): Promise<Registries>;
 }

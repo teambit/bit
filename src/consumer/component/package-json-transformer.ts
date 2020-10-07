@@ -20,10 +20,9 @@ export class PackageJsonTransformer {
   static async applyTransformers(component: ConsumerComponent, packageJson: PackageJsonFile) {
     let newPackageJsonObject = packageJson.packageJsonObject;
 
-    await Bluebird.mapSeries(
-      PackageJsonTransformer.packageJsonTransformersRegistry,
-      async (transformer) => (newPackageJsonObject = await transformer(component, newPackageJsonObject))
-    );
+    await Bluebird.mapSeries(PackageJsonTransformer.packageJsonTransformersRegistry, async (transformer) => {
+      newPackageJsonObject = await transformer(component, newPackageJsonObject);
+    });
 
     Object.keys(newPackageJsonObject).forEach((key) => {
       const value = replacePlaceHolderWithComponentValue(component, newPackageJsonObject[key]);
