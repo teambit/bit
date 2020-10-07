@@ -8,6 +8,7 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { Scope } from 'bit-bin/dist/scope';
 import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
@@ -86,7 +87,11 @@ export class IsolatorMain {
   }
   constructor(private dependencyResolver: DependencyResolverMain, private logger: Logger) {}
 
-  public async isolateComponents(components: Component[], opts: IsolateComponentsOptions): Promise<CapsuleList> {
+  public async isolateComponents(
+    components: Component[],
+    opts: IsolateComponentsOptions,
+    legacyScope?: Scope
+  ): Promise<CapsuleList> {
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string); // TODO: move this logic elsewhere
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
@@ -104,7 +109,7 @@ export class IsolatorMain {
     }
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    await this.writeComponentsInCapsules(components, capsuleList);
+    await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
@@ -158,14 +163,14 @@ export class IsolatorMain {
     return capsuleList;
   }
 
-  private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList) {
+  private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
     const legacyComponents = components.map((component) => component.state._consumer.clone());
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
     await Promise.all(
       components.map(async (component) => {
         const capsule = capsuleList.getCapsule(component.id);
         if (!capsule) return;
-        const params = this.getComponentWriteParams(component.state._consumer, allIds);
+        const params = this.getComponentWriteParams(component.state._consumer, allIds, legacyScope);
         const componentWriter = new ComponentWriter(params);
         await componentWriter.populateComponentsFilesToWrite();
         await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
@@ -173,7 +178,11 @@ export class IsolatorMain {
     );
   }
 
-  private getComponentWriteParams(component: ConsumerComponent, ids: BitIds): ComponentWriterProps {
+  private getComponentWriteParams(
+    component: ConsumerComponent,
+    ids: BitIds,
+    legacyScope?: Scope
+  ): ComponentWriterProps {
     return {
       component,
       // @ts-ignore
@@ -181,6 +190,7 @@ export class IsolatorMain {
       writeToPath: '.',
       origin: 'IMPORTED',
       consumer: undefined,
+      scope: legacyScope,
       override: false,
       writePackageJson: true,
       writeConfig: false,
