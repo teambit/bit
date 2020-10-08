@@ -11,7 +11,7 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { Packer, PackOptions, PackResult } from './pack';
+import { Packer, PackOptions, PackResult } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
 import { PkgAspect } from './pkg.aspect';
@@ -79,9 +79,10 @@ export class PkgMain {
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
     const logPublisher = logger.createLogger(PkgAspect.id);
-    const packer = new Packer(isolator, scope?.legacyScope, workspace);
+    const host = await componentAspect.getHost();
+    const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, logPublisher);
+    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     const pkg = new PkgMain(
       config,
@@ -94,7 +95,7 @@ export class PkgMain {
       componentAspect
     );
 
-    builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, logPublisher));
+    builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, packer, logPublisher));
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
