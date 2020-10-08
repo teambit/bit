@@ -11,6 +11,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { Logger } from '@teambit/logger';
 import Bluebird from 'bluebird';
+import { isSnap } from 'bit-bin/dist/version/version-parser';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
@@ -184,6 +185,11 @@ async function npmPack(
     args.push('--dry-run');
   }
   try {
+    const pkgJson = readPackageJson(cwd);
+    if (isSnap(pkgJson.version)) {
+      warnings.push(`"package.json at ${cwd}" contain a snap version which is not a valid semver, can't pack it`);
+      return { warnings, startTime, endTime: Date.now() };
+    }
     // @todo: once capsule.exec works properly, replace this
     const { stdout, stderr } = await execa(packageManager, args, { cwd });
     logger.debug(`successfully ran ${packageManager} ${args} at ${cwd}`);
@@ -191,7 +197,6 @@ async function npmPack(
     logger.debug(`stderr: ${stderr}`);
     const tgzName = stdout.trim();
     const tgzOriginPath = path.join(cwd, tgzName);
-    const pkgJson = readPackageJson(cwd);
     let tarPath = path.join(outputPath, tgzName);
     if (isRelative(tarPath)) {
       tarPath = path.join(cwd, tarPath);
@@ -212,7 +217,7 @@ async function npmPack(
     if (tgzOriginPath !== tarPath && !dryRun) {
       await fs.move(tgzOriginPath, tarPath);
     }
-    return { metadata, errors, startTime, endTime: Date.now() };
+    return { metadata, warnings, errors, startTime, endTime: Date.now() };
   } catch (err) {
     const errorMsg = `failed running ${packageManager} ${args} at ${cwd}`;
     logger.error(`${errorMsg}`);
