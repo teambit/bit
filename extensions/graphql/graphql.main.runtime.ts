@@ -71,7 +71,7 @@ export class GraphqlMain {
     const remoteSchemas = await createRemoteSchemas(this.graphQLServerSlot.values());
 
     const schema = mergeSchemas({
-      schemas: remoteSchemas.concat([localSchema.schema]),
+      schemas: [localSchema.schema].concat(remoteSchemas),
     });
 
     // TODO: @guy please consider to refactor to express extension.

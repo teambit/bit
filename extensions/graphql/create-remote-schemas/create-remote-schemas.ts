@@ -4,14 +4,13 @@ import { print } from 'graphql';
 import { GraphQLServer } from '../graphql-server';
 
 export function getExecutor(uri: string): AsyncExecutor {
-  return async ({ document, variables, context }) => {
+  return async ({ document, variables }) => {
     const query = print(document);
     const fetchResult = await fetch(uri, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        // @ts-ignore
-        Authorization: `Bearer ${context ? context.authKey || '' : ''}`,
+        // Authorization: `Bearer ${context ? context.authKey || '' : ''}`,
       },
       body: JSON.stringify({ query, variables }),
     });
