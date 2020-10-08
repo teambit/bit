@@ -12,29 +12,18 @@ import globalFlags from '../../../cli/global-flags';
 import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
-import CustomError from '../../../error/custom-error';
 import GeneralError from '../../../error/general-error';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
-import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
 import ComponentObjects from '../../component-objects';
-import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
 import RemovedObjects from '../../removed-components';
 import { ScopeDescriptor } from '../../scope';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
-import {
-  AuthenticationFailed,
-  OldClientVersion,
-  PermissionDenied,
-  RemoteScopeNotFound,
-  SSHInvalidResponse,
-  UnexpectedNetworkError,
-} from '../exceptions';
-import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
+import { AuthenticationFailed, RemoteScopeNotFound, SSHInvalidResponse } from '../exceptions';
 import { Network } from '../network';
 import keyGetter from './key-getter';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
