@@ -1,4 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
+import { ScopeBadgeSlot } from '@teambit/scope';
 import { PillLabel } from '@teambit/staged-components.pill-label';
 import classNames from 'classnames';
 import React from 'react';
@@ -6,22 +7,24 @@ import React from 'react';
 import styles from './scope-labels.module.scss';
 
 type ScopeLabelsProps = {
-  visibility: string;
-  license: string;
+  badgeSlot: ScopeBadgeSlot;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ScopeLabels({ visibility, license, className }: ScopeLabelsProps) {
-  const visibilityIcon = visibility === 'public' ? 'world' : 'lock';
+export function ScopeLabels({ badgeSlot, className }: ScopeLabelsProps) {
+  const badges = badgeSlot.values();
+
   return (
     <div className={classNames(styles.pillsContainer, className)}>
-      <PillLabel>
-        <Icon of={visibilityIcon} className={styles.pillIcon} />
-        {visibility}
-      </PillLabel>
-      <PillLabel>
-        <Icon of="license-round" className={styles.pillIcon} />
-        {license.toUpperCase()}
-      </PillLabel>
+      {badges.map((badge, key) => {
+        const UserBadge = badge.badge;
+        if (UserBadge) return <UserBadge label={badge.label} icon={badge.icon} />;
+        return (
+          <PillLabel key={key}>
+            <Icon of={badge.icon} className={styles.pillIcon} />
+            {badge.label}
+          </PillLabel>
+        );
+      })}
     </div>
   );
 }

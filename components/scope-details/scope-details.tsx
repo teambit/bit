@@ -1,46 +1,31 @@
-import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
+import { ScopeBadgeSlot } from '@teambit/scope';
 import { ScopeLabels } from '@teambit/staged-components.scope-labels';
 import { ScopeTitle } from '@teambit/staged-components.scope-title';
-import { AccountObj, UserAvatar } from '@teambit/staged-components.workspace-components.avatar';
-import { Contributors } from './contributors';
 import classNames from 'classnames';
 import React from 'react';
 
 import styles from './scope-details.module.scss';
 
 type ScopeDetailsProps = {
-  owner: string;
   scopeName: string;
-  visibility: string;
-  license: string;
+  badgeSlot: ScopeBadgeSlot;
   description: string;
-  contributors: AccountObj[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ScopeDetails({
-  owner,
-  scopeName,
-  visibility,
-  license,
-  description,
-  contributors,
-  className,
-  ...rest
-}: ScopeDetailsProps) {
+export function ScopeDetails({ scopeName, badgeSlot, description, className, ...rest }: ScopeDetailsProps) {
   return (
     <div {...rest} className={classNames(styles.scopeTitle, className)}>
       <div className={styles.titleRow}>
-        <ScopeTitle owner={owner} scopeName={scopeName} />
-        <ScopeLabels visibility={visibility} license={license} />
+        <ScopeTitle scopeName={scopeName} />
+        <ScopeLabels badgeSlot={badgeSlot} />
       </div>
       <Subtitle>{description}</Subtitle>
-      <Contributors contributors={contributors} />
-      <ConsumableLink
+      {/* <ConsumableLink
         title="Export to this scope"
         link={`bit export ${owner}.${scopeName}`}
         className={styles.copyLink}
-      />
+      /> */}
     </div>
   );
 }

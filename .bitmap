@@ -3407,6 +3407,11 @@
                 "name": "put.route.ts"
             },
             {
+                "relativePath": "scope-badge.ts",
+                "test": false,
+                "name": "scope-badge.ts"
+            },
+            {
                 "relativePath": "scope.aspect.ts",
                 "test": false,
                 "name": "scope.aspect.ts"
