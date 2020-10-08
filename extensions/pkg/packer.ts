@@ -21,8 +21,8 @@ export type PackResultWithId = PackResult & {
 };
 
 export type PackResultMetadata = TaskMetadata & {
-  pkgJson: Record<any, string>;
-  tarPath: string;
+  pkgJson?: Record<any, string>;
+  tarPath?: string;
 };
 
 export type PackWriteOptions = {
@@ -91,7 +91,7 @@ export class Packer {
     const concreteWriteOpts = writeOptions;
     // Set the package-tar as out dir to easily read the tar later
     concreteWriteOpts.outDir = concreteWriteOpts.outDir ?? DEFAULT_TAR_DIR_IN_CAPSULE;
-    const packResult = await runNpmPack(capsule.path, writeOptions, dryRun);
+    const packResult = await runNpmPack(capsule.path, writeOptions, dryRun, this.logger);
     const component = capsule.component;
     return {
       component,
@@ -128,7 +128,7 @@ export class Packer {
       saveDependenciesAsComponents: false,
     };
     await isolatedEnvironment.isolateComponent(componentId, isolateOpts);
-    const packResult = await runNpmPack(isolatePath, writeOptions);
+    const packResult = await runNpmPack(isolatePath, writeOptions, false, this.logger);
     if (!this.options.keep) {
       await isolatedEnvironment.destroy();
     }
@@ -149,12 +149,17 @@ export class Packer {
     const capsule = capsules.getCapsule(componentId);
 
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
-    return runNpmPack(capsule.path, writeOptions);
+    return runNpmPack(capsule.path, writeOptions, false, this.logger);
   }
 }
 
-async function runNpmPack(rootDir: string, writeOptions: PackWriteOptions, dryRun = false): Promise<PackResult> {
-  return npmPack(rootDir, writeOptions.outDir || rootDir, writeOptions.override, dryRun);
+async function runNpmPack(
+  rootDir: string,
+  writeOptions: PackWriteOptions,
+  dryRun = false,
+  logger: Logger
+): Promise<PackResult> {
+  return npmPack(rootDir, writeOptions.outDir || rootDir, writeOptions.override, dryRun, logger);
 }
 
 function readPackageJson(dir: string) {
@@ -162,39 +167,59 @@ function readPackageJson(dir: string) {
   return pkgJson;
 }
 
-async function npmPack(cwd: string, outputPath: string, override = false, dryRun = false): Promise<PackResult> {
+async function npmPack(
+  cwd: string,
+  outputPath: string,
+  override = false,
+  dryRun = false,
+  logger: Logger
+): Promise<PackResult> {
   const startTime = Date.now();
   const errors: string[] = [];
   const warnings: string[] = [];
+  const packageManager = 'npm';
 
   const args = ['pack'];
   if (dryRun) {
     args.push('--dry-run');
   }
-  const result = await execa('npm', args, { cwd });
-  const stdout = result.stdout;
-  const tgzName = stdout.trim();
-  const tgzOriginPath = path.join(cwd, tgzName);
-  const pkgJson = readPackageJson(cwd);
-  let tarPath = path.join(outputPath, tgzName);
-  if (isRelative(tarPath)) {
-    tarPath = path.join(cwd, tarPath);
-  }
-  const metadata: PackResultMetadata = {
-    pkgJson,
-    tarPath,
-  };
-  if (tgzOriginPath !== tarPath && fs.pathExistsSync(tarPath)) {
-    if (override) {
-      warnings.push(`"${tarPath}" already exists, override it`);
-      fs.removeSync(tarPath);
-    } else {
-      errors.push(`"${tarPath}" already exists, use --override flag to override`);
-      return { metadata, errors, startTime, endTime: Date.now() };
+  console.log('rin [ack on ', cwd);
+  try {
+    // @todo: once capsule.exec works properly, replace this
+    const { stdout, stderr } = await execa(packageManager, args, { cwd });
+    logger.debug(`successfully ran ${packageManager} ${args} at ${cwd}`);
+    logger.debug(`stdout: ${stdout}`);
+    logger.debug(`stderr: ${stderr}`);
+    const tgzName = stdout.trim();
+    const tgzOriginPath = path.join(cwd, tgzName);
+    const pkgJson = readPackageJson(cwd);
+    let tarPath = path.join(outputPath, tgzName);
+    if (isRelative(tarPath)) {
+      tarPath = path.join(cwd, tarPath);
     }
+    const metadata: PackResultMetadata = {
+      pkgJson,
+      tarPath,
+    };
+    if (tgzOriginPath !== tarPath && fs.pathExistsSync(tarPath)) {
+      if (override) {
+        warnings.push(`"${tarPath}" already exists, override it`);
+        fs.removeSync(tarPath);
+      } else {
+        errors.push(`"${tarPath}" already exists, use --override flag to override`);
+        return { metadata, errors, startTime, endTime: Date.now() };
+      }
+    }
+    if (tgzOriginPath !== tarPath && !dryRun) {
+      await fs.move(tgzOriginPath, tarPath);
+    }
+    return { metadata, errors, startTime, endTime: Date.now() };
+  } catch (err) {
+    const errorMsg = `failed running ${packageManager} ${args} at ${cwd}`;
+    logger.error(`${errorMsg}`);
+    if (err.stderr) logger.error(`${err.stderr}`);
+    errors.push(`${errorMsg}\n${err.stderr}`);
+    const metadata = {};
+    return { metadata, errors, startTime, endTime: Date.now() };
   }
-  if (tgzOriginPath !== tarPath && !dryRun) {
-    await fs.move(tgzOriginPath, tarPath);
-  }
-  return { metadata, errors, startTime, endTime: Date.now() };
 }
