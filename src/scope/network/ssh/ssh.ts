@@ -12,34 +12,24 @@ import globalFlags from '../../../cli/global-flags';
 import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
-import CustomError from '../../../error/custom-error';
 import GeneralError from '../../../error/general-error';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
-import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
 import ComponentObjects from '../../component-objects';
-import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
 import RemovedObjects from '../../removed-components';
 import { ScopeDescriptor } from '../../scope';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
-import {
-  AuthenticationFailed,
-  OldClientVersion,
-  PermissionDenied,
-  RemoteScopeNotFound,
-  SSHInvalidResponse,
-  UnexpectedNetworkError,
-} from '../exceptions';
-import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
+import { AuthenticationFailed, RemoteScopeNotFound, SSHInvalidResponse } from '../exceptions';
 import { Network } from '../network';
 import keyGetter from './key-getter';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { remoteErrorHandler } from '../remote-error-handler';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -330,7 +320,6 @@ export default class SSH implements Network {
     });
   }
 
-  // eslint-disable-next-line complexity
   errorHandler(code: number, err: string) {
     let parsedError;
     try {
@@ -341,34 +330,7 @@ export default class SSH implements Network {
       // be graceful when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
     }
-
-    switch (code) {
-      default:
-        return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
-      case 127:
-        return new ComponentNotFound((parsedError && parsedError.id) || err);
-      case 128:
-        return new PermissionDenied(`${this.host}:${this.path}`);
-      case 129:
-        return new RemoteScopeNotFound((parsedError && parsedError.name) || err);
-      case 130:
-        return new PermissionDenied(`${this.host}:${this.path}`);
-      case 131: {
-        const idsWithConflicts = parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : [];
-        const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
-        return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
-      }
-      case 132:
-        return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
-      case 133:
-        return new OldClientVersion(parsedError && parsedError.message ? parsedError.message : err);
-      case 134: {
-        const msg = parsedError && parsedError.message ? parsedError.message : err;
-        const sourceScope = parsedError && parsedError.sourceScope ? parsedError.sourceScope : 'unknown';
-        const destinationScope = parsedError && parsedError.destinationScope ? parsedError.destinationScope : 'unknown';
-        return new ExportAnotherOwnerPrivate(msg, sourceScope, destinationScope);
-      }
-    }
+    return remoteErrorHandler(code, parsedError, `${this.host}:${this.path}`, err);
   }
 
   _unpack(data, base64 = true) {
