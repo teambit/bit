@@ -37,7 +37,7 @@ export class StartCmd implements Command {
   onComponentChanges: any[] = [];
   noBrowser = false;
 
-  startingTimestamp;
+  startingTimestamp: number;
   devServerCounter = 0;
   targetHost = 'localhost';
   targetPort = 3000;
