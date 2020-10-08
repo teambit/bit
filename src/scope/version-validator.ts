@@ -8,6 +8,7 @@ import { SchemaName } from '../consumer/component/component-schema';
 import { Dependencies } from '../consumer/component/dependencies';
 import { DEPENDENCIES_TYPES } from '../consumer/component/dependencies/dependencies';
 import PackageJsonFile from '../consumer/component/package-json-file';
+import { getArtifactsFiles } from '../consumer/component/sources/artifact-files';
 import { componentOverridesForbiddenFields } from '../consumer/config/component-overrides';
 import { nonPackageJsonFields } from '../consumer/config/consumer-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../consumer/config/extension-data';
@@ -119,21 +120,28 @@ export default function validateVersionInstance(version: Version): void {
     if (extension.extensionId) {
       validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
-    extension.artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
-    const filesPaths = extension.artifacts.refs.map((artifact) => artifact.relativePath);
-    const duplicateArtifacts = filesPaths.filter(
-      (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
-    );
-    if (duplicateArtifacts.length) {
-      throw new VersionInvalid(
-        `${message} the following artifact files are duplicated ${duplicateArtifacts.join(', ')}`
+  };
+
+  const validateArtifacts = (extensions: ExtensionDataList) => {
+    const artifactsFiles = getArtifactsFiles(extensions);
+    artifactsFiles.forEach((artifacts) => {
+      artifacts.refs.map((artifact) => validateFile(artifact, 'artifact'));
+      const filesPaths = artifacts.refs.map((artifact) => artifact.relativePath);
+      const duplicateArtifacts = filesPaths.filter(
+        (file) => filesPaths.filter((f) => file.toLowerCase() === f.toLowerCase()).length > 1
       );
-    }
+      if (duplicateArtifacts.length) {
+        throw new VersionInvalid(
+          `${message} the following artifact files are duplicated ${duplicateArtifacts.join(', ')}`
+        );
+      }
+    });
   };
 
   const _validateExtensions = (extensions: ExtensionDataList) => {
     if (extensions) {
       extensions.map(_validateExtension);
+      validateArtifacts(extensions);
     }
   };
 
@@ -324,9 +332,9 @@ ${duplicationStr}`);
   if (version.isLegacy) {
     // mainly to make sure that all Harmony components are saved with schema
     // if they don't have schema, they'll fail on this test
-    if (version.extensions && version.extensions.some((e) => e.artifacts && !e.artifacts.isEmpty())) {
+    if (version.extensions && version.extensions.some((e) => e.name && e.name === 'teambit.bit/builder')) {
       throw new VersionInvalid(
-        `${message}, the extensions field should not have "artifacts" prop according to schema "${schema}"`
+        `${message}, the extensions should not include "teambit.bit/builder" as of the schema "${schema}"`
       );
     }
   }

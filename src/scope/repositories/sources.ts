@@ -4,8 +4,7 @@ import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
-import { ArtifactSource } from '../../consumer/component/sources/artifacts';
-import { ExtensionDataList } from '../../consumer/config';
+import { ArtifactFiles, ArtifactSource, getArtifactsFiles } from '../../consumer/component/sources/artifact-files';
 import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
@@ -183,11 +182,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     });
   }
 
-  private transformArtifactsFromVinylToSource(extensions: ExtensionDataList): ArtifactSource[] {
+  private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
     const artifacts: ArtifactSource[] = [];
-    extensions.forEach((extensionDataEntry) => {
-      const artifactsSource = extensionDataEntry.artifacts.fromVinylsToSources();
-      extensionDataEntry.artifacts.populateRefsFromSources(artifactsSource);
+    artifactsFiles.forEach((artifactFiles) => {
+      const artifactsSource = artifactFiles.fromVinylsToSources();
+      artifactFiles.populateRefsFromSources(artifactsSource);
       artifacts.push(...artifactsSource);
     });
     return artifacts;
@@ -302,7 +301,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const objectRepo = this.objects();
     const component = await this.findOrAddComponent(consumerComponent);
     const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
-    const artifacts = this.transformArtifactsFromVinylToSource(consumerComponent.extensions);
+    const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
     artifacts.forEach((file) => objectRepo.add(file.source));
     objectRepo.add(version);
@@ -337,7 +337,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         `unable to snap/tag "${component.name}", it is unmerged with conflicts. please run "bit merge <id> --resolve"`
       );
     }
-    const artifacts = this.transformArtifactsFromVinylToSource(source.extensions);
+    const artifactFiles = getArtifactsFiles(source.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,

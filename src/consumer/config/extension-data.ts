@@ -4,7 +4,10 @@ import { compact } from 'ramda-adjunct';
 
 import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';
-import { Artifacts } from '../component/sources/artifacts';
+import {
+  convertBuildArtifactsFromModelObject,
+  convertBuildArtifactsToModelObject,
+} from '../component/sources/artifact-files';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
@@ -19,8 +22,6 @@ export class ExtensionDataEntry {
     public name?: string,
     public config: { [key: string]: any } = {},
     public data: { [key: string]: any } = {},
-    // TODO: rename to files and make sure it only includes abstract vinyl
-    public artifacts: Artifacts = new Artifacts(),
     public newExtensionId: any = undefined
   ) {}
 
@@ -49,8 +50,7 @@ export class ExtensionDataEntry {
       this.extensionId?.clone(),
       this.name,
       R.clone(this.config),
-      R.clone(this.data),
-      this.artifacts.clone()
+      R.clone(this.data)
     );
   }
 
@@ -90,6 +90,26 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   get extensionsBitIds(): BitIds {
     const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as BitId[];
     return BitIds.fromArray(bitIds);
+  }
+
+  toModelObjects() {
+    const extensionsClone = this.clone();
+    extensionsClone.forEach((ext) => {
+      if (ext.extensionId) {
+        // TODO: fix the types of extensions. after this it should be an object not an object id
+        // @ts-ignore
+        ext.extensionId = ext.extensionId.serialize();
+      }
+    });
+    convertBuildArtifactsToModelObject(extensionsClone);
+
+    return extensionsClone;
+  }
+
+  static fromModelObject(entries: ExtensionDataEntry[]): ExtensionDataList {
+    const extensionDataList = ExtensionDataList.fromArray(entries);
+    convertBuildArtifactsFromModelObject(extensionDataList);
+    return extensionDataList;
   }
 
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {

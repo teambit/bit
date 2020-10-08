@@ -41,16 +41,15 @@ export class PreviewMain {
 
     readonly config: PreviewConfig,
 
-    private bundlingStrategySlot: BundlingStrategySlot
+    private bundlingStrategySlot: BundlingStrategySlot,
+
+    private builder: BuilderMain
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
-    const entry = component.config.extensions.findCoreExtension(PreviewAspect.id);
-    if (!entry) throw new PreviewArtifactNotFound(component.id);
-    const artifacts = entry.artifacts;
-    if (!artifacts) throw new PreviewArtifactNotFound(component.id);
+    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PreviewAspect.id);
+    if (!artifacts.length) throw new PreviewArtifactNotFound(component.id);
 
-    // @ts-ignore TODO: remove after @david fixes issue with artifacts type.
     return new PreviewArtifact(artifacts);
   }
 
@@ -165,7 +164,7 @@ export class PreviewMain {
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
   ) {
-    const preview = new PreviewMain(previewSlot, uiMain, envs, config, bundlingStrategySlot);
+    const preview = new PreviewMain(previewSlot, uiMain, envs, config, bundlingStrategySlot, builder);
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([
       {

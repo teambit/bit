@@ -1,3 +1,4 @@
+import type { ArtifactFiles, ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import type { BuildTask } from '../build-task';
 import type { StorageResolver } from '../storage';
 import type { ArtifactDefinition } from './artifact-definition';
@@ -14,10 +15,7 @@ export class Artifact {
      */
     readonly storageResolver: StorageResolver,
 
-    /**
-     * relative paths of the artifacts
-     */
-    readonly paths: string[] = [],
+    readonly files: ArtifactFiles,
 
     /**
      * join this with `this.paths` to get the absolute paths
@@ -67,17 +65,17 @@ export class Artifact {
    */
   tar() {}
 
-  toObject() {
-    // TODO: we have complicated relationship between components. we need a better way to handle models and store.
+  toObject(): ArtifactObject {
     return {
       name: this.name,
       description: this.description,
-      def: this.def,
+      generatedBy: this.generatedBy,
       storage: this.storageResolver.name,
       task: {
         id: this.task.id,
         name: this.task.name,
       },
+      files: this.files,
     };
   }
 }

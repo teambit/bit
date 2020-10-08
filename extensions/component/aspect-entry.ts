@@ -33,11 +33,6 @@ export class AspectEntry {
     this.legacy.data = val;
   }
 
-  get artifacts() {
-    // @ts-ignore todo: this is going to be completely changed very soon.
-    return this.legacy.artifacts.vinyls;
-  }
-
   transform(newData: SerializableMap): AspectEntry {
     const newEntry = this.clone();
     newEntry.data = newData;
@@ -53,7 +48,6 @@ export class AspectEntry {
       id: this.id.toString(),
       config: this.config,
       data: this.data,
-      artifacts: this.artifacts,
       icon: 'https://static.bit.dev/extensions-icons/default.svg', // TODO @gilad - once you connect the icon here please use this url as the default icon
     };
   }

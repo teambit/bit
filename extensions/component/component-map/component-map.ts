@@ -1,4 +1,5 @@
 import { Component } from '../component';
+import { ComponentID } from '../id';
 
 /**
  * allows to index components -> values.
@@ -22,6 +23,15 @@ export class ComponentMap<T> {
    */
   get(component: Component) {
     return this.hashMap.get(component.id.toString());
+  }
+
+  /**
+   * get a value by the component-id
+   */
+  getValueByComponentId(componentId: ComponentID): T | null {
+    const tuple = this.hashMap.get(componentId.toString());
+    if (!tuple) return null;
+    return tuple[1];
   }
 
   /**

@@ -1,6 +1,5 @@
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
-import { ComponentID } from '@teambit/component';
 import { Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
@@ -8,8 +7,7 @@ import path from 'path';
 import ts from 'typescript';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
-
-type ComponentError = { componentId: ComponentID; error: string };
+import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
   constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
@@ -84,6 +82,7 @@ export class TypescriptCompiler implements Compiler {
   getArtifactDefinition() {
     return [
       {
+        generatedBy: TypescriptAspect.id,
         name: 'dist',
         globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
       },
@@ -225,17 +224,5 @@ export class TypescriptCompiler implements Compiler {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
     return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
-  }
-
-  /**
-   * the message is something like: "Building project '/Users/davidfirst/Library/Caches/Bit/capsules/dce2c8055fc028cc39ab2636b027e74c76a6140b/marketing_testimonial/tsconfig.json'..."
-   * fetch the capsule path from this message.
-   */
-  private getCapsulePathFromBuilderStatus(msg: string): string | null {
-    // @ts-ignore
-    if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return null;
-    const msgTextSplit = msg.split("'");
-    if (msgTextSplit.length < 2) return null;
-    return msgTextSplit[1];
   }
 }

@@ -8,7 +8,7 @@ import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/compo
 import { CustomResolvedPath } from '../../consumer/component/consumer-component';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import { SourceFile } from '../../consumer/component/sources';
-import { ArtifactRef, Artifacts } from '../../consumer/component/sources/artifacts';
+import { getRefsFromExtensions } from '../../consumer/component/sources/artifact-files';
 import { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import { ExtensionDataEntry, ExtensionDataList } from '../../consumer/config/extension-data';
 import { Results } from '../../consumer/specs-results/specs-results';
@@ -312,7 +312,7 @@ export default class Version extends BitObject {
       allRefs.push(...this.parents);
     }
     if (includeArtifacts) {
-      const artifacts = R.flatten(this.extensions.map((e) => e.artifacts.refs.map((r) => r.ref)));
+      const artifacts = getRefsFromExtensions(this.extensions);
       allRefs.push(...artifacts);
     }
     return allRefs;
@@ -325,7 +325,7 @@ export default class Version extends BitObject {
     };
     const files = extractRefsFromFiles(this.files);
     const dists = extractRefsFromFiles(this.dists);
-    const artifacts = extractRefsFromFiles(R.flatten(this.extensions.map((e) => e.artifacts)));
+    const artifacts = getRefsFromExtensions(this.extensions);
     return [...dists, ...files, ...artifacts].filter((ref) => ref);
   }
 
@@ -391,17 +391,7 @@ export default class Version extends BitObject {
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
         flattenedDevDependencies: this.flattenedDevDependencies.map((dep) => dep.serialize()),
-        extensions: this.extensions.map((ext) => {
-          const extensionClone = ext.clone();
-          if (extensionClone.extensionId) {
-            // TODO: fix the types of extensions. after this it should be an object not an object id
-            // @ts-ignore
-            extensionClone.extensionId = ext.extensionId.serialize();
-          }
-          // @ts-ignore
-          extensionClone.artifacts = extensionClone.artifacts.toModelObjects();
-          return extensionClone;
-        }),
+        extensions: this.extensions.toModelObjects(),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
@@ -515,21 +505,16 @@ export default class Version extends BitObject {
             const entry = new ExtensionDataEntry(undefined, extensionId, undefined, extension.config, extension.data);
             return entry;
           }
-          const artifacts: ArtifactRef[] = (extension.artifacts || []).map((a) => ({
-            relativePath: a.relativePath,
-            ref: Ref.from(a.file),
-          }));
           const entry = new ExtensionDataEntry(
             extension.id,
             undefined,
             extension.name,
             extension.config,
-            extension.data,
-            Artifacts.fromModel(artifacts)
+            extension.data
           );
           return entry;
         });
-        return ExtensionDataList.fromArray(newExts);
+        return ExtensionDataList.fromModelObject(newExts);
       }
       return new ExtensionDataList();
     };

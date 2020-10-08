@@ -18,6 +18,7 @@ import PackageJsonFile from '../component/package-json-file';
 import { PackageJsonTransformer } from '../component/package-json-transformer';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import { ArtifactVinyl } from '../component/sources/artifact';
+import { getArtifactFilesByExtension } from '../component/sources/artifact-files';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import ComponentConfig from '../config/component-config';
@@ -216,13 +217,13 @@ export default class ComponentWriter {
       return;
     }
     const extensionsNamesForArtifacts = ['teambit.bit/compiler'];
-    const extensionDataEntries = extensionsNamesForArtifacts.map((extName) =>
-      this.component.extensions.findExtension(extName)
+    const artifactsFiles = extensionsNamesForArtifacts.map((extName) =>
+      getArtifactFilesByExtension(this.component.extensions, extName)
     );
     const scope = this.scope;
     const artifactsVinyl = await Promise.all(
-      extensionDataEntries.map((extDataEntry) =>
-        extDataEntry?.artifacts.getVinylsAndImportIfMissing(this.component.scope as string, scope)
+      artifactsFiles.map((artifactFiles) =>
+        artifactFiles?.getVinylsAndImportIfMissing(this.component.scope as string, scope)
       )
     );
     const artifactsVinylFlattened: ArtifactVinyl[] = R.flatten(artifactsVinyl).filter((vinyl) => vinyl);

@@ -1,6 +1,7 @@
 import { join } from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
+import { ArtifactFiles } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import { Component, ComponentMap } from '@teambit/component';
 import type { StorageResolverSlot } from '../builder.main.runtime';
 import { ArtifactDefinition } from './artifact-definition';
@@ -49,7 +50,7 @@ export class ArtifactFactory {
     const rootDir = this.getArtifactContextPath(context, component, def);
     const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
 
-    return new Artifact(def, storageResolver, paths, rootDir, task);
+    return new Artifact(def, storageResolver, new ArtifactFiles(paths), rootDir, task);
   }
 
   private getStorageResolver(def: ArtifactDefinition) {
@@ -86,7 +87,7 @@ export class ArtifactFactory {
         const artifact = new Artifact(
           def,
           this.getStorageResolver(def),
-          this.resolvePaths(rootDir, def),
+          new ArtifactFiles(this.resolvePaths(rootDir, def)),
           rootDir,
           task
         );
