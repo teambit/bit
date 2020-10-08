@@ -597,21 +597,25 @@ export class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    return this.componentDefaultScopeFromComponentDir(relativeComponentDir, componentId.fullName);
   }
 
-  async componentDefaultScopeFromComponentDir(relativeComponentDir: PathOsBasedRelative): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir);
+  async componentDefaultScopeFromComponentDir(
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
+  ): Promise<string | undefined> {
+    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir, name);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir);
+    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir, name);
   }
 
   private async componentDefaultScopeFromComponentDirWithoutConfigFile(
-    relativeComponentDir: PathOsBasedRelative
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
   ): Promise<string | undefined> {
-    const variantConfig = this.variants.byRootDir(relativeComponentDir);
+    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, name);
     if (variantConfig && variantConfig.defaultScope) {
       return variantConfig.defaultScope;
     }
@@ -648,7 +652,7 @@ export class Workspace implements ComponentFactory {
       // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    const variantConfig = this.variants.byRootDir(relativeComponentDir);
+    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
     if (variantConfig) {
       variantsExtensions = variantConfig.extensions;
       // Do not merge from scope when there is specific variant (which is not *) that match the component
@@ -738,17 +742,19 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDir(relativeComponentDir);
+    return this.componentConfigFileFromComponentDir(relativeComponentDir, id.fullName);
   }
 
   private async componentConfigFileFromComponentDir(
-    relativeComponentDir: PathOsBasedRelative
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
       const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(
-        relativeComponentDir
+        relativeComponentDir,
+        name
       );
       componentConfigFile = await ComponentConfigFile.load(absComponentDir, defaultScopeFromVariantsOrWs);
     }
@@ -1063,7 +1069,7 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    let legacyId;
+    let legacyId: BitId;
     try {
       legacyId = this.consumer.getParsedId(id.toString(), true, true);
     } catch (err) {
@@ -1075,7 +1081,10 @@ export class Workspace implements ComponentFactory {
       throw err;
     }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
-    const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    const defaultScope = await this.componentDefaultScopeFromComponentDir(
+      relativeComponentDir,
+      legacyId.toStringWithoutScopeAndVersion()
+    );
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 
