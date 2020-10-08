@@ -183,6 +183,10 @@ export class Workspace implements ComponentFactory {
     return this.consumer.getPath();
   }
 
+  get isLegacy(): boolean {
+    return this.consumer.isLegacy;
+  }
+
   onComponentLoad(loadFn: OnComponentLoad) {
     this.onComponentLoadSlot.register(loadFn);
     return this;
