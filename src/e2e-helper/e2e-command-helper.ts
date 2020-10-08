@@ -480,10 +480,11 @@ export default class CommandHelper {
         throw new Error('extracting supporting only when packing with json and out-dir');
       }
       const resultParsed = JSON.parse(result);
-      if (!resultParsed || !resultParsed.tarPath) {
+      if (!resultParsed || !resultParsed.metadata.tarPath) {
         throw new Error('npm pack results are invalid');
       }
-      const tarballFilePath = resultParsed.tarPath;
+
+      const tarballFilePath = resultParsed.metadata.tarPath;
       const dir = options.d || options['-out-dir'];
       if (this.debugMode) {
         console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
