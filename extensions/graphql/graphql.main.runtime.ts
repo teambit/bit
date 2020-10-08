@@ -1,3 +1,4 @@
+import { mergeSchemas } from 'graphql-tools';
 import { GraphQLModule } from '@graphql-modules/core';
 import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -11,7 +12,8 @@ import { createServer, Server } from 'http';
 import httpProxy from 'http-proxy';
 import { SubscriptionServer } from 'subscriptions-transport-ws';
 import cors from 'cors';
-
+import { GraphQLServer } from './graphql-server';
+import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
 
@@ -20,6 +22,8 @@ export type GraphQLConfig = {
   subscriptionsPortRange: number[];
   subscriptionsPath: string;
 };
+
+export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
 export type SchemaSlot = SlotRegistry<Schema>;
 
@@ -54,14 +58,21 @@ export class GraphqlMain {
     /**
      * logger extension.
      */
-    readonly logger: Logger
+    readonly logger: Logger,
+
+    private graphQLServerSlot: GraphQLServerSlot
   ) {}
 
   private modules = new Map<string, GraphQLModule>();
 
   async createServer(options: GraphQLServerOptions) {
     const { graphiql = true } = options;
-    const schema = this.createRootModule(options.schemaSlot);
+    const localSchema = this.createRootModule(options.schemaSlot);
+    const remoteSchemas = await createRemoteSchemas(this.graphQLServerSlot.values());
+
+    const schema = mergeSchemas({
+      schemas: remoteSchemas.concat([localSchema.schema]),
+    });
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
@@ -70,7 +81,7 @@ export class GraphqlMain {
       '/graphql',
       cors(),
       graphqlHTTP({
-        schema: schema.schema,
+        schema,
         graphiql,
       })
     );
@@ -81,6 +92,14 @@ export class GraphqlMain {
     this.proxySubscription(server, port);
 
     return server;
+  }
+
+  /**
+   * register a new graphql server.
+   */
+  registerServer(server: GraphQLServer) {
+    this.graphQLServerSlot.register(server);
+    return this;
   }
 
   /**
@@ -196,7 +215,7 @@ export class GraphqlMain {
       .filter((module) => !!module);
   }
 
-  static slots = [Slot.withType<Schema>()];
+  static slots = [Slot.withType<Schema>(), Slot.withType<GraphQLServer>()];
 
   static defaultConfig = {
     port: 4000,
@@ -210,11 +229,11 @@ export class GraphqlMain {
   static async provider(
     [loggerFactory]: [LoggerMain],
     config: GraphQLConfig,
-    [moduleSlot]: [SchemaSlot],
+    [moduleSlot, graphQLServerSlot]: [SchemaSlot, GraphQLServerSlot],
     context: Harmony
   ) {
     const logger = loggerFactory.createLogger(GraphqlAspect.id);
-    return new GraphqlMain(config, moduleSlot, context, new PubSub(), logger);
+    return new GraphqlMain(config, moduleSlot, context, new PubSub(), logger, graphQLServerSlot);
   }
 }
 

@@ -2160,6 +2160,16 @@
                 "name": "create-link.ts"
             },
             {
+                "relativePath": "create-remote-schemas/create-remote-schemas.ts",
+                "test": false,
+                "name": "create-remote-schemas.ts"
+            },
+            {
+                "relativePath": "create-remote-schemas/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
                 "relativePath": "graphql-error.ts",
                 "test": false,
                 "name": "graphql-error.ts"
@@ -2173,6 +2183,11 @@
                 "relativePath": "graphql-provider/index.ts",
                 "test": false,
                 "name": "index.ts"
+            },
+            {
+                "relativePath": "graphql-server.ts",
+                "test": false,
+                "name": "graphql-server.ts"
             },
             {
                 "relativePath": "graphql.aspect.ts",
