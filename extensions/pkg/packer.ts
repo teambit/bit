@@ -1,3 +1,4 @@
+import isRelative from 'is-relative-path';
 import { ComponentFactory } from '@teambit/component';
 import { ComponentResult, TaskMetadata, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
@@ -24,17 +25,17 @@ export type PackResultMetadata = TaskMetadata & {
   tarPath: string;
 };
 
+export type PackWriteOptions = {
+  outDir?: string;
+  override?: boolean;
+};
+
 export type PackOptions = {
   writeOptions: PackWriteOptions;
   prefix?: boolean;
   keep?: boolean;
   useCapsule?: boolean;
   loadScopeFromCache?: boolean;
-};
-
-export type PackWriteOptions = {
-  outDir?: string;
-  override?: boolean;
 };
 
 const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
@@ -102,10 +103,10 @@ export class Packer {
   }
 
   getArtifactDefInCapsule(outDir?: string): ArtifactDefinition {
+    const rootDir = outDir || DEFAULT_TAR_DIR_IN_CAPSULE;
     const def: ArtifactDefinition = {
       name: 'package tar file',
-      rootDir: outDir,
-      globPatterns: ['*.tgz'],
+      globPatterns: [`${rootDir}/*.tgz`],
     };
     return def;
   }
@@ -175,7 +176,10 @@ async function npmPack(cwd: string, outputPath: string, override = false, dryRun
   const tgzName = stdout.trim();
   const tgzOriginPath = path.join(cwd, tgzName);
   const pkgJson = readPackageJson(cwd);
-  const tarPath = path.join(outputPath, tgzName);
+  let tarPath = path.join(outputPath, tgzName);
+  if (isRelative(tarPath)) {
+    tarPath = path.join(cwd, tarPath);
+  }
   const metadata: PackResultMetadata = {
     pkgJson,
     tarPath,

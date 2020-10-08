@@ -3,6 +3,7 @@ import { Logger } from '@teambit/logger';
 import { Capsule } from '@teambit/isolator';
 
 import { Publisher } from './publisher';
+import { Packer } from './packer';
 
 /**
  * publish build task is running "publish --dry-run" to avoid later npm errors during export
@@ -30,7 +31,7 @@ export class PublishDryRunTask implements BuildTask {
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
 
     this.logger.info(`going to run pack dry-run on ${capsulesToPack.length} out of ${capsules.length}`);
-    const packResults = await this.packer.packMultipleCapsules(capsulesToPack, { override: true }, false);
+    const packResults = await this.packer.packMultipleCapsules(capsulesToPack, { override: true }, true);
     const packArtifactsDefs = this.packer.getArtifactDefInCapsule();
 
     return {
