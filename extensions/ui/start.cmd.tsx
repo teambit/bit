@@ -35,9 +35,9 @@ import {
 export class StartCmd implements Command {
   items: any[] = [];
   onComponentChanges: any[] = [];
-  nobrowser = false;
+  noBrowser = false;
 
-  startingtimestamp;
+  startingTimestamp;
   devServerCounter = 0;
   targetHost = 'localhost';
   targetPort = 3000;
@@ -180,12 +180,12 @@ export class StartCmd implements Command {
         </>
       );
 
-      if (!this.nobrowser) setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
+      if (!this.noBrowser) setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
     }
   }
 
   private getDuration() {
-    const duration = Date.now() - this.startingtimestamp;
+    const duration = Date.now() - this.startingTimestamp;
     return humanizeDuration(duration);
   }
 
@@ -199,8 +199,8 @@ export class StartCmd implements Command {
       suppressBrowserLaunch,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
-    this.startingtimestamp = Date.now();
-    this.nobrowser = !!suppressBrowserLaunch;
+    this.startingTimestamp = Date.now();
+    this.noBrowser = !!suppressBrowserLaunch;
 
     // TODO[uri]: move outside when refactor to react app.
     this.registerToEvents();
