@@ -98,6 +98,10 @@ export class ScopeMain implements ComponentFactory {
     return this.legacyScope.path;
   }
 
+  get isLegacy(): boolean {
+    return this.legacyScope.isLegacy;
+  }
+
   /**
    * register to the tag slot.
    */

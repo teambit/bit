@@ -363,6 +363,7 @@ export const LATEST_TESTED_MARK = '*';
 export const SUB_DIRECTORIES_GLOB_PATTERN = '/**/*';
 
 export const SCOPE_JSON = 'scope.json';
+export const SCOPE_JSONC = 'scope.jsonc';
 
 export const DEFAULT_RESOLVER = () => '';
 
