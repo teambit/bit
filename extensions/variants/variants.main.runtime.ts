@@ -162,7 +162,8 @@ export function isMatchPatternItem(
 
 export function isMatchDirPatternItem(rootDir: PathLinuxRelative, patternItem: string): MatchedPatternItem {
   // remove trailing / (will work for windows as well since the workspace.json always contain linux format)
-  const patternItemStriped = stripTrailingChar(patternItem, '/');
+  const patternItemStriped = stripTrailingChar(patternItem, '/').trim();
+
   if (pathIsInside(rootDir, patternItemStriped)) {
     return {
       match: true,
@@ -177,8 +178,8 @@ export function isMatchDirPatternItem(rootDir: PathLinuxRelative, patternItem: s
 
 export function isMatchNamespacePatternItem(componentName: string, patternItem: string): MatchedPatternItem {
   // remove trailing / (will work for windows as well since the workspace.json always contain linux format)
-  const withoutBrackets = patternItem.replace('{', '').replace('}', '');
-  const patternItemStriped = stripTrailingChar(withoutBrackets, '/');
+  const withoutBrackets = patternItem.replace('{', '').replace('}', '').trim();
+  const patternItemStriped = stripTrailingChar(withoutBrackets, '/').trim();
 
   let match = true;
   let specificity = 0;
@@ -210,6 +211,7 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
     }
     match = false;
   });
+
   return {
     match,
     specificity: match ? specificity : -1,
