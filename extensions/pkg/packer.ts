@@ -183,7 +183,6 @@ async function npmPack(
   if (dryRun) {
     args.push('--dry-run');
   }
-  console.log('rin [ack on ', cwd);
   try {
     // @todo: once capsule.exec works properly, replace this
     const { stdout, stderr } = await execa(packageManager, args, { cwd });
