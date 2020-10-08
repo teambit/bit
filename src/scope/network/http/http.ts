@@ -1,5 +1,5 @@
 import { request, gql } from 'graphql-request';
-import fetch from 'node-fetch';
+import fetch, { Response } from 'node-fetch';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
@@ -14,6 +14,7 @@ import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { remoteErrorHandler } from '../remote-error-handler';
 
 export class Http implements Network {
   constructor(private scopeUrl: string) {}
@@ -77,13 +78,8 @@ export class Http implements Network {
       method: 'POST',
       body: pack,
     });
-
-    if (res.status !== 200) {
-      throw new Error(res.status.toString());
-    }
-
+    await this.throwForNonOkStatus(res);
     const ids = await res.json();
-
     return ids;
   }
 
@@ -98,8 +94,19 @@ export class Http implements Network {
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
+    await this.throwForNonOkStatus(res);
     const objectList = await ObjectList.fromTar(res.body);
     return objectList;
+  }
+
+  private async throwForNonOkStatus(res: Response) {
+    if (!res.ok) {
+      const response = await res.json();
+      logger.error(`parsed error from HTTP, url: ${res.url}`, response);
+      const error = response.error?.code ? response.error : response;
+      const err = remoteErrorHandler(error.code, error, res.url, `status: ${res.status}. text: ${res.statusText}`);
+      throw err;
+    }
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {

@@ -40,6 +40,7 @@ import keyGetter from './key-getter';
 import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { remoteErrorHandler } from '../remote-error-handler';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -330,7 +331,6 @@ export default class SSH implements Network {
     });
   }
 
-  // eslint-disable-next-line complexity
   errorHandler(code: number, err: string) {
     let parsedError;
     try {
@@ -341,34 +341,7 @@ export default class SSH implements Network {
       // be graceful when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
     }
-
-    switch (code) {
-      default:
-        return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
-      case 127:
-        return new ComponentNotFound((parsedError && parsedError.id) || err);
-      case 128:
-        return new PermissionDenied(`${this.host}:${this.path}`);
-      case 129:
-        return new RemoteScopeNotFound((parsedError && parsedError.name) || err);
-      case 130:
-        return new PermissionDenied(`${this.host}:${this.path}`);
-      case 131: {
-        const idsWithConflicts = parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : [];
-        const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
-        return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
-      }
-      case 132:
-        return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
-      case 133:
-        return new OldClientVersion(parsedError && parsedError.message ? parsedError.message : err);
-      case 134: {
-        const msg = parsedError && parsedError.message ? parsedError.message : err;
-        const sourceScope = parsedError && parsedError.sourceScope ? parsedError.sourceScope : 'unknown';
-        const destinationScope = parsedError && parsedError.destinationScope ? parsedError.destinationScope : 'unknown';
-        return new ExportAnotherOwnerPrivate(msg, sourceScope, destinationScope);
-      }
-    }
+    return remoteErrorHandler(code, parsedError, `${this.host}:${this.path}`, err);
   }
 
   _unpack(data, base64 = true) {
