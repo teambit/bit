@@ -32,7 +32,7 @@ export class PackCmd implements Command {
 
   constructor(private packer: Packer) {}
 
-  async render(args: PackArgs, options: PackOptions) {
+  async render(args: PackArgs, options: PackCmdOptions) {
     const packResult = await this.json(args, options);
     if (packResult.data?.errors?.length) {
       return <Text color="red">{packResult.data?.errors[0]}</Text>;
