@@ -134,8 +134,10 @@ describe('compile extension', function () {
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
         expect(catComp).to.have.property('extensions');
-        const compileExt = catComp.extensions.find((e) => e.name === Extensions.compiler);
-        const files = compileExt.artifacts.map((d) => d.relativePath);
+
+        const builderExt = catComp.extensions.find((e) => e.name === Extensions.builder);
+        const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
+        const files = compilerArtifacts.files.map((d) => d.relativePath);
         expect(files).to.include('dist/index.js');
       });
     });
