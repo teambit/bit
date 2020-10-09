@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
+import { AbstractVinyl } from '.';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
@@ -43,17 +44,7 @@ export class ArtifactFiles {
   clone() {
     const vinyls = this.vinyls.map((vinyl) => vinyl.clone());
     const refs = this.refs.map((ref) => ({ ...ref }));
-    return new ArtifactFiles(this.paths, vinyls, refs);
-  }
-
-  fromVinylsToSources(): ArtifactSource[] {
-    // @todo: clone before converting maybe
-    return this.vinyls.map((artifact) => {
-      return {
-        relativePath: pathNormalizeToLinux(artifact.relative),
-        source: artifact.toSourceAsLinuxEOL(),
-      };
-    });
+    return new ArtifactFiles({ ...this.paths }, vinyls, refs);
   }
 
   populateRefsFromSources(sources: ArtifactSource[]) {
@@ -80,6 +71,15 @@ export class ArtifactFiles {
       ref: Ref.from(artifactModel.file),
     }));
     return new ArtifactFiles([], [], refs);
+  }
+
+  static fromVinylsToSources(vinyls: ArtifactVinyl[]): ArtifactSource[] {
+    return vinyls.map((artifact) => {
+      return {
+        relativePath: pathNormalizeToLinux(artifact.relative),
+        source: artifact.toSourceAsLinuxEOL(),
+      };
+    });
   }
 
   async getVinylsAndImportIfMissing(scopeName: string, scope: Scope): Promise<ArtifactVinyl[]> {
@@ -140,6 +140,17 @@ export function convertBuildArtifactsFromModelObject(extensions: ExtensionDataLi
 export function getArtifactsFiles(extensions: ExtensionDataList): ArtifactFiles[] {
   const buildArtifacts = getBuildArtifacts(extensions);
   return buildArtifacts.map((artifacts) => artifacts.files);
+}
+
+export function reStructureBuildArtifacts(extensions: ExtensionDataList) {
+  const buildArtifacts = getBuildArtifacts(extensions);
+  buildArtifacts.forEach((artifacts) => {
+    artifacts.files = new ArtifactFiles(artifacts.files.paths, artifacts.files.vinyls, artifacts.files.refs);
+  });
+}
+
+export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: ArtifactVinyl[]; refs: ArtifactRef[] }) {
+  return new ArtifactFiles(obj.paths, obj.vinyls, obj.refs);
 }
 
 function getBuildArtifacts(extensions: ExtensionDataList): ArtifactObject[] {

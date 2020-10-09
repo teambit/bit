@@ -185,8 +185,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   private transformArtifactsFromVinylToSource(artifactsFiles: ArtifactFiles[]): ArtifactSource[] {
     const artifacts: ArtifactSource[] = [];
     artifactsFiles.forEach((artifactFiles) => {
-      const artifactsSource = artifactFiles.fromVinylsToSources();
-      artifactFiles.populateRefsFromSources(artifactsSource);
+      const artifactsSource = ArtifactFiles.fromVinylsToSources(artifactFiles.vinyls);
+      if (artifactsSource.length) artifactFiles.populateRefsFromSources(artifactsSource);
       artifacts.push(...artifactsSource);
     });
     return artifacts;
