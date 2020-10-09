@@ -108,11 +108,6 @@ export default class Show implements LegacyCommand {
         const componentObj = comp.toObject();
         componentObj.files = comp.files.map((file) => file.toReadableString());
         componentObj.dists = componentObj.dists.getAsReadable();
-        if (comp.extensions && comp.extensions.length) {
-          componentObj.extensions.forEach(
-            (extension) => (extension.artifacts = extension.artifacts.refs.map((file) => file.relativePath))
-          );
-        }
 
         if (comp.componentMap) {
           componentObj.componentDir = comp.componentMap.getComponentDir();

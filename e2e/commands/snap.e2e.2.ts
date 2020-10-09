@@ -627,6 +627,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.command.setFeatures([LANES_FEATURE]);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents();
       helper.command.linkAndRewire();
       helper.command.snapAllComponents();

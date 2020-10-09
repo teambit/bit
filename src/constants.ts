@@ -447,4 +447,5 @@ export enum Extensions {
   pkg = 'teambit.bit/pkg',
   compiler = 'teambit.bit/compiler',
   envs = 'teambit.bit/envs',
+  builder = 'teambit.bit/builder',
 }

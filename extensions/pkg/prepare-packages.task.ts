@@ -16,11 +16,10 @@ export class PreparePackagesTask implements BuildTask {
   constructor(readonly id: string, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const artifacts = await this.executeNpmIgnoreTask(context);
+    await this.executeNpmIgnoreTask(context);
 
     const result = {
       componentsResults: [],
-      artifacts,
     };
 
     return result;
@@ -30,15 +29,14 @@ export class PreparePackagesTask implements BuildTask {
    * add .npmignore file in the capsule root with entries received from the compilers to avoid
    * adding them into the package.
    */
-  private async executeNpmIgnoreTask(context: BuildContext): Promise<any[]> {
-    if (!context.env.getCompiler) return [];
+  private async executeNpmIgnoreTask(context: BuildContext): Promise<void> {
+    if (!context.env.getCompiler) return;
     const compilerInstance: Compiler = context.env.getCompiler();
-    if (!compilerInstance || !compilerInstance.getNpmIgnoreEntries) return [];
+    if (!compilerInstance || !compilerInstance.getNpmIgnoreEntries) return;
     const npmIgnoreEntries = compilerInstance.getNpmIgnoreEntries();
-    if (!npmIgnoreEntries || !npmIgnoreEntries.length) return [];
+    if (!npmIgnoreEntries || !npmIgnoreEntries.length) return;
     const capsules = context.capsuleGraph.seedersCapsules;
     await Promise.all(capsules.map((capsule) => this.appendNpmIgnoreEntriesToCapsule(capsule, npmIgnoreEntries)));
-    return [{ fileName: NPM_IGNORE_FILE }];
   }
 
   private async appendNpmIgnoreEntriesToCapsule(capsule: Capsule, npmIgnoreEntries: string[]) {
