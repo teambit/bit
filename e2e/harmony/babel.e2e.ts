@@ -18,7 +18,7 @@ describe('compile extension', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe.only('compile with babel', () => {
+  describe('compile with babel', () => {
     describe('compile simple javascript component', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
