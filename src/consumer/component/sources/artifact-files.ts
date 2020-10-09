@@ -1,7 +1,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import { AbstractVinyl } from '.';
 import ShowDoctorError from '../../../error/show-doctor-error';
 import { Scope } from '../../../scope';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
