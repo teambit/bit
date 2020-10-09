@@ -53,7 +53,7 @@ import { ComponentItem, IndexType } from './objects/components-index';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
 import SourcesRepository from './repositories/sources';
-import { getPath as getScopeJsonPath, ScopeJson } from './scope-json';
+import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 
@@ -147,6 +147,11 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this.scopeJson.name;
+  }
+
+  get isLegacy(): boolean {
+    const harmonyScopeJsonPath = getHarmonyPath(this.path);
+    return !fs.existsSync(harmonyScopeJsonPath);
   }
 
   getPath() {
