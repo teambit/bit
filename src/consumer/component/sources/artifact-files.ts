@@ -144,16 +144,16 @@ export function getArtifactsFiles(extensions: ExtensionDataList): ArtifactFiles[
 export function reStructureBuildArtifacts(extensions: ExtensionDataList) {
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifacts) => {
-    const refs = artifacts.files.refs.map((ref) => ({
-      relativePath: ref.relativePath,
-      ref: new Ref(ref.ref.hash),
-    }));
-    artifacts.files = new ArtifactFiles(artifacts.files.paths, artifacts.files.vinyls, refs);
+    artifacts.files = deserializeArtifactFiles(artifacts.files);
   });
 }
 
 export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: ArtifactVinyl[]; refs: ArtifactRef[] }) {
-  return new ArtifactFiles(obj.paths, obj.vinyls, obj.refs);
+  const refs = obj.refs.map((ref) => ({
+    relativePath: ref.relativePath,
+    ref: new Ref(ref.ref.hash),
+  }));
+  return new ArtifactFiles(obj.paths, obj.vinyls, refs);
 }
 
 function getBuildArtifacts(extensions: ExtensionDataList): ArtifactObject[] {
