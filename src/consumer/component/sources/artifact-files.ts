@@ -145,7 +145,11 @@ export function getArtifactsFiles(extensions: ExtensionDataList): ArtifactFiles[
 export function reStructureBuildArtifacts(extensions: ExtensionDataList) {
   const buildArtifacts = getBuildArtifacts(extensions);
   buildArtifacts.forEach((artifacts) => {
-    artifacts.files = new ArtifactFiles(artifacts.files.paths, artifacts.files.vinyls, artifacts.files.refs);
+    const refs = artifacts.files.refs.map((ref) => ({
+      relativePath: ref.relativePath,
+      ref: new Ref(ref.ref.hash),
+    }));
+    artifacts.files = new ArtifactFiles(artifacts.files.paths, artifacts.files.vinyls, refs);
   });
 }
 
