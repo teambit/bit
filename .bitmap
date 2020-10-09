@@ -89,6 +89,45 @@
         "exported": false,
         "lanes": []
     },
+    "babel": {
+        "files": [
+            {
+                "name": "babel.aspect.ts",
+                "relativePath": "babel.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "babel.compiler.ts",
+                "relativePath": "babel.compiler.ts",
+                "test": false
+            },
+            {
+                "name": "babel.main.runtime.ts",
+                "relativePath": "babel.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "babel.parser.ts",
+                "relativePath": "babel.parser.ts",
+                "test": false
+            },
+            {
+                "name": "compiler-options.ts",
+                "relativePath": "compiler-options.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/babel",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "bit": {
         "files": [
             {
@@ -2730,9 +2769,9 @@
                 "test": false
             },
             {
+                "name": "packer.ts",
                 "relativePath": "packer.ts",
-                "test": false,
-                "name": "packer.ts"
+                "test": false
             },
             {
                 "name": "pkg.aspect.ts",
@@ -5547,5 +5586,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.51"
+    "version": "14.8.9-dev.52"
 }
