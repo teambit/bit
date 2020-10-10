@@ -31,6 +31,7 @@ export type GraphQLServerOptions = {
   schemaSlot?: SchemaSlot;
   app?: Express;
   graphiql?: boolean;
+  remoteSchemas?: GraphQLServer[];
 };
 
 export class GraphqlMain {
@@ -68,10 +69,11 @@ export class GraphqlMain {
   async createServer(options: GraphQLServerOptions) {
     const { graphiql = true } = options;
     const localSchema = this.createRootModule(options.schemaSlot);
-    const remoteSchemas = await createRemoteSchemas(this.graphQLServerSlot.values());
+    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
 
     const schema = mergeSchemas({
-      schemas: [localSchema.schema].concat(remoteSchemas),
+      schemas,
     });
 
     // TODO: @guy please consider to refactor to express extension.

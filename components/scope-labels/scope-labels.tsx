@@ -17,7 +17,7 @@ export function ScopeLabels({ badgeSlot, className }: ScopeLabelsProps) {
     <div className={classNames(styles.pillsContainer, className)}>
       {badges.map((badge, key) => {
         const UserBadge = badge.badge;
-        if (UserBadge) return <UserBadge label={badge.label} icon={badge.icon} />;
+        if (UserBadge) return <UserBadge key={key} label={badge.label} icon={badge.icon} />;
         return (
           <PillLabel key={key}>
             <Icon of={badge.icon} className={styles.pillIcon} />

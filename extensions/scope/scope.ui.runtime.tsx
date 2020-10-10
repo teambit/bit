@@ -110,13 +110,13 @@ export class ScopeUI {
    */
   registerMetadata() {}
 
-  private _context: ScopeContextType;
+  private _context: () => ScopeContextType;
 
   /**
    * add a new context to the scope.
    */
   addContext(context: ScopeContextType) {
-    this._context = context;
+    this._context = () => context;
   }
 
   uiRoot(): UIRoot {
@@ -134,7 +134,7 @@ export class ScopeUI {
               sidebar={<this.sidebar.render />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
-              context={this._context}
+              context={this._context()}
             />
           ),
         },
