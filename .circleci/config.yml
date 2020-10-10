@@ -170,6 +170,9 @@ jobs:
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
+      - run:
+          name: 'Build bit-bin types'
+          command: 'cd bit && npm run build:types'
       - persist_to_workspace:
           root: .
           paths:
