@@ -12,7 +12,7 @@ export class HttpHelper {
   constructor(private helper: Helper) {}
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const cmd = `${this.helper.command.bitBin} start --verbose`;
+      const cmd = `${this.helper.command.bitBin} start --verbose --suppress-browser-launch`;
       const cwd = this.helper.scopes.remotePath;
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
       if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
