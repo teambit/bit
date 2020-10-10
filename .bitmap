@@ -2730,9 +2730,9 @@
                 "test": false
             },
             {
+                "name": "packer.ts",
                 "relativePath": "packer.ts",
-                "test": false,
-                "name": "packer.ts"
+                "test": false
             },
             {
                 "name": "pkg.aspect.ts",
@@ -5547,5 +5547,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.51"
+    "version": "14.8.9-dev.52"
 }
