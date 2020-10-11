@@ -17,7 +17,7 @@ export function Contributors({ contributors, ...rest }: ContributorsProps) {
       </div>
       <div>
         {contributors.map((user, index) => {
-          if (index > 4) return;
+          if (index > 4) return null;
           return <UserAvatar key={index} size={32} account={user} className={styles.avatar} />;
         })}
         {hiddenContributors > 0 && <div className={styles.hiddenContributorsCount}>+{hiddenContributors}</div>}
