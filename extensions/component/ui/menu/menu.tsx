@@ -43,7 +43,9 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         <MenuNav navigationSlot={navigationSlot} />
       </div>
       <div className={styles.rightSide}>
-        {versionList.length > 0 && <ImportAction copyLink={componentFullName} componentName={component.id.name} />}
+        {versionList.length > 0 && (
+          <ImportAction copyLink={`bit import ${componentFullName}`} componentName={component.id.name} />
+        )}
         <VersionDropdown versions={versionList} currentVersion={component.version} />
         {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />
