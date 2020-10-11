@@ -28,7 +28,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         className={styles.dropdown}
         dropClass={styles.menu}
         placeholder=""
-        // clickToggles={false}
+        clickToggles={false}
         clickOutside
         PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
       >
