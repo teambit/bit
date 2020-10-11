@@ -119,6 +119,11 @@ export class ScopeUI {
     this._context = () => context;
   }
 
+  getContext() {
+    if (!this._context) return;
+    return this._context();
+  }
+
   uiRoot(): UIRoot {
     this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
@@ -134,7 +139,7 @@ export class ScopeUI {
               sidebar={<this.sidebar.render />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
-              context={this._context()}
+              context={this.getContext()}
             />
           ),
         },
