@@ -3,6 +3,7 @@ import gql from 'graphql-tag';
 
 import { BuilderMain } from './builder.main.runtime';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function builderSchema(builder: BuilderMain) {
   return {
     typeDefs: gql`
@@ -26,9 +27,10 @@ export function builderSchema(builder: BuilderMain) {
     `,
     resolvers: {
       Component: {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         getArtifacts: async (component: Component, { hash }: { hash: string }) => {
-          const artifacts = await builder.getArtifacts(component.id, hash);
-          return artifacts.map((artifact) => artifact.toObject());
+          // const artifacts = await builder.getArtifacts(component.id, hash);
+          // return artifacts.map((artifact) => artifact.toObject());
         },
       },
     },

@@ -479,12 +479,24 @@ export default class CommandHelper {
       ) {
         throw new Error('extracting supporting only when packing with json and out-dir');
       }
-      const resultParsed = JSON.parse(result);
-      if (!resultParsed || !resultParsed.tarPath) {
+      let resultParsed;
+      try {
+        resultParsed = JSON.parse(result);
+      } catch (e) {
+        // TODO: this is a temp hack to remove the pnpm install line which looks something like
+        // ...5c35e2f15af94460bf455f4c4e82b67991042 | Progress: resolved 19, reused 18, downloaded 0, added 0, doned 0
+        // it should be resolved by controlling the pnpm output correctly and don't print it in json mode
+        const firstCBracket = result.indexOf('{');
+        const newResult = result.substring(firstCBracket);
+        resultParsed = JSON.parse(newResult);
+      }
+      if (!resultParsed || !resultParsed.metadata.tarPath) {
         throw new Error('npm pack results are invalid');
       }
-      const tarballFilePath = resultParsed.tarPath;
-      const dir = options.d || options['-out-dir'];
+
+      const tarballFilePath = resultParsed.metadata.tarPath;
+      // const dir = options.d || options['-out-dir'];
+      const dir = path.dirname(tarballFilePath);
       if (this.debugMode) {
         console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
       }

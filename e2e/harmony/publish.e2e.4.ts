@@ -33,6 +33,7 @@ describe('publish functionality', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);

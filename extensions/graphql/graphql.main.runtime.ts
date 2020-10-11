@@ -78,14 +78,14 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    // app.use(cors());
+    app.use(cors());
     app.use(
       '/graphql',
-      cors(),
-      graphqlHTTP({
+      graphqlHTTP((request) => ({
         schema,
+        rootValue: request,
         graphiql,
-      })
+      }))
     );
 
     const server = createServer(app);

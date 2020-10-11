@@ -138,7 +138,7 @@ export class ReactMain {
    */
   overrideBuildPipe(tasks: BuildTask[]) {
     return this.envs.override({
-      getPipe: () => tasks,
+      getBuildPipe: () => tasks,
     });
   }
 

@@ -71,6 +71,9 @@ export default class BitJsoncHelper {
   addDefaultOwner(owner: string) {
     this.addKeyValToWorkspace('defaultOwner', owner);
   }
+  disablePreview() {
+    this.addKeyVal(undefined, 'teambit.bit/preview', { disabled: true });
+  }
 }
 
 function composePath(dir: string): string {
