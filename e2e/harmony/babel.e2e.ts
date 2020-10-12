@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import fs from 'fs-extra';
 import path from 'path';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
@@ -20,6 +21,7 @@ describe('compile extension', function () {
   });
   describe('compile with babel', () => {
     describe('compile simple javascript component', () => {
+      let distDir;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.addDefaultScope();
@@ -46,17 +48,25 @@ describe('compile extension', function () {
         helper.command.addComponent('bar');
         helper.extensions.addExtensionToVariant('bar', `my-scope/${EXTENSIONS_BASE_FOLDER}`);
         helper.command.compile();
+        distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });
-      it('should generate dists and source maps on the workspace', () => {
-        const dist = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
-        expect(dist).to.be.a.directory();
-        expect(path.join(dist, 'foo.js')).to.be.a.file();
-        expect(path.join(dist, 'foo.js.map')).to.be.a.file();
+      it('should generate dists on the workspace', () => {
+        expect(distDir).to.be.a.directory();
+        expect(path.join(distDir, 'foo.js')).to.be.a.file();
+      });
+      it('should generate source maps on the workspace', () => {
+        expect(path.join(distDir, 'foo.js.map')).to.be.a.file();
+      });
+      it('should generate source maps correctly with the paths to the sources', () => {
+        const mapFile = path.join(distDir, 'foo.js.map');
+        const mapFileParsed = fs.readJSONSync(mapFile);
+        expect(mapFileParsed).to.have.property('sourceRoot');
+        expect(mapFileParsed.sourceRoot).to.endsWith('/bar');
+        expect(mapFileParsed).to.have.property('sources');
       });
       it('should be able to run the dist file', () => {
-        const dist = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
-        expect(path.join(dist, 'foo.js')).to.be.a.file();
-        const result = helper.command.runCmd(`node ${path.join(dist, 'foo.js')}`);
+        expect(path.join(distDir, 'foo.js')).to.be.a.file();
+        const result = helper.command.runCmd(`node ${path.join(distDir, 'foo.js')}`);
         expect(result).to.have.string('hello');
       });
       describe('compile on capsules', () => {
