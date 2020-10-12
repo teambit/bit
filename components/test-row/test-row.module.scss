@@ -1,0 +1,17 @@
+.testBlock {
+  &.open {
+    border-bottom: none;
+    > .row > span {
+      visibility: unset;
+      transform: rotate(0.5turn);
+    }
+  }
+}
+
+.row {
+  padding: 11px 0;
+}
+
+.snippet {
+  margin-bottom: 12px;
+}

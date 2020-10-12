@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -36,12 +36,10 @@ import logger from '../logger/logger';
 import { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
-import ComponentObjects from './component-objects';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import ScopeComponentsImporter from './component-ops/scope-components-importer';
 import { getAllVersionHashes } from './component-ops/traverse-versions';
 import ComponentVersion from './component-version';
-import CompsAndLanesObjects from './comps-and-lanes-objects';
 import { ComponentNotFound, ScopeNotFound } from './exceptions';
 import DependencyGraph from './graph/scope-graph';
 import Lanes from './lanes/lanes';
@@ -54,9 +52,10 @@ import { BitObject, BitRawObject, Ref, Repository } from './objects';
 import { ComponentItem, IndexType } from './objects/components-index';
 import RemovedObjects from './removed-components';
 import { Tmp } from './repositories';
-import SourcesRepository, { ComponentTree } from './repositories/sources';
-import { getPath as getScopeJsonPath, ScopeJson } from './scope-json';
+import SourcesRepository from './repositories/sources';
+import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
 import VersionDependencies from './version-dependencies';
+import { ObjectItem, ObjectList } from './objects/object-list';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -148,6 +147,11 @@ export default class Scope {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this.scopeJson.name;
+  }
+
+  get isLegacy(): boolean {
+    const harmonyScopeJsonPath = getHarmonyPath(this.path);
+    return !fs.existsSync(harmonyScopeJsonPath);
   }
 
   getPath() {
@@ -326,7 +330,7 @@ export default class Scope {
     verbose: boolean,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     dontPrintEnvMsg? = false
-  ): Promise<{ component: string; buildResults: Record<string, any> }> {
+  ): Promise<{ component: string; buildResults: string[] | null | undefined }[]> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
@@ -343,8 +347,8 @@ export default class Scope {
     };
     const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
 
-    const buildResults = await pMapSeries(components, build);
-    await pMapSeries(components, writeLinks);
+    const buildResults = await mapSeries(components, build);
+    await mapSeries(components, writeLinks);
     return buildResults;
   }
 
@@ -416,42 +420,22 @@ export default class Scope {
       const missingDistSpecs = specs && R.isEmpty(specs);
       return { componentId: component.id, missingDistSpecs, specs, pass };
     };
-    return pMapSeries(components, test);
-  }
-
-  /**
-   * Writes a component as an object into the 'objects' directory
-   */
-  writeComponentToModel(componentObjects: ComponentObjects): Promise<any> {
-    const objects = componentObjects.toObjects();
-    logger.debugAndAddBreadCrumb(
-      'writeComponentToModel',
-      'writing into the model, Main id: {id}. It might have dependencies which are going to be written too',
-      { id: objects.component.id().toString() }
-    );
-    return this.mergeModelComponent(objects).then(() => this.objects.persist());
+    return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
   }
 
   /**
    * Writes components as objects into the 'objects' directory
    */
-  async writeManyComponentsToModel(
-    compsAndLanesObjects: CompsAndLanesObjects,
-    persist = true,
-    ids: BitId[]
-  ): Promise<any> {
-    logger.debugAndAddBreadCrumb(
-      'scope.writeManyComponentsToModel',
-      `total componentsObjects ${compsAndLanesObjects.componentsObjects.length}`
-    );
-    await pMapSeries(compsAndLanesObjects.componentsObjects, (componentObjects: ComponentObjects) =>
-      componentObjects.toObjectsAsync().then((objects) => this.mergeModelComponent(objects))
-    );
+  async writeManyComponentsToModel(objectList: ObjectList, persist = true, ids: BitId[]): Promise<any> {
+    logger.debugAndAddBreadCrumb('scope.writeManyComponentsToModel', `total objects ${objectList.objects.length}`);
+    const bitObjectList = await objectList.toBitObjects();
+    const components = bitObjectList.getComponents();
+    const versions = bitObjectList.getVersions();
+    const laneObjects = bitObjectList.getLanes();
+    await mapSeries(components, (component: ModelComponent) => this.mergeModelComponent(component, versions));
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
-      compsAndLanesObjects.laneObjects.map(async (laneBuffers) => {
-        const laneObjects = await laneBuffers.toObjectsAsync();
-        const lane = laneObjects.lane;
+      laneObjects.map(async (lane) => {
         if (!lane.scope) {
           throw new Error(`writeManyComponentsToModel scope is missing from a lane ${lane.name}`);
         }
@@ -460,12 +444,15 @@ export default class Scope {
         nonLaneIds.push(...lane.components.map((c) => c.id));
       })
     );
+    // components and lanes were merged previously, add the rest.
+    const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
+    this.sources.putObjects(objectsToAdd);
     if (persist) await this.objects.persist();
     return nonLaneIds;
   }
 
-  async mergeModelComponent(componentTree: ComponentTree) {
-    const { mergedComponent } = await this.sources.merge(componentTree);
+  async mergeModelComponent(component: ModelComponent, versions: Version[]) {
+    const { mergedComponent } = await this.sources.merge(component, versions);
     if (mergedComponent.remoteHead) {
       // when importing a component, save the remote head into the remote master ref file
       await this.objects.remoteLanes.addEntry(
@@ -482,6 +469,15 @@ export default class Scope {
 
   getRawObject(hash: string): Promise<BitRawObject> {
     return this.objects.loadRawObject(new Ref(hash));
+  }
+
+  getObjectItems(refs: Ref[]): Promise<ObjectItem[]> {
+    return Promise.all(
+      refs.map(async (ref) => ({
+        ref,
+        buffer: await this.objects.loadRaw(ref),
+      }))
+    );
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {

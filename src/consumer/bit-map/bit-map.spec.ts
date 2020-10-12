@@ -51,6 +51,48 @@ describe('BitMap', function () {
       const componentMapImported = allComponents['my-scope/is-string-imported@0.0.1'];
       expect(componentMapImported).to.not.have.property('exported');
     });
+    it('should sort the components alphabetically', () => {
+      const exampleComponent = { ...addComponentParamsFixture };
+      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
+      bitMap.addComponent(exampleComponent);
+      exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string3', version: '0.0.1' });
+      bitMap.addComponent(exampleComponent);
+      exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string2', version: '0.0.1' });
+      bitMap.addComponent(exampleComponent);
+      const allComponents = bitMap.toObjects();
+      const ids = Object.keys(allComponents);
+      expect(ids[0]).to.equal('my-scope/is-string1@0.0.1');
+      expect(ids[1]).to.equal('my-scope/is-string2@0.0.1');
+      expect(ids[2]).to.equal('my-scope/is-string3@0.0.1');
+    });
+    it('should sort the files in the component alphabetically', () => {
+      const exampleComponent = { ...addComponentParamsFixture };
+      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      exampleComponent.files = [
+        { name: 'is-string1.js', relativePath: 'is-string1.js', test: false },
+        { name: 'is-string3.js', relativePath: 'is-string3.js', test: false },
+        { name: 'is-string2.js', relativePath: 'is-string2.js', test: false },
+      ];
+      exampleComponent.mainFile = 'is-string2.js';
+      bitMap.addComponent(exampleComponent);
+      const allComponents = bitMap.toObjects();
+      const files = allComponents['is-string'].files;
+      expect(files[0].relativePath).to.equal('is-string1.js');
+      expect(files[1].relativePath).to.equal('is-string2.js');
+      expect(files[2].relativePath).to.equal('is-string3.js');
+    });
+    it('should sort the fields in the component files alphabetically', () => {
+      const exampleComponent = { ...addComponentParamsFixture };
+      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap.addComponent(exampleComponent);
+      const allComponents = bitMap.toObjects();
+      const files = allComponents['is-string'].files;
+      const fields = Object.keys(files[0]);
+      expect(fields[0]).to.equal('name');
+      expect(fields[1]).to.equal('relativePath');
+      expect(fields[2]).to.equal('test');
+    });
   });
   describe('getAuthoredExportedComponents', () => {
     it('should return an empty array when there are no authored components', () => {

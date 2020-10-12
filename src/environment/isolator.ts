@@ -1,5 +1,5 @@
 import execa from 'execa';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -45,7 +45,6 @@ export interface IsolateOptions {
   verbose?: boolean; // Print more logs
   excludeRegistryPrefix?: boolean; // exclude the registry prefix from the component's name in the package.json
   silentPackageManagerResult?: boolean; // Print environment install result
-  applyExtensionsAddedConfig?: boolean; // apply configs added by extension in the package.json
 }
 
 export default class Isolator {
@@ -86,7 +85,7 @@ export default class Isolator {
     throwForNonLegacy(componentWithDependencies.component.isLegacy, 'evn/Isolator.isolate');
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
-      await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
+      await mapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
         if (!dep.dists || dep.dists.isEmpty()) {
           await dep.build({ scope: this.scope, consumer: this.consumer });
           dep.dists.stripOriginallySharedDir(dep.originallySharedDir);
@@ -116,8 +115,8 @@ export default class Isolator {
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
-      applyExtensionsAddedConfig: opts.applyExtensionsAddedConfig,
       isolated: true,
+      applyPackageJsonTransformers: !this.consumer?.isLegacy,
     };
     this.componentWithDependencies = componentWithDependencies;
     this.manyComponentsWriter = new ManyComponentsWriter(concreteOpts);

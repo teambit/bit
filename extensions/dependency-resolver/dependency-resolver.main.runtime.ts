@@ -18,7 +18,7 @@ import fs from 'fs-extra';
 import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-
+import { Registries } from './registry';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
 import { DependencyGraph } from './dependency-graph';
 import { BitLinkType, DependencyInstaller } from './dependency-installer';
@@ -213,6 +213,29 @@ export class DependencyResolverMain {
     }
     // TODO: we should somehow pass the cache root dir to the package manager constructor
     return new DependencyVersionResolver(packageManager, cacheRootDir);
+  }
+
+  /**
+   * return the system configured package manager. by default pnpm.
+   */
+  getSystemPackageManager(): PackageManager {
+    const defaultPm = 'teambit.bit/pnpm';
+    const packageManager = this.packageManagerSlot.get(defaultPm);
+    if (!packageManager) throw new Error(`default package manager: ${defaultPm} was not found`);
+    return packageManager;
+  }
+
+  async getRegistries(): Promise<Registries> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    // TODO: support getting from default package manager
+    if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
+      return packageManager?.getRegistries();
+    }
+
+    const systemPm = this.getSystemPackageManager();
+    if (!systemPm.getRegistries) throw new Error('system package manager must implement `getRegistries()`');
+    return systemPm.getRegistries();
   }
 
   get packageManagerName(): string {

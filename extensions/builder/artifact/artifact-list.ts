@@ -1,10 +1,11 @@
 import { Component } from '@teambit/component';
+import type { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import type { Artifact } from './artifact';
 
 export type ResolverMap = { [key: string]: Artifact[] };
 
 export class ArtifactList {
-  constructor(private artifacts: Artifact[]) {}
+  constructor(readonly artifacts: Artifact[]) {}
 
   /**
    * return an array of artifact objects.
@@ -33,8 +34,16 @@ export class ArtifactList {
     return resolverMap;
   }
 
-  toObject() {
+  toObject(): ArtifactObject[] {
     return this.artifacts.map((artifact) => artifact.toObject());
+  }
+
+  groupByTaskId() {
+    return this.artifacts.reduce((acc: { [key: string]: Artifact }, artifact) => {
+      const taskId = artifact.task.id;
+      acc[taskId] = artifact;
+      return acc;
+    }, {});
   }
 
   /**
@@ -46,7 +55,8 @@ export class ArtifactList {
       const artifacts = byResolvers[key];
       if (!artifacts.length) return;
       const storageResolver = artifacts[0].storageResolver;
-      await storageResolver.store(component, artifacts);
+      const artifactList = new ArtifactList(artifacts);
+      await storageResolver.store(component, artifactList);
     });
 
     return Promise.all(promises);

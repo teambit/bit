@@ -10,7 +10,7 @@ export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data);
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;
@@ -60,6 +60,11 @@ export class AspectList {
     return res;
   }
 
+  serialize() {
+    const serializedEntries = this.entries.map((entry) => entry.serialize());
+    return serializedEntries;
+  }
+
   toLegacy(): ExtensionDataList {
     const legacyEntries = this.entries.map((entry) => entry.legacy);
     return ExtensionDataList.fromArray(legacyEntries);
@@ -70,17 +75,17 @@ export class AspectList {
     return ids;
   }
 
-  static fromLegacyExtensions(legacyDataList: ExtensionDataList): AspectList {
+  static fromLegacyExtensions(legacyDataList: ExtensionDataList, scope?: string): AspectList {
     const newEntries = legacyDataList.map((entry) => {
-      return new AspectEntry(getAspectId(entry), entry);
+      return new AspectEntry(getAspectId(entry, scope), entry);
     });
 
     return new AspectList(newEntries);
   }
 }
 
-function getAspectId(entry: ExtensionDataEntry) {
+function getAspectId(entry: ExtensionDataEntry, scope?: string) {
   if (!entry.extensionId && entry.name) return ComponentID.fromString(entry.name);
-  if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId);
+  if (entry.extensionId) return ComponentID.fromLegacy(entry.extensionId, scope);
   throw new Error('aspect cannot be loaded without setting an ID');
 }

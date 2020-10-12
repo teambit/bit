@@ -30,6 +30,11 @@ export type TesterOptions = {
    * start the tester in debug mode.
    */
   debug: boolean;
+
+  /**
+   * initiate the tester on given env.
+   */
+  env?: string;
 };
 
 export class TesterMain {
@@ -60,10 +65,18 @@ export class TesterMain {
 
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
-    const envRuntime = await this.envs.createEnvironment(components);
-    const results = await envRuntime.run(this.service, options);
+    const envsRuntime = await this.envs.createEnvironment(components);
+    if (opts?.env) {
+      return envsRuntime.runEnv(opts.env, this.service, options);
+    }
+    const results = await envsRuntime.run(this.service, options);
     return results;
   }
+
+  /**
+   * watch all components for changes and test upon each.
+   */
+  watch() {}
 
   getTestsResults(component: Component): TestsResult | undefined {
     const entry = component.state.aspects.get(TesterAspect.id);

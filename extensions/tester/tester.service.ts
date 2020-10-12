@@ -24,9 +24,13 @@ export class TesterService implements EnvService<Tests> {
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, detectTestFiles);
     const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
+    const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
+      if (specs.length > 0) acc += 1;
+      return acc;
+    }, 0);
     if (testCount === 0) throw new NoTestFilesFound(this.testsRegex);
 
-    this.logger.console(`testing ${context.components.length} components with environment ${chalk.cyan(context.id)}\n`);
+    this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
     const testerContext = Object.assign(context, {
       release: false,
@@ -39,4 +43,6 @@ export class TesterService implements EnvService<Tests> {
 
     return tester.test(testerContext);
   }
+
+  watch() {}
 }

@@ -11,6 +11,9 @@ const componentFields = gql`
       version
       scope
     }
+    compositions {
+      identifier
+    }
     issuesCount
     status {
       isNew
@@ -37,7 +40,7 @@ const componentFields = gql`
 `;
 
 const WORKSPACE = gql`
-  {
+  query workspace {
     workspace {
       name
       path

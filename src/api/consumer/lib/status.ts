@@ -37,7 +37,7 @@ export default (async function status(): Promise<StatusResult> {
   const modifiedComponent = await componentsList.listModifiedComponents(true);
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-  const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.toBitIdWithLatestVersion());
+  const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
   const allInvalidComponents = await componentsList.listInvalidComponents();
   const importPendingComponents = allInvalidComponents
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

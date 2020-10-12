@@ -8,6 +8,7 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
+import { Extensions } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 
@@ -139,9 +140,9 @@ describe('bit tag command', function () {
         });
         expect(listOutput).to.deep.include({
           id: 'components/dependent',
-          localVersion: '0.0.2',
+          localVersion: '1.0.0',
           deprecated: false,
-          currentVersion: '0.0.2',
+          currentVersion: '1.0.0',
           remoteVersion: 'N/A',
         });
       });
@@ -961,6 +962,7 @@ describe('bit tag command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents();
       helper.command.linkAndRewire();
       helper.command.tagAllComponents();
@@ -983,8 +985,10 @@ describe('bit tag command', function () {
       });
       it('should save the artifacts/dists to the auto-tagged components', () => {
         const comp1 = helper.command.catComponent('comp1@latest');
-        const compilerExt = comp1.extensions.find((e) => e.name === 'teambit.bit/compiler');
-        expect(compilerExt.artifacts.length).to.be.greaterThan(0);
+        const builderExt = comp1.extensions.find((e) => e.name === Extensions.builder);
+        expect(builderExt.data).to.have.property('artifacts');
+        const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
+        expect(compilerArtifacts.files.length).to.be.greaterThan(0);
       });
     });
   });
@@ -1048,6 +1052,24 @@ describe('bit tag command', function () {
           expect(componentMap).to.have.property('nextVersion');
           expect(componentMap.nextVersion.version).to.equal('2.0.0');
           expect(componentMap.nextVersion.message).to.match(/bump dependencies versions|my custom message/);
+        });
+      });
+    });
+    describe('soft tag after soft tag', () => {
+      let tagOutput;
+      before(() => {
+        helper.command.softTag('-a -s 2.0.0');
+        tagOutput = helper.command.softTag('-a -s 3.0.0');
+      });
+      it('should show the output according to the new soft-tag', () => {
+        expect(tagOutput).to.have.string('3.0.0');
+        expect(tagOutput).to.not.have.string('2.0.0');
+      });
+      it('should save the version and the message into the .bitmap file', () => {
+        const bitMap = helper.bitMap.readComponentsMapOnly();
+        const componentsMap: any[] = Object.values(bitMap);
+        componentsMap.forEach((componentMap) => {
+          expect(componentMap.nextVersion.version).to.equal('3.0.0');
         });
       });
     });

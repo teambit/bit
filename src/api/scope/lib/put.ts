@@ -5,41 +5,27 @@ import { POST_RECEIVE_OBJECTS, PRE_RECEIVE_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 import { loadScope } from '../../../scope';
 import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
-import CompsAndLanesObjects from '../../../scope/comps-and-lanes-objects';
-import { isClientHasVersionBefore } from '../../../scope/network/check-version-compatibility';
+import { ObjectList } from '../../../scope/objects/object-list';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
 export type ComponentObjectsInput = {
   path: string;
-  compsAndLanesObjects: string | CompsAndLanesObjects;
+  objectList: string | ObjectList;
 };
 
-export default (async function put(
-  { path, compsAndLanesObjects }: ComponentObjectsInput,
-  headers: Record<string, any>
+export default async function put(
+  { path, objectList }: ComponentObjectsInput,
+  headers?: Record<string, any>
 ): Promise<string[]> {
-  if (typeof compsAndLanesObjects === 'string') {
-    compsAndLanesObjects = CompsAndLanesObjects.fromString(compsAndLanesObjects);
+  if (typeof objectList === 'string') {
+    objectList = ObjectList.fromJsonString(objectList);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  await HooksManagerInstance.triggerHook(
-    PRE_RECEIVE_OBJECTS,
-    { path, componentObjects: compsAndLanesObjects.componentsObjects },
-    headers
-  );
+  await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, objectList }, headers);
   const scope = await loadScope(path);
-  // @todo: remove this once v15 is out.
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const clientIsOld = Boolean(headers && headers.version && isClientHasVersionBefore('14.1.1', headers.version));
-  const componentsBitIds: BitIds = await exportManyBareScope(
-    scope,
-    compsAndLanesObjects.componentsObjects,
-    clientIsOld,
-    compsAndLanesObjects.laneObjects
-  );
+  const componentsBitIds: BitIds = await exportManyBareScope(scope, objectList);
   const componentsIds: string[] = componentsBitIds.map((id) => id.toString());
   let uniqComponentsIds = componentsIds;
   if (componentsIds && componentsIds.length) {
@@ -48,7 +34,7 @@ export default (async function put(
   await HooksManagerInstance.triggerHook(
     POST_RECEIVE_OBJECTS,
     {
-      componentObjects: compsAndLanesObjects.componentsObjects,
+      objectList,
       componentsIds: uniqComponentsIds,
       scopePath: path,
       scopeName: scope.scopeJson.name,
@@ -57,4 +43,4 @@ export default (async function put(
     headers
   );
   return componentsIds;
-});
+}

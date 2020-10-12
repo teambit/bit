@@ -138,7 +138,8 @@ export class AspectLoaderMain {
   }
 
   getCoreAspectIds() {
-    return this.coreAspects.map((aspect) => aspect.id).concat(this._reserved);
+    const ids = this.coreAspects.map((aspect) => aspect.id);
+    return ids.concat(this._reserved);
   }
 
   private _reserved = ['teambit.bit/bit', 'teambit.bit/config'];
@@ -187,6 +188,11 @@ export class AspectLoaderMain {
     return this.failedLoadAspect;
   }
 
+  private addFailure(id: string): void {
+    if (this.failedAspects.includes(id)) return;
+    this.failedLoadAspect.push(id);
+  }
+
   /**
    * in case the extension failed to load, prefer to throw an error, unless `throwOnError` param
    * passed as `false`.
@@ -218,7 +224,7 @@ export class AspectLoaderMain {
         manifest.id = id;
         return manifest;
       } catch (e) {
-        this.failedLoadAspect.push(id);
+        this.addFailure(id);
         const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
         if (this.logger.isLoaderStarted) {
           this.logger.consoleFailure(errorMsg);
@@ -262,7 +268,12 @@ export class AspectLoaderMain {
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   async loadExtensionsByManifests(extensionsManifests: ExtensionManifest[], throwOnError = true) {
     try {
-      await this.harmony.load(this.prepareManifests(extensionsManifests));
+      const manifests = extensionsManifests.filter((manifest) => {
+        const isValid = this.isAspect(manifest) || manifest.provider;
+        if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
+        return isValid;
+      });
+      await this.harmony.load(this.prepareManifests(manifests));
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts

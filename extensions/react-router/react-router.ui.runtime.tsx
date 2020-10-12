@@ -29,7 +29,7 @@ export class ReactRouterUI {
   }
 
   /** sets the routing engine for navigation methods (internal method) */
-  setRouter = (routerHistory: History) => {
+  setRouter: (routerHistory: History) => void = (routerHistory: History): void => {
     this.routerHistory = routerHistory;
   };
 

@@ -119,6 +119,11 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js'],
+      alias: {
+        react: require.resolve('react'),
+        'react-dom': require.resolve('react-dom'),
+        // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
+      },
     },
 
     node: {

@@ -51,11 +51,13 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   private getArtifactDef(context: BuildContext) {
     const env: 'env' = 'env';
-    const globPattern = `${this.getDirName(context)}/**`;
+    const rootDir = this.getDirName(context);
+
     return [
       {
         name: 'preview',
-        globPatterns: [globPattern],
+        globPatterns: ['public/**'],
+        rootDir,
         context: env,
       },
     ];

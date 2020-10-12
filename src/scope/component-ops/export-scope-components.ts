@@ -1,9 +1,9 @@
 import graphLib, { Graph } from 'graphlib';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
-import { DEFAULT_LANE, Extensions, LATEST } from '../../constants';
+import { DEFAULT_LANE, Extensions } from '../../constants';
 import GeneralError from '../../error/general-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import { RemoteLaneId } from '../../lane-id/lane-id';
@@ -12,18 +12,16 @@ import { Remote, Remotes } from '../../remotes';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
 import ComponentObjects from '../component-objects';
-import CompsAndLanesObjects from '../comps-and-lanes-objects';
 import { MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
-import LaneObjects from '../lane-objects';
 import { Lane, ModelComponent, Symlink, Version } from '../models';
 import Source from '../models/source';
 import { BitObject, Ref } from '../objects';
-import { ComponentTree, LaneTree } from '../repositories/sources';
 import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
+import { ObjectItem, ObjectList } from '../objects/object-list';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -31,33 +29,15 @@ import ScopeComponentsImporter from './scope-components-importer';
  * dependencies, saves them as well. Finally runs the build process if needed on an isolated
  * environment.
  */
-export async function exportManyBareScope(
-  scope: Scope,
-  componentsObjects: ComponentObjects[],
-  clientIsOld: boolean,
-  lanesObjects: LaneObjects[] = []
-): Promise<BitIds> {
-  const lanesObjectsTree = (lanesObjects || []).map((laneObj) => laneObj.toObjects());
-  logger.debugAndAddBreadCrumb(
-    'scope.exportManyBareScope',
-    `Going to save ${componentsObjects.length} components, ${lanesObjects.length} lanes`
-  );
-  const manyObjects = componentsObjects.map((componentObjects) => componentObjects.toObjects());
-  const mergedIds: BitIds = await mergeObjects(scope, manyObjects, lanesObjectsTree);
+export async function exportManyBareScope(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+  logger.debugAndAddBreadCrumb('exportManyBareScope', `started with ${objectList.objects.length} objects`);
+  const mergedIds: BitIds = await mergeObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
-  // @todo: this is a temp workaround, remove once v15 is out
-  if (clientIsOld) {
-    const manyCompVersions = manyObjects.map((objects) => objects.component.toComponentVersion(LATEST));
-    const bitIds = BitIds.fromArray(manyCompVersions.map((compVersion) => compVersion.id));
-    logger.debug('exportManyBareScope: completed. exit.');
-    return bitIds;
-  }
-  logger.debug('exportManyBareScope: completed. exit.');
   return mergedIds;
 }
 
@@ -105,7 +85,7 @@ export async function exportMany({
     .map((item) => `scope "${item.scopeName}": ${item.ids.toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-  const results = await pMapSeries(groupedByScope, (result) => exportIntoRemote(result.scopeName, result.ids));
+  const results = await mapSeries(groupedByScope, (result) => exportIntoRemote(result.scopeName, result.ids));
   return {
     newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
     exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
@@ -119,13 +99,14 @@ export async function exportMany({
   ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
     bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
-    const componentObjects = await pMapSeries(bitIds, (id) => scope.sources.getObjects(id));
+    const componentObjects = await mapSeries(bitIds, (id) => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
       bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
     );
     const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
     const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
     const componentsAndObjects: Array<{ component: ModelComponent; objects: BitObject[] }> = [];
+    const objectList = new ObjectList();
     const processComponentObjects = async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects();
       const localVersions = componentAndObject.component.getLocalVersions();
@@ -159,7 +140,8 @@ export async function exportMany({
       }
 
       const componentBuffer = await componentAndObject.component.compress();
-      const getObjectsBuffer = () => {
+      const componentData = { ref: componentAndObject.component.hash(), buffer: componentBuffer };
+      const getObjectsData = async (): Promise<ObjectItem[]> => {
         // @todo currently, for lanes (componentAndObject.component.head) this optimization is skipped.
         // it should be enabled with a different mechanism
         if (
@@ -170,30 +152,31 @@ export async function exportMany({
           lanes.length
         ) {
           // only when really needed (e.g. fork or version changes), collect all versions objects
-          return Promise.all(componentAndObject.objects.map((obj) => obj.compress()));
+          return Promise.all(
+            componentAndObject.objects.map(async (obj) => ({ ref: obj.hash(), buffer: await obj.compress() }))
+          );
         }
         // when possible prefer collecting only new/local versions. the server has already
         // the rest, so no point of sending them.
         return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);
       };
-      const objectsBuffer = await getObjectsBuffer();
-      return new ComponentObjects(componentBuffer, objectsBuffer);
+      const objectsBuffer = await getObjectsData();
+      objectList.addIfNotExist([componentData, ...objectsBuffer]);
     };
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-    const manyObjects: ComponentObjects[] = await pMapSeries(componentObjects, processComponentObjects);
-    const manyLanesObjects = await Promise.all(
+    await mapSeries(componentObjects, processComponentObjects);
+    const lanesData = await Promise.all(
       lanes.map(async (lane) => {
         lane.components.forEach((c) => {
           c.id = c.id.changeScope(remoteName);
         });
-        const laneBuffer = await lane.compress();
-        return new LaneObjects(laneBuffer, []);
+        return { ref: lane.hash(), buffer: await lane.compress() };
       })
     );
-    const compsAndLanesObjects = new CompsAndLanesObjects(manyObjects, manyLanesObjects);
+    objectList.addIfNotExist(lanesData);
     let exportedIds: string[];
     try {
-      exportedIds = await remote.pushMany(compsAndLanesObjects, context);
+      exportedIds = await remote.pushMany(objectList, context);
       logger.debugAndAddBreadCrumb(
         'exportMany',
         'successfully pushed all ids to the bare-scope, going to save them back to local scope'
@@ -351,11 +334,19 @@ tip: use "bit graph [--all-versions]" to get a visual look of the circular depen
  * the BitIds returned here includes the versions that were merged. so it could contain multiple
  * ids of the same component with different versions
  */
-async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObjects: LaneTree[]): Promise<BitIds> {
+async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+  const bitObjectList = await objectList.toBitObjects();
+  const components = bitObjectList.getComponents();
+  const lanesObjects = bitObjectList.getLanes();
+  const versions = bitObjectList.getVersions();
+  logger.debugAndAddBreadCrumb(
+    'export-scope-components.mergeObjects',
+    `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
+  );
   const mergeResults = await Promise.all(
-    manyObjects.map(async (objects) => {
+    components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(objects, true, false);
+        const result = await scope.sources.merge(component, versions, true, false);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
@@ -365,7 +356,11 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObj
       }
     })
   );
-  const mergeLaneResultsP = lanesObjects.map((laneObjects) => scope.sources.mergeLane(laneObjects, false));
+  // components and lanes can't be just added, they need to be carefully merged.
+  const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
+  scope.sources.putObjects(objectsToAdd);
+
+  const mergeLaneResultsP = lanesObjects.map((laneObject) => scope.sources.mergeLane(laneObject, false));
   const mergeLaneResults = R.flatten(await Promise.all(mergeLaneResultsP));
   const componentsWithConflicts = mergeResults.filter((result) => result instanceof MergeConflict);
   const componentsNeedUpdate = [
@@ -381,6 +376,7 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[], lanesObj
       R.prop('id'),
       componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane }))
     );
+    scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

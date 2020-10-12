@@ -1,5 +1,6 @@
 import { EnvService, ExecutionContext } from '@teambit/environments';
 import { UIRoot } from '@teambit/ui';
+import { PubsubMain } from '@teambit/pubsub';
 
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
 import { ComponentServer } from './component-server';
@@ -10,6 +11,11 @@ import { selectPort } from './select-port';
 
 export class DevServerService implements EnvService<ComponentServer> {
   constructor(
+    /**
+     * browser runtime slot
+     */
+    private pubsub: PubsubMain,
+
     /**
      * browser runtime slot
      */
@@ -30,7 +36,7 @@ export class DevServerService implements EnvService<ComponentServer> {
     const devServer: DevServer = context.env.getDevServer(devServerContext);
     const port = await selectPort();
     // TODO: refactor to replace with a component server instance.
-    return new ComponentServer(context, port, devServer);
+    return new ComponentServer(this.pubsub, context, port, devServer);
   }
 
   /**

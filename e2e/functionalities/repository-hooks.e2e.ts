@@ -48,10 +48,11 @@ describe('repository-hooks', function () {
       it('should run the on read hook', () => {
         const regex = new RegExp('on read run', 'g');
         const count = importOutput.match(regex);
-        // 3 objects - component, version and file
-        // The read happen twice once via repository.loadRaw, once via repository.load
+        // total 3 objects - component, version and file
+        // The read happen twice. via repository.load (component, version),
+        // and via repository.loadRaw (component, version, file). total 5 reads.
         // TODO: check why we read them twice.. it create performance issue
-        expect(count).to.have.lengthOf(6);
+        expect(count).to.have.lengthOf(5);
       });
 
       it('should be able to import the component as usual', () => {

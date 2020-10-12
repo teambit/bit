@@ -23,7 +23,10 @@ export class AspectMain {
   static async provider([react, envs, builder, aspectLoader]: [ReactMain, EnvsMain, BuilderMain, AspectLoaderMain]) {
     const aspectEnv = envs.merge<AspectEnv>(new AspectEnv(react.reactEnv), react.reactEnv);
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
-    builder.registerTask(coreExporterTask);
+    if (!__dirname.includes('@teambit/bit')) {
+      builder.registerBuildTask(coreExporterTask);
+    }
+
     envs.registerEnv(aspectEnv);
     return new AspectMain(aspectEnv, envs);
   }
