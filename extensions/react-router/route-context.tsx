@@ -1,9 +1,12 @@
-import React from 'react';
-import { BrowserRouter, RouteProps, useHistory } from 'react-router-dom';
+import React, { useEffect, useState, ComponentType } from 'react';
+import { BrowserRouter, MemoryRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from './slot-router';
 import { ReactRouterUI } from './react-router.ui.runtime';
 
 export type History = ReturnType<typeof useHistory>;
+
+const isIframed = typeof window !== 'undefined' && window.parent !== window;
+const Router = isIframed ? MemoryRouter : (BrowserRouter as ComponentType);
 
 export function RouteContext({
   rootRoutes,
@@ -14,11 +17,24 @@ export function RouteContext({
   routeSlot: RouteSlot;
   reactRouterUi: ReactRouterUI;
 }) {
+  const [currentLocation, setLocation] = useState(window.location.pathname);
+
+  useEffect(() => {
+    const unregister = setInterval(() => {
+      setLocation(window.location.pathname);
+    }, 500);
+
+    return () => {
+      clearInterval(unregister);
+    };
+  }, []);
+
   return (
-    <BrowserRouter>
+    <Router>
+      <div>{currentLocation}</div>
       <RouterGetter onRouter={reactRouterUi.setRouter} />
       <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />
-    </BrowserRouter>
+    </Router>
   );
 }
 
