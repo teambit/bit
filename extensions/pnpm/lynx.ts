@@ -26,6 +26,11 @@ import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
 import { readConfig } from './read-config';
 
+type RegistriesMap = {
+  default: string;
+  [registryName: string]: string;
+};
+
 // TODO: DO NOT DELETE - uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
 // function getReporter(logger: Logger): ReporterFunction {
 //   return ((logObj) => {
@@ -180,13 +185,13 @@ export async function resolveRemoteVersion(
   }
 }
 
-async function getRegistriesMap(registries: Registries): Record<string, string> {
+async function getRegistriesMap(registries: Registries): RegistriesMap {
   const registriesMap = {
-    default: registries.defaultRegistry.uri,
+    default: registries.defaultRegistry.uri || 'https://registry.npmjs.org/',
   };
 
   Object.entries(registries.scopes).forEach(([registryName, registry]) => {
-    registriesMap[registryName] = registry.uri;
+    registriesMap[`@${registryName}`] = registry.uri;
   });
   return registriesMap;
 }

@@ -18,6 +18,7 @@ import { join } from 'path';
 import userHome from 'user-home';
 
 const defaultStoreDir = join(userHome, '.pnpm-store');
+const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 
 export class PnpmPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
@@ -102,12 +103,17 @@ export class PnpmPackageManager implements PackageManager {
     );
 
     const pnpmScoped = omit(pnpmRegistry, ['default']);
-    const scopesRegistries = Object.keys(pnpmScoped).reduce((acc, scopedRegName) => {
+    const scopesRegistries: Record<string, Registry> = Object.keys(pnpmScoped).reduce((acc, scopedRegName) => {
       const scopedReg = pnpmScoped[scopedRegName];
       const name = scopedRegName.replace('@', '');
       acc[name] = new Registry(scopedReg.uri, scopedReg.alwaysAuth, scopedReg.authHeaderValue);
       return acc;
     }, {});
+
+    // Add bit registry server if not exist
+    if (!scopesRegistries.bit) {
+      scopesRegistries.bit = new Registry(BIT_DEV_REGISTRY, true);
+    }
 
     return new Registries(defaultRegistry, scopesRegistries);
   }
