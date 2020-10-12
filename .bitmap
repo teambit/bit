@@ -546,6 +546,11 @@
                 "test": false
             },
             {
+                "name": "command-bar.preview.runtime.tsx",
+                "relativePath": "command-bar.preview.runtime.tsx",
+                "test": false
+            },
+            {
                 "name": "command-bar.ui.runtime.tsx",
                 "relativePath": "command-bar.ui.runtime.tsx",
                 "test": false
@@ -559,6 +564,21 @@
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
+            },
+            {
+                "relativePath": "model/key-event/index.ts",
+                "test": false,
+                "name": "index.ts"
+            },
+            {
+                "relativePath": "model/key-event/key-event.tsx",
+                "test": false,
+                "name": "key-event.tsx"
+            },
+            {
+                "relativePath": "model/key-event/serialize-keyboard-event.ts",
+                "test": false,
+                "name": "serialize-keyboard-event.ts"
             },
             {
                 "name": "types.tsx",

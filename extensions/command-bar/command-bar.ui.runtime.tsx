@@ -3,12 +3,15 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
+import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
+
 import { CommandBar } from './ui/command-bar';
 import { CommandSearcher } from './ui/command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
 import { commandBarCommands } from './command-bar.commands';
 import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 import { DuplicateCommandError } from './duplicate-command-error';
+import { KeyEvent } from './model/key-event';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
@@ -24,7 +27,6 @@ export type CommandEntry = {
 /** Quick launch actions. Use the `addSearcher` slot to extend the available actions */
 export class CommandBarUI {
   private mousetrap = new Mousetrap();
-  private commandRegistry = new Map<CommandId, CommandEntry>();
   private commandSearcher = new CommandSearcher([]);
 
   /** Opens the command bar */
@@ -117,15 +119,23 @@ export class CommandBarUI {
     return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
   };
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot) {
+  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, pubSub: PubsubUI) {
     this.addSearcher(this.commandSearcher);
+    pubSub.sub(CommandBarAspect.id, (e: KeyEvent) => {
+      const keyboardEvent = new KeyboardEvent(e.type, e.data);
+      document.dispatchEvent(keyboardEvent);
+    });
   }
 
-  static dependencies = [UIAspect];
+  static dependencies = [UIAspect, PubsubAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static runtime = UIRuntime;
-  static async provider([uiUi]: [UiUI], config, [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]) {
-    const commandBar = new CommandBarUI(searcherSlot, commandSlots);
+  static async provider(
+    [uiUi, pubsubUI]: [UiUI, PubsubUI],
+    config,
+    [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]
+  ) {
+    const commandBar = new CommandBarUI(searcherSlot, commandSlots, pubsubUI);
 
     commandBar.addCommand({
       id: commandBarCommands.open,
