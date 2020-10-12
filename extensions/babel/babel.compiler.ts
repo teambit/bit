@@ -52,12 +52,12 @@ export class BabelCompiler implements Compiler {
     const componentsResults: ComponentResult[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('compile babel components', capsules.length);
     await mapSeries(capsules, async (capsule) => {
-      const currentComponentResult: Partial<ComponentResult> = { errors: [] };
-      currentComponentResult.component = capsule.component;
-      currentComponentResult.startTime = Date.now();
+      const currentComponentResult: ComponentResult = {
+        errors: [],
+        component: capsule.component,
+      };
       longProcessLogger.logProgress(capsule.component.id.toString());
-      await this.buildOneCapsule(capsule);
-      currentComponentResult.endTime = Date.now();
+      await this.buildOneCapsule(capsule, currentComponentResult);
       componentsResults.push({ ...currentComponentResult } as ComponentResult);
     });
 
@@ -67,22 +67,27 @@ export class BabelCompiler implements Compiler {
     };
   }
 
-  private async buildOneCapsule(capsule: Capsule) {
+  private async buildOneCapsule(capsule: Capsule, componentResult: ComponentResult) {
+    componentResult.startTime = Date.now();
     const sourceFiles = capsule.component.filesystem.files.map((file) => file.relative);
     await fs.ensureDir(path.join(capsule.path, this.getDistDir()));
-    await Promise.all(
-      sourceFiles.map(async (filePath) => {
-        const result = await babel.transformFileAsync(
-          path.join(capsule.path, filePath),
-          this.options.babelTransformOptions
-        );
-        if (!result || !result.code) return;
-        capsule.fs.writeFileSync(path.join(this.getDistDir(), filePath), result.code);
-        if (result.map) {
-          capsule.fs.writeFileSync(path.join(this.getDistDir(), `${filePath}.map`), result.map.mappings);
-        }
-      })
-    );
+    sourceFiles.forEach((filePath) => {
+      let result;
+      try {
+        // don't use transformFileAsync, otherwise, it'll fail on the first error.
+        result = babel.transformFileSync(path.join(capsule.path, filePath), this.options.babelTransformOptions);
+      } catch (err) {
+        componentResult.errors?.push(err);
+      }
+      if (!result || !result.code) {
+        return;
+      }
+      capsule.fs.writeFileSync(path.join(this.getDistDir(), filePath), result.code);
+      if (result.map) {
+        capsule.fs.writeFileSync(path.join(this.getDistDir(), `${filePath}.map`), result.map.mappings);
+      }
+    });
+    componentResult.endTime = Date.now();
   }
 
   getArtifactDefinition() {
