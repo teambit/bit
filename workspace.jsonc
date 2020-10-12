@@ -83,7 +83,7 @@
         "@teambit/evangelist.theme.icon-font": "^0.0.2",
         "@teambit/explorer.ui.component-card": "^0.0.2",
         "@teambit/explorer.ui.component-grid": "^0.0.2",
-        "@teambit/harmony": "0.2.6",
+        "@teambit/harmony": "0.2.7",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/node-fetch": "2.5.7",
