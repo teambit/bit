@@ -66,7 +66,7 @@
         "@teambit/documenter.types.docs-file": "0.0.7",
         "@teambit/documenter.ui.consumable-link": "^0.0.5",
         "@teambit/documenter.ui.heading": "^0.0.5",
-        "@teambit/documenter.ui.import-action": "0.0.3",
+        "@teambit/documenter.ui.import-action": "0.0.5",
         "@teambit/documenter.ui.label-list": "^0.0.5",
         "@teambit/documenter.ui.linked-heading": "^0.0.6",
         "@teambit/documenter.ui.property-table": "^0.0.7",
@@ -79,12 +79,12 @@
         "@teambit/evangelist.elements.image": "^0.0.3",
         "@teambit/evangelist.elements.x-button": "0.0.2",
         "@teambit/evangelist.input.input": "^0.0.3",
-        "@teambit/evangelist.surfaces.dropdown": "0.0.4",
+        "@teambit/evangelist.surfaces.dropdown": "0.1.0",
         "@teambit/evangelist.surfaces.tooltip": "0.0.3",
         "@teambit/evangelist.theme.icon-font": "^0.0.2",
         "@teambit/explorer.ui.component-card": "^0.0.2",
         "@teambit/explorer.ui.component-grid": "^0.0.2",
-        "@teambit/harmony": "0.2.6",
+        "@teambit/harmony": "0.2.7",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/node-fetch": "2.5.7",
@@ -130,11 +130,13 @@
         "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
+        "graphql-tools": "6.2.4",
         "graphql-type-json": "0.3.2",
         "history": "4.10.1",
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",
         "humanize-duration": "3.23.1",
+        "is-primitive": "3.0.1",
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",
         "join-path": "^1.1.1",
@@ -220,7 +222,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.52",
+        "bit-bin": "14.8.9-dev.55",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -250,7 +252,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.52",
+            "bit-bin": "14.8.9-dev.55",
             "react-dom": "^16.13.1"
           }
         }
@@ -282,7 +284,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.52",
+            "bit-bin": "14.8.9-dev.55",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

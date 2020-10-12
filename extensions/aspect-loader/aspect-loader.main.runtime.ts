@@ -268,7 +268,12 @@ export class AspectLoaderMain {
   // TODO: change to use the new logger, see more info at loadExtensions function in the workspace
   async loadExtensionsByManifests(extensionsManifests: ExtensionManifest[], throwOnError = true) {
     try {
-      await this.harmony.load(this.prepareManifests(extensionsManifests));
+      const manifests = extensionsManifests.filter((manifest) => {
+        const isValid = this.isAspect(manifest) || manifest.provider;
+        if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
+        return isValid;
+      });
+      await this.harmony.load(this.prepareManifests(manifests));
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts

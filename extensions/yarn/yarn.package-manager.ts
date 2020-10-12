@@ -1,6 +1,5 @@
 import execa from 'execa';
 import * as semver from 'semver';
-
 import parsePackageName from 'parse-package-name';
 import {
   DependenciesObjectDefinition,
