@@ -21,16 +21,24 @@ export class BabelCompiler implements Compiler {
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
+    const transformOptions = this.options.babelTransformOptions || {};
+    // the `sourceRoot` and `sourceFileName` are manually set because the dists are written into the
+    // node_modules dir, so the debugger needs to know where to find the source.
+    transformOptions.sourceRoot = options.componentDir;
+    transformOptions.sourceFileName = options.filePath;
     const result = babel.transformSync(fileContent, this.options.babelTransformOptions);
     if (!result) {
       throw new Error(`babel returns no result`);
     }
+    const code = result.code || '';
     const outputPath = this.replaceFileExtToJs(options.filePath);
-    const outputFiles = [{ outputText: result.code as string, outputPath }];
+    const mapFilePath = `${outputPath}.map`;
+    const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${mapFilePath}` : code;
+    const outputFiles = [{ outputText, outputPath }];
     if (result.map) {
       outputFiles.push({
-        outputText: result.map.mappings,
-        outputPath: `${outputPath}.map`,
+        outputText: JSON.stringify(result.map),
+        outputPath: mapFilePath,
       });
     }
     return outputFiles;
