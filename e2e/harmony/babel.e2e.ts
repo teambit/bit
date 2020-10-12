@@ -6,6 +6,7 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
+chai.use(require('chai-string'));
 
 const EXTENSIONS_BASE_FOLDER = 'babel-env';
 
