@@ -80,8 +80,8 @@ export class FlattenedDependencyLoader {
     return this.cache[dependencyId.toString()];
   }
 
-  async loadFlattenedRecursively(deps: Component[], visited: string[] = []) {
-    if (R.isEmpty(deps)) return;
+  async loadFlattenedRecursively(deps: Component[], visited: string[] = []): Promise<Component[]> {
+    if (R.isEmpty(deps)) return [];
     const notVisitedDeps = deps.filter((dep) => !visited.includes(dep.id.toString()));
     const flattenedFromModel = await this.loadFlattenedFromModel(notVisitedDeps);
     deps.push(...flattenedFromModel);
