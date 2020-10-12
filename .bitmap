@@ -89,7 +89,6 @@
         "exported": false,
         "lanes": []
     },
-<<<<<<< HEAD
     "babel": {
         "files": [
             {
