@@ -13,7 +13,7 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-import { ResolvedPackageVersion } from '@teambit/dependency-resolver';
+import { ResolvedPackageVersion, Registries } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
@@ -24,7 +24,7 @@ import { MutatedProject, mutateModules } from 'supi';
 import createResolverAndFetcher from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
-import {readConfig} from './read-config';
+import { readConfig } from './read-config';
 
 // TODO: DO NOT DELETE - uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
 // function getReporter(logger: Logger): ReporterFunction {
@@ -76,7 +76,13 @@ async function generateResolverAndFetcher(storeDir: string) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export async function install(rootPathToManifest, pathsToManifests, storeDir: string, logger?: Logger) {
+export async function install(
+  rootPathToManifest,
+  pathsToManifests,
+  storeDir: string,
+  registries: Registries,
+  logger?: Logger
+) {
   const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
   const workspacePackages = {}; // supi will use this to link packages to each other
 
@@ -98,16 +104,14 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
     mutation: 'install',
     rootDir: rootPathToManifest.rootDir,
   });
+  const registriesMap = await getRegistriesMap(registries);
   const opts = {
     storeDir,
     dir: rootPathToManifest.rootDir,
     storeController: await createStoreController(storeDir),
     update: true,
     workspacePackages,
-    registries: {
-      default: 'https://registry.npmjs.org/',
-      '@bit': 'https://node.bit.dev/',
-    },
+    registries: registriesMap,
     // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
     // reporter: logger ? getReporter(logger) : undefined,
   };
@@ -174,4 +178,15 @@ export async function resolveRemoteVersion(
       resolvedVia: val.resolvedVia,
     };
   }
+}
+
+async function getRegistriesMap(registries: Registries): Record<string, string> {
+  const registriesMap = {
+    default: registries.defaultRegistry.uri,
+  };
+
+  Object.entries(registries.scopes).forEach(([registryName, registry]) => {
+    registriesMap[registryName] = registry.uri;
+  });
+  return registriesMap;
 }
