@@ -5245,7 +5245,7 @@
             {
                 "name": "variants.extension.spec.ts",
                 "relativePath": "variants.extension.spec.ts",
-                "test": false
+                "test": true
             },
             {
                 "name": "variants.main.runtime.ts",
