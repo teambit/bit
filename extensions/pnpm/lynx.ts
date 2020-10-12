@@ -80,12 +80,12 @@ async function generateResolverAndFetcher(storeDir: string) {
   return result;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function install(
   rootPathToManifest,
   pathsToManifests,
   storeDir: string,
   registries: Registries,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
   const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
@@ -185,7 +185,7 @@ export async function resolveRemoteVersion(
   }
 }
 
-async function getRegistriesMap(registries: Registries): RegistriesMap {
+async function getRegistriesMap(registries: Registries): Promise<RegistriesMap> {
   const registriesMap = {
     default: registries.defaultRegistry.uri || 'https://registry.npmjs.org/',
   };
