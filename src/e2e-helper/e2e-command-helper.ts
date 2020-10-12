@@ -444,9 +444,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
