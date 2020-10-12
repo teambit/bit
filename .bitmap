@@ -4678,8 +4678,8 @@
                 "relativePath": "exceptions/index.ts",
                 "test": false
             },
-         @0.0.70   {
-                "name": "no-test-files-found.@0.0.70ts",
+            {
+                "name": "no-test-files-found.ts",
                 "relativePath": "exceptions/no-test-files-found.ts",
                 "test": false
             },
@@ -4733,8 +4733,8 @@
                 "relativePath": "tester.ui.runtime.tsx",
                 "test": false
             },
-         @0.0.70   {
-                "name": "tests-files.@0.0.70ts",
+            {
+                "name": "tests-files.ts",
                 "relativePath": "tests-files.ts",
                 "test": false
             },
@@ -4758,8 +4758,8 @@
                 "relativePath": "ui/tests-page.tsx",
                 "test": false
             },
-         @0.0.70   {
-                "name": "detect-spec-files.@0.0.70ts",
+            {
+                "name": "detect-spec-files.ts",
                 "relativePath": "utils/detect-spec-files.ts",
                 "test": false
             },
