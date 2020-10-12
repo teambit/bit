@@ -130,7 +130,7 @@ export class ScopeUI {
   }
 
   getContext() {
-    if (!this._context) return;
+    if (!this._context) return undefined;
     return this._context();
   }
 
