@@ -1,20 +1,27 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteProps, useHistory } from 'react-router-dom';
-import { connectToParent } from 'penpal';
-import { Location } from 'history';
+import { connectToParent, ErrorCode } from 'penpal';
+import type { AsyncMethodReturns } from 'penpal/lib/types';
+import { Location, UnregisterCallback } from 'history';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteSlot } from './slot-router';
 import { RouteContext } from './route-context';
 
 type History = ReturnType<typeof useHistory>;
+type HistoryState = { iframeSource?: string };
+type ParentMethods = {
+  changeLocation: (e: Location) => void;
+};
+
+const ALLOWED_PARENTS = /.*bit\.dev$/;
 
 export class ReactRouterUI {
   private routerHistory?: History;
   private isIframed = typeof window !== 'undefined' && window.parent !== window;
-  private parent?: ParentMethods; // TODO
+  private parent?: AsyncMethodReturns<ParentMethods>;
 
   constructor(
     /**
@@ -23,8 +30,6 @@ export class ReactRouterUI {
     private routeSlot: RouteSlot
   ) {
     if (this.isIframed) setTimeout(this.connectToParent, 300);
-
-    popstateListen();
   }
 
   /**
@@ -34,15 +39,13 @@ export class ReactRouterUI {
     return <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} />;
   }
 
-  private listeningToHistory = false;
-  /** sets the routing engine for navigation methods (internal method) */
-  setRouter: (routerHistory: History) => void = (routerHistory: History): void => {
+  private unregisterListener?: UnregisterCallback = undefined;
+  /** (internal method) sets the routing engine for navigation methods */
+  setRouter = (routerHistory: History) => {
     this.routerHistory = routerHistory;
 
-    if (!this.listeningToHistory) {
-      this.listeningToHistory = true;
-      routerHistory.listen(this.handleLocationChange);
-    }
+    this.unregisterListener?.();
+    this.unregisterListener = routerHistory.listen(this.handleLocationChange);
   };
 
   /**
@@ -60,37 +63,39 @@ export class ReactRouterUI {
     /** destination */
     path: string
   ) => {
-    this.routerHistory?.push(path, { source: 'parent' });
+    const state: HistoryState = { iframeSource: 'parent' };
+    this.routerHistory?.push(path, state);
   };
 
-  private handleLocationChange = (nextState: Location, action: string) => {
-    // @ts-ignore // TODO
-    console.log('[iframe]', 'URL CHANGE', action, nextState);
-    if (nextState.state?.source === 'parent') return;
-    if (action === 'POP') return; // TODO. not sure its necessary. actually, it's more elegant
-    this.parent?.locationChange(nextState);
+  private handleLocationChange = (next: Location, action: string) => {
+    const state = next.state as HistoryState | undefined;
+    if (state?.iframeSource === 'parent') return;
+    if (action === 'POP') return; // ignore 'back' and 'forward' changes (handled by parent)
+
+    this.parent?.changeLocation(next);
   };
 
+  private connectionRetries = 3;
   private connectToParent = () => {
     const parentConnection = connectToParent<ParentMethods>({
-      parentOrigin: /.*bit\.dev$/,
-      debug: false,
+      parentOrigin: ALLOWED_PARENTS,
+      timeout: 800,
       methods: {
-        // hello: () => {
-        //   console.log("hello! I'm in iframe");
-        //   return 'iframe-response';
-        // },
         navigateTo: this.navigateTo,
       },
+      // debug: true,
     });
 
     parentConnection.promise
-      .then((e) => {
-        this.parent = e;
-        e.echo('connected!');
-      })
-      .catch((err) => {
-        console.log('[iframe]', 'err', err);
+      .then((e) => (this.parent = e))
+      .catch((err: Error & { code: ErrorCode }) => {
+        const shouldRetry =
+          this.connectionRetries > 0 && [ErrorCode.ConnectionTimeout, ErrorCode.ConnectionDestroyed].includes(err.code);
+
+        if (shouldRetry) {
+          this.connectionRetries -= 1;
+          setTimeout(this.connectToParent, 300);
+        }
       });
   };
 
@@ -104,26 +109,3 @@ export class ReactRouterUI {
 }
 
 ReactRouterAspect.addRuntime(ReactRouterUI);
-
-type ParentMethods = {
-  echo: (data: string) => void;
-  locationChange: (e: Location) => void;
-};
-
-// function MonitorUrl({ history }: { history: History }) {
-//   console.log('[iframe]', 'MonitorUrl()');
-
-//   // window.addEventListener('popstate', (e) => {
-//   //   console.log('[iframe]', 'popstate', window.history.length, e);
-//   // });
-
-//   history.listen((e, action) => {
-//     console.log('[iframe]', 'router history - URL CHANGE', history.length, action, e);
-//   });
-// }
-
-function popstateListen() {
-  window.addEventListener('popstate', (e) => {
-    console.debug('[iframe]', 'popstate', window.history.length, e);
-  });
-}

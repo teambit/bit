@@ -41,7 +41,7 @@ export function RouteContext({
 // needs to be rendered inside of <BrowserRouter/>
 function RouterGetter({ onRouter: onHistory }: { onRouter: (routerHistory: History) => void }) {
   const history = useHistory();
-  onHistory(history);
+  useEffect(() => onHistory(history), [history]);
 
   return null;
 }
