@@ -1,8 +1,8 @@
 const presets = [
-  '@babel/preset-react',
-  '@babel/typescript',
+  require.resolve('@babel/preset-react'),
+  require.resolve('@babel/preset-typescript'),
   [
-    '@babel/preset-env',
+    require.resolve('@babel/preset-env'),
     {
       targets: {
         node: 8,
