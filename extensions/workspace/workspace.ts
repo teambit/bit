@@ -493,11 +493,10 @@ export class Workspace implements ComponentFactory {
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
-    const extensions = component?.config.extensions ?? new ExtensionDataList();
-    // Add the default scope to the extension because we enforce it in config files
-    await this.addDefaultScopeToExtensionsList(extensions);
+    const aspects = component?.state.aspects ?? (await this.createAspectList(new ExtensionDataList()));
+
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
+    const componentConfigFile = new ComponentConfigFile(componentId, aspects, options.propagate);
     await componentConfigFile.write(componentDir, { override: options.override });
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
@@ -651,7 +650,7 @@ export class Workspace implements ComponentFactory {
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
-      configFileExtensions = componentConfigFile.extensions;
+      configFileExtensions = componentConfigFile.aspects.toLegacy();
       // do not merge from scope data when there is component config file
       // mergeFromScope = false;
     }
@@ -760,7 +759,11 @@ export class Workspace implements ComponentFactory {
         relativeComponentDir,
         name
       );
-      componentConfigFile = await ComponentConfigFile.load(absComponentDir, defaultScopeFromVariantsOrWs);
+      componentConfigFile = await ComponentConfigFile.load(
+        absComponentDir,
+        this.createAspectList,
+        defaultScopeFromVariantsOrWs
+      );
     }
 
     return componentConfigFile;
