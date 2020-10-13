@@ -189,7 +189,7 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
   populateExtensions(numOfExtensions = 3): void {
     const aspectImp = (index) => {
       return `
-      import { Aspect } from '@teambit/harmony';
+      import { Aspect } from '@teambit/bit';
 
       export const Ext${index}Aspect = Aspect.create({
         id: 'my-scope/ext${index}',
@@ -202,7 +202,7 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
     };
     const mainImp = (index) => {
       return `
-      import { MainRuntime } from 'bit-bin/dist/extensions/cli/cli.aspect';
+      import { MainRuntime } from '@teambit/cli';
       import { Ext${index}Aspect } from './ext${index}.aspect';
 
       export class Ext${index}Main {
@@ -231,8 +231,8 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       this.fs.outputFile(path.join('extensions', `ext${i}`, `ext${i}.main.runtime.ts`), mainImp(i));
       this.command.addComponent(`extensions/ext${i}`, { m: aspectFileName });
     }
-    this.scopeHelper.linkBitBin();
-    this.npm.installNpmPackage('@teambit/harmony');
+    // this.scopeHelper.linkBitBin();
+    // this.npm.installNpmPackage('@teambit/harmony');
   }
 
   populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = false): string {
