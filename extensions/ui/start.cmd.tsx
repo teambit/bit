@@ -35,6 +35,7 @@ import {
 export class StartCmd implements Command {
   items: any[] = [];
   onComponentChanges: any[] = [];
+  nobrowser = false;
 
   startingtimestamp;
   devServerCounter = 0;
@@ -50,6 +51,7 @@ export class StartCmd implements Command {
     ['p', 'port', 'port of the UI server.'],
     ['r', 'rebuild', 'rebuild the UI'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
+    ['', 'suppress-browser-launch', 'do not automatically open browser when ready'],
   ] as CommandOptions;
 
   constructor(
@@ -129,9 +131,15 @@ export class StartCmd implements Command {
     );
   };
 
-  private onUiServerStarted = (event) => {
+  private onUiServerStarted = async (event) => {
     this.targetHost = event.data.targetHost;
     this.targetPort = event.data.targetPort;
+    const devServers = await event.data.uiRoot.devServers;
+
+    if (!devServers.length) {
+      // no dev servers to wait for.
+      this.openBrowserOn0();
+    }
   };
 
   // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
@@ -172,7 +180,7 @@ export class StartCmd implements Command {
         </>
       );
 
-      setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
+      if (!this.nobrowser) setTimeout(() => open(`http://${this.targetHost}:${this.targetPort}/`), 500);
     }
   }
 
@@ -183,9 +191,16 @@ export class StartCmd implements Command {
 
   async render(
     [uiRootName, userPattern]: [string, string],
-    { dev, port, rebuild, verbose }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean }
+    {
+      dev,
+      port,
+      rebuild,
+      verbose,
+      suppressBrowserLaunch,
+    }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
     this.startingtimestamp = Date.now();
+    this.nobrowser = !!suppressBrowserLaunch;
 
     // TODO[uri]: move outside when refactor to react app.
     this.registerToEvents();

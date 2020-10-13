@@ -183,6 +183,10 @@ export class Workspace implements ComponentFactory {
     return this.consumer.getPath();
   }
 
+  get isLegacy(): boolean {
+    return this.consumer.isLegacy;
+  }
+
   onComponentLoad(loadFn: OnComponentLoad) {
     this.onComponentLoadSlot.register(loadFn);
     return this;
@@ -302,7 +306,7 @@ export class Workspace implements ComponentFactory {
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
     const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
-    const components = await this.getMany(ids);
+    const components = await this.getMany(ids, true);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
@@ -337,9 +341,11 @@ export class Workspace implements ComponentFactory {
     return ret;
   }
 
-  private async getConsumerComponent(id: ComponentID) {
+  private async getConsumerComponent(id: ComponentID, forCapsule = false) {
     try {
-      return await this.consumer.loadComponent(id._legacy);
+      return forCapsule
+        ? await this.consumer.loadComponentForCapsule(id._legacy)
+        : await this.consumer.loadComponent(id._legacy);
     } catch (err) {
       return undefined;
     }
@@ -358,8 +364,8 @@ export class Workspace implements ComponentFactory {
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: ComponentID): Promise<Component> {
-    const consumerComponent = await this.getConsumerComponent(id);
+  async get(id: ComponentID, forCapsule = false): Promise<Component> {
+    const consumerComponent = await this.getConsumerComponent(id, forCapsule);
     const component = await this.scope.get(id);
     if (!consumerComponent) {
       if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
@@ -412,6 +418,9 @@ export class Workspace implements ComponentFactory {
 
     await Promise.all(promises);
 
+    // Update the aspect list to have changes happened during the on load slot (new data added above)
+    const updatedAspectList = await this.createAspectList(component.state.config.extensions);
+    component.state.aspects = updatedAspectList;
     return component;
   }
 
@@ -507,13 +516,13 @@ export class Workspace implements ComponentFactory {
   /**
    * @todo: remove the string option, use only BitId
    */
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id).catch((err) => {
+      return this.get(id, forCapsule).catch((err) => {
         errors.push({
           id,
           err,
@@ -592,21 +601,25 @@ export class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    return this.componentDefaultScopeFromComponentDir(relativeComponentDir, componentId.fullName);
   }
 
-  async componentDefaultScopeFromComponentDir(relativeComponentDir: PathOsBasedRelative): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir);
+  async componentDefaultScopeFromComponentDir(
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
+  ): Promise<string | undefined> {
+    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir, name);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir);
+    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir, name);
   }
 
   private async componentDefaultScopeFromComponentDirWithoutConfigFile(
-    relativeComponentDir: PathOsBasedRelative
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
   ): Promise<string | undefined> {
-    const variantConfig = this.variants.byRootDir(relativeComponentDir);
+    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, name);
     if (variantConfig && variantConfig.defaultScope) {
       return variantConfig.defaultScope;
     }
@@ -643,7 +656,7 @@ export class Workspace implements ComponentFactory {
       // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    const variantConfig = this.variants.byRootDir(relativeComponentDir);
+    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
     if (variantConfig) {
       variantsExtensions = variantConfig.extensions;
       // Do not merge from scope when there is specific variant (which is not *) that match the component
@@ -733,17 +746,19 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDir(relativeComponentDir);
+    return this.componentConfigFileFromComponentDir(relativeComponentDir, id.fullName);
   }
 
   private async componentConfigFileFromComponentDir(
-    relativeComponentDir: PathOsBasedRelative
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
       const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(
-        relativeComponentDir
+        relativeComponentDir,
+        name
       );
       componentConfigFile = await ComponentConfigFile.load(absComponentDir, defaultScopeFromVariantsOrWs);
     }
@@ -1058,7 +1073,7 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    let legacyId;
+    let legacyId: BitId;
     try {
       legacyId = this.consumer.getParsedId(id.toString(), true, true);
     } catch (err) {
@@ -1070,7 +1085,10 @@ export class Workspace implements ComponentFactory {
       throw err;
     }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
-    const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    const defaultScope = await this.componentDefaultScopeFromComponentDir(
+      relativeComponentDir,
+      legacyId.toStringWithoutScopeAndVersion()
+    );
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 

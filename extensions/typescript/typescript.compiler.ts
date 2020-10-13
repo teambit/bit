@@ -1,6 +1,5 @@
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
-import { ComponentID } from '@teambit/component';
 import { Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
@@ -8,8 +7,7 @@ import path from 'path';
 import ts from 'typescript';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
-
-type ComponentError = { componentId: ComponentID; error: string };
+import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
   constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
@@ -26,7 +24,11 @@ export class TypescriptCompiler implements Compiler {
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
-      throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
+      const formattedErrors = ts.formatDiagnosticsWithColorAndContext(
+        compilerOptionsFromTsconfig.errors,
+        this.getFormatDiagnosticsHost()
+      );
+      throw new Error(`failed parsing the tsconfig.json.\n${formattedErrors}`);
     }
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
@@ -38,11 +40,7 @@ export class TypescriptCompiler implements Compiler {
     });
 
     if (result.diagnostics && result.diagnostics.length) {
-      const formatHost = {
-        getCanonicalFileName: (p) => p,
-        getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => ts.sys.newLine,
-      };
+      const formatHost = this.getFormatDiagnosticsHost();
       const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
       // :TODO @david please replace to a more concrete error type and put in 'exceptions' directory here.
@@ -77,9 +75,14 @@ export class TypescriptCompiler implements Compiler {
     };
   }
 
+  changePackageJsonBeforePublish(packageJson: Record<string, any>) {
+    delete packageJson.types;
+  }
+
   getArtifactDefinition() {
     return [
       {
+        generatedBy: TypescriptAspect.id,
         name: 'dist',
         globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
       },
@@ -182,6 +185,14 @@ export class TypescriptCompiler implements Compiler {
     return componentsResults;
   }
 
+  private getFormatDiagnosticsHost(): ts.FormatDiagnosticsHost {
+    return {
+      getCanonicalFileName: (p) => p,
+      getCurrentDirectory: ts.sys.getCurrentDirectory,
+      getNewLine: () => ts.sys.newLine,
+    };
+  }
+
   private async writeTypes(dirs: string[]) {
     await Promise.all(
       this.options.types.map(async (typePath) => {
@@ -221,17 +232,5 @@ export class TypescriptCompiler implements Compiler {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
     return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
-  }
-
-  /**
-   * the message is something like: "Building project '/Users/davidfirst/Library/Caches/Bit/capsules/dce2c8055fc028cc39ab2636b027e74c76a6140b/marketing_testimonial/tsconfig.json'..."
-   * fetch the capsule path from this message.
-   */
-  private getCapsulePathFromBuilderStatus(msg: string): string | null {
-    // @ts-ignore
-    if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return null;
-    const msgTextSplit = msg.split("'");
-    if (msgTextSplit.length < 2) return null;
-    return msgTextSplit[1];
   }
 }

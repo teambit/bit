@@ -1,5 +1,5 @@
 import { ComponentMap } from '@teambit/component';
-
+import { Registries } from './registry';
 import { DependenciesObjectDefinition } from './types';
 
 export type PackageManagerInstallOptions = {
@@ -44,4 +44,6 @@ export interface PackageManager {
     packageName: string,
     options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion>;
+
+  getRegistries?(): Promise<Registries>;
 }

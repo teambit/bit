@@ -1,10 +1,9 @@
-import getConfig from '@pnpm/config';
 import semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import defaultReporter from '@pnpm/default-reporter';
 // import createClient from '@pnpm/client'
 // import { createFetchFromRegistry } from '@pnpm/fetch';
-import { LogBase, streamParser } from '@pnpm/logger';
+import { streamParser } from '@pnpm/logger';
 // import createStore, { ResolveFunction, StoreController } from '@pnpm/package-store';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 // import { PreferredVersions, RequestPackageOptions, StoreController, WantedDependency } from '@pnpm/package-store';
@@ -14,29 +13,31 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-import { ResolvedPackageVersion } from '@teambit/dependency-resolver/package-manager';
+import { ResolvedPackageVersion, Registries } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
+// import { ReporterFunction } from 'supi/lib/types';
 // import { createResolver } from './create-resolver';
 // import {isValidPath} from 'bit-bin/dist/utils';
 // import {createResolver} from '@pnpm/default-resolver';
 import createResolverAndFetcher from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
+import { Logger } from '@teambit/logger';
+import { readConfig } from './read-config';
 
-async function readConfig() {
-  const pnpmConfig = await getConfig({
-    cliOptions: {
-      // 'global': true,
-      // 'link-workspace-packages': true,
-    },
-    packageManager: {
-      name: 'pnpm',
-      version: '1.0.0',
-    },
-  });
-  return pnpmConfig;
-}
+type RegistriesMap = {
+  default: string;
+  [registryName: string]: string;
+};
+
+// TODO: DO NOT DELETE - uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
+// function getReporter(logger: Logger): ReporterFunction {
+//   return ((logObj) => {
+//     // TODO: print correctly not the entire object
+//     logger.console(logObj)
+//   });
+// }
 
 async function createStoreController(storeDir: string): Promise<StoreController> {
   // const fetchFromRegistry = createFetchFromRegistry({});
@@ -79,7 +80,14 @@ async function generateResolverAndFetcher(storeDir: string) {
   return result;
 }
 
-export async function install(rootPathToManifest, pathsToManifests, storeDir: string, logFn?: (log: LogBase) => void) {
+export async function install(
+  rootPathToManifest,
+  pathsToManifests,
+  storeDir: string,
+  registries: Registries,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  logger?: Logger
+) {
   const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
   const workspacePackages = {}; // supi will use this to link packages to each other
 
@@ -101,17 +109,16 @@ export async function install(rootPathToManifest, pathsToManifests, storeDir: st
     mutation: 'install',
     rootDir: rootPathToManifest.rootDir,
   });
+  const registriesMap = await getRegistriesMap(registries);
   const opts = {
     storeDir,
     dir: rootPathToManifest.rootDir,
     storeController: await createStoreController(storeDir),
     update: true,
     workspacePackages,
-    registries: {
-      default: 'https://registry.npmjs.org/',
-      '@bit': 'https://node.bit.dev/',
-    },
-    reporter: logFn,
+    registries: registriesMap,
+    // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
+    // reporter: logger ? getReporter(logger) : undefined,
   };
 
   defaultReporter({
@@ -176,4 +183,15 @@ export async function resolveRemoteVersion(
       resolvedVia: val.resolvedVia,
     };
   }
+}
+
+async function getRegistriesMap(registries: Registries): Promise<RegistriesMap> {
+  const registriesMap = {
+    default: registries.defaultRegistry.uri || 'https://registry.npmjs.org/',
+  };
+
+  Object.entries(registries.scopes).forEach(([registryName, registry]) => {
+    registriesMap[`@${registryName}`] = registry.uri;
+  });
+  return registriesMap;
 }

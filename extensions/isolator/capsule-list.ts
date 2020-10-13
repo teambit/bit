@@ -6,7 +6,9 @@ import { Capsule } from './capsule';
 // ComponentId member
 export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsule }> {
   getCapsule(id: ComponentID): Capsule | null {
-    const found = this.find((item) => item.id._legacy.isEqual(id._legacy));
+    const found = this.find((item) => {
+      return item.id._legacy.isEqual(id._legacy);
+    });
     return found ? found.capsule : null;
   }
   getCapsuleIgnoreVersion(id: ComponentID): Capsule | null {

@@ -10,7 +10,6 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-
 import { sha1 } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
@@ -18,7 +17,6 @@ import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
-
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
 import { StartCmd } from './start.cmd';
@@ -168,7 +166,7 @@ export class UiMain {
     }
 
     // TODO: is this the right place?
-    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort));
+    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
@@ -186,8 +184,8 @@ export class UiMain {
   /**
    * Events
    */
-  private createUiServerStartedEvent = (targetHost, targetPort) => {
-    return new UiServerStartedEvent(Date.now(), targetHost, targetPort);
+  private createUiServerStartedEvent = (targetHost, targetPort, uiRoot) => {
+    return new UiServerStartedEvent(Date.now(), targetHost, targetPort, uiRoot);
   };
 
   /**

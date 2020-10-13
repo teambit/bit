@@ -17,6 +17,7 @@ export function ComponentStatusResolver({ status, id, issuesCount = 0 }: Compone
   const isModified = status && (status.modifyInfo.hasModifiedDependencies || status.modifyInfo.hasModifiedFiles);
   if (!status) return null;
   const colorOverride = getOverrideColor(issuesCount, isModified);
+
   return (
     <div className={styles.statusLine} data-tip="" data-for={id?.name}>
       {issuesCount > 0 && (

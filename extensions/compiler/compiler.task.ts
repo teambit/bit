@@ -10,11 +10,11 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly id: string) {}
+  constructor(readonly id: string, private artifactName: string, private compilerInstance?: Compiler) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const compilerInstance: Compiler = context.env.getCompiler();
-    const buildResults = await compilerInstance.build(context);
+    const compilerInstance: Compiler = this.compilerInstance || context.env.getCompiler();
+    const buildResults = await compilerInstance.build(context, this.artifactName);
 
     await Promise.all(
       context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, compilerInstance))

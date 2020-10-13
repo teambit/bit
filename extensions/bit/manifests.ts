@@ -14,6 +14,7 @@ import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/environments';
 import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
+import { YarnAspect } from '@teambit/yarn';
 import { CreateAspect } from '@teambit/generator';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -35,6 +36,7 @@ import { ScopeAspect } from '@teambit/scope';
 import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
 import { TypescriptAspect } from '@teambit/typescript';
+import { BabelAspect } from '@teambit/babel';
 import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
@@ -51,6 +53,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [PreviewAspect.id]: PreviewAspect,
   [DocsAspect.id]: DocsAspect,
+  [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
@@ -79,6 +82,7 @@ export const manifestsMap = {
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
+  [BabelAspect.id]: BabelAspect,
   [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,

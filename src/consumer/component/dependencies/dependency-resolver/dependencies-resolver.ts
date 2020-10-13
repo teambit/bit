@@ -88,7 +88,6 @@ export default class DependencyResolver {
   componentId: BitId;
   componentMap: ComponentMap;
   componentFromModel: Component;
-  extensionsAddedConfig: Record<string, any>;
   consumerPath: PathOsBased;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tree: Tree;
@@ -118,7 +117,6 @@ export default class DependencyResolver {
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
-    this.extensionsAddedConfig = this.component.extensionsAddedConfig;
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
       dependencies: [],
@@ -878,9 +876,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     let usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
-      return coreAspectsPackages.find((coreAspectName) => {
-        return packageName.includes(coreAspectName);
-      });
+      return coreAspectsPackages.find((coreAspectName) => packageName === coreAspectName);
     };
     const unidentifiedPackagesFiltered = unidentifiedPackages?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
