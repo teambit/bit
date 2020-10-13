@@ -19,6 +19,11 @@
                 "test": false
             },
             {
+                "name": "babel-config.ts",
+                "relativePath": "babel/babel-config.ts",
+                "test": false
+            },
+            {
                 "name": "core-exporter.task.ts",
                 "relativePath": "core-exporter.task.ts",
                 "test": false
@@ -5641,5 +5646,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.55"
+    "version": "14.8.9-dev.59"
 }
