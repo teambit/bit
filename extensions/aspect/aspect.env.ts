@@ -19,6 +19,14 @@ export class AspectEnv implements Environment {
     };
   }
 
+  async getDependencies() {
+    return {
+      dependencies: {
+        'core-js': '^3.6.5',
+      },
+    };
+  }
+
   getCompiler() {
     // return this.reactEnv.getCompiler(tsconfig);
     return this.babel.createCompiler({ babelTransformOptions: babelConfig });
