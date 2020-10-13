@@ -46,9 +46,9 @@ describe('multiple compilers - babel and typescript', function () {
         helper.command.install();
         helper.command.compile(); // compile the new env
 
-        // eslint-disable-next-line no-template-curly-in-string
         helper.fs.outputFile(
           'bar/foo.ts',
+          // eslint-disable-next-line no-template-curly-in-string
           'export function sayHello(name: string) { console.log(`hello ${name}`); }; sayHello("David");'
         );
         helper.command.addComponent('bar');
