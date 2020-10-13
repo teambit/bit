@@ -29,7 +29,7 @@ export class BabelCompiler implements Compiler {
     transformOptions.filename = options.filePath;
     const result = babel.transformSync(fileContent, this.options.babelTransformOptions);
     if (!result) {
-      throw new Error(`babel returns no result`);
+      return null;
     }
     const code = result.code || '';
     const outputPath = this.replaceFileExtToJs(options.filePath);
