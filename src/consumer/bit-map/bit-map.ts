@@ -435,8 +435,8 @@ export default class BitMap {
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
     const componentWithoutScope = this.components.find((componentMap: ComponentMap) => {
       return idHasVersion
-        ? componentMap.id.toStringWithoutScope() === id
-        : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
+        ? componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion
+        : componentMap.id.toStringWithoutScope() === id;
     });
     if (componentWithoutScope) return componentWithoutScope.id;
 
