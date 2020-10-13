@@ -1,5 +1,4 @@
 import chai, { expect } from 'chai';
-import fs from 'fs-extra';
 import path from 'path';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
@@ -8,9 +7,9 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
 
-const EXTENSIONS_BASE_FOLDER = 'babel-env';
+const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
 
-describe('babel compiler', function () {
+describe('multiple compilers - babel and typescript', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -20,8 +19,8 @@ describe('babel compiler', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('compile with babel', () => {
-    describe('compile simple javascript component', () => {
+  describe('compile with babel and ts', () => {
+    describe('compile simple ts component', () => {
       let distDir;
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -39,13 +38,19 @@ describe('babel compiler', function () {
             dependencies: {
               '@babel/core': '7.11.6',
               '@babel/preset-env': '7.11.5',
+              '@babel/preset-typescript': '7.10.4',
+              '@babel/plugin-proposal-class-properties': '7.10.4',
             },
           },
         });
         helper.command.install();
         helper.command.compile(); // compile the new env
 
-        helper.fs.outputFile('bar/foo.js', 'export function sayHello() { console.log("hello"); }; sayHello();');
+        helper.fs.outputFile(
+          'bar/foo.ts',
+          // eslint-disable-next-line no-template-curly-in-string
+          'export function sayHello(name: string) { console.log(`hello ${name}`); }; sayHello("David");'
+        );
         helper.command.addComponent('bar');
         helper.extensions.addExtensionToVariant('bar', `my-scope/${EXTENSIONS_BASE_FOLDER}`);
         helper.command.compile();
@@ -55,29 +60,23 @@ describe('babel compiler', function () {
         expect(distDir).to.be.a.directory();
         expect(path.join(distDir, 'foo.js')).to.be.a.file();
       });
-      it('should generate source maps on the workspace', () => {
-        expect(path.join(distDir, 'foo.js.map')).to.be.a.file();
-      });
-      it('should generate source maps correctly with the paths to the sources', () => {
-        const mapFile = path.join(distDir, 'foo.js.map');
-        const mapFileParsed = fs.readJSONSync(mapFile);
-        expect(mapFileParsed).to.have.property('sourceRoot');
-        expect(mapFileParsed.sourceRoot).to.endsWith('/bar');
-        expect(mapFileParsed).to.have.property('sources');
-      });
       it('should be able to run the dist file', () => {
         expect(path.join(distDir, 'foo.js')).to.be.a.file();
         const result = helper.command.runCmd(`node ${path.join(distDir, 'foo.js')}`);
         expect(result).to.have.string('hello');
       });
       describe('compile on capsules', () => {
+        let capsulePath;
         before(() => {
           helper.command.build();
+          capsulePath = helper.command.getCapsuleOfComponent('bar');
         });
-        it('should generate the dists on the capsule', () => {
-          const capsule = helper.command.getCapsuleOfComponent('bar');
-          expect(path.join(capsule, 'dist')).to.be.a.directory();
-          expect(path.join(capsule, 'dist/foo.js')).to.be.a.file();
+        it('should generate the dists on the capsule via babel compiler', () => {
+          expect(path.join(capsulePath, 'dist')).to.be.a.directory();
+          expect(path.join(capsulePath, 'dist/foo.js')).to.be.a.file();
+        });
+        it('should generate the d.ts on the capsule via typescript compiler', () => {
+          expect(path.join(capsulePath, 'dist/foo.d.ts')).to.be.a.file();
         });
       });
     });

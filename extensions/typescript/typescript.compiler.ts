@@ -24,7 +24,11 @@ export class TypescriptCompiler implements Compiler {
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
-      throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
+      const formattedErrors = ts.formatDiagnosticsWithColorAndContext(
+        compilerOptionsFromTsconfig.errors,
+        this.getFormatDiagnosticsHost()
+      );
+      throw new Error(`failed parsing the tsconfig.json.\n${formattedErrors}`);
     }
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
@@ -36,11 +40,7 @@ export class TypescriptCompiler implements Compiler {
     });
 
     if (result.diagnostics && result.diagnostics.length) {
-      const formatHost = {
-        getCanonicalFileName: (p) => p,
-        getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => ts.sys.newLine,
-      };
+      const formatHost = this.getFormatDiagnosticsHost();
       const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
       // :TODO @david please replace to a more concrete error type and put in 'exceptions' directory here.
@@ -183,6 +183,14 @@ export class TypescriptCompiler implements Compiler {
     longProcessLogger.end();
 
     return componentsResults;
+  }
+
+  private getFormatDiagnosticsHost(): ts.FormatDiagnosticsHost {
+    return {
+      getCanonicalFileName: (p) => p,
+      getCurrentDirectory: ts.sys.getCurrentDirectory,
+      getNewLine: () => ts.sys.newLine,
+    };
   }
 
   private async writeTypes(dirs: string[]) {

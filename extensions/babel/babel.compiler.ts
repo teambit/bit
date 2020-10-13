@@ -26,6 +26,7 @@ export class BabelCompiler implements Compiler {
     // node_modules dir, so the debugger needs to know where to find the source.
     transformOptions.sourceRoot = options.componentDir;
     transformOptions.sourceFileName = options.filePath;
+    transformOptions.filename = options.filePath;
     const result = babel.transformSync(fileContent, this.options.babelTransformOptions);
     if (!result) {
       throw new Error(`babel returns no result`);
@@ -71,22 +72,30 @@ export class BabelCompiler implements Compiler {
     componentResult.startTime = Date.now();
     const sourceFiles = capsule.component.filesystem.files.map((file) => file.relative);
     await fs.ensureDir(path.join(capsule.path, this.getDistDir()));
-    sourceFiles.forEach((filePath) => {
-      let result;
-      try {
-        // don't use transformFileAsync, otherwise, it'll fail on the first error.
-        result = babel.transformFileSync(path.join(capsule.path, filePath), this.options.babelTransformOptions);
-      } catch (err) {
-        componentResult.errors?.push(err);
-      }
-      if (!result || !result.code) {
-        return;
-      }
-      capsule.fs.writeFileSync(path.join(this.getDistDir(), filePath), result.code);
-      if (result.map) {
-        capsule.fs.writeFileSync(path.join(this.getDistDir(), `${filePath}.map`), result.map.mappings);
-      }
-    });
+    await Promise.all(
+      sourceFiles.map(async (filePath) => {
+        let result;
+        try {
+          result = await babel.transformFileAsync(
+            path.join(capsule.path, filePath),
+            this.options.babelTransformOptions
+          );
+        } catch (err) {
+          componentResult.errors?.push(err);
+        }
+        if (!result || !result.code) {
+          return;
+        }
+        const distPath = this.replaceFileExtToJs(filePath);
+        const distPathMap = `${distPath}.map`;
+        const code = result.code || '';
+        const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${distPathMap}` : code;
+        capsule.fs.writeFileSync(path.join(this.getDistDir(), distPath), outputText);
+        if (result.map) {
+          capsule.fs.writeFileSync(path.join(this.getDistDir(), distPathMap), JSON.stringify(result.map));
+        }
+      })
+    );
     componentResult.endTime = Date.now();
   }
 
