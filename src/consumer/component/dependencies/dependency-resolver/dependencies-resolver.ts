@@ -876,9 +876,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     let usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
-      return coreAspectsPackages.find((coreAspectName) => {
-        return packageName.includes(coreAspectName);
-      });
+      return coreAspectsPackages.find((coreAspectName) => packageName === coreAspectName);
     };
     const unidentifiedPackagesFiltered = unidentifiedPackages?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
