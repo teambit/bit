@@ -10,7 +10,7 @@ chai.use(require('chai-string'));
 
 const EXTENSIONS_BASE_FOLDER = 'babel-env';
 
-describe('compile extension', function () {
+describe('babel compiler', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
