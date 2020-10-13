@@ -111,10 +111,12 @@ describe('component config', function () {
       let componentJson;
       const config = { key: 'val' };
       before(() => {
+        const EXTENSION_FOLDER = 'dummy-extension';
         helper.componentJson.deleteIfExist('bar');
-        helper.fixtures.copyFixtureExtensions('dummy-extension');
-        helper.command.addComponent('dummy-extension');
+        helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
+        helper.command.addComponent(EXTENSION_FOLDER);
         helper.extensions.addExtensionToVariant('bar', 'my-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.bit/aspect');
         helper.command.install();
         helper.command.compile();
         helper.command.tagAllComponents();

@@ -207,7 +207,7 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
 
       export class Ext${index}Main {
         static runtime = MainRuntime;
-        static dependencies = [];
+        static dependencies: any = [];
 
 
         constructor(config) {
