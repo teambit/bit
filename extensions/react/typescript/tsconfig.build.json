@@ -6,11 +6,14 @@
     "target": "es2015",
     "module": "commonjs",
     "jsx": "react",
+    "composite": true,
     "declaration": true,
     "sourceMap": true,
     "skipLibCheck": true,
+    "outDir": "dist",
     "moduleResolution": "node",
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "rootDir": "."
   },
   "exclude": [
     "dist"
