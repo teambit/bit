@@ -3477,6 +3477,21 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "ui/menu/index.ts",
+                "test": false
+            },
+            {
+                "name": "menu.module.scss",
+                "relativePath": "ui/menu/menu.module.scss",
+                "test": false
+            },
+            {
+                "name": "menu.tsx",
+                "relativePath": "ui/menu/menu.tsx",
+                "test": false
+            },
+            {
                 "name": "scope-context.ts",
                 "relativePath": "ui/scope-context.ts",
                 "test": false
@@ -3902,21 +3917,6 @@
     },
     "staged-components/scope-details@0.0.70": {
         "files": [
-            {
-                "name": "contributors.module.scss",
-                "relativePath": "contributors/contributors.module.scss",
-                "test": false
-            },
-            {
-                "name": "contributors.tsx",
-                "relativePath": "contributors/contributors.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "contributors/index.ts",
-                "test": false
-            },
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
