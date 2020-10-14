@@ -1086,6 +1086,16 @@
                 "name": "use-component.tsx",
                 "relativePath": "ui/use-component.tsx",
                 "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "ui/use-query/index.ts",
+                "test": false
+            },
+            {
+                "name": "use-query.ts",
+                "relativePath": "ui/use-query/use-query.ts",
+                "test": false
             }
         ],
         "mainFile": "index.ts",
@@ -5641,5 +5651,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.55"
+    "version": "14.8.9-dev.59"
 }
