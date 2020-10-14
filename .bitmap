@@ -3235,6 +3235,11 @@
                 "test": false
             },
             {
+                "relativePath": "typescript/tsconfig.build.json",
+                "test": false,
+                "name": "tsconfig.build.json"
+            },
+            {
                 "name": "tsconfig.json",
                 "relativePath": "typescript/tsconfig.json",
                 "test": false
