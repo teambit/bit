@@ -206,13 +206,11 @@ module.exports = () => 'comp${index} and ' + ${nextComp}();`;
       import { Ext${index}Aspect } from './ext${index}.aspect';
 
       export class Ext${index}Main {
-        static runtime = MainRuntime;
+        static runtime: any = MainRuntime;
         static dependencies: any = [];
 
 
-        constructor(config) {
-          this.config = config;
-        }
+        constructor(public config: any) {}
 
         printName() {
           console.log('ext ${index}');
