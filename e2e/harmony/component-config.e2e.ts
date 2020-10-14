@@ -139,14 +139,12 @@ describe('component config', function () {
       helper.fixtures.populateExtensions(5);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      const defaultWsExtensions = {
-        'my-scope/ext1': { key: 'val-ws-defaults' },
-        'my-scope/ext2': { key: 'val-ws-defaults' },
-        'my-scope/ext5': { key: 'val-ws-defaults' },
-      };
-      helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
+      helper.extensions.addExtensionToVariant('*', 'my-scope/ext1', { key: 'val-ws-defaults' });
+      helper.extensions.addExtensionToVariant('*', 'my-scope/ext2', { key: 'val-ws-defaults' });
+      helper.extensions.addExtensionToVariant('*', 'my-scope/ext5', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('extensions', 'teambit.bit/aspect');
-      helper.command.link();
+      helper.bitJsonc.addToVariant(helper.scopes.localPath, 'extensions', 'propagate', false);
+      helper.command.install();
       helper.command.compile();
       helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
       helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
@@ -220,7 +218,14 @@ function getExtensionEntry(extensionId: string, config: any): any {
   return {
     extensionId,
     config,
+    newExtensionId: {
+      legacyComponentId: {
+        scope: null,
+        name: extensionId,
+        version: 'latest',
+      },
+      _scope: 'my-scope',
+    },
     data: {},
-    artifacts: [],
   };
 }
