@@ -180,7 +180,7 @@ export class ReactEnv implements Environment {
   }
 
   private getCompilerTask() {
-    return this.compiler.createTask('dist', this.getCompiler(buildTsConfig));
+    return this.compiler.createTask(this.getCompiler(buildTsConfig));
   }
 
   async __getDescriptor() {

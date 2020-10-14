@@ -343,10 +343,19 @@ export class DependencyResolverMain {
       policiesFromEnv = await env.getDependencies();
     }
     const configuredIds = configuredExtensions.ids;
+    const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {
+      // TODO: change this way of search, once we have workspace as dep-resolver dependency
+      // we can use something like:
+      // const resolvedId = this.workspace.resolveComponentId(extId)
+      // const currentPolicy = this.policiesRegistry.get(resolvedId.toString());
       // Only get props from configured extensions on this specific component
-      const currentPolicy = this.policiesRegistry.get(extId);
-      if (currentPolicy) {
+      const policyTupleToApply = policiesTuples.find(([policyRegistrar]) => {
+        return policyRegistrar === extId || policyRegistrar.includes(extId);
+      });
+
+      if (policyTupleToApply && policyTupleToApply[1]) {
+        const currentPolicy = policyTupleToApply[1];
         policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
       }
     });

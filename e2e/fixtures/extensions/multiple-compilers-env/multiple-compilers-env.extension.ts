@@ -20,18 +20,23 @@ export class MultipleCompilersEnv {
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect, CompilerAspect];
 
   static async provider([envs, react, babel, compiler]: [EnvsMain, ReactMain, BabelMain, CompilerMain]) {
+    const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
+    babelCompiler.distGlobPatterns = [`${babelCompiler.distDir}/**`, `!${babelCompiler.distDir}/**/*.d.ts`];
     const compilerOverride = envs.override({
       getCompiler: () => {
-        return babel.createCompiler({ babelTransformOptions: babelConfig })
+        return babelCompiler;
       },
     });
+    const tsCompiler = react.env.getCompiler(tsconfig);
+    tsCompiler.artifactName = 'declaration';
+    tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
+    tsCompiler.shouldCopyNonSupportedFiles = false;
     const buildPipeOverride = react.overrideBuildPipe([
-      compiler.createTask('declarations', react.env.getCompiler()),
-      ...react.env.getBuildPipe(),
+      compiler.createTask(babelCompiler),
+      compiler.createTask(tsCompiler),
     ]);
 
     const harmonyReactEnv = react.compose([
-      react.overrideTsConfig(tsconfig),
       compilerOverride,
       buildPipeOverride
     ]);
