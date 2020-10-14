@@ -25,11 +25,11 @@ export class CompilerMain {
    * API to create a new compiler task, it facilitates the usage of multiple compilers.
    * with this method you can create any number of compilers and add them to the buildPipeline.
    */
-  createTask(artifactName: string, compiler: Compiler) {
-    return new CompilerTask(CompilerAspect.id, artifactName, compiler);
+  createTask(compiler: Compiler) {
+    return new CompilerTask(CompilerAspect.id, compiler);
   }
   static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
-    const compilerTask = new CompilerTask(CompilerAspect.id, 'dist');
+    const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
     const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
     const logger = loggerMain.createLogger(CompilerAspect.id);

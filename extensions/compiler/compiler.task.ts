@@ -10,11 +10,15 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly id: string, private artifactName: string, private compilerInstance?: Compiler) {}
+  constructor(readonly id: string, private compilerInstance?: Compiler) {
+    if (compilerInstance && compilerInstance.artifactName) {
+      this.description += ` for artifact ${compilerInstance.artifactName}`;
+    }
+  }
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const compilerInstance: Compiler = this.compilerInstance || context.env.getCompiler();
-    const buildResults = await compilerInstance.build(context, this.artifactName);
+    const buildResults = await compilerInstance.build(context);
 
     await Promise.all(
       context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, compilerInstance))
@@ -24,14 +28,16 @@ export class CompilerTask implements BuildTask {
   }
 
   async copyNonSupportedFiles(capsule: Capsule, compiler: Compiler) {
+    if (!compiler.shouldCopyNonSupportedFiles) {
+      return;
+    }
     const component = capsule.component;
     await Promise.all(
       component.filesystem.files.map(async (file) => {
         if (compiler.isFileSupported(file.path)) return;
         const content = file.contents;
-        await fs.outputFile(path.join(capsule.path, compiler.getDistDir(), file.relative), content);
+        await fs.outputFile(path.join(capsule.path, compiler.distDir, file.relative), content);
       })
     );
-    return { id: component.id, errors: [] };
   }
 }
