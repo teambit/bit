@@ -50,6 +50,15 @@ export class AspectList {
     return new AspectList(entries);
   }
 
+  /**
+   * transform an aspect list into a new one.
+   */
+  async pmap(predicate: (entry: AspectEntry) => Promise<AspectEntry>) {
+    const entriesP = this.entries.map(predicate);
+    const entries = await Promise.all(entriesP);
+    return new AspectList(entries);
+  }
+
   toConfigObject() {
     const res = {};
     this.entries.forEach((entry) => {

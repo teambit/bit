@@ -367,11 +367,19 @@ export default class Component {
   }
 
   getAllDependencies(): Dependency[] {
-    return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.extensionDependencies.dependencies,
+    ];
   }
 
   getAllDependenciesCloned(): Dependencies {
-    const dependencies = [...this.dependencies.getClone(), ...this.devDependencies.getClone()];
+    const dependencies = [
+      ...this.dependencies.getClone(),
+      ...this.devDependencies.getClone(),
+      ...this.extensionDependencies.getClone(),
+    ];
     return new Dependencies(dependencies);
   }
 
