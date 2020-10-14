@@ -1,17 +1,36 @@
 const { transform } = require('@babel/core');
-const jestPreset = require('babel-preset-jest');
-const reactPreset = require('@babel/preset-react');
-const presetEnv = require('@babel/preset-env');
-const transformClassProps = require('@babel/plugin-proposal-class-properties');
-const typescriptPreset = require('@babel/preset-typescript');
-const transformRuntime = require('@babel/plugin-transform-runtime');
+
+const presets = [
+  require.resolve('@babel/preset-react'),
+  require.resolve('@babel/preset-typescript'),
+  [
+    require.resolve('@babel/preset-env'),
+    {
+      targets: {
+        node: 8,
+      },
+      useBuiltIns: 'usage',
+      corejs: 3,
+    },
+  ],
+];
+const plugins = [
+  [require.resolve('@babel/plugin-transform-modules-commonjs')],
+  require.resolve('babel-plugin-transform-typescript-metadata'),
+  [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
+  [require.resolve('@babel/plugin-transform-runtime')],
+  [require.resolve('@babel/plugin-proposal-object-rest-spread')],
+  [require.resolve('@babel/plugin-proposal-class-properties')],
+  [require.resolve('@babel/plugin-transform-async-to-generator')],
+  [require.resolve('babel-preset-jest')],
+];
 
 module.exports = {
   process(src, filename) {
     const result = transform(src, {
       filename,
-      presets: [presetEnv, reactPreset, typescriptPreset, jestPreset],
-      plugins: [transformRuntime, transformClassProps],
+      presets,
+      plugins,
     });
 
     return result ? result.code : src;
