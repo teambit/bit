@@ -50,7 +50,7 @@ import BluebirdPromise from 'bluebird';
 import fs from 'fs-extra';
 import { merge, slice } from 'lodash';
 import path, { join } from 'path';
-import { difference, flatten } from 'ramda';
+import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
