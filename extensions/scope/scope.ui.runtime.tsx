@@ -13,6 +13,7 @@ import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
 import { ComponentsDrawer } from './components.drawer';
 import { ScopeBadge } from './scope-badge';
+import { ScopeMenu } from './ui/menu';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -83,13 +84,16 @@ export class ScopeUI {
       children: this.componentUi.getComponentUI(ScopeAspect.id),
     });
 
-    this.menuSlot.register({
-      path: this.componentUi.routePath,
-      children: this.componentUi.getMenu(ScopeAspect.id),
-    });
+    this.menuSlot.register([
+      {
+        path: this.componentUi.routePath,
+        children: this.componentUi.getMenu(ScopeAspect.id),
+      },
+      { exact: true, path: '/', children: <ScopeMenu widgetSlot={this.menuWidgetSlot} /> }, // what happens when we have multiple scopes like in symphony?
+    ]);
   }
 
-  registerMenuWidget(menuItems: MenuWidget[]) {
+  registerMenuWidget(...menuItems: MenuWidget[]) {
     this.menuWidgetSlot.register(menuItems);
   }
 
