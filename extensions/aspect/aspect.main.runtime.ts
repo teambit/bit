@@ -2,6 +2,7 @@ import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/environments';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { AspectAspect } from './aspect.aspect';
@@ -19,16 +20,17 @@ export class AspectMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [ReactAspect, EnvsAspect, BuilderAspect, AspectLoaderAspect, BabelAspect];
+  static dependencies = [ReactAspect, EnvsAspect, BuilderAspect, AspectLoaderAspect, BabelAspect, CompilerAspect];
 
-  static async provider([react, envs, builder, aspectLoader, babel]: [
+  static async provider([react, envs, builder, aspectLoader, babel, compiler]: [
     ReactMain,
     EnvsMain,
     BuilderMain,
     AspectLoaderMain,
-    BabelMain
+    BabelMain,
+    CompilerMain
   ]) {
-    const aspectEnv = envs.merge<AspectEnv>(new AspectEnv(react.reactEnv, babel), react.reactEnv);
+    const aspectEnv = envs.merge<AspectEnv>(new AspectEnv(react.reactEnv, babel, compiler), react.reactEnv);
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
       builder.registerBuildTask(coreExporterTask);

@@ -10,7 +10,11 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly id: string, private artifactName: string, private compilerInstance?: Compiler) {}
+  constructor(readonly id: string, private artifactName: string, private compilerInstance?: Compiler) {
+    if (artifactName) {
+      this.description += ` for artifact "${artifactName}"`;
+    }
+  }
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const compilerInstance: Compiler = this.compilerInstance || context.env.getCompiler();
