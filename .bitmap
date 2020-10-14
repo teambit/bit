@@ -3235,9 +3235,9 @@
                 "test": false
             },
             {
+                "name": "tsconfig.build.json",
                 "relativePath": "typescript/tsconfig.build.json",
-                "test": false,
-                "name": "tsconfig.build.json"
+                "test": false
             },
             {
                 "name": "tsconfig.json",
@@ -5646,5 +5646,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.55"
+    "version": "14.8.9-dev.59"
 }
