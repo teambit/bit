@@ -789,7 +789,7 @@ export class Workspace implements ComponentFactory {
       );
       componentConfigFile = await ComponentConfigFile.load(
         absComponentDir,
-        this.createAspectList,
+        this.createAspectList.bind(this),
         defaultScopeFromVariantsOrWs
       );
     }
