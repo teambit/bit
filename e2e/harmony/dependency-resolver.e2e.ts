@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-
+import path from 'path';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -32,7 +32,7 @@ describe('dependency-resolver extension', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
-        helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+        helper.fs.outputFile(path.join('utils', 'is-type.js'), fixtures.isType);
         helper.command.addComponent('utils', { i: 'utils/is-type' });
         const depResolverConfig = {
           policy: {
@@ -56,10 +56,10 @@ describe('dependency-resolver extension', function () {
         expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
         expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
       });
-      it('should have the updated dependencies for utils/is-type', function () {
-        expect(isTypeOutput.packageDependencies).to.be.empty;
-        expect(isTypeOutput.devPackageDependencies).to.be.empty;
-        expect(isTypeOutput.peerPackageDependencies).to.be.empty;
+      it('should not put the dependencies for not configured component', function () {
+        expect(isTypeOutput.packageDependencies).to.not.have.key('lodash.get');
+        expect(isTypeOutput.devPackageDependencies).to.not.have.key('lodash.words');
+        expect(isTypeOutput.peerPackageDependencies).to.not.have.key('lodash.set');
       });
     });
     // TODO: implement once we can extend a specific env with new methods (to apply config changes)
@@ -111,10 +111,10 @@ describe('dependency-resolver extension', function () {
           expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
           expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
         });
-        it('should have the updated dependencies for utils/is-type', function () {
-          expect(isTypeOutput.packageDependencies).to.be.empty;
-          expect(isTypeOutput.devPackageDependencies).to.be.empty;
-          expect(isTypeOutput.peerPackageDependencies).to.be.empty;
+        it('should not put the dependencies for not configured component', function () {
+          expect(isTypeOutput.packageDependencies).to.not.have.key('lodash.get');
+          expect(isTypeOutput.devPackageDependencies).to.not.have.key('lodash.words');
+          expect(isTypeOutput.peerPackageDependencies).to.not.have.key('lodash.set');
         });
       });
       describe.skip('conflict between few extensions policies', function () {
@@ -127,7 +127,12 @@ describe('dependency-resolver extension', function () {
   });
   // @todo: once extensions are loaded on imported components, make sure the following:
   // import and validated that package.json has correct pkg names.
-  describe('saving dependencies package names', () => {
+  // TODO: skipped until @david fix it
+  // is failing because you set the package name there, so when you tag it's really publish it npm.
+  // and since it's run in the past and already published it,
+  // it gets an error about that version is already exist in npm.
+  // we should think of another approach to test this
+  describe.skip('saving dependencies package names', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponents(4);
