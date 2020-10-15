@@ -29,11 +29,8 @@ const plugins = [
   [require.resolve('@babel/plugin-transform-async-to-generator')],
 ];
 
-const only = ['**/*.ts', '**/*.tsx'];
-
 export const babelConfig = {
   presets,
   plugins,
-  only,
   sourceMaps: true,
 };
