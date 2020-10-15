@@ -18,7 +18,7 @@ import { Harmony } from '@teambit/harmony';
 ${getImportStatements(
   aspectDefs.map((def) => def.aspectPath),
   'Aspect'
-)}
+)} 
 ${getImportStatements(
   // @ts-ignore no nulls can be found here - see above.
   defs.map((def) => def.runtimePath),
@@ -44,7 +44,12 @@ Harmony.load([${getIdentifiers(
 }
 
 function getImportStatements(extensionPaths: string[], suffix: string): string {
-  return extensionPaths.map((path) => `import ${getIdentifier(path, suffix)} from '${path}';`).join('\n');
+  return extensionPaths
+    .map((path) => {
+      const windowsCompatibalePath = path.replace(/\\/g, '\\\\');
+      return `import ${getIdentifier(path, suffix)} from '${windowsCompatibalePath}';`;
+    })
+    .join('\n');
 }
 
 function getIdentifiers(extensionsPaths: string[], suffix: string): string {
