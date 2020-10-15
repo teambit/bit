@@ -187,7 +187,6 @@ export default async function tagModelComponent({
   resolveUnmerged?: boolean;
   isSnap?: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; publishedPackages: string[] }> {
-  loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
@@ -271,7 +270,6 @@ export default async function tagModelComponent({
   await addLogToComponents(componentsToTag, autoTagConsumerComponents, persist, message);
 
   if (persist) {
-    loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
@@ -314,8 +312,10 @@ async function addComponentsToScope(consumer: Consumer, components: Component[],
 }
 
 async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
+  loader.start('importing missing dependencies...');
   const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
   await flattenedDependenciesGetter.populateFlattenedDependencies();
+  loader.stop();
 }
 
 function addSpecsResultsToComponents(components: Component[], testsResults): void {
