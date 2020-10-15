@@ -166,7 +166,7 @@ export class TypescriptCompiler implements Compiler {
     while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
       // regex to make sure it will work correctly for both linux and windows
       // it replaces both /tsconfig.json and \tsocnfig.json
-      const capsulePath = nextProject.project.replace(/[\/\\]tsconfig.json/, '');
+      const capsulePath = nextProject.project.replace(/[/\\]tsconfig.json/, '');
       const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
       if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
       longProcessLogger.logProgress(currentComponentId.toString());
