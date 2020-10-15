@@ -1115,7 +1115,7 @@ export class Workspace implements ComponentFactory {
       }
       throw err;
     }
-    const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
+    const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
     const defaultScope = await this.componentDefaultScopeFromComponentDir(
       relativeComponentDir,
       legacyId.toStringWithoutScopeAndVersion()
