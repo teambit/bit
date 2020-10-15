@@ -17,7 +17,7 @@
       "sourceMap": true,
       "traceResolution": true
     },
-    
+
     "include": [
       "src/analytics",
       "src/api",
@@ -39,7 +39,6 @@
       "src/logger",
       "src/migration",
       "src/npm-client",
-      "src/plugins",
       "src/prompts",
       "src/remotes",
       "src/scope",
@@ -58,4 +57,3 @@
       "src/e2e-*"
     ]
   }
-  

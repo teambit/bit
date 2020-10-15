@@ -31,6 +31,7 @@ describe('set default owner and scope', function () {
     let componentPackageName;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       const remoteScopeParts = helper.scopes.remote.split('.');
       defaultOwner = remoteScopeParts[0];
       scopeWithoutOwner = remoteScopeParts[1];

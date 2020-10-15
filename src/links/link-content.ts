@@ -3,7 +3,6 @@ import R from 'ramda';
 
 import { ImportSpecifier } from '../consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
 import logger from '../logger/logger';
-import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getExt, getWithoutExt } from '../utils';
 import { PathOsBased } from '../utils/path';
 
@@ -66,11 +65,7 @@ export function getLinkToPackageContent(
 }
 
 function getSupportedExtensions(): string[] {
-  const extensions = Object.keys(LINKS_CONTENT_TEMPLATES);
-  fileTypesPlugins.forEach((plugin) => {
-    extensions.push(plugin.getExtension());
-  });
-  return extensions;
+  return Object.keys(LINKS_CONTENT_TEMPLATES);
 }
 
 /**
@@ -95,18 +90,11 @@ function getTemplateForFileOrPackage(fileExt: string, importSpecifiers?: ImportS
   if (isForPackage && !fileExtensionsForNpmLinkGenerator.includes(fileExt)) {
     return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
   }
-  return _getTemplate(fileExt, importSpecifiers);
+  return _getTemplate(fileExt);
 }
 
-function _getTemplate(fileExt: string, importSpecifiers?: ImportSpecifier[]) {
-  _addPluginsTemplatesToLinkContentTemplates(importSpecifiers);
+function _getTemplate(fileExt: string) {
   return LINKS_CONTENT_TEMPLATES[fileExt];
-}
-
-function _addPluginsTemplatesToLinkContentTemplates(importSpecifiers?: ImportSpecifier[]) {
-  fileTypesPlugins.forEach((plugin) => {
-    LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
-  });
 }
 
 function _logWhenNoTemplateWasFound(filePath: string, fileExt: string) {

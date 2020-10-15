@@ -10,7 +10,7 @@ export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data);
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;
@@ -50,6 +50,15 @@ export class AspectList {
     return new AspectList(entries);
   }
 
+  /**
+   * transform an aspect list into a new one.
+   */
+  async pmap(predicate: (entry: AspectEntry) => Promise<AspectEntry>) {
+    const entriesP = this.entries.map(predicate);
+    const entries = await Promise.all(entriesP);
+    return new AspectList(entries);
+  }
+
   toConfigObject() {
     const res = {};
     this.entries.forEach((entry) => {
@@ -58,6 +67,11 @@ export class AspectList {
       }
     });
     return res;
+  }
+
+  serialize() {
+    const serializedEntries = this.entries.map((entry) => entry.serialize());
+    return serializedEntries;
   }
 
   toLegacy(): ExtensionDataList {

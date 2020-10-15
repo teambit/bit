@@ -1,4 +1,5 @@
 import chai, { expect } from 'chai';
+import path from 'path';
 
 import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../extensions/aspect-loader/constants';
 import { CannotLoadExtension } from '../../extensions/aspect-loader/exceptions';
@@ -13,7 +14,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('load extensions', function () {
+describe('load extensions', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -65,7 +66,7 @@ describe.skip('load extensions', function () {
           expect(output).to.have.string('new components');
         });
         it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('non-requireable-aspect'));
+          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION('my-scope/non-requireable-aspect'));
         });
       });
     });
@@ -93,9 +94,7 @@ describe.skip('load extensions', function () {
           expect(output).to.have.string('new components');
         });
         it('should show a warning about the problematic extension', () => {
-          expect(output).to.have.string(
-            UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['my-scope/extension-provider-error-aspect'])
-          );
+          expect(output).to.have.string(UNABLE_TO_LOAD_EXTENSION_FROM_LIST(['my-scope/extension-provider-error']));
         });
       });
     });
@@ -112,14 +111,17 @@ describe.skip('load extensions', function () {
       helper.fixtures.copyFixtureExtensions('extension-provider-error');
       helper.command.addComponent('extension-provider-error');
       helper.command.addComponent('non-requireable-aspect');
-      helper.fs.createFile('affected-comp1', 'comp1.js', '');
+      helper.fs.outputFile(path.join('affected-comp1', 'comp1.js'), '');
       helper.command.addComponent('affected-comp1', { i: 'affected/comp1' });
-      helper.fs.createFile('not-affected-comp2', 'comp2.js', '');
+      helper.fs.outputFile(path.join('not-affected-comp2', 'comp2.js'), '');
       helper.command.addComponent('not-affected-comp2', { i: 'not-affected/comp2' });
+      helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.bit/aspect');
     });
     describe('loading simple extension', () => {
       before(() => {
         helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/dummy-extension', config);
+        helper.command.link();
+        helper.command.compile();
       });
 
       it('should load the extension when loading an affected component', () => {
@@ -136,7 +138,7 @@ describe.skip('load extensions', function () {
       before(() => {
         helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/non-requireable-aspect', config);
       });
-      it('when config set to throw error on failed extensions', () => {
+      it.skip('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
         const origError = new Error('error by purpose');
         const error = new CannotLoadExtension('non-requireable-aspect', origError);
@@ -162,7 +164,7 @@ describe.skip('load extensions', function () {
       before(() => {
         helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/extension-provider-error', config);
       });
-      it('when config set to throw error on failed extensions', () => {
+      it.skip('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.showComponent('affected/comp1');
         const error = new Error('error in provider');
         helper.general.expectToThrow(func, error);

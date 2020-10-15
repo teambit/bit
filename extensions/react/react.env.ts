@@ -20,6 +20,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
+const buildTsConfig = require('./typescript/tsconfig.build.json');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -167,7 +168,6 @@ export class ReactEnv implements Environment {
       peerDependencies: {
         react: '^16.13.1' || this.config.reactVersion,
         'react-dom': '^16.13.1',
-        '@babel/runtime': '^7.11.2',
       },
     };
   }
@@ -175,8 +175,12 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getPipe(): BuildTask[] {
-    return [this.compiler.task, this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  getBuildPipe(): BuildTask[] {
+    return [this.getCompilerTask(), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  }
+
+  private getCompilerTask() {
+    return this.compiler.createTask(this.getCompiler(buildTsConfig));
   }
 
   async __getDescriptor() {

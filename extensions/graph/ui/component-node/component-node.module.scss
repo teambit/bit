@@ -1,0 +1,62 @@
+.compNode {
+  max-width: 300px;
+  min-width: 200px;
+  border-width: 2px;
+  border-style: solid;
+  padding: 16px;
+  background: white;
+
+  text-align: left;
+}
+
+.firstRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.envIcon {
+  margin-right: 8px;
+}
+
+.breadcrumbs {
+  color: #6c707c;
+  font-size: 12px;
+}
+
+.nameLine {
+  display: flex;
+  align-items: center;
+}
+
+.name {
+  font-weight: bold;
+  margin-right: 8px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.version {
+  margin-right: 8px;
+}
+
+.buffs {
+  display: flex;
+  margin-left: auto;
+  line-height: 1;
+  font-size: 15px;
+  line-height: 16px;
+
+  > * {
+    margin-right: 8px;
+  }
+  > *:last-child {
+    margin-right: 0px;
+  }
+
+  &:empty {
+    display: none;
+  }
+}

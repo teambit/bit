@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: circleci/node:10.14.2
+    - image: circleci/node:10.20.0
 
 default_resource_class: &default_resource_class
   resource_class: medium
@@ -41,6 +41,16 @@ semver_tags_only_filters: &semver_tags_only_filters
     # only act on version tags
     tags:
       only: /^v[0-9]+(\.[0-9]+)*$/
+
+
+nightly_tag_only_filters: &nightly_tag_only_filters
+  filters:
+    # ignore any commit on any branch by default
+    branches:
+      ignore: /.*/
+    # only act on version tags
+    tags:
+      only: /manual-nightly/
 
 dev_tag_only_filters: &dev_tag_only_filters
   filters:
@@ -420,12 +430,17 @@ jobs:
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
+      - run:
+          name: 'Build bit-bin types'
+          command: 'cd bit && npm run build:types'
       - persist_to_workspace:
           root: .
           paths:
             - bit/dist
             - bit/node_modules
             - .pnpm-store
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
 
   bit_build:
     <<: *defaults
@@ -499,12 +514,17 @@ jobs:
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
       - run:
           name: 'git push'
-          command: 'cd bit && git push origin ${CIRCLE_BRANCH}'
+          # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+          command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
       - run: cd bit && node scripts/soft-tag-teambit.js
-      - run: cd bit && bit tag --persist
+      - run:
+          name: tag persist
+          command: cd bit && bit tag --persist
+          no_output_timeout: '25m'
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
-      - run: cd bit && git push origin ${CIRCLE_BRANCH}
+      # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+      - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
@@ -518,10 +538,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run:
-          # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
-          name: 'update npm to latest version'
-          command: 'npm i -g npm@latest'
+      # - run:
+      #     # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+      #     name: 'update npm to latest version'
+      #     command: 'npm i -g npm@latest'
       - bit_global_for_npm
       - bit_config
       - run:
@@ -536,9 +556,11 @@ jobs:
       - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
+      # Make sure when we run bit from e2e tests we run it from the global not from here
+      - run: 'rm bit/node_modules/.bin/bit'
       - run:
           name: 'Run e2e tests'
-          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.ts" | circleci tests split --split-by=filesize | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug
           environment:
@@ -998,5 +1020,23 @@ workflows:
             - set_npm_registries
             - checkout_code
       - tag_and_publish:
+          requires:
+            - setup_harmony
+  # TODO: check if we can combine it with the regular nightly somehow
+  manual_nightly:
+    jobs:
+      - checkout_code:
+          <<: *nightly_tag_only_filters
+      - set_ssh_key:
+          <<: *nightly_tag_only_filters
+      - set_npm_registries:
+          <<: *nightly_tag_only_filters
+      - setup_harmony:
+          <<: *nightly_tag_only_filters
+          requires:
+            - set_npm_registries
+            - checkout_code
+      - tag_and_publish:
+          <<: *nightly_tag_only_filters
           requires:
             - setup_harmony

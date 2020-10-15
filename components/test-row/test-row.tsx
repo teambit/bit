@@ -10,24 +10,10 @@ export type TestRowProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function TestRow({ children, content, className, rowClass }: TestRowProps) {
-  // const [isOpen, setIsOpen] = useState(true);
-
   return (
     <ThemeContext>
       <div className={classNames(styles.testBlock, className)}>
-        <div
-          className={classNames(
-            styles.row,
-            rowClass
-            // , content && styles.hover
-          )}
-          // onClick={() => {
-          //   if (!content) return;
-          //   setIsOpen(!isOpen);
-          // }}
-        >
-          {children}
-        </div>
+        <div className={classNames(styles.row, rowClass)}>{children}</div>
         {content && <CliSnippet content={content} className={styles.snippet} />}
       </div>
     </ThemeContext>

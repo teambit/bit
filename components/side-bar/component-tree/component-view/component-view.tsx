@@ -1,9 +1,9 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/react-router';
+import { EnvIcon } from '@teambit/staged-components.env-icon';
+import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
-import _ from 'lodash';
 import React, { useCallback, useContext } from 'react';
 
 import { ComponentTreeContext } from '../component-tree-context';
@@ -18,12 +18,8 @@ export type ComponentViewProps<Payload = any> = {
 } & TreeNodeProps<Payload>;
 
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
-  // TODO: @oded refactor here to regular prop use.
   const { node } = props;
-  const { payload } = node;
-  const envId = _.get(payload, ['environment', 'envId']);
-  const icon = _.get(payload, ['environment', 'icon']);
-  const isDeprecated = _.get(payload, ['deprecation', 'isDeprecate']);
+  const component = node.payload;
 
   const { onSelect } = useContext(ComponentTreeContext);
 
@@ -34,6 +30,8 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     [onSelect, node.id]
   );
 
+  if (!component) return null;
+
   return (
     <NavLink
       href={`/${node.id}`}
@@ -42,17 +40,15 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        {icon && <img src={icon} alt={envId} className={styles.envIcon} />}
+        <EnvIcon component={component} className={styles.envIcon} />
         <span>{getName(node.id)}</span>
       </div>
 
       <div className={styles.right}>
-        {isDeprecated && <Icon of="note-deprecated" className={styles.componentIcon} />}
+        <DeprecationIcon component={component} />
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
-        {props.treeNodeSlot.toArray().map(([id, treeNode]) => {
-          if (!payload) return null;
-          return <treeNode.widget key={id} component={payload} />;
-        })}
+        {component &&
+          props.treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}
       </div>
     </NavLink>
   );

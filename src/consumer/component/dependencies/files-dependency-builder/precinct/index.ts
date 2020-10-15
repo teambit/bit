@@ -14,7 +14,6 @@ import detectiveEs6 from '../detectives/detective-es6';
 import detectiveLess from '../detectives/detective-less';
 import detectiveSass from '../detectives/detective-sass';
 import detectiveScss from '../detectives/detective-scss';
-import detectiveStylable from '../detectives/detective-stylable';
 import detectiveTypeScript from '../detectives/detective-typescript';
 import detectiveVue from '../detectives/detective-vue';
 
@@ -104,9 +103,6 @@ function precinct(content, options) {
     case 'tsx':
       theDetective = detectiveTypeScript;
       break;
-    case 'stylable':
-      theDetective = detectiveStylable;
-      break;
     case 'vue':
       theDetective = detectiveVue;
       break;
@@ -159,9 +155,6 @@ precinct.paperwork = function (filename, options) {
   const ext = path.extname(filename);
 
   const getType = () => {
-    if (filename.endsWith('.st.css')) {
-      return 'stylable';
-    }
     switch (ext) {
       case '.css':
       case '.scss':

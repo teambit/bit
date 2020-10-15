@@ -24,7 +24,7 @@ export function componentToPrintableForDiff(component: Component): Record<string
 
   const parseExtensions = (extensions?: ExtensionDataList) => {
     if (!extensions || R.isEmpty(extensions)) return null;
-    return extensions.sortById().map((extension) => extension.stringId);
+    return extensions.toConfigArray().map((extension) => extension.id);
   };
 
   const {

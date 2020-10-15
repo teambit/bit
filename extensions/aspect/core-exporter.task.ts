@@ -17,7 +17,7 @@ export class CoreExporterTask implements BuildTask {
     const capsules = context.capsuleGraph.seedersCapsules;
     const mainAspectCapsule = capsules.find((capsule) => capsule.component.id.name === mainAspect.name);
     if (mainAspectCapsule) {
-      const distDir = this.env.getCompiler().getDistDir();
+      const distDir = this.env.getCompiler().distDir;
       await this.addFolderForAllCoreAspects(mainAspectCapsule, distDir);
     }
 
@@ -49,7 +49,8 @@ export class CoreExporterTask implements BuildTask {
 function generateBarrelFile(packageName) {
   return `
 Object.defineProperty(exports, "__esModule", { value: true });
-const aspect = require("${packageName}");
-module.exports = aspect;
+// const aspect = require("${packageName}");
+// module.exports = aspect;
+module.exports.path = require.resolve("${packageName}");
 `;
 }

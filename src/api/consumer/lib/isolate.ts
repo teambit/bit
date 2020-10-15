@@ -38,7 +38,6 @@ export default (async function isolate(
 });
 
 async function isolateUsingCapsule(componentId: string, opts: IsolateOptions) {
-  opts.applyExtensionsAddedConfig = true;
   const consumer = await loadConsumer();
   const bitId = consumer.getParsedId(componentId);
   const isolator: Isolator = await Isolator.getInstance('fs', consumer.scope, consumer, opts.writeToPath);

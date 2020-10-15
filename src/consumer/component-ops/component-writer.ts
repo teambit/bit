@@ -8,14 +8,21 @@ import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TES
 import ShowDoctorError from '../../error/show-doctor-error';
 import EnvExtension from '../../legacy-extensions/env-extension';
 import logger from '../../logger/logger';
+import { Scope } from '../../scope';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import { getPathRelativeRegardlessCWD, pathNormalizeToLinux, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map/bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
 import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
+import { PackageJsonTransformer } from '../component/package-json-transformer';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import { ArtifactVinyl } from '../component/sources/artifact';
+import {
+  ArtifactFiles,
+  deserializeArtifactFiles,
+  getArtifactFilesByExtension,
+} from '../component/sources/artifact-files';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import ComponentConfig from '../config/component-config';
@@ -30,13 +37,14 @@ export type ComponentWriterProps = {
   isolated?: boolean;
   origin: ComponentOrigin;
   consumer: Consumer | undefined;
+  scope?: Scope | undefined;
   bitMap: BitMap;
   ignoreBitDependencies?: boolean | BitIds;
   deleteBitDirContent?: boolean;
   existingComponentMap?: ComponentMap;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
-  applyExtensionsAddedConfig?: boolean;
+  applyPackageJsonTransformers?: boolean;
 };
 
 export default class ComponentWriter {
@@ -48,13 +56,15 @@ export default class ComponentWriter {
   isolated: boolean | undefined;
   origin: ComponentOrigin;
   consumer: Consumer | undefined; // when using capsule, the consumer is not defined
+  scope?: Scope | undefined;
   bitMap: BitMap;
   ignoreBitDependencies: boolean | BitIds;
   deleteBitDirContent: boolean | undefined;
   existingComponentMap: ComponentMap | undefined;
   excludeRegistryPrefix: boolean;
   saveOnLane: boolean;
-  applyExtensionsAddedConfig?: boolean;
+  applyPackageJsonTransformers: boolean;
+
   constructor({
     component,
     writeToPath,
@@ -64,13 +74,14 @@ export default class ComponentWriter {
     isolated = false,
     origin,
     consumer,
+    scope = consumer?.scope,
     bitMap,
     ignoreBitDependencies = true,
     deleteBitDirContent,
     existingComponentMap,
     excludeRegistryPrefix = false,
     saveOnLane = false,
-    applyExtensionsAddedConfig = false,
+    applyPackageJsonTransformers = true,
   }: ComponentWriterProps) {
     this.component = component;
     this.writeToPath = writeToPath;
@@ -80,13 +91,14 @@ export default class ComponentWriter {
     this.isolated = isolated;
     this.origin = origin;
     this.consumer = consumer;
+    this.scope = scope;
     this.bitMap = bitMap;
     this.ignoreBitDependencies = ignoreBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
     this.excludeRegistryPrefix = excludeRegistryPrefix;
     this.saveOnLane = saveOnLane;
-    this.applyExtensionsAddedConfig = applyExtensionsAddedConfig;
+    this.applyPackageJsonTransformers = applyPackageJsonTransformers;
   }
 
   static getInstance(componentWriterProps: ComponentWriterProps): ComponentWriter {
@@ -126,7 +138,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
-    this.populateArtifacts();
+    await this.populateArtifacts();
     return this.component;
   }
 
@@ -175,9 +187,11 @@ export default class ComponentWriter {
       componentConfig.setCompiler(this.component.compiler ? this.component.compiler.toBitJsonObject() : {});
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
-      if (this.applyExtensionsAddedConfig) {
-        packageJson.mergePropsFromExtensions(this.component);
+
+      if (!this.consumer?.isLegacy && this.applyPackageJsonTransformers) {
+        await this._applyTransformers(this.component, packageJson);
       }
+
       this._mergeChangedPackageJsonProps(packageJson);
       this._mergePackageJsonPropsFromOverrides(packageJson);
       this.component.dataToPersist.addFile(packageJson.toVinylFile());
@@ -200,17 +214,33 @@ export default class ComponentWriter {
    * later, this responsibility might move to pkg extension, which could write only artifacts
    * that are set in package.json.files[], to have a similar structure of a package.
    */
-  private populateArtifacts() {
-    if (this.isolated) {
-      // in capsule, do not write artifacts, they get created by build-pipeline
+  private async populateArtifacts() {
+    if (!this.scope) {
+      // when capsules are written via the workspace, do not write artifacts, they get created by
+      // build-pipeline. when capsules are written via the scope, we do need the dists.
       return;
     }
-    const artifactsVinyl: ArtifactVinyl[] = R.flatten(this.component.extensions.map((e) => e.artifacts));
+    const extensionsNamesForArtifacts = ['teambit.bit/compiler'];
+    const artifactsFiles = extensionsNamesForArtifacts.map((extName) =>
+      getArtifactFilesByExtension(this.component.extensions, extName)
+    );
+    const scope = this.scope;
+    const artifactsVinylFlattened: ArtifactVinyl[] = [];
+    await Promise.all(
+      artifactsFiles.map(async (artifactFiles) => {
+        if (!artifactFiles) return;
+        if (!(artifactFiles instanceof ArtifactFiles)) {
+          artifactFiles = deserializeArtifactFiles(artifactFiles);
+        }
+        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
+        artifactsVinylFlattened.push(...vinylFiles);
+      })
+    );
     const artifactsDir = this.getArtifactsDir();
     if (artifactsDir) {
-      artifactsVinyl.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
+      artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
     }
-    this.component.dataToPersist.addManyFiles(artifactsVinyl);
+    this.component.dataToPersist.addManyFiles(artifactsVinylFlattened);
   }
 
   private getArtifactsDir() {
@@ -248,6 +278,13 @@ export default class ComponentWriter {
   _mergePackageJsonPropsFromOverrides(packageJson: PackageJsonFile) {
     const valuesToMerge = this.component.overrides.componentOverridesPackageJsonData;
     packageJson.mergePackageJsonObject(valuesToMerge);
+  }
+
+  /**
+   * these are changes made by aspects
+   */
+  async _applyTransformers(component: Component, packageJson: PackageJsonFile) {
+    return PackageJsonTransformer.applyTransformers(component, packageJson);
   }
 
   /**

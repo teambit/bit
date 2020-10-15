@@ -12,4 +12,4 @@ const defaultLoaderApi: LoaderApi = {
   remove: () => false,
 };
 
-export const LoaderContext = createContext<LoaderApi>(defaultLoaderApi);
+export const LoaderContext: React.Context<LoaderApi> = createContext<LoaderApi>(defaultLoaderApi);

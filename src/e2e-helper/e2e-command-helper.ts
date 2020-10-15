@@ -215,6 +215,14 @@ export default class CommandHelper {
     const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }
+  getArtifacts(id: string) {
+    const comp = this.catComponent(`${id}@latest`);
+    const builderExt = comp.extensions.find((ext) => ext.name === 'teambit.bit/builder');
+    if (!builderExt) throw new Error(`unable to find builder data for ${id}`);
+    const artifacts = builderExt.data.artifacts;
+    if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
+    return artifacts;
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id} --persisted`);
   }
@@ -293,23 +301,28 @@ export default class CommandHelper {
   }
 
   /**
-   * returns the capsule dir
+   * returns the capsule dir in case there is --json flag
    */
-  createCapsuleHarmony(id: string): string {
-    const output = this.runCmd(`bit capsule-create ${id} --json`);
-    const capsules = JSON.parse(output);
-    const capsule = capsules.find((c) => c.id.includes(id));
-    if (!capsule)
-      throw new Error(
-        `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map((c) => c.id).join(', ')}`
-      );
-    return capsule.path;
+  createCapsuleHarmony(id: string, options?: Record<string, any>): string {
+    const parsedOpts = this.parseOptions(options);
+    const output = this.runCmd(`bit capsule-create ${id} ${parsedOpts}`);
+    if (options?.json || options?.j) {
+      const capsules = JSON.parse(output);
+      const capsule = capsules.find((c) => c.id.includes(id));
+      if (!capsule)
+        throw new Error(
+          `createCapsuleHarmony unable to find capsule for ${id}, inside ${capsules.map((c) => c.id).join(', ')}`
+        );
+      return capsule.path;
+    }
+    return output;
   }
 
   getCapsuleOfComponent(id: string) {
     const capsulesJson = this.runCmd('bit capsule-list -j');
     const capsules = JSON.parse(capsulesJson);
-    const capsulePath = capsules.capsules.find((c) => c.endsWith(id));
+    const idWithUnderScore = id.replace(/\//, '_');
+    const capsulePath = capsules.capsules.find((c) => c.endsWith(idWithUnderScore));
     if (!capsulePath) throw new Error(`unable to find the capsule for ${id}`);
     return capsulePath;
   }
@@ -439,9 +452,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);
@@ -474,12 +487,24 @@ export default class CommandHelper {
       ) {
         throw new Error('extracting supporting only when packing with json and out-dir');
       }
-      const resultParsed = JSON.parse(result);
-      if (!resultParsed || !resultParsed.tarPath) {
+      let resultParsed;
+      try {
+        resultParsed = JSON.parse(result);
+      } catch (e) {
+        // TODO: this is a temp hack to remove the pnpm install line which looks something like
+        // ...5c35e2f15af94460bf455f4c4e82b67991042 | Progress: resolved 19, reused 18, downloaded 0, added 0, doned 0
+        // it should be resolved by controlling the pnpm output correctly and don't print it in json mode
+        const firstCBracket = result.indexOf('{');
+        const newResult = result.substring(firstCBracket);
+        resultParsed = JSON.parse(newResult);
+      }
+      if (!resultParsed || !resultParsed.metadata.tarPath) {
         throw new Error('npm pack results are invalid');
       }
-      const tarballFilePath = resultParsed.tarPath;
-      const dir = options.d || options['-out-dir'];
+
+      const tarballFilePath = resultParsed.metadata.tarPath;
+      // const dir = options.d || options['-out-dir'];
+      const dir = path.dirname(tarballFilePath);
       if (this.debugMode) {
         console.log(`untaring the file ${tarballFilePath} into ${dir}`); // eslint-disable-line no-console
       }

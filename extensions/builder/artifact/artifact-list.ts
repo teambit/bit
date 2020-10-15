@@ -1,4 +1,5 @@
 import { Component } from '@teambit/component';
+import type { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import type { Artifact } from './artifact';
 
 export type ResolverMap = { [key: string]: Artifact[] };
@@ -33,7 +34,7 @@ export class ArtifactList {
     return resolverMap;
   }
 
-  toObject() {
+  toObject(): ArtifactObject[] {
     return this.artifacts.map((artifact) => artifact.toObject());
   }
 

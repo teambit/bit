@@ -1,3 +1,4 @@
+import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
@@ -15,7 +16,6 @@ import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
@@ -30,6 +30,7 @@ import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 
 export type WorkspaceDeps = [
+  PubsubMain,
   CLIMain,
   ScopeMain,
   ComponentMain,
@@ -69,6 +70,7 @@ export type WorkspaceCoreConfig = {
 
 export default async function provideWorkspace(
   [
+    pubsub,
     cli,
     scope,
     component,
@@ -95,7 +97,9 @@ export default async function provideWorkspace(
   if (!consumer) return undefined;
   // TODO: get the 'worksacpe' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
+
   const workspace = new Workspace(
+    pubsub,
     config,
     consumer,
     scope,
@@ -159,7 +163,7 @@ export default async function provideWorkspace(
   const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
   cli.register(capsuleListCmd);
   cli.register(capsuleCreateCmd);
-  const watcher = new Watcher(workspace);
+  const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
     cli.register(new WatchCommand(logger, watcher));
