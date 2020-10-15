@@ -1,4 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
+import { toWindowsCompatiblePath } from '@teambit/string.to-windows-compatible-path';
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 
@@ -45,10 +46,7 @@ Harmony.load([${getIdentifiers(
 
 function getImportStatements(extensionPaths: string[], suffix: string): string {
   return extensionPaths
-    .map((path) => {
-      const windowsCompatibalePath = path.replace(/\\/g, '\\\\');
-      return `import ${getIdentifier(path, suffix)} from '${windowsCompatibalePath}';`;
-    })
+    .map((path) => `import ${getIdentifier(path, suffix)} from '${toWindowsCompatiblePath(path)}';`)
     .join('\n');
 }
 
