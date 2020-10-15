@@ -164,7 +164,9 @@ export class TypescriptCompiler implements Compiler {
     const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     // eslint-disable-next-line no-cond-assign
     while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
-      const capsulePath = nextProject.project.replace(`${path.sep}tsconfig.json`, '');
+      // regex to make sure it will work correctly for both linux and windows
+      // it replaces both /tsconfig.json and \tsocnfig.json
+      const capsulePath = nextProject.project.replace(/[\/\\]tsconfig.json/, '');
       const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
       if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
       longProcessLogger.logProgress(currentComponentId.toString());
