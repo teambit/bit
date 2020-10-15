@@ -1,4 +1,4 @@
-import { Aspect } from '@teambit/harmony';
+import { Aspect } from '@teambit/bit';
 
 export const ExtensionAddDependenciesAspect = Aspect.create({
   id: 'my-scope/extension-add-dependencies',

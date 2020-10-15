@@ -10,6 +10,16 @@ import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
+  distDir = 'dist';
+  distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+  shouldCopyNonSupportedFiles = true;
+  artifactName = 'dist';
+  /**
+   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+   * needed for the package.
+   */
+  npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
+
   constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
@@ -83,17 +93,10 @@ export class TypescriptCompiler implements Compiler {
     return [
       {
         generatedBy: TypescriptAspect.id,
-        name: 'dist',
-        globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
+        name: this.artifactName,
+        globPatterns: this.distGlobPatterns,
       },
     ];
-  }
-
-  /**
-   * returns the dist directory on the capsule
-   */
-  getDistDir() {
-    return 'dist';
   }
 
   /**
@@ -101,7 +104,7 @@ export class TypescriptCompiler implements Compiler {
    */
   getDistPathBySrcPath(srcPath: string) {
     const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
-    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+    return path.join(this.distDir, fileWithJSExtIfNeeded);
   }
 
   /**
@@ -109,12 +112,6 @@ export class TypescriptCompiler implements Compiler {
    */
   isFileSupported(filePath: string): boolean {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
-  }
-
-  getNpmIgnoreEntries() {
-    // when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-    // needed for the package.
-    return [`${this.getDistDir()}/tsconfig.tsbuildinfo`];
   }
 
   /**
