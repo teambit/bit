@@ -88,8 +88,9 @@ export class JestTester implements Tester {
     const config: any = {
       rootDir: context.rootPath,
       watch: context.watch,
-      // runInBand: context.debug,
     };
+
+    if (context.debug) config.runInBand = true;
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
     const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
