@@ -65,7 +65,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(targetTsConfig, defaultTsConfig) : defaultTsConfig;
+    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
   /**
@@ -82,7 +82,6 @@ export class ReactEnv implements Environment {
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
     const tsconfig = this.getTsConfig(targetConfig);
-
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
