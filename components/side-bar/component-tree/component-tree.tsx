@@ -2,7 +2,7 @@ import { ComponentModel } from '@teambit/component';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import React, { useCallback, useMemo } from 'react';
 
-import { /* ScopeView, */ NamespaceView } from './component-nodes';
+import { ScopeView, NamespaceView } from './component-nodes';
 import { ComponentTreeContextProvider } from './component-tree-context';
 import { ComponentView } from './component-view';
 import { indentStyle } from './indent';
@@ -18,12 +18,14 @@ type ComponentTreeProps = {
   treeNodeSlot: ComponentTreeSlot;
 };
 
+const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
+
 export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: ComponentTreeProps) {
   const rootNode = useMemo(
     () =>
       inflateToTree(
         components,
-        (c) => c.id.fullName,
+        (c) => c.id.toString({ ignoreVersion: true }),
         (c) => c as PayloadType
       ),
     [components]
@@ -34,8 +36,10 @@ export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: 
       const children = props.node.children;
 
       if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
-      // // TODO - handle scopes view
-      // if (!id.includes('/')) return ScopeView;
+
+      const isScope = scopeRegEx.test(props.node.id);
+      if (isScope) return <ScopeView {...props} />;
+
       return <NamespaceView {...props} />;
     },
     [treeNodeSlot]

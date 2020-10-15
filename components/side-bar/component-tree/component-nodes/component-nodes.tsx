@@ -10,14 +10,24 @@ import { getName } from '../utils/get-name';
 import styles from './component-nodes.module.scss';
 
 export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
-  return (
-    <>
-      <div className={classNames(indentClass, styles.scope)}>{node.id}</div>
+  const [collapsed, collapse] = useState(false);
+  const displayName = getName(node.id.replace(/\/$/, ''));
 
-      <div style={indentStyle(depth + 1)}>
+  return (
+    <div>
+      {node.id && (
+        <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
+          <div className={styles.left}>
+            <Icon className={classNames(styles.arrow, collapsed && styles.collapsed)} of="fat-arrow-down" />
+            <span className={styles.name}>{displayName}</span>
+          </div>
+        </div>
+      )}
+
+      <div style={indentStyle(depth + 2)} className={classNames(styles.componentTree, { [styles.open]: !collapsed })}>
         {node.children && <TreeLayer childNodes={node.children} depth={depth} />}
       </div>
-    </>
+    </div>
   );
 }
 export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
@@ -26,17 +36,17 @@ export function NamespaceView({ node, depth }: TreeNodeProps<PayloadType>) {
   const displayName = getName(node.id.replace(/\/$/, ''));
 
   return (
-    <div data-collapsed={collapsed}>
+    <div>
       {node.id && (
         <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
           <div className={styles.left}>
-            <Icon className={styles.arrow} of="fat-arrow-down" />
+            <Icon className={classNames(styles.arrow, collapsed && styles.collapsed)} of="fat-arrow-down" />
             <span className={styles.name}>{displayName}</span>
           </div>
         </div>
       )}
 
-      <div style={indentStyle(depth + 1)} className={classNames(styles.componentTree, { [styles.open]: !collapsed })}>
+      <div style={indentStyle(depth + 2)} className={classNames(styles.componentTree, { [styles.open]: !collapsed })}>
         {node.children && <TreeLayer childNodes={node.children} depth={depth} />}
       </div>
     </div>
