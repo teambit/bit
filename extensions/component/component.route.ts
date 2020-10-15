@@ -4,8 +4,8 @@ import { ComponentMain } from './component.main.runtime';
 
 export class ComponentRoute implements Route {
   constructor(private registerRoute: Route, private componentExtension: ComponentMain) {}
-  dynamicRouteRegex = '/?[^./~]+/[^.~]*';
-  readonly route = `/:componentId(${this.dynamicRouteRegex})/~aspect/${this.registerRoute.route}`;
+  dynamicRouteRegex = '/?[^/@]+/[^~]*';
+  readonly route = `/:componentId(${this.dynamicRouteRegex})/~aspect${this.registerRoute.route}`;
 
   get componentMiddlewares() {
     return [

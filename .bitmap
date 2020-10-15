@@ -1803,6 +1803,11 @@
                 "test": false
             },
             {
+                "name": "middleware-manifest.ts",
+                "relativePath": "middleware-manifest.ts",
+                "test": false
+            },
+            {
                 "name": "error.ts",
                 "relativePath": "middlewares/error.ts",
                 "test": false
