@@ -1007,7 +1007,12 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     if (!ext.data[dataFiled]) ext.data[dataFiled] = [];
     if (operation === 'add') {
-      ext.data[dataFiled].push(data);
+      const existing = ext.data[dataFiled].find((c) => c.packageName === data.packageName);
+      if (existing) {
+        existing.componentId = data.componentId;
+      } else {
+        ext.data[dataFiled].push(data);
+      }
     }
     if (operation === 'set') {
       ext.data[dataFiled] = data;
