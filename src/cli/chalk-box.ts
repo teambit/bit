@@ -12,7 +12,7 @@ import { isHash } from '../version/version-parser';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
-export const formatBit = ({ scope, name, version }: any): string =>
+export const formatBit = ({ scope, name, version }: any) =>
   c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${name} - ${version ? version.toString() : 'latest'}`);
 
 export const formatPlainComponentItem = ({ scope, name, version, deprecated }: any): string =>
