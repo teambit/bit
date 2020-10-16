@@ -28,7 +28,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         className={styles.dropdown}
         dropClass={styles.menu}
         placeholder=""
-        clickToggles={false}
+        // clickToggles={false}
         clickOutside
         PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
       >
@@ -37,7 +37,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
           <div className={styles.versionContainer}>
             {versions.map((version, index) => {
               return (
-                <NavLink to={`?version=${version}`} key={index} className={classNames(styles.versionLine, hoverable)}>
+                <NavLink to={`?v=${version}`} key={index} className={classNames(styles.versionLine, hoverable)}>
                   <span className={styles.version}>{version}</span>
                   {version === currentVersion && <VersionLabel status="latest" />}
                 </NavLink>

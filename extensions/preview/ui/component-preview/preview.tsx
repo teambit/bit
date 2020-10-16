@@ -32,7 +32,7 @@ export type ComponentPreviewProps = {
  * renders a preview of a component.
  */
 export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
-  const serverUrl = `/api/${component.id.fullName}/@/preview`;
+  const serverUrl = `/api/${component.id.toString()}/~aspect/preview`;
 
   const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.fullName}${
     `?preview=${previewName}&${queryParams && queryParams}` || ''
