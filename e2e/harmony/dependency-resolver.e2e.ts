@@ -4,6 +4,8 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { generateRandomStr } from '../../src/utils';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -125,18 +127,19 @@ describe('dependency-resolver extension', function () {
       });
     });
   });
-  // @todo: once extensions are loaded on imported components, make sure the following:
-  // import and validated that package.json has correct pkg names.
-  // TODO: skipped until @david fix it
-  // is failing because you set the package name there, so when you tag it's really publish it npm.
-  // and since it's run in the past and already published it,
-  // it gets an error about that version is already exist in npm.
-  // we should think of another approach to test this
-  describe.skip('saving dependencies package names', () => {
-    before(() => {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('saving dependencies package names', function () {
+    let npmCiRegistry: NpmCiRegistry;
+    let randomStr;
+    before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+
+      npmCiRegistry = new NpmCiRegistry(helper);
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `react.${randomStr}.{name}`;
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+
       helper.fixtures.populateComponents(4);
-      const name = `ui.{name}`;
       const pkg = {
         packageJson: {
           name,
@@ -144,10 +147,14 @@ describe('dependency-resolver extension', function () {
       };
       helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
       helper.bitJsonc.addDefaultScope();
-      // @todo: this is a hack, we need to figure out how to get this ext to auto-load for all components
-      helper.bitJsonc.addToVariant(undefined, '*', Extensions.dependencyResolver, {});
       helper.command.linkAndRewire();
+
+      await npmCiRegistry.init();
+
       helper.command.tagAllComponents();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
     });
     it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
@@ -157,7 +164,7 @@ describe('dependency-resolver extension', function () {
       expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
-      expect(depResolverExt.data.dependencies[0].packageName).to.equal('ui.comp3');
+      expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
     });
     describe('exporting the component', () => {
       before(() => {
@@ -169,7 +176,7 @@ describe('dependency-resolver extension', function () {
         expect(depResolverExt.data.dependencies[0].componentId.scope).to.equal(helper.scopes.remote);
         expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
         expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
-        expect(depResolverExt.data.dependencies[0].packageName).to.equal('ui.comp3');
+        expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
       });
     });
   });
