@@ -206,17 +206,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   async consumerComponentToVersion({
     consumerComponent,
     consumer,
-    flattenedDependencies,
-    flattenedDevDependencies,
-    specsResults,
   }: {
     readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
-    flattenedDependencies?: Record<string, any>;
-    flattenedDevDependencies?: Record<string, any>;
     force?: boolean;
     verbose?: boolean;
-    specsResults?: any;
   }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
@@ -285,11 +279,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       dists,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainDistFile,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedDependencies,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      flattenedDevDependencies,
-      specsResults,
     });
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
@@ -313,18 +302,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   async addSource({
     source,
     consumer,
-    flattenedDependencies,
-    flattenedDevDependencies,
     lane,
-    specsResults,
     resolveUnmerged = false,
   }: {
     source: ConsumerComponent;
     consumer: Consumer;
-    flattenedDependencies: BitIds;
-    flattenedDevDependencies: BitIds;
     lane: Lane | null;
-    specsResults?: any;
     resolveUnmerged?: boolean;
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
@@ -343,9 +326,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
-      flattenedDependencies,
-      flattenedDevDependencies,
-      specsResults,
     });
     objectRepo.add(version);
     if (!source.version) throw new Error(`addSource expects source.version to be set`);
