@@ -8,7 +8,6 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
-import { BEFORE_IMPORT_PUT_ON_SCOPE, BEFORE_PERSISTING_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
 import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
@@ -20,9 +19,8 @@ import ValidationError from '../../error/validation-error';
 import logger from '../../logger/logger';
 import { pathJoinLinux, sha1 } from '../../utils';
 import { PathLinux } from '../../utils/path';
-import { buildComponentsGraph } from '../graph/components-graph';
 import { AutoTagResult, getAutoTagInfo } from './auto-tag';
-import { getAllFlattenedDependencies } from './get-flattened-dependencies';
+import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { OnTagResult } from '../scope';
 import { Log } from '../models/version';
@@ -188,7 +186,6 @@ export default async function tagModelComponent({
   resolveUnmerged?: boolean;
   isSnap?: boolean;
 }): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; publishedPackages: string[] }> {
-  loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
@@ -268,45 +265,13 @@ export default async function tagModelComponent({
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
-  // build the dependencies graph
-  const allDependenciesGraphs = buildComponentsGraph(allComponentsToTag);
-
-  const dependenciesCache = {};
-  const notFoundDependencies = new BitIds();
-  const lane = await consumer.getCurrentLaneObject();
-  const addComponentsToScope = async (consumerComponent: Component) => {
-    let testResult;
-    if (!skipTests) {
-      testResult = testsResults.find((result) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
-      });
-    }
-    const { flattenedDependencies, flattenedDevDependencies } = await getAllFlattenedDependencies(
-      scope,
-      consumerComponent.id,
-      allDependenciesGraphs,
-      dependenciesCache,
-      notFoundDependencies
-    );
-
-    await scope.sources.addSource({
-      source: consumerComponent,
-      consumer,
-      flattenedDependencies,
-      flattenedDevDependencies,
-      lane,
-      specsResults: testResult ? testResult.specs : undefined,
-      resolveUnmerged,
-    });
-  };
 
   await addLogToComponents(componentsToTag, autoTagConsumerComponents, persist, message);
 
   if (persist) {
-    // Run the persistence one by one not in parallel!
-    loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-    await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => addComponentsToScope(consumerComponent));
+    if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
+    await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
     validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
   } else {
@@ -331,6 +296,35 @@ export default async function tagModelComponent({
   }
 
   return { taggedComponents: componentsToTag, autoTaggedResults: autoTagData, publishedPackages };
+}
+
+async function addComponentsToScope(consumer: Consumer, components: Component[], resolveUnmerged: boolean) {
+  const lane = await consumer.getCurrentLaneObject();
+  await bluebird.mapSeries(components, async (component) => {
+    await consumer.scope.sources.addSource({
+      source: component,
+      consumer,
+      lane,
+      resolveUnmerged,
+    });
+  });
+}
+
+async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
+  loader.start('importing missing dependencies...');
+  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
+  await flattenedDependenciesGetter.populateFlattenedDependencies();
+  loader.stop();
+}
+
+function addSpecsResultsToComponents(components: Component[], testsResults): void {
+  components.forEach((component) => {
+    const testResult = testsResults.find((result) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      return component.id.isEqualWithoutScopeAndVersion(result.componentId);
+    });
+    component.specsResults = testResult ? testResult.specs : undefined;
+  });
 }
 
 async function addLogToComponents(
