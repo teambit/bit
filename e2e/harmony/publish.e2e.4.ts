@@ -106,6 +106,7 @@ describe('publish functionality', function () {
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 

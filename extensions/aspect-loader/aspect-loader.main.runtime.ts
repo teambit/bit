@@ -6,6 +6,7 @@ import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+
 import { difference } from 'ramda';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -295,7 +296,8 @@ export class AspectLoaderMain {
 
   static async provider([loggerExt, envs]: [LoggerMain, EnvsMain], config, slots, harmony: Harmony) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
-    return new AspectLoaderMain(logger, envs, harmony);
+    const aspectLoader = new AspectLoaderMain(logger, envs, harmony);
+    return aspectLoader;
   }
 }
 

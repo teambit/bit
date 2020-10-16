@@ -9,6 +9,10 @@ export interface ServiceExecutionResult {
 }
 
 export interface Service<TExecResponse extends ServiceExecutionResult, TOpts = {}> {
+  name?: string;
+
+  description?: string;
+
   /**
    * executes a service on a subset of components.
    */

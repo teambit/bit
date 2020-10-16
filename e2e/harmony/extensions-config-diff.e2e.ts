@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('extensions config diff', function () {
+describe('extensions config diff', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -23,6 +23,9 @@ describe.skip('extensions config diff', function () {
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext1', { key: 'val-variant' });
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
     helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
+    helper.extensions.addExtensionToVariant('extensions', 'teambit.bit/aspect');
+    helper.command.install();
+    helper.command.compile();
     helper.command.tagAllComponents();
   });
   after(() => {

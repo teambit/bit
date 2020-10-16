@@ -1729,6 +1729,11 @@
                 "test": false
             },
             {
+                "name": "envs.cmd.tsx",
+                "relativePath": "envs.cmd.tsx",
+                "test": false
+            },
+            {
                 "name": "env-not-found-in-runtime.ts",
                 "relativePath": "exceptions/env-not-found-in-runtime.ts",
                 "test": false
@@ -1800,6 +1805,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "middleware-manifest.ts",
+                "relativePath": "middleware-manifest.ts",
                 "test": false
             },
             {
@@ -3242,6 +3252,11 @@
             {
                 "name": "style.d.ts",
                 "relativePath": "typescript/style.d.ts",
+                "test": false
+            },
+            {
+                "name": "tsconfig.build.json",
+                "relativePath": "typescript/tsconfig.build.json",
                 "test": false
             },
             {
@@ -4696,6 +4711,25 @@
         "exported": false,
         "lanes": []
     },
+    "string/to-windows-compatible-path": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "to-windows-compatible-path.ts",
+                "relativePath": "to-windows-compatible-path.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/to-windows-compatible-path",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "styles/ellipsis": {
         "files": [
             {
@@ -5651,5 +5685,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.59"
+    "version": "14.8.9-dev.62"
 }

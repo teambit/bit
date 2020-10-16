@@ -32,8 +32,8 @@ export class PreparePackagesTask implements BuildTask {
   private async executeNpmIgnoreTask(context: BuildContext): Promise<void> {
     if (!context.env.getCompiler) return;
     const compilerInstance: Compiler = context.env.getCompiler();
-    if (!compilerInstance || !compilerInstance.getNpmIgnoreEntries) return;
-    const npmIgnoreEntries = compilerInstance.getNpmIgnoreEntries();
+    if (!compilerInstance) return;
+    const npmIgnoreEntries = compilerInstance.npmIgnoreEntries;
     if (!npmIgnoreEntries || !npmIgnoreEntries.length) return;
     const capsules = context.capsuleGraph.seedersCapsules;
     await Promise.all(capsules.map((capsule) => this.appendNpmIgnoreEntriesToCapsule(capsule, npmIgnoreEntries)));
@@ -55,7 +55,7 @@ export class PreparePackagesTask implements BuildTask {
   private async executeDistAsRootTask(context: BuildContext) {
     if (!context.env.getCompiler) return;
     const compilerInstance: Compiler = context.env.getCompiler();
-    const distDir = compilerInstance.getDistDir();
+    const distDir = compilerInstance.distDir;
 
     await Promise.all(
       context.capsuleGraph.capsules.map(async (capsule) => {

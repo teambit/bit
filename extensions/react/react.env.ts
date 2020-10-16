@@ -1,5 +1,4 @@
 import { TsConfigSourceFile } from 'typescript';
-import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
@@ -20,6 +19,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
+const buildTsConfig = require('./typescript/tsconfig.build.json');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -65,7 +65,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(targetTsConfig, defaultTsConfig) : defaultTsConfig;
+    return targetTsConfig ? { ...defaultTsConfig, ...targetTsConfig } : defaultTsConfig;
   }
 
   /**
@@ -82,7 +82,6 @@ export class ReactEnv implements Environment {
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
     const tsconfig = this.getTsConfig(targetConfig);
-
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -175,7 +174,11 @@ export class ReactEnv implements Environment {
    * returns the component build pipeline.
    */
   getBuildPipe(): BuildTask[] {
-    return [this.compiler.task, this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+    return [this.getCompilerTask(), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  }
+
+  private getCompilerTask() {
+    return this.compiler.createTask(this.getCompiler(buildTsConfig));
   }
 
   async __getDescriptor() {

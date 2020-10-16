@@ -13,6 +13,7 @@ import {
   Config,
   State,
   TagMap,
+  AspectList,
 } from '@teambit/component';
 import { ComponentScopeDirMap } from '@teambit/config';
 import {
@@ -493,15 +494,28 @@ export class Workspace implements ComponentFactory {
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
-    const extensions = component?.config.extensions ?? new ExtensionDataList();
-    // Add the default scope to the extension because we enforce it in config files
-    await this.addDefaultScopeToExtensionsList(extensions);
+    const aspects = component?.state.aspects
+      ? await this.resolveScopeAspectListIds(component?.state.aspects)
+      : await this.createAspectList(new ExtensionDataList());
+
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
+    const componentConfigFile = new ComponentConfigFile(componentId, aspects, options.propagate);
     await componentConfigFile.write(componentDir, { override: options.override });
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
+  }
+
+  private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
+    const resolvedList = await aspectListFromScope.pmap(async (entry) => {
+      if (entry.id.scope !== this.scope.name) {
+        return entry;
+      }
+      const newId = await this.resolveComponentId(entry.id.fullName);
+      const newEntry = new AspectEntry(newId, entry.legacy);
+      return newEntry;
+    });
+    return resolvedList;
   }
 
   // @gilad needs to implement on variants
@@ -651,7 +665,7 @@ export class Workspace implements ComponentFactory {
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
-      configFileExtensions = componentConfigFile.extensions;
+      configFileExtensions = componentConfigFile.aspects.toLegacy();
       // do not merge from scope data when there is component config file
       // mergeFromScope = false;
     }
@@ -693,6 +707,11 @@ export class Workspace implements ComponentFactory {
       extensionsToMerge.push(scopeExtensions);
     }
 
+    // It's important to do this resolution before the merge, otherwise we have issues with extensions
+    // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
+    const promises = extensionsToMerge.map((list) => this.resolveExtensionListIds(list));
+    await Promise.all(promises);
+
     let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
 
     // remove self from merged extensions
@@ -705,7 +724,16 @@ export class Workspace implements ComponentFactory {
       mergedExtensions = mergedExtensions.remove(selfInMergedExtensions.extensionId);
     }
 
-    const promises = mergedExtensions.map(async (entry) => {
+    return mergedExtensions;
+  }
+
+  /**
+   * This will mutate the entries with extensionId prop to have resolved legacy id
+   * This should be worked on the extension data list not the new aspect list
+   * @param extensionList
+   */
+  private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
+    const promises = extensionList.map(async (entry) => {
       if (entry.extensionId) {
         const id = await this.resolveComponentId(entry.extensionId);
         entry.extensionId = id._legacy;
@@ -713,9 +741,8 @@ export class Workspace implements ComponentFactory {
 
       return entry;
     });
-
     await Promise.all(promises);
-    return mergedExtensions;
+    return extensionList;
   }
 
   /**
@@ -760,7 +787,11 @@ export class Workspace implements ComponentFactory {
         relativeComponentDir,
         name
       );
-      componentConfigFile = await ComponentConfigFile.load(absComponentDir, defaultScopeFromVariantsOrWs);
+      componentConfigFile = await ComponentConfigFile.load(
+        absComponentDir,
+        this.createAspectList.bind(this),
+        defaultScopeFromVariantsOrWs
+      );
     }
 
     return componentConfigFile;
@@ -1084,7 +1115,7 @@ export class Workspace implements ComponentFactory {
       }
       throw err;
     }
-    const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
+    const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
     const defaultScope = await this.componentDefaultScopeFromComponentDir(
       relativeComponentDir,
       legacyId.toStringWithoutScopeAndVersion()
