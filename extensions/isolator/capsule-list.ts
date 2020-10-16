@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component';
+import { normalize } from 'path';
 
 import { Capsule } from './capsule';
 
@@ -23,7 +24,8 @@ export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsu
     return this.map((capsule) => capsule.capsule.wrkDir);
   }
   getIdByPathInCapsule(pathInCapsule: string): ComponentID | null {
-    const found = this.find((item) => pathInCapsule === item.capsule.path);
+    const normalizedPathInCapsule = normalize(pathInCapsule);
+    const found = this.find((item) => normalizedPathInCapsule === normalize(item.capsule.path));
     return found ? found.id : null;
   }
   getAllCapsules(): Capsule[] {
