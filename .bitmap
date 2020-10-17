@@ -1729,11 +1729,6 @@
                 "test": false
             },
             {
-                "name": "envs.cmd.tsx",
-                "relativePath": "envs.cmd.tsx",
-                "test": false
-            },
-            {
                 "name": "env-not-found-in-runtime.ts",
                 "relativePath": "exceptions/env-not-found-in-runtime.ts",
                 "test": false
