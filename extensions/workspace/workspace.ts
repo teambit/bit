@@ -402,13 +402,14 @@ export class Workspace implements ComponentFactory {
       const systemDescriptor = await env.env.__getDescriptor();
       // !important persist services only on the env itself.
       let services: undefined | EnvServiceList;
-      if (this.envs.isRegistered(component.id.toString())) services = this.envs.getServices(env);
+      if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
+      const icon = this.aspectLoader.getDescriptor(env.id).icon || env.env.icon;
 
       return {
         type: systemDescriptor.type,
         id: env.id,
         name: env.name,
-        icon: env.icon,
+        icon,
         description: env.description,
         services: services?.toObject(),
       };

@@ -12,6 +12,8 @@ export const AspectEnvType = 'aspect';
 export class AspectEnv implements Environment {
   constructor(private reactEnv: ReactEnv) {}
 
+  icon = 'https://static.bit.dev/extensions-icons/default.svg';
+
   async __getDescriptor() {
     return {
       type: AspectEnvType,

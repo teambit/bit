@@ -119,7 +119,10 @@ export class EnvsMain {
     return new EnvDefinition(id, this.envSlot.get(id) as Environment);
   }
 
-  isRegistered(id: string) {
+  /**
+   * determines whether an env is registered.
+   */
+  isEnvRegistered(id: string) {
     return Boolean(this.envSlot.get(id));
   }
 
@@ -172,9 +175,14 @@ export class EnvsMain {
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {
-    const envDef = this.getEnv(component);
-    if (!envDef) return null;
-    return envDef;
+    // TODO: fix after resolving dep issue between envs -> dep resolver -> workspace -> scope.
+    const envsData = component.state.aspects.get('teambit.bit/workspace');
+    if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
+
+    return {
+      id: envsData.id.toString(),
+      icon: envsData?.data.icon,
+    };
   }
 
   /**
@@ -190,6 +198,7 @@ export class EnvsMain {
    */
   merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
     const allNames = new Set<string>();
+    const keys = ['icon', 'name', 'description'];
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {
         allNames.add(name);
@@ -199,6 +208,7 @@ export class EnvsMain {
     allNames.forEach((key: string) => {
       const fn = sourceEnv[key];
       if (targetEnv[key]) return;
+      if (keys.includes(key)) targetEnv[key] = fn;
       if (!fn || !fn.bind) {
         return;
       }
