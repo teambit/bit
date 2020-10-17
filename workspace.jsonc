@@ -136,6 +136,7 @@
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",
         "humanize-duration": "3.23.1",
+        "ink-table": "2.0.1",
         "is-primitive": "3.0.1",
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",

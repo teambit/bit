@@ -1,4 +1,4 @@
-import { MainRuntime } from '@teambit/cli';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { EnvService } from './services';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -11,6 +11,7 @@ import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
+import { EnvsCmd } from './envs.cmd';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -180,8 +181,8 @@ export class EnvsMain {
     if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
 
     return {
-      id: envsData.id.toString(),
-      icon: envsData?.data.icon,
+      id: envsData.data.id,
+      icon: envsData.data.icon,
     };
   }
 
@@ -246,16 +247,17 @@ export class EnvsMain {
 
   static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
 
-  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect];
+  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect];
 
   static async provider(
-    [graphql, loggerAspect, component]: [GraphqlMain, LoggerMain, ComponentMain],
+    [graphql, loggerAspect, component, cli]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain],
     config: EnvsConfig,
     [envSlot, serviceSlot]: [EnvsRegistry, ServiceSlot],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
+    cli.register(new EnvsCmd(envs, component));
     graphql.register(environmentsSchema(envs));
     return envs;
   }
