@@ -22,9 +22,7 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
         <Newline />
         <Text color="cyan">compiler config:</Text>
         <Newline />
-        <Text>
-          {descriptor?.config && syntaxHighlighter.highlight(JSON.stringify(descriptor?.config, null, 4), 'javascript')}
-        </Text>
+        <Text>{descriptor?.config && syntaxHighlighter.highlight(descriptor?.config, 'javascript')}</Text>
       </Text>
     );
   }
