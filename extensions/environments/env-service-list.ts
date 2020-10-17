@@ -19,7 +19,7 @@ export class EnvServiceList {
       env: this.env.toObject(),
       services: this.services.map(([id, service]) => {
         return {
-          id: id,
+          id,
           name: service.name,
           description: service.description,
           // @ts-ignore

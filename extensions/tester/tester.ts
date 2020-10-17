@@ -1,5 +1,5 @@
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
-import { ConcreteService, ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/environments';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { TestsResult } from './tests-results';
 
@@ -67,7 +67,7 @@ export interface Tester {
   /**
    * serialized config of the tester.
    */
-  config(): string;
+  displayConfig(): string;
 
   /**
    * path to the config in the filesystem.

@@ -32,7 +32,7 @@ export interface Compiler extends ConcreteService {
   /**
    * serialized config of the compiler.
    */
-  config?(): string;
+  displayConfig?(): string;
 
   /**
    * determines which ones of the generated files will be saved in the bit objects when tagging.

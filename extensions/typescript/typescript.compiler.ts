@@ -14,6 +14,10 @@ export class TypescriptCompiler implements Compiler {
   distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
   shouldCopyNonSupportedFiles = true;
   artifactName = 'dist';
+
+  displayConfig() {
+    return JSON.stringify(this.options.tsconfig, null, 4);
+  }
   /**
    * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
    * needed for the package.

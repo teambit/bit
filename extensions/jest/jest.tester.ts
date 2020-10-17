@@ -15,7 +15,7 @@ export class JestTester implements Tester {
 
   displayName = 'Jest';
 
-  config() {
+  displayConfig() {
     return readFileSync(this.jestConfig, 'utf8');
   }
 

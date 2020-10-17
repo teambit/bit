@@ -1,6 +1,5 @@
 import { Component } from '@teambit/component';
 import { Environment } from '../environment';
-import { ServiceHandler } from './service-handler';
 
 export type EnvContext = {
   components: Component[];
@@ -30,6 +29,11 @@ export interface Service<TExecResponse extends ServiceExecutionResult, TData = {
    * description of the env.
    */
   description?: string;
+
+  /**
+   * create a string to describe to service in the env cli.
+   */
+  render?(env: Environment): JSX.Element;
 
   /**
    * get service data from an environment.

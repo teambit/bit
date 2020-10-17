@@ -1,8 +1,11 @@
 import { Logger } from '@teambit/logger';
+import React from 'react';
+import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, Environment } from '@teambit/environments';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
+import syntaxHighlighter from 'consolehighlighter';
 
 import { NoTestFilesFound } from './exceptions';
 import { Tester, Tests } from './tester';
@@ -42,6 +45,28 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     private logger: Logger
   ) {}
 
+  render(env: Environment) {
+    const descriptor = this.getDescriptor(env);
+    return (
+      <Text key={descriptor?.id}>
+        <Text color="cyan">configured tester: </Text>
+        <Text>
+          {descriptor?.id} ({descriptor?.displayName})
+        </Text>
+        <Newline />
+        <Text underline color="cyan">
+          tester config:
+        </Text>
+        <Newline />
+        <Text>
+          {/* refactor a separate component which highlights for cli */}
+          {syntaxHighlighter.highlight(descriptor?.config, 'javascript')}
+        </Text>
+        <Newline />
+      </Text>
+    );
+  }
+
   getDescriptor(environment: Environment) {
     if (!environment.getTester) return undefined;
     const tester: Tester = environment.getTester();
@@ -50,7 +75,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       id: tester.id || '',
       displayName: tester.displayName || '',
       icon: tester.icon || '',
-      config: tester.config() || '',
+      config: tester.displayConfig() || '',
     };
   }
 

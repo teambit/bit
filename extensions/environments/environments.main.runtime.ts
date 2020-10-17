@@ -1,10 +1,10 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
-import { EnvService } from './services';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';
@@ -29,6 +29,7 @@ export type ServiceSlot = SlotRegistry<EnvService<any>>;
 export type Descriptor = {
   id: string;
   icon: string;
+  services?: [];
 };
 
 export const DEFAULT_ENV = 'teambit.bit/node';
@@ -183,6 +184,7 @@ export class EnvsMain {
     return {
       id: envsData.data.id,
       icon: envsData.data.icon,
+      services: envsData.data.services,
     };
   }
 
