@@ -20,7 +20,7 @@ export class TypescriptCompiler implements Compiler {
    */
   npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
 
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace

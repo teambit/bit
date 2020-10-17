@@ -20,12 +20,12 @@ export class NodeMain {
   }
 
   /**
-   * override the TS config of the React environment.
+   * override the TS config of the environment.
    */
   overrideTsConfig = this.react.overrideTsConfig;
 
   /**
-   * override the jest config of the Node environment.
+   * override the jest config of the environment.
    */
   overrideJestConfig = this.react.overrideJestConfig;
 

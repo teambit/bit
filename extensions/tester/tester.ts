@@ -53,7 +53,32 @@ export interface TesterContext extends ExecutionContext {
 /**
  * tester interface allows extensions to implement a component tester into bit.
  */
-export interface Tester extends ConcreteService {
+export interface Tester {
+  /**
+   * display name of the tester.
+   */
+  displayName?: string;
+
+  /**
+   * icon of the tester.
+   */
+  icon?: string;
+
+  /**
+   * serialized config of the tester.
+   */
+  config(): string;
+
+  /**
+   * path to the config in the filesystem.
+   */
+  configPath?: string;
+
+  /**
+   * id of the tester.
+   */
+  id: string;
+
   /**
    * execute tests on all components in the given execution context.
    */

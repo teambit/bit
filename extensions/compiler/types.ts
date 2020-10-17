@@ -15,9 +15,24 @@ export type TranspileOutput =
 
 export interface Compiler extends ConcreteService {
   /**
+   * id of the compiler.
+   */
+  id: string;
+
+  /**
+   * name of the compiler.
+   */
+  name?: string;
+
+  /**
    * relative path of the dist directory inside the capsule. e.g. "dist".
    */
   distDir: string;
+
+  /**
+   * serialized config of the compiler.
+   */
+  config?(): string;
 
   /**
    * determines which ones of the generated files will be saved in the bit objects when tagging.

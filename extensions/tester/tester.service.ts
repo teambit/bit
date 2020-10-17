@@ -1,5 +1,5 @@
 import { Logger } from '@teambit/logger';
-import { EnvService, ExecutionContext } from '@teambit/environments';
+import { EnvService, ExecutionContext, Environment } from '@teambit/environments';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
@@ -9,7 +9,29 @@ import { Tester, Tests } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
-export class TesterService implements EnvService<Tests> {
+export type TesterDescriptor = {
+  /**
+   * id of the tester (e.g. jest/mocha)
+   */
+  id: string;
+
+  /**
+   * display name of the tester (e.g. Jest / Mocha)
+   */
+  displayName: string;
+
+  /**
+   * icon of the configured tester.
+   */
+  icon: string;
+
+  /**
+   * string containing the config for display.
+   */
+  config: string;
+};
+
+export class TesterService implements EnvService<Tests, TesterDescriptor> {
   constructor(
     readonly workspace: Workspace,
     /**
@@ -19,6 +41,18 @@ export class TesterService implements EnvService<Tests> {
 
     private logger: Logger
   ) {}
+
+  getDescriptor(environment: Environment) {
+    if (!environment.getTester) return undefined;
+    const tester: Tester = environment.getTester();
+
+    return {
+      id: tester.id || '',
+      displayName: tester.displayName || '',
+      icon: tester.icon || '',
+      config: tester.config() || '',
+    };
+  }
 
   async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
     const tester: Tester = context.env.getTester();
