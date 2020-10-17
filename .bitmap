@@ -719,6 +719,11 @@
                 "test": false
             },
             {
+                "name": "compiler.service.ts",
+                "relativePath": "compiler.service.ts",
+                "test": false
+            },
+            {
                 "name": "compiler.task.ts",
                 "relativePath": "compiler.task.ts",
                 "test": false
@@ -1714,6 +1719,11 @@
                 "test": false
             },
             {
+                "name": "env-service-list.ts",
+                "relativePath": "env-service-list.ts",
+                "test": false
+            },
+            {
                 "name": "environment.ts",
                 "relativePath": "environment.ts",
                 "test": false
@@ -1781,6 +1791,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "services/index.ts",
+                "test": false
+            },
+            {
+                "name": "service-handler.ts",
+                "relativePath": "services/service-handler.ts",
                 "test": false
             },
             {

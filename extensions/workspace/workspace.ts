@@ -402,7 +402,7 @@ export class Workspace implements ComponentFactory {
       const systemDescriptor = await env.env.__getDescriptor();
       // !important persist services only on the env itself.
       let services: undefined | EnvServiceList;
-      if (env.id === component.id.toString()) services = this.envs.getServices(env);
+      if (this.envs.isRegistered(component.id.toString())) services = this.envs.getServices(env);
 
       return {
         type: systemDescriptor.type,

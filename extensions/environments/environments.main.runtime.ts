@@ -119,6 +119,10 @@ export class EnvsMain {
     return new EnvDefinition(id, this.envSlot.get(id) as Environment);
   }
 
+  isRegistered(id: string) {
+    return Boolean(this.envSlot.get(id));
+  }
+
   /**
    * register a new environment service.
    */

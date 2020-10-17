@@ -16,7 +16,7 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
     return {
       id: compiler.id,
       icon: compiler.icon,
-      config: compiler.config(),
+      config: compiler.config ? compiler.config() : undefined,
     };
   }
 }

@@ -23,7 +23,7 @@ export class EnvServiceList {
           name: service.name,
           description: service.description,
           // @ts-ignore
-          data: service.getDescriptor(),
+          data: service.getDescriptor(this.env.env),
         };
       }),
     };
