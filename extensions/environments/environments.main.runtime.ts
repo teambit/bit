@@ -1,13 +1,17 @@
-import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect } from '@teambit/component';
+import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
+import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
 import { environmentsSchema } from './environments.graphql';
 import { EnvRuntime, Runtime } from './runtime';
+import { EnvDefinition } from './env-definition';
+import { EnvServiceList } from './env-service-list';
+import { EnvsCmd } from './envs.cmd';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -20,14 +24,12 @@ export type EnvOptions = {};
 
 export type EnvTransformer = (env: Environment) => Environment;
 
-export type EnvDefinition = {
-  id: string;
-  env: Environment;
-};
+export type ServiceSlot = SlotRegistry<EnvService<any>>;
 
 export type Descriptor = {
   id: string;
   icon: string;
+  services?: [];
 };
 
 export const DEFAULT_ENV = 'teambit.bit/node';
@@ -60,7 +62,11 @@ export class EnvsMain {
      */
     private envSlot: EnvsRegistry,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private serviceSlot: ServiceSlot,
+
+    private componentMain: ComponentMain
   ) {}
 
   /**
@@ -70,14 +76,14 @@ export class EnvsMain {
     return this.createRuntime(components);
   }
 
+  /**
+   * get the configured default env.
+   */
   getDefaultEnv(): EnvDefinition {
     const defaultEnv = this.envSlot.get(DEFAULT_ENV);
     if (!defaultEnv) throw new Error('default env must be set.');
 
-    return {
-      id: DEFAULT_ENV,
-      env: defaultEnv,
-    };
+    return new EnvDefinition(DEFAULT_ENV, defaultEnv);
   }
 
   /**
@@ -93,7 +99,7 @@ export class EnvsMain {
   }
 
   /**
-   * override members of an environment and return an env transformer.
+   * create an env transformer which overrides specific env properties.
    */
   override(propsToOverride: Environment): EnvTransformer {
     return (env: Environment) => {
@@ -112,10 +118,40 @@ export class EnvsMain {
 
     if (!env) return this.getDefaultEnv();
     const id = env.id.toString();
-    return {
-      id,
-      env: this.envSlot.get(id) as Environment,
-    };
+    return new EnvDefinition(id, this.envSlot.get(id) as Environment);
+  }
+
+  /**
+   * determines whether an env is registered.
+   */
+  isEnvRegistered(id: string) {
+    return Boolean(this.envSlot.get(id));
+  }
+
+  /**
+   * register a new environment service.
+   */
+  registerService(envService: EnvService<any>) {
+    this.serviceSlot.register(envService);
+    return this;
+  }
+
+  /**
+   * get list of services enabled on an env.
+   */
+  getServices(env: EnvDefinition): EnvServiceList {
+    const allServices = this.serviceSlot.toArray();
+    const services = allServices.filter(([, service]) => {
+      return this.implements(env, service);
+    });
+
+    return new EnvServiceList(env, services);
+  }
+
+  implements(env: EnvDefinition, service: EnvService<any>) {
+    // TODO: remove this after refactoring everything and remove getDescriptor from being optional.
+    if (!service.getDescriptor) return false;
+    return !!service.getDescriptor(env.env);
   }
 
   /**
@@ -129,32 +165,26 @@ export class EnvsMain {
       const id = envInExtensionList.newExtensionId
         ? envInExtensionList.newExtensionId.toString()
         : envInExtensionList.stringId;
-      return {
-        id,
-        env: this.envSlot.get(id) as Environment,
-      };
+      return new EnvDefinition(id, this.envSlot.get(id) as Environment);
     }
     const defaultEnvId = 'teambit.bit/node';
     const defaultEnv = this.envSlot.get(defaultEnvId);
     if (!defaultEnv) throw new Error(`the default environment "${defaultEnvId}" was not registered`);
-    return { id: defaultEnvId, env: defaultEnv };
+    return new EnvDefinition(defaultEnvId, defaultEnv);
   }
 
   /**
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {
-    const defaultIcon = `https://static.bit.dev/extensions-icons/default.svg`;
-    // TODO: @guy after fix core extension then take it from core extension
-    const envDef = this.getEnv(component);
-    if (!envDef) return null;
-    const instance = this.context.get<any>(envDef.id);
-    const iconFn = instance.icon;
+    // TODO: fix after resolving dep issue between envs -> dep resolver -> workspace -> scope.
+    const envsData = component.state.aspects.get('teambit.bit/workspace');
+    if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
 
-    const icon = iconFn ? iconFn.apply(instance) : defaultIcon;
     return {
-      id: envDef.id,
-      icon,
+      id: envsData.data.id,
+      icon: envsData.data.icon,
+      services: envsData.data.services,
     };
   }
 
@@ -171,6 +201,7 @@ export class EnvsMain {
    */
   merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
     const allNames = new Set<string>();
+    const keys = ['icon', 'name', 'description'];
     for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
       for (const name of Object.getOwnPropertyNames(o)) {
         allNames.add(name);
@@ -180,6 +211,7 @@ export class EnvsMain {
     allNames.forEach((key: string) => {
       const fn = sourceEnv[key];
       if (targetEnv[key]) return;
+      if (keys.includes(key)) targetEnv[key] = fn;
       if (!fn || !fn.bind) {
         return;
       }
@@ -215,18 +247,19 @@ export class EnvsMain {
     });
   }
 
-  static slots = [Slot.withType<Environment>()];
+  static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
 
-  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect];
+  static dependencies = [GraphqlAspect, LoggerAspect, ComponentAspect, CLIAspect];
 
   static async provider(
-    [graphql, loggerAspect]: [GraphqlMain, LoggerMain],
+    [graphql, loggerAspect, component, cli]: [GraphqlMain, LoggerMain, ComponentMain, CLIMain],
     config: EnvsConfig,
-    [envSlot]: [EnvsRegistry],
+    [envSlot, serviceSlot]: [EnvsRegistry, ServiceSlot],
     context: Harmony
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
-    const envs = new EnvsMain(config, context, envSlot, logger);
+    const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
+    cli.register(new EnvsCmd(envs, component));
     graphql.register(environmentsSchema(envs));
     return envs;
   }

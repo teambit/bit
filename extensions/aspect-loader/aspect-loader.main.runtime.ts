@@ -23,7 +23,7 @@ export type AspectDescriptor = {
   /**
    * icon of the extension.
    */
-  icon: string;
+  icon?: string;
 };
 
 export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
@@ -98,12 +98,8 @@ export class AspectLoaderMain {
   getDescriptor(id: string): AspectDescriptor {
     const instance = this.harmony.get<any>(id);
     const iconFn = instance.icon;
-    const defaultIcon = `
-      <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="25" cy="25" r="20"/>
-      </svg>`;
 
-    const icon = iconFn ? iconFn() : defaultIcon;
+    const icon = iconFn ? iconFn.apply(instance) : undefined;
 
     return {
       id,

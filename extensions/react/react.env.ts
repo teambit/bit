@@ -133,6 +133,8 @@ export class ReactEnv implements Environment {
     return require.resolve('./docs');
   }
 
+  icon = 'https://static.bit.dev/extensions-icons/react.svg';
+
   /**
    * return a function which mounts a given component to DOM
    */

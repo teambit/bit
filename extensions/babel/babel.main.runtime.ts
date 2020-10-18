@@ -13,7 +13,7 @@ export class BabelMain {
   constructor(private logger: Logger) {}
 
   createCompiler(options: BabelCompilerOptions): Compiler {
-    return new BabelCompiler(this.logger, options);
+    return new BabelCompiler(BabelAspect.id, this.logger, options);
   }
 
   getPackageJsonProps() {

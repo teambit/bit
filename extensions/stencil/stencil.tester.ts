@@ -3,7 +3,7 @@ import { Tester, TesterContext, Tests } from '@teambit/tester';
 import { Workspace } from '@teambit/workspace';
 
 export class StencilTester implements Tester {
-  constructor(private workspace: Workspace) {}
+  constructor(readonly id: string, private workspace: Workspace) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async test(context: TesterContext): Promise<Tests> {

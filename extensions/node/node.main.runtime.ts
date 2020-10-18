@@ -1,7 +1,7 @@
 import { DependenciesPolicy } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/environments';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
@@ -20,12 +20,12 @@ export class NodeMain {
   }
 
   /**
-   * override the TS config of the React environment.
+   * override the TS config of the environment.
    */
   overrideTsConfig = this.react.overrideTsConfig;
 
   /**
-   * override the jest config of the Node environment.
+   * override the jest config of the environment.
    */
   overrideJestConfig = this.react.overrideJestConfig;
 
@@ -56,6 +56,13 @@ export class NodeMain {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.nodeEnv.getDependencies()),
     });
+  }
+
+  /**
+   * create a new composition of the node environment.
+   */
+  compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
+    return this.envs.compose(this.envs.merge(targetEnv, this.nodeEnv), transformers);
   }
 
   static runtime = MainRuntime;
