@@ -6,7 +6,7 @@ import { ReactRouterUI } from './react-router.ui.runtime';
 export type History = ReturnType<typeof useHistory>;
 
 export enum Routing {
-  pathname,
+  url,
   hash,
   inMemory,
 }
@@ -18,7 +18,7 @@ type RouterContextProps = {
   routing?: Routing;
 };
 
-export function RouteContext({ rootRoutes, routeSlot, reactRouterUi, routing = Routing.pathname }: RouterContextProps) {
+export function RouteContext({ rootRoutes, routeSlot, reactRouterUi, routing = Routing.url }: RouterContextProps) {
   const Router = getRouter(routing);
 
   return (
@@ -35,7 +35,7 @@ function getRouter(type: Routing): ComponentType {
       return MemoryRouter;
     case Routing.hash:
       return HashRouter;
-    case Routing.pathname:
+    case Routing.url:
     default:
       return BrowserRouter;
   }

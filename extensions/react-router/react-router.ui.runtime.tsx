@@ -1,44 +1,38 @@
 import React from 'react';
-import { Slot } from '@teambit/harmony';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { RouteProps, useHistory } from 'react-router-dom';
-import { connectToParent, ErrorCode } from 'penpal';
-import type { AsyncMethodReturns } from 'penpal/lib/types';
-import { Location, UnregisterCallback } from 'history';
+import { RouteProps } from 'react-router-dom';
+import { History, UnregisterCallback, LocationListener } from 'history';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteSlot } from './slot-router';
 import { RouteContext, Routing } from './route-context';
+import { IframeNavigator } from './parent-navigator';
 
-type History = ReturnType<typeof useHistory>;
-type HistoryState = { iframeSource?: string };
-type ParentMethods = {
-  changeLocation: (e: Location) => void;
-};
-
-const ALLOWED_PARENTS = /.*bit\.dev$/;
+type RouteChangeSlot = SlotRegistry<LocationListener>;
 
 export class ReactRouterUI {
   private routerHistory?: History;
-  private isIframed = typeof window !== 'undefined' && window.parent !== window;
-  private parent?: AsyncMethodReturns<ParentMethods>;
+  private routingMode = Routing.url;
 
   constructor(
     /**
      * route slot.
      */
-    private routeSlot: RouteSlot
-  ) {
-    if (this.isIframed) setTimeout(this.connectToParent, 300);
-  }
+    private routeSlot: RouteSlot,
+    /**
+     *
+     */
+    private routeChangeListener: RouteChangeSlot
+  ) {}
 
   /**
    * render all slot routes.
    */
   renderRoutes(routes: RouteProps[]): JSX.Element {
-    const routing = this.isIframed ? Routing.inMemory : Routing.pathname;
-
-    return <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} routing={routing} />;
+    return (
+      <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} routing={this.routingMode} />
+    );
   }
 
   private unregisterListener?: UnregisterCallback = undefined;
@@ -47,8 +41,19 @@ export class ReactRouterUI {
     this.routerHistory = routerHistory;
 
     this.unregisterListener?.();
-    this.unregisterListener = routerHistory.listen(this.handleLocationChange);
+    this.unregisterListener = routerHistory.listen((...args) => {
+      this.routeChangeListener.values().forEach((listener) => listener(...args));
+    });
   };
+
+  /** decides how navigation is stored and applied.
+   * Url - updates the `window.location.pathname`.
+   * Hash - updates `window.location.hash`.
+   * InMemory - store state internally and don't update the browser.
+   */
+  setRoutingMode(routing: Routing) {
+    this.routingMode = routing;
+  }
 
   /**
    * register a new route.
@@ -69,44 +74,18 @@ export class ReactRouterUI {
     this.routerHistory?.push(path, state);
   };
 
-  private handleLocationChange = (next: Location, action: string) => {
-    const state = next.state as HistoryState | undefined;
-    if (state?.iframeSource === 'parent') return;
-    if (action === 'POP') return; // ignore 'back' and 'forward' changes (handled by parent)
-
-    this.parent?.changeLocation(next);
-  };
-
-  private connectionRetries = 3;
-  private connectToParent = () => {
-    const parentConnection = connectToParent<ParentMethods>({
-      parentOrigin: ALLOWED_PARENTS,
-      timeout: 800,
-      methods: {
-        navigateTo: (path: string) => this.navigateTo(path, { iframeSource: 'parent' }),
-      },
-      // debug: true,
-    });
-
-    parentConnection.promise
-      .then((e) => (this.parent = e))
-      .catch((err: Error & { code: ErrorCode }) => {
-        const shouldRetry =
-          this.connectionRetries > 0 && [ErrorCode.ConnectionTimeout, ErrorCode.ConnectionDestroyed].includes(err.code);
-
-        if (shouldRetry) {
-          this.connectionRetries -= 1;
-          setTimeout(this.connectToParent, 300);
-        }
-      });
-  };
-
-  static slots = [Slot.withType<RouteProps>()];
-
+  static slots = [Slot.withType<RouteProps>(), Slot.withType<LocationListener>()];
   static runtime = UIRuntime;
 
-  static async provider(deps, config, [routeSlot]: [RouteSlot]) {
-    return new ReactRouterUI(routeSlot);
+  static async provider(deps, config, [routeSlot, routeChangeSlot]: [RouteSlot, RouteChangeSlot]) {
+    const router = new ReactRouterUI(routeSlot, routeChangeSlot);
+
+    const iframeNav = new IframeNavigator(router);
+    routeChangeSlot.register(iframeNav.handleLocationChange);
+    // @ts-ignore TODO! TEMPORARY
+    router.iframeNav = iframeNav;
+
+    return router;
   }
 }
 
