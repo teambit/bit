@@ -7,11 +7,14 @@ import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
 import { Middleware, Request, Response, Route } from './types';
+import { MiddlewareManifest } from './middleware-manifest';
 
 export type ExpressConfig = {
   port: number;
   namespace: string;
 };
+
+export type MiddlewareSlot = SlotRegistry<MiddlewareManifest[]>;
 
 export type RouteSlot = SlotRegistry<Route[]>;
 
@@ -32,7 +35,9 @@ export class ExpressMain {
     /**
      * logger extension.
      */
-    readonly logger: Logger
+    readonly logger: Logger,
+
+    readonly middlewareSlot: MiddlewareSlot
   ) {}
 
   /**
@@ -49,6 +54,14 @@ export class ExpressMain {
    */
   register(routes: Route[]) {
     this.moduleSlot.register(routes);
+    return this;
+  }
+
+  /**
+   * register a new middleware into express.
+   */
+  registerMiddleware(middlewares: MiddlewareManifest[]) {
+    this.middlewareSlot.register(middlewares);
     return this;
   }
 
@@ -104,7 +117,7 @@ export class ExpressMain {
     return middlewares.map((middleware) => catchErrors(middleware));
   }
 
-  static slots = [Slot.withType<Route[]>()];
+  static slots = [Slot.withType<Route[]>(), Slot.withType<MiddlewareManifest[]>()];
   static dependencies = [LoggerAspect];
 
   static defaultConfig = {
@@ -112,9 +125,13 @@ export class ExpressMain {
     namespace: 'api',
   };
 
-  static async provider([loggerFactory]: [LoggerMain], config: ExpressConfig, [routeSlot]: [RouteSlot]) {
+  static async provider(
+    [loggerFactory]: [LoggerMain],
+    config: ExpressConfig,
+    [routeSlot, middlewareSlot]: [RouteSlot, MiddlewareSlot]
+  ) {
     const logger = loggerFactory.createLogger(ExpressAspect.id);
-    return new ExpressMain(config, routeSlot, logger);
+    return new ExpressMain(config, routeSlot, logger, middlewareSlot);
   }
 }
 

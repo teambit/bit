@@ -1,9 +1,10 @@
 import React, { useContext } from 'react';
-import { ComponentComposition } from '@teambit/compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { ComponentCard } from '@teambit/explorer.ui.component-card';
 import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
 import { ScopeDetails } from '@teambit/staged-components.scope-details';
+import { PreviewPlaceholder } from '@teambit/staged-components.preview-placeholder';
+import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '../scope-context';
 import styles from './scope-overview.module.scss';
 import { ScopeBadgeSlot } from '../../scope.ui.runtime';
@@ -28,15 +29,26 @@ export function ScopeOverview({ badgeSlot }: ScopeOverviewProps) {
         {components.map((component, index) => {
           return (
             <div key={index}>
-              <ComponentCard
-                id={component.id.fullName}
-                envIcon={component.environment?.icon}
-                preview={<ComponentComposition component={component} />}
-              />
+              <ScopeComponentCard component={component} />
             </div>
           );
         })}
       </ComponentGrid>
     </div>
+  );
+}
+
+type ScopeComponentCardProps = {
+  component: ComponentModel;
+};
+
+export function ScopeComponentCard({ component }: ScopeComponentCardProps) {
+  const shouldShowPreview = component.compositions.length > 0;
+  return (
+    <ComponentCard
+      id={component.id.fullName}
+      envIcon={component.environment?.icon}
+      preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
+    />
   );
 }
