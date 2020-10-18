@@ -14,6 +14,9 @@ const SCOPE = gql`
           version
           scope
         }
+        compositions {
+          identifier
+        }
         env {
           id
           icon

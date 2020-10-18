@@ -1,5 +1,3 @@
-import { ComponentComposition } from '@teambit/compositions';
-import ReactTooltip from 'react-tooltip';
 import { ComponentCard } from '@teambit/explorer.ui.component-card';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
