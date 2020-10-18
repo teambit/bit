@@ -1,9 +1,11 @@
 import chai, { expect } from 'chai';
-
+import path from 'path';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { Extensions } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
+import { generateRandomStr } from '../../src/utils';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -12,7 +14,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('dependency-resolver extension', function () {
+describe('dependency-resolver extension', function () {
   let helper: Helper;
   this.timeout(0);
   before(() => {
@@ -32,7 +34,7 @@ describe.skip('dependency-resolver extension', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.fixtures.createComponentUtilsIsType();
-        helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+        helper.fs.outputFile(path.join('utils', 'is-type.js'), fixtures.isType);
         helper.command.addComponent('utils', { i: 'utils/is-type' });
         const depResolverConfig = {
           policy: {
@@ -56,10 +58,10 @@ describe.skip('dependency-resolver extension', function () {
         expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
         expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
       });
-      it('should have the updated dependencies for utils/is-type', function () {
-        expect(isTypeOutput.packageDependencies).to.be.empty;
-        expect(isTypeOutput.devPackageDependencies).to.be.empty;
-        expect(isTypeOutput.peerPackageDependencies).to.be.empty;
+      it('should not put the dependencies for not configured component', function () {
+        expect(isTypeOutput.packageDependencies).to.not.have.key('lodash.get');
+        expect(isTypeOutput.devPackageDependencies).to.not.have.key('lodash.words');
+        expect(isTypeOutput.peerPackageDependencies).to.not.have.key('lodash.set');
       });
     });
     // TODO: implement once we can extend a specific env with new methods (to apply config changes)
@@ -111,10 +113,10 @@ describe.skip('dependency-resolver extension', function () {
           expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
           expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
         });
-        it('should have the updated dependencies for utils/is-type', function () {
-          expect(isTypeOutput.packageDependencies).to.be.empty;
-          expect(isTypeOutput.devPackageDependencies).to.be.empty;
-          expect(isTypeOutput.peerPackageDependencies).to.be.empty;
+        it('should not put the dependencies for not configured component', function () {
+          expect(isTypeOutput.packageDependencies).to.not.have.key('lodash.get');
+          expect(isTypeOutput.devPackageDependencies).to.not.have.key('lodash.words');
+          expect(isTypeOutput.peerPackageDependencies).to.not.have.key('lodash.set');
         });
       });
       describe.skip('conflict between few extensions policies', function () {
@@ -125,13 +127,19 @@ describe.skip('dependency-resolver extension', function () {
       });
     });
   });
-  // @todo: once extensions are loaded on imported components, make sure the following:
-  // import and validated that package.json has correct pkg names.
-  describe('saving dependencies package names', () => {
-    before(() => {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('saving dependencies package names', function () {
+    let npmCiRegistry: NpmCiRegistry;
+    let randomStr;
+    before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+
+      npmCiRegistry = new NpmCiRegistry(helper);
+      randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
+      const name = `react.${randomStr}.{name}`;
+      npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+
       helper.fixtures.populateComponents(4);
-      const name = `ui.{name}`;
       const pkg = {
         packageJson: {
           name,
@@ -139,10 +147,14 @@ describe.skip('dependency-resolver extension', function () {
       };
       helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
       helper.bitJsonc.addDefaultScope();
-      // @todo: this is a hack, we need to figure out how to get this ext to auto-load for all components
-      helper.bitJsonc.addToVariant(undefined, '*', Extensions.dependencyResolver, {});
       helper.command.linkAndRewire();
+
+      await npmCiRegistry.init();
+
       helper.command.tagAllComponents();
+    });
+    after(() => {
+      npmCiRegistry.destroy();
     });
     it('should save the packageName data into the dependencyResolver extension in the model', () => {
       const comp2 = helper.command.catComponent('comp2@latest');
@@ -152,7 +164,7 @@ describe.skip('dependency-resolver extension', function () {
       expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
-      expect(depResolverExt.data.dependencies[0].packageName).to.equal('ui.comp3');
+      expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
     });
     describe('exporting the component', () => {
       before(() => {
@@ -164,7 +176,7 @@ describe.skip('dependency-resolver extension', function () {
         expect(depResolverExt.data.dependencies[0].componentId.scope).to.equal(helper.scopes.remote);
         expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
         expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
-        expect(depResolverExt.data.dependencies[0].packageName).to.equal('ui.comp3');
+        expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
       });
     });
   });

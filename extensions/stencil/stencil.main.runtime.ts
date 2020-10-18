@@ -22,11 +22,11 @@ export class StencilMain {
   ) {}
 
   createCompiler(options: TranspileOptions) {
-    return new StencilCompiler(options);
+    return new StencilCompiler(StencilAspect.id, options);
   }
 
   createTester() {
-    return new StencilTester(this.workspace);
+    return new StencilTester(StencilAspect.id, this.workspace);
   }
 
   createDevServer() {

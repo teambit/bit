@@ -29,6 +29,8 @@
           "url-loader": "^4.1.0",
           "postcss-loader": "^3.0.0",
           "sass-loader": "^8.0.2",
+          "less": "^3.12.2",
+          "less-loader": "^7.0.2",
           "bit-bin": "-"
         },
         "devDependencies": {
@@ -40,7 +42,7 @@
         "peerDependencies": {
           "react": "^16.13.1",
           "react-dom": "^16.13.1",
-          "bit-bin": "14.8.9-dev.46"
+          "bit-bin": "14.8.9-dev.64"
         }
       }
     }

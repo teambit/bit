@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import { ComponentID, AspectList } from '@teambit/component';
 import { COMPONENT_CONFIG_FILE_NAME } from 'bit-bin/dist/constants';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
@@ -21,6 +21,7 @@ interface WriteConfigFileOptions {
 
 interface ComponentConfigFileJson {
   componentId: any;
+  // TODO: think if we want to change it to aspects
   extensions: any;
   propagate: boolean;
   defaultScope?: string;
@@ -32,7 +33,7 @@ const DEFAULT_NEWLINE = '\n';
 export class ComponentConfigFile {
   constructor(
     public componentId: ComponentID,
-    public extensions: ExtensionDataList,
+    public aspects: AspectList,
     public propagate: boolean = false,
     private options: ComponentConfigFileOptions = { indent: DEFAULT_INDENT, newLine: DEFAULT_NEWLINE },
     public defaultScope?: string
@@ -41,6 +42,7 @@ export class ComponentConfigFile {
   // TODO: remove consumer from here
   static async load(
     componentDir: PathOsBasedAbsolute,
+    aspectListFactory: (extensionDataList: ExtensionDataList) => Promise<AspectList>,
     outsideDefaultScope?: string
   ): Promise<ComponentConfigFile | undefined> {
     const filePath = ComponentConfigFile.composePath(componentDir);
@@ -53,15 +55,9 @@ export class ComponentConfigFile {
     const indent = detectIndent(content).amount;
     const newLine = detectNewline(content);
     const componentId = ComponentID.fromObject(parsed.componentId, parsed.defaultScope || outsideDefaultScope);
-    const extensions = ExtensionDataList.fromConfigObject(parsed.extensions);
+    const aspects = await aspectListFactory(ExtensionDataList.fromConfigObject(parsed.extensions));
 
-    return new ComponentConfigFile(
-      componentId,
-      extensions,
-      !!parsed.propagate,
-      { indent, newLine },
-      parsed.defaultScope
-    );
+    return new ComponentConfigFile(componentId, aspects, !!parsed.propagate, { indent, newLine }, parsed.defaultScope);
   }
 
   static composePath(componentRootFolder: string) {
@@ -83,7 +79,7 @@ export class ComponentConfigFile {
       componentId: this.componentId.toObject(),
       propagate: this.propagate,
       defaultScope: this.defaultScope,
-      extensions: this.extensions.toConfigObject(),
+      extensions: this.aspects.toConfigObject(),
     };
   }
 

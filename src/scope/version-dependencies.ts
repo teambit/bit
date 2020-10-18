@@ -1,7 +1,8 @@
+import R from 'ramda';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ComponentWithDependencies from './component-dependencies';
-import ComponentObjects from './component-objects';
 import ComponentVersion from './component-version';
+import { ObjectItem } from './objects/object-list';
 import Repository from './objects/repository';
 
 export default class VersionDependencies {
@@ -50,23 +51,17 @@ export default class VersionDependencies {
     });
   }
 
-  toObjects(
+  async toObjects(
     repo: Repository,
     clientVersion: string | null | undefined,
-    collectParents: boolean
-  ): Promise<ComponentObjects> {
-    const depsP = Promise.all(this.allDependencies.map((dep) => dep.toObjects(repo, clientVersion, collectParents)));
-    const compP = this.component.toObjects(repo, clientVersion, collectParents);
-
-    return Promise.all([compP, depsP]).then(([component, dependencies]) => {
-      const flattened = dependencies.reduce((array, compObjects) => {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        array.push(...compObjects.objects.concat([compObjects.component]));
-        return array;
-      }, []);
-
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      return new ComponentObjects(component.component, flattened.concat(component.objects));
-    });
+    collectParents: boolean,
+    collectArtifacts: boolean
+  ): Promise<ObjectItem[]> {
+    const depsP = Promise.all(
+      this.allDependencies.map((dep) => dep.toObjects(repo, clientVersion, collectParents, collectArtifacts))
+    );
+    const compP = this.component.toObjects(repo, clientVersion, collectParents, collectArtifacts);
+    const [component, dependencies] = await Promise.all([compP, depsP]);
+    return [...component, ...R.flatten(dependencies)];
   }
 }

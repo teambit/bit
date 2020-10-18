@@ -1,14 +1,17 @@
 import { extendPath, NavLink, NavLinkProps } from '@teambit/react-router';
 import classnames from 'classnames';
 import React from 'react';
-import { useRouteMatch } from 'react-router-dom';
+import { useRouteMatch, useLocation } from 'react-router-dom';
 
 import styles from './top-bar-nav.module.scss';
 
 export function TopBarNav(props: NavLinkProps) {
   const { url } = useRouteMatch();
+  const { search } = useLocation(); // sticky query params
   const { href } = props;
-  const target = extendPath(url, href);
+
+  const target = `${extendPath(url, href)}${search}`;
+
   return (
     <NavLink
       {...props}

@@ -10,6 +10,10 @@ export interface ComponentFactory {
    */
   name: string;
 
+  path: string;
+
+  isLegacy: boolean;
+
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
 
   /**

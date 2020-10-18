@@ -10,7 +10,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('harmony extension config', function () {
+describe('harmony extension config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -26,6 +26,7 @@ describe.skip('harmony extension config', function () {
       const config = { key: 'val' };
       let extensionData;
       let devDeps;
+      let scopeExtensionEntry;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
@@ -35,10 +36,11 @@ describe.skip('harmony extension config', function () {
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
         extensionData = componentVersionModel.extensions;
         devDeps = componentVersionModel.devDependencies;
+        scopeExtensionEntry = extensionData.find((ext) => ext.name === 'teambit.bit/scope');
       });
       it('should persist core extension config during tag', () => {
-        expect(extensionData).to.be.length(1);
-        expect(extensionData[0].config).to.deep.equal(config);
+        expect(scopeExtensionEntry).to.not.be.undefined;
+        expect(scopeExtensionEntry.config).to.deep.equal(config);
       });
       it('should not have version for core extension in the models', () => {
         expect(extensionData[0].name).to.equal('teambit.bit/scope');
@@ -53,13 +55,17 @@ describe.skip('harmony extension config', function () {
       let localBeforeTag;
 
       before(() => {
+        const EXTENSION_FOLDER = 'dummy-extension';
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.bitJsonc.addDefaultScope();
-        helper.fixtures.copyFixtureExtensions('dummy-extension');
-        helper.command.addComponent('dummy-extension');
+        helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
+        helper.command.addComponent(EXTENSION_FOLDER);
         helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.bit/aspect');
+        helper.command.link();
+        helper.command.compile();
         localBeforeTag = helper.scopeHelper.cloneLocalScope();
       });
       describe('extension is new component on the workspace', () => {

@@ -12,33 +12,24 @@ import globalFlags from '../../../cli/global-flags';
 import { CFG_SSH_NO_COMPRESS, CFG_USER_TOKEN_KEY, DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
-import CustomError from '../../../error/custom-error';
 import GeneralError from '../../../error/general-error';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
 import logger from '../../../logger/logger';
 import { userpass as promptUserpass } from '../../../prompts';
-import ComponentNotFound from '../../../scope/exceptions/component-not-found';
 import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../../../utils';
 import ComponentObjects from '../../component-objects';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
-import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
 import RemovedObjects from '../../removed-components';
 import { ScopeDescriptor } from '../../scope';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
-import {
-  AuthenticationFailed,
-  OldClientVersion,
-  PermissionDenied,
-  RemoteScopeNotFound,
-  SSHInvalidResponse,
-  UnexpectedNetworkError,
-} from '../exceptions';
-import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
+import { AuthenticationFailed, RemoteScopeNotFound, SSHInvalidResponse } from '../exceptions';
 import { Network } from '../network';
 import keyGetter from './key-getter';
+import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
+import CompsAndLanesObjects from '../../comps-and-lanes-objects';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { remoteErrorHandler } from '../remote-error-handler';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -329,7 +320,6 @@ export default class SSH implements Network {
     });
   }
 
-  // eslint-disable-next-line complexity
   errorHandler(code: number, err: string) {
     let parsedError;
     try {
@@ -340,34 +330,7 @@ export default class SSH implements Network {
       // be graceful when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
     }
-
-    switch (code) {
-      default:
-        return new UnexpectedNetworkError(parsedError ? parsedError.message : err);
-      case 127:
-        return new ComponentNotFound((parsedError && parsedError.id) || err);
-      case 128:
-        return new PermissionDenied(`${this.host}:${this.path}`);
-      case 129:
-        return new RemoteScopeNotFound((parsedError && parsedError.name) || err);
-      case 130:
-        return new PermissionDenied(`${this.host}:${this.path}`);
-      case 131: {
-        const idsWithConflicts = parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : [];
-        const idsNeedUpdate = parsedError && parsedError.idsNeedUpdate ? parsedError.idsNeedUpdate : [];
-        return new MergeConflictOnRemote(idsWithConflicts, idsNeedUpdate);
-      }
-      case 132:
-        return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
-      case 133:
-        return new OldClientVersion(parsedError && parsedError.message ? parsedError.message : err);
-      case 134: {
-        const msg = parsedError && parsedError.message ? parsedError.message : err;
-        const sourceScope = parsedError && parsedError.sourceScope ? parsedError.sourceScope : 'unknown';
-        const destinationScope = parsedError && parsedError.destinationScope ? parsedError.destinationScope : 'unknown';
-        return new ExportAnotherOwnerPrivate(msg, sourceScope, destinationScope);
-      }
-    }
+    return remoteErrorHandler(code, parsedError, `${this.host}:${this.path}`, err);
   }
 
   _unpack(data, base64 = true) {
@@ -380,14 +343,13 @@ export default class SSH implements Network {
     }
   }
 
-  pushMany(compsAndLanesObjects: CompsAndLanesObjects, context?: Record<string, any>): Promise<string[]> {
+  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    return this.exec('_put', compsAndLanesObjects.toString(), context).then((data: string) => {
-      const { payload, headers } = this._unpack(data);
-      checkVersionCompatibility(headers.version);
-      return payload.ids;
-    });
+    const data = await this.exec('_put', objectList.toJsonString(), context);
+    const { payload, headers } = this._unpack(data);
+    checkVersionCompatibility(headers.version);
+    return payload.ids;
   }
 
   deleteMany(
@@ -512,29 +474,32 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(
-    ids: Array<BitId | RemoteLaneId>,
-    noDeps = false,
-    idsAreLanes = false,
-    context?: Record<string, any>
-  ): Promise<CompsAndLanesObjects> {
+  async fetch(idsStr: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectList> {
     let options = '';
-    const idsStr = ids.map((id) => id.toString());
-    if (noDeps) options = '--no-dependencies';
-    if (idsAreLanes) options += ' --lanes';
-    return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
-      const parseResponse = () => {
-        try {
-          const results = JSON.parse(str);
-          return results;
-        } catch (err) {
-          throw new SSHInvalidResponse(str);
-        }
-      };
-      const { payload, headers } = parseResponse();
-      checkVersionCompatibility(headers.version);
+    const { type, withoutDependencies, includeArtifacts } = fetchOptions;
+    if (type !== 'component') options = ` --type ${type}`;
+    if (withoutDependencies) options += ' --no-dependencies';
+    if (includeArtifacts) options += ' --include-artifacts';
+    const str = await this.exec(`_fetch ${options}`, idsStr, context);
+    const parseResponse = () => {
+      try {
+        const results = JSON.parse(str);
+        return results;
+      } catch (err) {
+        throw new SSHInvalidResponse(str);
+      }
+    };
+    const { payload, headers } = parseResponse();
+    checkVersionCompatibility(headers.version);
+    const format = headers.format;
+    if (!format) {
+      // this is an old version that doesn't have the "format" header
       const componentObjects = CompsAndLanesObjects.fromString(payload);
-      return componentObjects;
-    });
+      return componentObjects.toObjectList();
+    }
+    if (format === FETCH_FORMAT_OBJECT_LIST) {
+      return ObjectList.fromJsonString(payload);
+    }
+    throw new Error(`ssh.fetch, format "${format}" is not supported`);
   }
 }

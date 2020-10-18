@@ -36,9 +36,9 @@ export class FlattenedDependencyLoader {
     const filteredDeps = filterIgnoreIds(dependencies);
     const filteredDevDeps = filterIgnoreIds(devDependencies);
     const filteredExtDeps = filterIgnoreIds(extensionDependencies);
-    await this.loadFlattened(filteredDeps);
-    await this.loadFlattened(filteredDevDeps);
-    await this.loadFlattened(filteredExtDeps);
+    await this.loadFlattenedRecursively(filteredDeps);
+    await this.loadFlattenedRecursively(filteredDevDeps);
+    await this.loadFlattenedRecursively(filteredExtDeps);
 
     return new ComponentWithDependencies({
       component,
@@ -80,31 +80,40 @@ export class FlattenedDependencyLoader {
     return this.cache[dependencyId.toString()];
   }
 
-  async loadFlattened(deps: Component[]) {
-    if (R.isEmpty(deps)) return;
-    await this.loadFlattenedFromModel(deps);
-    await this.loadFlattenedFromFsRecursively(deps);
+  async loadFlattenedRecursively(deps: Component[], visited: string[] = []): Promise<Component[]> {
+    if (R.isEmpty(deps)) return [];
+    const notVisitedDeps = deps.filter((dep) => !visited.includes(dep.id.toString()));
+    const flattenedFromModel = await this.loadFlattenedFromModel(notVisitedDeps);
+    deps.push(...flattenedFromModel);
+    const flattenedFromFs = await this.loadFlattenedFromFs(notVisitedDeps);
+    const newVisitedIds = deps.map((dep) => dep.id.toString());
+    deps.push(...flattenedFromFs);
+    if (flattenedFromFs.length) {
+      const newVisited = R.uniq(visited.concat(newVisitedIds));
+      await this.loadFlattenedRecursively(deps, newVisited);
+      return deps;
+    }
+    return deps;
   }
 
-  async loadFlattenedFromModel(deps: Component[]) {
+  async loadFlattenedFromModel(deps: Component[]): Promise<Component[]> {
     const dependenciesFromModel = deps.filter((d) => !d.loadedFromFileSystem);
     const flattenedIdsFromModel = dependenciesFromModel.map((d) => d.flattenedDependencies);
     const flattenedFromModel = await this.loadManyDependencies(R.flatten(flattenedIdsFromModel));
-    deps.push(...flattenedFromModel);
+    return flattenedFromModel;
   }
 
   // @todo: in case of out-of-sync, when a component has versions in the objects but the .bitmap
   // has the component without any version, this function result in "Maximum call stack size
   // exceeded" error.
-  async loadFlattenedFromFsRecursively(components: Component[]) {
+  async loadFlattenedFromFs(components: Component[]): Promise<Component[]> {
     const currentIds = BitIds.fromArray(components.map((c) => c.id));
     const ids = R.flatten(components.filter((c) => c.loadedFromFileSystem).map((c) => c.getAllDependenciesIds()));
     const idsUniq = BitIds.uniqFromArray(ids);
     const newIds = idsUniq.filter((id) => !currentIds.has(id));
-    if (R.isEmpty(newIds)) return;
+    if (R.isEmpty(newIds)) return [];
     const deps = await this.loadManyDependencies(newIds);
-    if (R.isEmpty(deps)) return;
-    components.push(...deps);
-    await this.loadFlattened(components);
+    if (R.isEmpty(deps)) return [];
+    return deps;
   }
 }
