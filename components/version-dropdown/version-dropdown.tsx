@@ -3,7 +3,6 @@ import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
 import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import React from 'react';
 
