@@ -14,7 +14,7 @@ import {
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
-import { unlinkSync, existsSync } from 'fs-extra';
+import { existsSync, removeSync } from 'fs-extra';
 import { join, resolve } from 'path';
 import {
   Workspace,
@@ -116,10 +116,10 @@ export class YarnPackageManager implements PackageManager {
       const packageName = this.pkg.getPackageName(component);
       const modulePath = resolve(join(rootDir, 'node_modules', packageName));
       const packageJsonPath = resolve(join(dir, 'package.json'));
-      if (installOptions.cacheRootDir) unlinkSync(packageJsonPath);
+      if (!installOptions.cacheRootDir) removeSync(packageJsonPath);
       const exists = existsSync(modulePath);
-      if (exists) return; // TODO: check if this can be done through the yarn API.
-      unlinkSync(modulePath);
+      if (!exists) return; // TODO: check if this can be done through the yarn API.
+      removeSync(modulePath);
     });
   }
 
@@ -214,7 +214,7 @@ export class YarnPackageManager implements PackageManager {
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
       // enableInlineBuilds: true,
-      globalFolder: `${rootDirPath}/.yarn/global`,
+      globalFolder: `${userHome}/.yarn/global`,
     };
     if (defaultAuthProp) {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;

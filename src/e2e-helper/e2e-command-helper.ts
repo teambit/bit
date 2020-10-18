@@ -215,6 +215,14 @@ export default class CommandHelper {
     const component = lane.components.find((c) => c.id.name === componentName);
     return component.head;
   }
+  getArtifacts(id: string) {
+    const comp = this.catComponent(`${id}@latest`);
+    const builderExt = comp.extensions.find((ext) => ext.name === 'teambit.bit/builder');
+    if (!builderExt) throw new Error(`unable to find builder data for ${id}`);
+    const artifacts = builderExt.data.artifacts;
+    if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);
+    return artifacts;
+  }
   untag(id: string) {
     return this.runCmd(`bit untag ${id} --persisted`);
   }
@@ -444,9 +452,9 @@ export default class CommandHelper {
   link(flags?: string) {
     return this.runCmd(`bit link ${flags || ''}`);
   }
-  install(options?: Record<string, any>) {
+  install(packages = '', options?: Record<string, any>) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit install ${parsedOpts}`);
+    return this.runCmd(`bit install ${packages} ${parsedOpts}`);
   }
   linkAndRewire(ids = '') {
     return this.runCmd(`bit link ${ids} --rewire`);

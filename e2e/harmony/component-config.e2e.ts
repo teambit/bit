@@ -12,7 +12,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('component config', function () {
+describe('component config', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -50,8 +50,7 @@ describe.skip('component config', function () {
         });
         it('expect to have the component id', () => {
           expect(componentJson.componentId).to.deep.equal({
-            // TODO: once we use the scope from default scope all over the place, this might be needed
-            // scope: helper.scopes.local,
+            scope: 'my-scope',
             name: 'bar/foo',
           });
         });
@@ -112,10 +111,14 @@ describe.skip('component config', function () {
       let componentJson;
       const config = { key: 'val' };
       before(() => {
+        const EXTENSION_FOLDER = 'dummy-extension';
         helper.componentJson.deleteIfExist('bar');
-        helper.fixtures.copyFixtureExtensions('dummy-extension');
-        helper.command.addComponent('dummy-extension');
-        helper.extensions.addExtensionToVariant('bar', 'default-scope/dummy-extension', config);
+        helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
+        helper.command.addComponent(EXTENSION_FOLDER);
+        helper.extensions.addExtensionToVariant('bar', 'my-scope/dummy-extension', config);
+        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.bit/aspect');
+        helper.command.install();
+        helper.command.compile();
         helper.command.tagAllComponents();
         helper.command.ejectConf('bar/foo');
         componentJson = helper.componentJson.read('bar');
@@ -136,14 +139,12 @@ describe.skip('component config', function () {
       helper.fixtures.populateExtensions(5);
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
-      const defaultWsExtensions = {
-        'my-scope/ext1': { key: 'val-ws-defaults' },
-        'my-scope/ext2': { key: 'val-ws-defaults' },
-        'my-scope/ext5': { key: 'val-ws-defaults' },
-      };
-      helper.bitJsonc.addKeyValToWorkspace('extensions', defaultWsExtensions);
+      helper.extensions.addExtensionToVariant('*', 'my-scope/ext1', { key: 'val-ws-defaults' });
+      helper.extensions.addExtensionToVariant('*', 'my-scope/ext2', { key: 'val-ws-defaults' });
+      helper.extensions.addExtensionToVariant('*', 'my-scope/ext5', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('extensions', 'teambit.bit/aspect');
-      helper.command.link();
+      helper.bitJsonc.addToVariant(helper.scopes.localPath, 'extensions', 'propagate', false);
+      helper.command.install();
       helper.command.compile();
       helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
       helper.extensions.addExtensionToVariant('bar', 'my-scope/ext3', { key: 'val-variant' });
@@ -217,7 +218,14 @@ function getExtensionEntry(extensionId: string, config: any): any {
   return {
     extensionId,
     config,
+    newExtensionId: {
+      legacyComponentId: {
+        scope: null,
+        name: extensionId,
+        version: 'latest',
+      },
+      _scope: 'my-scope',
+    },
     data: {},
-    artifacts: [],
   };
 }

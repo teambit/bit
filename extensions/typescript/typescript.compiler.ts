@@ -10,7 +10,21 @@ import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  distDir = 'dist';
+  distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+  shouldCopyNonSupportedFiles = true;
+  artifactName = 'dist';
+
+  displayConfig() {
+    return JSON.stringify(this.options.tsconfig, null, 4);
+  }
+  /**
+   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+   * needed for the package.
+   */
+  npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
+
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace
@@ -24,7 +38,11 @@ export class TypescriptCompiler implements Compiler {
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
-      throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
+      const formattedErrors = ts.formatDiagnosticsWithColorAndContext(
+        compilerOptionsFromTsconfig.errors,
+        this.getFormatDiagnosticsHost()
+      );
+      throw new Error(`failed parsing the tsconfig.json.\n${formattedErrors}`);
     }
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
@@ -36,11 +54,7 @@ export class TypescriptCompiler implements Compiler {
     });
 
     if (result.diagnostics && result.diagnostics.length) {
-      const formatHost = {
-        getCanonicalFileName: (p) => p,
-        getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => ts.sys.newLine,
-      };
+      const formatHost = this.getFormatDiagnosticsHost();
       const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
       // :TODO @david please replace to a more concrete error type and put in 'exceptions' directory here.
@@ -83,17 +97,10 @@ export class TypescriptCompiler implements Compiler {
     return [
       {
         generatedBy: TypescriptAspect.id,
-        name: 'dist',
-        globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
+        name: this.artifactName,
+        globPatterns: this.distGlobPatterns,
       },
     ];
-  }
-
-  /**
-   * returns the dist directory on the capsule
-   */
-  getDistDir() {
-    return 'dist';
   }
 
   /**
@@ -101,7 +108,7 @@ export class TypescriptCompiler implements Compiler {
    */
   getDistPathBySrcPath(srcPath: string) {
     const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
-    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+    return path.join(this.distDir, fileWithJSExtIfNeeded);
   }
 
   /**
@@ -109,12 +116,6 @@ export class TypescriptCompiler implements Compiler {
    */
   isFileSupported(filePath: string): boolean {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
-  }
-
-  getNpmIgnoreEntries() {
-    // when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-    // needed for the package.
-    return [`${this.getDistDir()}/tsconfig.tsbuildinfo`];
   }
 
   /**
@@ -167,7 +168,9 @@ export class TypescriptCompiler implements Compiler {
     const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     // eslint-disable-next-line no-cond-assign
     while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
-      const capsulePath = nextProject.project.replace(`${path.sep}tsconfig.json`, '');
+      // regex to make sure it will work correctly for both linux and windows
+      // it replaces both /tsconfig.json and \tsocnfig.json
+      const capsulePath = nextProject.project.replace(/[/\\]tsconfig.json/, '');
       const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
       if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
       longProcessLogger.logProgress(currentComponentId.toString());
@@ -183,6 +186,14 @@ export class TypescriptCompiler implements Compiler {
     longProcessLogger.end();
 
     return componentsResults;
+  }
+
+  private getFormatDiagnosticsHost(): ts.FormatDiagnosticsHost {
+    return {
+      getCanonicalFileName: (p) => p,
+      getCurrentDirectory: ts.sys.getCurrentDirectory,
+      getNewLine: () => ts.sys.newLine,
+    };
   }
 
   private async writeTypes(dirs: string[]) {

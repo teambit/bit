@@ -1,4 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
+import { toWindowsCompatiblePath } from '@teambit/string.to-windows-compatible-path';
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 
@@ -18,7 +19,7 @@ import { Harmony } from '@teambit/harmony';
 ${getImportStatements(
   aspectDefs.map((def) => def.aspectPath),
   'Aspect'
-)}
+)} 
 ${getImportStatements(
   // @ts-ignore no nulls can be found here - see above.
   defs.map((def) => def.runtimePath),
@@ -44,7 +45,9 @@ Harmony.load([${getIdentifiers(
 }
 
 function getImportStatements(extensionPaths: string[], suffix: string): string {
-  return extensionPaths.map((path) => `import ${getIdentifier(path, suffix)} from '${path}';`).join('\n');
+  return extensionPaths
+    .map((path) => `import ${getIdentifier(path, suffix)} from '${toWindowsCompatiblePath(path)}';`)
+    .join('\n');
 }
 
 function getIdentifiers(extensionsPaths: string[], suffix: string): string {
