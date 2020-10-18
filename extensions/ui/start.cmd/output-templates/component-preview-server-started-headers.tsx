@@ -7,10 +7,10 @@ export const ComponentPreviewServerStartedHeaders = () => (
       <Text underline>ENVIRONMENT NAME</Text>
     </Box>
     <Box width="50%">
-      <Text underline>STATUS</Text>
+      <Text underline>URL</Text>
     </Box>
     <Box width="20%">
-      <Text underline>DURATION</Text>
+      <Text underline>STATUS</Text>
     </Box>
   </Box>
 );

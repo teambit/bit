@@ -5,7 +5,7 @@ export type props = {
   events: any[];
 };
 
-export const OnComponentChange = ({ events }: props) => {
+export const ComponentChange = ({ events }: props) => {
   return (
     <Text>
       <Newline />
@@ -16,7 +16,7 @@ export const OnComponentChange = ({ events }: props) => {
             Compilation of <Text color="rgb(45, 164, 157)">{event.idStr}</Text> is done.
           </Text>
           <Newline />
-          <Text color="yellow">Waiting for component changes... ({event.timestamp})</Text>
+          <Text color="yellow">Waiting for component changes... </Text>
           <Newline />
           <Newline />
         </Text>
