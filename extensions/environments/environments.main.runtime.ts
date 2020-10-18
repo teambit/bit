@@ -215,8 +215,7 @@ export class EnvsMain {
    */
   registerEnv(env: Environment) {
     // @ts-ignore
-    this.envSlot.register(env);
-    return;
+    return this.envSlot.register(env);
   }
 
   /**
