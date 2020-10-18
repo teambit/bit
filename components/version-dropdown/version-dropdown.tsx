@@ -1,4 +1,4 @@
-// import { Icon } from '@teambit/evangelist.elements.icon';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
@@ -28,7 +28,6 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         className={styles.dropdown}
         dropClass={styles.menu}
         placeholder=""
-        // clickToggles={false}
         clickOutside
         PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
       >
@@ -36,10 +35,16 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
           <div className={styles.title}>Select version to view</div>
           <div className={styles.versionContainer}>
             {versions.map((version, index) => {
+              const isCurrent = version === currentVersion;
               return (
-                <NavLink to={`?v=${version}`} key={index} className={classNames(styles.versionLine, hoverable)}>
+                <NavLink
+                  to={`?v=${version}`}
+                  key={index}
+                  className={classNames(styles.versionLine, hoverable, isCurrent && styles.currentVersion)}
+                >
                   <span className={styles.version}>{version}</span>
-                  {version === currentVersion && <VersionLabel status="latest" />}
+                  {/* {version === currentVersion && <VersionLabel status="checked-out" />} */}
+                  {index === 0 && <VersionLabel status="latest" />}
                 </NavLink>
               );
             })}
@@ -54,7 +59,7 @@ function VersionPlaceholder({ currentVersion }: { currentVersion?: string }) {
   return (
     <div className={classNames(styles.placeholder)}>
       <div>{currentVersion}</div>
-      {/* <Icon of="fat-arrow-down" /> */}
+      <Icon of="fat-arrow-down" />
     </div>
   );
 }

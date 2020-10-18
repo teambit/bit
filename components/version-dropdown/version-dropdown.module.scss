@@ -40,14 +40,16 @@
   &:last-child {
     margin-bottom: 8px;
   }
-
+  &.currentVersion {
+    background: var(--muted-color);
+  }
   .version {
     margin-right: 16px;
   }
 }
 
 .placeholder {
-  // cursor: pointer;
+  cursor: pointer;
   display: flex;
   align-items: center;
   padding: 7px;
@@ -66,9 +68,9 @@
       background-color: var(--bg-color);
     }
   }
-  // > div {
-  //   margin-right: 5px;
-  // }
+  > div {
+    margin-right: 5px;
+  }
   .label {
     margin-right: 8px;
   }
