@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import React, { useState } from 'react';
 import { ComponentModel } from '@teambit/component';
+import { PreviewPlaceholder } from '@teambit/staged-components.preview-placeholder';
 import styles from './workspace-component-card.module.scss';
 
 type WorkspaceComponentCardProps = {
@@ -29,28 +30,6 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
       {shouldPreviewButton && (
         <LoadPreview onClick={showPreview} isModified={component.status?.modifyInfo?.hasModifiedFiles} />
       )}
-    </div>
-  );
-}
-
-function PreviewPlaceholder({
-  component,
-  shouldShowPreview,
-}: {
-  component: ComponentModel;
-  shouldShowPreview: boolean;
-}) {
-  if (shouldShowPreview) {
-    return <ComponentComposition component={component} hotReload={false} />;
-  }
-  const name = component.id.toString();
-  return (
-    <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
-      <Icon of="img" />
-      <div>No preview available</div>
-      <ReactTooltip className={styles.tooltip} place="bottom" id={name} effect="solid">
-        Preview is generated from compositions during CI
-      </ReactTooltip>
     </div>
   );
 }
