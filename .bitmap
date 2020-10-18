@@ -719,6 +719,11 @@
                 "test": false
             },
             {
+                "name": "compiler.service.tsx",
+                "relativePath": "compiler.service.tsx",
+                "test": false
+            },
+            {
                 "name": "compiler.task.ts",
                 "relativePath": "compiler.task.ts",
                 "test": false
@@ -1694,6 +1699,16 @@
                 "test": false
             },
             {
+                "name": "env-overview.tsx",
+                "relativePath": "components/env-overview/env-overview.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "components/env-overview/index.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "components/index.ts",
                 "test": false
@@ -1706,6 +1721,16 @@
             {
                 "name": "index.ts",
                 "relativePath": "context/index.ts",
+                "test": false
+            },
+            {
+                "name": "env-definition.ts",
+                "relativePath": "env-definition.ts",
+                "test": false
+            },
+            {
+                "name": "env-service-list.ts",
+                "relativePath": "env-service-list.ts",
                 "test": false
             },
             {
@@ -1771,6 +1796,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "services/index.ts",
+                "test": false
+            },
+            {
+                "name": "service-handler.ts",
+                "relativePath": "services/service-handler.ts",
                 "test": false
             },
             {
@@ -4792,8 +4822,8 @@
                 "test": false
             },
             {
-                "name": "tester.service.ts",
-                "relativePath": "tester.service.ts",
+                "name": "tester.service.tsx",
+                "relativePath": "tester.service.tsx",
                 "test": false
             },
             {

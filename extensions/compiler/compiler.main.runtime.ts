@@ -3,7 +3,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
-
+import { CompilerService } from './compiler.service';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerTask } from './compiler.task';
@@ -31,6 +31,7 @@ export class CompilerMain {
   static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
     const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
+    envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger));
