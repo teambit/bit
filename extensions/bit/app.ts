@@ -127,14 +127,14 @@ async function runCLI() {
   await cli.run();
 }
 
-function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain){
+function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) {
   const allCoreAspectsIds = aspectLoader.getCoreAspectIds();
-    const coreAspectsPackagesAndIds = {};
+  const coreAspectsPackagesAndIds = {};
 
-    allCoreAspectsIds.forEach((id) => {
-      const packageName = getCoreAspectPackageName(id);
-      coreAspectsPackagesAndIds[packageName] = id;
-    });
-    // @ts-ignore
-    DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
+  allCoreAspectsIds.forEach((id) => {
+    const packageName = getCoreAspectPackageName(id);
+    coreAspectsPackagesAndIds[packageName] = id;
+  });
+  // @ts-ignore
+  DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
 }

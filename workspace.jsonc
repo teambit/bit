@@ -111,6 +111,7 @@
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
         "classnames": "^2.2.6",
         "cleargraph": "^5.4.0",
+        "consolehighlighter": "0.1.5",
         "copy-to-clipboard": "^3.3.1",
         "core-js": "^3.6.5",
         "cors": "^2.8.5",
@@ -223,7 +224,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.62",
+        "bit-bin": "14.8.9-dev.64",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -253,7 +254,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.62",
+            "bit-bin": "14.8.9-dev.64",
             "react-dom": "^16.13.1"
           }
         }
@@ -285,7 +286,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.62",
+            "bit-bin": "14.8.9-dev.64",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

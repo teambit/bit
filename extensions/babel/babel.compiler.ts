@@ -10,7 +10,7 @@ import { BabelCompilerOptions } from './compiler-options';
 import { BabelAspect } from './babel.aspect';
 
 export class BabelCompiler implements Compiler {
-  constructor(private logger: Logger, private options: BabelCompilerOptions) {}
+  constructor(readonly id, private logger: Logger, private options: BabelCompilerOptions) {}
   distDir = 'dist';
   distGlobPatterns = [`${this.distDir}/**`];
   shouldCopyNonSupportedFiles = true;

@@ -1,5 +1,4 @@
 import { TsConfigSourceFile } from 'typescript';
-import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
@@ -66,7 +65,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(targetTsConfig, defaultTsConfig) : defaultTsConfig;
+    return targetTsConfig ? { ...defaultTsConfig, ...targetTsConfig } : defaultTsConfig;
   }
 
   /**
@@ -83,7 +82,6 @@ export class ReactEnv implements Environment {
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
     const tsconfig = this.getTsConfig(targetConfig);
-
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -134,6 +132,8 @@ export class ReactEnv implements Environment {
   getDocsTemplate() {
     return require.resolve('./docs');
   }
+
+  icon = 'https://static.bit.dev/extensions-icons/react.svg';
 
   /**
    * return a function which mounts a given component to DOM

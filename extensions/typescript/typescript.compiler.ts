@@ -14,13 +14,17 @@ export class TypescriptCompiler implements Compiler {
   distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
   shouldCopyNonSupportedFiles = true;
   artifactName = 'dist';
+
+  displayConfig() {
+    return JSON.stringify(this.options.tsconfig, null, 4);
+  }
   /**
    * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
    * needed for the package.
    */
   npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
 
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace
@@ -164,7 +168,9 @@ export class TypescriptCompiler implements Compiler {
     const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     // eslint-disable-next-line no-cond-assign
     while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
-      const capsulePath = nextProject.project.replace(`${path.sep}tsconfig.json`, '');
+      // regex to make sure it will work correctly for both linux and windows
+      // it replaces both /tsconfig.json and \tsocnfig.json
+      const capsulePath = nextProject.project.replace(/[/\\]tsconfig.json/, '');
       const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
       if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
       longProcessLogger.logProgress(currentComponentId.toString());

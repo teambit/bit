@@ -1,4 +1,5 @@
 import { Environment } from '@teambit/environments';
+import { merge } from 'lodash';
 import { ReactEnv } from '@teambit/react';
 
 const tsconfig = require('./typescript/tsconfig.json');
@@ -11,13 +12,16 @@ export const AspectEnvType = 'aspect';
 export class AspectEnv implements Environment {
   constructor(private reactEnv: ReactEnv) {}
 
+  icon = 'https://static.bit.dev/extensions-icons/default.svg';
+
   async __getDescriptor() {
     return {
       type: AspectEnvType,
     };
   }
 
-  getCompiler() {
-    return this.reactEnv.getCompiler(tsconfig);
+  getCompiler(tsConfig: any) {
+    const targetTsConfig = merge(tsconfig, tsConfig);
+    return this.reactEnv.getCompiler(targetTsConfig);
   }
 }
