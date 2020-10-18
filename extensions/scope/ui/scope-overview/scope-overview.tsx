@@ -4,10 +4,10 @@ import { ComponentCard } from '@teambit/explorer.ui.component-card';
 import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
 import { ScopeDetails } from '@teambit/staged-components.scope-details';
 import { PreviewPlaceholder } from '@teambit/staged-components.preview-placeholder';
+import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '../scope-context';
 import styles from './scope-overview.module.scss';
 import { ScopeBadgeSlot } from '../../scope.ui.runtime';
-import { ComponentModel } from '@teambit/component';
 
 export type ScopeOverviewProps = {
   badgeSlot: ScopeBadgeSlot;
