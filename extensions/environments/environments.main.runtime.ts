@@ -111,14 +111,55 @@ export class EnvsMain {
    * get the env of the given component.
    */
   getEnv(component: Component): EnvDefinition {
-    const env = component.state.aspects.entries.find((aspectEntry) => {
+    // Search first for env configured via envs aspect itself
+    const envsAspect = component.state.aspects.get(EnvsAspect.id);
+    const envId = envsAspect?.config.env;
+    let env;
+    if (envId) {
+      env = this.envSlot.get(envId);
+    }
+    if (env) {
+      return new EnvDefinition(envId, env as Environment);
+    }
+
+    env = component.state.aspects.entries.find((aspectEntry) => {
       const id = aspectEntry.id.toString();
       return this.envSlot.get(id);
     });
 
     if (!env) return this.getDefaultEnv();
     const id = env.id.toString();
-    return new EnvDefinition(id, this.envSlot.get(id) as Environment);
+    return new EnvDefinition(id, env as Environment);
+  }
+
+  /**
+   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
+   */
+  getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
+    // Search first for env configured via envs aspect itself
+    const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
+    const envId = envsAspect?.config.env;
+    let env;
+    if (envId) {
+      env = this.envSlot.get(envId);
+    }
+    if (env) {
+      return new EnvDefinition(envId, env as Environment);
+    }
+
+    const envInExtensionList = extensions.find((e) =>
+      this.envSlot.get(e.newExtensionId ? e.newExtensionId.toString() : e.stringId)
+    );
+    if (envInExtensionList) {
+      const id = envInExtensionList.newExtensionId
+        ? envInExtensionList.newExtensionId.toString()
+        : envInExtensionList.stringId;
+      return new EnvDefinition(id, this.envSlot.get(id) as Environment);
+    }
+    const defaultEnvId = 'teambit.bit/node';
+    const defaultEnv = this.envSlot.get(defaultEnvId);
+    if (!defaultEnv) throw new Error(`the default environment "${defaultEnvId}" was not registered`);
+    return new EnvDefinition(defaultEnvId, defaultEnv);
   }
 
   /**
@@ -155,25 +196,6 @@ export class EnvsMain {
   }
 
   /**
-   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
-   */
-  getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
-    const envInExtensionList = extensions.find((e) =>
-      this.envSlot.get(e.newExtensionId ? e.newExtensionId.toString() : e.stringId)
-    );
-    if (envInExtensionList) {
-      const id = envInExtensionList.newExtensionId
-        ? envInExtensionList.newExtensionId.toString()
-        : envInExtensionList.stringId;
-      return new EnvDefinition(id, this.envSlot.get(id) as Environment);
-    }
-    const defaultEnvId = 'teambit.bit/node';
-    const defaultEnv = this.envSlot.get(defaultEnvId);
-    if (!defaultEnv) throw new Error(`the default environment "${defaultEnvId}" was not registered`);
-    return new EnvDefinition(defaultEnvId, defaultEnv);
-  }
-
-  /**
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {
@@ -193,7 +215,8 @@ export class EnvsMain {
    */
   registerEnv(env: Environment) {
     // @ts-ignore
-    return this.envSlot.register(env);
+    this.envSlot.register(env);
+    return;
   }
 
   /**
