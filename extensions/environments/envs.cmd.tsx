@@ -4,6 +4,7 @@ import Table from 'tty-table';
 import { Command } from '@teambit/cli';
 import { ComponentMain, ComponentFactory, Component } from '@teambit/component';
 import { EnvsMain } from './environments.main.runtime';
+import { EnvOverview } from './components/env-overview';
 
 export class EnvsCmd implements Command {
   name = 'envs [name]';
@@ -33,13 +34,20 @@ export class EnvsCmd implements Command {
           </Text>
         );
       return (
-        <Text bold underline key={serviceId}>
-          {serviceId}
+        <Text key={serviceId}>
+          <Text bold underline>
+            {serviceId}
+          </Text>
         </Text>
       );
     });
 
-    return <Text>{all.map((item) => item)}</Text>;
+    return (
+      <Text>
+        <EnvOverview envDef={env} />
+        {all.map((item) => item)}
+      </Text>
+    );
   }
 
   async render([name]: [string]): Promise<JSX.Element> {
