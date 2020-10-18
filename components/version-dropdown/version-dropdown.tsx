@@ -40,11 +40,11 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
                 <NavLink
                   to={`?v=${version}`}
                   key={index}
-                  className={classNames(styles.versionLine, hoverable, isCurrent && styles.currentVersion)}
+                  className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
                 >
                   <span className={styles.version}>{version}</span>
-                  {/* {version === currentVersion && <VersionLabel status="checked-out" />} */}
-                  {index === 0 && <VersionLabel status="latest" />}
+                  {index === 0 && <VersionLabel className={styles.label} status="latest" />}
+                  {/* {version === currentVersion && <VersionLabel className={styles.label} status="checked-out" />} */}
                 </NavLink>
               );
             })}

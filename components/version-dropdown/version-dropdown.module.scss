@@ -27,7 +27,6 @@
 .versionContainer {
   max-height: 240px;
   overflow-y: scroll;
-  padding: 0 8px;
 }
 .versionLine {
   cursor: pointer;
@@ -37,6 +36,9 @@
   padding: 0 24px;
   text-decoration: none;
   color: var(--text-highlight);
+  &:hover {
+    background-color: var(--bg-topping-highlight);
+  }
   &:last-child {
     margin-bottom: 8px;
   }
@@ -45,6 +47,10 @@
   }
   .version {
     margin-right: 16px;
+  }
+  .label {
+    background-color: white;
+    margin-right: 8px;
   }
 }
 
