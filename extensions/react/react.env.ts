@@ -1,5 +1,6 @@
 import { TsConfigSourceFile } from 'typescript';
 import { BuildTask } from '@teambit/builder';
+import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
@@ -65,7 +66,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? { ...defaultTsConfig, ...targetTsConfig } : defaultTsConfig;
+    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
   /**

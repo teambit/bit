@@ -22,32 +22,32 @@ export class NodeMain {
   /**
    * override the TS config of the environment.
    */
-  overrideTsConfig = this.react.overrideTsConfig;
+  overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
 
   /**
    * override the jest config of the environment.
    */
-  overrideJestConfig = this.react.overrideJestConfig;
+  overrideJestConfig = this.react.overrideJestConfig.bind(this.react);
 
   /**
    * override the env build pipeline.
    */
-  overrideBuildPipe = this.react.overrideBuildPipe;
+  overrideBuildPipe = this.react.overrideBuildPipe.bind(this.react);
 
   /**
    * override package json properties.
    */
-  overridePackageJsonProps = this.react.overridePackageJsonProps;
+  overridePackageJsonProps = this.react.overridePackageJsonProps.bind(this.react);
 
   /**
    * override the preview config in the env.
    */
-  overridePreviewConfig = this.react.overridePreviewConfig;
+  overridePreviewConfig = this.react.overridePreviewConfig.bind(this.react);
 
   /**
    * override the dev server configuration.
    */
-  overrideDevServerConfig = this.react.overrideDevServerConfig;
+  overrideDevServerConfig = this.react.overrideDevServerConfig.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.
