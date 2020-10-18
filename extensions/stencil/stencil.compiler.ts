@@ -3,7 +3,7 @@ import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 
 export class StencilCompiler implements Compiler {
-  constructor(private transpileOpts: TranspileOptions) {}
+  constructor(readonly id: string, private transpileOpts: TranspileOptions) {}
   distDir = 'dist';
 
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {

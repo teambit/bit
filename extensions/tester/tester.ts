@@ -67,7 +67,7 @@ export interface Tester {
   /**
    * serialized config of the tester.
    */
-  displayConfig(): string;
+  displayConfig?(): string;
 
   /**
    * path to the config in the filesystem.

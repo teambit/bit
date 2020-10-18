@@ -75,7 +75,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       id: tester.id || '',
       displayName: tester.displayName || '',
       icon: tester.icon || '',
-      config: tester.displayConfig() || '',
+      config: tester.displayConfig ? tester.displayConfig() : '',
     };
   }
 
