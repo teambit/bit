@@ -46,10 +46,10 @@ export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: 
   );
 
   return (
-    <div style={indentStyle(0)}>
+    <div style={indentStyle(1)}>
       <TreeNodeContext.Provider value={TreeNodeRenderer}>
         <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
-          <RootNode node={rootNode} />
+          <RootNode node={rootNode} depth={1} />
         </ComponentTreeContextProvider>
       </TreeNodeContext.Provider>
     </div>

@@ -41,11 +41,7 @@
 }
 
 .componentTree {
-  max-height: 0;
   overflow: hidden;
   transition: max-height 400ms ease-in-out;
   font-size: var(--p-xs);
-  &.open {
-    max-height: 100vh;
-  }
 }
