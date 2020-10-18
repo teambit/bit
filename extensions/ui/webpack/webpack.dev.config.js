@@ -187,6 +187,41 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
           ],
         },
         {
+          test: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.less$/,
+          exclude: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
           test: /\.css$/,
           exclude: /\.(s(a|c)ss)$/,
           loader: [require.resolve('style-loader'), require.resolve('css-loader')],
