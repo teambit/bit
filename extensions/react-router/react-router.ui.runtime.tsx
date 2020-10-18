@@ -8,7 +8,7 @@ import { Location, UnregisterCallback } from 'history';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteSlot } from './slot-router';
-import { RouteContext } from './route-context';
+import { RouteContext, Routing } from './route-context';
 
 type History = ReturnType<typeof useHistory>;
 type HistoryState = { iframeSource?: string };
@@ -36,7 +36,9 @@ export class ReactRouterUI {
    * render all slot routes.
    */
   renderRoutes(routes: RouteProps[]): JSX.Element {
-    return <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} />;
+    const routing = this.isIframed ? Routing.inMemory : Routing.pathname;
+
+    return <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} routing={routing} />;
   }
 
   private unregisterListener?: UnregisterCallback = undefined;
@@ -61,9 +63,9 @@ export class ReactRouterUI {
    */
   navigateTo = (
     /** destination */
-    path: string
+    path: string,
+    state?: Record<string, any>
   ) => {
-    const state: HistoryState = { iframeSource: 'parent' };
     this.routerHistory?.push(path, state);
   };
 
@@ -81,7 +83,7 @@ export class ReactRouterUI {
       parentOrigin: ALLOWED_PARENTS,
       timeout: 800,
       methods: {
-        navigateTo: this.navigateTo,
+        navigateTo: (path: string) => this.navigateTo(path, { iframeSource: 'parent' }),
       },
       // debug: true,
     });
