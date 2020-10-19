@@ -1,8 +1,8 @@
 import { Environment } from '@teambit/environments';
-import { merge } from 'lodash';
+// import { merge } from 'lodash';
 import { ReactEnv } from '@teambit/react';
 
-const tsconfig = require('./typescript/tsconfig.json');
+// const tsconfig = require('./typescript/tsconfig.json');
 
 export const AspectEnvType = 'aspect';
 
