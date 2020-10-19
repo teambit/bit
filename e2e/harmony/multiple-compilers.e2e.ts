@@ -7,8 +7,6 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
 
-const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
-
 describe('multiple compilers - babel and typescript', function () {
   this.timeout(0);
   let helper: Helper;
@@ -28,23 +26,7 @@ describe('multiple compilers - babel and typescript', function () {
         helper.bitJsonc.disablePreview();
 
         // add a new env that compiles with Babel
-        helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
-        helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
-        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/aspect');
-        helper.scopeHelper.linkBitBin();
-        helper.command.link();
-        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/dependency-resolver', {
-          policy: {
-            dependencies: {
-              '@babel/core': '7.11.6',
-              '@babel/preset-env': '7.11.5',
-              '@babel/preset-typescript': '7.10.4',
-              '@babel/plugin-proposal-class-properties': '7.10.4',
-            },
-          },
-        });
-        helper.command.install();
-        helper.command.compile(); // compile the new env
+        const envName = helper.env.setBabelWithTsHarmony();
 
         helper.fs.outputFile(
           'bar/foo.ts',
@@ -52,7 +34,7 @@ describe('multiple compilers - babel and typescript', function () {
           'export function sayHello(name: string) { console.log(`hello ${name}`); }; sayHello("David");'
         );
         helper.command.addComponent('bar');
-        helper.extensions.addExtensionToVariant('bar', `my-scope/${EXTENSIONS_BASE_FOLDER}`);
+        helper.extensions.addExtensionToVariant('bar', `my-scope/${envName}`);
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });
@@ -102,5 +84,19 @@ describe('multiple compilers - babel and typescript', function () {
         });
       });
     });
+  });
+  describe('different envs in the dependency graph', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+      helper.fixtures.populateComponentsTS(4);
+      const babelEnv = helper.env.setBabelWithTsHarmony();
+      helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.bit/react');
+      helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp4', 'teambit.bit/react');
+      helper.command.compile();
+    });
+    it.only('should', () => {});
   });
 });
