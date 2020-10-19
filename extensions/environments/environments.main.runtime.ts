@@ -122,13 +122,14 @@ export class EnvsMain {
       return new EnvDefinition(envId, env as Environment);
     }
 
-    env = component.state.aspects.entries.find((aspectEntry) => {
+    const envEntry = component.state.aspects.entries.find((aspectEntry) => {
       const id = aspectEntry.id.toString();
-      return this.envSlot.get(id);
+      env = this.envSlot.get(id);
+      return !!env;
     });
 
-    if (!env) return this.getDefaultEnv();
-    const id = env.id.toString();
+    if (!envEntry) return this.getDefaultEnv();
+    const id = envEntry.id.toString();
     return new EnvDefinition(id, env as Environment);
   }
 
