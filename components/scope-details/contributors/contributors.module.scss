@@ -1,0 +1,35 @@
+.contributors {
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  > div {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+    .title {
+      font-size: 15px;
+      font-weight: bold;
+      margin-right: 10px;
+      color: var(--text-highlight);
+    }
+  }
+  > div:nth-child(2) {
+    > div {
+      margin-right: 8px;
+    }
+  }
+  .contributorsCount {
+    font-size: 12px;
+    color: white;
+    padding: 3px 8px;
+    margin-right: 23px;
+    background-color: var(--text-color);
+    border-radius: 6px;
+  }
+  .hiddenContributorsCount {
+    color: var(--base-highlight);
+    font-size: 14px;
+    padding-left: 8px;
+  }
+}
