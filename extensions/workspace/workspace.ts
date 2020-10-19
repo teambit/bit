@@ -1119,9 +1119,14 @@ export class Workspace implements ComponentFactory {
       legacyId = this.consumer.getParsedId(id.toString(), true, true);
     } catch (err) {
       if (err.name === 'MissingBitMapComponent') {
-        // if a component is coming from the scope, it doesn't have .bitmap entry
-        legacyId = BitId.parse(id.toString(), true);
-        return ComponentID.fromLegacy(legacyId);
+        try {
+          const idWithoutVersion = id.toString().split('@');
+          this.consumer.getParsedId(idWithoutVersion[0], false, true);
+          return this.scope.resolveComponentId(id);
+        } catch (error) {
+          legacyId = BitId.parse(id.toString(), true);
+          return ComponentID.fromLegacy(legacyId);
+        }
       }
       throw err;
     }
