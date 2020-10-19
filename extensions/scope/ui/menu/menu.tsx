@@ -39,7 +39,7 @@ export function ScopeMenu({ menuSlot, widgetSlot, className }: MenuProps) {
           widgets.map((Widget: MenuWidget, index) => {
             return <Widget key={index} />;
           })}
-        <MainDropdown />
+        {/* <MainDropdown /> */}
       </div>
     </div>
   );

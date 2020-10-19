@@ -56,7 +56,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
               <Icon className={classnames(styles.icon)} of="changelog" />
             </TopBarWidgetLink>
           ))}
-        <MainDropdown />
+        {/* <MainDropdown /> */}
       </div>
     </div>
   );
