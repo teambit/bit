@@ -3994,6 +3994,30 @@
         "exported": false,
         "lanes": []
     },
+    "staged-components/preview-placeholder": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "preview-placeholder.module.scss",
+                "relativePath": "preview-placeholder.module.scss",
+                "test": false
+            },
+            {
+                "name": "preview-placeholder.tsx",
+                "relativePath": "preview-placeholder.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/preview-placeholder",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "staged-components/scope-details": {
         "files": [
             {
@@ -5715,5 +5739,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.63"
+    "version": "14.8.9-dev.64"
 }
