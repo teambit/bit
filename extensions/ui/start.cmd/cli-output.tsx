@@ -146,7 +146,7 @@ export class CliOutput extends React.Component<props> {
         <ClearConsole verbose={!!verbose} />
         <ComponentChange events={componentChanges} />
 
-        <Starting workspaceID={WorkspaceAspect.id} componentServers={componentServers} />
+        <Starting componentServers={componentServers} />
         <Newline />
 
         <ComponentPreviewServerStarted items={componentServers} />

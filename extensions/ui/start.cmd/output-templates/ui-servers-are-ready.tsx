@@ -14,6 +14,8 @@ export const UIServersAreReady = ({ mainUIServer }: props) =>
         Main UI server is running on http://{mainUIServer.targetHost}:{mainUIServer.targetPort}
       </Text>
       <Newline />
-      <Text color="yellow">Waiting for component changes... ({moment().format('HH:mm:ss')})</Text>
+      {mainUIServer.uiRoot.workspace ? (
+        <Text color="yellow">Waiting for component changes... ({moment().format('HH:mm:ss')})</Text>
+      ) : null}
     </>
   );
