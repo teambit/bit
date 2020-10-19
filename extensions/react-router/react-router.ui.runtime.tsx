@@ -7,7 +7,6 @@ import { History, UnregisterCallback, LocationListener } from 'history';
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteSlot } from './slot-router';
 import { RouteContext, Routing } from './route-context';
-import { IframeNavigator } from './parent-navigator';
 
 type RouteChangeSlot = SlotRegistry<LocationListener>;
 
@@ -78,14 +77,7 @@ export class ReactRouterUI {
   static runtime = UIRuntime;
 
   static async provider(deps, config, [routeSlot, routeChangeSlot]: [RouteSlot, RouteChangeSlot]) {
-    const router = new ReactRouterUI(routeSlot, routeChangeSlot);
-
-    const iframeNav = new IframeNavigator(router);
-    routeChangeSlot.register(iframeNav.handleLocationChange);
-    // @ts-ignore TODO! TEMPORARY
-    router.iframeNav = iframeNav;
-
-    return router;
+    return new ReactRouterUI(routeSlot, routeChangeSlot);
   }
 }
 

@@ -3384,11 +3384,6 @@
                 "test": false
             },
             {
-                "name": "parent-navigator.ts",
-                "relativePath": "parent-navigator.ts",
-                "test": false
-            },
-            {
                 "name": "react-router.aspect.ts",
                 "relativePath": "react-router.aspect.ts",
                 "test": false
