@@ -1,7 +1,11 @@
 /* eslint-disable max-classes-per-file */
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/environments';
+import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
+
+import { CompilerAspect } from './compiler.aspect';
+import { CompilerErrorEvent } from './events';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
@@ -27,6 +31,7 @@ type LegacyCompilerOptions = {
 
 export class ComponentCompiler {
   constructor(
+    private pubsub: PubsubMain,
     private workspace: Workspace,
     private component: ConsumerComponent,
     private compilerInstance: Compiler,
@@ -54,12 +59,15 @@ export class ComponentCompiler {
 
   private throwOnCompileErrors() {
     if (this.compileErrors.length) {
-      this.compileErrors.forEach((errorItem) =>
-        logger.error(`compilation error at ${errorItem.path}`, errorItem.error)
-      );
+      this.compileErrors.forEach((errorItem) => {
+        logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
+      });
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
-      throw new Error(`compilation failed. see the following errors from the compiler
+      const Err = new Error(`compilation failed. see the following errors from the compiler
 ${this.compileErrors.map(formatError).join('\n')}`);
+
+      this.pubsub.pub(CompilerAspect.id, new CompilerErrorEvent(Err));
+      throw Err;
     }
   }
 
@@ -106,7 +114,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: EnvsMain) {
+  constructor(private workspace: Workspace, private envs: EnvsMain, private pubsub: PubsubMain) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
@@ -142,7 +150,7 @@ export class WorkspaceCompiler {
       if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsAndNewCompilers.push(
-          new ComponentCompiler(this.workspace, c.state._consumer, compilerInstance, compilerName)
+          new ComponentCompiler(this.pubsub, this.workspace, c.state._consumer, compilerInstance, compilerName)
         );
       } else {
         componentsWithLegacyCompilers.push(c.state._consumer);

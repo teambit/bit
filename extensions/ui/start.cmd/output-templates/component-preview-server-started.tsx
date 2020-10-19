@@ -20,7 +20,6 @@ export const ComponentPreviewServerStarted = ({ items }: props) =>
             <Text>{`http://${item.server.host || 'localhost'}:${item.server.port}`}</Text>
           </Box>
           <Box width="20%">
-            <InkSpinner />
             <Text color="yellow">{item.status}</Text>
           </Box>
         </Box>

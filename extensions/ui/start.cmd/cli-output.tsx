@@ -11,6 +11,7 @@ import {
 import { UIAspect, UiServerStartedEvent } from '@teambit/ui';
 import { WebpackAspect, WebpackCompilationDoneEvent } from '@teambit/webpack';
 import { BundlerAspect, ComponentsServerStartedEvent } from '@teambit/bundler';
+import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
 import React from 'react';
 import { Newline, Text } from 'ink';
@@ -41,6 +42,7 @@ export class CliOutput extends React.Component<props> {
       componentServers: [],
       componentChanges: [],
       isBrowserOpen: false,
+      latestError: null,
     };
 
     this.registerToEvents(props.pubsub);
@@ -51,6 +53,7 @@ export class CliOutput extends React.Component<props> {
     pubsub.sub(WebpackAspect.id, this.eventsListener);
     pubsub.sub(BundlerAspect.id, this.eventsListener);
     pubsub.sub(WorkspaceAspect.id, this.eventsListener);
+    pubsub.sub(CompilerAspect.id, this.eventsListener);
   }
 
   private eventsListener = (event: BitBaseEvent<any>) => {
@@ -75,6 +78,12 @@ export class CliOutput extends React.Component<props> {
         break;
       case OnComponentRemovedEvent.TYPE:
         this.onComponentRemoved(event);
+        break;
+      case CompilerErrorEvent.TYPE:
+        this.setState({
+          latestError: event.data.error,
+        });
+        console.log(event);
         break;
       default:
     }
@@ -104,6 +113,7 @@ export class CliOutput extends React.Component<props> {
   private onComponentChange(event) {
     this.setState({
       componentChanges: [...this.state.componentChanges, event],
+      latestError: null,
     });
   }
 
@@ -118,8 +128,7 @@ export class CliOutput extends React.Component<props> {
   // Hellpers
 
   private areAllComponentServersRunning() {
-    //TODO: should not be hardcoded
-    return this.state.componentServers.filter((cs) => cs.status === 'Running').length >= 3;
+    return this.state.componentServers.filter((cs) => cs.status !== 'Running').length === 0;
   }
 
   private safeOpenBrowser() {
@@ -139,18 +148,32 @@ export class CliOutput extends React.Component<props> {
   }
 
   render() {
-    const { webpackRunningCompilationProcesses, componentServers, mainUIServer, componentChanges } = this.state;
+    const {
+      webpackRunningCompilationProcesses,
+      componentServers,
+      mainUIServer,
+      componentChanges,
+      latestError,
+    } = this.state;
     const { verbose } = this.state.commandFlags;
     return (
       <>
         <ClearConsole verbose={!!verbose} />
-        <ComponentChange events={componentChanges} />
+        {latestError ? null : <ComponentChange events={componentChanges} />}
 
-        <Starting componentServers={componentServers} />
+        {mainUIServer ? null : <Starting componentServers={componentServers} />}
         <Newline />
 
         <ComponentPreviewServerStarted items={componentServers} />
         <Newline />
+
+        {latestError ? (
+          verbose ? (
+            <Text>Error: {latestError.stack}</Text>
+          ) : (
+            <Text>Error: {latestError.message}</Text>
+          )
+        ) : null}
 
         <UIServersAreReady mainUIServer={mainUIServer} />
       </>
