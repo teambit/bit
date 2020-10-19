@@ -62,6 +62,10 @@ export class ReactRouterUI {
     return this;
   }
 
+  registerListener(listener: LocationListener) {
+    this.routeChangeListener.register(listener);
+  }
+
   /**
    * change browser location
    */
