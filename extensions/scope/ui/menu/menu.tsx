@@ -1,4 +1,4 @@
-import { MainDropdown } from '@teambit/staged-components.main-dropdown';
+// import { MainDropdown } from '@teambit/staged-components.main-dropdown';
 import classnames from 'classnames';
 import React from 'react';
 import { flatten } from 'lodash';

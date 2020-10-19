@@ -153,7 +153,6 @@ export class ScopeUI {
               sidebar={<this.sidebar.render />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
-              widgetSlot={this.menuWidgetSlot}
               context={this.getContext()}
             />
           ),

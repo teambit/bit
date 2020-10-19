@@ -13,7 +13,7 @@ export class ComponentRoute implements Route {
         const { componentId } = req.params;
         // TODO @guy: hack we should fix this. (consider moving this route to scope extension.)
         const host = this.componentExtension.getHost('teambit.bit/scope');
-        debugger;
+
         const component = await host.get(await host.resolveComponentId(componentId));
         // @ts-ignore
         req.component = component;
