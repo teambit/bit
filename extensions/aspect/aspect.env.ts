@@ -21,7 +21,6 @@ export class AspectEnv implements Environment {
   }
 
   getCompiler(tsConfig: any) {
-    const targetTsConfig = merge(tsconfig, tsConfig);
-    return this.reactEnv.getCompiler(targetTsConfig);
+    return this.reactEnv.getCompiler(tsConfig);
   }
 }
