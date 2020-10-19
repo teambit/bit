@@ -16,11 +16,12 @@ type ComponentTreeProps = {
   selected?: string;
   components: ComponentModel[];
   treeNodeSlot: ComponentTreeSlot;
+  showScopeDrawer: boolean;
 };
 
 const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
 
-export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: ComponentTreeProps) {
+export function ComponentTree({ components, onSelect, selected, treeNodeSlot, showScopeDrawer }: ComponentTreeProps) {
   const rootNode = useMemo(
     () =>
       inflateToTree(
@@ -38,7 +39,7 @@ export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: 
       if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
 
       const isScope = scopeRegEx.test(props.node.id);
-      if (isScope) return <ScopeView {...props} />;
+      if (isScope) return <ScopeView showScopeDrawer={showScopeDrawer} {...props} />;
 
       return <NamespaceView {...props} />;
     },

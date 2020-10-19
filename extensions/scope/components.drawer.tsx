@@ -13,6 +13,6 @@ export class ComponentsDrawer implements Drawer {
   render = () => {
     const { scope } = useScope();
     if (!scope) return <FullLoader />;
-    return <ComponentTree components={scope.components} treeNodeSlot={this.treeNodeSlot} />;
+    return <ComponentTree showScopeDrawer={false} components={scope.components} treeNodeSlot={this.treeNodeSlot} />;
   };
 }

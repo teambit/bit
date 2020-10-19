@@ -10,13 +10,13 @@ import { TreeLayer, TreeNodeProps } from '../recursive-tree';
 import { getName } from '../utils/get-name';
 import styles from './component-nodes.module.scss';
 
-export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
+export function ScopeView({ node, depth, showScopeDrawer }: TreeNodeProps<PayloadType>) {
   const [collapsed, collapse] = useState(false);
   const displayName = getName(node.id.replace(/\/$/, ''));
-
+  const calculatedDepth = showScopeDrawer ? 1 : 0;
   return (
     <div>
-      {node.id && (
+      {node.id && showScopeDrawer && (
         <div className={classNames(indentClass, clickable, styles.namespace)} onClick={() => collapse(!collapsed)}>
           <div className={styles.left}>
             <Icon className={classNames(styles.arrow, collapsed && styles.collapsed)} of="fat-arrow-down" />
@@ -26,7 +26,7 @@ export function ScopeView({ node, depth }: TreeNodeProps<PayloadType>) {
         </div>
       )}
       <AnimateHeight height={collapsed ? 0 : 'auto'}>
-        <div style={indentStyle(depth + 2)} className={classNames(styles.componentTree)}>
+        <div style={indentStyle(depth + calculatedDepth)} className={classNames(styles.componentTree)}>
           {node.children && <TreeLayer childNodes={node.children} depth={depth + 1} />}
         </div>
       </AnimateHeight>
