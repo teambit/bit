@@ -359,7 +359,7 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * resolve a component ID.
-   * @param id component ID
+   * @param id component ID.
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     if (id.toString().startsWith(this.name)) {
