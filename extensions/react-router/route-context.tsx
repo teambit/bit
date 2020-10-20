@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ComponentType } from 'react';
+import React, { useEffect, ComponentType } from 'react';
 import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from './slot-router';
 import { ReactRouterUI } from './react-router.ui.runtime';
