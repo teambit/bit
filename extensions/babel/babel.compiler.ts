@@ -2,14 +2,19 @@ import * as babel from '@babel/core';
 import { mapSeries } from 'bluebird';
 import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
-import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
+import { Compiler, CompilerMain, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import path from 'path';
 import { BabelCompilerOptions } from './compiler-options';
 
 export class BabelCompiler implements Compiler {
-  constructor(readonly id, private logger: Logger, private options: BabelCompilerOptions) {}
+  constructor(
+    readonly id,
+    private logger: Logger,
+    private compiler: CompilerMain,
+    private options: BabelCompilerOptions
+  ) {}
   distDir = 'dist';
   distGlobPatterns = [`${this.distDir}/**`];
   shouldCopyNonSupportedFiles = true;
@@ -69,6 +74,10 @@ export class BabelCompiler implements Compiler {
       artifacts: this.getArtifactDefinition(),
       componentsResults,
     };
+  }
+
+  createTask(name = 'BabelCompiler') {
+    return this.compiler.createTask(name, this);
   }
 
   private async buildOneCapsule(capsule: Capsule, componentResult: ComponentResult) {

@@ -83,7 +83,7 @@ export class BuildPipe {
       if (!task) {
         throw new InvalidTask(task);
       }
-      const taskName = `${task.aspectId} ${task.name} ${task.description || ''}`;
+      const taskName = `${task.aspectId}:${task.name}${task.description ? ` (${task.description})` : ''}`;
       longProcessLogger.logProgress(taskName);
       const startTask = process.hrtime();
       const taskStartTime = Date.now();
