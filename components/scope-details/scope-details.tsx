@@ -18,14 +18,9 @@ export function ScopeDetails({ scopeName, badgeSlot, description, className, ...
     <div {...rest} className={classNames(styles.scopeTitle, className)}>
       <div className={styles.titleRow}>
         <ScopeTitle scopeName={scopeName} />
-        <ScopeLabels badgeSlot={badgeSlot} />
       </div>
       <Subtitle>{description}</Subtitle>
-      {/* <ConsumableLink
-        title="Export to this scope"
-        link={`bit export ${owner}.${scopeName}`}
-        className={styles.copyLink}
-      /> */}
+      <ScopeLabels badgeSlot={badgeSlot} />
     </div>
   );
 }

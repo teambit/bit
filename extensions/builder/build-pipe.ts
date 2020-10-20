@@ -1,4 +1,4 @@
-import GeneralError from 'bit-bin/dist/error/general-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import Bluebird from 'bluebird';
@@ -124,7 +124,7 @@ export class BuildPipe {
         })
         .join('\n\n');
       const summery = `\n\nFound ${totalErrors} errors in ${compsWithErrors.length} components`;
-      throw new GeneralError(title + errorsStr + summery);
+      throw new BitError(title + errorsStr + summery);
     }
   }
 
