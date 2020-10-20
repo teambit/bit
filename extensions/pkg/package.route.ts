@@ -22,10 +22,9 @@ export class PackageRoute implements Route {
       // TODO: 404 again how to handle.
       if (!file) return res.status(404).jsonp({ error: 'not found' });
       const contents = file.contents;
-      const str = `${file.cwd}/${file.path}`;
-      const contentType = mime.getType('.tar');
+      const contentType = mime.getType('.tgz');
+      res.set('Content-disposition', `attachment; filename=${file.basename}`);
       if (contentType) res.set('Content-Type', contentType);
-      // return res.send(contents.toString());
       return res.send(contents);
     },
   ];
