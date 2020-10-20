@@ -57,7 +57,7 @@ export class Artifact {
    * aspect id (string) that generated the artifact
    */
   get generatedBy(): string {
-    return this.def.generatedBy || this.task.id;
+    return this.def.generatedBy || this.task.aspectId;
   }
 
   /**
@@ -72,7 +72,7 @@ export class Artifact {
       generatedBy: this.generatedBy,
       storage: this.storageResolver.name,
       task: {
-        id: this.task.id,
+        id: this.task.aspectId,
         name: this.task.name,
       },
       files: this.files,

@@ -9,8 +9,13 @@ import { Packer } from './packer';
  * publish build task is running "publish --dry-run" to avoid later npm errors during export
  */
 export class PublishDryRunTask implements BuildTask {
-  readonly description = 'publish dry-run';
-  constructor(readonly id: string, private publisher: Publisher, private packer: Packer, private logger: Logger) {}
+  readonly name = 'PublishDryRun';
+  constructor(
+    readonly aspectId: string,
+    private publisher: Publisher,
+    private packer: Packer,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     this.publisher.options.dryRun = true;
