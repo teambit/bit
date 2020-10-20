@@ -1,11 +1,11 @@
 import { SlotRegistry } from '@teambit/harmony';
 import React from 'react';
 import { Route, RouteProps, Switch, useRouteMatch } from 'react-router-dom';
-
+import { flatten } from 'lodash';
 import { extendPath } from './extend-path';
 import { NavLinkProps } from './nav-link';
 
-export type RouteSlot = SlotRegistry<RouteProps>;
+export type RouteSlot = SlotRegistry<RouteProps | RouteProps[]>;
 export type NavigationSlot = SlotRegistry<NavLinkProps>;
 
 export type SlotRouterProps = {
@@ -14,7 +14,8 @@ export type SlotRouterProps = {
 };
 
 export function SlotRouter({ slot, rootRoutes }: SlotRouterProps) {
-  const routes = slot.values();
+  const routes = flatten(slot.values());
+
   const withRoot = routes.concat(rootRoutes || []);
 
   return (
@@ -27,7 +28,7 @@ export function SlotRouter({ slot, rootRoutes }: SlotRouterProps) {
 }
 
 export function SlotSubRouter({ slot, basePath }: { slot: RouteSlot; basePath?: string }) {
-  const routes = slot.values();
+  const routes = flatten(slot.values());
   const { path: contextPath } = useRouteMatch();
   // TODO - generate key as part of the slot.
 

@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import { BitId } from 'bit-bin/dist/bit-id';
-import GeneralError from 'bit-bin/dist/error/general-error';
 
 const DEV_ENV = 'development';
 const RUNTIME_ENV = 'runtime';
@@ -49,7 +49,7 @@ export class Dependencies {
     if (env === RUNTIME_ENV) {
       return DependencyList.fromArray(this.runtime.concat(this.peer));
     }
-    throw new GeneralError(`env ${env} is not supported`);
+    throw new BitError(`env ${env} is not supported`);
   }
 
   /**
