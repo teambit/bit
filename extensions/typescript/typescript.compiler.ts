@@ -16,7 +16,7 @@ export class TypescriptCompiler implements Compiler {
   artifactName = 'dist';
 
   displayConfig() {
-    return JSON.stringify(this.options.tsconfig, null, 4);
+    return this.stringifyTsconfig(this.options.tsconfig);
   }
   /**
    * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
