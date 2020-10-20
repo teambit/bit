@@ -32,8 +32,8 @@ export class MultipleCompilersEnv {
     tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
     tsCompiler.shouldCopyNonSupportedFiles = false;
     const buildPipeOverride = react.overrideBuildPipe([
-      compiler.createTask(babelCompiler),
-      compiler.createTask(tsCompiler),
+      compiler.createTask('BabelCompiler', babelCompiler),
+      compiler.createTask('TypescriptCompiler', tsCompiler),
     ]);
 
     const harmonyReactEnv = react.compose([
