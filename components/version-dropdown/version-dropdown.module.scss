@@ -27,7 +27,6 @@
 .versionContainer {
   max-height: 240px;
   overflow-y: scroll;
-  padding: 0 8px;
 }
 .versionLine {
   cursor: pointer;
@@ -37,17 +36,26 @@
   padding: 0 24px;
   text-decoration: none;
   color: var(--text-highlight);
+  &:hover {
+    background-color: var(--bg-topping-highlight);
+  }
   &:last-child {
     margin-bottom: 8px;
   }
-
+  &.currentVersion {
+    background: var(--muted-color);
+  }
   .version {
     margin-right: 16px;
+  }
+  .label {
+    background-color: white;
+    margin-right: 8px;
   }
 }
 
 .placeholder {
-  // cursor: pointer;
+  cursor: pointer;
   display: flex;
   align-items: center;
   padding: 7px;
@@ -66,9 +74,9 @@
       background-color: var(--bg-color);
     }
   }
-  // > div {
-  //   margin-right: 5px;
-  // }
+  > div {
+    margin-right: 5px;
+  }
   .label {
     margin-right: 8px;
   }

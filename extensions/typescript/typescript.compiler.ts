@@ -10,7 +10,21 @@ import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  distDir = 'dist';
+  distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+  shouldCopyNonSupportedFiles = true;
+  artifactName = 'dist';
+
+  displayConfig() {
+    return this.stringifyTsconfig(this.options.tsconfig);
+  }
+  /**
+   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+   * needed for the package.
+   */
+  npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
+
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace
@@ -83,17 +97,10 @@ export class TypescriptCompiler implements Compiler {
     return [
       {
         generatedBy: TypescriptAspect.id,
-        name: 'dist',
-        globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
+        name: this.artifactName,
+        globPatterns: this.distGlobPatterns,
       },
     ];
-  }
-
-  /**
-   * returns the dist directory on the capsule
-   */
-  getDistDir() {
-    return 'dist';
   }
 
   /**
@@ -101,7 +108,7 @@ export class TypescriptCompiler implements Compiler {
    */
   getDistPathBySrcPath(srcPath: string) {
     const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
-    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+    return path.join(this.distDir, fileWithJSExtIfNeeded);
   }
 
   /**
@@ -109,12 +116,6 @@ export class TypescriptCompiler implements Compiler {
    */
   isFileSupported(filePath: string): boolean {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
-  }
-
-  getNpmIgnoreEntries() {
-    // when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-    // needed for the package.
-    return [`${this.getDistDir()}/tsconfig.tsbuildinfo`];
   }
 
   /**
@@ -167,7 +168,9 @@ export class TypescriptCompiler implements Compiler {
     const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     // eslint-disable-next-line no-cond-assign
     while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
-      const capsulePath = nextProject.project.replace(`${path.sep}tsconfig.json`, '');
+      // regex to make sure it will work correctly for both linux and windows
+      // it replaces both /tsconfig.json and \tsocnfig.json
+      const capsulePath = nextProject.project.replace(/[/\\]tsconfig.json/, '');
       const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
       if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
       longProcessLogger.logProgress(currentComponentId.toString());

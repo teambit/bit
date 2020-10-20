@@ -571,17 +571,11 @@ export default class Version extends BitObject {
     files,
     dists,
     mainDistFile,
-    flattenedDependencies,
-    flattenedDevDependencies,
-    specsResults,
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
-    flattenedDependencies: BitIds;
-    flattenedDevDependencies: BitIds;
     dists: Array<DistFileModel> | undefined;
     mainDistFile: PathLinuxRelative;
-    specsResults: Results | undefined;
   }) {
     const parseFile = (file) => {
       return {
@@ -609,7 +603,7 @@ export default class Version extends BitObject {
       bindingPrefix: component.bindingPrefix,
       tester,
       log: component.log as Log,
-      specsResults,
+      specsResults: (component.specsResults as any) as Results,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       docs: component.docs,
       dependencies: component.dependencies.get(),
@@ -625,8 +619,8 @@ export default class Version extends BitObject {
         component.testerPackageDependencies || {},
         testerDynamicPakageDependencies || {}
       ),
-      flattenedDependencies,
-      flattenedDevDependencies,
+      flattenedDependencies: component.flattenedDependencies,
+      flattenedDevDependencies: component.flattenedDevDependencies,
       schema: component.schema,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,

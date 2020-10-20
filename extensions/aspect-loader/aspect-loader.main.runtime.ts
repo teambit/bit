@@ -6,6 +6,7 @@ import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
+
 import { difference } from 'ramda';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -22,7 +23,7 @@ export type AspectDescriptor = {
   /**
    * icon of the extension.
    */
-  icon: string;
+  icon?: string;
 };
 
 export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
@@ -97,12 +98,8 @@ export class AspectLoaderMain {
   getDescriptor(id: string): AspectDescriptor {
     const instance = this.harmony.get<any>(id);
     const iconFn = instance.icon;
-    const defaultIcon = `
-      <svg width="50" height="50" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="25" cy="25" r="20"/>
-      </svg>`;
 
-    const icon = iconFn ? iconFn() : defaultIcon;
+    const icon = iconFn ? iconFn.apply(instance) : undefined;
 
     return {
       id,
@@ -295,7 +292,8 @@ export class AspectLoaderMain {
 
   static async provider([loggerExt, envs]: [LoggerMain, EnvsMain], config, slots, harmony: Harmony) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
-    return new AspectLoaderMain(logger, envs, harmony);
+    const aspectLoader = new AspectLoaderMain(logger, envs, harmony);
+    return aspectLoader;
   }
 }
 

@@ -1,7 +1,6 @@
 import { useDataQuery } from '@teambit/ui';
 import { gql } from 'apollo-boost';
 import { useMemo } from 'react';
-
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 

@@ -10,7 +10,11 @@ import { BabelCompilerOptions } from './compiler-options';
 import { BabelAspect } from './babel.aspect';
 
 export class BabelCompiler implements Compiler {
-  constructor(private logger: Logger, private options: BabelCompilerOptions) {}
+  constructor(readonly id, private logger: Logger, private options: BabelCompilerOptions) {}
+  distDir = 'dist';
+  distGlobPatterns = [`${this.distDir}/**`];
+  shouldCopyNonSupportedFiles = true;
+  artifactName = 'dist';
 
   /**
    * compile one file on the workspace
@@ -71,7 +75,7 @@ export class BabelCompiler implements Compiler {
   private async buildOneCapsule(capsule: Capsule, componentResult: ComponentResult) {
     componentResult.startTime = Date.now();
     const sourceFiles = capsule.component.filesystem.files.map((file) => file.relative);
-    await fs.ensureDir(path.join(capsule.path, this.getDistDir()));
+    await fs.ensureDir(path.join(capsule.path, this.distDir));
     await Promise.all(
       sourceFiles.map(async (filePath) => {
         let result;
@@ -90,9 +94,9 @@ export class BabelCompiler implements Compiler {
         const distPathMap = `${distPath}.map`;
         const code = result.code || '';
         const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${distPathMap}` : code;
-        capsule.fs.writeFileSync(path.join(this.getDistDir(), distPath), outputText);
+        capsule.fs.writeFileSync(path.join(this.distDir, distPath), outputText);
         if (result.map) {
-          capsule.fs.writeFileSync(path.join(this.getDistDir(), distPathMap), JSON.stringify(result.map));
+          capsule.fs.writeFileSync(path.join(this.distDir, distPathMap), JSON.stringify(result.map));
         }
       })
     );
@@ -103,17 +107,10 @@ export class BabelCompiler implements Compiler {
     return [
       {
         generatedBy: BabelAspect.id,
-        name: 'dist',
-        globPatterns: [`${this.getDistDir()}/**`],
+        name: this.artifactName,
+        globPatterns: this.distGlobPatterns,
       },
     ];
-  }
-
-  /**
-   * returns the dist directory on the capsule
-   */
-  getDistDir() {
-    return 'dist';
   }
 
   /**
@@ -121,11 +118,11 @@ export class BabelCompiler implements Compiler {
    */
   getDistPathBySrcPath(srcPath: string) {
     const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
-    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+    return path.join(this.distDir, fileWithJSExtIfNeeded);
   }
 
   /**
-   * whether typescript is able to compile the given path
+   * whether babel is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
     return (

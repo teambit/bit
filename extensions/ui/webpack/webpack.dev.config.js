@@ -14,6 +14,20 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
+const moduleFileExtensions = [
+  'web.mjs',
+  'mjs',
+  'web.js',
+  'js',
+  'web.ts',
+  'ts',
+  'web.tsx',
+  'tsx',
+  'json',
+  'web.jsx',
+  'jsx',
+];
+
 module.exports = {
   createWebpackConfig,
   devConfig: createWebpackConfig,
@@ -118,7 +132,13 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
     },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js'],
+      // These are the reasonable defaults supported by the Node ecosystem.
+      // We also include JSX as a common component filename extension to support
+      // some tools, although we do not recommend using it, see:
+      // https://github.com/facebook/create-react-app/issues/290
+      // `web` extension prefixes have been added for better support
+      // for React Native Web.
+      extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
@@ -180,6 +200,41 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
             require.resolve('css-loader'),
             {
               loader: require.resolve('sass-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.less$/,
+          exclude: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('less-loader'),
               options: {
                 sourceMap: true,
               },

@@ -1,13 +1,13 @@
 import React, { useContext } from 'react';
 
 import { PayloadType } from '../payload-type';
-import { TreeNode, TreeNodeContext } from '../recursive-tree';
+import { TreeNodeProps, TreeNodeContext } from '../recursive-tree';
 
-export function RootNode({ node }: { node: TreeNode<PayloadType> }) {
+export function RootNode({ node, depth = 0 }: TreeNodeProps<PayloadType>) {
   const TreeNodeRenderer = useContext(TreeNodeContext);
 
   if (node.id) {
-    return <TreeNodeRenderer node={node} depth={0} />;
+    return <TreeNodeRenderer node={node} depth={depth} />;
   }
 
   if (!node.children) return null;
@@ -15,7 +15,7 @@ export function RootNode({ node }: { node: TreeNode<PayloadType> }) {
   return (
     <>
       {node.children.map((rootNode) => (
-        <RootNode key={rootNode.id} node={rootNode} />
+        <RootNode key={rootNode.id} node={rootNode} depth={depth} />
       ))}
     </>
   );
