@@ -1,27 +1,26 @@
 import { ComponentModel } from '@teambit/component';
-import { ComponentTreeSlot } from '@teambit/component-tree';
-import React, { useCallback, useMemo } from 'react';
-
-import { ScopeView, NamespaceView } from './component-nodes';
+import React, { useMemo } from 'react';
 import { ComponentTreeContextProvider } from './component-tree-context';
-import { ComponentView } from './component-view';
 import { indentStyle } from './indent';
 import { inflateToTree } from './inflate-paths';
 import { PayloadType } from './payload-type';
-import { TreeNodeContext, TreeNodeProps } from './recursive-tree';
+import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
 import { RootNode } from './root-node';
+import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   components: ComponentModel[];
-  treeNodeSlot: ComponentTreeSlot;
-  showScopeDrawer: boolean;
+  TreeNode?: TreeNodeRenderer<PayloadType>;
 };
 
-const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
-
-export function ComponentTree({ components, onSelect, selected, treeNodeSlot, showScopeDrawer }: ComponentTreeProps) {
+export function ComponentTree({
+  components,
+  onSelect,
+  selected,
+  TreeNode = DefaultTreeNodeRenderer,
+}: ComponentTreeProps) {
   const rootNode = useMemo(
     () =>
       inflateToTree(
@@ -32,23 +31,9 @@ export function ComponentTree({ components, onSelect, selected, treeNodeSlot, sh
     [components]
   );
 
-  const TreeNodeRenderer = useCallback(
-    function TreeNode(props: TreeNodeProps<PayloadType>) {
-      const children = props.node.children;
-
-      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
-
-      const isScope = scopeRegEx.test(props.node.id);
-      if (isScope) return <ScopeView showScopeDrawer={showScopeDrawer} {...props} />;
-
-      return <NamespaceView {...props} />;
-    },
-    [treeNodeSlot]
-  );
-
   return (
     <div style={indentStyle(1)}>
-      <TreeNodeContext.Provider value={TreeNodeRenderer}>
+      <TreeNodeContext.Provider value={TreeNode}>
         <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
           <RootNode node={rootNode} depth={1} />
         </ComponentTreeContextProvider>

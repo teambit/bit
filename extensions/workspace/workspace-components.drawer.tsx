@@ -1,9 +1,18 @@
 import { Drawer } from '@teambit/sidebar';
 import { FullLoader } from '@teambit/staged-components.full-loader';
-import { ComponentTree } from '@teambit/staged-components.side-bar';
-import React from 'react';
+import {
+  ComponentTree,
+  TreeNodeProps,
+  PayloadType,
+  ComponentView,
+  ScopeView,
+  NamespaceView,
+} from '@teambit/staged-components.side-bar';
+import React, { useCallback } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { useWorkspace } from './ui/workspace/use-workspace';
+
+const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
 
 export class WorkspaceComponentsDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
@@ -12,8 +21,23 @@ export class WorkspaceComponentsDrawer implements Drawer {
 
   render = () => {
     const workspace = useWorkspace();
+    const { treeNodeSlot } = this;
+
+    const TreeNodeRenderer = useCallback(
+      function TreeNode(props: TreeNodeProps<PayloadType>) {
+        const children = props.node.children;
+
+        if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
+
+        const isScope = scopeRegEx.test(props.node.id);
+        if (isScope) return <ScopeView {...props} />;
+
+        return <NamespaceView {...props} />;
+      },
+      [treeNodeSlot]
+    );
 
     if (!workspace) return <FullLoader />;
-    return <ComponentTree showScopeDrawer={true} components={workspace.components} treeNodeSlot={this.treeNodeSlot} />;
+    return <ComponentTree components={workspace.components} TreeNode={TreeNodeRenderer} />;
   };
 }

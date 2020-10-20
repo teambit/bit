@@ -4153,6 +4153,16 @@
                 "test": false
             },
             {
+                "name": "default-tree-node-renderer.tsx",
+                "relativePath": "component-tree/default-tree-node-renderer/default-tree-node-renderer.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "component-tree/default-tree-node-renderer/index.ts",
+                "test": false
+            },
+            {
                 "name": "indent.module.scss",
                 "relativePath": "component-tree/indent/indent.module.scss",
                 "test": false

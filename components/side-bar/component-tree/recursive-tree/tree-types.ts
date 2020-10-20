@@ -1,4 +1,5 @@
 import { ComponentType } from 'react';
+import { PayloadType } from '../payload-type';
 
 export type treeNodeComponentProvider = (node: TreeNode) => ComponentType<TreeNodeProps>;
 
@@ -10,7 +11,7 @@ export type TreeLayerProps<Payload = any> = {
 export type TreeNodeProps<Payload = any> = {
   node: TreeNode<Payload>;
   depth: number;
-  showScopeDrawer?: boolean;
+  TreeNode?: TreeNodeProps<PayloadType>;
 };
 
 export type TreeNode<Payload = any> = {

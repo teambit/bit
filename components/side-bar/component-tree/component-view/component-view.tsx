@@ -14,7 +14,7 @@ import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
 
 export type ComponentViewProps<Payload = any> = {
-  treeNodeSlot: ComponentTreeSlot;
+  treeNodeSlot?: ComponentTreeSlot;
 } & TreeNodeProps<Payload>;
 
 export function ComponentView(props: ComponentViewProps<PayloadType>) {
@@ -47,7 +47,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       <div className={styles.right}>
         <DeprecationIcon component={component} />
         {/* {isInternal && <Icon of="Internal" className={styles.componentIcon} />} */}
-        {component &&
+        {props.treeNodeSlot &&
           props.treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}
       </div>
     </NavLink>
