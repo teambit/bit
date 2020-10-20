@@ -13,10 +13,10 @@ export const ComponentPreviewServerStarted = ({ items }: props) =>
       <ComponentPreviewServerStartedHeaders />
       {items.map((item, index) => (
         <Box key={index}>
-          <Box width="30%">
+          <Box width="40%">
             <Text color="rgb(45, 164, 157)">{item.id}</Text>
           </Box>
-          <Box width="50%">
+          <Box width="40%">
             <Text>{`http://${item.server.host || 'localhost'}:${item.server.port}`}</Text>
           </Box>
           <Box width="20%">

@@ -63,39 +63,8 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
       globalObject: 'this',
     },
 
-    stats: {
-      // preset: 'minimal',
-      ignoreWarnings: [
-        (warning) => {
-          pubsub.pub(WebpackAspect.id, { name: 'TEST', data: warning });
-          return true;
-        },
-      ],
-      ignoreErrors: [
-        (error) => {
-          pubsub.pub(WebpackAspect.id, { name: 'TEST', data: error });
-          return true;
-        },
-      ],
-      preset: 'none',
-    },
-
     devServer: {
-      // For bit start command
-      // quiet: true,
       stats: 'none',
-      // stats: {
-      //   // preset: 'minimal',
-      //   ignoreWarnings: [(warning) => {
-      //     pubsub.pub(WebpackAspect.id, {name: 'TEST', data: warning})
-      //     return true;
-      //   }],
-      //   ignoreErrors: [(error) => {
-      //     pubsub.pub(WebpackAspect.id, {name: 'TEST', data: error})
-      //     return true;
-      //   }],
-      //   preset: 'none',
-      // },
 
       // Serve index.html as the base
       contentBase: resolveWorkspacePath(publicDirectory),

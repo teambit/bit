@@ -17,13 +17,7 @@ import React from 'react';
 import { Newline, Text } from 'ink';
 import open from 'open';
 
-import {
-  ClearConsole,
-  Starting,
-  ComponentPreviewServerStarted,
-  UIServersAreReady,
-  ComponentChange,
-} from './output-templates';
+import { Starting, ComponentPreviewServerStarted, UIServersAreReady, ComponentChange } from './output-templates';
 
 type state = {
   commandFlags: any;
@@ -176,8 +170,6 @@ export class CliOutput extends React.Component<props, state> {
 
     return (
       <>
-        {latestError ? null : <ComponentChange events={componentChanges} />}
-
         {mainUIServer ? null : <Starting componentServers={componentServers} />}
         <Newline />
 

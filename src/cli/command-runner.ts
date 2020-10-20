@@ -134,6 +134,7 @@ export function handleUnhandledRejection(err: Error | null | undefined | {}) {
     return handleErrorAndExit(err, process.argv[2]);
   }
 
+  // @ts-ignore
   logger.console(err, 'error'); // eslint-disable-line
 
   return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
@@ -141,7 +142,6 @@ export function handleUnhandledRejection(err: Error | null | undefined | {}) {
 
 export function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
-  // console.error(err); // eslint-disable-line //!!!!!!
   logger.console(err, 'error'); // eslint-disable-line
   logger.exitAfterFlush(1, commandName);
 }
