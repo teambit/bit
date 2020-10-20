@@ -10,8 +10,8 @@ import {
 } from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 
 export const componentIssuesLabels = {
-  missingPackagesDependenciesOnFs:
-    'missing packages dependencies (use `bit install` to make sure all package dependencies are installed)',
+ missingPackagesDependenciesOnFs:
+    'missing packages dependencies (make sure you\'ve added it to the package dependencies, and use `bit install` to make sure all package dependencies are installed)',
   missingComponents: 'missing components (use "bit import" or `bit install` to make sure all components exist)',
   untrackedDependencies: 'untracked file dependencies (use "bit add <file>" to track untracked files as components)',
   missingDependenciesOnFs: 'non-existing dependency files (make sure all files exists on your workspace)',
