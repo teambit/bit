@@ -22,7 +22,7 @@
     /**
      * default scope for all components in workspace.
      **/
-    "defaultScope": "<my-company-name>.<my-scope-name>"
+    "defaultScope": "my-scope"
   },
 
   /**
