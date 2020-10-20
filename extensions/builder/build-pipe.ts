@@ -83,7 +83,7 @@ export class BuildPipe {
       if (!task) {
         throw new InvalidTask(task);
       }
-      const taskName = `${task.id} ${task.description || ''}`;
+      const taskName = `${task.aspectId} ${task.name} ${task.description || ''}`;
       longProcessLogger.logProgress(taskName);
       const startTask = process.hrtime();
       const taskStartTime = Date.now();
@@ -112,8 +112,8 @@ export class BuildPipe {
   private throwIfErrorsFound(task: BuildTask, taskResult: BuiltTaskResult) {
     const compsWithErrors = taskResult.componentsResults.filter((c) => c.errors?.length);
     if (compsWithErrors.length) {
-      this.logger.consoleFailure(`task "${task.id}" has failed`);
-      const title = `Builder found the following errors while running "${task.id}" task\n`;
+      this.logger.consoleFailure(`task "${task.aspectId} ${task.name}" has failed`);
+      const title = `Builder found the following errors while running "${task.aspectId}" task\n`;
       let totalErrors = 0;
       const errorsStr = compsWithErrors
         .map((c) => {

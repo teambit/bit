@@ -11,7 +11,7 @@ import { Compiler } from './types';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
-  constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
+  constructor(private workspaceCompiler: WorkspaceCompiler) {}
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: {
@@ -25,14 +25,13 @@ export class CompilerMain {
    * API to create a new compiler task, it facilitates the usage of multiple compilers.
    * with this method you can create any number of compilers and add them to the buildPipeline.
    */
-  createTask(compiler: Compiler) {
-    return new CompilerTask(CompilerAspect.id, compiler);
+  createTask(name: string, compiler: Compiler): CompilerTask {
+    return new CompilerTask(CompilerAspect.id, name, compiler);
   }
   static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
-    const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
     envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
+    const compilerMain = new CompilerMain(workspaceCompiler);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger));
     return compilerMain;

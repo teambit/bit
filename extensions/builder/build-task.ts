@@ -20,19 +20,21 @@ export interface BuildContext extends ExecutionContext {
 
 export interface BuildTask {
   /**
-   * id of the task. this is the extension/aspect id serialized.
+   * aspect id serialized of the creator of the task.
+   * todo: automate this so then it won't be needed to pass manually.
    */
-  id: string;
+  aspectId: string;
 
   /**
-   * name of the task.
+   * name of the task. function as an identifier among other tasks of the same aspectId.
+   * spaces and special characters are not allowed. as a convention, use UpperCamelCase style.
+   * (e.g. TypescriptCompiler).
    */
-  name?: string;
+  name: string;
 
   /**
    * description of what the task does.
    * if available, the logger will log it show it in the status-line.
-   * it's helpful to distinguish multiple tasks of the same extension.
    */
   description?: string;
 

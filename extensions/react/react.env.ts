@@ -181,7 +181,7 @@ export class ReactEnv implements Environment {
   }
 
   private getCompilerTask() {
-    return this.compiler.createTask(this.getCompiler(buildTsConfig));
+    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(buildTsConfig));
   }
 
   async __getDescriptor() {

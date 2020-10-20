@@ -7,7 +7,6 @@ import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import path from 'path';
 import { BabelCompilerOptions } from './compiler-options';
-import { BabelAspect } from './babel.aspect';
 
 export class BabelCompiler implements Compiler {
   constructor(readonly id, private logger: Logger, private options: BabelCompilerOptions) {}
@@ -106,7 +105,7 @@ export class BabelCompiler implements Compiler {
   getArtifactDefinition() {
     return [
       {
-        generatedBy: BabelAspect.id,
+        generatedBy: this.id,
         name: this.artifactName,
         globPatterns: this.distGlobPatterns,
       },
