@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import { BuildContext, BuildTask, BuiltTaskResult } from '@teambit/builder';
 import { ConcreteService } from '@teambit/environments';
 
 export type TranspileOpts = {
@@ -15,9 +15,24 @@ export type TranspileOutput =
 
 export interface Compiler extends ConcreteService {
   /**
+   * id of the compiler.
+   */
+  id: string;
+
+  /**
+   * name of the compiler.
+   */
+  name?: string;
+
+  /**
    * relative path of the dist directory inside the capsule. e.g. "dist".
    */
   distDir: string;
+
+  /**
+   * serialized config of the compiler.
+   */
+  displayConfig?(): string;
 
   /**
    * determines which ones of the generated files will be saved in the bit objects when tagging.
@@ -70,4 +85,9 @@ export interface Compiler extends ConcreteService {
    * enable changing the capsule package.json before publishing the package
    */
   changePackageJsonBeforePublish?(packageJson: Record<string, any>): void;
+
+  /**
+   * sugar to create a Compiler task via the concrete compiler
+   */
+  createTask?(name?: string): BuildTask;
 }

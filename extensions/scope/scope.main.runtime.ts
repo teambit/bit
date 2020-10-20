@@ -359,9 +359,16 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * resolve a component ID.
-   * @param id component ID
+   * @param id component ID.
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
+    if (id.toString().startsWith(this.name)) {
+      const withoutOwn = id.toString().replace(`${this.name}/`, '');
+      const legacyId = await this.legacyScope.getParsedId(withoutOwn);
+      if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
+      return ComponentID.fromLegacy(legacyId);
+    }
+
     const legacyId = await this.legacyScope.getParsedId(id.toString());
     if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
     return ComponentID.fromLegacy(legacyId);

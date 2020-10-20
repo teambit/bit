@@ -4,7 +4,7 @@ The compiler is configured inside an environment and not directly on the compone
 
 ## As a task
 A task is running with `bit build` or during the tag process on the capsules or the workspace (depends on the specific compiler implementation).
-The env extension should have this compiler extension as a dependency first, then add to the `build()` array the following: `this.compiler.task`.
+The env extension should have this compiler extension as a dependency first, then add to the `getBuildPipe()` array the following: `this.compiler.createTask()`.
 
 ## As a command
 A command is running on the workspace.

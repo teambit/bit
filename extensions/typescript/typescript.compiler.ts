@@ -7,20 +7,23 @@ import path from 'path';
 import ts from 'typescript';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
-import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
   distDir = 'dist';
   distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
   shouldCopyNonSupportedFiles = true;
   artifactName = 'dist';
+
+  displayConfig() {
+    return this.stringifyTsconfig(this.options.tsconfig);
+  }
   /**
    * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
    * needed for the package.
    */
   npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
 
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace
@@ -92,7 +95,7 @@ export class TypescriptCompiler implements Compiler {
   getArtifactDefinition() {
     return [
       {
-        generatedBy: TypescriptAspect.id,
+        generatedBy: this.id,
         name: this.artifactName,
         globPatterns: this.distGlobPatterns,
       },

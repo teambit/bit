@@ -76,8 +76,6 @@ export class StencilEnv implements Environment {
    * returns the component build pipeline.
    */
   getBuildPipe(): BuildTask[] {
-    // return BuildPipe.from([this.compiler.task, this.tester.task]);
-    // return BuildPipe.from([this.tester.task]);
-    return [this.compiler.task];
+    return [this.compiler.createTask('StencilCompiler', this.getCompiler())];
   }
 }

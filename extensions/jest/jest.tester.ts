@@ -1,3 +1,4 @@
+import { readFileSync } from 'fs';
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
 import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
@@ -8,7 +9,15 @@ import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { JestError } from './error';
 
 export class JestTester implements Tester {
-  constructor(readonly jestConfig: any) {}
+  constructor(readonly id: string, readonly jestConfig: any, readonly icon = '') {}
+
+  configPath = this.jestConfig;
+
+  displayName = 'Jest';
+
+  displayConfig() {
+    return readFileSync(this.jestConfig, 'utf8');
+  }
 
   private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
     return testerContext.specFiles.toArray().reduce((acc: AbstractVinyl | undefined, [, specs]) => {

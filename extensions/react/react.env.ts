@@ -1,5 +1,6 @@
 import { TsConfigSourceFile } from 'typescript';
 import { BuildTask } from '@teambit/builder';
+import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
@@ -65,7 +66,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? { ...defaultTsConfig, ...targetTsConfig } : defaultTsConfig;
+    return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
   /**
@@ -133,6 +134,8 @@ export class ReactEnv implements Environment {
     return require.resolve('./docs');
   }
 
+  icon = 'https://static.bit.dev/extensions-icons/react.svg';
+
   /**
    * return a function which mounts a given component to DOM
    */
@@ -178,7 +181,7 @@ export class ReactEnv implements Environment {
   }
 
   private getCompilerTask() {
-    return this.compiler.createTask(this.getCompiler(buildTsConfig));
+    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(buildTsConfig));
   }
 
   async __getDescriptor() {
