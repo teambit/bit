@@ -7,7 +7,7 @@ import styles from './dismiss-button.module.scss';
 type DismissButtonProps = { visible: boolean } & ButtonProps;
 
 export function DismissButton({ visible, className, ...rest }: DismissButtonProps) {
-  const stage = useInOutTransition(visible, styles.animationTime);
+  const stage = useInOutTransition(visible, +styles.animationTime);
 
   return (
     <Button {...rest} className={classnames(className, styles.dismissButton, `${styles.dismissButton}-${stage}`)}>
