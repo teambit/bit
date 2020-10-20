@@ -3571,6 +3571,21 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "ui/menu/index.ts",
+                "test": false
+            },
+            {
+                "name": "menu.module.scss",
+                "relativePath": "ui/menu/menu.module.scss",
+                "test": false
+            },
+            {
+                "name": "menu.tsx",
+                "relativePath": "ui/menu/menu.tsx",
+                "test": false
+            },
+            {
                 "name": "scope-context.ts",
                 "relativePath": "ui/scope-context.ts",
                 "test": false

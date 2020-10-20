@@ -30,7 +30,6 @@ export function Scope({ routeSlot, menuSlot, sidebar, scopeUi, badgeSlot, contex
   const { scope } = useScope();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
-
   if (!scope) {
     return <FullLoader />;
   }
@@ -43,7 +42,11 @@ export function Scope({ routeSlot, menuSlot, sidebar, scopeUi, badgeSlot, contex
     <ScopeProvider scope={scope}>
       <Context scope={scope}>
         <div className={styles.scope}>
-          <TopBar className={styles.topbar} Corner={() => <Corner name={scope.name} />} menu={menuSlot} />
+          <TopBar
+            className={styles.topbar}
+            Corner={() => <Corner name={scope.name} className={styles.whiteCorner} />}
+            menu={menuSlot}
+          />
 
           <SplitPane className={styles.main} size={264} layout={sidebarOpenness}>
             <Pane className={styles.sidebar}>{sidebar}</Pane>
