@@ -11,8 +11,8 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
 import { PkgAspect } from './pkg.aspect';
