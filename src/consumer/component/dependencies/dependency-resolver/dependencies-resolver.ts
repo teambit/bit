@@ -23,6 +23,7 @@ import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
+import { ResolvedPackageData } from '../../../../utils/packages';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -87,7 +88,6 @@ export default class DependencyResolver {
   componentId: BitId;
   componentMap: ComponentMap;
   componentFromModel: Component;
-  extensionsAddedConfig: Record<string, any>;
   consumerPath: PathOsBased;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tree: Tree;
@@ -117,7 +117,6 @@ export default class DependencyResolver {
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentFromModel = this.component.componentFromModel;
-    this.extensionsAddedConfig = this.component.extensionsAddedConfig;
     this.consumerPath = this.consumer.getPath();
     this.allDependencies = {
       dependencies: [],
@@ -183,6 +182,7 @@ export default class DependencyResolver {
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
+      isLegacyProject: this.consumer.isLegacy,
       resolveModulesConfig: this.consumer.config._resolveModules,
       visited: cacheResolvedDependencies,
       cacheProjectAst,
@@ -353,19 +353,7 @@ export default class DependencyResolver {
     if (this.tree[depFile].bits && !R.isEmpty(this.tree[depFile].bits)) {
       const bits = this.tree[depFile].bits || [];
       for (const bit of bits) {
-        if (bit.componentId) {
-          return bit.componentId;
-        }
-        if (bit.fullPath) {
-          const componentId = this.consumer.getComponentIdFromNodeModulesPath(
-            bit.fullPath,
-            this.component.bindingPrefix
-          );
-          if (componentId) return componentId;
-        } else {
-          const componentId = packageNameToComponentId(this.consumer, bit.name, this.component.bindingPrefix);
-          return componentId;
-        }
+        return this.getComponentIdByResolvedPackageData(bit);
       }
     }
 
@@ -380,6 +368,19 @@ export default class DependencyResolver {
       }
     }
     return undefined;
+  }
+
+  getComponentIdByResolvedPackageData(bit: ResolvedPackageData): BitId {
+    if (bit.componentId) {
+      return bit.componentId;
+    }
+    if (!this.consumer.isLegacy) {
+      throw new Error(`on Harmony resolved Bit component must have componentId prop in the package.json file`);
+    }
+    if (bit.fullPath) {
+      return this.consumer.getComponentIdFromNodeModulesPath(bit.fullPath, this.component.bindingPrefix);
+    }
+    return packageNameToComponentId(this.consumer, bit.name, this.component.bindingPrefix);
   }
 
   /**
@@ -552,7 +553,8 @@ export default class DependencyResolver {
     if (!componentId) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (this.tree[depFile] && this.tree[depFile].missing && this.tree[depFile].missing.bits) {
-        // this depFile is a dependency link and this dependency is missing
+        // this depFile is a dependency link and this dependency is missing.
+        // it can't happen on Harmony, as Harmony doesn't have the generated dependencies files.
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
         return false;
@@ -717,18 +719,10 @@ either, use the ignore file syntax or change the require statement to have a mod
   processBits(originFile: PathLinuxRelative, fileType: FileType) {
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;
-    let componentId;
     bits.forEach((bitDep) => {
       const version =
         this.getValidVersion(bitDep.concreteVersion) || this.getValidVersion(bitDep.versionUsedByDependent);
-      if (bitDep.componentId) {
-        componentId = bitDep.componentId;
-      } else if (bitDep.fullPath) {
-        componentId = this.consumer.getComponentIdFromNodeModulesPath(bitDep.fullPath, this.component.bindingPrefix);
-      } else {
-        // legacy components don't have componentId prop in the package.json
-        componentId = packageNameToComponentId(this.consumer, bitDep.name, this.component.bindingPrefix);
-      }
+      let componentId = this.getComponentIdByResolvedPackageData(bitDep);
       if (componentId && version) {
         componentId = componentId.changeVersion(version);
       }
@@ -823,16 +817,16 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   _addToMissingComponentsIfNeeded(missingComponents: string[], originFile: string, fileType: FileType) {
+    if (!this.consumer.isLegacy) {
+      // on Harmony we don't guess whether a path is a component or a package based on the path only,
+      // see missing-handler.groupMissingByType() for more info.
+      throw new Error(
+        `Harmony should not have "missing.bits" (only "missing.packages"). got ${missingComponents.join(',')}`
+      );
+    }
     missingComponents.forEach((missingBit) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
         missingBit,
-        // this is a bit dangerous because it send the dependent prefix and assume it's the same for the dependency
-        // sometime you might just not find it (which is totally fine) but sometime it can make a bug
-        // for example
-        // I installed a package names my-comp
-        // I have a component called @my-org/my-comp
-        // The dependent called @my-org/my-dependent
-        // Now I might resolve the package as the component
         this.component.bindingPrefix
       );
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
@@ -882,9 +876,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     let usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
-      return coreAspectsPackages.find((coreAspectName) => {
-        return packageName.includes(coreAspectName);
-      });
+      return coreAspectsPackages.find((coreAspectName) => packageName === coreAspectName);
     };
     const unidentifiedPackagesFiltered = unidentifiedPackages?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
@@ -1015,7 +1007,12 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     if (!ext.data[dataFiled]) ext.data[dataFiled] = [];
     if (operation === 'add') {
-      ext.data[dataFiled].push(data);
+      const existing = ext.data[dataFiled].find((c) => c.packageName === data.packageName);
+      if (existing) {
+        existing.componentId = data.componentId;
+      } else {
+        ext.data[dataFiled].push(data);
+      }
     }
     if (operation === 'set') {
       ext.data[dataFiled] = data;

@@ -1,6 +1,6 @@
 import { TsConfigSourceFile } from 'typescript';
-import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
+import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
@@ -20,6 +20,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
+const buildTsConfig = require('./typescript/tsconfig.build.json');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -65,7 +66,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(defaultTsConfig, targetTsConfig) : defaultTsConfig;
+    return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
   /**
@@ -82,7 +83,6 @@ export class ReactEnv implements Environment {
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
     const tsconfig = this.getTsConfig(targetConfig);
-
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -134,6 +134,8 @@ export class ReactEnv implements Environment {
     return require.resolve('./docs');
   }
 
+  icon = 'https://static.bit.dev/extensions-icons/react.svg';
+
   /**
    * return a function which mounts a given component to DOM
    */
@@ -160,11 +162,13 @@ export class ReactEnv implements Environment {
       devDependencies: {
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
+        '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
       },
       // TODO: take version from config
       peerDependencies: {
         react: '^16.13.1' || this.config.reactVersion,
+        'react-dom': '^16.13.1',
       },
     };
   }
@@ -172,8 +176,12 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getPipe(): BuildTask[] {
-    return [this.compiler.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  getBuildPipe(): BuildTask[] {
+    return [this.getCompilerTask(), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  }
+
+  private getCompilerTask() {
+    return this.compiler.createTask(this.getCompiler(buildTsConfig));
   }
 
   async __getDescriptor() {

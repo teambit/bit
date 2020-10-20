@@ -3,10 +3,12 @@ import R, { forEachObjIndexed } from 'ramda';
 import { compact } from 'ramda-adjunct';
 
 import { BitId, BitIds } from '../../bit-id';
-import Source from '../../scope/models/source';
 import { sortObject } from '../../utils';
-import { AbstractVinyl } from '../component/sources';
-import { Artifact } from '../component/sources/artifact';
+import {
+  convertBuildArtifactsFromModelObject,
+  convertBuildArtifactsToModelObject,
+  reStructureBuildArtifacts,
+} from '../component/sources/artifact-files';
 
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
@@ -21,8 +23,6 @@ export class ExtensionDataEntry {
     public name?: string,
     public config: { [key: string]: any } = {},
     public data: { [key: string]: any } = {},
-    // TODO: rename to files and make sure it only includes abstract vinyl
-    public artifacts: Array<AbstractVinyl | { relativePath: string; file: Source }> = [],
     public newExtensionId: any = undefined
   ) {}
 
@@ -46,16 +46,12 @@ export class ExtensionDataEntry {
   }
 
   clone(): ExtensionDataEntry {
-    const clonedArtifacts = this.artifacts.map((artifact) => {
-      return artifact instanceof Artifact ? artifact.clone() : artifact;
-    });
     return new ExtensionDataEntry(
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
       R.clone(this.config),
-      R.clone(this.data),
-      clonedArtifacts
+      R.clone(this.data)
     );
   }
 
@@ -95,6 +91,26 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   get extensionsBitIds(): BitIds {
     const bitIds = this.filter((entry) => entry.extensionId).map((entry) => entry.extensionId) as BitId[];
     return BitIds.fromArray(bitIds);
+  }
+
+  toModelObjects() {
+    const extensionsClone = this.clone();
+    extensionsClone.forEach((ext) => {
+      if (ext.extensionId) {
+        // TODO: fix the types of extensions. after this it should be an object not an object id
+        // @ts-ignore
+        ext.extensionId = ext.extensionId.serialize();
+      }
+    });
+    convertBuildArtifactsToModelObject(extensionsClone);
+
+    return extensionsClone;
+  }
+
+  static fromModelObject(entries: ExtensionDataEntry[]): ExtensionDataList {
+    const extensionDataList = ExtensionDataList.fromArray(entries);
+    convertBuildArtifactsFromModelObject(extensionDataList);
+    return extensionDataList;
   }
 
   findExtension(extensionId: string, ignoreVersion = false, ignoreScope = false): ExtensionDataEntry | undefined {
@@ -150,7 +166,9 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
 
   clone(): ExtensionDataList {
     const extensionDataEntries = this.map((extensionData) => extensionData.clone());
-    return new ExtensionDataList(...extensionDataEntries);
+    const extensionDataList = new ExtensionDataList(...extensionDataEntries);
+    reStructureBuildArtifacts(extensionDataList);
+    return extensionDataList;
   }
 
   _filterLegacy(): ExtensionDataList {

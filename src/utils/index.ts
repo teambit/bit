@@ -5,8 +5,7 @@ import flatten from './array/flatten';
 import sharedStartOfArray from './array/shared-start';
 import splitBy from './array/split-by';
 import bufferToReadStream from './buffer/to-read-stream';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import buildCommandMessage from './build-command-message';
+import { buildCommandMessage } from './build-command-message';
 import sha1 from './encryption/sha1';
 import * as eol from './eol';
 import filterObject from './filter-object';

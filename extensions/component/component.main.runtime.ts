@@ -4,13 +4,14 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { flatten } from 'lodash';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
-
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
 import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
+import { AspectEntry } from './aspect-entry';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -35,8 +36,12 @@ export class ComponentMain {
     return this;
   }
 
-  createAspectList(legacyExtensionDataList: ExtensionDataList) {
-    return new AspectList(legacyExtensionDataList);
+  createAspectList(legacyExtensionDataList: ExtensionDataList, scope?: string) {
+    return AspectList.fromLegacyExtensions(legacyExtensionDataList, scope);
+  }
+
+  createAspectListFromEntries(entries: AspectEntry[]) {
+    return new AspectList(entries);
   }
 
   registerRoute(routes: Route[]) {
@@ -92,7 +97,11 @@ export class ComponentMain {
   static runtime = MainRuntime;
   static dependencies = [GraphqlAspect, ExpressAspect];
 
-  static async provider([graphql, express]: [GraphqlMain, ExpressMain], config, [hostSlot]: [ComponentHostSlot]) {
+  static async provider(
+    [graphql, express]: [GraphqlMain, ExpressMain, AspectLoaderMain],
+    config,
+    [hostSlot]: [ComponentHostSlot]
+  ) {
     const componentExtension = new ComponentMain(hostSlot, express);
     graphql.register(componentSchema(componentExtension));
 

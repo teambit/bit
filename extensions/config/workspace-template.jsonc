@@ -42,7 +42,7 @@
    **/
   "teambit.bit/dependency-resolver": {
     /**
-     * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
+     * choose the package manager for Bit to use. you can choose between 'yarn', 'pnpm'
      */
     "packageManager": "teambit.bit/pnpm",
 

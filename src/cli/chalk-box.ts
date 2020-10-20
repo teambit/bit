@@ -12,17 +12,17 @@ import { isHash } from '../version/version-parser';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
-export const formatBit = ({ scope, name, version }: any): string =>
+export const formatBit = ({ scope, name, version }: any) =>
   c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${name} - ${version ? version.toString() : 'latest'}`);
 
-export const formatPlainComponentItem = ({ scope, name, version, deprecated }: any): string =>
+export const formatPlainComponentItem = ({ scope, name, version, deprecated }: any) =>
   c.cyan(
     `- ${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}  ${
       deprecated ? c.yellow('[deprecated]') : ''
     }`
   );
 
-export const formatPlainComponentItemWithVersions = (component: Component, importDetails: ImportDetails): string => {
+export const formatPlainComponentItemWithVersions = (component: Component, importDetails: ImportDetails) => {
   const status: ImportStatus = importDetails.status;
   const id = component.id.toStringWithoutVersion();
   const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
@@ -42,17 +42,17 @@ export const formatPlainComponentItemWithVersions = (component: Component, impor
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 
-export const paintBitProp = (key: string, value: string): string => {
+export const paintBitProp = (key: string, value: string) => {
   if (!value) return '';
   return `${c.magenta(key)} -> ${value}\n`;
 };
 
-export const paintHeader = (value: string): string => {
+export const paintHeader = (value: string) => {
   if (!value) return '';
   return `${c.underline(value)}\n`;
 };
 
-const paintAuthor = (email: string | null | undefined, username: string | null | undefined): string => {
+const paintAuthor = (email: string | null | undefined, username: string | null | undefined) => {
   if (email && username) {
     return c.white(`author: ${username} <${email}>\n`);
   }

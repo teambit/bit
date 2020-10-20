@@ -14,6 +14,7 @@ import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/environments';
 import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
+import { YarnAspect } from '@teambit/yarn';
 import { CreateAspect } from '@teambit/generator';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
@@ -30,15 +31,18 @@ import { PreviewAspect } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
+import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
 import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
 import { TypescriptAspect } from '@teambit/typescript';
+import { BabelAspect } from '@teambit/babel';
 import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { ChangelogAspect } from '@teambit/changelog';
+import { CommandBarAspect } from '@teambit/command-bar';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -49,6 +53,7 @@ export const manifestsMap = {
   [ComponentAspect.id]: ComponentAspect,
   [PreviewAspect.id]: PreviewAspect,
   [DocsAspect.id]: DocsAspect,
+  [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
@@ -57,6 +62,7 @@ export const manifestsMap = {
   [EnvsAspect.id]: EnvsAspect,
   [FlowsAspect.id]: FlowsAspect,
   [GraphAspect.id]: GraphAspect,
+  [PubsubAspect.id]: PubsubAspect,
   [DependencyResolverAspect.id]: DependencyResolverAspect,
   [InsightsAspect.id]: InsightsAspect,
   [IsolatorAspect.id]: IsolatorAspect,
@@ -76,12 +82,14 @@ export const manifestsMap = {
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
+  [BabelAspect.id]: BabelAspect,
   [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  [CommandBarAspect.id]: CommandBarAspect,
 };
 
 export function isCoreAspect(id: string) {

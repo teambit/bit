@@ -25,6 +25,7 @@ describe('compile extension', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
@@ -60,15 +61,17 @@ describe('compile extension', function () {
         helper.command.tagAllComponents();
       });
       it('should write dists files inside the capsule as it is needed for release', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.1');
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/index.js')).to.be.a.file();
       });
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
         expect(catComp2).to.have.property('extensions');
-        const compileExt = catComp2.extensions.find((e) => e.name === Extensions.compiler);
-        const files = compileExt.artifacts.map((d) => d.relativePath);
+        const builderExt = catComp2.extensions.find((e) => e.name === Extensions.builder);
+        expect(builderExt.data).to.have.property('artifacts');
+        const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
+        const files = compilerArtifacts.files.map((d) => d.relativePath);
         expect(files).to.include('dist/index.js');
         expect(files).to.include('dist/index.d.ts'); // makes sure it saves declaration files
       });
@@ -131,8 +134,10 @@ describe('compile extension', function () {
       it('should still save the dists on the component with the compiler', () => {
         const catComp = helper.command.catComponent('comp3@latest');
         expect(catComp).to.have.property('extensions');
-        const compileExt = catComp.extensions.find((e) => e.name === Extensions.compiler);
-        const files = compileExt.artifacts.map((d) => d.relativePath);
+
+        const builderExt = catComp.extensions.find((e) => e.name === Extensions.builder);
+        const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
+        const files = compilerArtifacts.files.map((d) => d.relativePath);
         expect(files).to.include('dist/index.js');
       });
     });
@@ -168,7 +173,7 @@ describe('compile extension', function () {
         helper.command.tagAllComponents();
       });
       it('should copy unsupported files inside the capsule', () => {
-        const capsule = helper.command.getCapsuleOfComponent('comp1');
+        const capsule = helper.command.getCapsuleOfComponent('comp1@0.0.1');
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/style.css')).to.be.a.file();
       });

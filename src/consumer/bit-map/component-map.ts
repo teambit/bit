@@ -7,7 +7,7 @@ import { BIT_MAP, COMPONENT_ORIGINS } from '../../constants';
 import ValidationError from '../../error/validation-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
-import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
+import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
@@ -122,7 +122,7 @@ export default class ComponentMap {
 
   toPlainObject(): Record<string, any> {
     let res = {
-      files: this.files,
+      files: this.files.map((file) => sortObject(file)),
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,

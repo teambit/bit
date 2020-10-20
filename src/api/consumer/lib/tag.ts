@@ -11,7 +11,7 @@ import HooksManager from '../../../hooks';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { validateVersion } from '../../../utils/semver-helper';
-import { PublishResults } from '../../../scope/component-ops/publish-components';
+import loader from '../../../cli/loader';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -21,7 +21,7 @@ export type TagResults = {
   warnings: string[];
   newComponents: BitIds;
   isSoftTag: boolean;
-  publishResults?: PublishResults;
+  publishedPackages: string[];
 };
 
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
@@ -71,6 +71,7 @@ export async function tagAction(tagParams: TagParams) {
   HooksManagerInstance.triggerHook(preHook, tagParams);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
+  loader.start('determine components to tag...');
   const newComponents = await componentsList.listNewComponents();
   const { bitIds, warnings } = await getComponentsToTag(
     consumer,

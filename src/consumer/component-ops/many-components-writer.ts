@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -47,7 +47,7 @@ export interface ManyComponentsWriterParams {
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
-  applyExtensionsAddedConfig?: boolean;
+  applyPackageJsonTransformers?: boolean;
 }
 
 /**
@@ -87,8 +87,8 @@ export default class ManyComponentsWriter {
   basePath?: string;
   saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   packageManager?: string;
+  applyPackageJsonTransformers?: boolean;
   // Apply config added by extensions
-  applyExtensionsAddedConfig?: boolean;
 
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
@@ -113,7 +113,7 @@ export default class ManyComponentsWriter {
     this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
     this.saveOnLane = params.saveOnLane;
     this.packageManager = params.packageManager;
-    this.applyExtensionsAddedConfig = params.applyExtensionsAddedConfig;
+    this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
 
@@ -185,7 +185,7 @@ export default class ManyComponentsWriter {
       componentWriter.existingComponentMap =
         componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
-    this.writtenComponents = await pMapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
+    this.writtenComponents = await mapSeries(componentWriterInstances, (componentWriter: ComponentWriter) =>
       componentWriter.populateComponentsFilesToWrite(this.packageManager)
     );
   }
@@ -240,10 +240,10 @@ export default class ManyComponentsWriter {
   _getDefaultWriteParams(): Record<string, any> {
     return {
       writePackageJson: this.writePackageJson,
+      applyPackageJsonTransformers: this.applyPackageJsonTransformers,
       consumer: this.consumer,
       bitMap: this.bitMap,
       isolated: this.isolated,
-      applyExtensionsAddedConfig: this.applyExtensionsAddedConfig,
       excludeRegistryPrefix: this.excludeRegistryPrefix,
     };
   }

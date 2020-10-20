@@ -1,6 +1,7 @@
-import { BuildContext, BuildResults, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
-
+import { Compiler } from '@teambit/compiler';
+import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
 
@@ -9,31 +10,50 @@ import { detectTestFiles } from './utils';
  */
 export class TesterTask implements BuildTask {
   readonly description = 'test components';
-  constructor(readonly extensionId: string) {}
+  constructor(readonly id: string) {}
 
-  async execute(context: BuildContext): Promise<BuildResults> {
+  async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const tester: Tester = context.env.getTester();
-    const components = detectTestFiles(context.components);
+    const componentsSpecFiles = ComponentMap.as(context.components, detectTestFiles);
 
-    const testMatch = components.reduce((acc: string[], component: any) => {
-      const specs = component.specs.map((specFile) => {
+    const testCount = componentsSpecFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
+    if (testCount === 0)
+      return {
+        artifacts: [],
+        componentsResults: [],
+      };
+
+    const specFilesWithCapsule = ComponentMap.as(context.components, (component) => {
+      const componentSpecFiles = componentsSpecFiles.get(component);
+      if (!componentSpecFiles) throw new Error('capsule not found');
+      const [, specs] = componentSpecFiles;
+      return specs.map((specFile) => {
         const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
-        return join(capsule.wrkDir, specFile);
-      });
+        const compiler: Compiler = context.env.getCompiler();
+        const distPath = compiler.getDistPathBySrcPath(specFile.relative);
 
-      acc = acc.concat(specs);
-      return acc;
-    }, []);
+        // TODO: fix spec type file need to capsule will return files with type AbstractVinyl
+        return { path: join(capsule.path, distPath), relative: distPath };
+      });
+    });
 
     const testerContext = Object.assign(context, {
       release: true,
-      specFiles: testMatch,
+      specFiles: specFilesWithCapsule,
       rootPath: context.capsuleGraph.capsulesRootDir,
     });
 
-    // @todo: @guy to fix. handle components without tests, define tests results and implement from jest.
+    // TODO: remove after fix AbstractVinyl on capsule
     // @ts-ignore
-    return tester.test(testerContext);
+    const testsResults = await tester.test(testerContext);
+    return {
+      artifacts: [], // @ts-ignore
+      componentsResults: testsResults.components.map((componentTests) => ({
+        component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
+        metadata: { tests: componentTests.results },
+        errors: testsResults.errors ? testsResults.errors : [],
+      })),
+    };
   }
 }

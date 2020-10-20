@@ -17,18 +17,6 @@
   }
 }
 
-// TODO  @oded - @hack! this is for closing the menu when clicking an iframe for the beta. we need a better way to do this because it uses a global data-attr
-.overlay {
-  [data-open='true'] & {
-    position: fixed;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 1;
-  }
-}
-
 .title {
   padding: 16px;
   padding-bottom: 12px;
@@ -39,7 +27,6 @@
 .versionContainer {
   max-height: 240px;
   overflow-y: scroll;
-  padding: 0 8px;
 }
 .versionLine {
   cursor: pointer;
@@ -47,13 +34,28 @@
   align-items: center;
   height: 36px;
   padding: 0 24px;
+  text-decoration: none;
+  color: var(--text-highlight);
+  &:hover {
+    background-color: var(--bg-topping-highlight);
+  }
+  &:last-child {
+    margin-bottom: 8px;
+  }
+  &.currentVersion {
+    background: var(--muted-color);
+  }
   .version {
     margin-right: 16px;
+  }
+  .label {
+    background-color: white;
+    margin-right: 8px;
   }
 }
 
 .placeholder {
-  // cursor: pointer;
+  cursor: pointer;
   display: flex;
   align-items: center;
   padding: 7px;
@@ -61,9 +63,9 @@
   user-select: none;
   transition: background-color 300ms ease-in-out;
   background-color: var(--bg-color);
-  // &:hover {
-  //   background-color: var(--bg-dent);
-  // }
+  &:hover {
+    background-color: var(--bg-dent);
+  }
   [data-open='true'] & {
     transition: color 300ms, background-color 300ms ease-in-out;
     background-color: var(--bg-color);
@@ -72,9 +74,9 @@
       background-color: var(--bg-color);
     }
   }
-  // > div {
-  // margin-right: 5px;
-  // }
+  > div {
+    margin-right: 5px;
+  }
   .label {
     margin-right: 8px;
   }

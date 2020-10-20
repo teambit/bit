@@ -1,4 +1,4 @@
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import * as path from 'path';
 
 import { Consumer } from '..';
@@ -74,11 +74,13 @@ export default (async function checkoutVersion(
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
-  const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
+  const componentsResults = await mapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
 
-  const componentsWithDependencies = componentsResults.map((c) => c.component).filter((c) => c);
+  const componentsWithDependencies = componentsResults
+    .map((c) => c.component)
+    .filter((c) => c) as ComponentWithDependencies[];
 
   const manyComponentsWriter = new ManyComponentsWriter({
     consumer,
@@ -202,7 +204,7 @@ async function getComponentStatus(
 export async function applyVersion(
   consumer: Consumer,
   id: BitId,
-  componentFromFS: ConsumerComponent | null, // it can be null only when isLanes is true
+  componentFromFS: ConsumerComponent | null | undefined, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
 ): Promise<{ applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies }> {

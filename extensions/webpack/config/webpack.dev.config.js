@@ -1,3 +1,4 @@
+const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -13,7 +14,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
+module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -62,6 +63,9 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
     },
 
     devServer: {
+      // For bit start command
+      quiet: true,
+
       // Serve index.html as the base
       contentBase: resolveWorkspacePath(publicDirectory),
 
@@ -79,7 +83,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
 
       // quiet: true,
 
-      // injectClient: false,
+      injectClient: false,
 
       overlay: false,
       // Enable hot reloading
@@ -129,6 +133,10 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath) {
       new HtmlWebpackPlugin({
         templateContent: html('Component preview'),
         filename: 'index.html',
+      }),
+
+      new WebpackCompilerDonePlugin({
+        options: { pubsub },
       }),
     ],
   };

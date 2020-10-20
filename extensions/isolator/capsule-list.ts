@@ -1,4 +1,5 @@
 import { ComponentID } from '@teambit/component';
+import { normalize } from 'path';
 
 import { Capsule } from './capsule';
 
@@ -6,7 +7,9 @@ import { Capsule } from './capsule';
 // ComponentId member
 export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsule }> {
   getCapsule(id: ComponentID): Capsule | null {
-    const found = this.find((item) => item.id._legacy.isEqual(id._legacy));
+    const found = this.find((item) => {
+      return item.id._legacy.isEqual(id._legacy);
+    });
     return found ? found.capsule : null;
   }
   getCapsuleIgnoreVersion(id: ComponentID): Capsule | null {
@@ -21,8 +24,8 @@ export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsu
     return this.map((capsule) => capsule.capsule.wrkDir);
   }
   getIdByPathInCapsule(pathInCapsule: string): ComponentID | null {
-    // capsules with version ends with "@version-number", strip it.
-    const found = this.find((item) => pathInCapsule.startsWith(item.capsule.wrkDir.split('@')[0]));
+    const normalizedPathInCapsule = normalize(pathInCapsule);
+    const found = this.find((item) => normalizedPathInCapsule === normalize(item.capsule.path));
     return found ? found.id : null;
   }
   getAllCapsules(): Capsule[] {

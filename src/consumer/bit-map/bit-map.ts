@@ -447,8 +447,8 @@ export default class BitMap {
         const idWithoutScope = BitId.getScopeAndName(id).name;
         const matches = this.components.filter((componentMap: ComponentMap) => {
           return idHasVersion
-            ? componentMap.id.toStringWithoutScope() === idWithoutScope
-            : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutScope;
+            ? componentMap.id.toString() === idWithoutScope
+            : componentMap.id.toStringWithoutVersion() === idWithoutScope;
         });
         if (matches && matches.length > 1) {
           throw new MultipleMatches(id);
@@ -739,7 +739,7 @@ export default class BitMap {
         ? componentMapCloned.id.changeVersion(componentMapCloned.defaultVersion)
         : componentMapCloned.id;
       const idStr = id.toString();
-      delete componentMapCloned.id;
+      delete componentMapCloned?.id;
       components[idStr] = componentMapCloned.toPlainObject();
     });
 
@@ -753,11 +753,12 @@ export default class BitMap {
    * may result in a damaged file
    */
   async write(): Promise<any> {
-    if (!this.hasChanged) return undefined;
+    if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();
     const bitMapContent = this.getContent();
-    return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+    await outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+    this.hasChanged = false;
   }
 
   getContent(): Record<string, any> {

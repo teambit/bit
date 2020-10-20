@@ -1,7 +1,10 @@
 /* eslint-disable import/no-dynamic-require */
 /* eslint-disable import/first */
-// eslint-disable-next-line no-console
-process.on('uncaughtException', (err) => console.log('uncaughtException', err));
+process.on('uncaughtException', (err) => {
+  // eslint-disable-next-line no-console
+  console.error('uncaughtException', err);
+  process.exit(1);
+});
 
 require('v8-compile-cache');
 
@@ -23,6 +26,7 @@ import { Config } from '@teambit/harmony/dist/harmony-config';
 import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 import { bootstrap } from 'bit-bin/dist/bootstrap';
 import { handleErrorAndExit } from 'bit-bin/dist/cli/command-runner';
+import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
@@ -118,7 +122,19 @@ async function runCLI() {
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.bit/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
-
+  registerCoreAspectsToLegacyDepResolver(aspectLoader);
   const cli = harmony.get<CLIMain>('teambit.bit/cli');
   await cli.run();
+}
+
+function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) {
+  const allCoreAspectsIds = aspectLoader.getCoreAspectIds();
+  const coreAspectsPackagesAndIds = {};
+
+  allCoreAspectsIds.forEach((id) => {
+    const packageName = getCoreAspectPackageName(id);
+    coreAspectsPackagesAndIds[packageName] = id;
+  });
+  // @ts-ignore
+  DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
 }

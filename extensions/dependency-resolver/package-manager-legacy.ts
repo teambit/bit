@@ -8,7 +8,7 @@ import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
 import { EventEmitter } from 'events';
 import execa from 'execa';
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
+import { mapSeries } from 'bluebird';
 import path, { join } from 'path';
 
 export default class PackageManager {
@@ -41,7 +41,7 @@ export default class PackageManager {
     const longProcessLogger = this.logger.createLongProcessLogger('installing capsules', capsules.length);
     if (packageManager === 'npm' || packageManager === 'yarn' || packageManager === 'pnpm') {
       // Don't run them in parallel (Promise.all), the package-manager doesn't handle it well.
-      await pMapSeries(capsules, async (capsule) => {
+      await mapSeries(capsules, async (capsule) => {
         const componentId = capsule.component.id.toString();
         longProcessLogger.logProgress(componentId);
         // TODO: remove this hack once harmony supports ownExtensionName

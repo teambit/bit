@@ -1,3 +1,4 @@
+import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
@@ -15,15 +16,12 @@ import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
 import EjectConfCmd from './eject-conf.cmd';
 import InstallCmd from './install.cmd';
-import { OnComponentAdd } from './on-component-add';
-import { OnComponentChange } from './on-component-change';
-import { OnComponentLoad } from './on-component-load';
+import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
@@ -32,6 +30,7 @@ import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 
 export type WorkspaceDeps = [
+  PubsubMain,
   CLIMain,
   ScopeMain,
   ComponentMain,
@@ -52,6 +51,8 @@ export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 
 export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
+export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
+
 export type WorkspaceCoreConfig = {
   /**
    * sets the default location of components.
@@ -69,6 +70,7 @@ export type WorkspaceCoreConfig = {
 
 export default async function provideWorkspace(
   [
+    pubsub,
     cli,
     scope,
     component,
@@ -83,10 +85,11 @@ export default async function provideWorkspace(
     envs,
   ]: WorkspaceDeps,
   config: WorkspaceExtConfig,
-  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot]: [
+  [onComponentLoadSlot, onComponentChangeSlot, onComponentAddSlot, onComponentRemoveSlot]: [
     OnComponentLoadSlot,
     OnComponentChangeSlot,
-    OnComponentAddSlot
+    OnComponentAddSlot,
+    OnComponentRemoveSlot
   ],
   harmony: Harmony
 ) {
@@ -94,7 +97,9 @@ export default async function provideWorkspace(
   if (!consumer) return undefined;
   // TODO: get the 'worksacpe' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
+
   const workspace = new Workspace(
+    pubsub,
     config,
     consumer,
     scope,
@@ -110,6 +115,7 @@ export default async function provideWorkspace(
     onComponentChangeSlot,
     envs,
     onComponentAddSlot,
+    onComponentRemoveSlot,
     graphql
   );
 
@@ -125,6 +131,7 @@ export default async function provideWorkspace(
     const componentFromScope = await workspace.scope.get(componentId);
     const extensions = await workspace.componentExtensions(componentId, componentFromScope);
     const defaultScope = await workspace.componentDefaultScope(componentId);
+
     await workspace.loadExtensions(extensions);
     const extensionsWithLegacyIdsP = extensions.map(async (extension) => {
       const legacyEntry = extension.clone();
@@ -156,10 +163,10 @@ export default async function provideWorkspace(
   const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
   cli.register(capsuleListCmd);
   cli.register(capsuleCreateCmd);
-  const watcher = new Watcher(workspace);
+  const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(watcher));
+    cli.register(new WatchCommand(logger, watcher));
   }
   component.registerHost(workspace);
 

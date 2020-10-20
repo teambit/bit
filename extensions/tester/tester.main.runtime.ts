@@ -3,12 +3,15 @@ import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { merge } from 'lodash';
 
+import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
+import { testerSchema } from './tester.graphql';
 
 export type TesterExtensionConfig = {
   /**
@@ -27,11 +30,16 @@ export type TesterOptions = {
    * start the tester in debug mode.
    */
   debug: boolean;
+
+  /**
+   * initiate the tester on given env.
+   */
+  env?: string;
 };
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect];
+  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect];
 
   constructor(
     /**
@@ -57,14 +65,24 @@ export class TesterMain {
 
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
-    const envRuntime = await this.envs.createEnvironment(components);
-    const results = await envRuntime.run(this.service, options);
+    const envsRuntime = await this.envs.createEnvironment(components);
+    if (opts?.env) {
+      return envsRuntime.runEnv(opts.env, this.service, options);
+    }
+    const results = await envsRuntime.run(this.service, options);
     return results;
   }
 
-  getTestsResults(component: Component) {
+  /**
+   * watch all components for changes and test upon each.
+   */
+  watch() {}
+
+  getTestsResults(component: Component): TestsResult | undefined {
     const entry = component.state.aspects.get(TesterAspect.id);
-    return entry?.data;
+    // TODO: type is ok, talk to @david about it
+    // @ts-ignore
+    return entry?.data.tests;
   }
 
   private getOptions(options?: TesterOptions): TesterOptions {
@@ -84,22 +102,20 @@ export class TesterMain {
   };
 
   static async provider(
-    [cli, envs, workspace, loggerAspect]: [CLIMain, EnvsMain, Workspace, LoggerMain],
+    [cli, envs, workspace, loggerAspect, graphql]: [CLIMain, EnvsMain, Workspace, LoggerMain, GraphqlMain],
     config: TesterExtensionConfig
   ) {
     const logger = loggerAspect.createLogger(TesterAspect.id);
-    // @todo: Ran to fix.
-    // @ts-ignore
-    const tester = new TesterMain(
-      envs,
-      workspace,
-      new TesterService(workspace, config.testRegex, logger),
-      new TesterTask(TesterAspect.id)
-    );
+    const testerService = new TesterService(workspace, config.testRegex, logger);
+    envs.registerService(testerService);
+
+    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id));
+
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
       cli.register(new TestCmd(tester, workspace, logger));
     }
+    graphql.register(testerSchema(tester));
 
     return tester;
   }

@@ -9,7 +9,6 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
@@ -40,6 +39,10 @@ export class UIServer {
     private uiRootExtension: string,
     private logger: Logger
   ) {}
+
+  getName() {
+    return this.uiRoot.name;
+  }
 
   private _port = 0;
 

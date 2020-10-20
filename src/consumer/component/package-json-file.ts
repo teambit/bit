@@ -9,7 +9,6 @@ import stringifyPackage from 'stringify-package';
 import { DEPENDENCIES_FIELDS, PACKAGE_JSON } from '../../constants';
 import logger from '../../logger/logger';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 import { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
 import Component from './consumer-component';
 import PackageJsonVinyl from './package-json-vinyl';
@@ -115,10 +114,15 @@ export default class PackageJsonFile {
     componentDir: PathRelative,
     component: Component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    excludeRegistryPrefix? = false
+    excludeRegistryPrefix? = false,
+    addDefaultScopeToCompId? = false // for the capsule, we want the default-scope because it gets published
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
     const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
+    const componentIdWithDefaultScope =
+      component.id.hasScope() || !addDefaultScopeToCompId
+        ? component.id
+        : component.id.changeScope(component.defaultScope);
     const packageJsonObject = {
       name,
       version: component.version,
@@ -128,7 +132,7 @@ export default class PackageJsonFile {
       // Used when resolve dependencies to identify that some package should be treated as component
       // TODO: replace by better way to identify that something is a component for sure
       // TODO: Maybe need to add the binding prefix here
-      componentId: component.id.serialize(),
+      componentId: componentIdWithDefaultScope.serialize(),
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -221,22 +225,6 @@ export default class PackageJsonFile {
     const clone = new PackageJsonFile(this);
     clone.packageJsonObject = R.clone(this.packageJsonObject);
     return clone;
-  }
-
-  /**
-   * these changes were added by extensions
-   */
-  mergePropsFromExtensions(component: Component) {
-    // The special keys will be merged in other place
-    const specialKeys = ['extensions', 'dependencies', 'devDependencies', 'peerDependencies'];
-    if (!component.extensionsAddedConfig || R.isEmpty(component.extensionsAddedConfig)) return;
-    const valuesToMerge = R.omit(specialKeys, component.extensionsAddedConfig);
-    const valuesToMergeFormatted = Object.keys(valuesToMerge).reduce((acc, current) => {
-      const value = replacePlaceHolderWithComponentValue(component, valuesToMerge[current]);
-      acc[current] = value;
-      return acc;
-    }, {});
-    this.mergePackageJsonObject(valuesToMergeFormatted);
   }
 
   static propsNonUserChangeable() {

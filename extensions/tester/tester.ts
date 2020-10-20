@@ -1,11 +1,17 @@
-import { Component } from '@teambit/component';
-import { ConcreteService, ExecutionContext } from '@teambit/environments';
-import { Workspace } from '@teambit/workspace';
+import { Component, ComponentID, ComponentMap } from '@teambit/component';
+import { ExecutionContext } from '@teambit/environments';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { TestsResult } from './tests-results';
 
-export type TestResults = {
+export type Tests = {
+  components: {
+    componentId: ComponentID;
+    results: TestsResult;
+  }[];
   errors?: Error[];
-  total: number;
 };
+
+export type SpecFiles = ComponentMap<AbstractVinyl[]>;
 
 export interface TesterContext extends ExecutionContext {
   /**
@@ -16,7 +22,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * component workspace.
    */
-  workspace: Workspace;
+  // workspace: Workspace;
 
   /**
    * defines whether tester is expected to run in quite mode.
@@ -26,7 +32,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * list of spec files to test.
    */
-  specFiles: string[];
+  specFiles: SpecFiles;
 
   /**
    * rootPath of the component workspace.
@@ -47,9 +53,34 @@ export interface TesterContext extends ExecutionContext {
 /**
  * tester interface allows extensions to implement a component tester into bit.
  */
-export interface Tester extends ConcreteService {
+export interface Tester {
+  /**
+   * display name of the tester.
+   */
+  displayName?: string;
+
+  /**
+   * icon of the tester.
+   */
+  icon?: string;
+
+  /**
+   * serialized config of the tester.
+   */
+  displayConfig?(): string;
+
+  /**
+   * path to the config in the filesystem.
+   */
+  configPath?: string;
+
+  /**
+   * id of the tester.
+   */
+  id: string;
+
   /**
    * execute tests on all components in the given execution context.
    */
-  test(context: TesterContext): Promise<TestResults>;
+  test(context: TesterContext): Promise<Tests>;
 }

@@ -1,0 +1,20 @@
+.aspectPage {
+  padding: 50px 40px 100px 40px;
+  width: 100%;
+  overflow-y: scroll;
+  box-sizing: border-box;
+  > div {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+}
+.title {
+  margin-bottom: 25px;
+  font-size: var(--h-xs);
+}
+.separator {
+  margin-bottom: 41px;
+}
+.aspectBox {
+  margin-bottom: 32px;
+}

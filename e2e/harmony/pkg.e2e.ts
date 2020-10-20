@@ -12,7 +12,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 
 // @TODO: REMOVE THE SKIP ASAP
-describe.skip('pkg extension', function () {
+describe('pkg extension', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -31,7 +31,7 @@ describe.skip('pkg extension', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.outputFile(path.join('utils', 'is-type.js'), fixtures.isType);
       helper.command.addComponent('utils', { i: 'utils/is-type' });
       const pkgConfig = {
         packageJson: {
@@ -39,8 +39,11 @@ describe.skip('pkg extension', function () {
         },
       };
       helper.extensions.addExtensionToVariant('bar', 'teambit.bit/pkg', pkgConfig);
-      barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
-      isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
+      helper.command.createCapsuleHarmony('bar/foo');
+      helper.command.createCapsuleHarmony('utils/is-type');
+      // We do this because the create capsule dir with json is not working because of pnpm output
+      barFooCapsuleDir = helper.command.getCapsuleOfComponent('bar/foo');
+      isTypeCapsuleDir = helper.command.getCapsuleOfComponent('utils/is-type');
     });
     it('should have the updated config in the package.json of the configured component in capsule', function () {
       const packageJson = helper.packageJson.read(barFooCapsuleDir);
@@ -59,7 +62,9 @@ describe.skip('pkg extension', function () {
         helper.command.importComponent('bar/foo');
       });
       it('should have the updated config in the package.json of the configured component in capsule', () => {
-        barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
+        helper.command.createCapsuleHarmony('bar/foo');
+        // We do this because the create capsule dir with json is not working because of pnpm output
+        barFooCapsuleDir = helper.command.getCapsuleOfComponent('bar/foo');
         const packageJson = helper.packageJson.read(barFooCapsuleDir);
         expect(packageJson).to.have.property('some-key', 'some-val');
       });
@@ -76,7 +81,7 @@ describe.skip('pkg extension', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.outputFile(path.join('utils', 'is-type.js'), fixtures.isType);
       helper.command.addComponent('utils', { i: 'utils/is-type' });
     });
 
@@ -88,11 +93,16 @@ describe.skip('pkg extension', function () {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
+        helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.bit/aspect');
         helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
         helper.scopeHelper.linkBitBin();
         helper.command.link();
-        barFooCapsuleDir = helper.command.createCapsuleHarmony('bar/foo');
-        isTypeCapsuleDir = helper.command.createCapsuleHarmony('utils/is-type');
+        helper.command.compile();
+        helper.command.createCapsuleHarmony('bar/foo');
+        helper.command.createCapsuleHarmony('utils/is-type');
+        // We do this because the create capsule dir with json is not working because of pnpm output
+        barFooCapsuleDir = helper.command.getCapsuleOfComponent('bar/foo');
+        isTypeCapsuleDir = helper.command.getCapsuleOfComponent('utils/is-type');
       });
       it('should have the updated config in the package.json of the component with the defined extension in capsule', function () {
         const packageJson = helper.packageJson.read(barFooCapsuleDir);

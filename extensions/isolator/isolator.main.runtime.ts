@@ -8,18 +8,19 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { Scope } from 'bit-bin/dist/scope';
 import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
 import { equals, map } from 'ramda';
-
+import BitMap from 'bit-bin/dist/consumer/bit-map';
+import ComponentWriter, { ComponentWriterProps } from 'bit-bin/dist/consumer/component-ops/component-writer';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
-import { symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
-import writeComponentsToCapsules from './write-components-to-capsules';
+import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -29,7 +30,7 @@ export type ListResults = {
 };
 
 export type IsolateComponentsInstallOptions = {
-  installPackages?: boolean;
+  installPackages?: boolean; // default: true
   // TODO: add back when depResolver.getInstaller support it
   // packageManager?: string;
   dedupe?: boolean;
@@ -40,9 +41,30 @@ export type IsolateComponentsInstallOptions = {
 export type IsolateComponentsOptions = {
   name?: string;
   baseDir?: string;
+  /**
+   * create a new capsule with a random string attached to the path suffix
+   */
   alwaysNew?: boolean;
+
+  /**
+   * installation options
+   */
   installOptions?: IsolateComponentsInstallOptions;
   linkingOptions?: LinkingOptions;
+  /**
+   * remove the capsule content first (if exist)
+   */
+  emptyExisting?: boolean;
+
+  /**
+   * get existing capsule without doing any changes, no writes, no installations.
+   */
+  getExistingAsIs?: boolean;
+
+  /**
+   * include all dependencies the capsule root context.
+   */
+  includeDeps?: boolean;
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -65,13 +87,12 @@ export class IsolatorMain {
   }
   constructor(private dependencyResolver: DependencyResolverMain, private logger: Logger) {}
 
-  public async isolateComponents(components: Component[], opts: IsolateComponentsOptions): Promise<CapsuleList> {
-    const config = Object.assign(
-      {
-        installPackages: true,
-      },
-      opts
-    );
+  public async isolateComponents(
+    components: Component[],
+    opts: IsolateComponentsOptions,
+    legacyScope?: Scope
+  ): Promise<CapsuleList> {
+    const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string); // TODO: move this logic elsewhere
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
     const capsuleList = new CapsuleList(
@@ -80,10 +101,15 @@ export class IsolatorMain {
         return { id, capsule: c };
       })
     );
+    if (opts.getExistingAsIs) {
+      return capsuleList;
+    }
+    if (opts.emptyExisting) {
+      await Promise.all(capsuleList.getAllCapsuleDirs().map((dir) => fs.emptyDir(dir)));
+    }
     const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
 
-    const consumerComponents = components.map((c) => c.state._consumer);
-    await writeComponentsToCapsules(consumerComponents, capsuleList);
+    await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
@@ -99,6 +125,7 @@ export class IsolatorMain {
       const installer = this.dependencyResolver.getInstaller({
         rootDir: capsulesDir,
         linkingOptions: opts.linkingOptions,
+        cacheRootDirectory: opts.includeDeps ? capsulesDir : undefined,
       });
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace
@@ -115,6 +142,7 @@ export class IsolatorMain {
         copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
       };
       await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
+      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
       // TODO: remove this after exporting core extensions as components
@@ -135,13 +163,49 @@ export class IsolatorMain {
     return capsuleList;
   }
 
+  private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
+    const legacyComponents = components.map((component) => component.state._consumer.clone());
+    const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
+    await Promise.all(
+      components.map(async (component) => {
+        const capsule = capsuleList.getCapsule(component.id);
+        if (!capsule) return;
+        const params = this.getComponentWriteParams(component.state._consumer, allIds, legacyScope);
+        const componentWriter = new ComponentWriter(params);
+        await componentWriter.populateComponentsFilesToWrite();
+        await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
+      })
+    );
+  }
+
+  private getComponentWriteParams(
+    component: ConsumerComponent,
+    ids: BitIds,
+    legacyScope?: Scope
+  ): ComponentWriterProps {
+    return {
+      component,
+      // @ts-ignore
+      bitMap: new BitMap(),
+      writeToPath: '.',
+      origin: 'IMPORTED',
+      consumer: undefined,
+      scope: legacyScope,
+      override: false,
+      writePackageJson: true,
+      writeConfig: false,
+      ignoreBitDependencies: ids,
+      excludeRegistryPrefix: false,
+      isolated: true,
+    };
+  }
+
   private toComponentMap(capsules: Capsule[]): ComponentMap<string> {
-    const tuples = capsules.map((capsule) => {
-      return [capsule.component.id.fullName, [capsule.component, capsule.path]];
+    const tuples: [Component, string][] = capsules.map((capsule) => {
+      return [capsule.component, capsule.path];
     });
 
-    // @ts-ignore
-    return new ComponentMap(tuples);
+    return ComponentMap.create(tuples);
   }
 
   async list(workspacePath: string): Promise<ListResults> {
@@ -213,14 +277,15 @@ async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<Caps
 
 function updateWithCurrentPackageJsonData(capsulesWithPackagesData: CapsulePackageJsonData[], capsules: Capsule[]) {
   capsules.forEach((capsule) => {
-    const packageJson = getCurrentPackageJson(capsule.component, capsule);
+    const packageJson = getCurrentPackageJson(capsule);
     const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
     if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
     found.currentPackageJson = packageJson.packageJsonObject;
   });
 }
 
-function getCurrentPackageJson(component: Component, capsule: Capsule): PackageJsonFile {
+function getCurrentPackageJson(capsule: Capsule): PackageJsonFile {
+  const component: Component = capsule.component;
   const consumerComponent: ConsumerComponent = component.state._consumer;
   const newVersion = '0.0.1-new';
   const getBitDependencies = (dependencies: BitIds) => {

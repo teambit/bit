@@ -33,6 +33,7 @@ describe('publish functionality', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
@@ -49,21 +50,6 @@ describe('publish functionality', function () {
         expect(output).to.have.string(
           'unable to publish the following component(s), please make sure they are exported: comp1'
         );
-      });
-    });
-    describe('publishing before export', () => {
-      before(() => {
-        helper.command.tagAllComponents();
-      });
-      it('should throw an error when --allow-staged flag is not used', () => {
-        const output = helper.general.runWithTryCatch('bit publish comp1');
-        expect(output).to.have.string(
-          'unable to publish the following component(s), please make sure they are exported: comp1'
-        );
-      });
-      it('should allow when --dry-run is specified', () => {
-        const output = helper.command.publish('comp1', '--dry-run');
-        expect(output).to.have.string(`+ @${defaultOwner}/${scopeWithoutOwner}.comp1@0.0.1`);
       });
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing the components', () => {
@@ -120,6 +106,7 @@ describe('publish functionality', function () {
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 

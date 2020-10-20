@@ -1,6 +1,20 @@
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { Configuration } from 'webpack';
 
+const moduleFileExtensions = [
+  'web.mjs',
+  'mjs',
+  'web.js',
+  'js',
+  'web.ts',
+  'ts',
+  'web.tsx',
+  'tsx',
+  'json',
+  'web.jsx',
+  'jsx',
+];
+
 export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
   return {
     devServer: {
@@ -64,6 +78,41 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           ],
         },
         {
+          test: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
+          test: /\.less$/,
+          exclude: /\.module\.less$/,
+          loader: [
+            require.resolve('style-loader'),
+            require.resolve('css-loader'),
+            {
+              loader: require.resolve('less-loader'),
+              options: {
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
           test: /\.module.css$/,
           loader: [
             require.resolve('style-loader'),
@@ -86,11 +135,19 @@ export default function (workspaceDir: string, targets: string[], envId: string)
       ],
     },
     resolve: {
+      // These are the reasonable defaults supported by the Node ecosystem.
+      // We also include JSX as a common component filename extension to support
+      // some tools, although we do not recommend using it, see:
+      // https://github.com/facebook/create-react-app/issues/290
+      // `web` extension prefixes have been added for better support
+      // for React Native Web.
+      extensions: moduleFileExtensions.map((ext) => `.${ext}`),
+
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
-        'react-refresh/runtime': require.resolve('react-refresh/runtime'),
+        // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
     },
 
@@ -100,8 +157,8 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           sockPath: `_hmr/${envId}`,
           // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
           // errors
-          // entry: require.resolve('react-dev-utils/webpackHotDevClient'),
-          // module: require.resolve('./refresh'),
+          entry: require.resolve('./react-hot-dev-client'),
+          module: require.resolve('./refresh'),
         },
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],

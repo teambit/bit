@@ -1,8 +1,10 @@
+import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
-import type { ComponentMain } from '@teambit/component';
 import {
+  AspectEntry,
+  ComponentMain,
   Component,
   ComponentFactory,
   ComponentFS,
@@ -11,6 +13,7 @@ import {
   Config,
   State,
   TagMap,
+  AspectList,
 } from '@teambit/component';
 import { ComponentScopeDirMap } from '@teambit/config';
 import {
@@ -19,7 +22,7 @@ import {
   PackageManagerInstallOptions,
   PolicyDep,
 } from '@teambit/dependency-resolver';
-import { EnvsMain } from '@teambit/environments';
+import { EnvsMain, EnvServiceList } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -52,15 +55,26 @@ import { compact } from 'ramda-adjunct';
 
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
-import { OnComponentAdd, OnComponentAddResult } from './on-component-add';
-import { OnComponentChange, OnComponentChangeResult } from './on-component-change';
-import { ExtensionData, OnComponentLoad } from './on-component-load';
+import {
+  ExtensionData,
+  OnComponentAdd,
+  OnComponentChange,
+  OnComponentEventResult,
+  OnComponentLoad,
+  OnComponentRemove,
+  SerializableResults,
+} from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import { WorkspaceAspect } from './workspace.aspect';
-import { OnComponentAddSlot, OnComponentChangeSlot, OnComponentLoadSlot } from './workspace.provider';
+import {
+  OnComponentAddSlot,
+  OnComponentChangeSlot,
+  OnComponentLoadSlot,
+  OnComponentRemoveSlot,
+} from './workspace.provider';
 import { Issues } from './workspace-component/issues';
 
 export type EjectConfResult = {
@@ -95,6 +109,11 @@ export class Workspace implements ComponentFactory {
   componentsScopeDirsMap: ComponentScopeDirMap;
 
   constructor(
+    /**
+     * private pubsub.
+     */
+    private pubsub: PubsubMain,
+
     private config: WorkspaceExtConfig,
     /**
      * private access to the legacy consumer instance.
@@ -145,6 +164,8 @@ export class Workspace implements ComponentFactory {
      */
     private onComponentAddSlot: OnComponentAddSlot,
 
+    private onComponentRemoveSlot: OnComponentRemoveSlot,
+
     private graphql: GraphqlMain
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
@@ -154,13 +175,17 @@ export class Workspace implements ComponentFactory {
   /**
    * watcher api.
    */
-  readonly watcher = new Watcher(this);
+  readonly watcher = new Watcher(this, this.pubsub);
 
   /**
    * root path of the Workspace.
    */
   get path() {
     return this.consumer.getPath();
+  }
+
+  get isLegacy(): boolean {
+    return this.consumer.isLegacy;
   }
 
   onComponentLoad(loadFn: OnComponentLoad) {
@@ -175,6 +200,11 @@ export class Workspace implements ComponentFactory {
 
   registerOnComponentAdd(onComponentAddFunc: OnComponentAdd) {
     this.onComponentAddSlot.register(onComponentAddFunc);
+    return this;
+  }
+
+  registerOnComponentRemove(onComponentRemoveFunc: OnComponentRemove) {
+    this.onComponentRemoveSlot.register(onComponentRemoveFunc);
     return this;
   }
 
@@ -195,8 +225,8 @@ export class Workspace implements ComponentFactory {
   async hasModifiedDependencies(component: Component) {
     const componentsList = new ComponentsList(this.consumer);
     const listAutoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
-    const isAutoTag = listAutoTagPendingComponents.find(
-      (componentModal) => componentModal.id() === component.id._legacy.toStringWithoutVersion()
+    const isAutoTag = listAutoTagPendingComponents.find((consumerComponent) =>
+      consumerComponent.id.isEqualWithoutVersion(component.id._legacy)
     );
     if (isAutoTag) return true;
     return false;
@@ -267,6 +297,7 @@ export class Workspace implements ComponentFactory {
       const componentId = await this.resolveComponentId(seeder);
       return componentId._legacy;
     });
+
     const legacySeedersIds = await Promise.all(legacySeedersIdsP);
     const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
@@ -275,7 +306,8 @@ export class Workspace implements ComponentFactory {
     const consumerComponents = compsAndDeps.filter((c) =>
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
-    const components = await this.getMany(consumerComponents.map((c) => new ComponentID(c.id)));
+    const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
+    const components = await this.getMany(ids, true);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
     longProcessLogger.end();
@@ -283,7 +315,7 @@ export class Workspace implements ComponentFactory {
     return new Network(
       capsuleList,
       graph,
-      seederIdsWithVersions.map((s) => new ComponentID(s)),
+      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
   }
@@ -296,7 +328,6 @@ export class Workspace implements ComponentFactory {
   /**
    * fully load components, including dependency resolution and prepare them for runtime.
    * @todo: remove the string option, use only BitId
-   * fully load components, including dependency resolution and prepare them for runtime.
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
@@ -311,31 +342,45 @@ export class Workspace implements ComponentFactory {
     return ret;
   }
 
-  private async getConsumerComponent(id: ComponentID) {
+  private async getConsumerComponent(id: ComponentID, forCapsule = false) {
     try {
-      return await this.consumer.loadComponent(id._legacy);
+      return forCapsule
+        ? await this.consumer.loadComponentForCapsule(id._legacy)
+        : await this.consumer.loadComponent(id._legacy);
     } catch (err) {
       return undefined;
     }
+  }
+
+  private async createAspectList(extensionDataList: ExtensionDataList) {
+    const entiresP = extensionDataList.map(async (entry) => {
+      return new AspectEntry(await this.resolveComponentId(entry.id), entry);
+    });
+
+    const entries = await Promise.all(entiresP);
+    return this.componentAspect.createAspectListFromEntries(entries);
   }
 
   /**
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: ComponentID): Promise<Component> {
-    const consumerComponent = await this.getConsumerComponent(id);
+  async get(id: ComponentID, forCapsule = false): Promise<Component> {
+    const consumerComponent = await this.getConsumerComponent(id, forCapsule);
     const component = await this.scope.get(id);
     if (!consumerComponent) {
       if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
       return component;
     }
 
-    const extensionDataList = await this.componentExtensions(id, component);
+    let extensionDataList = await this.componentExtensions(id, component);
+    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
+    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
+    extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
-      this.componentAspect.createAspectList(extensionDataList),
+      await this.createAspectList(extensionDataList),
       ComponentFS.fromVinyls(consumerComponent.files),
       consumerComponent.dependencies,
       consumerComponent
@@ -350,13 +395,23 @@ export class Workspace implements ComponentFactory {
     return this.executeLoadSlot(workspaceComponent);
   }
 
+  // TODO: @gilad we should refactor this asap into to the envs aspect.
   async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnv(component)?.env;
-    if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
-      const systemDescriptor = await env.__getDescriptor();
+    const env = this.envs.getEnv(component);
+    if (env.env.__getDescriptor && typeof env.env.__getDescriptor === 'function') {
+      const systemDescriptor = await env.env.__getDescriptor();
+      // !important persist services only on the env itself.
+      let services: undefined | EnvServiceList;
+      if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
+      const icon = this.aspectLoader.getDescriptor(env.id).icon || env.env.icon;
 
       return {
         type: systemDescriptor.type,
+        id: env.id,
+        name: env.name,
+        icon,
+        description: env.description,
+        services: services?.toObject(),
       };
     }
 
@@ -374,15 +429,21 @@ export class Workspace implements ComponentFactory {
 
     await Promise.all(promises);
 
+    // Update the aspect list to have changes happened during the on load slot (new data added above)
+    const updatedAspectList = await this.createAspectList(component.state.config.extensions);
+    component.state.aspects = updatedAspectList;
     return component;
   }
 
-  async triggerOnComponentChange(
-    id: ComponentID
-  ): Promise<Array<{ extensionId: string; results: OnComponentChangeResult }>> {
+  async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
+    this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
+    // if a new file was added, upon component-load, its .bitmap entry is updated to include the
+    // new file. write these changes to the .bitmap file so then other processes have access to
+    // this new file. If the .bitmap wasn't change, it won't do anything.
+    await this.consumer.bitMap.write();
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
-    const results: Array<{ extensionId: string; results: OnComponentChangeResult }> = [];
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
@@ -393,16 +454,30 @@ export class Workspace implements ComponentFactory {
     return results;
   }
 
-  async triggerOnComponentAdd(id: ComponentID): Promise<Array<{ extensionId: string; results: OnComponentAddResult }>> {
+  async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
+    // TODO: put it on an other function
+    this.componentList = new ComponentsList(this.consumer);
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
-    const results: Array<{ extensionId: string; results: OnComponentAddResult }> = [];
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
       this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 
+    return results;
+  }
+
+  async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
+    // TODO: put it on an other function
+    this.componentList = new ComponentsList(this.consumer);
+    const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
+    const results: Array<{ extensionId: string; results: SerializableResults }> = [];
+    await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
+      const onRemoveResult = await onRemoveFunc(id);
+      results.push({ extensionId: extension, results: onRemoveResult });
+    });
     return results;
   }
 
@@ -429,15 +504,28 @@ export class Workspace implements ComponentFactory {
   async ejectConfig(id: ComponentID, options: EjectConfOptions): Promise<EjectConfResult> {
     const componentId = await this.resolveComponentId(id);
     const component = await this.scope.get(componentId);
-    const extensions = component?.config.extensions ?? new ExtensionDataList();
-    // Add the default scope to the extension because we enforce it in config files
-    await this.addDefaultScopeToExtensionsList(extensions);
+    const aspects = component?.state.aspects
+      ? await this.resolveScopeAspectListIds(component?.state.aspects)
+      : await this.createAspectList(new ExtensionDataList());
+
     const componentDir = this.componentDir(id, { ignoreVersion: true });
-    const componentConfigFile = new ComponentConfigFile(componentId, extensions, options.propagate);
+    const componentConfigFile = new ComponentConfigFile(componentId, aspects, options.propagate);
     await componentConfigFile.write(componentDir, { override: options.override });
     return {
       configPath: ComponentConfigFile.composePath(componentDir),
     };
+  }
+
+  private async resolveScopeAspectListIds(aspectListFromScope: AspectList): Promise<AspectList> {
+    const resolvedList = await aspectListFromScope.pmap(async (entry) => {
+      if (entry.id.scope !== this.scope.name) {
+        return entry;
+      }
+      const newId = await this.resolveComponentId(entry.id.fullName);
+      const newEntry = new AspectEntry(newId, entry.legacy);
+      return newEntry;
+    });
+    return resolvedList;
   }
 
   // @gilad needs to implement on variants
@@ -446,19 +534,19 @@ export class Workspace implements ComponentFactory {
     // @todo: this is a naive implementation, replace it with a real one.
     const all = await this.list();
     if (!pattern) return this.list();
-    return all.filter((c) => c.id.toString() === pattern);
+    return all.filter((c) => c.id.toString({ ignoreVersion: true }) === pattern);
   }
 
   /**
    * @todo: remove the string option, use only BitId
    */
-  async getMany(ids: Array<ComponentID>): Promise<Component[]> {
+  async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
-      return this.get(id).catch((err) => {
+      return this.get(id, forCapsule).catch((err) => {
         errors.push({
           id,
           err,
@@ -537,21 +625,25 @@ export class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    return this.componentDefaultScopeFromComponentDir(relativeComponentDir, componentId.fullName);
   }
 
-  async componentDefaultScopeFromComponentDir(relativeComponentDir: PathOsBasedRelative): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir);
+  async componentDefaultScopeFromComponentDir(
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
+  ): Promise<string | undefined> {
+    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir, name);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir);
+    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir, name);
   }
 
   private async componentDefaultScopeFromComponentDirWithoutConfigFile(
-    relativeComponentDir: PathOsBasedRelative
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
   ): Promise<string | undefined> {
-    const variantConfig = this.variants.byRootDir(relativeComponentDir);
+    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, name);
     if (variantConfig && variantConfig.defaultScope) {
       return variantConfig.defaultScope;
     }
@@ -583,12 +675,12 @@ export class Workspace implements ComponentFactory {
 
     const componentConfigFile = await this.componentConfigFile(componentId);
     if (componentConfigFile) {
-      configFileExtensions = componentConfigFile.extensions;
+      configFileExtensions = componentConfigFile.aspects.toLegacy();
       // do not merge from scope data when there is component config file
       // mergeFromScope = false;
     }
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    const variantConfig = this.variants.byRootDir(relativeComponentDir);
+    const variantConfig = this.variants.byRootDirAndName(relativeComponentDir, componentId.fullName);
     if (variantConfig) {
       variantsExtensions = variantConfig.extensions;
       // Do not merge from scope when there is specific variant (which is not *) that match the component
@@ -625,6 +717,11 @@ export class Workspace implements ComponentFactory {
       extensionsToMerge.push(scopeExtensions);
     }
 
+    // It's important to do this resolution before the merge, otherwise we have issues with extensions
+    // coming from scope with local scope name, as opposed to the same extension comes from the workspace with default scope name
+    const promises = extensionsToMerge.map((list) => this.resolveExtensionListIds(list));
+    await Promise.all(promises);
+
     let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
 
     // remove self from merged extensions
@@ -638,6 +735,24 @@ export class Workspace implements ComponentFactory {
     }
 
     return mergedExtensions;
+  }
+
+  /**
+   * This will mutate the entries with extensionId prop to have resolved legacy id
+   * This should be worked on the extension data list not the new aspect list
+   * @param extensionList
+   */
+  private async resolveExtensionListIds(extensionList: ExtensionDataList): Promise<ExtensionDataList> {
+    const promises = extensionList.map(async (entry) => {
+      if (entry.extensionId) {
+        const id = await this.resolveComponentId(entry.extensionId);
+        entry.extensionId = id._legacy;
+      }
+
+      return entry;
+    });
+    await Promise.all(promises);
+    return extensionList;
   }
 
   /**
@@ -668,34 +783,54 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDir(relativeComponentDir);
+    return this.componentConfigFileFromComponentDir(relativeComponentDir, id.fullName);
   }
 
   private async componentConfigFileFromComponentDir(
-    relativeComponentDir: PathOsBasedRelative
+    relativeComponentDir: PathOsBasedRelative,
+    name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
       const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(
-        relativeComponentDir
+        relativeComponentDir,
+        name
       );
-      componentConfigFile = await ComponentConfigFile.load(absComponentDir, defaultScopeFromVariantsOrWs);
+      componentConfigFile = await ComponentConfigFile.load(
+        absComponentDir,
+        this.createAspectList.bind(this),
+        defaultScopeFromVariantsOrWs
+      );
     }
 
     return componentConfigFile;
   }
 
   async getGraphWithoutCore(components: Component[]) {
-    const loadComponentsFunc = async (ids: BitId[]) => {
-      const loadedComps = await this.getMany(ids.map((id) => new ComponentID(id)));
-      return loadedComps.map((c) => c.state._consumer);
-    };
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', loadComponentsFunc, coreAspectsBitIds);
+    // const aspectsIds = components.reduce((acc, curr) => {
+    //   const currIds = curr.state.aspects.ids;
+    //   acc = acc.concat(currIds);
+    //   return acc;
+    // }, [] as any);
+    // const otherDependenciesMap = components.reduce((acc, curr) => {
+    //   // const currIds = curr.state.dependencies.dependencies.map(dep => dep.id.toString());
+    //   const currMap = curr.state.dependencies.getIdsMap();
+    //   Object.assign(acc, currMap);
+    //   return acc;
+    // }, {});
+
+    // const depsWhichAreNotAspects = difference(Object.keys(otherDependenciesMap), aspectsIds);
+    // const depsWhichAreNotAspectsBitIds = depsWhichAreNotAspects.map((strId) => otherDependenciesMap[strId]);
+    // We only want to load into the graph components which are aspects and not regular dependencies
+    // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
+    // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
+    const ignoredIds = coreAspectsBitIds.concat([]);
+    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
   // TODO: refactor to aspect-loader after handling of default scope.
@@ -727,7 +862,7 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.getMany(componentIds);
-    const graph = await this.getGraphWithoutCore(components);
+    const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
@@ -735,7 +870,7 @@ export class Workspace implements ComponentFactory {
 
     const allIds = await Promise.all(allIdsP);
 
-    const allComponents = await this.getMany(allIds);
+    const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
       const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
@@ -807,7 +942,10 @@ export class Workspace implements ComponentFactory {
       if (!extensionEntry.extensionId) {
         return extensionEntry.stringId;
       }
-      return extensionEntry.extensionId.toString();
+
+      const id = await this.resolveComponentId(extensionEntry.extensionId);
+      // return this.resolveComponentId(extensionEntry.extensionId);
+      return id.toString();
     });
     const extensionsIds = await Promise.all(extensionsIdsP);
     const loadedExtensions = this.harmony.extensionsIds;
@@ -937,8 +1075,8 @@ export class Workspace implements ComponentFactory {
 
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
-      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot,
-      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents,
+      copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
+      copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
@@ -976,19 +1114,27 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    let legacyId;
+    let legacyId: BitId;
     try {
       legacyId = this.consumer.getParsedId(id.toString(), true, true);
     } catch (err) {
       if (err.name === 'MissingBitMapComponent') {
-        // if a component is coming from the scope, it doesn't have .bitmap entry
-        legacyId = BitId.parse(id.toString(), true);
-        return ComponentID.fromLegacy(legacyId);
+        try {
+          const idWithoutVersion = id.toString().split('@');
+          this.consumer.getParsedId(idWithoutVersion[0], false, true);
+          return this.scope.resolveComponentId(id);
+        } catch (error) {
+          legacyId = BitId.parse(id.toString(), true);
+          return ComponentID.fromLegacy(legacyId);
+        }
       }
       throw err;
     }
-    const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
-    const defaultScope = await this.componentDefaultScopeFromComponentDir(relativeComponentDir);
+    const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
+    const defaultScope = await this.componentDefaultScopeFromComponentDir(
+      relativeComponentDir,
+      legacyId.toStringWithoutScopeAndVersion()
+    );
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 

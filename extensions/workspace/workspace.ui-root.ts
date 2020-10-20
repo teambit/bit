@@ -1,8 +1,7 @@
-import { BundlerMain } from '@teambit/bundler';
-import { ComponentServer } from '@teambit/bundler/component-server';
+import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { Component, ComponentID } from '@teambit/component';
-import { UIRoot } from '@teambit/ui';
-import { PostStartOptions, ProxyEntry } from '@teambit/ui/ui-root';
+import { UIRoot, PostStartOptions, ProxyEntry } from '@teambit/ui';
+
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import { flatten } from 'bit-bin/dist/utils';
 import { PathOsBased } from 'bit-bin/dist/utils/path';
@@ -34,6 +33,10 @@ export class WorkspaceUIRoot implements UIRoot {
 
   get configFile() {
     return 'workspace.json';
+  }
+
+  get devServers() {
+    return this.getServers();
   }
 
   async resolveAspects(runtimeName: string) {

@@ -6,14 +6,14 @@ export class State {
   constructor(
     /**
      * component configuration which is later generated to a component `package.json` and `bit.json`.
-     * @deprecated
+     * @deprecated please use `aspects` instead.
      */
     readonly config: Config,
 
     /**
      * list of aspects configured on the component.
      */
-    readonly aspects: AspectList,
+    private _aspects: AspectList,
 
     /**
      * in-memory representation of the component current filesystem.
@@ -37,6 +37,14 @@ export class State {
    */
   get hash() {
     return '';
+  }
+
+  get aspects(): AspectList {
+    return this._aspects;
+  }
+
+  set aspects(aspects: AspectList) {
+    this._aspects = aspects;
   }
 
   // static fromLegacy(consumerComponent: ConsumerComponent) {

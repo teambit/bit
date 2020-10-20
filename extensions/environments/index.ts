@@ -5,3 +5,5 @@ export { EnvService, ConcreteService } from './services';
 export { EnvRuntime } from './runtime/env-runtime';
 export type { EnvsMain, EnvTransformer } from './environments.main.runtime';
 export { EnvsAspect } from './environments.aspect';
+export { EnvsExecutionResult } from './runtime/envs-execution-result';
+export type { EnvServiceList } from './env-service-list';

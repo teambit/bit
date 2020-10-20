@@ -18,7 +18,7 @@ import fs from 'fs-extra';
 import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-
+import { Registries } from './registry';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
 import { DependencyGraph } from './dependency-graph';
 import { BitLinkType, DependencyInstaller } from './dependency-installer';
@@ -26,7 +26,7 @@ import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
 import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest/workspace-manifest';
-import { PackageManager, ResolvedPackageVersion } from './package-manager';
+import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,
   DependenciesPolicy,
@@ -83,7 +83,7 @@ export type UpdatedPackage = {
 };
 
 export type UpdatePolicyResult = {
-  addedPackages: ResolvedPackageVersion[];
+  addedPackages: PolicyDep[];
   existingPackages: PolicyDep[];
   updatedPackages: UpdatedPackage[];
 };
@@ -215,6 +215,29 @@ export class DependencyResolverMain {
     return new DependencyVersionResolver(packageManager, cacheRootDir);
   }
 
+  /**
+   * return the system configured package manager. by default pnpm.
+   */
+  getSystemPackageManager(): PackageManager {
+    const defaultPm = 'teambit.bit/pnpm';
+    const packageManager = this.packageManagerSlot.get(defaultPm);
+    if (!packageManager) throw new Error(`default package manager: ${defaultPm} was not found`);
+    return packageManager;
+  }
+
+  async getRegistries(): Promise<Registries> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    // TODO: support getting from default package manager
+    if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
+      return packageManager?.getRegistries();
+    }
+
+    const systemPm = this.getSystemPackageManager();
+    if (!systemPm.getRegistries) throw new Error('system package manager must implement `getRegistries()`');
+    return systemPm.getRegistries();
+  }
+
   get packageManagerName(): string {
     return this.config.packageManager;
   }
@@ -239,7 +262,7 @@ export class DependencyResolverMain {
       updateExisting: false,
     };
     const calculatedOpts = Object.assign({}, defaultOptions, options);
-    const addedPackages: ResolvedPackageVersion[] = [];
+    const addedPackages: PolicyDep[] = [];
     const existingPackages: PolicyDep[] = [];
     const updatedPackages: UpdatedPackage[] = [];
     newDeps.forEach((dep) => {
@@ -320,10 +343,19 @@ export class DependencyResolverMain {
       policiesFromEnv = await env.getDependencies();
     }
     const configuredIds = configuredExtensions.ids;
+    const policiesTuples = this.policiesRegistry.toArray();
     configuredIds.forEach((extId) => {
+      // TODO: change this way of search, once we have workspace as dep-resolver dependency
+      // we can use something like:
+      // const resolvedId = this.workspace.resolveComponentId(extId)
+      // const currentPolicy = this.policiesRegistry.get(resolvedId.toString());
       // Only get props from configured extensions on this specific component
-      const currentPolicy = this.policiesRegistry.get(extId);
-      if (currentPolicy) {
+      const policyTupleToApply = policiesTuples.find(([policyRegistrar]) => {
+        return policyRegistrar === extId || policyRegistrar.includes(extId);
+      });
+
+      if (policyTupleToApply && policyTupleToApply[1]) {
+        const currentPolicy = policyTupleToApply[1];
         policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
       }
     });

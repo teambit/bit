@@ -1,12 +1,12 @@
 import { createTesting } from '@stencil/core/testing';
-import { Tester, TesterContext, TestResults } from '@teambit/tester';
+import { Tester, TesterContext, Tests } from '@teambit/tester';
 import { Workspace } from '@teambit/workspace';
 
 export class StencilTester implements Tester {
-  constructor(private workspace: Workspace) {}
+  constructor(readonly id: string, private workspace: Workspace) {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async test(context: TesterContext): Promise<TestResults> {
+  async test(context: TesterContext): Promise<Tests> {
     const testing = await createTesting({
       rootDir: this.workspace.path,
     });
@@ -14,6 +14,7 @@ export class StencilTester implements Tester {
     testing.run({});
 
     return {
+      // @ts-ignore
       total: 50,
     };
   }

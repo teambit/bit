@@ -1,5 +1,5 @@
 import { ComponentMap } from '@teambit/component';
-
+import { Registries } from './registry';
 import { DependenciesObjectDefinition } from './types';
 
 export type PackageManagerInstallOptions = {
@@ -17,13 +17,15 @@ export type PackageManagerInstallOptions = {
 export type ResolvedPackageVersion = {
   packageName: string;
   version: string | null;
+  isSemver: boolean;
+  resolvedVia?: string;
 };
 
 export type PackageManagerResolveRemoteVersionOptions = {
   rootDir: string;
   cacheRootDir?: string;
-  fetchToCache?: boolean;
-  update?: boolean;
+  // fetchToCache?: boolean;
+  // update?: boolean;
 };
 
 export interface PackageManager {
@@ -42,4 +44,6 @@ export interface PackageManager {
     packageName: string,
     options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion>;
+
+  getRegistries?(): Promise<Registries>;
 }

@@ -1,10 +1,13 @@
+import React from 'react';
 import { Slot } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import React from 'react';
-import { BrowserRouter, RouteProps } from 'react-router-dom';
+import { RouteProps, useHistory } from 'react-router-dom';
 
 import { ReactRouterAspect } from './react-router.aspect';
-import { RouteSlot, SlotRouter } from './slot-router';
+import { RouteSlot } from './slot-router';
+import { RouteContext } from './route-context';
+
+type History = ReturnType<typeof useHistory>;
 
 export class ReactRouterUI {
   constructor(
@@ -14,18 +17,21 @@ export class ReactRouterUI {
     private routeSlot: RouteSlot
   ) {}
 
+  private routerHistory?: History;
+
   link() {}
 
   /**
    * render all slot routes.
    */
   renderRoutes(routes: RouteProps[]): JSX.Element {
-    return (
-      <BrowserRouter>
-        <SlotRouter slot={this.routeSlot} rootRoutes={routes} />
-      </BrowserRouter>
-    );
+    return <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} />;
   }
+
+  /** sets the routing engine for navigation methods (internal method) */
+  setRouter: (routerHistory: History) => void = (routerHistory: History): void => {
+    this.routerHistory = routerHistory;
+  };
 
   /**
    * register a new route.
@@ -34,6 +40,16 @@ export class ReactRouterUI {
     this.routeSlot.register(route);
     return this;
   }
+
+  /**
+   * change browser location
+   */
+  navigateTo = (
+    /** destination */
+    path: string
+  ) => {
+    this.routerHistory?.push(path);
+  };
 
   static slots = [Slot.withType<RouteProps>()];
 

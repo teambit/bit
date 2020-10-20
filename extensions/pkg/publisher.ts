@@ -1,12 +1,12 @@
-import { Component, ComponentID } from '@teambit/component';
+import { ComponentResult, TaskMetadata } from '@teambit/builder';
+import { Component } from '@teambit/component';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import GeneralError from 'bit-bin/dist/error/general-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import { Scope } from 'bit-bin/dist/scope';
-import { PublishPostTagResult } from 'bit-bin/dist/scope/component-ops/publish-components';
 import Bluebird from 'bluebird';
 import execa from 'execa';
 import R from 'ramda';
@@ -16,8 +16,6 @@ export type PublisherOptions = {
   dryRun?: boolean;
   allowStaged?: boolean;
 };
-
-export type PublishResult = { id: ComponentID; data?: string; errors: string[] };
 
 export class Publisher {
   packageManager = 'npm'; // @todo: decide if this is mandatory or using the workspace settings
@@ -29,7 +27,7 @@ export class Publisher {
     public options: PublisherOptions = {}
   ) {}
 
-  async publish(componentIds: string[], options: PublisherOptions): Promise<PublishResult[]> {
+  async publish(componentIds: string[], options: PublisherOptions): Promise<ComponentResult[]> {
     // @todo: replace by `workspace.byPatter` once ready.
     if (componentIds.length === 1 && componentIds[0] === '*') {
       const all = this.workspace.consumer.bitMap.getAuthoredAndImportedBitIds();
@@ -41,17 +39,7 @@ export class Publisher {
     return this.publishMultipleCapsules(capsules);
   }
 
-  async postTagPersistListener(ids: BitId[]): Promise<PublishPostTagResult[]> {
-    const componentIds = ids.map((id) => id.toString());
-    const components = await this.publish(componentIds, { allowStaged: true });
-    return components.map((c) => ({
-      id: c.id._legacy,
-      data: c.data,
-      errors: c.errors as string[],
-    }));
-  }
-
-  public async publishMultipleCapsules(capsules: Capsule[]): Promise<PublishResult[]> {
+  public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
     const results = Bluebird.mapSeries(capsules, (capsule) => {
@@ -62,7 +50,8 @@ export class Publisher {
     return results;
   }
 
-  private async publishOneCapsule(capsule: Capsule): Promise<PublishResult> {
+  private async publishOneCapsule(capsule: Capsule): Promise<ComponentResult> {
+    const startTime = Date.now();
     const publishParams = ['publish'];
     if (this.options.dryRun) publishParams.push('--dry-run');
     const extraArgs = this.getExtraArgsFromConfig(capsule.component);
@@ -74,22 +63,23 @@ export class Publisher {
     const cwd = capsule.path;
     const componentIdStr = capsule.id.toString();
     const errors: string[] = [];
-    let data;
+    let metadata: TaskMetadata = {};
     try {
       // @todo: once capsule.exec works properly, replace this
       const { stdout, stderr } = await execa(this.packageManager, publishParams, { cwd });
       this.logger.debug(`${componentIdStr}, successfully ran ${this.packageManager} ${publishParamsStr} at ${cwd}`);
       this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
       this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
-      data = stdout;
+      const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
+      metadata = this.options.dryRun ? {} : { publishedPackage };
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
       if (err.stderr) this.logger.error(`${componentIdStr}, ${err.stderr}`);
       errors.push(`${errorMsg}\n${err.stderr}`);
     }
-    const id = capsule.component.id;
-    return { id, data, errors };
+    const component = capsule.component;
+    return { component, metadata, errors, startTime, endTime: Date.now() };
   }
 
   private async getComponentCapsules(componentIds: string[]): Promise<Capsule[]> {
@@ -146,7 +136,7 @@ export class Publisher {
     const idsWithoutScope = bitIds.filter((id) => !id.hasScope());
     if (!idsWithoutScope.length) return;
     if (!this.options.allowStaged && !this.options.dryRun) {
-      throw new GeneralError(
+      throw new BitError(
         `unable to publish the following component(s), please make sure they are exported: ${idsWithoutScope.join(
           ', '
         )}`
@@ -162,7 +152,7 @@ export class Publisher {
       })
     );
     if (missingFromScope.length) {
-      throw new GeneralError(
+      throw new BitError(
         `unable to publish the following component(s), please make sure they are tagged: ${missingFromScope.join(', ')}`
       );
     }

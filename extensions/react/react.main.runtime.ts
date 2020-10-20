@@ -83,6 +83,7 @@ export class ReactMain {
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
     this.tsConfigOverride = tsconfig;
+
     return this.envs.override({
       getCompiler: () => {
         return this.reactEnv.getCompiler(tsconfig);
@@ -109,9 +110,9 @@ export class ReactMain {
   /**
    * override the preview webpack config.
    */
-  overridePreviewConfig() {
+  overridePreviewConfig(config: Configuration) {
     return this.envs.override({
-      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context),
+      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, config),
     });
   }
 
@@ -137,7 +138,7 @@ export class ReactMain {
    */
   overrideBuildPipe(tasks: BuildTask[]) {
     return this.envs.override({
-      getPipe: () => tasks,
+      getBuildPipe: () => tasks,
     });
   }
 

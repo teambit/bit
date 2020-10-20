@@ -10,12 +10,21 @@ export interface ComponentFactory {
    */
   name: string;
 
+  path: string;
+
+  isLegacy: boolean;
+
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
 
   /**
    * returns a component by ID.
    */
   get(id: ComponentID | string, withState?: boolean): Promise<Component | undefined>;
+
+  /**
+   * returns many components with a group of ids.
+   */
+  getMany(ids: ComponentID[]): Promise<Component[]>;
 
   /**
    * returns a specific state of a component by hash or semver.
