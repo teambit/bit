@@ -1120,9 +1120,11 @@ export class Workspace implements ComponentFactory {
     } catch (err) {
       if (err.name === 'MissingBitMapComponent') {
         try {
-          const idWithoutVersion = id.toString().split('@');
-          this.consumer.getParsedId(idWithoutVersion[0], false, true);
-          return this.scope.resolveComponentId(id);
+          // handle component versions in the scope that doesn't exists on the workspace.
+          const [idWithoutVersion, version] = id.toString().split('@');
+          const _id = this.consumer.getParsedId(idWithoutVersion, false, true);
+          const withVersion = _id.changeVersion(version);
+          return this.scope.resolveComponentId(withVersion);
         } catch (error) {
           legacyId = BitId.parse(id.toString(), true);
           return ComponentID.fromLegacy(legacyId);
