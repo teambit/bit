@@ -2354,7 +2354,7 @@
         "exported": false,
         "lanes": []
     },
-    "insights@0.0.78": 
+    "insights@0.0.78": {
         "files": [
             {
                 "name": "duplicate-dependencies.tsx",
