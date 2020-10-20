@@ -10,6 +10,7 @@ import React from 'react';
 
 import type { UiMain } from './ui.main.runtime';
 import { CliOutput } from './cli-output';
+import { ClearConsole } from './output-templates';
 
 export class StartCmd implements Command {
   startingtimestamp;
@@ -61,12 +62,15 @@ export class StartCmd implements Command {
     });
 
     return (
-      <CliOutput
-        workspaceID={WorkspaceAspect.id}
-        startingTimestamp={Date.now()}
-        pubsub={this.pubsub}
-        commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
-      />
+      <>
+        <ClearConsole verbose={!!verbose} />
+        <CliOutput
+          workspaceID={WorkspaceAspect.id}
+          startingTimestamp={Date.now()}
+          pubsub={this.pubsub}
+          commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
+        />
+      </>
     );
   }
 }

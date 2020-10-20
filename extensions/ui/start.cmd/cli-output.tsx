@@ -25,24 +25,36 @@ import {
   ComponentChange,
 } from './output-templates';
 
+type state = {
+  commandFlags: any;
+  mainUIServer: any;
+  componentServers: Array<any>;
+  componentChanges: Array<any>;
+  isBrowserOpen: boolean;
+  latestError: any;
+  webpackErrors: Array<any>;
+  webpackWarnings: Array<any>;
+};
+
 export type props = {
   workspaceID: string;
   startingTimestamp: number;
   pubsub: PubsubMain;
-  commandFlags: object;
+  commandFlags: any;
 };
 
-export class CliOutput extends React.Component<props> {
+export class CliOutput extends React.Component<props, state> {
   constructor(props: props) {
     super(props);
     this.state = {
-      webpackRunningCompilationProcesses: 0,
       commandFlags: props.commandFlags,
       mainUIServer: null,
       componentServers: [],
       componentChanges: [],
       isBrowserOpen: false,
       latestError: null,
+      webpackErrors: [],
+      webpackWarnings: [],
     };
 
     this.registerToEvents(props.pubsub);
@@ -83,7 +95,6 @@ export class CliOutput extends React.Component<props> {
         this.setState({
           latestError: event.data.error,
         });
-        console.log(event);
         break;
       default:
     }
@@ -103,10 +114,10 @@ export class CliOutput extends React.Component<props> {
     }
   }
 
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-unused-vars
-  private onWebpackCompilationDone = (_event) => {
+  private onWebpackCompilationDone = (event) => {
     this.setState({
-      webpackRunningCompilationProcesses: this.state.webpackRunningCompilationProcesses + 1,
+      webpackErrors: [...event.data.stats.compilation.errors],
+      webpackWarnings: [...event.data.stats.compilation.warnings],
     });
   };
 
@@ -149,16 +160,22 @@ export class CliOutput extends React.Component<props> {
 
   render() {
     const {
-      webpackRunningCompilationProcesses,
       componentServers,
       mainUIServer,
       componentChanges,
       latestError,
+      webpackErrors,
+      webpackWarnings,
     } = this.state;
     const { verbose } = this.state.commandFlags;
+
+    // run in scope
+    if (mainUIServer && mainUIServer.uiRoot.scope) {
+      return <UIServersAreReady mainUIServer={mainUIServer} />;
+    }
+
     return (
       <>
-        <ClearConsole verbose={!!verbose} />
         {latestError ? null : <ComponentChange events={componentChanges} />}
 
         {mainUIServer ? null : <Starting componentServers={componentServers} />}
@@ -174,6 +191,14 @@ export class CliOutput extends React.Component<props> {
             <Text>Error: {latestError.message}</Text>
           )
         ) : null}
+
+        {webpackErrors.map((err) => (
+          <Text>Error: {err}</Text>
+        ))}
+
+        {webpackWarnings.map((warning) => (
+          <Text>Warning: {warning}</Text>
+        ))}
 
         <UIServersAreReady mainUIServer={mainUIServer} />
       </>
