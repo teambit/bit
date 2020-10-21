@@ -4181,21 +4181,6 @@
     "staged-components/side-bar@0.0.79": {
         "files": [
             {
-                "name": "component-nodes.module.scss",
-                "relativePath": "component-tree/component-nodes/component-nodes.module.scss",
-                "test": false
-            },
-            {
-                "name": "component-nodes.tsx",
-                "relativePath": "component-tree/component-nodes/component-nodes.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "component-tree/component-nodes/index.ts",
-                "test": false
-            },
-            {
                 "name": "component-tree-context.tsx",
                 "relativePath": "component-tree/component-tree-context.tsx",
                 "test": false
@@ -4296,6 +4281,21 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "component-tree/namespace-tree-node/index.ts",
+                "test": false
+            },
+            {
+                "name": "namespace-tree-node.module.scss",
+                "relativePath": "component-tree/namespace-tree-node/namespace-tree-node.module.scss",
+                "test": false
+            },
+            {
+                "name": "namespace-tree-node.tsx",
+                "relativePath": "component-tree/namespace-tree-node/namespace-tree-node.tsx",
+                "test": false
+            },
+            {
                 "name": "payload-type.tsx",
                 "relativePath": "component-tree/payload-type.tsx",
                 "test": false
@@ -4338,6 +4338,21 @@
             {
                 "name": "root-node.tsx",
                 "relativePath": "component-tree/root-node/root-node.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "component-tree/scope-tree-node/index.ts",
+                "test": false
+            },
+            {
+                "name": "scope-tree-node.module.scss",
+                "relativePath": "component-tree/scope-tree-node/scope-tree-node.module.scss",
+                "test": false
+            },
+            {
+                "name": "scope-tree-node.tsx",
+                "relativePath": "component-tree/scope-tree-node/scope-tree-node.tsx",
                 "test": false
             },
             {

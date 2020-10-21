@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import {
   ComponentTree,
   ComponentView,
-  NamespaceView,
+  NamespaceTreeNode,
   PayloadType,
   TreeNodeProps,
   ScopePayload,
@@ -38,7 +38,7 @@ export class ComponentsDrawer implements Drawer {
           );
         }
 
-        return <NamespaceView {...props} />;
+        return <NamespaceTreeNode {...props} />;
       },
       [treeNodeSlot]
     );

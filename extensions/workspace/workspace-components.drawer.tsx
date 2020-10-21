@@ -5,8 +5,8 @@ import {
   TreeNodeProps,
   PayloadType,
   ComponentView,
-  ScopeView,
-  NamespaceView,
+  ScopeTreeNode,
+  NamespaceTreeNode,
   ScopePayload,
 } from '@teambit/staged-components.side-bar';
 
@@ -29,9 +29,9 @@ export class WorkspaceComponentsDrawer implements Drawer {
 
         if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
 
-        if (props.node.payload instanceof ScopePayload) return <ScopeView {...props} />;
+        if (props.node.payload instanceof ScopePayload) return <ScopeTreeNode {...props} />;
 
-        return <NamespaceView {...props} />;
+        return <NamespaceTreeNode {...props} />;
       },
       [treeNodeSlot]
     );
