@@ -16,6 +16,7 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
+import { Compiler } from '@teambit/compiler';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -151,6 +152,17 @@ export class ReactMain {
   overrideDependencies(dependencyPolicy: DependenciesPolicy) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
+    });
+  }
+
+  /**
+   * override the workspace compiler.
+   */
+  overrideCompiler(compiler: Compiler) {
+    return this.envs.override({
+      getCompiler: () => {
+        return compiler;
+      },
     });
   }
 
