@@ -1356,6 +1356,45 @@
         "exported": false,
         "lanes": []
     },
+    "crypto/checksum": {
+        "files": [
+            {
+                "name": "checksum.spec.ts",
+                "relativePath": "checksum.spec.ts",
+                "test": true
+            },
+            {
+                "name": "checksum.ts",
+                "relativePath": "checksum.ts",
+                "test": false
+            },
+            {
+                "name": "1px.gif",
+                "relativePath": "fixtures/1px.gif",
+                "test": false
+            },
+            {
+                "name": "dshaw.txt",
+                "relativePath": "fixtures/dshaw.txt",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "readme.md",
+                "relativePath": "readme.md",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/checksum",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "dependency-resolver@0.0.79": {
         "files": [
             {
