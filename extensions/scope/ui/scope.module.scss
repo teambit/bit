@@ -8,6 +8,8 @@
 
 .topbar {
   flex: none;
+  background-color: var(--bg-color, #ffffff);
+  border-bottom: 1px solid var(--border-color, #ededed);
 }
 
 .main {
@@ -28,4 +30,9 @@
   position: relative;
 
   height: 100%;
+}
+
+.whiteCorner {
+  background-color: var(--bg-color, #ffffff);
+  border-bottom: 1px solid var(--border-color, #ededed);
 }

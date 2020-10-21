@@ -4,7 +4,7 @@ import { ComponentResult, TaskMetadata, ArtifactDefinition } from '@teambit/buil
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { ScopeMain } from '@teambit/scope';
 import IsolatedEnvironment from 'bit-bin/dist/environment';
-import GeneralError from 'bit-bin/dist/error/general-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import LegacyScope from 'bit-bin/dist/scope/scope';
 import execa from 'execa';
 import fs from 'fs-extra';
@@ -12,6 +12,7 @@ import path from 'path';
 import { Logger } from '@teambit/logger';
 import Bluebird from 'bluebird';
 import { isSnap } from 'bit-bin/dist/version/version-parser';
+import { checksumFile } from '@teambit/crypto.checksum';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
@@ -24,6 +25,7 @@ export type PackResultWithId = PackResult & {
 export type PackResultMetadata = TaskMetadata & {
   pkgJson?: Record<any, string>;
   tarPath?: string;
+  checksum?: string;
 };
 
 export type PackWriteOptions = {
@@ -40,6 +42,7 @@ export type PackOptions = {
 };
 
 const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
+export const TAR_FILE_ARTIFACT_NAME = 'package tar file';
 
 export class Packer {
   options: PackOptions;
@@ -106,7 +109,7 @@ export class Packer {
   getArtifactDefInCapsule(outDir?: string): ArtifactDefinition {
     const rootDir = outDir || DEFAULT_TAR_DIR_IN_CAPSULE;
     const def: ArtifactDefinition = {
-      name: 'package tar file',
+      name: TAR_FILE_ARTIFACT_NAME,
       globPatterns: [`${rootDir}/*.tgz`],
     };
     return def;
@@ -144,7 +147,7 @@ export class Packer {
     const componentId = await this.host.resolveComponentId(componentIdStr);
     const component = await this.host.get(componentId);
     if (!component) {
-      throw new GeneralError(`unable to find "${componentId}"`);
+      throw new BitError(`unable to find "${componentId}"`);
     }
     const capsules = await this.isolator.isolateComponents([component], { baseDir: this.host.path }, legacyScope);
     const capsule = capsules.getCapsule(componentId);
@@ -216,6 +219,10 @@ async function npmPack(
     }
     if (tgzOriginPath !== tarPath && !dryRun) {
       await fs.move(tgzOriginPath, tarPath);
+    }
+    if (!dryRun) {
+      const checksum = await checksumFile(tarPath);
+      metadata.checksum = checksum;
     }
     return { metadata, warnings, errors, startTime, endTime: Date.now() };
   } catch (err) {

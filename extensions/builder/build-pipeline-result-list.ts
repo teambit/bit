@@ -45,7 +45,7 @@ export class BuildPipelineResultList {
   public getMetadataFromTaskResults(componentId: ComponentID): { [taskId: string]: TaskMetadata } {
     const compResults = this.flattenedTasksResults.reduce((acc, current: TaskResults) => {
       const foundComponent = current.componentsResults.find((c) => c.component.id.isEqual(componentId));
-      const taskId = current.task.id;
+      const taskId = current.task.aspectId;
       if (foundComponent && foundComponent.metadata) {
         acc[taskId] = this.mergeDataIfPossible(foundComponent.metadata, acc[taskId], taskId);
       }
@@ -59,7 +59,7 @@ export class BuildPipelineResultList {
       const foundComponent = taskResults.componentsResults.find((c) => c.component.id.isEqual(componentId));
       if (!foundComponent) return null;
       const pipelineReport: PipelineReport = {
-        taskId: taskResults.task.id,
+        taskId: taskResults.task.aspectId,
         taskName: taskResults.task.name,
         taskDescription: taskResults.task.description,
         errors: foundComponent.errors,
