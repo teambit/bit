@@ -139,9 +139,9 @@ export class ScopeMain implements ComponentFactory {
   /**
    * register to the post-export slot.
    */
-  onPostExport(postExportFn: OnPostPut) {
-    this.legacyScope.onPostExport.push(postExportFn);
-    this.postPutSlot.register(postExportFn);
+  onPostPut(postPutFn: OnPostPut) {
+    this.legacyScope.onPostExport.push(postPutFn);
+    this.postPutSlot.register(postPutFn);
     return this;
   }
 
