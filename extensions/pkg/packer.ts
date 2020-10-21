@@ -40,6 +40,7 @@ export type PackOptions = {
 };
 
 const DEFAULT_TAR_DIR_IN_CAPSULE = 'package-tar';
+export const TAR_FILE_ARTIFACT_NAME = 'package tar file';
 
 export class Packer {
   options: PackOptions;
@@ -106,7 +107,7 @@ export class Packer {
   getArtifactDefInCapsule(outDir?: string): ArtifactDefinition {
     const rootDir = outDir || DEFAULT_TAR_DIR_IN_CAPSULE;
     const def: ArtifactDefinition = {
-      name: 'package tar file',
+      name: TAR_FILE_ARTIFACT_NAME,
       globPatterns: [`${rootDir}/*.tgz`],
     };
     return def;
