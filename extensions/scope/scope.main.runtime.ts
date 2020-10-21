@@ -78,7 +78,7 @@ export class ScopeMain implements ComponentFactory {
     /**
      * slot registry for subscribing to post-export
      */
-    private postExportRegistry: OnPostPutSlot,
+    private postPutSlot: OnPostPutSlot,
 
     private isolator: IsolatorMain,
 
@@ -141,7 +141,7 @@ export class ScopeMain implements ComponentFactory {
    */
   onPostExport(postExportFn: OnPostPut) {
     this.legacyScope.onPostExport.push(postExportFn);
-    this.postExportRegistry.register(postExportFn);
+    this.postPutSlot.register(postExportFn);
     return this;
   }
 
