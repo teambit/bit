@@ -70,7 +70,7 @@ export class CliOutput extends React.Component<props, state> {
           this.safeOpenBrowser();
         }
         break;
-      case WebpackCompilationDoneEvent.TYPE: // TODO: add Errors & Warnings: event.data.stats.compilation.errors/warnings
+      case WebpackCompilationDoneEvent.TYPE:
         this.onWebpackCompilationDone(event);
         break;
       case UiServerStartedEvent.TYPE:
@@ -130,7 +130,7 @@ export class CliOutput extends React.Component<props, state> {
     this.onComponentChange(event);
   };
 
-  // Hellpers
+  // Helpers
 
   private areAllComponentServersRunning() {
     return this.state.componentServers.filter((cs) => cs.status !== 'Running').length === 0;

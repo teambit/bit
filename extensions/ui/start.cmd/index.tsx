@@ -1,6 +1,3 @@
-/**
- * TODO[uri] - refactor to full blown React app (with state).
- */
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';

@@ -40,7 +40,7 @@ export class ComponentCompiler {
     private compileErrors: { path: string; error: Error }[] = []
   ) {}
 
-  async compile(noThrow?: boolean): Promise<BuildResult> {
+  async compile(noThrow = true): Promise<BuildResult> {
     if (!this.compilerInstance.transpileFile) {
       throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
     }
@@ -57,20 +57,22 @@ export class ComponentCompiler {
     return { component: this.component.id.toString(), buildResults };
   }
 
-  private throwOnCompileErrors(noThrow?: boolean) {
+  private throwOnCompileErrors(noThrow = true) {
     if (this.compileErrors.length) {
       this.compileErrors.forEach((errorItem) => {
         logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
       });
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
-      const Err = new Error(`compilation failed. see the following errors from the compiler
+      const err = new Error(`compilation failed. see the following errors from the compiler
 ${this.compileErrors.map(formatError).join('\n')}`);
 
-      this.pubsub.pub(CompilerAspect.id, new CompilerErrorEvent(Err));
+      this.pubsub.pub(CompilerAspect.id, new CompilerErrorEvent(err));
 
       if (!noThrow) {
-        throw Err;
+        throw err;
       }
+
+      logger.console(err.message);
     }
   }
 
