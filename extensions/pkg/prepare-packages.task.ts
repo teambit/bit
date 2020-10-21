@@ -12,8 +12,8 @@ const NPM_IGNORE_FILE = '.npmignore';
  * prepare packages for publishing.
  */
 export class PreparePackagesTask implements BuildTask {
-  readonly description = 'prepare packages';
-  constructor(readonly id: string, private logger: Logger) {}
+  readonly name = 'PreparePackages';
+  constructor(readonly aspectId: string, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     await this.executeNpmIgnoreTask(context);

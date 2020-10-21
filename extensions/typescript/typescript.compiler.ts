@@ -7,7 +7,6 @@ import path from 'path';
 import ts from 'typescript';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
-import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
   distDir = 'dist';
@@ -96,7 +95,7 @@ export class TypescriptCompiler implements Compiler {
   getArtifactDefinition() {
     return [
       {
-        generatedBy: TypescriptAspect.id,
+        generatedBy: this.id,
         name: this.artifactName,
         globPatterns: this.distGlobPatterns,
       },
