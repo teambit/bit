@@ -175,7 +175,6 @@
         "react-tabs": "^3.1.1",
         "react-test-renderer": "^16.13.1",
         "react-tooltip": "^4.2.8",
-        "react-transition-group": "^4.4.1",
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
