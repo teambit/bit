@@ -12,6 +12,7 @@ import path from 'path';
 import { Logger } from '@teambit/logger';
 import Bluebird from 'bluebird';
 import { isSnap } from 'bit-bin/dist/version/version-parser';
+import { checksumFile } from '@teambit/crypto.checksum';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
@@ -24,6 +25,7 @@ export type PackResultWithId = PackResult & {
 export type PackResultMetadata = TaskMetadata & {
   pkgJson?: Record<any, string>;
   tarPath?: string;
+  checksum?: string;
 };
 
 export type PackWriteOptions = {
@@ -217,6 +219,10 @@ async function npmPack(
     }
     if (tgzOriginPath !== tarPath && !dryRun) {
       await fs.move(tgzOriginPath, tarPath);
+    }
+    if (!dryRun) {
+      const checksum = await checksumFile(tarPath);
+      metadata.checksum = checksum;
     }
     return { metadata, warnings, errors, startTime, endTime: Date.now() };
   } catch (err) {
