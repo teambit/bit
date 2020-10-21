@@ -17,13 +17,16 @@ export class BabelEnv {
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect];
 
   static async provider([envs, react, babel]: [EnvsMain, ReactMain, BabelMain]) {
+    const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
     const compilerOverride = envs.override({
       getCompiler: () => {
-        return babel.createCompiler({ babelTransformOptions: babelConfig })
+        return babelCompiler;
       },
     });
+    const compilerTaskOverride = react.overrideCompilerTasks([babelCompiler.createTask()]);
     const harmonyReactEnv = react.compose([
-      compilerOverride
+      compilerOverride,
+      compilerTaskOverride
     ]);
 
     envs.registerEnv(harmonyReactEnv);

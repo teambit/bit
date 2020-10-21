@@ -2,15 +2,19 @@ import * as babel from '@babel/core';
 import { mapSeries } from 'bluebird';
 import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
-import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
+import { Compiler, CompilerMain, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import path from 'path';
 import { BabelCompilerOptions } from './compiler-options';
-import { BabelAspect } from './babel.aspect';
 
 export class BabelCompiler implements Compiler {
-  constructor(readonly id, private logger: Logger, private options: BabelCompilerOptions) {}
+  constructor(
+    readonly id,
+    private logger: Logger,
+    private compiler: CompilerMain,
+    private options: BabelCompilerOptions
+  ) {}
   distDir = 'dist';
   distGlobPatterns = [`${this.distDir}/**`];
   shouldCopyNonSupportedFiles = true;
@@ -72,6 +76,10 @@ export class BabelCompiler implements Compiler {
     };
   }
 
+  createTask(name = 'BabelCompiler') {
+    return this.compiler.createTask(name, this);
+  }
+
   private async buildOneCapsule(capsule: Capsule, componentResult: ComponentResult) {
     componentResult.startTime = Date.now();
     const sourceFiles = capsule.component.filesystem.files.map((file) => file.relative);
@@ -106,7 +114,7 @@ export class BabelCompiler implements Compiler {
   getArtifactDefinition() {
     return [
       {
-        generatedBy: BabelAspect.id,
+        generatedBy: this.id,
         name: this.artifactName,
         globPatterns: this.distGlobPatterns,
       },

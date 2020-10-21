@@ -1,6 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavigationSlot } from '@teambit/react-router';
-import { MainDropdown } from '@teambit/staged-components.main-dropdown';
+// import { MainDropdown } from '@teambit/staged-components.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/staged-components.version-dropdown';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
@@ -56,7 +56,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
               <Icon className={classnames(styles.icon)} of="changelog" />
             </TopBarWidgetLink>
           ))}
-        <MainDropdown />
+        {/* <MainDropdown /> */}
       </div>
     </div>
   );

@@ -13,6 +13,7 @@ import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
 import { ComponentsDrawer } from './components.drawer';
 import { ScopeBadge } from './scope-badge';
+import { ScopeMenu } from './ui/menu';
 
 export type MenuItem = {
   label: JSX.Element | string | null;
@@ -27,6 +28,10 @@ export type SidebarSlot = SlotRegistry<ComponentTreeNode>;
 export type ScopeOverview = ComponentType;
 
 export type ScopeOverviewSlot = SlotRegistry<ScopeOverview>;
+
+export type MenuWidget = ComponentType;
+
+export type MenuWidgetSlot = SlotRegistry<MenuWidget[]>;
 
 export class ScopeUI {
   constructor(
@@ -52,7 +57,9 @@ export class ScopeUI {
 
     private componentSearcher: ComponentSearcher,
 
-    private scopeBadgeSlot: ScopeBadgeSlot
+    private scopeBadgeSlot: ScopeBadgeSlot,
+
+    private menuWidgetSlot: MenuWidgetSlot
   ) {}
 
   /**
@@ -77,10 +84,17 @@ export class ScopeUI {
       children: this.componentUi.getComponentUI(ScopeAspect.id),
     });
 
-    this.menuSlot.register({
-      path: this.componentUi.routePath,
-      children: this.componentUi.getMenu(ScopeAspect.id),
-    });
+    this.menuSlot.register([
+      {
+        path: this.componentUi.routePath,
+        children: this.componentUi.getMenu(ScopeAspect.id),
+      },
+      { exact: true, path: '/', children: <ScopeMenu widgetSlot={this.menuWidgetSlot} /> }, // what happens when we have multiple scopes like in symphony?
+    ]);
+  }
+
+  registerMenuWidget(...menuItems: MenuWidget[]) {
+    this.menuWidgetSlot.register(menuItems);
   }
 
   /**
@@ -160,6 +174,7 @@ export class ScopeUI {
     Slot.withType<ComponentTreeNode>(),
     Slot.withType<ScopeBadge>(),
     Slot.withType<ScopeOverview>(),
+    Slot.withType<MenuWidget[]>(),
   ];
 
   static async provider(
@@ -171,7 +186,13 @@ export class ScopeUI {
       ReactRouterUI
     ],
     config,
-    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot]: [RouteSlot, RouteSlot, SidebarSlot, ScopeBadgeSlot]
+    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot]: [
+      RouteSlot,
+      RouteSlot,
+      SidebarSlot,
+      ScopeBadgeSlot,
+      MenuWidgetSlot
+    ]
   ) {
     const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
     const scopeUi = new ScopeUI(
@@ -182,7 +203,8 @@ export class ScopeUI {
       sidebarSlot,
       commandBarUI,
       componentSearcher,
-      scopeBadgeSlot
+      scopeBadgeSlot,
+      menuWidgetSlot
     );
     scopeUi.registerExplicitRoutes();
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));

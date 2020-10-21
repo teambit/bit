@@ -13,7 +13,7 @@ import { Compiler } from './types';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
-  constructor(private pubsub: PubsubMain, private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
+  constructor(private pubsub: PubsubMain, private workspaceCompiler: WorkspaceCompiler) {}
 
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
@@ -28,8 +28,8 @@ export class CompilerMain {
    * API to create a new compiler task, it facilitates the usage of multiple compilers.
    * with this method you can create any number of compilers and add them to the buildPipeline.
    */
-  createTask(compiler: Compiler) {
-    return new CompilerTask(CompilerAspect.id, compiler);
+  createTask(name: string, compiler: Compiler): CompilerTask {
+    return new CompilerTask(CompilerAspect.id, name, compiler);
   }
 
   static runtime = MainRuntime;
@@ -43,10 +43,9 @@ export class CompilerMain {
     LoggerMain,
     PubsubMain
   ]) {
-    const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub);
     envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, compilerTask);
+    const compilerMain = new CompilerMain(pubsub, workspaceCompiler);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger));
     return compilerMain;
