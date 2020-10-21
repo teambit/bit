@@ -10,13 +10,6 @@ const  tsconfig = require('./tsconfig.json');
 export class MultipleCompilersEnv {
   constructor(private react: ReactMain) {}
 
-  /**
-   * icon of the extension.
-   */
-  icon() {
-    return this.react.icon;
-  }
-
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect, CompilerAspect];
 
   static async provider([envs, react, babel, compiler]: [EnvsMain, ReactMain, BabelMain, CompilerMain]) {
