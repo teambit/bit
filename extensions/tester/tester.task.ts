@@ -1,6 +1,6 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
-import { Compiler } from '@teambit/compiler';
+import { Compiler, CompilerAspect } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
@@ -10,6 +10,7 @@ import { detectTestFiles } from './utils';
  */
 export class TesterTask implements BuildTask {
   readonly name = 'TestComponents';
+  readonly dependencies = [CompilerAspect.id];
   constructor(readonly aspectId: string) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {

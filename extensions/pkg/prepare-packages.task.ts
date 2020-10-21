@@ -13,6 +13,7 @@ const NPM_IGNORE_FILE = '.npmignore';
  */
 export class PreparePackagesTask implements BuildTask {
   readonly name = 'PreparePackages';
+  readonly location = 'end';
   constructor(readonly aspectId: string, private logger: Logger) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {

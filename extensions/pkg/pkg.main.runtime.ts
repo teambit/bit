@@ -10,7 +10,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-json-transformer';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { BuilderMain, BuilderAspect } from '@teambit/builder';
+import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
 import { Packer, PackOptions, PackResult } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -84,6 +84,7 @@ export class PkgMain {
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
+    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
     const pkg = new PkgMain(
       config,
       packageJsonPropsRegistry,
