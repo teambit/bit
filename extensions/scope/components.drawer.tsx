@@ -5,6 +5,7 @@ import {
   NamespaceView,
   PayloadType,
   TreeNodeProps,
+  ScopePayload,
 } from '@teambit/staged-components.side-bar';
 import { FullLoader } from '@teambit/staged-components.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
@@ -26,9 +27,8 @@ export class ComponentsDrawer implements Drawer {
 
         if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
 
-        const isScope = scope?.name === props.node.id.replace('/', '');
         // skip over scope node and render only children
-        if (isScope)
+        if (props.node.payload instanceof ScopePayload) {
           return (
             <>
               {children.map((childNode) => (
@@ -36,6 +36,7 @@ export class ComponentsDrawer implements Drawer {
               ))}
             </>
           );
+        }
 
         return <NamespaceView {...props} />;
       },
