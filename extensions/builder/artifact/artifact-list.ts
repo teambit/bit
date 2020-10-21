@@ -40,7 +40,7 @@ export class ArtifactList {
 
   groupByTaskId() {
     return this.artifacts.reduce((acc: { [key: string]: Artifact }, artifact) => {
-      const taskId = artifact.task.id;
+      const taskId = artifact.task.aspectId;
       acc[taskId] = artifact;
       return acc;
     }, {});

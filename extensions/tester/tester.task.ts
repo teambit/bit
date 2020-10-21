@@ -9,8 +9,8 @@ import { detectTestFiles } from './utils';
  * tester build task. Allows to test components during component build.
  */
 export class TesterTask implements BuildTask {
-  readonly description = 'test components';
-  constructor(readonly id: string) {}
+  readonly name = 'TestComponents';
+  constructor(readonly aspectId: string) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const tester: Tester = context.env.getTester();

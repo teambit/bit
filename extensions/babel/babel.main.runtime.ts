@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { Compiler } from '@teambit/compiler';
+import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
@@ -10,10 +10,10 @@ import { BabelCompiler } from './babel.compiler';
 import { BabelParser } from './babel.parser';
 
 export class BabelMain {
-  constructor(private logger: Logger) {}
+  constructor(private logger: Logger, private compiler: CompilerMain) {}
 
   createCompiler(options: BabelCompilerOptions): Compiler {
-    return new BabelCompiler(BabelAspect.id, this.logger, options);
+    return new BabelCompiler(BabelAspect.id, this.logger, this.compiler, options);
   }
 
   getPackageJsonProps() {
@@ -23,12 +23,12 @@ export class BabelMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect];
+  static dependencies = [SchemaAspect, LoggerAspect, CompilerAspect];
 
-  static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
+  static async provider([schema, loggerExt, compiler]: [SchemaMain, LoggerMain, CompilerMain]) {
     schema.registerParser(new BabelParser());
     const logger = loggerExt.createLogger(BabelAspect.id);
-    return new BabelMain(logger);
+    return new BabelMain(logger, compiler);
   }
 }
 
