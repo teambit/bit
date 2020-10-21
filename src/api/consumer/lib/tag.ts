@@ -11,6 +11,7 @@ import HooksManager from '../../../hooks';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { validateVersion } from '../../../utils/semver-helper';
+import loader from '../../../cli/loader';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -70,6 +71,7 @@ export async function tagAction(tagParams: TagParams) {
   HooksManagerInstance.triggerHook(preHook, tagParams);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
+  loader.start('determine components to tag...');
   const newComponents = await componentsList.listNewComponents();
   const { bitIds, warnings } = await getComponentsToTag(
     consumer,

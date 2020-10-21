@@ -1,11 +1,5 @@
 @import '~@teambit/base-ui.theme.colors/colors.module.scss';
 
-.scope {
-  //TBD
-  user-select: none;
-  display: none;
-}
-
 .namespace {
   position: relative;
   height: 32px;
@@ -27,7 +21,7 @@
     transition: all 300ms;
     margin-right: 10px;
     color: var(--text-muted);
-    [data-collapsed='true'] & {
+    &.collapsed {
       transform: rotate(-0.25turn);
     }
   }
@@ -47,11 +41,7 @@
 }
 
 .componentTree {
-  max-height: 0;
   overflow: hidden;
   transition: max-height 400ms ease-in-out;
   font-size: var(--p-xs);
-  &.open {
-    max-height: 100vh;
-  }
 }

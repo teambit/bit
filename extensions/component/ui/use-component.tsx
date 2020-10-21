@@ -1,5 +1,5 @@
 import { useRouteMatch } from 'react-router-dom';
-
+import { useQuery } from './use-query';
 import { ComponentID } from '../id';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
@@ -14,7 +14,15 @@ export function useComponent(host: string, id?: ComponentID): Component {
   const {
     params: { componentId },
   } = useRouteMatch();
+  const query = useQuery();
+  const version = query.get('v') || undefined;
+
   const targetId = id || componentId;
 
-  return useComponentQuery(targetId, host);
+  return useComponentQuery(withVersion(targetId, version), host);
+}
+
+function withVersion(id: string, version?: string) {
+  if (!version) return id;
+  return `${id}@${version}`;
 }

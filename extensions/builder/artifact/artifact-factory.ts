@@ -1,6 +1,7 @@
 import { join } from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
+import { ArtifactFiles } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import { Component, ComponentMap } from '@teambit/component';
 import type { StorageResolverSlot } from '../builder.main.runtime';
 import { ArtifactDefinition } from './artifact-definition';
@@ -44,12 +45,19 @@ export class ArtifactFactory {
     return def.context || DEFAULT_CONTEXT;
   }
 
-  createFromComponent(context: BuildContext, component: Component, def: ArtifactDefinition, task: BuildTask) {
+  createFromComponent(
+    context: BuildContext,
+    component: Component,
+    def: ArtifactDefinition,
+    task: BuildTask
+  ): Artifact | undefined {
     const storageResolver = this.getStorageResolver(def);
     const rootDir = this.getArtifactContextPath(context, component, def);
     const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
-
-    return new Artifact(def, storageResolver, paths, rootDir, task);
+    if (!paths || !paths.length) {
+      return undefined;
+    }
+    return new Artifact(def, storageResolver, new ArtifactFiles(paths), rootDir, task);
   }
 
   private getStorageResolver(def: ArtifactDefinition) {
@@ -82,23 +90,27 @@ export class ArtifactFactory {
       if (artifactContext === 'env') {
         const capsuleDir = context.capsuleGraph.capsulesRootDir;
         const rootDir = this.getRootDir(capsuleDir, def);
+        const paths = this.resolvePaths(rootDir, def);
+        if (paths && paths.length) {
+          const artifact = new Artifact(
+            def,
+            this.getStorageResolver(def),
+            new ArtifactFiles(this.resolvePaths(rootDir, def)),
+            rootDir,
+            task
+          );
 
-        const artifact = new Artifact(
-          def,
-          this.getStorageResolver(def),
-          this.resolvePaths(rootDir, def),
-          rootDir,
-          task
-        );
-
-        return context.components.forEach((component) => {
-          tupleArr.push([component.id.toString(), artifact]);
-        });
+          return context.components.forEach((component) => {
+            tupleArr.push([component.id.toString(), artifact]);
+          });
+        }
       }
 
       return context.components.forEach((component) => {
         const artifact = this.createFromComponent(context, component, def, task);
-        tupleArr.push([component.id.toString(), artifact]);
+        if (artifact) {
+          tupleArr.push([component.id.toString(), artifact]);
+        }
       });
     });
 

@@ -36,6 +36,7 @@ import { ScopeAspect } from '@teambit/scope';
 import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
 import { TypescriptAspect } from '@teambit/typescript';
+import { BabelAspect } from '@teambit/babel';
 import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
@@ -81,6 +82,7 @@ export const manifestsMap = {
   [ReactRouterAspect.id]: ReactRouterAspect,
   [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
+  [BabelAspect.id]: BabelAspect,
   [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
   [BundlerAspect.id]: BundlerAspect,

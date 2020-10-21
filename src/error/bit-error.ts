@@ -1,16 +1,14 @@
-export abstract class BitError extends Error {
+export class BitError extends Error {
+  isUserError = true; // user errors are not reported to Sentry
   constructor(msg?: string) {
     super(msg || '');
   }
 
-  get message() {
-    return this.report();
-  }
-
-  isUserError: boolean; // user errors are not reported to Sentry
-  abstract report(): string;
-
-  static handleError(err: BitError): string {
-    return err.report();
+  /**
+   * override if you want your error to be pretty (e.g. with color with chalk).
+   * eventually, the error shown to the user is the output of this method
+   */
+  report(): string {
+    return this.message;
   }
 }

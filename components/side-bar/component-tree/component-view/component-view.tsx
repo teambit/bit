@@ -34,7 +34,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
 
   return (
     <NavLink
-      href={`/${node.id}`}
+      href={`/${component.id.fullName}`}
       className={classNames(indentClass, clickable, styles.component)}
       activeClassName={styles.active}
       onClick={handleClick}

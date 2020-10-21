@@ -1,0 +1,21 @@
+.previewPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #c7c7c7;
+  pointer-events: auto;
+  > span:first-child {
+    font-size: 30px;
+    margin-bottom: 14px;
+  }
+  > div {
+    font-size: 13px;
+  }
+}
+
+.tooltip {
+  max-width: 155px;
+  text-align: center;
+}

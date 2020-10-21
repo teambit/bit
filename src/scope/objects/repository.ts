@@ -14,6 +14,7 @@ import ScopeMeta from '../models/scopeMeta';
 import { ScopeJson } from '../scope-json';
 import ScopeIndex, { IndexType } from './components-index';
 import BitObject from './object';
+import { ObjectItem } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
@@ -83,13 +84,20 @@ export default class Repository {
     return this.scopeJson.getPopulatedLicense();
   }
 
-  getScopeMetaObject(): Promise<Buffer> {
-    return this.getLicense().then((license) => ScopeMeta.fromObject({ license, name: this.scopeJson.name }).compress());
+  async getScopeMetaObject(): Promise<ObjectItem> {
+    const license = await this.getLicense();
+    const object = ScopeMeta.fromObject({ license, name: this.scopeJson.name });
+    return { ref: object.hash(), buffer: await object.compress() };
   }
 
   objectPath(ref: Ref): string {
     const hash = ref.toString();
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
+  }
+
+  async has(ref: Ref): Promise<boolean> {
+    const objectPath = this.objectPath(ref);
+    return fs.pathExists(objectPath);
   }
 
   load(ref: Ref, throws = false): Promise<BitObject> {
@@ -241,6 +249,10 @@ export default class Repository {
 
   removeFromCache(ref: Ref) {
     delete this._cache[ref.toString()];
+  }
+
+  clearCache() {
+    this._cache = {};
   }
 
   backup(dirName?: string) {

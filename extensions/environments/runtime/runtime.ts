@@ -39,13 +39,22 @@ export class Runtime {
    * execute a service on all environments.
    */
   async run<T>(
+    /**
+     * environment service to execute.
+     */
     service: EnvService<T>,
+
+    /**
+     * options to proxy to the service upon execution.
+     */
     options?: { [key: string]: any },
     runtimes?: EnvRuntime[]
   ): Promise<EnvsExecutionResult<T>> {
+    if (!service.run) throw new Error('a service must implement `run()` in order to be executed');
     const errors: Error[] = [];
     const contexts: EnvResult<T>[] = await BluebirdPromise.mapSeries(runtimes || this.runtimeEnvs, async (env) => {
       try {
+        // @ts-ignore
         const serviceResult = await service.run(new ExecutionContext(this, env), options);
 
         return {
@@ -54,7 +63,7 @@ export class Runtime {
         };
       } catch (err) {
         this.logger.error(err.message, err);
-        this.logger.consoleFailure(`env ${env.id} service has failed. ${err.message}`);
+        this.logger.consoleFailure(`service ${service.name} env ${env.id} has failed. ${err.message}`);
         errors.push(err);
         return {
           env,

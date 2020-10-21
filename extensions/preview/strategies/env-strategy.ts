@@ -73,7 +73,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getPaths(context: BuildContext, files: AbstractVinyl[], capsule: Capsule) {
-    const compiler: Compiler = context.env.getCompiler(context);
+    const compiler: Compiler = context.env.getCompiler();
     return files.map((file) => join(capsule.path, compiler.getDistPathBySrcPath(file.relative)));
   }
 

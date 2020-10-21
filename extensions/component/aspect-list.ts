@@ -10,7 +10,7 @@ export class AspectList {
   constructor(readonly entries: AspectEntry[]) {}
 
   addEntry(aspectId: ComponentID, data: SerializableMap = {}) {
-    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data, []);
+    const extensionDataEntry = new ExtensionDataEntry(undefined, aspectId._legacy, undefined, {}, data);
     const entry = new AspectEntry(aspectId, extensionDataEntry);
     this.entries.push(entry);
     return entry;
@@ -47,6 +47,15 @@ export class AspectList {
    */
   map(predicate: (entry: AspectEntry) => AspectEntry) {
     const entries = this.entries.map(predicate);
+    return new AspectList(entries);
+  }
+
+  /**
+   * transform an aspect list into a new one.
+   */
+  async pmap(predicate: (entry: AspectEntry) => Promise<AspectEntry>) {
+    const entriesP = this.entries.map(predicate);
+    const entries = await Promise.all(entriesP);
     return new AspectList(entries);
   }
 

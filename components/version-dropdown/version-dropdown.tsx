@@ -1,9 +1,8 @@
-// import { Icon } from '@teambit/evangelist.elements.icon';
-// import { NavLink } from 'react-router-dom';
-// import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { NavLink } from 'react-router-dom';
+import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { PillLabel } from '@teambit/staged-components.pill-label';
-// import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
-// import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
+import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -23,31 +22,35 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
     );
   }
   return (
-    <VersionPlaceholder currentVersion={currentVersion} />
-    // <div className={styles.versionDropdown}>
-    //   <Dropdown
-    //     className={styles.dropdown}
-    //     dropClass={styles.menu}
-    //     placeholder=""
-    //     clickToggles={false}
-    //     clickOutside
-    //     PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
-    //   >
-    //     <div>
-    //       <div className={styles.title}>Select version to view</div>
-    //       <div className={styles.versionContainer}>
-    //         {versions.map((version, index) => {
-    //           return (
-    //             <NavLink to={`?version=${version}`} key={index} className={classNames(styles.versionLine, hoverable)}>
-    //               <span className={styles.version}>{version}</span>
-    //               {version === currentVersion && <VersionLabel status="latest" />}
-    //             </NavLink>
-    //           );
-    //         })}
-    //       </div>
-    //     </div>
-    //   </Dropdown>
-    // </div>
+    <div className={styles.versionDropdown}>
+      <Dropdown
+        className={styles.dropdown}
+        dropClass={styles.menu}
+        placeholder=""
+        clickOutside
+        PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
+      >
+        <div>
+          <div className={styles.title}>Select version to view</div>
+          <div className={styles.versionContainer}>
+            {versions.map((version, index) => {
+              const isCurrent = version === currentVersion;
+              return (
+                <NavLink
+                  to={`?v=${version}`}
+                  key={index}
+                  className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
+                >
+                  <span className={styles.version}>{version}</span>
+                  {index === 0 && <VersionLabel className={styles.label} status="latest" />}
+                  {/* {version === currentVersion && <VersionLabel className={styles.label} status="checked-out" />} */}
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
+      </Dropdown>
+    </div>
   );
 }
 
@@ -55,7 +58,7 @@ function VersionPlaceholder({ currentVersion }: { currentVersion?: string }) {
   return (
     <div className={classNames(styles.placeholder)}>
       <div>{currentVersion}</div>
-      {/* <Icon of="fat-arrow-down" /> */}
+      <Icon of="fat-arrow-down" />
     </div>
   );
 }

@@ -3,14 +3,15 @@ import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { BitId } from 'bit-bin/dist/bit-id';
-
+import { CompilerService } from './compiler.service';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerTask } from './compiler.task';
+import { Compiler } from './types';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
-  constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
+  constructor(private workspaceCompiler: WorkspaceCompiler) {}
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: {
@@ -20,10 +21,17 @@ export class CompilerMain {
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
+  /**
+   * API to create a new compiler task, it facilitates the usage of multiple compilers.
+   * with this method you can create any number of compilers and add them to the buildPipeline.
+   */
+  createTask(name: string, compiler: Compiler): CompilerTask {
+    return new CompilerTask(CompilerAspect.id, name, compiler);
+  }
   static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
-    const compilerTask = new CompilerTask(CompilerAspect.id);
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
-    const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
+    envs.registerService(new CompilerService());
+    const compilerMain = new CompilerMain(workspaceCompiler);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger));
     return compilerMain;

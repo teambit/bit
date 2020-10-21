@@ -4,8 +4,8 @@ import * as path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
 import logger from '../../logger/logger';
-import CompsAndLanesObjects from '../../scope/comps-and-lanes-objects';
 import { ModelComponent } from '../../scope/models';
+import { ObjectList } from '../../scope/objects/object-list';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { getLatestVersionNumber } from '../../utils';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
@@ -192,15 +192,14 @@ export default class ComponentLoader {
 
   async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
     const remotes = await getScopeRemotes(this.consumer.scope);
-    let compsAndLanesObjects: CompsAndLanesObjects;
+    let objectList: ObjectList;
     try {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      compsAndLanesObjects = await remotes.fetch([id], this.consumer.scope, false);
+      objectList = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.consumer.scope);
     } catch (err) {
       return null; // probably doesn't exist
     }
-    const remoteComponent = await compsAndLanesObjects.componentsObjects[0].toObjectsAsync();
-    return remoteComponent.component;
+    const bitObjectsList = await objectList.toBitObjects();
+    return bitObjectsList.getComponents()[0];
   }
 
   clearComponentsCache() {

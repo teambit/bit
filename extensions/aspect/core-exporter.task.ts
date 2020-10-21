@@ -9,7 +9,8 @@ export class CoreExporterTask implements BuildTask {
   constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
 
   location: TaskLocation = 'start';
-  readonly id = 'teambit.bit/aspect';
+  readonly aspectId = 'teambit.bit/aspect';
+  readonly name = 'CoreExporter';
   readonly description = 'export all core aspects via the main aspects';
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
@@ -17,7 +18,7 @@ export class CoreExporterTask implements BuildTask {
     const capsules = context.capsuleGraph.seedersCapsules;
     const mainAspectCapsule = capsules.find((capsule) => capsule.component.id.name === mainAspect.name);
     if (mainAspectCapsule) {
-      const distDir = this.env.getCompiler().getDistDir();
+      const distDir = this.env.getCompiler().distDir;
       await this.addFolderForAllCoreAspects(mainAspectCapsule, distDir);
     }
 

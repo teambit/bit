@@ -20,4 +20,12 @@ export class Registry {
     if (!this.authHeaderValue || !this.authHeaderValue.startsWith('Bearer')) return undefined;
     return this.authHeaderValue.replace('Bearer ', '');
   }
+
+  /**
+   * Support for basic token or user/pass
+   */
+  get baseToken(): string | undefined {
+    if (!this.authHeaderValue || !this.authHeaderValue.startsWith('Basic')) return undefined;
+    return this.authHeaderValue.replace('Basic ', '');
+  }
 }

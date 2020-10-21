@@ -33,6 +33,7 @@ describe('publish functionality', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
@@ -105,6 +106,7 @@ describe('publish functionality', function () {
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 

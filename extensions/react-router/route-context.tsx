@@ -1,31 +1,50 @@
-import React from 'react';
-import { BrowserRouter, RouteProps, useHistory } from 'react-router-dom';
+import React, { useEffect, ComponentType } from 'react';
+import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from './slot-router';
 import { ReactRouterUI } from './react-router.ui.runtime';
 
 export type History = ReturnType<typeof useHistory>;
 
-export function RouteContext({
-  rootRoutes,
-  routeSlot,
-  reactRouterUi,
-}: {
+export enum Routing {
+  url,
+  hash,
+  inMemory,
+}
+
+type RouterContextProps = {
   rootRoutes: RouteProps[];
   routeSlot: RouteSlot;
   reactRouterUi: ReactRouterUI;
-}) {
+  routing?: Routing;
+};
+
+export function RouteContext({ rootRoutes, routeSlot, reactRouterUi, routing = Routing.url }: RouterContextProps) {
+  const Router = getRouter(routing);
+
   return (
-    <BrowserRouter>
+    <Router>
       <RouterGetter onRouter={reactRouterUi.setRouter} />
       <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />
-    </BrowserRouter>
+    </Router>
   );
+}
+
+function getRouter(type: Routing): ComponentType {
+  switch (type) {
+    case Routing.inMemory:
+      return MemoryRouter;
+    case Routing.hash:
+      return HashRouter;
+    case Routing.url:
+    default:
+      return BrowserRouter;
+  }
 }
 
 // needs to be rendered inside of <BrowserRouter/>
 function RouterGetter({ onRouter: onHistory }: { onRouter: (routerHistory: History) => void }) {
   const history = useHistory();
-  onHistory(history);
+  useEffect(() => onHistory(history), [history]);
 
   return null;
 }

@@ -11,7 +11,8 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
-import { Packer, PackOptions, PackResult } from './pack';
+import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
 import { PkgAspect } from './pkg.aspect';
@@ -20,6 +21,9 @@ import { PublishDryRunTask } from './publish-dry-run.task';
 import { PublishCmd } from './publish.cmd';
 import { Publisher } from './publisher';
 import { PublishTask } from './publish.task';
+import { PackageTarFiletNotFound, PkgArtifactNotFound } from './exceptions';
+import { PkgArtifact } from './pkg-artifact';
+import { PackageRoute } from './package.route';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -79,14 +83,16 @@ export class PkgMain {
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
     const logPublisher = logger.createLogger(PkgAspect.id);
-    const packer = new Packer(isolator, scope?.legacyScope, workspace);
+    const host = await componentAspect.getHost();
+    const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, logPublisher);
+    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
     const pkg = new PkgMain(
       config,
       packageJsonPropsRegistry,
       workspace,
+      builder,
       packer,
       envs,
       dryRunTask,
@@ -94,7 +100,9 @@ export class PkgMain {
       componentAspect
     );
 
-    builder.registerTaskOnTagOnly(new PublishTask(PkgAspect.id, publisher, logPublisher));
+    componentAspect.registerRoute([new PackageRoute(pkg)]);
+
+    builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, packer, logPublisher));
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
@@ -139,6 +147,8 @@ export class PkgMain {
     private packageJsonPropsRegistry: PackageJsonPropsRegistry,
 
     private workspace: Workspace,
+
+    private builder: BuilderMain,
     /**
      * A utils class to packing components into tarball
      */
@@ -216,6 +226,24 @@ export class PkgMain {
     const currentExtension = component.state.aspects.get(PkgAspect.id);
     const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
     return currentData?.packageJson ?? {};
+  }
+
+  async getPkgArtifact(component: Component): Promise<PkgArtifact> {
+    const artifacts = await this.builder.getArtifactsVinylByExtension(component, PkgAspect.id);
+    if (!artifacts.length) throw new PkgArtifactNotFound(component.id);
+
+    return new PkgArtifact(artifacts);
+  }
+
+  async getPackageTarFile(component: Component): Promise<AbstractVinyl> {
+    const artifacts = await this.builder.getArtifactsVinylByExtensionAndName(
+      component,
+      PkgAspect.id,
+      TAR_FILE_ARTIFACT_NAME
+    );
+    if (!artifacts.length) throw new PackageTarFiletNotFound(component.id);
+
+    return artifacts[0];
   }
 
   async transformPackageJson(
