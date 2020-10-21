@@ -5,7 +5,7 @@ import { WorkspaceAspect } from '@teambit/workspace';
 
 import React from 'react';
 
-import type { UiMain } from './ui.main.runtime';
+import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
 import { ClearConsole } from './output-templates';
 
