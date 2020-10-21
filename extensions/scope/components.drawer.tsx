@@ -11,8 +11,6 @@ import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Drawer } from '@teambit/sidebar';
 import { useScope } from './ui/use-scope';
 
-const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
-
 export class ComponentsDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
@@ -28,7 +26,8 @@ export class ComponentsDrawer implements Drawer {
 
         if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
 
-        const isScope = scopeRegEx.test(props.node.id);
+        const isScope = scope?.name === props.node.id.replace('/', '');
+        // skip over scope node and render only children
         if (isScope)
           return (
             <>

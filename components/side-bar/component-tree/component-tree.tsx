@@ -2,8 +2,8 @@ import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
 import { ComponentTreeContextProvider } from './component-tree-context';
 import { indentStyle } from './indent';
-import { inflateToTree } from './inflate-paths';
-import { PayloadType } from './payload-type';
+import { inflateToTree, attachPayload } from './inflate-paths';
+import { PayloadType, ScopePayload } from './payload-type';
 import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
 import { RootNode } from './root-node';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
@@ -21,15 +21,15 @@ export function ComponentTree({
   selected,
   TreeNode = DefaultTreeNodeRenderer,
 }: ComponentTreeProps) {
-  const rootNode = useMemo(
-    () =>
-      inflateToTree(
-        components,
-        (c) => c.id.toString({ ignoreVersion: true }),
-        (c) => c as PayloadType
-      ),
-    [components]
-  );
+  const rootNode = useMemo(() => {
+    const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
+
+    const payloadMap = calcPayload(components);
+
+    attachPayload(tree, payloadMap);
+
+    return tree;
+  }, [components]);
 
   return (
     <div style={indentStyle(1)}>
@@ -40,4 +40,13 @@ export function ComponentTree({
       </TreeNodeContext.Provider>
     </div>
   );
+}
+
+function calcPayload(components: ComponentModel[]) {
+  const payloadMap = new Map<string, PayloadType>(components.map((c) => [c.id.toString({ ignoreVersion: true }), c]));
+
+  const scopeIds = new Set(components.map((x) => x.id.scope).filter((x) => !!x));
+  scopeIds.forEach((x) => x && payloadMap.set(x, new ScopePayload()));
+
+  return payloadMap;
 }

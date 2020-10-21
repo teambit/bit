@@ -6,6 +6,7 @@ import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
 
+import { ComponentModel } from '@teambit/component';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
 import { PayloadType } from '../payload-type';
@@ -30,7 +31,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
     [onSelect, node.id]
   );
 
-  if (!component) return null;
+  if (!(component instanceof ComponentModel)) return null;
 
   return (
     <NavLink

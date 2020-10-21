@@ -8,11 +8,13 @@ import {
   ScopeView,
   NamespaceView,
 } from '@teambit/staged-components.side-bar';
+
 import React, { useCallback } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';
+import { ScopePayload } from '@teambit/staged-components.side-bar/component-tree';
 import { useWorkspace } from './ui/workspace/use-workspace';
 
-const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
+// const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
 
 export class WorkspaceComponentsDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
@@ -29,8 +31,7 @@ export class WorkspaceComponentsDrawer implements Drawer {
 
         if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
 
-        const isScope = scopeRegEx.test(props.node.id);
-        if (isScope) return <ScopeView {...props} />;
+        if (props.node.payload instanceof ScopePayload) return <ScopeView {...props} />;
 
         return <NamespaceView {...props} />;
       },
