@@ -2335,6 +2335,25 @@
         "exported": false,
         "lanes": []
     },
+    "hooks/use-in-out-transition": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "relativePath": "use-in-out-transition.tsx",
+                "name": "use-in-out-transition.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-in-out-transition",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "insights@0.0.79": {
         "files": [
             {
