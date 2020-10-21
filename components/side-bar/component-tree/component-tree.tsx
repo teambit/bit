@@ -46,7 +46,7 @@ function calcPayload(components: ComponentModel[]) {
   const payloadMap = new Map<string, PayloadType>(components.map((c) => [c.id.toString({ ignoreVersion: true }), c]));
 
   const scopeIds = new Set(components.map((x) => x.id.scope).filter((x) => !!x));
-  scopeIds.forEach((x) => x && payloadMap.set(x, new ScopePayload()));
+  scopeIds.forEach((x) => x && payloadMap.set(`${x}/`, new ScopePayload()));
 
   return payloadMap;
 }

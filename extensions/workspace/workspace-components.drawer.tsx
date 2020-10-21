@@ -7,14 +7,12 @@ import {
   ComponentView,
   ScopeView,
   NamespaceView,
+  ScopePayload,
 } from '@teambit/staged-components.side-bar';
 
 import React, { useCallback } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { ScopePayload } from '@teambit/staged-components.side-bar/component-tree';
 import { useWorkspace } from './ui/workspace/use-workspace';
-
-// const scopeRegEx = /^[\w-]+\.[\w-]+\/$/;
 
 export class WorkspaceComponentsDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
