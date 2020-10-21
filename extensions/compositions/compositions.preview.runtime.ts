@@ -22,7 +22,7 @@ export class CompositionsPreview {
 
   /** gets relevant information for this preview to render */
   selectPreviewModel(componentId: string, previewModule: PreviewModule) {
-    const files = previewModule.componentMap[componentId];
+    const files = previewModule.componentMap[componentId] || [];
 
     const combined = Object.assign({}, ...files);
     return combined;
