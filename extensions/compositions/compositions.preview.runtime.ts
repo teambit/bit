@@ -1,4 +1,5 @@
-import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
+import { PreviewAspect, PreviewPreview, PreviewRuntime, PreviewModule, ModuleFile } from '@teambit/preview';
+import head from 'lodash.head';
 
 import { CompositionsAspect } from './compositions.aspect';
 
@@ -10,20 +11,31 @@ export class CompositionsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render(componentId: string, modules: any) {
+  render(componentId: string, modules: PreviewModule) {
     if (!modules.componentMap[componentId]) return;
-    const composition = this.getActiveComposition(modules.componentMap[componentId][0]);
-    modules.mainModule.default(composition);
+
+    const compositions = this.selectPreviewModel(componentId, modules);
+    const active = this.getActiveComposition(compositions);
+
+    modules.mainModule.default(active);
   }
 
-  private getActiveComposition(module: any) {
+  /** gets relevant information for this preview to render */
+  selectPreviewModel(componentId: string, previewModule: PreviewModule) {
+    const files = previewModule.componentMap[componentId];
+
+    const combined = Object.assign({}, ...files);
+    return combined;
+  }
+
+  private getActiveComposition(module: ModuleFile) {
     const chosen = window.location.hash.split('&')[1];
 
     if (!chosen) {
-      // :TODO @uri we should handle more than one file here.
-      return Object.values(module)[0];
+      const first = head(Object.values(module));
+      return first;
     }
-    // @uri :TODO move to something more generic in preview extension.
+
     return module[chosen];
   }
 
@@ -36,6 +48,7 @@ export class CompositionsPreview {
     preview.registerPreview({
       name: 'compositions',
       render: compPreview.render.bind(compPreview),
+      selectPreviewModel: compPreview.selectPreviewModel.bind(compPreview),
       default: true,
     });
 

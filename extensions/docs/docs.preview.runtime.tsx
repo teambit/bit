@@ -1,5 +1,5 @@
 import { GraphqlAspect, GraphqlUI } from '@teambit/graphql';
-import { PreviewAspect, PreviewPreview, PreviewRuntime } from '@teambit/preview';
+import { PreviewAspect, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
 
 import { DocsAspect } from './docs.aspect';
 
@@ -16,20 +16,23 @@ export class DocsPreview {
     private graphql: GraphqlUI
   ) {}
 
-  render = (componentId: string, modules: any, [compositions]: [any]) => {
+  render = (componentId: string, modules: PreviewModule, [compositions]: [any]) => {
     if (!modules.componentMap[componentId]) {
       modules.mainModule.default(this.graphql.getProvider, componentId, {}, compositions);
       return;
     }
 
-    // only one doc file is supported.
-    modules.mainModule.default(
-      this.graphql.getProvider,
-      componentId,
-      modules.componentMap[componentId][0],
-      compositions
-    );
+    const docsModule = this.selectPreviewModel(componentId, modules);
+
+    modules.mainModule.default(this.graphql.getProvider, componentId, docsModule, compositions);
   };
+
+  selectPreviewModel(componentId: string, modules: PreviewModule) {
+    const relevant = modules.componentMap[componentId];
+
+    // only one doc file is supported.
+    return relevant[0];
+  }
 
   static runtime = PreviewRuntime;
   static dependencies = [PreviewAspect, GraphqlAspect];
@@ -38,7 +41,8 @@ export class DocsPreview {
     const docsPreview = new DocsPreview(preview, graphql);
     preview.registerPreview({
       name: 'overview',
-      render: docsPreview.render,
+      render: docsPreview.render.bind(docsPreview),
+      selectPreviewModel: docsPreview.selectPreviewModel.bind(docsPreview),
       include: ['compositions'],
     });
 
