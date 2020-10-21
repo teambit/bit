@@ -18,6 +18,7 @@ const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
 const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IBitLogger {
   silly(message: string, ...meta: any[]): void;
 

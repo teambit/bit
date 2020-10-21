@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { ComponentFactory } from '@teambit/component';
-import { ComponentResult, TaskMetadata, ArtifactDefinition } from '@teambit/builder';
+import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { ScopeMain } from '@teambit/scope';
 import { BitError } from 'bit-bin/dist/error/bit-error';
