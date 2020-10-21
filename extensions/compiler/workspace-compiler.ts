@@ -4,8 +4,9 @@ import { EnvsMain } from '@teambit/environments';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
 
-import { CompilerAspect } from './compiler.aspect';
-import { CompilerErrorEvent } from './events';
+import BluebirdPromise from 'bluebird';
+import path from 'path';
+
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
@@ -16,8 +17,8 @@ import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import logger from 'bit-bin/dist/logger/logger';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
-import BluebirdPromise from 'bluebird';
-import path from 'path';
+import { CompilerAspect } from './compiler.aspect';
+import { CompilerErrorEvent } from './events';
 
 import { Compiler } from './types';
 

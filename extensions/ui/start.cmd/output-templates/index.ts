@@ -7,3 +7,4 @@ export { UIServersAreReady } from './ui-servers-are-ready';
 export { StandaloneNewLine } from './standalone-new-line';
 export { StartingMainUiServer } from './starting-main-ui-server';
 export { InkSpinner } from './ink-spinner';
+export { TSErrors } from './ts-errors';

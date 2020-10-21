@@ -1,6 +1,5 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { InkSpinner } from '.';
 import { ComponentPreviewServerStartedHeaders } from '.';
 
 export type props = {

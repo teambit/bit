@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, Spacer } from 'ink';
+import { Text } from 'ink';
 import Spinner from 'ink-spinner';
 
 export const InkSpinner = () => (

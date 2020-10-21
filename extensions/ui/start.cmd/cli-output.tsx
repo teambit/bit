@@ -17,7 +17,7 @@ import React from 'react';
 import { Newline, Text } from 'ink';
 import open from 'open';
 
-import { Starting, ComponentPreviewServerStarted, UIServersAreReady, ComponentChange } from './output-templates';
+import { Starting, ComponentPreviewServerStarted, UIServersAreReady, TSErrors } from './output-templates';
 
 type state = {
   commandFlags: any;
@@ -153,14 +153,7 @@ export class CliOutput extends React.Component<props, state> {
   }
 
   render() {
-    const {
-      componentServers,
-      mainUIServer,
-      componentChanges,
-      latestError,
-      webpackErrors,
-      webpackWarnings,
-    } = this.state;
+    const { componentServers, mainUIServer, latestError, webpackErrors, webpackWarnings } = this.state;
     const { verbose } = this.state.commandFlags;
 
     // run in scope
@@ -176,20 +169,14 @@ export class CliOutput extends React.Component<props, state> {
         <ComponentPreviewServerStarted items={componentServers} />
         <Newline />
 
-        {latestError ? (
-          verbose ? (
-            <Text>Error: {latestError.stack}</Text>
-          ) : (
-            <Text>Error: {latestError.message}</Text>
-          )
-        ) : null}
+        <TSErrors latestError={latestError} verbose={!!verbose} />
 
-        {webpackErrors.map((err) => (
-          <Text>Error: {err}</Text>
+        {webpackErrors.map((err, index) => (
+          <Text key={index}>Error: {err}</Text>
         ))}
 
-        {webpackWarnings.map((warning) => (
-          <Text>Warning: {warning}</Text>
+        {webpackWarnings.map((warning, index) => (
+          <Text key={index}>Warning: {warning}</Text>
         ))}
 
         <UIServersAreReady mainUIServer={mainUIServer} />
