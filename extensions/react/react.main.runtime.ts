@@ -72,13 +72,6 @@ export class ReactMain {
   private tsConfigOverride: TsConfigSourceFile | undefined;
 
   /**
-   *  return aspect icon
-   */
-  icon() {
-    return 'https://static.bit.dev/extensions-icons/react.svg';
-  }
-
-  /**
    * override the TS config of the React environment.
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
