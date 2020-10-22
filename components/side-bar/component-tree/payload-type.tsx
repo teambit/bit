@@ -1,3 +1,9 @@
 import { ComponentModel } from '@teambit/component';
 
-export type PayloadType = ComponentModel | undefined;
+export class ScopePayload {
+  get isScope() {
+    return true;
+  }
+}
+
+export type PayloadType = ComponentModel | ScopePayload | undefined;
