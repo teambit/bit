@@ -126,22 +126,16 @@ export function handleErrorAndExit(err: Error, commandName: string, shouldSerial
 
 export function handleUnhandledRejection(err: Error | null | undefined | {}) {
   // eslint-disable-next-line no-console
-  logger.console(
-    '** unhandled rejection found, please make sure the promise is resolved/rejected correctly! **',
-    'error'
-  );
+  console.error('** unhandled rejection found, please make sure the promise is resolved/rejected correctly! **');
   if (err instanceof Error) {
     return handleErrorAndExit(err, process.argv[2]);
   }
-
-  // @ts-ignore
-  logger.console(err, 'error'); // eslint-disable-line
-
+  console.error(err); // eslint-disable-line
   return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
 }
 
 export function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
-  logger.console(err, 'error'); // eslint-disable-line
+  console.error(err); // eslint-disable-line
   logger.exitAfterFlush(1, commandName);
 }
