@@ -38,11 +38,10 @@ export class PublishDryRunTask implements BuildTask {
 
     this.logger.info(`going to run pack dry-run on ${capsulesToPack.length} out of ${capsules.length}`);
     const packResults = await this.packer.packMultipleCapsules(capsulesToPack, { override: true }, true);
-    const packArtifactsDefs = this.packer.getArtifactDefInCapsule();
 
     return {
       componentsResults: publishResults.concat(packResults),
-      artifacts: [packArtifactsDefs],
+      artifacts: [],
     };
   }
 }

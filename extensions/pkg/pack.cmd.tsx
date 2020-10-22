@@ -12,7 +12,7 @@ type PackCmdOptions = {
   override?: boolean;
   prefix?: boolean;
   keep?: boolean;
-  useCapsule?: boolean;
+  // useCapsule?: boolean;
 };
 
 export class PackCmd implements Command {
@@ -23,7 +23,7 @@ export class PackCmd implements Command {
     ['o', 'override [boolean]', 'override existing pack file'],
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix [boolean]', 'keep custom (binding) prefix'],
-    ['c', 'use-capsule [boolean]', 'isolate using the capsule and pack on the capsule'],
+    // ['c', 'use-capsule [boolean]', 'isolate using the capsule and pack on the capsule'],
     ['j', 'json [boolean]', 'return the output as JSON'],
   ] as CommandOptions;
   shortDescription = '';
@@ -58,7 +58,7 @@ export class PackCmd implements Command {
       },
       prefix: options.prefix,
       keep: options.keep,
-      useCapsule: options.useCapsule,
+      // useCapsule: options.useCapsule,
     };
 
     const packResult = await this.packer.packComponent(compId, scopePathStr, concreteOpts);

@@ -113,8 +113,23 @@ export class BuilderMain {
     return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
   }
 
+  // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
   async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
     const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
+  }
+
+  async getArtifactsVinylByExtensionAndName(
+    component: Component,
+    aspectName: string,
+    name: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
     const vinyls = await Promise.all(
       (artifactsObjects || []).map((artifactObject) =>
         artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
@@ -131,6 +146,11 @@ export class BuilderMain {
   getArtifactsByExtension(component: Component, aspectName: string): ArtifactObject[] | undefined {
     const artifacts = this.getArtifacts(component);
     return artifacts?.filter((artifact) => artifact.task.id === aspectName);
+  }
+
+  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
   }
 
   private getArtifacts(component: Component): ArtifactObject[] | undefined {
