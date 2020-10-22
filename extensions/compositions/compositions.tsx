@@ -17,7 +17,7 @@ import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 
-const GET_COMPONENT = gql`
+const GET_PROPERTIES = gql`
   query($id: String!) {
     getHost {
       getDocs(id: $id) {
@@ -39,9 +39,10 @@ export function Compositions() {
   const component = useContext(ComponentContext);
   // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
-  const { data } = useQuery(GET_COMPONENT, {
+  const { data } = useQuery(GET_PROPERTIES, {
     variables: { id: component.id._legacy.name },
   });
+
   const properties = R.path(['getHost', 'getDocs', 'properties'], data);
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok
