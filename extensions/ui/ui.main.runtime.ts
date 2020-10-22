@@ -162,6 +162,7 @@ export class UiMain {
       await uiServer.dev({ port: targetPort });
     } else {
       await this.buildIfChanged(name, uiRoot, rebuild);
+      await this.buildIfNoBundle(name, uiRoot);
       await uiServer.start({ port: targetPort });
     }
 
@@ -270,6 +271,19 @@ export class UiMain {
     if (hash !== hashed)
       this.logger.console(`${uiRoot.configFile} has been changed. Rebuilding UI assets for ${uiRoot.name}`);
     this.logger.console(`Building UI assets for ${uiRoot.name}`);
+    await this.build(name);
+    await this.cache.set(uiRoot.path, hash);
+  }
+
+  private async buildIfNoBundle(name: string, uiRoot: UIRoot) {
+    const config = createWebpackConfig(
+      uiRoot.path,
+      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
+      uiRoot.name
+    );
+    if (fs.pathExistsSync(config.output.path)) return;
+    if (fs.readdirSync(config.output.path).length > 0) return;
+    const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }
