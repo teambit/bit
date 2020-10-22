@@ -1,8 +1,7 @@
-import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import fs from 'fs-extra';
 import path from 'path';
-import { TaskResultsList } from '../builder/task-results-list';
 
 import { Compiler } from './types';
 

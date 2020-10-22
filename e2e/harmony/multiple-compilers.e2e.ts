@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 
@@ -85,7 +86,9 @@ describe('multiple compilers - babel and typescript', function () {
       });
     });
   });
+  // notice that comp1 and comp3 are multiple-compiler but comp2 and comp4 are react
   describe('different envs in the dependency graph', () => {
+    let buildOutput;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.disablePreview();
@@ -97,7 +100,32 @@ describe('multiple compilers - babel and typescript', function () {
       helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp4', 'teambit.bit/react');
       helper.command.compile();
+      buildOutput = helper.command.build();
     });
-    it.only('should', () => {});
+    it('should successfully build', () => {
+      expect(buildOutput).to.have.string('the build has been completed');
+    });
+    it('should indicate that pre-build and post-build were running', () => {
+      expect(buildOutput).to.have.string('executing pre-build for all tasks');
+      expect(buildOutput).to.have.string('executing post-build for all tasks');
+    });
+    it('should write .npmignore with TS entries even when getCompiler() is Babel', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp1');
+      expect(path.join(comp1Capsule, '.npmignore')).to.be.a.file();
+    });
+    it('typescript should not override Babel dist files', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp3');
+      const distFile = path.join(comp1Capsule, 'dist/index.js');
+      const distFileContent = fs.readFileSync(distFile).toString();
+      expect(distFileContent).to.have.string('interopRequireDefault'); // this is generated only by Babel.
+      expect(distFileContent).to.not.have.string('exports.default'); // this is generated only by Typescript.
+    });
+    it('Babel should not override typescript dist files', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp2');
+      const distFile = path.join(comp1Capsule, 'dist/index.js');
+      const distFileContent = fs.readFileSync(distFile).toString();
+      expect(distFileContent).to.have.string('exports.default'); // this is generated only by Typescript.
+      expect(distFileContent).to.not.have.string('interopRequireDefault'); // this is generated only by Babel.
+    });
   });
 });
