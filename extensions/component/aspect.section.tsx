@@ -1,4 +1,5 @@
 import React from 'react';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { Section } from './section';
 import { AspectPage } from './ui/aspect-page';
 
@@ -9,7 +10,7 @@ export class AspectSection implements Section {
   };
   navigationLink = {
     href: '~aspect',
-    children: 'Configuration',
+    children: <Icon of="Extension" />,
   };
   order = 50;
 }
