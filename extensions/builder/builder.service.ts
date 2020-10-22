@@ -2,7 +2,8 @@ import { EnvService, ExecutionContext } from '@teambit/environments';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { Component } from '@teambit/component';
-import { BuildPipe, BuildPipeResults } from './build-pipe';
+import { BuildPipe } from './build-pipe';
+import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
 import { BuildContext } from './build-task';
 import { ArtifactFactory } from './artifact';
@@ -10,7 +11,7 @@ import { figureOrder } from './build-pipeline-order';
 
 export type BuildServiceResults = {
   id: string;
-  buildResults: BuildPipeResults;
+  buildResults: TaskResultsList;
   components: Component[];
   errors?: [];
 };
@@ -51,7 +52,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
   /**
    * runs all tasks for all envs
    */
-  async runOnce(envsExecutionContext: ExecutionContext[]): Promise<any> {
+  async runOnce(envsExecutionContext: ExecutionContext[]): Promise<TaskResultsList> {
     const envs = envsExecutionContext.map((executionContext) => executionContext.envRuntime);
     const tasksQueue = figureOrder(this.taskSlot, envs, this.pipeNameOnEnv);
     const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;
@@ -70,7 +71,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     const buildPipe = BuildPipe.from(tasksQueue, envsBuildContext, this.logger, this.artifactFactory);
     const buildResults = await buildPipe.execute();
     longProcessLogger.end();
-    this.logger.consoleSuccess();
+    buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();
 
     return buildResults;
   }

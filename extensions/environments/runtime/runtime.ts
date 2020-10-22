@@ -35,10 +35,10 @@ export class Runtime {
     return this.run(service, options, [envRuntime]);
   }
 
-  async runOnce<T>(service: EnvService<T>): Promise<any> {
+  async runOnce<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<any> {
     if (!service.runOnce) throw new Error('a service must implement `runOnce()` in order to be executed');
     const envsExecutionContext = this.runtimeEnvs.map((env) => new ExecutionContext(this, env));
-    const serviceResult = await service.runOnce(envsExecutionContext);
+    const serviceResult = await service.runOnce(envsExecutionContext, options);
     return serviceResult;
   }
 

@@ -1,9 +1,9 @@
 import { ComponentID, ComponentMap, Component } from '@teambit/component';
-import { flatten, isEmpty } from 'ramda';
+import { isEmpty } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import type { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import { Artifact, ArtifactList } from './artifact';
-import { BuildPipeResults, TaskResults } from './build-pipe';
+import { TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';
 
 type PipelineReport = {
@@ -17,20 +17,14 @@ type PipelineReport = {
 };
 
 export class BuildPipelineResultList {
-  private flattenedTasksResults: TaskResults[];
   private artifactListsMap: ComponentMap<ArtifactList>;
-  constructor(private buildPipeResults: BuildPipeResults[], private components: Component[]) {
-    this.flattenedTasksResults = this.getFlattenedTaskResultsFromAllEnvs();
+  constructor(private tasksResults: TaskResults[], private components: Component[]) {
     this.artifactListsMap = this.getFlattenedArtifactListsMapFromAllTasks();
   }
 
-  private getFlattenedTaskResultsFromAllEnvs(): TaskResults[] {
-    return flatten(this.buildPipeResults.map((buildPipeResult) => buildPipeResult.tasksResults));
-  }
-
   private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList> {
-    const artifactListsMaps: ComponentMap<ArtifactList>[] = this.flattenedTasksResults.map(
-      (taskResult) => taskResult.artifacts
+    const artifactListsMaps: ComponentMap<ArtifactList>[] = this.tasksResults.map(
+      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
     );
     return ComponentMap.as<ArtifactList>(this.components, (component) => {
       const artifacts: Artifact[] = [];
@@ -43,7 +37,7 @@ export class BuildPipelineResultList {
   }
 
   public getMetadataFromTaskResults(componentId: ComponentID): { [taskId: string]: TaskMetadata } {
-    const compResults = this.flattenedTasksResults.reduce((acc, current: TaskResults) => {
+    const compResults = this.tasksResults.reduce((acc, current: TaskResults) => {
       const foundComponent = current.componentsResults.find((c) => c.component.id.isEqual(componentId));
       const taskId = current.task.aspectId;
       if (foundComponent && foundComponent.metadata) {
@@ -55,7 +49,7 @@ export class BuildPipelineResultList {
   }
 
   public getPipelineReportOfComponent(componentId: ComponentID): PipelineReport[] {
-    const compResults = this.flattenedTasksResults.map((taskResults: TaskResults) => {
+    const compResults = this.tasksResults.map((taskResults: TaskResults) => {
       const foundComponent = taskResults.componentsResults.find((c) => c.component.id.isEqual(componentId));
       if (!foundComponent) return null;
       const pipelineReport: PipelineReport = {

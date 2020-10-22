@@ -48,5 +48,5 @@ export interface Service<TExecResponse extends ServiceExecutionResult, TData = {
   /**
    *
    */
-  runOnce?(context: EnvContext[]): Promise<TExecResponse>;
+  runOnce?(context: EnvContext[], options?: TOpts): Promise<any>;
 }
