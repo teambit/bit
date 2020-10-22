@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { Graph } from 'cleargraph';
 import { Environment } from '@teambit/environments';
-import { EnvRuntime, Runtime } from '@teambit/environments/runtime';
+import { EnvRuntime } from '@teambit/environments/runtime';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 
@@ -11,7 +11,12 @@ type TasksLocationGraph = { location: Location; graph: TaskDependenciesGraph };
 type EnvTask = { env: EnvRuntime; task: BuildTask };
 type PipelineEnv = { env: EnvRuntime; pipeline: BuildTask[] };
 type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipelineEnvs: PipelineEnv[] };
-export type TasksQueue = EnvTask[];
+
+export class TasksQueue extends Array<EnvTask> {
+  toString() {
+    return this.map(({ env, task }) => `env ${env.id}, task ${BuildTaskHelper.serializeId(task)}`).join('\n');
+  }
+}
 
 /**
  * there are two ways how to add tasks to build pipeline.
@@ -33,7 +38,11 @@ export type TasksQueue = EnvTask[];
  * to a queue. once completed, iterate the pipeline and add all tasks to the queue.
  * 4. do the same for the "middle" and "end" groups.
  */
-export function figureOrder(taskSlot: TaskSlot, envs: EnvRuntime[], pipeNameOnEnv = 'getBuildPipe'): TasksQueue {
+export function calculatePipelineOrder(
+  taskSlot: TaskSlot,
+  envs: EnvRuntime[],
+  pipeNameOnEnv = 'getBuildPipe'
+): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
   locations.forEach((location) => {
@@ -48,7 +57,6 @@ export function figureOrder(taskSlot: TaskSlot, envs: EnvRuntime[], pipeNameOnEn
       );
     }
     const pipeline = getPipelineForEnv(taskSlot, envRuntime.env, pipeNameOnEnv);
-    console.log('pipeline', envRuntime.id, 'tasks', pipeline.length, 'components: ', envRuntime.components.length);
     pipelineEnvs.push({ env: envRuntime, pipeline });
   });
 
@@ -62,7 +70,7 @@ export function figureOrder(taskSlot: TaskSlot, envs: EnvRuntime[], pipeNameOnEn
     return { location, graph, pipelineEnvs: pipelineEnvsPerLocation };
   });
 
-  const tasksQueue: TasksQueue = [];
+  const tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
   return tasksQueue;
 }

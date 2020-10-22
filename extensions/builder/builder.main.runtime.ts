@@ -3,7 +3,7 @@ import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact'
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -88,7 +88,7 @@ export class BuilderMain {
   }
 
   async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
-    const envsExecutionResults = await this.build(components, { emptyExisting: true }, { throwOnFirstError: true });
+    const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
     const deployEnvsExecutionResults = await this.deploy(components);
     deployEnvsExecutionResults.throwErrorsIfExist();

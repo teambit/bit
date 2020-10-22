@@ -7,7 +7,7 @@ import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
 import { BuildContext } from './build-task';
 import { ArtifactFactory } from './artifact';
-import { figureOrder } from './build-pipeline-order';
+import { calculatePipelineOrder } from './build-pipeline-order';
 
 export type BuildServiceResults = {
   id: string;
@@ -54,7 +54,8 @@ export class BuilderService implements EnvService<BuildServiceResults> {
    */
   async runOnce(envsExecutionContext: ExecutionContext[]): Promise<TaskResultsList> {
     const envs = envsExecutionContext.map((executionContext) => executionContext.envRuntime);
-    const tasksQueue = figureOrder(this.taskSlot, envs, this.pipeNameOnEnv);
+    const tasksQueue = calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv);
+    this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
     const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
