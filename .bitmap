@@ -205,11 +205,6 @@
     "builder@0.0.80": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "artifact-definition.ts",
                 "relativePath": "artifact/artifact-definition.ts",
                 "test": false
