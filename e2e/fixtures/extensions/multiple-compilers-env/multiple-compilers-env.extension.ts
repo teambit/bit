@@ -10,13 +10,6 @@ const  tsconfig = require('./tsconfig.json');
 export class MultipleCompilersEnv {
   constructor(private react: ReactMain) {}
 
-  /**
-   * icon of the extension.
-   */
-  icon() {
-    return this.react.icon;
-  }
-
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect, CompilerAspect];
 
   static async provider([envs, react, babel, compiler]: [EnvsMain, ReactMain, BabelMain, CompilerMain]) {
@@ -32,8 +25,8 @@ export class MultipleCompilersEnv {
     tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
     tsCompiler.shouldCopyNonSupportedFiles = false;
     const buildPipeOverride = react.overrideBuildPipe([
-      compiler.createTask(babelCompiler),
-      compiler.createTask(tsCompiler),
+      compiler.createTask('BabelCompiler', babelCompiler),
+      compiler.createTask('TypescriptCompiler', tsCompiler),
     ]);
 
     const harmonyReactEnv = react.compose([

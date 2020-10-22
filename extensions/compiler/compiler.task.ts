@@ -10,7 +10,7 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly id: string, private compilerInstance?: Compiler) {
+  constructor(readonly aspectId: string, readonly name: string, private compilerInstance?: Compiler) {
     if (compilerInstance && compilerInstance.artifactName) {
       this.description += ` for artifact ${compilerInstance.artifactName}`;
     }

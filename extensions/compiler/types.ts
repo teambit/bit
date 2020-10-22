@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import { BuildContext, BuildTask, BuiltTaskResult } from '@teambit/builder';
 import { ConcreteService } from '@teambit/environments';
 
 export type TranspileOpts = {
@@ -85,4 +85,9 @@ export interface Compiler extends ConcreteService {
    * enable changing the capsule package.json before publishing the package
    */
   changePackageJsonBeforePublish?(packageJson: Record<string, any>): void;
+
+  /**
+   * sugar to create a Compiler task via the concrete compiler
+   */
+  createTask?(name?: string): BuildTask;
 }
