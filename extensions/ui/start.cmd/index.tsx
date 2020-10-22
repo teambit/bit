@@ -42,17 +42,9 @@ export class StartCmd implements Command {
       dev,
       port,
       rebuild,
-      verbose,
-      suppressBrowserLaunch,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<string> {
-    return report(
-      [uiRootName, userPattern],
-      { dev, port, rebuild, verbose, suppressBrowserLaunch },
-      this.ui,
-      this.logger,
-      this.pubsub
-    );
+    return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
   async render(

@@ -1,17 +1,10 @@
 import { UIAspect, UiServerStartedEvent } from '@teambit/ui';
 
-import chalk from 'chalk';
 import moment from 'moment';
 
 export const report = async (
   [uiRootName, userPattern]: [string, string],
-  {
-    dev,
-    port,
-    rebuild,
-    verbose,
-    suppressBrowserLaunch,
-  }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean },
+  { dev, port, rebuild }: { dev: boolean; port: string; rebuild: boolean },
   ui,
   logger,
   pubsub
@@ -26,6 +19,7 @@ export const report = async (
     rebuild,
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return new Promise((resolve, reject) => {
     pubsub.sub(UIAspect.id, (event) => {
       if (event.type === UiServerStartedEvent.TYPE) {
