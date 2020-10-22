@@ -1,5 +1,6 @@
 import { BuildContext, BuildTask, BuiltTaskResult } from '@teambit/builder';
 import { ConcreteService } from '@teambit/environments';
+import { TaskResultsList } from '../builder/task-results-list';
 
 export type TranspileOpts = {
   componentDir: string; // absolute path of the component's root directory
@@ -90,4 +91,15 @@ export interface Compiler extends ConcreteService {
    * sugar to create a Compiler task via the concrete compiler
    */
   createTask?(name?: string): BuildTask;
+
+  /**
+   * run before the build pipeline has started. this is useful when some preparation are needed to
+   * be done on all envs before the build starts.
+   */
+  preBuild?(context: BuildContext): Promise<void>;
+
+  /**
+   * run after the build pipeline completed for all envs. useful for some cleanups
+   */
+  postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void>;
 }

@@ -62,13 +62,23 @@ export class BuildPipe {
    * execute a pipeline of build tasks.
    */
   async execute(): Promise<TaskResultsList> {
+    await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
     const results = await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
     this.longProcessLogger.end();
+    const tasksResultsList = new TaskResultsList(this.tasksQueue, compact(results));
+    await this.executePostBuild(tasksResultsList);
 
-    const tasksResults = compact(results) as TaskResults[];
+    return tasksResultsList;
+  }
 
-    return new TaskResultsList(this.tasksQueue, tasksResults);
+  private async executePreBuild() {
+    this.logger.setStatusLine('executing pre-build for all tasks');
+    await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => {
+      if (!task.preBuild) return;
+      await task.preBuild(this.getBuildContext(env.id));
+    });
+    this.logger.consoleSuccess();
   }
 
   private async executeTask(task: BuildTask, env: EnvRuntime): Promise<TaskResults | null> {
@@ -81,8 +91,7 @@ export class BuildPipe {
     }
     const startTask = process.hrtime();
     const taskStartTime = Date.now();
-    const buildContext = this.envsBuildContext[env.id];
-    if (!buildContext) throw new Error(`unable to find buildContext for ${env.id}`);
+    const buildContext = this.getBuildContext(env.id);
     const buildTaskResult = await task.execute(buildContext);
     const endTime = Date.now();
     const compsWithErrors = buildTaskResult.componentsResults.filter((c) => c.errors?.length);
@@ -109,6 +118,15 @@ export class BuildPipe {
     return taskResults;
   }
 
+  private async executePostBuild(tasksResults: TaskResultsList) {
+    this.logger.setStatusLine('executing post-build for all tasks');
+    await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => {
+      if (!task.postBuild) return;
+      await task.postBuild(this.getBuildContext(env.id), tasksResults);
+    });
+    this.logger.consoleSuccess();
+  }
+
   private updateFailedDependencyTask(task: BuildTask) {
     if (!this.failedDependencyTask && this.failedTasks.length && task.dependencies) {
       task.dependencies.forEach((dependency) => {
@@ -126,6 +144,12 @@ export class BuildPipe {
     const failedTaskId = BuildTaskHelper.serializeId(this.failedDependencyTask);
     this.logger.consoleWarning(`env: ${envId}, task "${taskId}" has skipped due to "${failedTaskId}" failure`);
     return true;
+  }
+
+  private getBuildContext(envId: string) {
+    const buildContext = this.envsBuildContext[envId];
+    if (!buildContext) throw new Error(`unable to find buildContext for ${envId}`);
+    return buildContext;
   }
 
   /**

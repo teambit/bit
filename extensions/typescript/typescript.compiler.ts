@@ -71,15 +71,17 @@ export class TypescriptCompiler implements Compiler {
     return outputFiles;
   }
 
+  async preBuild(context: BuildContext) {
+    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsuleDirs = capsules.map((capsule) => capsule.path);
+    await this.writeTsConfig(capsuleDirs);
+    await this.writeTypes(capsuleDirs);
+  }
+
   /**
    * compile multiple components on the capsules
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const capsules = context.capsuleGraph.capsules;
-    const capsuleDirs = capsules.getAllCapsuleDirs();
-    await this.writeTsConfig(capsuleDirs);
-    await this.writeTypes(capsuleDirs);
-
     const componentsResults = await this.runTscBuild(context.capsuleGraph);
 
     return {

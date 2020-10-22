@@ -3,6 +3,7 @@ import { ExecutionContext } from '@teambit/environments';
 import type { Network } from '@teambit/isolator';
 import type { ComponentResult } from './types';
 import type { ArtifactDefinition } from './artifact';
+import { TaskResultsList } from './task-results-list';
 
 export type TaskLocation = 'start' | 'end';
 
@@ -65,7 +66,7 @@ export interface BuildTask {
    * run after the build pipeline completed for all envs. useful for doing some cleanup on the
    * capsules before the deployment starts.
    */
-  postBuild?(context: BuildContext, tasksResults: BuiltTaskResult[]): Promise<void>;
+  postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void>;
 
   /**
    * needed if you want the task to be running only after the dependencies were completed
