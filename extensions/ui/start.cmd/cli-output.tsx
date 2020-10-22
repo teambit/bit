@@ -133,7 +133,7 @@ export class CliOutput extends React.Component<props, state> {
   // Helpers
 
   private areAllComponentServersRunning() {
-    return this.state.componentServers.filter((cs) => cs.status !== 'Running').length === 0;
+    return this.state.componentServers.every((cs) => cs.status === 'Running');
   }
 
   private safeOpenBrowser() {
