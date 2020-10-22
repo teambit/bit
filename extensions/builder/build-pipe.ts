@@ -4,9 +4,10 @@ import { Logger } from '@teambit/logger';
 import Bluebird from 'bluebird';
 import prettyTime from 'pretty-time';
 import { ArtifactFactory, ArtifactList } from './artifact';
-import { BuildContext, BuildTask, BuiltTaskResult } from './build-task';
-import { InvalidTask } from './exceptions';
+import { BuildTask, BuildTaskHelper, BuiltTaskResult } from './build-task';
 import { ComponentResult } from './types';
+import { TasksQueue } from './build-pipeline-order';
+import { EnvsBuildContext } from './builder.service';
 
 export type BuildPipeResults = {
   /**
@@ -57,7 +58,8 @@ export class BuildPipe {
     /**
      * array of services to apply on the components.
      */
-    readonly tasks: BuildTask[],
+    readonly tasksQueue: TasksQueue,
+    readonly envsBuildContext: EnvsBuildContext,
     readonly logger: Logger,
     readonly artifactFactory: ArtifactFactory
   ) {}
@@ -65,9 +67,9 @@ export class BuildPipe {
   /**
    * execute a pipeline of build tasks.
    */
-  async execute(buildContext: BuildContext): Promise<BuildPipeResults> {
+  async execute(): Promise<BuildPipeResults> {
     const startTime = Date.now();
-    const tasksResults = await this.executeTasks(buildContext);
+    const tasksResults = await this.executeTasks();
     const endTime = Date.now();
 
     return {
@@ -77,23 +79,22 @@ export class BuildPipe {
     };
   }
 
-  private async executeTasks(buildContext: BuildContext): Promise<TaskResults[]> {
-    const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasks.length);
-    const results: TaskResults[] = await Bluebird.mapSeries(this.tasks, async (task: BuildTask) => {
-      if (!task) {
-        throw new InvalidTask(task);
-      }
-      const taskName = `${task.aspectId}:${task.name}${task.description ? ` (${task.description})` : ''}`;
-      longProcessLogger.logProgress(taskName);
+  private async executeTasks(): Promise<TaskResults[]> {
+    const longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
+    const results: TaskResults[] = await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => {
+      const taskName = `${BuildTaskHelper.serializeId(task)}${task.description ? ` (${task.description})` : ''}`;
+      longProcessLogger.logProgress(`env "${env.id}", task "${taskName}"`);
       const startTask = process.hrtime();
       const taskStartTime = Date.now();
+      const buildContext = this.envsBuildContext[env.id];
+      if (!buildContext) throw new Error(`unable to find buildContext for ${env.id}`);
       const buildTaskResult = await task.execute(buildContext);
       const endTime = Date.now();
       // TODO: move this function to the upper scope. that should happen from the consumer of the service.
       // (e.g. onTag/onSnap slot, build command, etc.)
-      this.throwIfErrorsFound(task, buildTaskResult);
+      this.throwIfErrorsFound(task, buildTaskResult, env.id);
       const duration = prettyTime(process.hrtime(startTask));
-      this.logger.consoleSuccess(`task "${taskName}" has completed successfully in ${duration}`);
+      this.logger.consoleSuccess(`env "${env.id}", task "${taskName}" has completed successfully in ${duration}`);
       const defs = buildTaskResult.artifacts || [];
       const artifacts = this.artifactFactory.generate(buildContext, defs, task);
 
@@ -109,10 +110,10 @@ export class BuildPipe {
     return results;
   }
 
-  private throwIfErrorsFound(task: BuildTask, taskResult: BuiltTaskResult) {
+  private throwIfErrorsFound(task: BuildTask, taskResult: BuiltTaskResult, envId: string) {
     const compsWithErrors = taskResult.componentsResults.filter((c) => c.errors?.length);
     if (compsWithErrors.length) {
-      this.logger.consoleFailure(`task "${task.aspectId} ${task.name}" has failed`);
+      this.logger.consoleFailure(`env: ${envId}, task "${BuildTaskHelper.serializeId(task)}" has failed`);
       const title = `Builder found the following errors while running "${task.aspectId}" task\n`;
       let totalErrors = 0;
       const errorsStr = compsWithErrors
@@ -131,7 +132,12 @@ export class BuildPipe {
   /**
    * create a build pipe from an array of tasks.
    */
-  static from(tasks: BuildTask[], logger: Logger, artifactFactory: ArtifactFactory) {
-    return new BuildPipe(tasks, logger, artifactFactory);
+  static from(
+    tasksQueue: TasksQueue,
+    envsBuildContext: EnvsBuildContext,
+    logger: Logger,
+    artifactFactory: ArtifactFactory
+  ) {
+    return new BuildPipe(tasksQueue, envsBuildContext, logger, artifactFactory);
   }
 }

@@ -44,4 +44,9 @@ export interface Service<TExecResponse extends ServiceExecutionResult, TData = {
    * executes a service on a subset of components.
    */
   run?(context: EnvContext, options?: TOpts): Promise<TExecResponse>;
+
+  /**
+   *
+   */
+  runOnce?(context: EnvContext[]): Promise<TExecResponse>;
 }

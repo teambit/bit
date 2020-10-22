@@ -11,7 +11,7 @@ type TasksLocationGraph = { location: Location; graph: TaskDependenciesGraph };
 type EnvTask = { env: EnvRuntime; task: BuildTask };
 type PipelineEnv = { env: EnvRuntime; pipeline: BuildTask[] };
 type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipelineEnvs: PipelineEnv[] };
-type TasksQueue = EnvTask[];
+export type TasksQueue = EnvTask[];
 
 /**
  * there are two ways how to add tasks to build pipeline.
@@ -33,17 +33,23 @@ type TasksQueue = EnvTask[];
  * to a queue. once completed, iterate the pipeline and add all tasks to the queue.
  * 4. do the same for the "middle" and "end" groups.
  */
-export function figureOrder(taskSlot: TaskSlot, envs: Runtime, pipeNameOnEnv = 'getBuildPipe') {
+export function figureOrder(taskSlot: TaskSlot, envs: EnvRuntime[], pipeNameOnEnv = 'getBuildPipe'): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
   locations.forEach((location) => {
     graphs.push({ location, graph: new Graph<string, string>() });
   });
   const pipelineEnvs: PipelineEnv[] = [];
-  envs.runtimeEnvs.forEach((runtimeEnv) => {
-    const pipeline = getPipelineForEnv(taskSlot, runtimeEnv.env, pipeNameOnEnv);
-    console.log('pipeline', runtimeEnv.id, 'tasks', pipeline.length, 'components: ', runtimeEnv.components.length);
-    pipelineEnvs.push({ env: runtimeEnv, pipeline });
+  envs.forEach((envRuntime) => {
+    if (envRuntime.env.getPipe) {
+      // @todo: remove once this confusion is over
+      throw new Error(
+        `Fatal: a breaking API has introduced. Please change "getPipe()" method on "${envRuntime.id}" to "getBuildPipe()"`
+      );
+    }
+    const pipeline = getPipelineForEnv(taskSlot, envRuntime.env, pipeNameOnEnv);
+    console.log('pipeline', envRuntime.id, 'tasks', pipeline.length, 'components: ', envRuntime.components.length);
+    pipelineEnvs.push({ env: envRuntime, pipeline });
   });
 
   const flattenedPipeline: BuildTask[] = R.flatten(pipelineEnvs.map((pipelineEnv) => pipelineEnv.pipeline));
@@ -58,8 +64,7 @@ export function figureOrder(taskSlot: TaskSlot, envs: Runtime, pipeNameOnEnv = '
 
   const tasksQueue: TasksQueue = [];
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
-
-  throw new Error('stop here');
+  return tasksQueue;
 }
 
 function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocation[], location: Location) {

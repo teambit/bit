@@ -4,8 +4,9 @@ import { Workspace } from '@teambit/workspace';
 import { Component } from '@teambit/component';
 import { BuildPipe, BuildPipeResults } from './build-pipe';
 import { TaskSlot } from './builder.main.runtime';
-import { BuildTask } from './build-task';
+import { BuildContext } from './build-task';
 import { ArtifactFactory } from './artifact';
+import { figureOrder } from './build-pipeline-order';
 
 export type BuildServiceResults = {
   id: string;
@@ -13,6 +14,8 @@ export type BuildServiceResults = {
   components: Component[];
   errors?: [];
 };
+
+export type EnvsBuildContext = { [envId: string]: BuildContext };
 
 export class BuilderService implements EnvService<BuildServiceResults> {
   constructor(
@@ -46,52 +49,29 @@ export class BuilderService implements EnvService<BuildServiceResults> {
   ) {}
 
   /**
-   * runs a pipeline of tasks on all components in the execution context.
+   * runs all tasks for all envs
    */
-  async run(context: ExecutionContext): Promise<BuildServiceResults> {
-    const title = `running ${this.displayPipeName} pipe for environment ${context.id}, total ${context.components.length} components`;
+  async runOnce(envsExecutionContext: ExecutionContext[]): Promise<any> {
+    const envs = envsExecutionContext.map((executionContext) => executionContext.envRuntime);
+    const tasksQueue = figureOrder(this.taskSlot, envs, this.pipeNameOnEnv);
+    const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;
     const longProcessLogger = this.logger.createLongProcessLogger(title);
     this.logger.consoleTitle(title);
-    // make build pipe accessible throughout the context.
-    if (context.env.getPipe) {
-      // @todo: remove once this confusion is over
-      throw new Error(
-        `Fatal: a breaking API has introduced. Please change "getPipe()" method on "${context.id}" to "getBuildPipe()"`
-      );
-    }
-    const buildTasks: BuildTask[] = context.env[this.pipeNameOnEnv] ? context.env[this.pipeNameOnEnv]() : [];
-
-    // TODO: refactor end and start task execution to a separate method
-    const slotsTasks = this.taskSlot.values();
-    const tasksAtStart: BuildTask[] = [];
-    const tasksAtEnd: BuildTask[] = [];
-    // @todo: develop a better mechanism. e.g. I want "preview" and "publish" to be in the end
-    // but preview before publish. in Drupal for example this is resolved by a numeric "weight" field
-    slotsTasks.forEach((task) => {
-      if (task.location === 'start') {
-        tasksAtStart.push(task);
-        return;
-      }
-      if (task.location === 'end') {
-        tasksAtEnd.push(task);
-        return;
-      }
-      tasksAtStart.push(task);
-    });
-
-    // merge with extension registered tasks.
-    const mergedTasks = [...tasksAtStart, ...buildTasks, ...tasksAtEnd];
-    const buildPipe = BuildPipe.from(mergedTasks, this.logger, this.artifactFactory);
-    this.logger.info(`start running building pipe for "${context.id}". total ${buildPipe.tasks.length} tasks`);
-
-    const componentIds = context.components.map((component) => component.id.toString());
-    const buildContext = Object.assign(context, {
-      capsuleGraph: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
-    });
-    const buildResults = await buildPipe.execute(buildContext);
-
+    const envsBuildContext: EnvsBuildContext = {};
+    await Promise.all(
+      envsExecutionContext.map(async (executionContext) => {
+        const componentIds = executionContext.components.map((component) => component.id.toString());
+        const buildContext = Object.assign(executionContext, {
+          capsuleGraph: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
+        });
+        envsBuildContext[executionContext.id] = buildContext;
+      })
+    );
+    const buildPipe = BuildPipe.from(tasksQueue, envsBuildContext, this.logger, this.artifactFactory);
+    const buildResults = await buildPipe.execute();
     longProcessLogger.end();
     this.logger.consoleSuccess();
-    return { id: context.id, buildResults, components: buildContext.components };
+
+    return buildResults;
   }
 }

@@ -22,7 +22,6 @@ import { StorageResolver } from './storage';
 import { BuildPipeResults } from './build-pipe';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList } from './build-pipeline-result-list';
-import { figureOrder } from './build-pipeline-order';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
@@ -177,9 +176,10 @@ export class BuilderMain {
     const idsStr = components.map((c) => c.id.toString());
     await this.workspace.createNetwork(idsStr, isolateOptions);
     const envs = await this.envs.createEnvironment(components);
-    const order = figureOrder(this.buildTaskSlot, envs);
-    const buildResult = await envs.run(this.buildService);
-
+    const buildResult = await envs.runOnce(this.buildService);
+    console.log('BuilderMain -> buildResult', buildResult);
+    throw new Error('stop here');
+    // const buildResult = await envs.run(this.buildService);
     return buildResult;
   }
 
