@@ -1,6 +1,7 @@
 import { addMany as addManyInternal, build, buildAll as buildAllApi, getScopeComponent } from './api/consumer/index';
 import { scopeList } from './api/scope/index';
 import { AddProps } from './consumer/component-ops/add-components/add-components';
+import { Packer } from './pack';
 import HooksManager from './hooks';
 // import { registerCoreExtensions } from './extensions/bit';
 // import { manifestsMap as coreExtensions } from './extensions/bit';
@@ -50,3 +51,6 @@ export async function buildAll(id: string, noCache = false, verbose = false): Pr
 export async function addMany(components: AddProps[], alternateCwd?: string) {
   return addManyInternal(components, alternateCwd);
 }
+
+const packer = new Packer();
+export { packer };
