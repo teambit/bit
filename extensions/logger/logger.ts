@@ -1,11 +1,11 @@
 import loader from 'bit-bin/dist/cli/loader';
-import logger from 'bit-bin/dist/logger/logger';
+import logger, { IBitLogger } from 'bit-bin/dist/logger/logger';
 import chalk from 'chalk';
 import stc from 'string-to-color';
 
 import { LongProcessLogger } from './long-process-logger';
 
-export class Logger {
+export class Logger implements IBitLogger {
   constructor(private extensionName: string) {}
 
   silly(message: string, ...meta: any[]) {
