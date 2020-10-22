@@ -6,8 +6,6 @@ import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 import fs from 'fs-extra';
 import path from 'path';
 
-const NPM_IGNORE_FILE = '.npmignore';
-
 /**
  * prepare packages for publishing.
  */
@@ -16,34 +14,13 @@ export class PreparePackagesTask implements BuildTask {
   readonly location = 'end';
   constructor(readonly aspectId: string, private logger: Logger) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    await this.executeNpmIgnoreTask(context);
-
     const result = {
       componentsResults: [],
     };
 
     return result;
-  }
-
-  /**
-   * add .npmignore file in the capsule root with entries received from the compilers to avoid
-   * adding them into the package.
-   */
-  private async executeNpmIgnoreTask(context: BuildContext): Promise<void> {
-    if (!context.env.getCompiler) return;
-    const compilerInstance: Compiler = context.env.getCompiler();
-    if (!compilerInstance) return;
-    const npmIgnoreEntries = compilerInstance.npmIgnoreEntries;
-    if (!npmIgnoreEntries || !npmIgnoreEntries.length) return;
-    const capsules = context.capsuleGraph.seedersCapsules;
-    await Promise.all(capsules.map((capsule) => this.appendNpmIgnoreEntriesToCapsule(capsule, npmIgnoreEntries)));
-  }
-
-  private async appendNpmIgnoreEntriesToCapsule(capsule: Capsule, npmIgnoreEntries: string[]) {
-    const npmIgnorePath = path.join(capsule.path, NPM_IGNORE_FILE);
-    const npmIgnoreEntriesStr = `${npmIgnoreEntries.join('\n')}\n`;
-    await fs.appendFile(npmIgnorePath, npmIgnoreEntriesStr);
   }
 
   /**

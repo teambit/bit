@@ -17,11 +17,6 @@ export class TypescriptCompiler implements Compiler {
   displayConfig() {
     return this.stringifyTsconfig(this.options.tsconfig);
   }
-  /**
-   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-   * needed for the package.
-   */
-  npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
 
   constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
@@ -76,6 +71,7 @@ export class TypescriptCompiler implements Compiler {
     const capsuleDirs = capsules.map((capsule) => capsule.path);
     await this.writeTsConfig(capsuleDirs);
     await this.writeTypes(capsuleDirs);
+    await this.writeNpmIgnore(capsuleDirs);
   }
 
   /**
@@ -211,6 +207,21 @@ export class TypescriptCompiler implements Compiler {
             }
           })
         );
+      })
+    );
+  }
+
+  /**
+   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+   * needed for the package.
+   */
+  private async writeNpmIgnore(dirs: string[]) {
+    const NPM_IGNORE_FILE = '.npmignore';
+    await Promise.all(
+      dirs.map(async (dir) => {
+        const npmIgnorePath = path.join(dir, NPM_IGNORE_FILE);
+        const npmIgnoreEntriesStr = `\n${this.distDir}/tsconfig.tsbuildinfo\n`;
+        await fs.appendFile(npmIgnorePath, npmIgnoreEntriesStr);
       })
     );
   }
