@@ -8,6 +8,7 @@ import React from 'react';
 import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
 import { ClearConsole } from './output-templates';
+import { report } from './report';
 
 export class StartCmd implements Command {
   startingtimestamp;
@@ -34,6 +35,17 @@ export class StartCmd implements Command {
 
     private pubsub: PubsubMain
   ) {}
+
+  async report(
+    [uiRootName, userPattern]: [string, string],
+    {
+      dev,
+      port,
+      rebuild,
+    }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
+  ): Promise<string> {
+    return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
+  }
 
   async render(
     [uiRootName, userPattern]: [string, string],
