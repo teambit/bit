@@ -5,6 +5,7 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
 
@@ -138,6 +139,10 @@ export class TypescriptCompiler implements Compiler {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
+      if (!diagnostic.file) {
+        // the error is general and not related to a specific file. e.g. tsconfig is missing.
+        throw new BitError(errorStr);
+      }
       this.logger.consoleFailure(errorStr);
       if (!currentComponentResult.component || !currentComponentResult.errors) {
         throw new Error(`currentComponentResult is not defined yet for ${diagnostic.file}`);
