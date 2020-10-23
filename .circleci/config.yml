@@ -102,6 +102,13 @@ jobs:
           paths:
             - bit
 
+  docker_build:
+    machine: true
+    steps:
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit && docker build -f ./scripts/docker-teambit-bit/Dockerfile -t bitcli/bit:0.0.80 .
+      - run: cd bit && docker push bitcli/bit:0.0.80
+
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -813,29 +820,30 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - setup_harmony:
-          requires:
-            - set_npm_registries
-            - checkout_code
-      - unit_test:
-          requires:
-            - setup_harmony
-      - lint:
-          requires:
-            - setup_harmony
-      - generate_and_check_types:
-          requires:
-            - setup_harmony
-      - generate_docs:
-          <<: *semver_tags_only_filters
-          requires:
-            - setup_harmony
-      - e2e_test:
-          requires:
-            - setup_harmony
-      - bit_build:
-          requires:
-            - generate_and_check_types
+      - docker_build
+      # - setup_harmony:
+      #     requires:
+      #       - set_npm_registries
+      #       - checkout_code
+      # - unit_test:
+      #     requires:
+      #       - setup_harmony
+      # - lint:
+      #     requires:
+      #       - setup_harmony
+      # - generate_and_check_types:
+      #     requires:
+      #       - setup_harmony
+      # - generate_docs:
+      #     <<: *semver_tags_only_filters
+      #     requires:
+      #       - setup_harmony
+      # - e2e_test:
+      #     requires:
+      #       - setup_harmony
+      # - bit_build:
+      #     requires:
+      #       - generate_and_check_types
 
 
   # windows_e2e:
