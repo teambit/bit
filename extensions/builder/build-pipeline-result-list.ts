@@ -16,6 +16,9 @@ type PipelineReport = {
   warnings?: string[];
 };
 
+/**
+ * Helper to get the data and artifacts from the TasksResultsList before saving during the tag
+ */
 export class BuildPipelineResultList {
   private artifactListsMap: ComponentMap<ArtifactList>;
   constructor(private tasksResults: TaskResults[], private components: Component[]) {

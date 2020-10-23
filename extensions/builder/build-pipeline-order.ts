@@ -18,12 +18,14 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
  * 2. registering to the `builder.registerBuildTask()`.
  *
  * in the option #1, it's possible to determine the order. e.g. `getBuildPipe() { return [taskA, taskB, taskC]; }`
- * in the option #2, the register happens once the extension is loaded and it's hard to determine
- * when it's happening.
- * There are two ways to determine the order.
+ * in the option #2, the register happens once the extension is loaded, so there is no way to put
+ * one task before/after another task.
+ *
+ * To be able to determine the order, you can do the following
  * 1. "task.location", it has two options "start" and "end". the rest are "middle".
  * 2. "task.dependencies", the dependencies must be completed for all envs before this task starts.
- * the dependencies are applicable inside a location and not across locations.
+ * the dependencies are applicable inside a location and not across locations. see getLocation()
+ * or/and continue reading for more info about this.
  *
  * to determine the final order of the tasks, the following is done:
  * 1. split all tasks to three groups: start, middle and end.
@@ -31,6 +33,14 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
  * 3. start with the first group "start", toposort the dependencies graph and push the found tasks
  * to a queue. once completed, iterate the pipeline and add all tasks to the queue.
  * 4. do the same for the "middle" and "end" groups.
+ *
+ * the reason for splitting the tasks to the three groups and not using the "dependencies" field
+ * alone to determine the order is that the "start" and "end" groups are mostly core and "middle"
+ * is mostly the user entering tasks to the pipeline and we as the core don't know about the users
+ * tasks. For example, a core task "PublishComponent" must happen after the compiler, however, a
+ * user might have an env without a compiler. if we determine the order only by the dependencies
+ * field, the "PublishComponent" would have a dependency "compiler" and because in this case there
+ * is no compiler task, it would throw an error about missing dependencies.
  */
 export function calculatePipelineOrder(
   taskSlot: TaskSlot,
@@ -121,6 +131,14 @@ function addDependenciesToGraph(graphs: TasksLocationGraph[], pipeline: BuildTas
   });
 }
 
+/**
+ * since the task execution is happening per group: "start", "middle" and "end", the dependencies
+ * need to be inside the same group.
+ * e.g. if a dependency located at "end" group and the task located at "start", it's impossible to
+ * complete the dependency before the task, there it throws an error.
+ * it's ok to have the dependency located earlier, e.g. "start" and the task at "end", and in this
+ * case, it will not be part of the graph because there is no need to do any special calculation.
+ */
 function getLocation(task: BuildTask, dependencyTask: BuildTask): Location | null {
   const taskLocation = task.location || 'middle';
   const dependencyLocation = dependencyTask.location || 'middle';
@@ -132,7 +150,9 @@ function getLocation(task: BuildTask, dependencyTask: BuildTask): Location | nul
   const isDependencyEqual = taskLocation === dependencyLocation;
 
   if (isDependencyAhead) {
-    throw new Error(``);
+    throw new Error(`a task "${BuildTaskHelper.serializeId(task)}" located at ${taskLocation}
+has a dependency "${BuildTaskHelper.serializeId(dependencyTask)} located at ${dependencyLocation},
+which is invalid. the dependency must be located earlier or in the same location as the task"`);
   }
 
   if (isDependencyEqual) {

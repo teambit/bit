@@ -18,6 +18,9 @@ export class TaskResultsList {
     return this.tasksResults.some((taskResult) => taskResult.componentsResults.find((c) => c.errors?.length));
   }
 
+  /**
+   * group errors from all tasks and show them nicely to the user
+   */
   throwErrorsIfExist() {
     const tasksErrors: string[] = [];
     let totalErrors = 0;
