@@ -18,6 +18,21 @@ const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
 const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
 
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+export interface IBitLogger {
+  silly(message: string, ...meta: any[]): void;
+
+  debug(message: string, ...meta: any[]): void;
+
+  warn(message: string, ...meta: any[]): void;
+
+  info(message: string, ...meta: any[]): void;
+
+  error(message: string, ...meta: any[]): void;
+
+  console(msg: string): void;
+}
+
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
   format: jsonFormat ? winston.format.combine(winston.format.timestamp(), winston.format.json()) : getFormat(),
@@ -69,7 +84,7 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
  * when using logger.error(message, error), it shows the error serialized and unclear.
  * normally, no need to call logger.error(). once an error is thrown, it is already logged.
  */
-class BitLogger {
+class BitLogger implements IBitLogger {
   logger: Logger;
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
@@ -110,7 +125,10 @@ class BitLogger {
    * use this instead of calling `console.log()`, this way it won't break commands that don't
    * expect output during the execution.
    */
-  console(msg: string | Error, level = 'info', color?: string) {
+  console(msg?: string | Error, level = 'info', color?: string) {
+    if (!msg) {
+      return;
+    }
     let actualMessage = msg;
     if (msg instanceof Error) {
       const { message } = defaultHandleError(msg);
