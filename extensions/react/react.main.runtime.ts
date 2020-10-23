@@ -85,6 +85,17 @@ export class ReactMain {
   }
 
   /**
+   * override the build tsconfig.
+   */
+  overrideBuildTsConfig(tsconfig) {
+    return this.envs.override({
+      getBuildPipe: () => {
+        return this.reactEnv.getBuildPipe(tsconfig);
+      },
+    });
+  }
+
+  /**
    * override the dev server webpack config.
    */
   overrideDevServerConfig(config: Configuration) {
@@ -140,6 +151,7 @@ export class ReactMain {
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
     const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+
     return this.envs.override({
       getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
     });
