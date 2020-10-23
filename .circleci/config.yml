@@ -826,25 +826,12 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - unit_test:
+      - tag_and_publish:
           requires:
             - setup_harmony
-      - lint:
+      - docker_build:
           requires:
-            - setup_harmony
-      - generate_and_check_types:
-          requires:
-            - setup_harmony
-      - generate_docs:
-          <<: *semver_tags_only_filters
-          requires:
-            - setup_harmony
-      - e2e_test:
-          requires:
-            - setup_harmony
-      - bit_build:
-          requires:
-            - generate_and_check_types
+            - tag_and_publish
 
 
   # windows_e2e:
