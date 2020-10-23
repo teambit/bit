@@ -1,11 +1,7 @@
 const { execSync } = require('child_process');
 const { SemVer } = require('semver');
 
-const currentBitBinVersionInNpm = execSync('npm view bit-bin@dev version').toString();
-console.log('currentBitBinVersionInNpm', currentBitBinVersionInNpm);
-
-// const currentTeambitVersion = execSync('npm show @teambit/bit version').toString();
-const currentTeambitVersion = '0.0.81'; // TEMP ONLY
+const currentTeambitVersion = execSync('npm show @teambit/bit version').toString();
 console.log('currentTeambitVersion', currentTeambitVersion);
 const teambitSemVer = new SemVer(currentTeambitVersion);
 const nextTeambitSevVer = teambitSemVer.inc('patch');
