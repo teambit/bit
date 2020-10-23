@@ -526,6 +526,10 @@ jobs:
           # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
           command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
+      - run: npm view bit-bin@dev version
+      # there is a delay between publishing a package and until it's seen on npm servers
+      - run: sleep 2m
+      - run: npm view bit-bin@dev version
       - run: cd bit && node scripts/soft-tag-teambit.js
       - run:
           name: tag persist
