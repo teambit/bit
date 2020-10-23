@@ -60,6 +60,7 @@ describe('harmony extension config', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.bitJsonc.addDefaultScope();
+        helper.bitJsonc.disablePreview();
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
         helper.command.addComponent(EXTENSION_FOLDER);
         helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);

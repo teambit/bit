@@ -142,6 +142,10 @@ export class BabelCompiler implements Compiler {
     );
   }
 
+  displayConfig() {
+    return JSON.stringify(this.options.babelTransformOptions || {}, null, 4);
+  }
+
   private replaceFileExtToJs(filePath: string): string {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);

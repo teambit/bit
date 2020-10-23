@@ -3,7 +3,7 @@ import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact'
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -15,27 +15,18 @@ import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { BuilderService, BuildServiceResults } from './builder.service';
+import { BuilderService } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
-import { BuildPipeResults } from './build-pipe';
+import { TaskResults } from './build-pipe';
+import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList } from './build-pipeline-result-list';
 
 export type TaskSlot = SlotRegistry<BuildTask>;
 
 export type StorageResolverSlot = SlotRegistry<StorageResolver>;
-
-/**
- * extension config type.
- */
-export type BuilderConfig = {
-  /**
-   * number of components to build in parallel.
-   */
-  parallel: 10;
-};
 
 export class BuilderMain {
   constructor(
@@ -50,13 +41,10 @@ export class BuilderMain {
     private storageResolversSlot: StorageResolverSlot
   ) {}
 
-  private async storeArtifacts(buildServiceResults: BuildPipeResults[]) {
-    const artifacts: ComponentMap<ArtifactList>[] = flatten(
-      buildServiceResults.map((pipeResult) => {
-        return pipeResult.tasksResults.map((val) => val.artifacts);
-      })
+  private async storeArtifacts(tasksResults: TaskResults[]) {
+    const artifacts: ComponentMap<ArtifactList>[] = tasksResults.map(
+      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
     );
-
     const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
@@ -73,7 +61,7 @@ export class BuilderMain {
 
   private pipelineResultsToAspectList(
     components: Component[],
-    buildPipelineResults: BuildPipeResults[]
+    buildPipelineResults: TaskResults[]
   ): ComponentMap<AspectList> {
     const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults, components);
     return ComponentMap.as<AspectList>(components, (component) => {
@@ -99,27 +87,14 @@ export class BuilderMain {
     });
   }
 
-  /**
-   * transform the complex EnvsExecutionResult<BuildServiceResults> type to a simpler array of
-   * BuildPipeResults. as a reminder, the build pipeline is running per env, hence the array. each
-   * item of BuildPipeResults has the results of multiple tasks.
-   */
-  private getPipelineResults(execResults: EnvsExecutionResult<BuildServiceResults>): BuildPipeResults[] {
-    const map = execResults.results.map((envRes) => envRes.data?.buildResults);
-    return map.filter((val) => val) as BuildPipeResults[];
-  }
-
   async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
-    // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
     const deployEnvsExecutionResults = await this.deploy(components);
     deployEnvsExecutionResults.throwErrorsIfExist();
-    const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
-    const deployPipelineResults = this.getPipelineResults(deployEnvsExecutionResults);
-    const allPipeLineResults = [...buildPipelineResults, ...deployPipelineResults];
-    await this.storeArtifacts(allPipeLineResults);
-    const aspectList = this.pipelineResultsToAspectList(components, allPipeLineResults);
+    const allTasksResults = [...envsExecutionResults.tasksResults, ...deployEnvsExecutionResults.tasksResults];
+    await this.storeArtifacts(allTasksResults);
+    const aspectList = this.pipelineResultsToAspectList(components, allTasksResults);
     return aspectList;
   }
 
@@ -189,21 +164,17 @@ export class BuilderMain {
    * in case of an error in a task, it stops the execution of that env and continue to the next
    * env. at the end, the results contain the data and errors per env.
    */
-  async build(
-    components: Component[],
-    isolateOptions?: IsolateComponentsOptions
-  ): Promise<EnvsExecutionResult<BuildServiceResults>> {
+  async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const idsStr = components.map((c) => c.id.toString());
-    await this.workspace.createNetwork(idsStr, isolateOptions);
-    const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.run(this.buildService);
-
+    const network = await this.workspace.createNetwork(idsStr, isolateOptions);
+    const envs = await this.envs.createEnvironment(network.capsules.getAllComponents());
+    const buildResult = await envs.runOnce(this.buildService);
     return buildResult;
   }
 
-  async deploy(components: Component[]) {
+  async deploy(components: Component[]): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.run(this.deployService);
+    const buildResult = await envs.runOnce(this.deployService);
 
     return buildResult;
   }
