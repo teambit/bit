@@ -820,7 +820,9 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - docker_build
+      - docker_build:
+          requires:
+            - checkout_code
       # - setup_harmony:
       #     requires:
       #       - set_npm_registries
