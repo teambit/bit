@@ -47,17 +47,3 @@
 //     ],
 //   });
 // });
-
-// it('should attach payload', () => {
-//   const result = inflateToTree(
-//     [{ id: 'path', p: 'one' }],
-//     (x) => x.id,
-//     (x) => x.p
-//   );
-
-//   expect(result).to.deep.equal({
-//     id: 'path',
-//     children: undefined,
-//     payload: 'one',
-//   });
-// });

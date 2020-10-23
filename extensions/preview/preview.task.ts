@@ -23,8 +23,8 @@ export class PreviewTask implements BuildTask {
     private preview: PreviewMain
   ) {}
 
-  id = 'teambit.bit/preview';
-
+  aspectId = 'teambit.bit/preview';
+  name = 'GeneratePreview';
   location: TaskLocation = 'end';
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {

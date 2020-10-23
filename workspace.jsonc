@@ -110,8 +110,10 @@
         "cacache": "^15.0.5",
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
+        "checksum": "0.1.1",
         "classnames": "^2.2.6",
         "cleargraph": "^5.4.0",
+        "consolehighlighter": "0.1.5",
         "copy-to-clipboard": "^3.3.1",
         "core-js": "^3.6.5",
         "cors": "^2.8.5",
@@ -164,6 +166,7 @@
         "prism-react-renderer": "^1.1.1",
         "proper-lockfile": "^4.1.1",
         "react": "^16.13.1",
+        "react-animate-height": "2.0.23",
         "react-dev-utils": "^10.2.1",
         "react-dom": "^16.13.1",
         "react-error-overlay": "^6.0.7",
@@ -174,7 +177,6 @@
         "react-tabs": "^3.1.1",
         "react-test-renderer": "^16.13.1",
         "react-tooltip": "^4.2.8",
-        "react-transition-group": "^4.4.1",
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
@@ -223,7 +225,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.62",
+        "bit-bin": "14.8.9-dev.74",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -253,7 +255,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.62",
+            "bit-bin": "14.8.9-dev.74",
             "react-dom": "^16.13.1"
           }
         }
@@ -285,7 +287,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.62",
+            "bit-bin": "14.8.9-dev.74",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

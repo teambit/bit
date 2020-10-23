@@ -106,14 +106,11 @@ export class TesterMain {
     config: TesterExtensionConfig
   ) {
     const logger = loggerAspect.createLogger(TesterAspect.id);
-    // @todo: Ran to fix.
-    // @ts-ignore
-    const tester = new TesterMain(
-      envs,
-      workspace,
-      new TesterService(workspace, config.testRegex, logger),
-      new TesterTask(TesterAspect.id)
-    );
+    const testerService = new TesterService(workspace, config.testRegex, logger);
+    envs.registerService(testerService);
+
+    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id));
+
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
       cli.register(new TestCmd(tester, workspace, logger));

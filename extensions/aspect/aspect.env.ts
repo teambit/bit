@@ -3,6 +3,7 @@ import type { BuildTask } from '@teambit/builder';
 import { CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
 import { PkgMain } from '@teambit/pkg';
+// import { merge } from 'lodash';
 import { ReactEnv } from '@teambit/react';
 import { TesterMain } from '@teambit/tester';
 import { babelConfig } from './babel/babel-config';
@@ -22,6 +23,8 @@ export class AspectEnv implements Environment {
     private tester: TesterMain,
     private pkg: PkgMain
   ) {}
+
+  icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
   async __getDescriptor() {
     return {

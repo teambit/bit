@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import fs from 'fs-extra';
 import path from 'path';
@@ -10,21 +10,30 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly id: string, private compilerInstance?: Compiler) {
-    if (compilerInstance && compilerInstance.artifactName) {
+  constructor(readonly aspectId: string, readonly name: string, private compilerInstance: Compiler) {
+    if (compilerInstance.artifactName) {
       this.description += ` for artifact ${compilerInstance.artifactName}`;
     }
   }
 
+  async preBuild(context: BuildContext) {
+    if (!this.compilerInstance.preBuild) return;
+    await this.compilerInstance.preBuild(context);
+  }
+
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const compilerInstance: Compiler = this.compilerInstance || context.env.getCompiler();
-    const buildResults = await compilerInstance.build(context);
+    const buildResults = await this.compilerInstance.build(context);
 
     await Promise.all(
-      context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, compilerInstance))
+      context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, this.compilerInstance))
     );
 
     return buildResults;
+  }
+
+  async postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void> {
+    if (!this.compilerInstance.postBuild) return;
+    await this.compilerInstance.postBuild(context, tasksResults);
   }
 
   async copyNonSupportedFiles(capsule: Capsule, compiler: Compiler) {

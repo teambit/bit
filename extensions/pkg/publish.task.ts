@@ -12,9 +12,14 @@ import { Packer } from './packer';
  * publish components by running "npm publish"
  */
 export class PublishTask implements BuildTask {
-  readonly description = 'publish components';
+  readonly name = 'PublishComponents';
   readonly location: TaskLocation = 'end';
-  constructor(readonly id: string, private publisher: Publisher, private packer: Packer, private logger: Logger) {}
+  constructor(
+    readonly aspectId: string,
+    private publisher: Publisher,
+    private packer: Packer,
+    private logger: Logger
+  ) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     this.publisher.options.dryRun = false;

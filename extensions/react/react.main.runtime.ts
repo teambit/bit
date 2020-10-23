@@ -2,7 +2,7 @@ import { Configuration } from 'webpack';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler';
+import { CompilerAspect, Compiler } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
 import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/environments';
@@ -72,13 +72,6 @@ export class ReactMain {
   private tsConfigOverride: TsConfigSourceFile | undefined;
 
   /**
-   *  return aspect icon
-   */
-  icon() {
-    return 'https://static.bit.dev/extensions-icons/react.svg';
-  }
-
-  /**
    * override the TS config of the React environment.
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
@@ -87,6 +80,17 @@ export class ReactMain {
     return this.envs.override({
       getCompiler: () => {
         return this.reactEnv.getCompiler(tsconfig);
+      },
+    });
+  }
+
+  /**
+   * override the build tsconfig.
+   */
+  overrideBuildTsConfig(tsconfig) {
+    return this.envs.override({
+      getBuildPipe: () => {
+        return this.reactEnv.getBuildPipe(tsconfig);
       },
     });
   }
@@ -143,11 +147,33 @@ export class ReactMain {
   }
 
   /**
+   * override the build pipeline of the component environment.
+   */
+  overrideCompilerTasks(tasks: BuildTask[]) {
+    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+
+    return this.envs.override({
+      getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
+    });
+  }
+
+  /**
    * override the dependency configuration of the component environment.
    */
   overrideDependencies(dependencyPolicy: DependenciesPolicy) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
+    });
+  }
+
+  /**
+   * override the workspace compiler.
+   */
+  overrideCompiler(compiler: Compiler) {
+    return this.envs.override({
+      getCompiler: () => {
+        return compiler;
+      },
     });
   }
 

@@ -5,22 +5,21 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
-import { TypescriptAspect } from './typescript.aspect';
 
 export class TypescriptCompiler implements Compiler {
   distDir = 'dist';
   distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
   shouldCopyNonSupportedFiles = true;
   artifactName = 'dist';
-  /**
-   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-   * needed for the package.
-   */
-  npmIgnoreEntries = [`${this.distDir}/tsconfig.tsbuildinfo`];
 
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  displayConfig() {
+    return this.stringifyTsconfig(this.options.tsconfig);
+  }
+
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace
@@ -68,15 +67,18 @@ export class TypescriptCompiler implements Compiler {
     return outputFiles;
   }
 
+  async preBuild(context: BuildContext) {
+    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsuleDirs = capsules.map((capsule) => capsule.path);
+    await this.writeTsConfig(capsuleDirs);
+    await this.writeTypes(capsuleDirs);
+    await this.writeNpmIgnore(capsuleDirs);
+  }
+
   /**
    * compile multiple components on the capsules
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const capsules = context.capsuleGraph.capsules;
-    const capsuleDirs = capsules.getAllCapsuleDirs();
-    await this.writeTsConfig(capsuleDirs);
-    await this.writeTypes(capsuleDirs);
-
     const componentsResults = await this.runTscBuild(context.capsuleGraph);
 
     return {
@@ -92,7 +94,7 @@ export class TypescriptCompiler implements Compiler {
   getArtifactDefinition() {
     return [
       {
-        generatedBy: TypescriptAspect.id,
+        generatedBy: this.id,
         name: this.artifactName,
         globPatterns: this.distGlobPatterns,
       },
@@ -137,6 +139,10 @@ export class TypescriptCompiler implements Compiler {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
+      if (!diagnostic.file) {
+        // the error is general and not related to a specific file. e.g. tsconfig is missing.
+        throw new BitError(errorStr);
+      }
       this.logger.consoleFailure(errorStr);
       if (!currentComponentResult.component || !currentComponentResult.errors) {
         throw new Error(`currentComponentResult is not defined yet for ${diagnostic.file}`);
@@ -206,6 +212,21 @@ export class TypescriptCompiler implements Compiler {
             }
           })
         );
+      })
+    );
+  }
+
+  /**
+   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+   * needed for the package.
+   */
+  private async writeNpmIgnore(dirs: string[]) {
+    const NPM_IGNORE_FILE = '.npmignore';
+    await Promise.all(
+      dirs.map(async (dir) => {
+        const npmIgnorePath = path.join(dir, NPM_IGNORE_FILE);
+        const npmIgnoreEntriesStr = `\n${this.distDir}/tsconfig.tsbuildinfo\n`;
+        await fs.appendFile(npmIgnorePath, npmIgnoreEntriesStr);
       })
     );
   }

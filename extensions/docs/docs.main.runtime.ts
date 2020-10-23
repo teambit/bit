@@ -35,12 +35,12 @@ export class DocsMain {
    */
   getDocsMap(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      return component.state.filesystem.byRegex(/.docs.ts/);
+      return component.state.filesystem.byRegex(/\.docs\.[tj]sx?$/);
     });
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    return component.state.filesystem.byRegex(/.docs.ts/);
+    return component.state.filesystem.byRegex(/\.docs\.[tj]sx?$/);
   }
 
   // async docsPreviewTarget(context: ExecutionContext) {

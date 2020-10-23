@@ -22,7 +22,7 @@ import {
   PackageManagerInstallOptions,
   PolicyDep,
 } from '@teambit/dependency-resolver';
-import { EnvsMain } from '@teambit/environments';
+import { EnvsMain, EnvServiceList } from '@teambit/environments';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -395,13 +395,23 @@ export class Workspace implements ComponentFactory {
     return this.executeLoadSlot(workspaceComponent);
   }
 
+  // TODO: @gilad we should refactor this asap into to the envs aspect.
   async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnv(component)?.env;
-    if (env?.__getDescriptor && typeof env.__getDescriptor === 'function') {
-      const systemDescriptor = await env.__getDescriptor();
+    const env = this.envs.getEnv(component);
+    if (env.env.__getDescriptor && typeof env.env.__getDescriptor === 'function') {
+      const systemDescriptor = await env.env.__getDescriptor();
+      // !important persist services only on the env itself.
+      let services: undefined | EnvServiceList;
+      if (this.envs.isEnvRegistered(component.id.toString())) services = this.envs.getServices(env);
+      const icon = this.aspectLoader.getDescriptor(env.id).icon || env.env.icon;
 
       return {
         type: systemDescriptor.type,
+        id: env.id,
+        name: env.name,
+        icon,
+        description: env.description,
+        services: services?.toObject(),
       };
     }
 
@@ -1109,13 +1119,20 @@ export class Workspace implements ComponentFactory {
       legacyId = this.consumer.getParsedId(id.toString(), true, true);
     } catch (err) {
       if (err.name === 'MissingBitMapComponent') {
-        // if a component is coming from the scope, it doesn't have .bitmap entry
-        legacyId = BitId.parse(id.toString(), true);
-        return ComponentID.fromLegacy(legacyId);
+        try {
+          // handle component versions in the scope that doesn't exists on the workspace.
+          const [idWithoutVersion, version] = id.toString().split('@');
+          const _id = this.consumer.getParsedId(idWithoutVersion, false, true);
+          const withVersion = _id.changeVersion(version);
+          return this.scope.resolveComponentId(withVersion);
+        } catch (error) {
+          legacyId = BitId.parse(id.toString(), true);
+          return ComponentID.fromLegacy(legacyId);
+        }
       }
       throw err;
     }
-    const relativeComponentDir = this.componentDirFromLegacyId(legacyId);
+    const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
     const defaultScope = await this.componentDefaultScopeFromComponentDir(
       relativeComponentDir,
       legacyId.toStringWithoutScopeAndVersion()
