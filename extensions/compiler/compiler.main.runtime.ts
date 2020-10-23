@@ -28,6 +28,7 @@ export class CompilerMain {
   createTask(name: string, compiler: Compiler): CompilerTask {
     return new CompilerTask(CompilerAspect.id, name, compiler);
   }
+
   static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
     envs.registerService(new CompilerService());
