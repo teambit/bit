@@ -92,6 +92,11 @@
     "babel": {
         "files": [
             {
+                "name": "README.md",
+                "relativePath": "README.md",
+                "test": false
+            },
+            {
                 "name": "babel.aspect.ts",
                 "relativePath": "babel.aspect.ts",
                 "test": false
