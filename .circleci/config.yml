@@ -822,33 +822,29 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_npm_registries
-      - docker_build:
+      - setup_harmony:
           requires:
             - set_npm_registries
             - checkout_code
-      # - setup_harmony:
-      #     requires:
-      #       - set_npm_registries
-      #       - checkout_code
-      # - unit_test:
-      #     requires:
-      #       - setup_harmony
-      # - lint:
-      #     requires:
-      #       - setup_harmony
-      # - generate_and_check_types:
-      #     requires:
-      #       - setup_harmony
-      # - generate_docs:
-      #     <<: *semver_tags_only_filters
-      #     requires:
-      #       - setup_harmony
-      # - e2e_test:
-      #     requires:
-      #       - setup_harmony
-      # - bit_build:
-      #     requires:
-      #       - generate_and_check_types
+      - unit_test:
+          requires:
+            - setup_harmony
+      - lint:
+          requires:
+            - setup_harmony
+      - generate_and_check_types:
+          requires:
+            - setup_harmony
+      - generate_docs:
+          <<: *semver_tags_only_filters
+          requires:
+            - setup_harmony
+      - e2e_test:
+          requires:
+            - setup_harmony
+      - bit_build:
+          requires:
+            - generate_and_check_types
 
 
   # windows_e2e:
@@ -1035,6 +1031,9 @@ workflows:
       - tag_and_publish:
           requires:
             - setup_harmony
+      - docker_build:
+          requires:
+            - tag_and_publish
   # TODO: check if we can combine it with the regular nightly somehow
   manual_nightly:
     jobs:
@@ -1053,3 +1052,7 @@ workflows:
           <<: *nightly_tag_only_filters
           requires:
             - setup_harmony
+      - docker_build:
+          <<: *nightly_tag_only_filters
+          requires:
+            - tag_and_publish
