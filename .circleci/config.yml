@@ -108,8 +108,8 @@ jobs:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit && docker build -f ./scripts/docker-teambit-bit/Dockerfile -t bitcli/bit:0.0.80 .
-      - run: cd bit && docker push bitcli/bit:0.0.80
+      - run: cd bit && docker build -f ./scripts/docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
 
   set_ssh_key:
     <<: *defaults
