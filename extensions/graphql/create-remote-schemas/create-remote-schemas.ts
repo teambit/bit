@@ -10,7 +10,9 @@ export function getExecutor(uri: string): AsyncExecutor {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        // eslint-disable-next-line dot-notation
         Cookie: context ? context['headers'].cookie : '',
+        // eslint-disable-next-line dot-notation
         Authorization: context ? context['headers'].authorization : '',
       },
       body: JSON.stringify({ query, variables }),
