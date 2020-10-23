@@ -528,6 +528,8 @@ jobs:
       - run: cd bit && npm publish --tag dev
       - run: cd bit && node scripts/soft-tag-teambit.js
       - run: npm view bit-bin@dev version
+      - run: sleep 5m
+      - run: npm view bit-bin@dev version
       - run:
           name: tag persist
           command: cd bit && bit tag --persist
