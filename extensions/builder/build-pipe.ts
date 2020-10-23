@@ -7,7 +7,7 @@ import prettyTime from 'pretty-time';
 import { ArtifactFactory, ArtifactList } from './artifact';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import { ComponentResult } from './types';
-import { TasksQueue } from './build-pipeline-order';
+import { TasksQueue } from './tasks-queue';
 import { EnvsBuildContext } from './builder.service';
 import { TaskResultsList } from './task-results-list';
 

@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { BuildTaskHelper } from './build-task';
-import { TasksQueue } from './build-pipeline-order';
+import { TasksQueue } from './tasks-queue';
 import { TaskResults } from './build-pipe';
 import { ComponentResult } from './types';
 

@@ -55,6 +55,7 @@ export class BuilderService implements EnvService<BuildServiceResults> {
   async runOnce(envsExecutionContext: ExecutionContext[]): Promise<TaskResultsList> {
     const envs = envsExecutionContext.map((executionContext) => executionContext.envRuntime);
     const tasksQueue = calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv);
+    tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
     const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;
     const longProcessLogger = this.logger.createLongProcessLogger(title);

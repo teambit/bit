@@ -4,19 +4,13 @@ import { Environment } from '@teambit/environments';
 import { EnvRuntime } from '@teambit/environments/runtime';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
+import { TasksQueue } from './tasks-queue';
 
 type TaskDependenciesGraph = Graph<string, string>;
 type Location = 'start' | 'middle' | 'end';
 type TasksLocationGraph = { location: Location; graph: TaskDependenciesGraph };
-type EnvTask = { env: EnvRuntime; task: BuildTask };
 type PipelineEnv = { env: EnvRuntime; pipeline: BuildTask[] };
 type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipelineEnvs: PipelineEnv[] };
-
-export class TasksQueue extends Array<EnvTask> {
-  toString() {
-    return this.map(({ env, task }) => `env ${env.id}, task ${BuildTaskHelper.serializeId(task)}`).join('\n');
-  }
-}
 
 /**
  * there are two ways how to add tasks to build pipeline.
