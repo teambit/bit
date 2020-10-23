@@ -14,7 +14,7 @@ export class MultipleCompilersEnv {
 
   static async provider([envs, react, babel, compiler]: [EnvsMain, ReactMain, BabelMain, CompilerMain]) {
     const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
-    babelCompiler.distGlobPatterns = [`${babelCompiler.distDir}/**`, `!${babelCompiler.distDir}/**/*.d.ts`];
+    babelCompiler.distGlobPatterns = [`${babelCompiler.distDir}/**`, `!${babelCompiler.distDir}/**/*.d.ts`, `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`];
     const compilerOverride = envs.override({
       getCompiler: () => {
         return babelCompiler;

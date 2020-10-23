@@ -240,6 +240,11 @@
                 "test": false
             },
             {
+                "name": "build-pipeline-order.ts",
+                "relativePath": "build-pipeline-order.ts",
+                "test": false
+            },
+            {
                 "name": "build-pipeline-result-list.ts",
                 "relativePath": "build-pipeline-result-list.ts",
                 "test": false
