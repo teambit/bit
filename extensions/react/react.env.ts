@@ -17,6 +17,8 @@ import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
+import { ESLintMain } from '../eslint';
+import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -62,7 +64,9 @@ export class ReactEnv implements Environment {
      */
     private tester: TesterMain,
 
-    private config: ReactMainConfig
+    private config: ReactMainConfig,
+
+    private eslint: ESLintMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
@@ -96,9 +100,14 @@ export class ReactEnv implements Environment {
 
   /**
    * returns and configures the component linter.
-   * TODO: linter aspect, es-hint aspect
    */
-  getLinter() {}
+  getLinter() {
+    return this.eslint.createLinter({
+      config: eslintConfig(),
+      // resolve all plugins from the react environment.
+      pluginPath: __dirname,
+    });
+  }
 
   /**
    * get the default react webpack config.

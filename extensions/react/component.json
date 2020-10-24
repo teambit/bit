@@ -34,6 +34,11 @@
           "postcss-loader": "^3.0.0",
           "sass-loader": "^8.0.2",
           "less": "^3.12.2",
+          "eslint-plugin-import": "^2.22.0",
+          "eslint-plugin-jsx-a11y": "^6.3.1",
+          "eslint-plugin-react": "^7.20.3",
+          "eslint-plugin-react-hooks": "^4.0.8",
+          "@typescript-eslint/eslint-plugin": "^4.4.1",
           "less-loader": "^7.0.2",
           "bit-bin": "-",
           "@babel/runtime": "^7.11.2"

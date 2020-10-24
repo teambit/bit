@@ -49,6 +49,7 @@ export interface BuildTask {
   execute(context: BuildContext): Promise<BuiltTaskResult>;
 }
 
+// TODO: rename to BuildTaskResults
 export interface BuiltTaskResult {
   /**
    * build results for each of the components in the build context.
