@@ -179,6 +179,8 @@ export class ReactMain {
     });
   }
 
+  overrideEslintConfig() {}
+
   /**
    * override the package json props of the component environment.
    */

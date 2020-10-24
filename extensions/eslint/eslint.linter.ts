@@ -1,5 +1,4 @@
 import { flatten } from 'lodash';
-import { Component } from '@teambit/component';
 import { Linter, LinterContext } from '@teambit/linter';
 import { ESLint } from 'eslint';
 import { ESLintOptions } from './eslint.main.runtime';
@@ -11,13 +10,14 @@ export class ESLintLinter implements Linter {
     /**
      * reference to the eslint module.
      */
+    // eslint-disable-next-line no-shadow
     private ESLint?: any
   ) {}
 
   /**
    * get options for eslint.
    */
-  private getOptions(options: ESLintOptions, context: LinterContext, component: Component): ESLint.Options {
+  private getOptions(options: ESLintOptions, context: LinterContext): ESLint.Options {
     return {
       overrideConfig: options.config,
       extensions: context.extensionFormats,
@@ -26,9 +26,10 @@ export class ESLintLinter implements Linter {
     };
   }
 
+  // @ts-ignore
   async lint(context: LinterContext) {
     const resultsP = context.components.map(async (component) => {
-      const eslint = this.createEslint(this.options, context, component, this.ESLint);
+      const eslint = this.createEslint(this.options, context, this.ESLint);
       const filesP = component.filesystem.files.map(async (file) => {
         const sourceCode = file.contents.toString('utf8');
         const lintResults = await eslint.lintText(sourceCode, {
@@ -71,9 +72,10 @@ export class ESLintLinter implements Linter {
     });
   }
 
-  private createEslint(options: ESLintOptions, context: LinterContext, component: Component, ESLintModule?: any) {
-    if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context, component));
-    return new ESLint(this.getOptions(options, context, component));
+  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any) {
+    // eslint-disable-next-line no-new
+    if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context));
+    return new ESLint(this.getOptions(options, context));
   }
 
   version() {

@@ -103,7 +103,7 @@ export class ReactEnv implements Environment {
    */
   getLinter() {
     return this.eslint.createLinter({
-      config: eslintConfig(),
+      config: eslintConfig,
       // resolve all plugins from the react environment.
       pluginPath: __dirname,
     });

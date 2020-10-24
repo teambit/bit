@@ -6,7 +6,7 @@ export class LintTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const linter: Linter = context.env.getLinter();
-    linter.lint(context);
+    const results = await linter.lint(context);
 
     return {
       componentsResults: [],

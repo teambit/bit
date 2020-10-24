@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
+import { Linter } from 'eslint';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
-import { ESLint, Linter } from 'eslint';
 
 export type ESLintOptions = {
   /**
@@ -20,15 +20,13 @@ export type ESLintOptions = {
   formatter?: string;
 };
 
-export type ESLintConfig = {};
-
 export class ESLintMain {
   /**
    * create a eslint linter instance.
    * @param options eslint options.
    * @param ESLintModule reference to an `eslint` module.
    */
-  createLinter(options: ESLintOptions, ESLintModule?: any) {
+  createLinter(options: ESLintOptions, ESLintModule?: any): ESLintLinter {
     return new ESLintLinter(options, ESLintModule);
   }
 
@@ -36,7 +34,7 @@ export class ESLintMain {
 
   static dependencies = [];
 
-  static async provider() {
+  static async provider(): Promise<ESLintMain> {
     return new ESLintMain();
   }
 }
