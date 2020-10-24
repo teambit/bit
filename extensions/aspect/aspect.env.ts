@@ -57,8 +57,8 @@ export class AspectEnv implements Environment {
     babelCompiler.distGlobPatterns = [`${babelCompiler.distDir}/**`, `!${babelCompiler.distDir}/**/*.d.ts`];
 
     return [
-      this.compiler.createTask(babelCompiler), // for dists
-      this.compiler.createTask(tsCompiler), // for d.ts files
+      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
+      this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
       this.tester.task,
       this.pkg.preparePackagesTask,
       this.pkg.dryRunTask,
