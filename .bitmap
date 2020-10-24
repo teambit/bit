@@ -92,6 +92,11 @@
     "babel": {
         "files": [
             {
+                "name": "README.md",
+                "relativePath": "README.md",
+                "test": false
+            },
+            {
                 "name": "babel.aspect.ts",
                 "relativePath": "babel.aspect.ts",
                 "test": false
@@ -240,6 +245,11 @@
                 "test": false
             },
             {
+                "name": "build-pipeline-order.ts",
+                "relativePath": "build-pipeline-order.ts",
+                "test": false
+            },
+            {
                 "name": "build-pipeline-result-list.ts",
                 "relativePath": "build-pipeline-result-list.ts",
                 "test": false
@@ -270,8 +280,8 @@
                 "test": false
             },
             {
-                "name": "builder.service.ts",
-                "relativePath": "builder.service.ts",
+                "name": "builder.service.tsx",
+                "relativePath": "builder.service.tsx",
                 "test": false
             },
             {
@@ -327,6 +337,16 @@
             {
                 "name": "storage-resolver.ts",
                 "relativePath": "storage/storage-resolver.ts",
+                "test": false
+            },
+            {
+                "name": "task-results-list.ts",
+                "relativePath": "task-results-list.ts",
+                "test": false
+            },
+            {
+                "name": "tasks-queue.ts",
+                "relativePath": "tasks-queue.ts",
                 "test": false
             },
             {
@@ -5980,5 +6000,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.74"
+    "version": "14.8.9-dev.89"
 }

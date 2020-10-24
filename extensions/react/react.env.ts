@@ -10,6 +10,7 @@ import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
+import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { Configuration } from 'webpack';
@@ -17,7 +18,6 @@ import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
-import { ESLintMain } from '../eslint';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
@@ -195,7 +195,7 @@ export class ReactEnv implements Environment {
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('ts-compile', this.getCompiler(targetConfig));
+    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {
