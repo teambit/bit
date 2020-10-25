@@ -1,11 +1,11 @@
-import { ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { LinterContext } from './linter-context';
 
 export type ComponentLintResult = {
   /**
    * id of the linted component.
    */
-  id: ComponentID;
+  component: Component;
 
   /**
    * CLI output of the linter.

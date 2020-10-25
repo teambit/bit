@@ -19,9 +19,9 @@ export class LintCmd implements Command {
     const linterResults = await this.linter.lint(components);
     this.logger.consoleTitle(`linting total of ${components.length} in workspace '${this.componentHost.name}'`);
 
-    linterResults.results.map((result) => {
+    linterResults.results.forEach((result) => {
       result.data?.results.forEach((lintRes) => {
-        this.logger.consoleTitle(`${lintRes.id.toString({ ignoreVersion: true })}`);
+        this.logger.consoleTitle(`${lintRes.component.id.toString({ ignoreVersion: true })}`);
         this.logger.console(lintRes.output);
       });
     });

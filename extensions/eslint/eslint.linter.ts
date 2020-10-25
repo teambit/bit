@@ -47,7 +47,7 @@ export class ESLintLinter implements Linter {
       const output = formatter.format(results);
 
       return {
-        id: component.id,
+        component,
         output,
         results: this.computeResults(results),
       };
