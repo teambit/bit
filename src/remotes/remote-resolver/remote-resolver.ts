@@ -27,19 +27,20 @@ const SCOPE_GET = gql`
   }
 `;
 
-async function getScope(name: string) {
-  if (scopeCache[name]) return scopeCache[name];
-  const token = getSync(CFG_USER_TOKEN_KEY);
-  const client = new GraphQLClient(symphonyUrl);
-  if (token) client.setHeader('Authorization', token);
+// comment this out once on production
+// async function getScope(name: string) {
+//   if (scopeCache[name]) return scopeCache[name];
+//   const token = getSync(CFG_USER_TOKEN_KEY);
+//   const client = new GraphQLClient(symphonyUrl);
+//   if (token) client.setHeader('Authorization', token);
 
-  const res = client.request(SCOPE_GET, {
-    name,
-  });
+//   const res = client.request(SCOPE_GET, {
+//     name,
+//   });
 
-  scopeCache[name] = res;
-  return res;
-}
+//   scopeCache[name] = res;
+//   return res;
+// }
 
 const hubResolver = async (scopeName) => {
   // check if has harmony
