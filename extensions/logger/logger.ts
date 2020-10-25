@@ -1,11 +1,11 @@
 import loader from 'bit-bin/dist/cli/loader';
-import logger from 'bit-bin/dist/logger/logger';
+import logger, { IBitLogger } from 'bit-bin/dist/logger/logger';
 import chalk from 'chalk';
 import stc from 'string-to-color';
 
 import { LongProcessLogger } from './long-process-logger';
 
-export class Logger {
+export class Logger implements IBitLogger {
   constructor(private extensionName: string) {}
 
   silly(message: string, ...meta: any[]) {
@@ -91,6 +91,13 @@ export class Logger {
   consoleFailure(message?: string) {
     if (message) this.error(message);
     loader.fail(message);
+  }
+  /**
+   * print to the screen with a red `⚠` prefix. if message is empty, print the last logged message.
+   */
+  consoleWarning(message?: string) {
+    if (message) this.warn(message);
+    loader.warn(message);
   }
 
   private colorMessage(message: string) {

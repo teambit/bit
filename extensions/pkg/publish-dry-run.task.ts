@@ -1,7 +1,6 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { Logger } from '@teambit/logger';
 import { Capsule } from '@teambit/isolator';
-
 import { Publisher } from './publisher';
 import { Packer } from './packer';
 
@@ -10,6 +9,8 @@ import { Packer } from './packer';
  */
 export class PublishDryRunTask implements BuildTask {
   readonly name = 'PublishDryRun';
+  readonly location = 'end';
+  dependencies: string[];
   constructor(
     readonly aspectId: string,
     private publisher: Publisher,

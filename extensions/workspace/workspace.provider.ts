@@ -166,7 +166,7 @@ export default async function provideWorkspace(
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(logger, watcher));
+    cli.register(new WatchCommand(pubsub, logger, watcher));
   }
   component.registerHost(workspace);
 
