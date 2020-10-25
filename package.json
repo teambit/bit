@@ -95,6 +95,7 @@
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
     "@teambit/gitconfig": "^2.0.6",
+    "graphql-request": "3.0.0",
     "@vuedoc/parser": "^2.3.0",
     "acorn": "^6.0.0",
     "ajv": "^6.11.0",
