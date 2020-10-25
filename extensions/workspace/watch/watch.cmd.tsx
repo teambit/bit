@@ -3,6 +3,10 @@ import moment from 'moment';
 
 import { Command, CommandOptions } from '@teambit/cli';
 import type { Logger } from '@teambit/logger';
+import type { BitBaseEvent, PubsubMain } from '@teambit/pubsub';
+
+// import IDs and events
+import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
 import { Watcher } from './watcher';
 import { formatCompileResults, formatWatchPathsSortByComponent } from './output-formatter';
@@ -57,13 +61,33 @@ export class WatchCommand implements Command {
     /**
      * logger extension.
      */
+    private pubsub: PubsubMain,
+
+    /**
+     * logger extension.
+     */
     private logger: Logger,
 
     /**
      * watcher extension.
      */
     private watcher: Watcher
-  ) {}
+  ) {
+    this.registerToEvents();
+  }
+
+  private registerToEvents() {
+    this.pubsub.sub(CompilerAspect.id, this.eventsListener);
+  }
+
+  private eventsListener = (event: BitBaseEvent<any>) => {
+    switch (event.type) {
+      case CompilerErrorEvent.TYPE:
+        this.logger.console(`Watcher error ${event.data.error}, 'error'`);
+        break;
+      default:
+    }
+  };
 
   async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
     await this.watcher.watch({ msgs: this.msgs, verbose });

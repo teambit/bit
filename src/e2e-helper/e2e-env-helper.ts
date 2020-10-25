@@ -3,6 +3,7 @@ import * as path from 'path';
 
 import { generateRandomStr } from '../utils';
 import CommandHelper from './e2e-command-helper';
+import ExtensionsHelper from './e2e-extensions-helper';
 import FixtureHelper from './e2e-fixtures-helper';
 import FsHelper from './e2e-fs-helper';
 import { ensureAndWriteJson } from './e2e-helper';
@@ -20,18 +21,21 @@ export default class EnvHelper {
   dummyCompilerCreated: boolean;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dummyTesterCreated: boolean;
+  extensions: ExtensionsHelper;
   constructor(
     command: CommandHelper,
     fsHelper: FsHelper,
     scopes: ScopesData,
     scopeHelper: ScopeHelper,
-    fixtures: FixtureHelper
+    fixtures: FixtureHelper,
+    extensions: ExtensionsHelper
   ) {
     this.command = command;
     this.fs = fsHelper;
     this.scopes = scopes;
     this.scopeHelper = scopeHelper;
     this.fixtures = fixtures;
+    this.extensions = extensions;
   }
 
   importCompiler(id?: string) {
@@ -193,5 +197,31 @@ export default class EnvHelper {
     this.scopeHelper.addRemoteScope(this.scopes.envPath);
     this.compilerCreated = true;
     return true;
+  }
+
+  /**
+   * set up a new environment with two compilers, babel for the dists and ts for the d.ts files
+   * returns the env name.
+   */
+  setBabelWithTsHarmony(): string {
+    const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
+    this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
+    this.command.addComponent(EXTENSIONS_BASE_FOLDER);
+    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/aspect');
+    this.scopeHelper.linkBitBin();
+    this.command.link();
+    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/dependency-resolver', {
+      policy: {
+        dependencies: {
+          '@babel/core': '7.11.6',
+          '@babel/preset-env': '7.11.5',
+          '@babel/preset-typescript': '7.10.4',
+          '@babel/plugin-proposal-class-properties': '7.10.4',
+        },
+      },
+    });
+    this.command.install();
+    this.command.compile();
+    return EXTENSIONS_BASE_FOLDER;
   }
 }
