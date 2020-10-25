@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { compact } from 'ramda-adjunct';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { SemVer } from 'semver';
 import ComponentAspect, { Component, ComponentMain, Tag } from '@teambit/component';
@@ -12,6 +13,7 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
@@ -25,7 +27,7 @@ import { Publisher } from './publisher';
 import { PublishTask } from './publish.task';
 import { PackageTarFiletNotFound, PkgArtifactNotFound } from './exceptions';
 import { PkgArtifact } from './pkg-artifact';
-import { PackageRoute } from './package.route';
+import { PackageRoute, routePath } from './package.route';
 
 import { pkgSchema } from './pkg.graphql';
 
@@ -272,6 +274,9 @@ export class PkgMain {
   async getManifest(component: Component): Promise<ComponentPackageManifest> {
     const name = this.getPackageName(component);
     const latestVersion = component.latest;
+    if (!latestVersion) {
+      throw new BitError('can not get manifest for component without versions');
+    }
     const distTags = {
       latest: latestVersion,
     };
@@ -279,23 +284,38 @@ export class PkgMain {
       return this.getVersionManifest(component, tag);
     });
     const versions = await Promise.all(versionsP);
+    const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
     return {
       name,
       distTags,
-      versions: versions.filter((v) => v),
+      versions: versionsWithoutEmpty,
     };
   }
 
   async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
-    const state = await this.scope.getState(component.id, tag.hash);
-    const currentExtension = state.aspects.get(PkgAspect.id);
+    const idWithCorrectVersion = component.id.changeVersion(tag.version.toString());
+    // const state = await this.scope.getState(component.id, tag.hash);
+    // const currentExtension = state.aspects.get(PkgAspect.id);
+    const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
+    if (!updatedComponent) {
+      throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
+    }
+    const currentExtension = updatedComponent.state.aspects.get(PkgAspect.id);
     const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
     const pkgJson = currentData?.pkgJson ?? {};
+    const checksum = currentData?.checksum;
+    if (!checksum) {
+      throw new BitError(`checksum for ${component.id} is missing`);
+    }
     const dist = {
-      shasum: currentData?.checksum,
-      tarball: 'fdadfadfs',
+      shasum: checksum,
+      tarball: this.componentAspect.getRoute(idWithCorrectVersion, routePath),
     };
-    const manifest = Object.assign({}, pkgJson, { dist });
+
+    const manifest = {
+      ...pkgJson,
+      dist,
+    };
     return manifest;
   }
 
