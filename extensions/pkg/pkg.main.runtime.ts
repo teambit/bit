@@ -1,7 +1,6 @@
 import R from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { SemVer } from 'semver';
 import ComponentAspect, { Component, ComponentMain, Tag } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';

@@ -11,10 +11,6 @@ export function pkgSchema(pkg: PkgMain): Schema {
         packageManifest: PackageManifest
       }
 
-      extend type Component {
-        packageManifest: PackageManifest
-      }
-
       type TarDist {
         tarball: String
         shasum: String
@@ -34,13 +30,21 @@ export function pkgSchema(pkg: PkgMain): Schema {
       type PackageManifest {
         name: String
         distTags: JSONObject
-        versions: [VersionsPackageManifest]
+        versions(version: String): [VersionsPackageManifest]
       }
     `,
     resolvers: {
       Component: {
         packageManifest: (component: Component) => {
           return pkg.getManifest(component);
+        },
+      },
+      PackageManifest: {
+        versions: (parent, { version }) => {
+          if (version) {
+            return parent.versions.filter((v) => v.version === version);
+          }
+          return parent.versions;
         },
       },
     },
