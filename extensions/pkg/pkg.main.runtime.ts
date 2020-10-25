@@ -1,6 +1,7 @@
 import R from 'ramda';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
+import { SemVer } from 'semver';
+import ComponentAspect, { Component, ComponentMain, Tag } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -12,6 +13,7 @@ import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect } from '@teambit/builder';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -24,6 +26,8 @@ import { PublishTask } from './publish.task';
 import { PackageTarFiletNotFound, PkgArtifactNotFound } from './exceptions';
 import { PkgArtifact } from './pkg-artifact';
 import { PackageRoute } from './package.route';
+
+import { pkgSchema } from './pkg.graphql';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -50,7 +54,31 @@ export type ComponentPkgExtensionData = {
   /**
    * properties to add to the package.json of the component.
    */
-  packageJson: Record<string, any>;
+  packageJsonModification: Record<string, any>;
+
+  /**
+   * Final package.json after creating tar file
+   */
+  pkgJson?: Record<string, any>;
+
+  /**
+   * Checksum of the tar file
+   */
+  checksum?: string;
+};
+
+type ComponentPackageManifest = {
+  name: string;
+  distTags: Record<string, string>;
+  versions: VersionPackageManifest[];
+};
+
+type VersionPackageManifest = {
+  [key: string]: any;
+  dist: {
+    tarball: string;
+    shasum: string;
+  };
 };
 
 export class PkgMain {
@@ -64,12 +92,13 @@ export class PkgMain {
     WorkspaceAspect,
     BuilderAspect,
     ComponentAspect,
+    GraphqlAspect,
   ];
   static slots = [Slot.withType<PackageJsonProps>()];
   static defaultConfig = {};
 
   static async provider(
-    [cli, scope, envs, isolator, logger, workspace, builder, componentAspect]: [
+    [cli, scope, envs, isolator, logger, workspace, builder, componentAspect, graphql]: [
       CLIMain,
       ScopeMain,
       EnvsMain,
@@ -77,7 +106,8 @@ export class PkgMain {
       LoggerMain,
       Workspace,
       BuilderMain,
-      ComponentMain
+      ComponentMain,
+      GraphqlMain
     ],
     config: PkgExtensionConfig,
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
@@ -92,6 +122,7 @@ export class PkgMain {
       config,
       packageJsonPropsRegistry,
       workspace,
+      scope,
       builder,
       packer,
       envs,
@@ -99,6 +130,8 @@ export class PkgMain {
       preparePackagesTask,
       componentAspect
     );
+
+    graphql.register(pkgSchema(pkg));
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
 
@@ -108,7 +141,7 @@ export class PkgMain {
       workspace.onComponentLoad(async (component) => {
         const data = await pkg.mergePackageJsonProps(component);
         return {
-          packageJson: data,
+          packageJsonModification: data,
         };
       });
     }
@@ -147,6 +180,7 @@ export class PkgMain {
     private packageJsonPropsRegistry: PackageJsonPropsRegistry,
 
     private workspace: Workspace,
+    private scope: ScopeMain,
 
     private builder: BuilderMain,
     /**
@@ -225,7 +259,7 @@ export class PkgMain {
   getPackageJsonModifications(component: Component): Record<string, any> {
     const currentExtension = component.state.aspects.get(PkgAspect.id);
     const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
-    return currentData?.packageJson ?? {};
+    return currentData?.packageJsonModification ?? {};
   }
 
   async getPkgArtifact(component: Component): Promise<PkgArtifact> {
@@ -233,6 +267,36 @@ export class PkgMain {
     if (!artifacts.length) throw new PkgArtifactNotFound(component.id);
 
     return new PkgArtifact(artifacts);
+  }
+
+  async getManifest(component: Component): Promise<ComponentPackageManifest> {
+    const name = this.getPackageName(component);
+    const latestVersion = component.latest;
+    const distTags = {
+      latest: latestVersion,
+    };
+    const versionsP = component.tags.toArray().map((tag: Tag) => {
+      return this.getVersionManifest(component, tag);
+    });
+    const versions = await Promise.all(versionsP);
+    return {
+      name,
+      distTags,
+      versions: versions.filter((v) => v),
+    };
+  }
+
+  async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
+    const state = await this.scope.getState(component.id, tag.hash);
+    const currentExtension = state.aspects.get(PkgAspect.id);
+    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const pkgJson = currentData?.pkgJson ?? {};
+    const dist = {
+      shasum: currentData?.checksum,
+      tarball: 'fdadfadfs',
+    };
+    const manifest = Object.assign({}, pkgJson, { dist });
+    return manifest;
   }
 
   async getPackageTarFile(component: Component): Promise<AbstractVinyl> {
