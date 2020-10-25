@@ -1,31 +1,31 @@
 /* @flow */
 import R from 'ramda';
-import { GraphQLClient, gql } from 'graphql-request';
+// import { GraphQLClient, gql } from 'graphql-request';
 import { getSync } from '../../api/consumer/lib/global-config';
 import {
   CFG_HUB_DOMAIN_KEY,
   DEFAULT_HUB_DOMAIN,
-  CFG_USER_TOKEN_KEY,
-  SYMPHONY_URL,
-  CFG_SYMPHONY_URL_KEY,
+  // CFG_USER_TOKEN_KEY,
+  // SYMPHONY_URL,
+  // CFG_SYMPHONY_URL_KEY,
 } from '../../constants';
 import Scope from '../../scope/scope';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
-const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
+// const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
 
-const scopeCache = {};
+// const scopeCache = {};
 
-const SCOPE_GET = gql`
-  query GET_SCOPE($id: String!) {
-    getScope(id: $id) {
-      isLegacy
-      api {
-        url
-      }
-    }
-  }
-`;
+// const SCOPE_GET = gql`
+//   query GET_SCOPE($id: String!) {
+//     getScope(id: $id) {
+//       isLegacy
+//       api {
+//         url
+//       }
+//     }
+//   }
+// `;
 
 // comment this out once on production
 // async function getScope(name: string) {
