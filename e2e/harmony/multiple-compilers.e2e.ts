@@ -1,3 +1,4 @@
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 
@@ -6,8 +7,6 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
-
-const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
 
 describe('multiple compilers - babel and typescript', function () {
   this.timeout(0);
@@ -28,23 +27,7 @@ describe('multiple compilers - babel and typescript', function () {
         helper.bitJsonc.disablePreview();
 
         // add a new env that compiles with Babel
-        helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
-        helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
-        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/aspect');
-        helper.scopeHelper.linkBitBin();
-        helper.command.link();
-        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/dependency-resolver', {
-          policy: {
-            dependencies: {
-              '@babel/core': '7.11.6',
-              '@babel/preset-env': '7.11.5',
-              '@babel/preset-typescript': '7.10.4',
-              '@babel/plugin-proposal-class-properties': '7.10.4',
-            },
-          },
-        });
-        helper.command.install();
-        helper.command.compile(); // compile the new env
+        const envName = helper.env.setBabelWithTsHarmony();
 
         helper.fs.outputFile(
           'bar/foo.ts',
@@ -52,7 +35,7 @@ describe('multiple compilers - babel and typescript', function () {
           'export function sayHello(name: string) { console.log(`hello ${name}`); }; sayHello("David");'
         );
         helper.command.addComponent('bar');
-        helper.extensions.addExtensionToVariant('bar', `my-scope/${EXTENSIONS_BASE_FOLDER}`);
+        helper.extensions.addExtensionToVariant('bar', `my-scope/${envName}`);
         helper.command.compile();
         distDir = path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/bar/dist`);
       });
@@ -101,6 +84,48 @@ describe('multiple compilers - babel and typescript', function () {
           expect(declaration.generatedBy).to.equal('teambit.bit/typescript');
         });
       });
+    });
+  });
+  // notice that comp1 and comp3 are multiple-compiler but comp2 and comp4 are react
+  describe('different envs in the dependency graph', () => {
+    let buildOutput;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.addDefaultScope();
+      helper.fixtures.populateComponentsTS(4, undefined, true);
+      const babelEnv = helper.env.setBabelWithTsHarmony();
+      helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.bit/react');
+      helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
+      helper.extensions.addExtensionToVariant('comp4', 'teambit.bit/react');
+      helper.command.compile();
+      buildOutput = helper.command.build();
+    });
+    it('should successfully build', () => {
+      expect(buildOutput).to.have.string('the build has been completed');
+    });
+    it('should indicate that pre-build and post-build were running', () => {
+      expect(buildOutput).to.have.string('executing pre-build for all tasks');
+      expect(buildOutput).to.have.string('executing post-build for all tasks');
+    });
+    it('should write .npmignore with TS entries even when getCompiler() is Babel', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp1');
+      expect(path.join(comp1Capsule, '.npmignore')).to.be.a.file();
+    });
+    it('typescript should not override Babel dist files', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp3');
+      const distFile = path.join(comp1Capsule, 'dist/index.js');
+      const distFileContent = fs.readFileSync(distFile).toString();
+      expect(distFileContent).to.have.string('interopRequireDefault'); // this is generated only by Babel.
+      expect(distFileContent).to.not.have.string('exports.default'); // this is generated only by Typescript.
+    });
+    it('Babel should not override typescript dist files', () => {
+      const comp1Capsule = helper.command.getCapsuleOfComponent('comp2');
+      const distFile = path.join(comp1Capsule, 'dist/index.js');
+      const distFileContent = fs.readFileSync(distFile).toString();
+      expect(distFileContent).to.have.string('exports.default'); // this is generated only by Typescript.
+      expect(distFileContent).to.not.have.string('interopRequireDefault'); // this is generated only by Babel.
     });
   });
 });

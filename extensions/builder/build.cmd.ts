@@ -41,6 +41,6 @@ export class BuilderCmd implements Command {
     longProcessLogger.end();
     envsExecutionResults.throwErrorsIfExist();
     this.logger.consoleSuccess();
-    return chalk.green(`the build has been completed. total: ${envsExecutionResults.results.length} environments`);
+    return chalk.green(`the build has been completed. total: ${envsExecutionResults.tasksQueue.length} tasks`);
   }
 }

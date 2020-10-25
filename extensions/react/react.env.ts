@@ -69,6 +69,10 @@ export class ReactEnv implements Environment {
     return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
+  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
+    return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
+  }
+
   /**
    * returns a component tester.
    */
@@ -176,12 +180,13 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(): BuildTask[] {
-    return [this.getCompilerTask(), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
+    return [this.getCompilerTask(tsconfig), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
   }
 
-  private getCompilerTask() {
-    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(buildTsConfig));
+  private getCompilerTask(tsconfig?: TsConfigSourceFile) {
+    const targetConfig = this.getBuildTsConfig(tsconfig);
+    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {

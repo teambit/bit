@@ -76,7 +76,7 @@ export default class Helper {
       this.fixtures,
       this.fs
     );
-    this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper, this.fixtures);
+    this.env = new EnvHelper(this.command, this.fs, this.scopes, this.scopeHelper, this.fixtures, this.extensions);
     this.general = new GeneralHelper(this.scopes, this.npm, this.command);
   }
 }

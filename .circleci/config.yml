@@ -102,6 +102,15 @@ jobs:
           paths:
             - bit
 
+  docker_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit && docker build -f ./scripts/docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
+
   set_ssh_key:
     <<: *defaults
     working_directory: ~/.ssh
@@ -517,6 +526,10 @@ jobs:
           # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
           command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
+      - run: npm view bit-bin@dev version
+      # there is a delay between publishing a package and until it's seen on npm servers
+      - run: sleep 2m
+      - run: npm view bit-bin@dev version
       - run: cd bit && node scripts/soft-tag-teambit.js
       - run:
           name: tag persist
@@ -1022,6 +1035,9 @@ workflows:
       - tag_and_publish:
           requires:
             - setup_harmony
+      - docker_build:
+          requires:
+            - tag_and_publish
   # TODO: check if we can combine it with the regular nightly somehow
   manual_nightly:
     jobs:
@@ -1040,3 +1056,7 @@ workflows:
           <<: *nightly_tag_only_filters
           requires:
             - setup_harmony
+      - docker_build:
+          <<: *nightly_tag_only_filters
+          requires:
+            - tag_and_publish
