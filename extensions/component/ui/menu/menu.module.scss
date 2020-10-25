@@ -37,7 +37,16 @@
       margin-right: 16px;
     }
   }
+  .widgets {
+    margin-right: 20px;
+    > * {
+      margin-right: 12px;
+      &:last-child {
+        margin-right: 0;
+      }
+    }
+  }
   .widget {
-    margin: 0 20px;
+    font-size: 17px;
   }
 }

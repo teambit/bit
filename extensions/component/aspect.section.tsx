@@ -10,7 +10,7 @@ export class AspectSection implements Section {
   };
   navigationLink = {
     href: '~aspect',
-    children: <Icon of="Extension" />,
+    children: <Icon of="settings" />,
   };
   order = 50;
 }

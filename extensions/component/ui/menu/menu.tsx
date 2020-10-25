@@ -1,4 +1,3 @@
-import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavigationSlot } from '@teambit/react-router';
 // import { MainDropdown } from '@teambit/staged-components.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
@@ -43,12 +42,14 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         <MenuNav navigationSlot={navigationSlot} />
       </div>
       <div className={styles.rightSide}>
-        {widgetLinks &&
-          widgetLinks.map(([id, widget]) => (
-            <TopBarWidgetLink key={id} href={widget.href} className={styles.widget}>
-              {widget.children}
-            </TopBarWidgetLink>
-          ))}
+        <div className={styles.widgets}>
+          {widgetLinks &&
+            widgetLinks.map(([id, widget]) => (
+              <TopBarWidgetLink key={id} href={widget.href} className={styles.widget}>
+                {widget.children}
+              </TopBarWidgetLink>
+            ))}
+        </div>
         {versionList.length > 0 && (
           <ImportAction copyLink={`bit import ${componentFullName}`} componentName={component.id.name} />
         )}

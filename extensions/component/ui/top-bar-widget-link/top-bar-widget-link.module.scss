@@ -4,12 +4,18 @@
   align-items: center;
   text-decoration: none;
   transition: color 300ms;
-  padding: 7px;
+  padding: 0 8px;
+  height: 30px;
+  box-sizing: border-box;
   border-radius: 6px;
-  color: var(--text-highlight);
-  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 300ms ease-in-out;
+  &:hover {
+    background-color: var(--bg-dent);
+  }
 
   &.active {
+    background-color: var(--muted-color);
     color: var(--base-highlight);
   }
 }
