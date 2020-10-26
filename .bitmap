@@ -1894,6 +1894,35 @@
         "exported": false,
         "lanes": []
     },
+    "eslint": {
+        "files": [
+            {
+                "name": "eslint.aspect.ts",
+                "relativePath": "eslint.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "eslint.linter.ts",
+                "relativePath": "eslint.linter.ts",
+                "test": false
+            },
+            {
+                "name": "eslint.main.runtime.ts",
+                "relativePath": "eslint.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/eslint",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "express": {
         "files": [
             {
@@ -2606,6 +2635,60 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/jest",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "linter": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "lint.cmd.ts",
+                "relativePath": "lint.cmd.ts",
+                "test": false
+            },
+            {
+                "name": "lint.task.ts",
+                "relativePath": "lint.task.ts",
+                "test": false
+            },
+            {
+                "name": "linter-context.ts",
+                "relativePath": "linter-context.ts",
+                "test": false
+            },
+            {
+                "name": "linter.aspect.ts",
+                "relativePath": "linter.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "linter.graphql.ts",
+                "relativePath": "linter.graphql.ts",
+                "test": false
+            },
+            {
+                "name": "linter.main.runtime.ts",
+                "relativePath": "linter.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "linter.service.ts",
+                "relativePath": "linter.service.ts",
+                "test": false
+            },
+            {
+                "name": "linter.ts",
+                "relativePath": "linter.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/linter",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3345,6 +3428,11 @@
             {
                 "name": "symlink-component-list.md",
                 "relativePath": "docs/symlink-component-list.md",
+                "test": false
+            },
+            {
+                "name": "eslintrc.js",
+                "relativePath": "eslint/eslintrc.js",
                 "test": false
             },
             {
