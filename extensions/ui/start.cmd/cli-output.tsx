@@ -17,7 +17,13 @@ import React from 'react';
 import { Newline, Text } from 'ink';
 import open from 'open';
 
-import { Starting, ComponentPreviewServerStarted, UIServersAreReady, TSErrors } from './output-templates';
+import {
+  Starting,
+  ComponentPreviewServerStarted,
+  UIServersAreReady,
+  TSErrors,
+  WebpackErrors,
+} from './output-templates';
 
 type state = {
   commandFlags: any;
@@ -119,6 +125,8 @@ export class CliOutput extends React.Component<props, state> {
     this.setState({
       componentChanges: [...this.state.componentChanges, event],
       latestError: null,
+      webpackErrors: [],
+      webpackWarnings: [],
     });
   }
 
@@ -171,12 +179,10 @@ export class CliOutput extends React.Component<props, state> {
 
         <TSErrors latestError={latestError} verbose={!!verbose} />
 
-        {webpackErrors.map((err, index) => (
-          <Text key={index}>Error: {err}</Text>
-        ))}
+        <WebpackErrors errs={webpackErrors} verbose={!!verbose} />
 
         {webpackWarnings.map((warning, index) => (
-          <Text key={index}>Warning: {warning}</Text>
+          <Text key={index}>{warning}</Text>
         ))}
 
         <UIServersAreReady mainUIServer={mainUIServer} />

@@ -64,6 +64,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
     },
 
     devServer: {
+      quiet: true,
       stats: 'none',
 
       // Serve index.html as the base
@@ -80,8 +81,6 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
       // Use 'ws' instead of 'sockjs-node' on server since we're using native
       // websockets in `webpackHotDevClient`.
       transportMode: 'ws',
-
-      // quiet: true,
 
       injectClient: false,
 

@@ -4,6 +4,12 @@ import { Logger } from '@teambit/logger';
 import { WorkspaceAspect } from '@teambit/workspace';
 
 import React from 'react';
+// import fs from 'fs-extra';
+// import through2 from 'through2';
+// const { Writable, pipeline, Transform } = require('stream');
+// var intercept = require("intercept-stdout");
+// import { Filter } from './filter';
+import { Newline, Text, render } from 'ink';
 
 import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
@@ -47,6 +53,21 @@ export class StartCmd implements Command {
     return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
+  private asyncRender(workspaceID, startingTimestamp, pubsub, commandFlags) {
+    render(
+      <CliOutput
+        workspaceID={workspaceID}
+        startingTimestamp={startingTimestamp}
+        pubsub={pubsub}
+        commandFlags={commandFlags}
+      />
+    );
+  }
+
+  private clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+  }
+
   async render(
     [uiRootName, userPattern]: [string, string],
     {
@@ -62,17 +83,32 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    this.ui.createRuntime({
-      uiRootName,
-      pattern,
-      dev,
-      port: port ? parseInt(port) : undefined,
-      rebuild,
-    });
+    // await this.ui.createRuntime({
+    this.ui
+      .createRuntime({
+        uiRootName,
+        pattern,
+        dev,
+        port: port ? parseInt(port) : undefined,
+        rebuild,
+      })
+      .then(() => {
+        setTimeout(() => {
+          this.clearConsole();
+
+          const workspaceID = WorkspaceAspect.id;
+          const startingTimestamp = Date.now();
+          const pubsub = this.pubsub;
+          const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch };
+
+          setTimeout(() => {
+            this.asyncRender(workspaceID, startingTimestamp, pubsub, commandFlags);
+          }, 200);
+        }, 0);
+      });
 
     return (
       <>
-        <ClearConsole verbose={!!verbose} />
         <CliOutput
           workspaceID={WorkspaceAspect.id}
           startingTimestamp={Date.now()}
