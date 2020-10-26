@@ -77,9 +77,7 @@ export class CliOutput extends React.Component<props, state> {
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
         this.changeOrAddComponentServer(event.data, event.data.context.id, 'Running');
-        // if (this.areAllComponentServersRunning()) {
         this.safeOpenBrowser();
-        // }
         break;
       case WebpackCompilationDoneEvent.TYPE:
         this.onWebpackCompilationDone(event);
