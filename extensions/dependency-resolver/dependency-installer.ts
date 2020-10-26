@@ -9,9 +9,16 @@ import {
 } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinkingOptions } from './dependency-resolver.main.runtime';
-import { MainAspectNotInstallable, MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError } from './exceptions';
+import {
+  MainAspectNotInstallable,
+  MainAspectNotLinkable,
+  RootDirNotDefined,
+  CoreAspectLinkError,
+  HarmonyLinkError,
+} from './exceptions';
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
 import { DependenciesObjectDefinition } from './types';
 
@@ -90,6 +97,8 @@ export class DependencyInstaller {
       );
     }
 
+    await this.linkHarmony(path.join(finalRootDir, 'node_modules'));
+
     return componentDirectoryMap;
   }
 
@@ -164,6 +173,7 @@ export class DependencyInstaller {
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
+
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
@@ -193,4 +203,55 @@ export class DependencyInstaller {
       throw new CoreAspectLinkError(id, err);
     }
   }
+
+  private linkHarmony(dir: string) {
+    const name = 'harmony';
+    const packageName = '@teambit/harmony';
+
+    if (!this.aspectLoader.mainAspect.packageName) {
+      throw new MainAspectNotLinkable();
+    }
+
+    const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
+    let harmonyDir = path.join(mainAspectPath, 'dist', name);
+    const target = path.join(dir, packageName);
+    const isTargetExists = fs.pathExistsSync(target);
+    // Do not override links created by other means
+    if (isTargetExists) {
+      return;
+    }
+    const isHarmonyDirExist = fs.pathExistsSync(harmonyDir);
+    if (!isHarmonyDirExist) {
+      harmonyDir = getHarmonyDirForDevEnv();
+      createSymlinkOrCopy(harmonyDir, target);
+      return;
+    }
+
+    try {
+      // eslint-disable-next-line global-require, import/no-dynamic-require
+      const module = require(harmonyDir);
+      const harmonyPath = path.resolve(path.join(module.path, '..', '..'));
+      // in this case we want the symlinks to be relative links
+      // Using the fs module to make sure it is relative to the target
+      if (fs.existsSync(target)) {
+        return;
+      }
+      fs.symlinkSync(harmonyPath, target);
+    } catch (err) {
+      throw new HarmonyLinkError(err);
+    }
+  }
+}
+
+/**
+ * When running dev env (bd) we need to get the harmony folder from the node_modules of the clone
+ */
+function getHarmonyDirForDevEnv(): string {
+  let dirPath: string;
+  const moduleDirectory = require.resolve('@teambit/harmony');
+  dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
+  if (!fs.existsSync(dirPath)) {
+    throw new BitError(`unable to find @teambit/harmony in ${dirPath}`);
+  }
+  return dirPath;
 }
