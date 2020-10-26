@@ -41,15 +41,19 @@ import { UIAspect } from '@teambit/ui';
 import { VariantsAspect } from '@teambit/variants';
 import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
+import { LinterAspect } from '@teambit/linter';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CommandBarAspect } from '@teambit/command-bar';
+import { ESLintAspect } from '@teambit/eslint';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
+  [ESLintAspect.id]: ESLintAspect,
   [CompilerAspect.id]: CompilerAspect,
+  [LinterAspect.id]: LinterAspect,
   [ComponentAspect.id]: ComponentAspect,
   [PreviewAspect.id]: PreviewAspect,
   [DocsAspect.id]: DocsAspect,

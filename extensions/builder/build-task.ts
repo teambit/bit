@@ -81,6 +81,7 @@ export interface BuildTask {
   dependencies?: string[];
 }
 
+// TODO: rename to BuildTaskResults
 export interface BuiltTaskResult {
   /**
    * build results for each of the components in the build context.

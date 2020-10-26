@@ -1,12 +1,12 @@
 import { BabelMain } from '@teambit/babel';
-import type { BuildTask } from '@teambit/builder';
 import { CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
 import { PkgMain } from '@teambit/pkg';
 // import { merge } from 'lodash';
+import { merge } from 'lodash';
+import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { TesterMain } from '@teambit/tester';
-import { babelConfig } from './babel/babel-config';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -32,36 +32,18 @@ export class AspectEnv implements Environment {
     };
   }
 
-  async getDependencies() {
-    return {
-      dependencies: {
-        'core-js': '^3.6.5',
-      },
-    };
+  getTsConfig(tsConfig: TsConfigSourceFile) {
+    const targetConf = merge(tsconfig, tsConfig);
+    return targetConf;
   }
 
-  getCompiler() {
-    // return this.reactEnv.getCompiler(tsconfig);
-    return this.babel.createCompiler({ babelTransformOptions: babelConfig });
+  getCompiler(tsConfig: TsConfigSourceFile) {
+    const targetConf = this.getTsConfig(tsConfig);
+    return this.reactEnv.getCompiler(targetConf);
   }
 
-  getBuildPipe(): BuildTask[] {
-    const tsCompiler = this.reactEnv.getCompiler(tsconfig);
-    tsCompiler.distDir = 'dist';
-    tsCompiler.artifactName = 'declaration';
-    tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
-    tsCompiler.shouldCopyNonSupportedFiles = false;
-
-    const babelCompiler = this.babel.createCompiler({ babelTransformOptions: babelConfig });
-    babelCompiler.distDir = 'dist';
-    babelCompiler.distGlobPatterns = [`${babelCompiler.distDir}/**`, `!${babelCompiler.distDir}/**/*.d.ts`];
-
-    return [
-      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
-      this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
-      this.tester.task,
-      this.pkg.preparePackagesTask,
-      this.pkg.dryRunTask,
-    ];
+  getBuildPipe(tsConfig: TsConfigSourceFile) {
+    const targetConfig = this.getTsConfig(tsConfig);
+    return this.reactEnv.getBuildPipe(targetConfig);
   }
 }
