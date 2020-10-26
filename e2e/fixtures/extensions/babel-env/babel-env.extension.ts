@@ -16,8 +16,9 @@ export class BabelEnv {
         return babelCompiler;
       },
     });
-    
-    const compilerTaskOverride = react.overrideCompilerTasks([babelCompiler.createTask()]);
+    const babelTask = babelCompiler.createTask?.();
+    const tasks = babelTask ? [babelTask] : []
+    const compilerTaskOverride = react.overrideCompilerTasks(tasks);
     const harmonyReactEnv = react.compose([
       compilerOverride,
       compilerTaskOverride

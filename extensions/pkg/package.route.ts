@@ -3,6 +3,7 @@ import mime from 'mime';
 
 import { PkgMain } from './pkg.main.runtime';
 
+export const routePath = `package`;
 export class PackageRoute implements Route {
   constructor(
     /**
@@ -11,7 +12,7 @@ export class PackageRoute implements Route {
     private pkg: PkgMain
   ) {}
 
-  route = `/package`;
+  route = `/${routePath}`;
   method = 'get';
 
   middlewares = [

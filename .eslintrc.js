@@ -11,7 +11,8 @@ module.exports = {
     },
   },
   parserOptions: {
-    project: './tsconfig.json',
+    // project: require.resolve('./tsconfig.json'),
+    createDefaultProgram: true,
     ecmaFeatures: {
       jsx: true, // Allows for the parsing of JSX
     },
@@ -48,6 +49,7 @@ module.exports = {
     // ERRORS OF plugin:@typescript-eslint/recommended
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',
+    '@typescript-eslint/camelcase': 'off',
     '@typescript-eslint/no-explicit-any': 'off',
     // END ERRORS OF plugin:@typescript-eslint/recommended
 
@@ -58,8 +60,6 @@ module.exports = {
     'import/prefer-default-export': 'off', // typescript works better without default export
     'import/export': 'off', // typescript does allow multiple export default when overloading. not sure why it's enabled here. rule source: https://github.com/benmosher/eslint-plugin-import/blob/master/docs/rules/export.md
     'prefer-object-spread': 'off',
-    'import/no-duplicates': 'off',
-    'import/prefer-default-export': 'off',
     '@typescript-eslint/explicit-function-return-type': 'off',
     'import/no-cycle': 'off',
     'import/no-useless-path-segments': 'off',
