@@ -48,7 +48,7 @@ export class UiUI {
     private contextSlot: ContextSlot
   ) {}
 
-  render(rootExtension: string) {
+  async render(rootExtension: string) {
     const GraphqlProvider = this.graphql.getProvider;
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);

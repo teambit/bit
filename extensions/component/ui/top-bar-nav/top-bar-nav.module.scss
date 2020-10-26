@@ -43,7 +43,8 @@
 
   > div {
     border-radius: 6px;
-    padding: 7px;
+    padding: 0 8px;
+    height: 30px;
     display: flex;
     align-items: center;
     transition: background-color 300ms ease-in-out;

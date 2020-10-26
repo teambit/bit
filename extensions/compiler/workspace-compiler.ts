@@ -1,7 +1,12 @@
 /* eslint-disable max-classes-per-file */
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/environments';
+import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
+
+import BluebirdPromise from 'bluebird';
+import path from 'path';
+
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
@@ -12,8 +17,8 @@ import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import logger from 'bit-bin/dist/logger/logger';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
-import BluebirdPromise from 'bluebird';
-import path from 'path';
+import { CompilerAspect } from './compiler.aspect';
+import { CompilerErrorEvent } from './events';
 
 import { Compiler } from './types';
 
@@ -27,6 +32,7 @@ type LegacyCompilerOptions = {
 
 export class ComponentCompiler {
   constructor(
+    private pubsub: PubsubMain,
     private workspace: Workspace,
     private component: ConsumerComponent,
     private compilerInstance: Compiler,
@@ -35,12 +41,12 @@ export class ComponentCompiler {
     private compileErrors: { path: string; error: Error }[] = []
   ) {}
 
-  async compile(): Promise<BuildResult> {
+  async compile(noThrow = true): Promise<BuildResult> {
     if (!this.compilerInstance.transpileFile) {
       throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
     }
     await Promise.all(this.component.files.map((file) => this.compileOneFileWithNewCompiler(file)));
-    this.throwOnCompileErrors();
+    this.throwOnCompileErrors(noThrow);
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
     const dataToPersist = new DataToPersist();
@@ -52,14 +58,22 @@ export class ComponentCompiler {
     return { component: this.component.id.toString(), buildResults };
   }
 
-  private throwOnCompileErrors() {
+  private throwOnCompileErrors(noThrow = true) {
     if (this.compileErrors.length) {
-      this.compileErrors.forEach((errorItem) =>
-        logger.error(`compilation error at ${errorItem.path}`, errorItem.error)
-      );
+      this.compileErrors.forEach((errorItem) => {
+        logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
+      });
       const formatError = (errorItem) => `${errorItem.path}\n${errorItem.error}`;
-      throw new Error(`compilation failed. see the following errors from the compiler
+      const err = new Error(`compilation failed. see the following errors from the compiler
 ${this.compileErrors.map(formatError).join('\n')}`);
+
+      this.pubsub.pub(CompilerAspect.id, new CompilerErrorEvent(err));
+
+      if (!noThrow) {
+        throw err;
+      }
+
+      logger.console(err.message);
     }
   }
 
@@ -106,7 +120,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: EnvsMain) {
+  constructor(private workspace: Workspace, private envs: EnvsMain, private pubsub: PubsubMain) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
@@ -114,7 +128,7 @@ export class WorkspaceCompiler {
   }
 
   async onComponentChange(component: Component): Promise<SerializableResults> {
-    const buildResults = await this.compileComponents([component.id.toString()], {});
+    const buildResults = await this.compileComponents([component.id.toString()], {}, true);
     return {
       results: buildResults,
       toString() {
@@ -125,7 +139,8 @@ export class WorkspaceCompiler {
 
   async compileComponents(
     componentsIds: string[] | BitId[], // when empty, it compiles all
-    options: LegacyCompilerOptions
+    options: LegacyCompilerOptions,
+    noThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.resolveIds(componentsIds);
@@ -142,7 +157,7 @@ export class WorkspaceCompiler {
       if (compilerInstance && c.state._consumer.componentMap?.getComponentDir()) {
         const compilerName = compilerInstance.constructor.name || 'compiler';
         componentsAndNewCompilers.push(
-          new ComponentCompiler(this.workspace, c.state._consumer, compilerInstance, compilerName)
+          new ComponentCompiler(this.pubsub, this.workspace, c.state._consumer, compilerInstance, compilerName)
         );
       } else {
         componentsWithLegacyCompilers.push(c.state._consumer);
@@ -153,7 +168,7 @@ export class WorkspaceCompiler {
     if (componentsAndNewCompilers.length) {
       newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
         componentsAndNewCompilers,
-        (componentAndNewCompilers) => componentAndNewCompilers.compile()
+        (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
       );
     }
     if (componentsWithLegacyCompilers.length) {
@@ -191,7 +206,7 @@ export class WorkspaceCompiler {
   private async resolveIds(componentsIds: Array<string | BitId>): Promise<ComponentID[]> {
     const ids: ComponentID[] = componentsIds.length
       ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
-      : this.workspace.getAllComponentIds();
+      : await this.workspace.getAllComponentIds();
 
     return ids;
   }

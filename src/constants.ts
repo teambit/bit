@@ -133,6 +133,10 @@ export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
 export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
 
+export const SYMPHONY_URL = `symphony.${BASE_WEB_DOMAIN}`;
+
+export const SYMPHONY_GRAPHQL = `http://${SYMPHONY_URL}/graphql`;
+
 export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
 
 export const REPO_NAME = 'teambit/bit';
@@ -191,6 +195,8 @@ export const CFG_REGISTRY_URL_KEY = 'registry';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
+
+export const CFG_SYMPHONY_URL_KEY = 'symphony_url';
 
 export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
@@ -363,6 +369,7 @@ export const LATEST_TESTED_MARK = '*';
 export const SUB_DIRECTORIES_GLOB_PATTERN = '/**/*';
 
 export const SCOPE_JSON = 'scope.json';
+export const SCOPE_JSONC = 'scope.jsonc';
 
 export const DEFAULT_RESOLVER = () => '';
 
@@ -446,4 +453,5 @@ export enum Extensions {
   pkg = 'teambit.bit/pkg',
   compiler = 'teambit.bit/compiler',
   envs = 'teambit.bit/envs',
+  builder = 'teambit.bit/builder',
 }

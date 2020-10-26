@@ -73,7 +73,7 @@ describe('pkg extension', function () {
   // TODO: implement once we can extend a specific env with new methods (to apply config changes)
   // and maybe to also apply custom compiler which change props
   describe.skip('config added by an env', function () {});
-  describe.skip('config added by extension', function () {
+  describe('config added by extension', function () {
     const EXTENSIONS_BASE_FOLDER = 'extension-add-config';
     const config = { key: 'val' };
     before(() => {
@@ -93,9 +93,11 @@ describe('pkg extension', function () {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
+        helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.bit/aspect');
         helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
         helper.scopeHelper.linkBitBin();
         helper.command.link();
+        helper.command.compile();
         helper.command.createCapsuleHarmony('bar/foo');
         helper.command.createCapsuleHarmony('utils/is-type');
         // We do this because the create capsule dir with json is not working because of pnpm output

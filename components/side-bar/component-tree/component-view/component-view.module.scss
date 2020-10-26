@@ -62,10 +62,13 @@
   .right {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    .componentIcon {
-      color: var(--text-muted);
-      margin-right: 8px;
+    font-size: 12px;
+
+    > * {
+      margin-right: 4px;
+    }
+    > :last-child() {
+      margin-right: 0px;
     }
   }
 }

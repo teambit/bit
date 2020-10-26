@@ -1,4 +1,5 @@
 const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
+const WebpackAspect = require('../webpack.aspect');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
@@ -63,8 +64,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
     },
 
     devServer: {
-      // For bit start command
-      quiet: true,
+      stats: 'none',
 
       // Serve index.html as the base
       contentBase: resolveWorkspacePath(publicDirectory),

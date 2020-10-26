@@ -23,6 +23,10 @@ export class Tag {
     readonly version: SemVer
   ) {}
 
+  get hash(): string {
+    return this.snap.hash;
+  }
+
   /**
    * create a plain tag object.
    */

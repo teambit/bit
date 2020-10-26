@@ -1,11 +1,9 @@
-import { request, gql } from 'graphql-request';
-import fetch from 'node-fetch';
+import { request, gql, GraphQLClient } from 'graphql-request';
+import fetch, { Response } from 'node-fetch';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
-import { RemoteLaneId } from '../../../lane-id/lane-id';
-import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLogs } from '../../models/model-component';
@@ -13,23 +11,25 @@ import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import logger from '../../../logger/logger';
+import { ObjectList } from '../../objects/object-list';
+import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { remoteErrorHandler } from '../remote-error-handler';
 
 export class Http implements Network {
-  constructor(private scopeUrl: string) {}
+  constructor(private graphClient: GraphQLClient, private _token: string | undefined | null, private url: string) {}
 
-  private _token: string | undefined | null;
-
-  get token() {
-    if (this._token === undefined) return this._token;
+  static getToken() {
     const processToken = globalFlags.token;
     const token = processToken || getSync(CFG_USER_TOKEN_KEY);
-    if (!token) this._token = null;
+    if (!token) return null;
 
     return token;
   }
 
-  get graphqlUrl() {
-    return `${this.scopeUrl}/graphql`;
+  get token() {
+    if (this._token === undefined) return this._token;
+    return Http.getToken();
   }
 
   close(): void {}
@@ -43,7 +43,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await request(this.graphqlUrl, SCOPE_QUERY);
+    const data = await this.graphClient.request(SCOPE_QUERY);
 
     return {
       name: data.scope.name,
@@ -57,7 +57,7 @@ export class Http implements Network {
       }
     `;
 
-    const res = await request(this.graphqlUrl, REMOVE_COMPONENTS, {
+    const res = await request(this.url, REMOVE_COMPONENTS, {
       ids,
       force,
       idsAreLanes,
@@ -66,40 +66,46 @@ export class Http implements Network {
     return res.removeComponents;
   }
 
-  async pushMany(compsAndLanesObjects: CompsAndLanesObjects): Promise<string[]> {
+  async pushMany(objectList: ObjectList): Promise<string[]> {
     const route = 'api/scope/put';
-    const body = compsAndLanesObjects.toString();
+    logger.debug(`Http.pushMany, total objects ${objectList.count()}`);
 
-    const res = await fetch(`${this.scopeUrl}/${route}`, {
+    const pack = objectList.toTar();
+
+    const res = await fetch(`${this.url}/${route}`, {
       method: 'POST',
-      body,
-      headers: this.getHeaders({ 'Content-Type': 'text/plain' }),
+      body: pack,
+      headers: this.getHeaders(),
     });
-
-    if (res.status !== 200) {
-      throw new Error(res.status.toString());
-    }
-
+    await this.throwForNonOkStatus(res);
     const ids = await res.json();
-
     return ids;
   }
 
-  async fetch(ids: Array<BitId | RemoteLaneId>, noDeps = false, idsAreLanes = false): Promise<CompsAndLanesObjects> {
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
     const route = 'api/scope/fetch';
     const body = JSON.stringify({
-      ids: ids.map((id) => id.toString()),
-      noDeps,
-      idsAreLanes,
+      ids,
+      fetchOptions,
     });
-
-    const res = await fetch(`${this.scopeUrl}/${route}`, {
+    const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
+    await this.throwForNonOkStatus(res);
+    const objectList = await ObjectList.fromTar(res.body);
+    return objectList;
+  }
 
-    return CompsAndLanesObjects.fromString(await res.text());
+  private async throwForNonOkStatus(res: Response) {
+    if (!res.ok) {
+      const response = await res.json();
+      logger.error(`parsed error from HTTP, url: ${res.url}`, response);
+      const error = response.error?.code ? response.error : response;
+      const err = remoteErrorHandler(error.code, error, res.url, `status: ${res.status}. text: ${res.statusText}`);
+      throw err;
+    }
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
@@ -120,7 +126,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await request(this.graphqlUrl, LIST_LEGACY, {
+    const data = await this.graphClient.request(LIST_LEGACY, {
       namespaces: namespacesUsingWildcards,
     });
 
@@ -140,7 +146,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await request(this.graphqlUrl, SHOW_COMPONENT, {
+    const data = await this.graphClient.request(SHOW_COMPONENT, {
       id: bitId.toString(),
     });
 
@@ -153,7 +159,7 @@ export class Http implements Network {
         deprecate(bitIds: $bitIds)
       }
     `;
-    const res = await request(this.graphqlUrl, DEPRECATE_COMPONENTS, {
+    const res = await this.graphClient.request(DEPRECATE_COMPONENTS, {
       ids,
     });
 
@@ -166,7 +172,7 @@ export class Http implements Network {
         undeprecate(bitIds: $bitIds)
       }
     `;
-    const res = await request(this.graphqlUrl, UNDEPRECATE_COMPONENTS, {
+    const res = await this.graphClient.request(UNDEPRECATE_COMPONENTS, {
       ids,
     });
 
@@ -187,7 +193,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await request(this.graphqlUrl, GET_LOG_QUERY, {
+    const data = await this.graphClient.request(GET_LOG_QUERY, {
       id: id.toString(),
     });
 
@@ -203,7 +209,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await request(this.graphqlUrl, GET_LATEST_VERSIONS, {
+    const data = await this.graphClient.request(GET_LATEST_VERSIONS, {
       ids: bitIds.map((id) => id.toString()),
     });
 
@@ -224,7 +230,7 @@ export class Http implements Network {
     }
     `;
 
-    const res = await request(this.graphqlUrl, LIST_LANES, {
+    const res = await this.graphClient.request(LIST_LANES, {
       mergeData,
     });
 
@@ -232,6 +238,8 @@ export class Http implements Network {
   }
 
   static async connect(host: string) {
-    return new Http(host);
+    const token = Http.getToken();
+    const graphClient = new GraphQLClient(`${host}/graphql`);
+    return new Http(graphClient, token, host);
   }
 }

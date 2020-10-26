@@ -1,0 +1,19 @@
+{
+  "componentId": {
+    "name": "eslint",
+    "scope": "teambit.bit"
+  },
+  "propagate": true,
+  "extensions": {
+    "teambit.bit/dependency-resolver": {
+      "policy": {
+        "dependencies": {
+          
+        },
+        "devDependencies": {
+          "@types/eslint": "7.2.4"
+        }
+      }
+    }
+  }
+}

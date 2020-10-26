@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
@@ -45,7 +46,7 @@ export class CompositionsMain {
    */
   getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      return component.state.filesystem.byRegex(/.composition.ts/);
+      return component.state.filesystem.byRegex(/\.composition\.[tj]sx?$/);
     });
   }
 
@@ -66,9 +67,9 @@ export class CompositionsMain {
    */
   readCompositions(component: Component): Composition[] {
     const maybeFiles = this.getCompositionFiles([component]).byComponent(component);
+
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
-
     return flatten(
       files.map((file) => {
         return this.computeCompositions(component, file);
@@ -88,14 +89,14 @@ export class CompositionsMain {
     const pathArray = file.path.split('.');
     pathArray[pathArray.length - 1] = 'js';
 
-    const module = this.schema.parseModule(file.path);
+    const module = this.schema.parseModule(join(this.workspace.componentDir(component.id), file.relative));
     return module.exports.map((exportModel) => {
       return new Composition(exportModel.identifier, file.relative);
     });
   }
 
   static defaultConfig = {
-    regex: '/compositions.ts/',
+    regex: '/.composition.[tj]sx?$/',
   };
 
   static runtime = MainRuntime;

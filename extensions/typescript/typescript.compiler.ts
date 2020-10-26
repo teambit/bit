@@ -1,18 +1,25 @@
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
-import { ComponentID } from '@teambit/component';
 import { Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 
 import { TypeScriptCompilerOptions } from './compiler-options';
 
-type ComponentError = { componentId: ComponentID; error: string };
-
 export class TypescriptCompiler implements Compiler {
-  constructor(private logger: Logger, private options: TypeScriptCompilerOptions) {}
+  distDir = 'dist';
+  distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+  shouldCopyNonSupportedFiles = true;
+  artifactName = 'dist';
+
+  displayConfig() {
+    return this.stringifyTsconfig(this.options.tsconfig);
+  }
+
+  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace
@@ -26,7 +33,11 @@ export class TypescriptCompiler implements Compiler {
     const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
-      throw new Error(`failed parsing the tsconfig.json.\n${compilerOptionsFromTsconfig.errors.join('\n')}`);
+      const formattedErrors = ts.formatDiagnosticsWithColorAndContext(
+        compilerOptionsFromTsconfig.errors,
+        this.getFormatDiagnosticsHost()
+      );
+      throw new Error(`failed parsing the tsconfig.json.\n${formattedErrors}`);
     }
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
@@ -38,11 +49,7 @@ export class TypescriptCompiler implements Compiler {
     });
 
     if (result.diagnostics && result.diagnostics.length) {
-      const formatHost = {
-        getCanonicalFileName: (p) => p,
-        getCurrentDirectory: ts.sys.getCurrentDirectory,
-        getNewLine: () => ts.sys.newLine,
-      };
+      const formatHost = this.getFormatDiagnosticsHost();
       const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
       // :TODO @david please replace to a more concrete error type and put in 'exceptions' directory here.
@@ -60,23 +67,19 @@ export class TypescriptCompiler implements Compiler {
     return outputFiles;
   }
 
+  async preBuild(context: BuildContext) {
+    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsuleDirs = capsules.map((capsule) => capsule.path);
+    await this.writeTsConfig(capsuleDirs);
+    await this.writeTypes(capsuleDirs);
+    await this.writeNpmIgnore(capsuleDirs);
+  }
+
   /**
    * compile multiple components on the capsules
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const capsules = context.capsuleGraph.capsules;
-    const capsuleDirs = capsules.getAllCapsuleDirs();
-    await this.writeTsConfig(capsuleDirs);
-    await this.writeTypes(capsuleDirs);
-
     const componentsResults = await this.runTscBuild(context.capsuleGraph);
-
-    capsules.forEach(({ capsule }) => {
-      const packageJsonContent = capsule.fs.readFileSync('package.json', 'utf-8');
-      const packageJson = JSON.parse(packageJsonContent);
-      delete packageJson.types;
-      capsule.fs.writeFileSync('package.json', JSON.stringify(packageJson, null, 2));
-    });
 
     return {
       artifacts: this.getArtifactDefinition(),
@@ -84,20 +87,18 @@ export class TypescriptCompiler implements Compiler {
     };
   }
 
+  changePackageJsonBeforePublish(packageJson: Record<string, any>) {
+    delete packageJson.types;
+  }
+
   getArtifactDefinition() {
     return [
       {
-        name: 'dist',
-        globPatterns: [`${this.getDistDir()}/**`, '!dist/tsconfig.tsbuildinfo'],
+        generatedBy: this.id,
+        name: this.artifactName,
+        globPatterns: this.distGlobPatterns,
       },
     ];
-  }
-
-  /**
-   * returns the dist directory on the capsule
-   */
-  getDistDir() {
-    return 'dist';
   }
 
   /**
@@ -105,7 +106,7 @@ export class TypescriptCompiler implements Compiler {
    */
   getDistPathBySrcPath(srcPath: string) {
     const fileWithJSExtIfNeeded = this.replaceFileExtToJs(srcPath);
-    return path.join(this.getDistDir(), fileWithJSExtIfNeeded);
+    return path.join(this.distDir, fileWithJSExtIfNeeded);
   }
 
   /**
@@ -113,12 +114,6 @@ export class TypescriptCompiler implements Compiler {
    */
   isFileSupported(filePath: string): boolean {
     return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
-  }
-
-  getNpmIgnoreEntries() {
-    // when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
-    // needed for the package.
-    return [`${this.getDistDir()}/tsconfig.tsbuildinfo`];
   }
 
   /**
@@ -144,6 +139,10 @@ export class TypescriptCompiler implements Compiler {
       const errorStr = process.stdout.isTTY
         ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
         : ts.formatDiagnostic(diagnostic, formatHost);
+      if (!diagnostic.file) {
+        // the error is general and not related to a specific file. e.g. tsconfig is missing.
+        throw new BitError(errorStr);
+      }
       this.logger.consoleFailure(errorStr);
       if (!currentComponentResult.component || !currentComponentResult.errors) {
         throw new Error(`currentComponentResult is not defined yet for ${diagnostic.file}`);
@@ -171,7 +170,9 @@ export class TypescriptCompiler implements Compiler {
     const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     // eslint-disable-next-line no-cond-assign
     while ((nextProject = solutionBuilder.getNextInvalidatedProject())) {
-      const capsulePath = nextProject.project.replace(`${path.sep}tsconfig.json`, '');
+      // regex to make sure it will work correctly for both linux and windows
+      // it replaces both /tsconfig.json and \tsocnfig.json
+      const capsulePath = nextProject.project.replace(/[/\\]tsconfig.json/, '');
       const currentComponentId = capsules.getIdByPathInCapsule(capsulePath);
       if (!currentComponentId) throw new Error(`unable to find component for ${capsulePath}`);
       longProcessLogger.logProgress(currentComponentId.toString());
@@ -189,6 +190,14 @@ export class TypescriptCompiler implements Compiler {
     return componentsResults;
   }
 
+  private getFormatDiagnosticsHost(): ts.FormatDiagnosticsHost {
+    return {
+      getCanonicalFileName: (p) => p,
+      getCurrentDirectory: ts.sys.getCurrentDirectory,
+      getNewLine: () => ts.sys.newLine,
+    };
+  }
+
   private async writeTypes(dirs: string[]) {
     await Promise.all(
       this.options.types.map(async (typePath) => {
@@ -203,6 +212,21 @@ export class TypescriptCompiler implements Compiler {
             }
           })
         );
+      })
+    );
+  }
+
+  /**
+   * when using project-references, typescript adds a file "tsconfig.tsbuildinfo" which is not
+   * needed for the package.
+   */
+  private async writeNpmIgnore(dirs: string[]) {
+    const NPM_IGNORE_FILE = '.npmignore';
+    await Promise.all(
+      dirs.map(async (dir) => {
+        const npmIgnorePath = path.join(dir, NPM_IGNORE_FILE);
+        const npmIgnoreEntriesStr = `\n${this.distDir}/tsconfig.tsbuildinfo\n`;
+        await fs.appendFile(npmIgnorePath, npmIgnoreEntriesStr);
       })
     );
   }
@@ -228,17 +252,5 @@ export class TypescriptCompiler implements Compiler {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
     return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
-  }
-
-  /**
-   * the message is something like: "Building project '/Users/davidfirst/Library/Caches/Bit/capsules/dce2c8055fc028cc39ab2636b027e74c76a6140b/marketing_testimonial/tsconfig.json'..."
-   * fetch the capsule path from this message.
-   */
-  private getCapsulePathFromBuilderStatus(msg: string): string | null {
-    // @ts-ignore
-    if (!msg || !msg.includes('Building project' || !msg.includes("'"))) return null;
-    const msgTextSplit = msg.split("'");
-    if (msgTextSplit.length < 2) return null;
-    return msgTextSplit[1];
   }
 }

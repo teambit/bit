@@ -5,7 +5,7 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import GeneralError from 'bit-bin/dist/error/general-error';
+import { BitError } from 'bit-bin/dist/error/bit-error';
 import { Scope } from 'bit-bin/dist/scope';
 import Bluebird from 'bluebird';
 import execa from 'execa';
@@ -71,7 +71,7 @@ export class Publisher {
       this.logger.debug(`${componentIdStr}, stdout: ${stdout}`);
       this.logger.debug(`${componentIdStr}, stderr: ${stderr}`);
       const publishedPackage = stdout.replace('+ ', ''); // npm adds "+ " prefix before the published package
-      metadata = { publishedPackage };
+      metadata = this.options.dryRun ? {} : { publishedPackage };
     } catch (err) {
       const errorMsg = `failed running ${this.packageManager} ${publishParamsStr} at ${cwd}`;
       this.logger.error(`${componentIdStr}, ${errorMsg}`);
@@ -136,7 +136,7 @@ export class Publisher {
     const idsWithoutScope = bitIds.filter((id) => !id.hasScope());
     if (!idsWithoutScope.length) return;
     if (!this.options.allowStaged && !this.options.dryRun) {
-      throw new GeneralError(
+      throw new BitError(
         `unable to publish the following component(s), please make sure they are exported: ${idsWithoutScope.join(
           ', '
         )}`
@@ -152,7 +152,7 @@ export class Publisher {
       })
     );
     if (missingFromScope.length) {
-      throw new GeneralError(
+      throw new BitError(
         `unable to publish the following component(s), please make sure they are tagged: ${missingFromScope.join(', ')}`
       );
     }

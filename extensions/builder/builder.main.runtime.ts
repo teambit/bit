@@ -1,23 +1,26 @@
 import { flatten } from 'lodash';
+import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
-import { ArtifactList, ExtensionArtifact } from './artifact';
+import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { BuilderService, BuildServiceResults } from './builder.service';
+import { BuilderService } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
-import { BuildPipeResults } from './build-pipe';
+import { TaskResults } from './build-pipe';
+import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList } from './build-pipeline-result-list';
 
@@ -25,35 +28,23 @@ export type TaskSlot = SlotRegistry<BuildTask>;
 
 export type StorageResolverSlot = SlotRegistry<StorageResolver>;
 
-/**
- * extension config type.
- */
-export type BuilderConfig = {
-  /**
-   * number of components to build in parallel.
-   */
-  parallel: 10;
-};
-
 export class BuilderMain {
-  tagTasks: BuildTask[] = [];
   constructor(
     private envs: EnvsMain,
     private workspace: Workspace,
-    private service: BuilderService,
+    private buildService: BuilderService,
+    private deployService: BuilderService,
     private scope: ScopeMain,
     private aspectLoader: AspectLoaderMain,
-    private taskSlot: TaskSlot,
+    private buildTaskSlot: TaskSlot,
+    private deployTaskSlot: TaskSlot,
     private storageResolversSlot: StorageResolverSlot
   ) {}
 
-  private async storeArtifacts(buildServiceResults: BuildPipeResults[]) {
-    const artifacts: ComponentMap<ArtifactList>[] = flatten(
-      buildServiceResults.map((pipeResult) => {
-        return pipeResult.tasksResults.map((val) => val.artifacts);
-      })
+  private async storeArtifacts(tasksResults: TaskResults[]) {
+    const artifacts: ComponentMap<ArtifactList>[] = tasksResults.map(
+      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
     );
-
     const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
@@ -70,9 +61,9 @@ export class BuilderMain {
 
   private pipelineResultsToAspectList(
     components: Component[],
-    buildPipelineResults: BuildPipeResults[]
+    buildPipelineResults: TaskResults[]
   ): ComponentMap<AspectList> {
-    const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults);
+    const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults, components);
     return ComponentMap.as<AspectList>(components, (component) => {
       const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
       const aspectList = component.state.aspects.map((aspectEntry) => {
@@ -90,29 +81,21 @@ export class BuilderMain {
       const buildId = BuilderAspect.id;
       const buildAspectEntry = aspectList.get(buildId) || aspectList.addEntry(ComponentID.fromString(buildId));
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
-      buildAspectEntry.data = { pipeline: pipelineReport };
+      const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
+      buildAspectEntry.data = { pipeline: pipelineReport, artifacts: artifactsData };
       return aspectList;
     });
   }
 
-  /**
-   * transform the complex EnvsExecutionResult<BuildServiceResults> type to a simpler array of
-   * BuildPipeResults. as a reminder, the build pipeline is running per env, hence the array. each
-   * item of BuildPipeResults has the results of multiple tasks.
-   */
-  private getPipelineResults(execResults: EnvsExecutionResult<BuildServiceResults>): BuildPipeResults[] {
-    const map = execResults.results.map((envRes) => envRes.data?.buildResults);
-    return map.filter((val) => val) as BuildPipeResults[];
-  }
-
   async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
-    this.tagTasks.forEach((task) => this.registerTask(task));
-    // @todo: some processes needs dependencies/dependents of the given ids
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
-    const buildPipelineResults = this.getPipelineResults(envsExecutionResults);
-    await this.storeArtifacts(buildPipelineResults);
-    return this.pipelineResultsToAspectList(components, buildPipelineResults);
+    const deployEnvsExecutionResults = await this.deploy(components);
+    deployEnvsExecutionResults.throwErrorsIfExist();
+    const allTasksResults = [...envsExecutionResults.tasksResults, ...deployEnvsExecutionResults.tasksResults];
+    await this.storeArtifacts(allTasksResults);
+    const aspectList = this.pipelineResultsToAspectList(components, allTasksResults);
+    return aspectList;
   }
 
   /**
@@ -130,20 +113,68 @@ export class BuilderMain {
     return this.storageResolversSlot.values().find((storageResolver) => storageResolver.name === name);
   }
 
+  // TODO: merge with getArtifactsVinylByExtensionAndName by getting aspect name and name as object with optional props
+  async getArtifactsVinylByExtension(component: Component, aspectName: string): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtension(component, aspectName);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
+  }
+
+  async getArtifactsVinylByExtensionAndName(
+    component: Component,
+    aspectName: string,
+    name: string
+  ): Promise<ArtifactVinyl[]> {
+    const artifactsObjects = this.getArtifactsByExtensionAndName(component, aspectName, name);
+    const vinyls = await Promise.all(
+      (artifactsObjects || []).map((artifactObject) =>
+        artifactObject.files.getVinylsAndImportIfMissing(component.id.scope as string, this.scope.legacyScope)
+      )
+    );
+    return flatten(vinyls);
+  }
+
+  getArtifactsByName(component: Component, name: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.name === name);
+  }
+
+  getArtifactsByExtension(component: Component, aspectName: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName);
+  }
+
+  getArtifactsByExtensionAndName(component: Component, aspectName: string, name: string): ArtifactObject[] | undefined {
+    const artifacts = this.getArtifacts(component);
+    return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
+  }
+
+  private getArtifacts(component: Component): ArtifactObject[] | undefined {
+    const dataEntry = component.state.aspects.get(BuilderAspect.id);
+    return dataEntry?.data.artifacts;
+  }
+
   /**
    * build given components for release.
    * for each one of the envs it runs a series of tasks.
    * in case of an error in a task, it stops the execution of that env and continue to the next
    * env. at the end, the results contain the data and errors per env.
    */
-  async build(
-    components: Component[],
-    isolateOptions?: IsolateComponentsOptions
-  ): Promise<EnvsExecutionResult<BuildServiceResults>> {
+  async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const idsStr = components.map((c) => c.id.toString());
-    await this.workspace.createNetwork(idsStr, isolateOptions);
+    const network = await this.workspace.createNetwork(idsStr, isolateOptions);
+    const envs = await this.envs.createEnvironment(network.capsules.getAllComponents());
+    const buildResult = await envs.runOnce(this.buildService);
+    return buildResult;
+  }
+
+  async deploy(components: Component[]): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.run(this.service);
+    const buildResult = await envs.runOnce(this.deployService);
 
     return buildResult;
   }
@@ -152,36 +183,20 @@ export class BuilderMain {
    * register a build task to apply on all component build pipelines.
    * build happens on `bit build` and as part of `bit tag --persist`.
    */
-  registerTask(task: BuildTask) {
-    this.taskSlot.register(task);
+  registerBuildTask(task: BuildTask) {
+    this.buildTaskSlot.register(task);
     return this;
   }
 
   /**
-   * build task that doesn't get executed on `bit build`, only on `bit tag --persist'
+   * deploy task that doesn't get executed on `bit build`, only on `bit tag --persist'.
+   * the deploy-pipeline is running once the build-pipeline has completed.
    */
-  registerTaskOnTagOnly(task: BuildTask) {
-    this.tagTasks.push(task);
+  registerDeployTask(task: BuildTask) {
+    this.deployTaskSlot.register(task);
   }
 
-  /**
-   * return a list of artifacts for the given hash and component id.
-   */
-  async getArtifacts(id: ComponentID, hash: string): Promise<ExtensionArtifact[]> {
-    const component = await this.scope.getOrThrow(id);
-    const state = await component.loadState(hash);
-    const extensionArtifacts = state.config.extensions.map((extensionData) => {
-      return new ExtensionArtifact(
-        // @ts-ignore TODO: remove when @david fixes `extensionData.artifacts` to be abstract vinyl only.
-        extensionData.artifacts,
-        this.aspectLoader.getDescriptor(extensionData.id.toString())
-      );
-    });
-
-    return extensionArtifacts;
-  }
-
-  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>()];
+  static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>(), Slot.withType<BuildTask>()];
 
   static runtime = MainRuntime;
   static dependencies = [
@@ -206,18 +221,28 @@ export class BuilderMain {
       GraphqlMain
     ],
     config,
-    [taskSlot, storageResolversSlot]: [TaskSlot, StorageResolverSlot]
+    [buildTaskSlot, storageResolversSlot, deployTaskSlot]: [TaskSlot, StorageResolverSlot, TaskSlot]
   ) {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const builderService = new BuilderService(workspace, logger, taskSlot, artifactFactory);
+    const buildService = new BuilderService(workspace, logger, buildTaskSlot, 'getBuildPipe', 'build', artifactFactory);
+    const deployService = new BuilderService(
+      workspace,
+      logger,
+      deployTaskSlot,
+      'getDeployPipe',
+      'deploy',
+      artifactFactory
+    );
     const builder = new BuilderMain(
       envs,
       workspace,
-      builderService,
+      buildService,
+      deployService,
       scope,
       aspectLoader,
-      taskSlot,
+      buildTaskSlot,
+      deployTaskSlot,
       storageResolversSlot
     );
 

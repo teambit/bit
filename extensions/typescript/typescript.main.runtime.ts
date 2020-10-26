@@ -15,7 +15,7 @@ export class TypescriptMain {
    * create a new compiler.
    */
   createCompiler(options: TypeScriptCompilerOptions): Compiler {
-    return new TypescriptCompiler(this.logger, options);
+    return new TypescriptCompiler(TypescriptAspect.id, this.logger, options);
   }
 
   resolveTypeFile() {}
@@ -27,7 +27,7 @@ export class TypescriptMain {
   getPackageJsonProps() {
     return {
       main: 'dist/{main}.js',
-      types: '{main}.ts'
+      types: '{main}.ts',
     };
   }
 

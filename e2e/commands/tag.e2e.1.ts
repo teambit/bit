@@ -8,6 +8,7 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
+import { Extensions } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 
@@ -961,6 +962,7 @@ describe('bit tag command', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents();
       helper.command.linkAndRewire();
       helper.command.tagAllComponents();
@@ -983,8 +985,10 @@ describe('bit tag command', function () {
       });
       it('should save the artifacts/dists to the auto-tagged components', () => {
         const comp1 = helper.command.catComponent('comp1@latest');
-        const compilerExt = comp1.extensions.find((e) => e.name === 'teambit.bit/compiler');
-        expect(compilerExt.artifacts.length).to.be.greaterThan(0);
+        const builderExt = comp1.extensions.find((e) => e.name === Extensions.builder);
+        expect(builderExt.data).to.have.property('artifacts');
+        const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
+        expect(compilerArtifacts.files.length).to.be.greaterThan(0);
       });
     });
   });

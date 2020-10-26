@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "lib": [
+      "es2019", "DOM", "ES6" ,"DOM.Iterable", "ScriptHost"
+    ],
+    "target": "es2015",
+    "module": "commonjs",
+    "jsx": "react",
+    "composite": true,
+    "emitDeclarationOnly": true,
+    "declaration": true,
+    "sourceMap": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strictPropertyInitialization": false,
+    "strict": true,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "rootDir": ".",
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "resolveJsonModule": true
+  },
+  "exclude": [
+    "dist"
+  ]
+}

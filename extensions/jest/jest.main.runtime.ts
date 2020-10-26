@@ -8,7 +8,7 @@ export class JestMain {
   static dependencies = [];
 
   createTester(jestConfig: any) {
-    return new JestTester(jestConfig);
+    return new JestTester(JestAspect.id, jestConfig);
   }
 
   static async provider() {

@@ -7,7 +7,7 @@ To create a new environment, create a new extension, add "teambit.bit/environmen
 
 The class of the environment extension needs to implement the `Environment` interface. For now, due to types/circular constrains, it doesn't require to implement anything. However, to get a working env, you must implement the following:
 ```
-getPipe(): BuildTask[];
+getBuildPipe(): BuildTask[];
 ```
 There are the tasks that will be running on "bit tag"/"bit build". If you have a compiler setup, it should include `this.compiler.task`. Also, it is recommended to add the dry-run task of the publisher: `this.pkg.dryRunTask`.
 See the react.env.ts for a detailed example.

@@ -4,9 +4,16 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { Text } from 'ink';
 import React from 'react';
 
-import { Packer, PackOptions } from './pack';
+import { Packer, PackOptions } from './packer';
 
 type PackArgs = [string, string];
+type PackCmdOptions = {
+  outDir?: string;
+  override?: boolean;
+  prefix?: boolean;
+  keep?: boolean;
+  // useCapsule?: boolean;
+};
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
@@ -16,7 +23,7 @@ export class PackCmd implements Command {
     ['o', 'override [boolean]', 'override existing pack file'],
     ['k', 'keep [boolean]', 'should keep isolated environment [default = false]'],
     ['p', 'prefix [boolean]', 'keep custom (binding) prefix'],
-    ['c', 'use-capsule [boolean]', 'isolate using the capsule and pack on the capsule'],
+    // ['c', 'use-capsule [boolean]', 'isolate using the capsule and pack on the capsule'],
     ['j', 'json [boolean]', 'return the output as JSON'],
   ] as CommandOptions;
   shortDescription = '';
@@ -25,19 +32,36 @@ export class PackCmd implements Command {
 
   constructor(private packer: Packer) {}
 
-  async render(args: PackArgs, options: PackOptions) {
+  async render(args: PackArgs, options: PackCmdOptions) {
     const packResult = await this.json(args, options);
-    return <Text color="green">tar path: {packResult.data.tarPath}</Text>;
+    if (packResult.data?.errors?.length) {
+      return <Text color="red">{packResult.data?.errors[0]}</Text>;
+    }
+    return (
+      <Text color="green">
+        tar path for component {packResult.data.id}: {packResult.data.metadata?.tarPath}
+      </Text>
+    );
   }
 
-  async json([componentId, scopePath]: PackArgs, options: PackOptions) {
+  async json([componentId, scopePath]: PackArgs, options: PackCmdOptions) {
     const compId = typeof componentId === 'string' ? componentId : componentId[0];
     let scopePathStr: string | undefined;
     if (scopePath) {
       scopePathStr = typeof scopePath !== 'string' ? scopePath[0] : scopePath;
     }
 
-    const packResult = await this.packer.packComponent(compId, scopePathStr, options);
+    const concreteOpts: PackOptions = {
+      writeOptions: {
+        outDir: options.outDir,
+        override: options.override,
+      },
+      prefix: options.prefix,
+      keep: options.keep,
+      // useCapsule: options.useCapsule,
+    };
+
+    const packResult = await this.packer.packComponent(compId, scopePathStr, concreteOpts);
     return {
       data: packResult,
       code: 0,

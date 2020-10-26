@@ -11,6 +11,8 @@ export type { WorkspaceUI } from './workspace.ui.runtime';
 export type { SerializableResults, OnComponentEventResult, ExtensionData } from './on-component-events';
 export { ComponentStatus } from './workspace-component';
 export { WorkspaceModelComponent } from './ui/workspace/workspace-model';
+export { WorkspaceContext } from './ui/workspace/workspace-context';
 export type { WorkspaceComponent } from './workspace-component';
+
 export { WorkspaceAspect };
 export default WorkspaceAspect;
