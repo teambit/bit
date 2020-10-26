@@ -247,9 +247,8 @@ export class DependencyInstaller {
  * When running dev env (bd) we need to get the harmony folder from the node_modules of the clone
  */
 function getHarmonyDirForDevEnv(): string {
-  let dirPath: string;
   const moduleDirectory = require.resolve('@teambit/harmony');
-  dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
+  const dirPath = path.join(moduleDirectory, '../..'); // to remove the "index.js" at the end
   if (!fs.existsSync(dirPath)) {
     throw new BitError(`unable to find @teambit/harmony in ${dirPath}`);
   }
