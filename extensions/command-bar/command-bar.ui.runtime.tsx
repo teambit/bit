@@ -48,10 +48,18 @@ export class CommandBarUI {
   /**
    * registers a command
    */
-  addCommand(...commands: CommandEntry[]) {
-    commands.forEach(({ id: commandId }) => {
+  addCommand(...originalCommands: CommandEntry[]) {
+    originalCommands.forEach(({ id: commandId }) => {
       if (this.getCommand(commandId) !== undefined) throw new DuplicateCommandError(commandId);
     });
+
+    // commands could mutate later on, clone to ensure immutability 👌
+    const commands = originalCommands.map((x) => ({
+      id: x.id,
+      displayName: x.displayName,
+      handler: x.handler,
+      keybinding: x.keybinding,
+    }));
 
     this.commandSlot.register(commands);
 
@@ -62,6 +70,11 @@ export class CommandBarUI {
     });
 
     this.updateCommandsSearcher();
+
+    const updaters = commands.map((command) => (next: CommandHandler) => {
+      command.handler = next;
+    });
+    return updaters;
   }
 
   /**

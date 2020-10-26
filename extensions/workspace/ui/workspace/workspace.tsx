@@ -21,16 +21,19 @@ export type WorkspaceProps = {
   menuSlot: RouteSlot;
   sidebar: JSX.Element;
   workspaceUI: WorkspaceUI;
+  onSidebarTogglerChange: (callback: () => void) => void;
 };
 
 /**
  * main workspace component.
  */
-export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI }: WorkspaceProps) {
+export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebarTogglerChange }: WorkspaceProps) {
   const workspace = useWorkspace();
 
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
+
+  onSidebarTogglerChange(handleSidebarToggle);
 
   if (!workspace) {
     return (

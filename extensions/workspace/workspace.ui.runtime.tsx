@@ -7,7 +7,7 @@ import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, ComponentSearcher } from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
@@ -49,6 +49,8 @@ export class WorkspaceUI {
     this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
   }
 
+  private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
+
   /**
    * register a route to the workspace.
    */
@@ -83,6 +85,13 @@ export class WorkspaceUI {
   uiRoot(): UIRoot {
     this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
+    const [setKeyBindHandler] = this.commandBarUI.addCommand({
+      id: 'sidebar', // extract to constant!
+      handler: () => {},
+      displayName: 'open command bar',
+      keybinding: 's',
+    });
+    this.setKeyBindHandler = setKeyBindHandler;
 
     return {
       routes: [
@@ -94,6 +103,7 @@ export class WorkspaceUI {
               routeSlot={this.routeSlot}
               sidebar={<this.sidebar.render />}
               workspaceUI={this}
+              onSidebarTogglerChange={this.setKeyBindHandler}
             />
           ),
         },

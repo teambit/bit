@@ -7,7 +7,7 @@ import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ComponentType, ReactNode } from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI, ComponentSearcher } from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
@@ -61,6 +61,8 @@ export class ScopeUI {
 
     private menuWidgetSlot: MenuWidgetSlot
   ) {}
+
+  private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
 
   /**
    * register a new badge into the scope overview.
@@ -142,6 +144,14 @@ export class ScopeUI {
     this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
 
+    const [setKeyBindHandler] = this.commandBarUI.addCommand({
+      id: 'sidebar', // extract to constant!
+      handler: () => {},
+      displayName: 'open command bar',
+      keybinding: 's',
+    });
+    this.setKeyBindHandler = setKeyBindHandler;
+
     return {
       routes: [
         {
@@ -154,6 +164,7 @@ export class ScopeUI {
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
               context={this.getContext()}
+              onSidebarTogglerChange={this.setKeyBindHandler}
             />
           ),
         },
