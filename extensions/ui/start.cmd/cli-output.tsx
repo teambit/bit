@@ -159,9 +159,7 @@ export class CliOutput extends React.Component<props, state> {
     const { isBrowserOpen, mainUIServer } = this.state;
 
     if (mainUIServer && !isBrowserOpen && !suppressBrowserLaunch && !!this.state.compiledComponents.length) {
-      // const totalComponentsSum = await mainUIServer.uiRoot.workspace.list();
-      // if (this.state.compiledComponents.length >= totalComponentsSum.length) {
-      //Bug to events for each server
+      // TODO(uri): Bug two events for each server
       if (this.state.compiledComponents.length / 2 >= this.state.componentServers.length) {
         this.unsafeOpenBrowser(mainUIServer);
       }

@@ -40,6 +40,11 @@ export const CompilingOrUIServersAreReady = ({
     return null;
   }
 
+  // For 0 componnets
+  if (totalComponentsSum === 0 && !!mainUIServer) {
+    return <UIServersAreReady mainUIServer={mainUIServer} />;
+  }
+
   if (!!totalComponentsSum && totalComponentsSum <= compiledComponentsSum && !!mainUIServer) {
     return <UIServersAreReady mainUIServer={mainUIServer} />;
   }
