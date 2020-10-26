@@ -32,8 +32,8 @@ const SCOPE_GET = gql`
 async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
   const token = getSync(CFG_USER_TOKEN_KEY);
-  const client = new GraphQLClient(`http://${symphonyUrl}/graphql`);
-  if (token) client.setHeader('Authorization', `Barrier ${token}`);
+  const client = new GraphQLClient(`https://${symphonyUrl}/graphql`);
+  if (token) client.setHeader('Authorization', `Bearer ${token}`);
 
   try {
     const res = client.request(SCOPE_GET, {
