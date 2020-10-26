@@ -1,12 +1,10 @@
 import { BabelMain } from '@teambit/babel';
-import { CompilerMain } from '@teambit/compiler';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
-import { PkgMain } from '@teambit/pkg';
 // import { merge } from 'lodash';
-import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
-import { TesterMain } from '@teambit/tester';
+import { babelConfig } from './babel/babel-config';
 
 const tsconfig = require('./typescript/tsconfig.json');
 
@@ -16,13 +14,7 @@ export const AspectEnvType = 'aspect';
  * a component environment built for [Aspects](https://reactjs.org) .
  */
 export class AspectEnv implements Environment {
-  constructor(
-    private reactEnv: ReactEnv,
-    private babel: BabelMain,
-    private compiler: CompilerMain,
-    private tester: TesterMain,
-    private pkg: PkgMain
-  ) {}
+  constructor(private reactEnv: ReactEnv, private babel: BabelMain, private compiler: CompilerMain) {}
 
   icon = 'https://static.bit.dev/extensions-icons/default.svg';
 
@@ -32,18 +24,32 @@ export class AspectEnv implements Environment {
     };
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getTsConfig(tsConfig: TsConfigSourceFile) {
-    const targetConf = merge(tsconfig, tsConfig);
-    return targetConf;
+    // @todo: @ran, is this needed now? the tsconfig is different as it generates only d.ts files.
+    // const targetConf = merge(tsconfig, tsConfig);
+    // return targetConf;
+    return tsconfig;
   }
 
-  getCompiler(tsConfig: TsConfigSourceFile) {
-    const targetConf = this.getTsConfig(tsConfig);
-    return this.reactEnv.getCompiler(targetConf);
+  getCompiler() {
+    return this.babel.createCompiler({ babelTransformOptions: babelConfig });
   }
 
-  getBuildPipe(tsConfig: TsConfigSourceFile) {
-    const targetConfig = this.getTsConfig(tsConfig);
-    return this.reactEnv.getBuildPipe(targetConfig);
+  getBuildPipe() {
+    const tsCompiler = this.reactEnv.getCompiler(tsconfig);
+    tsCompiler.artifactName = 'declaration';
+    tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
+    tsCompiler.shouldCopyNonSupportedFiles = false;
+
+    const babelCompiler = this.babel.createCompiler({ babelTransformOptions: babelConfig });
+
+    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+
+    return [
+      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
+      this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
+      ...pipeWithoutCompiler,
+    ];
   }
 }
