@@ -22,14 +22,18 @@ export class TasksQueue extends Array<EnvTask> {
     if (!task.name) throw new InvalidTask(task.aspectId, 'name is missing');
     const regexWord = /^\w+$/; // match any word: a-zA-Z0-9 and underscore.
     const isValid = regexWord.test(task.name);
-    if (!isValid) throw new InvalidTask(task.aspectId, `name "${task.name}" is invalid, only alphanumeric characters are allowed`);
+    if (!isValid)
+      throw new InvalidTask(task.aspectId, `name "${task.name}" is invalid, only alphanumeric characters are allowed`);
   }
 
   private validateDuplications() {
     const uniqueTasks = this.map(({ env, task }) => `${env.id} ${task.aspectId}:${task.name}`);
-    uniqueTasks.forEach(uniqTask => {
-      if (uniqueTasks.filter(u => u === uniqTask).length > 1) {
-        throw new InvalidTask(uniqTask, 'there are two or more tasks with the same name and aspectId in the same environment');
+    uniqueTasks.forEach((uniqTask) => {
+      if (uniqueTasks.filter((u) => u === uniqTask).length > 1) {
+        throw new InvalidTask(
+          uniqTask,
+          'there are two or more tasks with the same name and aspectId in the same environment'
+        );
       }
     });
   }
