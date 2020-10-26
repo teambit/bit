@@ -30,7 +30,6 @@ import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,
   DependenciesPolicy,
-  DependencyLifecycleType,
   DependencyResolverVariantConfig,
   DependencyResolverWorkspaceConfig,
   DepObjectKeyName,
@@ -40,6 +39,7 @@ import {
 import {
   SerializedDependency,
   DependencyListFactory,
+  DependencyLifecycleType,
   DependencyFactory,
   ComponentDependencyFactory,
   PackageDependencyFactory,

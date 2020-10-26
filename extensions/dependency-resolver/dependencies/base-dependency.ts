@@ -28,7 +28,7 @@ export abstract class BaseDependency implements Dependency {
     return {
       id: this.id,
       version: this.version,
-      type: this.type,
+      __type: this.type,
       lifecycle: this.lifecycle.toString(),
     };
   }

@@ -10,6 +10,7 @@ export {
   ComponentsManifestsMap,
   PolicyDep,
   RegistriesMap,
+  DependenciesPolicy,
 } from './types';
 export { CreateFromComponentsOptions } from './manifest/workspace-manifest';
 export { WorkspaceManifest, ComponentManifest } from './manifest';
@@ -22,4 +23,4 @@ export {
 } from './package-manager';
 export type { DependencyResolverMain, LinkingOptions } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
-export { DependencyLifecycleType, DependenciesPolicy } from './types';
+export { DependencyLifecycleType } from './dependencies';

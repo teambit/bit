@@ -18,7 +18,7 @@ export class PackageDependencyFactory implements DependencyFactory {
     return (new PackageDependency(
       serialized.id,
       serialized.version,
-      serialized.type,
+      serialized.__type,
       serialized.lifecycle as DependencyLifecycleType
     ) as unknown) as PackageDependency;
   }
