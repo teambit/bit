@@ -2,7 +2,7 @@ import { Configuration } from 'webpack';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
-import { CompilerAspect } from '@teambit/compiler';
+import { CompilerAspect, Compiler } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
 import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/environments';
@@ -22,6 +22,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { DependenciesPolicy } from '@teambit/dependency-resolver';
 import { TsConfigSourceFile } from 'typescript';
+import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -35,7 +36,8 @@ type ReactDeps = [
   Workspace,
   GraphqlMain,
   PkgMain,
-  TesterMain
+  TesterMain,
+  ESLintMain
 ];
 
 export type ReactMainConfig = {
@@ -72,13 +74,6 @@ export class ReactMain {
   private tsConfigOverride: TsConfigSourceFile | undefined;
 
   /**
-   *  return aspect icon
-   */
-  icon() {
-    return 'https://static.bit.dev/extensions-icons/react.svg';
-  }
-
-  /**
    * override the TS config of the React environment.
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile) {
@@ -87,6 +82,17 @@ export class ReactMain {
     return this.envs.override({
       getCompiler: () => {
         return this.reactEnv.getCompiler(tsconfig);
+      },
+    });
+  }
+
+  /**
+   * override the build tsconfig.
+   */
+  overrideBuildTsConfig(tsconfig) {
+    return this.envs.override({
+      getBuildPipe: () => {
+        return this.reactEnv.getBuildPipe(tsconfig);
       },
     });
   }
@@ -143,6 +149,17 @@ export class ReactMain {
   }
 
   /**
+   * override the build pipeline of the component environment.
+   */
+  overrideCompilerTasks(tasks: BuildTask[]) {
+    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+
+    return this.envs.override({
+      getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
+    });
+  }
+
+  /**
    * override the dependency configuration of the component environment.
    */
   overrideDependencies(dependencyPolicy: DependenciesPolicy) {
@@ -150,6 +167,19 @@ export class ReactMain {
       getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
     });
   }
+
+  /**
+   * override the workspace compiler.
+   */
+  overrideCompiler(compiler: Compiler) {
+    return this.envs.override({
+      getCompiler: () => {
+        return compiler;
+      },
+    });
+  }
+
+  overrideEslintConfig() {}
 
   /**
    * override the package json props of the component environment.
@@ -194,13 +224,14 @@ export class ReactMain {
     GraphqlAspect,
     PkgAspect,
     TesterAspect,
+    ESLintAspect,
   ];
 
   static async provider(
-    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
+    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
+    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config, eslint);
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

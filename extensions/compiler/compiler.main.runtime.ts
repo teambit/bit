@@ -2,6 +2,8 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
+
 import { BitId } from 'bit-bin/dist/bit-id';
 import { CompilerService } from './compiler.service';
 import { CompilerAspect } from './compiler.aspect';
@@ -11,7 +13,8 @@ import { Compiler } from './types';
 import { WorkspaceCompiler } from './workspace-compiler';
 
 export class CompilerMain {
-  constructor(private workspaceCompiler: WorkspaceCompiler, readonly task: CompilerTask) {}
+  constructor(private pubsub: PubsubMain, private workspaceCompiler: WorkspaceCompiler) {}
+
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: {
@@ -25,21 +28,28 @@ export class CompilerMain {
    * API to create a new compiler task, it facilitates the usage of multiple compilers.
    * with this method you can create any number of compilers and add them to the buildPipeline.
    */
-  createTask(compiler: Compiler) {
-    return new CompilerTask(CompilerAspect.id, compiler);
+  createTask(name: string, compiler: Compiler): CompilerTask {
+    return new CompilerTask(CompilerAspect.id, name, compiler);
   }
-  static async provider([cli, workspace, envs, loggerMain]: [CLIMain, Workspace, EnvsMain, LoggerMain]) {
-    const compilerTask = new CompilerTask(CompilerAspect.id);
-    const workspaceCompiler = new WorkspaceCompiler(workspace, envs);
+
+  static runtime = MainRuntime;
+
+  static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect, PubsubAspect];
+
+  static async provider([cli, workspace, envs, loggerMain, pubsub]: [
+    CLIMain,
+    Workspace,
+    EnvsMain,
+    LoggerMain,
+    PubsubMain
+  ]) {
+    const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub);
     envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(workspaceCompiler, compilerTask);
+    const compilerMain = new CompilerMain(pubsub, workspaceCompiler);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger));
     return compilerMain;
   }
-
-  static runtime = MainRuntime;
-  static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect];
 }
 
 CompilerAspect.addRuntime(CompilerMain);

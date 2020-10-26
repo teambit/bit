@@ -66,7 +66,7 @@
         "@teambit/documenter.types.docs-file": "0.0.7",
         "@teambit/documenter.ui.consumable-link": "^0.0.5",
         "@teambit/documenter.ui.heading": "^0.0.5",
-        "@teambit/documenter.ui.import-action": "0.0.5",
+        "@teambit/documenter.ui.import-action": "0.0.6",
         "@teambit/documenter.ui.label-list": "^0.0.5",
         "@teambit/documenter.ui.linked-heading": "^0.0.6",
         "@teambit/documenter.ui.property-table": "^0.0.7",
@@ -109,6 +109,7 @@
         "cacache": "^15.0.5",
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
+        "checksum": "0.1.1",
         "classnames": "^2.2.6",
         "cleargraph": "^5.4.0",
         "consolehighlighter": "0.1.5",
@@ -128,7 +129,6 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
-        "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
         "graphql-tools": "6.2.4",
@@ -175,7 +175,6 @@
         "react-tabs": "^3.1.1",
         "react-test-renderer": "^16.13.1",
         "react-tooltip": "^4.2.8",
-        "react-transition-group": "^4.4.1",
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
@@ -224,7 +223,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.69",
+        "bit-bin": "14.8.9-dev.91",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -254,7 +253,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.69",
+            "bit-bin": "14.8.9-dev.91",
             "react-dom": "^16.13.1"
           }
         }
@@ -286,7 +285,7 @@
       "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.69",
+            "bit-bin": "14.8.9-dev.91",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

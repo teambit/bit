@@ -45,11 +45,18 @@ export class ArtifactFactory {
     return def.context || DEFAULT_CONTEXT;
   }
 
-  createFromComponent(context: BuildContext, component: Component, def: ArtifactDefinition, task: BuildTask) {
+  createFromComponent(
+    context: BuildContext,
+    component: Component,
+    def: ArtifactDefinition,
+    task: BuildTask
+  ): Artifact | undefined {
     const storageResolver = this.getStorageResolver(def);
     const rootDir = this.getArtifactContextPath(context, component, def);
     const paths = this.resolvePaths(this.getRootDir(rootDir, def), def);
-
+    if (!paths || !paths.length) {
+      return undefined;
+    }
     return new Artifact(def, storageResolver, new ArtifactFiles(paths), rootDir, task);
   }
 
@@ -83,23 +90,27 @@ export class ArtifactFactory {
       if (artifactContext === 'env') {
         const capsuleDir = context.capsuleGraph.capsulesRootDir;
         const rootDir = this.getRootDir(capsuleDir, def);
+        const paths = this.resolvePaths(rootDir, def);
+        if (paths && paths.length) {
+          const artifact = new Artifact(
+            def,
+            this.getStorageResolver(def),
+            new ArtifactFiles(this.resolvePaths(rootDir, def)),
+            rootDir,
+            task
+          );
 
-        const artifact = new Artifact(
-          def,
-          this.getStorageResolver(def),
-          new ArtifactFiles(this.resolvePaths(rootDir, def)),
-          rootDir,
-          task
-        );
-
-        return context.components.forEach((component) => {
-          tupleArr.push([component.id.toString(), artifact]);
-        });
+          return context.components.forEach((component) => {
+            tupleArr.push([component.id.toString(), artifact]);
+          });
+        }
       }
 
       return context.components.forEach((component) => {
         const artifact = this.createFromComponent(context, component, def, task);
-        tupleArr.push([component.id.toString(), artifact]);
+        if (artifact) {
+          tupleArr.push([component.id.toString(), artifact]);
+        }
       });
     });
 

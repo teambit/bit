@@ -92,6 +92,11 @@
     "babel": {
         "files": [
             {
+                "name": "README.md",
+                "relativePath": "README.md",
+                "test": false
+            },
+            {
                 "name": "babel.aspect.ts",
                 "relativePath": "babel.aspect.ts",
                 "test": false
@@ -240,6 +245,11 @@
                 "test": false
             },
             {
+                "name": "build-pipeline-order.ts",
+                "relativePath": "build-pipeline-order.ts",
+                "test": false
+            },
+            {
                 "name": "build-pipeline-result-list.ts",
                 "relativePath": "build-pipeline-result-list.ts",
                 "test": false
@@ -270,8 +280,8 @@
                 "test": false
             },
             {
-                "name": "builder.service.ts",
-                "relativePath": "builder.service.ts",
+                "name": "builder.service.tsx",
+                "relativePath": "builder.service.tsx",
                 "test": false
             },
             {
@@ -327,6 +337,16 @@
             {
                 "name": "storage-resolver.ts",
                 "relativePath": "storage/storage-resolver.ts",
+                "test": false
+            },
+            {
+                "name": "task-results-list.ts",
+                "relativePath": "task-results-list.ts",
+                "test": false
+            },
+            {
+                "name": "tasks-queue.ts",
+                "relativePath": "tasks-queue.ts",
                 "test": false
             },
             {
@@ -531,13 +551,13 @@
                 "test": false
             },
             {
-                "name": "already-exists.tsx",
-                "relativePath": "exceptions/already-exists.tsx",
+                "name": "already-exists.ts",
+                "relativePath": "exceptions/already-exists.ts",
                 "test": false
             },
             {
-                "name": "command-not-found.tsx",
-                "relativePath": "exceptions/command-not-found.tsx",
+                "name": "command-not-found.ts",
+                "relativePath": "exceptions/command-not-found.ts",
                 "test": false
             },
             {
@@ -595,8 +615,8 @@
                 "test": false
             },
             {
-                "name": "duplicate-command-error.tsx",
-                "relativePath": "duplicate-command-error.tsx",
+                "name": "duplicate-command-error.ts",
+                "relativePath": "duplicate-command-error.ts",
                 "test": false
             },
             {
@@ -726,6 +746,16 @@
             {
                 "name": "compiler.task.ts",
                 "relativePath": "compiler.task.ts",
+                "test": false
+            },
+            {
+                "name": "compiler-error.ts",
+                "relativePath": "events/compiler-error.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "events/index.ts",
                 "test": false
             },
             {
@@ -1300,13 +1330,13 @@
                 "test": false
             },
             {
-                "name": "config-dir-not-defined.tsx",
-                "relativePath": "exceptions/config-dir-not-defined.tsx",
+                "name": "config-dir-not-defined.ts",
+                "relativePath": "exceptions/config-dir-not-defined.ts",
                 "test": false
             },
             {
-                "name": "extension-already-configured.tsx",
-                "relativePath": "exceptions/extension-already-configured.tsx",
+                "name": "extension-already-configured.ts",
+                "relativePath": "exceptions/extension-already-configured.ts",
                 "test": false
             },
             {
@@ -1315,8 +1345,8 @@
                 "test": false
             },
             {
-                "name": "invalid-config-file.tsx",
-                "relativePath": "exceptions/invalid-config-file.tsx",
+                "name": "invalid-config-file.ts",
+                "relativePath": "exceptions/invalid-config-file.ts",
                 "test": false
             },
             {
@@ -1356,6 +1386,45 @@
         "exported": false,
         "lanes": []
     },
+    "crypto/checksum": {
+        "files": [
+            {
+                "name": "checksum.spec.ts",
+                "relativePath": "checksum.spec.ts",
+                "test": true
+            },
+            {
+                "name": "checksum.ts",
+                "relativePath": "checksum.ts",
+                "test": false
+            },
+            {
+                "name": "1px.gif",
+                "relativePath": "fixtures/1px.gif",
+                "test": false
+            },
+            {
+                "name": "dshaw.txt",
+                "relativePath": "fixtures/dshaw.txt",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "readme.md",
+                "relativePath": "readme.md",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "toolbox/checksum",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "dependency-resolver": {
         "files": [
             {
@@ -1391,6 +1460,11 @@
             {
                 "name": "core-aspect-link-error.ts",
                 "relativePath": "exceptions/core-aspect-link-error.ts",
+                "test": false
+            },
+            {
+                "name": "harmony-link-error.ts",
+                "relativePath": "exceptions/harmony-link-error.ts",
                 "test": false
             },
             {
@@ -1816,6 +1890,35 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/environments",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "eslint": {
+        "files": [
+            {
+                "name": "eslint.aspect.ts",
+                "relativePath": "eslint.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "eslint.linter.ts",
+                "relativePath": "eslint.linter.ts",
+                "test": false
+            },
+            {
+                "name": "eslint.main.runtime.ts",
+                "relativePath": "eslint.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/eslint",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2335,6 +2438,25 @@
         "exported": false,
         "lanes": []
     },
+    "hooks/use-in-out-transition": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "use-in-out-transition.tsx",
+                "relativePath": "use-in-out-transition.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/hooks/use-in-out-transition",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "insights": {
         "files": [
             {
@@ -2353,18 +2475,18 @@
                 "test": false
             },
             {
-                "name": "insight-already-exists.tsx",
-                "relativePath": "exceptions/insight-already-exists.tsx",
+                "name": "insight-already-exists.ts",
+                "relativePath": "exceptions/insight-already-exists.ts",
                 "test": false
             },
             {
-                "name": "insight-not-found.tsx",
-                "relativePath": "exceptions/insight-not-found.tsx",
+                "name": "insight-not-found.ts",
+                "relativePath": "exceptions/insight-not-found.ts",
                 "test": false
             },
             {
-                "name": "no-data-for-insight.tsx",
-                "relativePath": "exceptions/no-data-for-insight.tsx",
+                "name": "no-data-for-insight.ts",
+                "relativePath": "exceptions/no-data-for-insight.ts",
                 "test": false
             },
             {
@@ -2513,6 +2635,60 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "extensions/jest",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "linter": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "lint.cmd.ts",
+                "relativePath": "lint.cmd.ts",
+                "test": false
+            },
+            {
+                "name": "lint.task.ts",
+                "relativePath": "lint.task.ts",
+                "test": false
+            },
+            {
+                "name": "linter-context.ts",
+                "relativePath": "linter-context.ts",
+                "test": false
+            },
+            {
+                "name": "linter.aspect.ts",
+                "relativePath": "linter.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "linter.graphql.ts",
+                "relativePath": "linter.graphql.ts",
+                "test": false
+            },
+            {
+                "name": "linter.main.runtime.ts",
+                "relativePath": "linter.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "linter.service.ts",
+                "relativePath": "linter.service.ts",
+                "test": false
+            },
+            {
+                "name": "linter.ts",
+                "relativePath": "linter.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/linter",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2839,8 +3015,23 @@
     "pkg": {
         "files": [
             {
-                "name": "scope-not-found.tsx",
-                "relativePath": "exceptions/scope-not-found.tsx",
+                "name": "index.ts",
+                "relativePath": "exceptions/index.ts",
+                "test": false
+            },
+            {
+                "name": "package-tar-filet-not-found.ts",
+                "relativePath": "exceptions/package-tar-filet-not-found.ts",
+                "test": false
+            },
+            {
+                "name": "pkg-artifact-not-found.ts",
+                "relativePath": "exceptions/pkg-artifact-not-found.ts",
+                "test": false
+            },
+            {
+                "name": "scope-not-found.ts",
+                "relativePath": "exceptions/scope-not-found.ts",
                 "test": false
             },
             {
@@ -2854,13 +3045,28 @@
                 "test": false
             },
             {
+                "name": "package.route.ts",
+                "relativePath": "package.route.ts",
+                "test": false
+            },
+            {
                 "name": "packer.ts",
                 "relativePath": "packer.ts",
                 "test": false
             },
             {
+                "name": "pkg-artifact.ts",
+                "relativePath": "pkg-artifact.ts",
+                "test": false
+            },
+            {
                 "name": "pkg.aspect.ts",
                 "relativePath": "pkg.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "pkg.graphql.ts",
+                "relativePath": "pkg.graphql.ts",
                 "test": false
             },
             {
@@ -3225,6 +3431,11 @@
                 "test": false
             },
             {
+                "name": "eslintrc.js",
+                "relativePath": "eslint/eslintrc.js",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
@@ -3568,6 +3779,21 @@
             {
                 "name": "types.ts",
                 "relativePath": "types.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "ui/menu/index.ts",
+                "test": false
+            },
+            {
+                "name": "menu.module.scss",
+                "relativePath": "ui/menu/menu.module.scss",
+                "test": false
+            },
+            {
+                "name": "menu.tsx",
+                "relativePath": "ui/menu/menu.tsx",
                 "test": false
             },
             {
@@ -4108,21 +4334,6 @@
     "staged-components/side-bar": {
         "files": [
             {
-                "name": "component-nodes.module.scss",
-                "relativePath": "component-tree/component-nodes/component-nodes.module.scss",
-                "test": false
-            },
-            {
-                "name": "component-nodes.tsx",
-                "relativePath": "component-tree/component-nodes/component-nodes.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "component-tree/component-nodes/index.ts",
-                "test": false
-            },
-            {
                 "name": "component-tree-context.tsx",
                 "relativePath": "component-tree/component-tree-context.tsx",
                 "test": false
@@ -4150,6 +4361,16 @@
             {
                 "name": "index.ts",
                 "relativePath": "component-tree/component-view/index.ts",
+                "test": false
+            },
+            {
+                "name": "default-tree-node-renderer.tsx",
+                "relativePath": "component-tree/default-tree-node-renderer/default-tree-node-renderer.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "component-tree/default-tree-node-renderer/index.ts",
                 "test": false
             },
             {
@@ -4213,6 +4434,21 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "component-tree/namespace-tree-node/index.ts",
+                "test": false
+            },
+            {
+                "name": "namespace-tree-node.module.scss",
+                "relativePath": "component-tree/namespace-tree-node/namespace-tree-node.module.scss",
+                "test": false
+            },
+            {
+                "name": "namespace-tree-node.tsx",
+                "relativePath": "component-tree/namespace-tree-node/namespace-tree-node.tsx",
+                "test": false
+            },
+            {
                 "name": "payload-type.tsx",
                 "relativePath": "component-tree/payload-type.tsx",
                 "test": false
@@ -4255,6 +4491,21 @@
             {
                 "name": "root-node.tsx",
                 "relativePath": "component-tree/root-node/root-node.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "component-tree/scope-tree-node/index.ts",
+                "test": false
+            },
+            {
+                "name": "scope-tree-node.module.scss",
+                "relativePath": "component-tree/scope-tree-node/scope-tree-node.module.scss",
+                "test": false
+            },
+            {
+                "name": "scope-tree-node.tsx",
+                "relativePath": "component-tree/scope-tree-node/scope-tree-node.tsx",
                 "test": false
             },
             {
@@ -5036,51 +5287,6 @@
     "ui": {
         "files": [
             {
-                "name": "clear-console.tsx",
-                "relativePath": "bit-start-cmd-output-templates/clear-console.tsx",
-                "test": false
-            },
-            {
-                "name": "component-preview-server-started-headers.tsx",
-                "relativePath": "bit-start-cmd-output-templates/component-preview-server-started-headers.tsx",
-                "test": false
-            },
-            {
-                "name": "component-preview-server-started.tsx",
-                "relativePath": "bit-start-cmd-output-templates/component-preview-server-started.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "bit-start-cmd-output-templates/index.ts",
-                "test": false
-            },
-            {
-                "name": "on-component-change.tsx",
-                "relativePath": "bit-start-cmd-output-templates/on-component-change.tsx",
-                "test": false
-            },
-            {
-                "name": "standalone-new-line.tsx",
-                "relativePath": "bit-start-cmd-output-templates/standalone-new-line.tsx",
-                "test": false
-            },
-            {
-                "name": "starting-main-ui-server.tsx",
-                "relativePath": "bit-start-cmd-output-templates/starting-main-ui-server.tsx",
-                "test": false
-            },
-            {
-                "name": "starting.tsx",
-                "relativePath": "bit-start-cmd-output-templates/starting.tsx",
-                "test": false
-            },
-            {
-                "name": "ui-servers-are-ready.tsx",
-                "relativePath": "bit-start-cmd-output-templates/ui-servers-are-ready.tsx",
-                "test": false
-            },
-            {
                 "name": "compose.tsx",
                 "relativePath": "compose.tsx",
                 "test": false
@@ -5121,8 +5327,73 @@
                 "test": false
             },
             {
-                "name": "start.cmd.tsx",
-                "relativePath": "start.cmd.tsx",
+                "name": "cli-output.tsx",
+                "relativePath": "start.cmd/cli-output.tsx",
+                "test": false
+            },
+            {
+                "name": "index.tsx",
+                "relativePath": "start.cmd/index.tsx",
+                "test": false
+            },
+            {
+                "name": "clear-console.tsx",
+                "relativePath": "start.cmd/output-templates/clear-console.tsx",
+                "test": false
+            },
+            {
+                "name": "component-change.tsx",
+                "relativePath": "start.cmd/output-templates/component-change.tsx",
+                "test": false
+            },
+            {
+                "name": "component-preview-server-started-headers.tsx",
+                "relativePath": "start.cmd/output-templates/component-preview-server-started-headers.tsx",
+                "test": false
+            },
+            {
+                "name": "component-preview-server-started.tsx",
+                "relativePath": "start.cmd/output-templates/component-preview-server-started.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "start.cmd/output-templates/index.ts",
+                "test": false
+            },
+            {
+                "name": "ink-spinner.tsx",
+                "relativePath": "start.cmd/output-templates/ink-spinner.tsx",
+                "test": false
+            },
+            {
+                "name": "standalone-new-line.tsx",
+                "relativePath": "start.cmd/output-templates/standalone-new-line.tsx",
+                "test": false
+            },
+            {
+                "name": "starting-main-ui-server.tsx",
+                "relativePath": "start.cmd/output-templates/starting-main-ui-server.tsx",
+                "test": false
+            },
+            {
+                "name": "starting.tsx",
+                "relativePath": "start.cmd/output-templates/starting.tsx",
+                "test": false
+            },
+            {
+                "name": "ts-errors.tsx",
+                "relativePath": "start.cmd/output-templates/ts-errors.tsx",
+                "test": false
+            },
+            {
+                "name": "ui-servers-are-ready.tsx",
+                "relativePath": "start.cmd/output-templates/ui-servers-are-ready.tsx",
+                "test": false
+            },
+            {
+                "name": "report.ts",
+                "relativePath": "start.cmd/report.ts",
                 "test": false
             },
             {
@@ -5739,5 +6010,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.64"
+    "version": "14.8.9-dev.90"
 }

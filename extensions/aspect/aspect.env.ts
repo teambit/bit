@@ -1,5 +1,6 @@
 import { Environment } from '@teambit/environments';
 import { merge } from 'lodash';
+import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 
 const tsconfig = require('./typescript/tsconfig.json');
@@ -20,7 +21,18 @@ export class AspectEnv implements Environment {
     };
   }
 
-  getCompiler(tsConfig: any) {
-    return this.reactEnv.getCompiler(tsConfig);
+  getTsConfig(tsConfig: TsConfigSourceFile) {
+    const targetConf = merge(tsconfig, tsConfig);
+    return targetConf;
+  }
+
+  getCompiler(tsConfig: TsConfigSourceFile) {
+    const targetConf = this.getTsConfig(tsConfig);
+    return this.reactEnv.getCompiler(targetConf);
+  }
+
+  getBuildPipe(tsConfig: TsConfigSourceFile) {
+    const targetConfig = this.getTsConfig(tsConfig);
+    return this.reactEnv.getBuildPipe(targetConfig);
   }
 }

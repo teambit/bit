@@ -1,11 +1,7 @@
 import { BitError } from 'bit-bin/dist/error/bit-error';
 
 export class InvalidTask extends BitError {
-  constructor(readonly task: any) {
-    super(`task is invalid`);
-  }
-
-  report() {
-    return `task: ${this.task} is invalid`;
+  constructor(readonly taskAspectId: string, reason: string) {
+    super(`task of ${taskAspectId} is invalid, ${reason}`);
   }
 }

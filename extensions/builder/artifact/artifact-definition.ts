@@ -39,6 +39,8 @@ export type ArtifactDefinition = {
   /**
    * determine the context of the artifact.
    * default artifact context is `component`.
+   * "env" is useful when the same file is generated for all components, for example, "preview"
+   * task may create the same webpack file for all components of that env.
    */
   context?: 'component' | 'env';
 

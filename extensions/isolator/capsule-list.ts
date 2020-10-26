@@ -1,4 +1,4 @@
-import { ComponentID } from '@teambit/component';
+import type { Component, ComponentID } from '@teambit/component';
 import { normalize } from 'path';
 
 import { Capsule } from './capsule';
@@ -30,5 +30,8 @@ export default class CapsuleList extends Array<{ id: ComponentID; capsule: Capsu
   }
   getAllCapsules(): Capsule[] {
     return this.map((c) => c.capsule);
+  }
+  getAllComponents(): Component[] {
+    return this.getAllCapsules().map((c) => c.component);
   }
 }

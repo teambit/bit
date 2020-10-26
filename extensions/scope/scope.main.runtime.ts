@@ -43,10 +43,12 @@ import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
-type PostExportRegistry = SlotRegistry<OnPostExport>;
 
 export type OnTag = (components: Component[]) => Promise<ComponentMap<AspectList>>;
-export type OnPostExport = (ids: BitId[]) => Promise<any>;
+
+export type OnPostPut = (ids: ComponentID[]) => void;
+
+export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 
 export type ScopeConfig = {
   description: string;
@@ -76,7 +78,7 @@ export class ScopeMain implements ComponentFactory {
     /**
      * slot registry for subscribing to post-export
      */
-    private postExportRegistry: PostExportRegistry,
+    private postPutSlot: OnPostPutSlot,
 
     private isolator: IsolatorMain,
 
@@ -137,9 +139,10 @@ export class ScopeMain implements ComponentFactory {
   /**
    * register to the post-export slot.
    */
-  onPostExport(postExportFn: OnPostExport) {
-    this.legacyScope.onPostExport.push(postExportFn);
-    this.postExportRegistry.register(postExportFn);
+  onPostPut(postPutFn: OnPostPut) {
+    this.legacyScope.onPostExport.push(postPutFn);
+    this.postPutSlot.register(postPutFn);
+    return this;
   }
 
   /**
@@ -359,7 +362,7 @@ export class ScopeMain implements ComponentFactory {
 
   /**
    * resolve a component ID.
-   * @param id component ID
+   * @param id component ID.
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
     if (id.toString().startsWith(this.name)) {
@@ -428,7 +431,7 @@ export class ScopeMain implements ComponentFactory {
   /**
    * declare the slots of scope extension.
    */
-  static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostExport>()];
+  static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostPut>()];
   static runtime = MainRuntime;
 
   static dependencies = [
@@ -453,7 +456,7 @@ export class ScopeMain implements ComponentFactory {
       ExpressMain
     ],
     config: ScopeConfig,
-    [tagSlot, postExportSlot]: [TagRegistry, PostExportRegistry],
+    [tagSlot, postPutSlot]: [TagRegistry, OnPostPutSlot],
     harmony: Harmony
   ) {
     cli.register(new ExportCmd());
@@ -468,7 +471,7 @@ export class ScopeMain implements ComponentFactory {
       legacyScope,
       componentExt,
       tagSlot,
-      postExportSlot,
+      postPutSlot,
       isolator,
       aspectLoader,
       config
@@ -477,7 +480,7 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    express.register([new PutRoute(scope), new FetchRoute(scope)]);
+    express.register([new PutRoute(scope, postPutSlot), new FetchRoute(scope)]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));
