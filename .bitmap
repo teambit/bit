@@ -1463,6 +1463,11 @@
                 "test": false
             },
             {
+                "name": "harmony-link-error.ts",
+                "relativePath": "exceptions/harmony-link-error.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "exceptions/index.ts",
                 "test": false
