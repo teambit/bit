@@ -1,4 +1,3 @@
-import { useQuery } from '@apollo/react-hooks';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -7,47 +6,30 @@ import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
 import { EmptyBox } from '@teambit/staged-components.empty-box';
-import { gql } from 'apollo-boost';
 import head from 'lodash.head';
-import R from 'ramda';
-import React, { useContext, useEffect, useReducer, useState } from 'react';
+import React, { useContext, useEffect, useReducer, useState, useRef } from 'react';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-
-const GET_PROPERTIES = gql`
-  query($id: String!) {
-    getHost {
-      getDocs(id: $id) {
-        properties {
-          name
-          description
-          required
-          type
-          default: defaultValue {
-            value
-          }
-        }
-      }
-    }
-  }
-`;
+import { useProperties } from './use-properties';
 
 export function Compositions() {
   const component = useContext(ComponentContext);
-  // const compositions = useCompositions();
   const [selected, selectComposition] = useState(head(component.compositions));
-  const { data } = useQuery(GET_PROPERTIES, {
-    variables: { id: component.id._legacy.name },
-  });
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
 
-  const properties = R.path(['getHost', 'getDocs', 'properties'], data);
+  const properties = useProperties(component.id);
+
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok
   useEffect(() => {
-    selectComposition(component.compositions[0]);
+    const prevId = selectedRef.current?.identifier;
+    const next = component.compositions.find((c) => c.identifier === prevId) || component.compositions[0];
+
+    selectComposition(next);
   }, [component]);
 
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, component.compositions.length > 0);
