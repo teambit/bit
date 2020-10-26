@@ -22,6 +22,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { DependenciesPolicy } from '@teambit/dependency-resolver';
 import { TsConfigSourceFile } from 'typescript';
+import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -35,7 +36,8 @@ type ReactDeps = [
   Workspace,
   GraphqlMain,
   PkgMain,
-  TesterMain
+  TesterMain,
+  ESLintMain
 ];
 
 export type ReactMainConfig = {
@@ -177,6 +179,8 @@ export class ReactMain {
     });
   }
 
+  overrideEslintConfig() {}
+
   /**
    * override the package json props of the component environment.
    */
@@ -220,13 +224,14 @@ export class ReactMain {
     GraphqlAspect,
     PkgAspect,
     TesterAspect,
+    ESLintAspect,
   ];
 
   static async provider(
-    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester]: ReactDeps,
+    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config);
+    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config, eslint);
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

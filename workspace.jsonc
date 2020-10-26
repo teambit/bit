@@ -129,7 +129,6 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
-        "graphql-request": "3.0.0",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
         "graphql-tools": "6.2.4",
