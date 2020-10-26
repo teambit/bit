@@ -4,11 +4,6 @@ import { Logger } from '@teambit/logger';
 import { WorkspaceAspect } from '@teambit/workspace';
 
 import React from 'react';
-// import fs from 'fs-extra';
-// import through2 from 'through2';
-// const { Writable, pipeline, Transform } = require('stream');
-// var intercept = require("intercept-stdout");
-// import { Filter } from './filter';
 import { Newline, Text, render } from 'ink';
 
 import type { UiMain } from '../ui.main.runtime';
@@ -83,7 +78,6 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    // await this.ui.createRuntime({
     this.ui
       .createRuntime({
         uiRootName,
