@@ -1,7 +1,7 @@
 import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
-// import { merge } from 'lodash';
+import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
 import { babelConfig } from './babel/babel-config';
@@ -24,12 +24,9 @@ export class AspectEnv implements Environment {
     };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getTsConfig(tsConfig: TsConfigSourceFile) {
-    // @todo: @ran, is this needed now? the tsconfig is different as it generates only d.ts files.
-    // const targetConf = merge(tsconfig, tsConfig);
-    // return targetConf;
-    return tsconfig;
+    const targetConf = merge(tsconfig, tsConfig);
+    return targetConf;
   }
 
   getCompiler() {
