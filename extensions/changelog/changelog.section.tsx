@@ -11,7 +11,7 @@ export class ChangelogSection implements Section {
   };
   navigationLink = {
     href: '~changelog',
-    children: <Icon of="changelog" />,
+    children: <Icon of="changelog" className={styles.icon} />,
   };
   order = 30;
 }

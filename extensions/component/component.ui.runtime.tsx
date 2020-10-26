@@ -42,7 +42,7 @@ export class ComponentUI {
     /**
      * slot for registering a new widget to the menu.
      */
-    private widgetSlot: NavigationSlot
+    private widgetSlot: OrderedNavigationSlot
   ) {
     this.registerPubSub();
   }
@@ -92,8 +92,8 @@ export class ComponentUI {
     });
   }
 
-  registerWidget(widget: NavLinkProps) {
-    this.widgetSlot.register(widget);
+  registerWidget(widget: NavLinkProps, order?: number) {
+    this.widgetSlot.register({ props: widget, order });
   }
 
   static dependencies = [PubsubAspect];
@@ -105,7 +105,7 @@ export class ComponentUI {
   static async provider(
     [pubsub]: [PubsubUI],
     config,
-    [routeSlot, navSlot, widgetSlot]: [RouteSlot, OrderedNavigationSlot, NavigationSlot]
+    [routeSlot, navSlot, widgetSlot]: [RouteSlot, OrderedNavigationSlot, OrderedNavigationSlot]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
@@ -113,7 +113,7 @@ export class ComponentUI {
     const section = new AspectSection();
 
     componentUI.registerRoute(section.route);
-    componentUI.registerWidget(section.navigationLink);
+    componentUI.registerWidget(section.navigationLink, section.order);
     return componentUI;
   }
 }

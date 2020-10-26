@@ -31,6 +31,7 @@
 .rightSide {
   display: flex;
   align-items: center;
+  height: 100%;
   > * {
     margin-right: 12px;
     &:last-child {
@@ -38,7 +39,10 @@
     }
   }
   .widgets {
+    height: 100%;
     margin-right: 20px;
+    display: flex;
+    align-items: center;
     > * {
       margin-right: 12px;
       &:last-child {

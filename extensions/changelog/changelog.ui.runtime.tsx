@@ -20,7 +20,7 @@ export class ChangeLogUI {
     const section = new ChangelogSection();
 
     component.registerRoute(section.route);
-    component.registerWidget(section.navigationLink);
+    component.registerWidget(section.navigationLink, section.order);
 
     return ui;
   }
