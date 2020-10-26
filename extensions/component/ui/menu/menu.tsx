@@ -1,5 +1,5 @@
 // import { NavigationSlot } from '@teambit/react-router';
-import { MainDropdown } from '@teambit/staged-components.main-dropdown';
+// import { MainDropdown } from '@teambit/staged-components.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/staged-components.version-dropdown';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
@@ -43,12 +43,6 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
       </div>
       <div className={styles.rightSide}>
         <div className={styles.widgets}>
-          {/* {widgetLinks &&
-            widgetLinks.map(([id, widget]) => (
-              <TopBarWidgetLink key={id} href={widget.href} className={styles.widget}>
-                {widget.children}
-              </TopBarWidgetLink>
-            ))} */}
           <MenuNav navigationSlot={widgetSlot} />
         </div>
         {versionList.length > 0 && (
@@ -58,7 +52,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />
         </span> */}
-        <MainDropdown />
+        {/* <MainDropdown /> */}
       </div>
     </div>
   );
