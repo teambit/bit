@@ -66,7 +66,7 @@
         "@teambit/documenter.types.docs-file": "0.0.7",
         "@teambit/documenter.ui.consumable-link": "^0.0.5",
         "@teambit/documenter.ui.heading": "^0.0.5",
-        "@teambit/documenter.ui.import-action": "0.0.6",
+        "@teambit/documenter.ui.import-action": "0.0.5",
         "@teambit/documenter.ui.label-list": "^0.0.5",
         "@teambit/documenter.ui.linked-heading": "^0.0.6",
         "@teambit/documenter.ui.property-table": "^0.0.7",
@@ -194,9 +194,7 @@
         "webpack-hot-middleware": "^2.25.0",
         "webpack-manifest-plugin": "^2.2.0",
         "webpack-merge": "^4.2.2",
-        "workbox-webpack-plugin": "^5.1.3"
-      },
-      "devDependencies": {
+        "workbox-webpack-plugin": "^5.1.3",
         "@types/mocha": "-",
         "@types/cacache": "^12.0.1",
         "@types/classnames": "^2.2.10",
