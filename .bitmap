@@ -1468,6 +1468,11 @@
                 "test": false
             },
             {
+                "name": "harmony-link-error.ts",
+                "relativePath": "exceptions/harmony-link-error.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "exceptions/index.ts",
                 "test": false
@@ -2979,6 +2984,11 @@
             {
                 "name": "pkg.aspect.ts",
                 "relativePath": "pkg.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "pkg.graphql.ts",
+                "relativePath": "pkg.graphql.ts",
                 "test": false
             },
             {
@@ -5917,5 +5927,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.84"
+    "version": "14.8.9-dev.90"
 }

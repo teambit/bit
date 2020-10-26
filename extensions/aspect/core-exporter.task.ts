@@ -20,6 +20,7 @@ export class CoreExporterTask implements BuildTask {
     if (mainAspectCapsule) {
       const distDir = this.env.getCompiler().distDir;
       await this.addFolderForAllCoreAspects(mainAspectCapsule, distDir);
+      await this.addFolderForHarmony(mainAspectCapsule, distDir);
     }
 
     return {
@@ -44,6 +45,16 @@ export class CoreExporterTask implements BuildTask {
       await fs.writeFile(path.join(newDirPath, 'index.js'), barrelContent);
     });
     return Promise.all(createBarrelFilesP);
+  }
+
+  private async addFolderForHarmony(mainAspectCapsule: Capsule, distDir: string) {
+    const name = 'harmony';
+    const packageName = '@teambit/harmony';
+    const capsuleDir = mainAspectCapsule.path;
+    const newDirPath = path.join(capsuleDir, distDir, name);
+    await fs.ensureDir(newDirPath);
+    const barrelContent = generateBarrelFile(packageName);
+    await fs.writeFile(path.join(newDirPath, 'index.js'), barrelContent);
   }
 }
 

@@ -46,7 +46,7 @@
         },
         "peerDependencies": {
           "react": "^16.13.1",
-          "bit-bin": "14.8.9-dev.84",
+          "bit-bin": "14.8.9-dev.91",
           "react-dom": "^16.13.1"
         }
       }
