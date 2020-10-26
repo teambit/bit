@@ -10,6 +10,7 @@ import {
   CFG_SYMPHONY_URL_KEY,
 } from '../../constants';
 import Scope from '../../scope/scope';
+import logger from '../../../src/logger/logger';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
@@ -34,18 +35,23 @@ async function getScope(name: string) {
   const client = new GraphQLClient(`http://${symphonyUrl}/graphql`);
   if (token) client.setHeader('Authorization', `Barrier ${token}`);
 
-  const res = client.request(SCOPE_GET, {
-    id: name,
-  });
+  try {
+    const res = client.request(SCOPE_GET, {
+      id: name,
+    });
 
-  scopeCache[name] = res;
-  return res;
+    scopeCache[name] = res;
+    return res;
+  } catch (err) {
+    logger.error(err);
+    return undefined;
+  }
 }
 
 const hubResolver = async (scopeName) => {
   // check if has harmony
   const scope = await getScope(scopeName);
-  if (scope.getScope.isLegacy) {
+  if (scope && scope.getScope.isLegacy) {
     const hubPrefix = `ssh://bit@${hubDomain}:`;
     return hubPrefix + scopeName;
   }
