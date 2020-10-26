@@ -277,9 +277,9 @@ export class AspectLoaderMain {
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
       this.logger.warn(warning, e);
       if (this.logger.isLoaderStarted) {
-        this.logger.consoleFailure(e);
+        this.logger.consoleFailure(warning);
       } else {
-        this.logger.console(e);
+        this.logger.console(warning);
       }
       if (throwOnError) {
         throw e;
