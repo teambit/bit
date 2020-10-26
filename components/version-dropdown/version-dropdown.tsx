@@ -1,7 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import { PillLabel } from '@teambit/staged-components.pill-label';
 import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
 import classNames from 'classnames';
 import React from 'react';
@@ -17,7 +16,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
   if (versions.length < 2) {
     return (
       <div className={styles.noVersions}>
-        <PillLabel className={styles.label}>{currentVersion}</PillLabel>
+        <VersionPlaceholder currentVersion={currentVersion} />
       </div>
     );
   }
@@ -28,7 +27,9 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
         dropClass={styles.menu}
         placeholder=""
         clickOutside
-        PlaceholderComponent={() => <VersionPlaceholder currentVersion={currentVersion} />}
+        PlaceholderComponent={() => (
+          <VersionPlaceholder currentVersion={currentVersion} className={styles.withVersions} />
+        )}
       >
         <div>
           <div className={styles.title}>Select version to view</div>
@@ -54,9 +55,9 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
   );
 }
 
-function VersionPlaceholder({ currentVersion }: { currentVersion?: string }) {
+function VersionPlaceholder({ currentVersion, className }: { currentVersion?: string; className?: string }) {
   return (
-    <div className={classNames(styles.placeholder)}>
+    <div className={classNames(styles.placeholder, className)}>
       <div>{currentVersion}</div>
       <Icon of="fat-arrow-down" />
     </div>
