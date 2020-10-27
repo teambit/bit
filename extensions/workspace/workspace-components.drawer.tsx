@@ -10,9 +10,9 @@ import {
   ScopePayload,
 } from '@teambit/staged-components.side-bar';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { useWorkspace } from './ui/workspace/use-workspace';
+import { WorkspaceContext } from './ui/workspace/workspace-context';
 
 export class WorkspaceComponentsDrawer implements Drawer {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
@@ -20,7 +20,7 @@ export class WorkspaceComponentsDrawer implements Drawer {
   name = 'COMPONENTS';
 
   render = () => {
-    const workspace = useWorkspace();
+    const workspace = useContext(WorkspaceContext);
     const { treeNodeSlot } = this;
 
     const TreeNodeRenderer = useCallback(
