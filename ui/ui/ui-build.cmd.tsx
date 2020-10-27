@@ -18,7 +18,7 @@ export class UIBuildCmd implements Command {
   ) {}
 
   async report([type]: [string]): Promise<string> {
-    // teambit.bit/variants should be the one to take care of component patterns.
+    // teambit.workspace/variants should be the one to take care of component patterns.
     const stats = await this.ui.build(type);
     return stats.toString();
   }

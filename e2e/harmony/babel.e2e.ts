@@ -31,10 +31,10 @@ describe('babel compiler', function () {
         // add a new env that compiles with Babel
         helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
         helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
-        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
         helper.scopeHelper.linkBitBin();
         helper.command.link();
-        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/dependency-resolver', {
+        helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
           policy: {
             dependencies: {
               '@babel/core': '7.11.6',

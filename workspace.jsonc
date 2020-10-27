@@ -1,14 +1,14 @@
 {
   "$schema": "",
-  "teambit.bit/workspace": {
+  "teambit.workspace/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
-  "teambit.bit/dependency-resolver": {
-    "packageManager": "teambit.bit/pnpm",
+  "teambit.dependencies/dependency-resolver": {
+    "packageManager": "teambit.dependencies/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
     "policy": {
@@ -227,9 +227,9 @@
       }
     }
   },
-  "teambit.bit/variants": {
+  "teambit.workspace/variants": {
     "*": {
-      "teambit.bit/pkg": {
+      "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
         ],
@@ -238,7 +238,7 @@
           "private": false
         }
       },
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "-"
@@ -258,10 +258,10 @@
       }
     },
     "{ui/*}": {
-      "teambit.bit/react": {}
+      "teambit.react/react": {}
     },
     "{aspects/*}": {
-      "teambit.bit/aspect": {}
+      "teambit.aspect/aspect": {}
     },
     "toolbox": {
       "defaultScope": "teambit.toolbox"
@@ -288,7 +288,7 @@
       "defaultScope": "teambit.react"
     },
     "product": {
-      "defaultScope": "teambit.bit"
+      "defaultScope": "teambit.product"
     },
     "preview": {
       "defaultScope": "teambit.preview"
@@ -318,7 +318,7 @@
       "defaultScope": "teambit.schemas"
     },
     "product/bit": {
-      "teambit.bit/pkg": {
+      "teambit.pkg/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [
             "--access public"
@@ -331,7 +331,7 @@
           }
         }
       },
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "14.8.9-dev.93",
@@ -360,7 +360,7 @@
       }
     },
     "extensions/jest": {
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "peerDependencies": {
             "jest": "^26.0.1"

@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const DocsAspect = Aspect.create({
-  id: 'teambit.bit/docs',
+  id: 'teambit.docs/docs',
   dependencies: [],
   defaultConfig: {},
 });

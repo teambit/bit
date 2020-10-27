@@ -4,7 +4,7 @@
   "description": "This is the main configuration file of your bit workspace. for full documentation, please see: https://docs.bit.dev/configuration",
   "type": "object",
   "properties": {
-    "teambit.bit/workspace": {
+    "teambit.workspace/workspace": {
       "description": "Main configuration of the Bit workspace.",
       "type": "object",
       "properties": {
@@ -35,14 +35,14 @@
       },
       "required": ["defaultScope"]
     },
-    "teambit.bit/dependency-resolver": {
+    "teambit.dependencies/dependency-resolver": {
       "description": "Main configuration for component dependency resolution.",
       "type": "object",
       "properties": {
         "packageManager": {
           "description": "main configuration for bit's component dependency resolution.",
           "type": "string",
-          "examples": ["teambit.bit/pnpm"]
+          "examples": ["teambit.dependencies/pnpm"]
         },
         "strictPeerDependencies": {
           "description": "If true, then Bit will add the '--strict-peer-dependencies' option when invoking package managers. This causes 'bit install' to fail if there are unsatisfied peer dependencies, which is an invalid state that can cause build failures or incompatible dependency versions. (For historical reasons, JavaScript package managers generally do not treat this invalid state as an error.) The default value is false to avoid legacy compatibility issues. It is strongly recommended to set strictPeerDependencies=true.",
@@ -71,7 +71,7 @@
       },
       "required": ["packageManager"]
     },
-    "teambit.bit/react": {
+    "teambit.react/react": {
       "description": "apply the react environment on components.",
       "type": "object",
       "properties": {
@@ -83,7 +83,7 @@
         }
       }
     },
-    "teambit.bit/variants": {
+    "teambit.workspace/variants": {
       "description": "Workspace variants allow to set different subsets of configuration for components in your workspace. This is extremely useful for upgrading, aligning and building components with a new set of dependencies.",
       "type": "object",
       "properties": {
@@ -95,7 +95,7 @@
               "description": "",
               "type": "boolean"
             },
-            "teambit.bit/react": {
+            "teambit.react/react": {
               "description": "apply the react environment on components.",
               "type": "object",
               "properties": {
@@ -119,7 +119,7 @@
                 }
               }
             },
-            "teambit.bit/node": {
+            "teambit.engineering/node": {
               "description": "apply the node environment on components.",
               "type": "object",
               "properties": {
@@ -129,7 +129,7 @@
                 }
               }
             },
-            "teambit.bit/flows": {
+            "teambit.pipelines/flows": {
               "description": "main configuration for handling the build process of components.",
               "type": "object",
               "properties": {
@@ -139,8 +139,8 @@
                   "properties": {
                     "build": {
                       "type": "array",
-                      "default": ["teambit.bit/react:build", "mv dist dist-copy"],
-                      "examples": [["teambit.bit/react:build", "mv dist dist-copy"]]
+                      "default": ["teambit.react/react:build", "mv dist dist-copy"],
+                      "examples": [["teambit.react/react:build", "mv dist dist-copy"]]
                     },
                     "test": {
                       "type": "array",
@@ -156,7 +156,7 @@
                 }
               }
             },
-            "teambit.bit/pkg": {
+            "teambit.pkg/pkg": {
               "description": "",
               "type": "object",
               "properties": {
@@ -179,5 +179,5 @@
       "required": []
     }
   },
-  "required": ["teambit.bit/workspace", "teambit.bit/dependency-resolver"]
+  "required": ["teambit.workspace/workspace", "teambit.dependencies/dependency-resolver"]
 }

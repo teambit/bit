@@ -5,7 +5,7 @@
   },
   "propagate": true,
   "extensions": {
-    "teambit.bit/pkg": {
+    "teambit.pkg/pkg": {
       "packageJson": {
         "name": "@teambit/{name}",
         "private": false
@@ -14,7 +14,7 @@
         "--access public"
       ]
     },
-    "teambit.bit/dependency-resolver": {
+    "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
           "source-map-loader": "^1.0.0",

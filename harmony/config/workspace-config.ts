@@ -62,8 +62,8 @@ export interface DependencyResolverExtensionProps {
 }
 
 export type WorkspaceSettingsNewProps = {
-  'teambit.bit/workspace': WorkspaceExtensionProps;
-  'teambit.bit/dependency-resolver': DependencyResolverExtensionProps;
+  'teambit.workspace/workspace': WorkspaceExtensionProps;
+  'teambit.dependencies/dependency-resolver': DependencyResolverExtensionProps;
 };
 
 export type WorkspaceLegacyProps = {
@@ -204,11 +204,11 @@ export class WorkspaceConfig implements HostConfig {
     if (!dirPath) throw new Error('workspace-config, dirPath is missing');
     // Only support here what needed for e2e tests
     const legacyProps: LegacyWorkspaceConfigProps = {};
-    if (props['teambit.bit/dependency-resolver']) {
-      legacyProps.packageManager = props['teambit.bit/dependency-resolver'].packageManager;
+    if (props['teambit.dependencies/dependency-resolver']) {
+      legacyProps.packageManager = props['teambit.dependencies/dependency-resolver'].packageManager;
     }
-    if (props['teambit.bit/workspace']) {
-      legacyProps.componentsDefaultDirectory = props['teambit.bit/workspace'].defaultDirectory;
+    if (props['teambit.workspace/workspace']) {
+      legacyProps.componentsDefaultDirectory = props['teambit.workspace/workspace'].defaultDirectory;
     }
 
     const standAlone = legacyInitProps?.standAlone ?? false;
@@ -396,26 +396,26 @@ export class WorkspaceConfig implements HostConfig {
       return this.legacyConfig?.tester;
     };
 
-    let componentsDefaultDirectory = this.extension('teambit.bit/workspace', true)?.defaultDirectory;
+    let componentsDefaultDirectory = this.extension('teambit.workspace/workspace', true)?.defaultDirectory;
     if (componentsDefaultDirectory && !componentsDefaultDirectory.includes('{name}')) {
       componentsDefaultDirectory = `${componentsDefaultDirectory}/{name}`;
     }
 
     return {
       lang: this.legacyConfig?.lang || DEFAULT_LANGUAGE,
-      defaultScope: this.extension('teambit.bit/workspace', true)?.defaultScope,
-      _useWorkspaces: this.extension('teambit.bit/dependency-resolver', true)?.useWorkspaces,
-      dependencyResolver: this.extension('teambit.bit/dependency-resolver', true),
-      packageManager: this.extension('teambit.bit/dependency-resolver', true)?.packageManager,
-      _bindingPrefix: this.extension('teambit.bit/workspace', true)?.defaultOwner,
+      defaultScope: this.extension('teambit.workspace/workspace', true)?.defaultScope,
+      _useWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.useWorkspaces,
+      dependencyResolver: this.extension('teambit.dependencies/dependency-resolver', true),
+      packageManager: this.extension('teambit.dependencies/dependency-resolver', true)?.packageManager,
+      _bindingPrefix: this.extension('teambit.workspace/workspace', true)?.defaultOwner,
       _distEntry: this._legacyProps?.distEntry,
       _distTarget: this._legacyProps?.distTarget,
       _saveDependenciesAsComponents: this._legacyProps?.saveDependenciesAsComponents,
       _dependenciesDirectory: this._legacyProps?.dependenciesDirectory,
       componentsDefaultDirectory,
       _resolveModules: this._legacyProps?.resolveModules,
-      _manageWorkspaces: this.extension('teambit.bit/dependency-resolver', true)?.manageWorkspaces,
-      defaultOwner: this.extension('teambit.bit/workspace', true)?.defaultOwner,
+      _manageWorkspaces: this.extension('teambit.dependencies/dependency-resolver', true)?.manageWorkspaces,
+      defaultOwner: this.extension('teambit.workspace/workspace', true)?.defaultOwner,
       extensions: this.extensions.toConfigObject(),
       // @ts-ignore
       path: this.path,
@@ -467,16 +467,16 @@ export function transformLegacyPropsToExtensions(
   const variants = legacyConfig.overrides?.overrides;
   const data = {};
   if (workspace && !isEmpty(workspace)) {
-    data['teambit.bit/workspace'] = workspace;
+    data['teambit.workspace/workspace'] = workspace;
   }
   if (dependencyResolver && !isEmpty(dependencyResolver)) {
-    data['teambit.bit/dependency-resolver'] = dependencyResolver;
+    data['teambit.dependencies/dependency-resolver'] = dependencyResolver;
   }
   // TODO: add variants here once we have a way to pass the deps overrides and general key vals for package.json to
   // TODO: new extensions (via dependency-resolver extension and pkg extensions)
   // TODO: transform legacy props to new one once dependency-resolver extension and pkg extensions are ready
   if (variants && !isEmpty(variants)) {
-    data['teambit.bit/variants'] = variants;
+    data['teambit.workspace/variants'] = variants;
   }
   // @ts-ignore
   return data;

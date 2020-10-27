@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const NotificationsAspect = Aspect.create({
-  id: 'teambit.bit/notifications',
+  id: 'teambit.ui/notifications',
   dependencies: [],
   defaultConfig: {},
 });

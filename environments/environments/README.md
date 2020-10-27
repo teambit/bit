@@ -3,7 +3,7 @@
 # Creating a new Environment
 Before starting, it might be easier to re-use an existing environment, see the "Composing an Environment" section below.
 
-To create a new environment, create a new extension, add "teambit.bit/environment" as a dependency and register to its slot: `envs.registerEnv(yourNewEnv);`. See the `provider` of react.extension.ts for a detailed example.
+To create a new environment, create a new extension, add "teambit.environments/environments" as a dependency and register to its slot: `envs.registerEnv(yourNewEnv);`. See the `provider` of react.extension.ts for a detailed example.
 
 The class of the environment extension needs to implement the `Environment` interface. For now, due to types/circular constrains, it doesn't require to implement anything. However, to get a working env, you must implement the following:
 ```
@@ -23,7 +23,7 @@ getDependencies(); // if you need to change/add/remove package dependencies
 
 add this to your workspace.jsonc file.
 ```
-"teambit.bit/envs": {
+"teambit.environments/environments": {
   "env": "your-new-env",
   "config": {}
 }

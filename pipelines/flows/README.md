@@ -1,4 +1,4 @@
-# `teambit.bit/flows`
+# `teambit.pipelines/flows`
 
 Run tasks on components and their dependents.
 
@@ -42,7 +42,7 @@ Use `bit.jsonc` configuration docs to understand how to configure bit.
 // workspace configuration with default values for 'concurrency' and 'verbose'
 
 {
-  "teambit.bit/flows": {
+  "teambit.pipelines/flows": {
     "concurrency": 4,
     "verbose": false,
     "tasks": {
@@ -61,7 +61,7 @@ The structure allows only for the task entry in that use case.
 {
   "variants": {
     "ui/*":{
-      "teambit.bit/flows": {
+      "teambit.pipelines/flows": {
         "tasks": {
           "build": ["some_build_task"]
         }
@@ -78,7 +78,7 @@ Consult with the docs to learn more about variants.
 Flows API is document in [`flows.ts`](https://github.com/teambit/bit/blob/harmony/main/src/extensions/flows/flows.ts) module. Here are two examples:
 
 ```javascript
-import {Flows, flattenReplaySubject} from 'teambit.bit/flows'
+import {Flows, flattenReplaySubject} from 'teambit.pipelines/flows'
 
 const flows = new Flows(workspace)
 const execution = flows.run(seeders)

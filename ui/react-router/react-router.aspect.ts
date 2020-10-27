@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const ReactRouterAspect = Aspect.create({
-  id: 'teambit.bit/react-router',
+  id: 'teambit.ui/react-router',
   dependencies: [],
   defaultConfig: {},
 });

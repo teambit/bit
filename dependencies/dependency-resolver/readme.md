@@ -1,4 +1,4 @@
-# `teambit.bit/dependency-resolver`
+# `teambit.dependencies/dependency-resolver`
 
 This extension is responsible for:
 1. detecting dependencies of components by static code analysis
@@ -20,7 +20,7 @@ Here is a full example of workspace config:
 /**
   * main configuration for component dependency resolution.
   */
-  "teambit.bit/dependency-resolver": {
+  "teambit.dependencies/dependency-resolver": {
     "policy" : {
       "dependencies": {
         "lodash": "1.2.3",
@@ -78,13 +78,13 @@ for example:
 
 for example, consider the following config (co-exist in the same workspace with the workspace configuration described above):
 ```js
-"teambit.bit/variants": {
+"teambit.workspace/variants": {
     /**
      * wildcards can be used to configure components under a specific namespace.
      * this configuration applies the react extensions on all components the `ui` namespace.
     **/
     "new-ui/*": {
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "dependencies": {
           "lodash": "-",
           // will change "teambit.bit/my-awesome-component" version to 5.5.5 for any component that require it
@@ -144,8 +144,8 @@ The dependency resolver will provide a hook called @dependncies (name is open - 
 here is an example:
 ```js
 // my 3rd party extension
-import { Extension } from 'teambit.bit/bit';
-import { DependencyResolver, Dependencies } from 'teambit.bit/dependency-resolver';
+import { Extension } from '@teambit/bit';
+import { DependencyResolver, Dependencies } from '@teambit/dependency-resolver';
 @Extension()
 export class MyExtension {
   constructor() {}
@@ -175,8 +175,8 @@ import default from 'my-component';
 console.log('do something');
 
 // my 3rd party extension
-import { Extension } from 'teambit.bit/bit';
-import { DependencyResolver, FileDependencies } from 'teambit.bit/dependency-resolver';
+import { Extension } from 'teambit.product/bit';
+import { DependencyResolver, FileDependencies } from 'teambit.dependencies/dependency-resolver';
 
 @Extension()
 export class MyExtension {

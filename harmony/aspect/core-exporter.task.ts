@@ -9,7 +9,7 @@ export class CoreExporterTask implements BuildTask {
   constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
 
   location: TaskLocation = 'start';
-  readonly aspectId = 'teambit.bit/aspect';
+  readonly aspectId = 'teambit.harmony/aspect';
   readonly name = 'CoreExporter';
   readonly description = 'export all core aspects via the main aspects';
 

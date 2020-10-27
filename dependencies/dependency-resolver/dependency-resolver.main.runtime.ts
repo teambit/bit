@@ -219,7 +219,7 @@ export class DependencyResolverMain {
    * return the system configured package manager. by default pnpm.
    */
   getSystemPackageManager(): PackageManager {
-    const defaultPm = 'teambit.bit/pnpm';
+    const defaultPm = 'teambit.dependencies/pnpm';
     const packageManager = this.packageManagerSlot.get(defaultPm);
     if (!packageManager) throw new Error(`default package manager: ${defaultPm} was not found`);
     return packageManager;
@@ -377,7 +377,7 @@ export class DependencyResolverMain {
     /**
      * default package manager.
      */
-    packageManager: 'teambit.bit/pnpm',
+    packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
     strictPeerDependencies: true,

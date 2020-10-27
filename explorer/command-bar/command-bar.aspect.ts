@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const CommandBarAspect = Aspect.create({
-  id: 'teambit.bit/command-bar',
+  id: 'teambit.explorer/command-bar',
   dependencies: [],
   defaultConfig: {},
 });

@@ -23,7 +23,7 @@ export class PreviewTask implements BuildTask {
     private preview: PreviewMain
   ) {}
 
-  aspectId = 'teambit.bit/preview';
+  aspectId = 'teambit.preview/preview';
   name = 'GeneratePreview';
   location: TaskLocation = 'end';
 

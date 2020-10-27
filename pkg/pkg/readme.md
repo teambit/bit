@@ -1,4 +1,4 @@
-# `extension teambit.bit/pkg`
+# `extension teambit.pkg/pkg`
 
 1. allows users to change (add) properties in the component's package.json
 2. allows other extensions to add new properties to the component's package.json
@@ -22,7 +22,7 @@ This extensions gets properties to add to the package.json in the variants confi
 ```js
 {
   "ui/*": {
-    "teambit.bit/pkg": {
+    "teambit.pkg/pkg": {
       "packageJson": {
         "myPropToAdd": "propValue"
       }
@@ -37,7 +37,7 @@ Configure the `publishConfig` prop with your registry data. For example:
 
 ```js
 "ui/*": {
-  "teambit.bit/pkg": {
+  "teambit.pkg/pkg": {
     "packageJson": {
        "publishConfig": {
          "scope": "@custom",
@@ -54,7 +54,7 @@ In addition, you can specify args to the `npm publish` command by adding an arra
 
 ```js
 "ui/*": {
-  "teambit.bit/pkg": {
+  "teambit.pkg/pkg": {
     "packageManagerPublishArgs": ["--access public"]
   }
 }

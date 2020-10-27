@@ -116,7 +116,7 @@ describe('component config', function () {
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
         helper.command.addComponent(EXTENSION_FOLDER);
         helper.extensions.addExtensionToVariant('bar', 'my-scope/dummy-extension', config);
-        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.install();
         helper.command.compile();
         helper.command.tagAllComponents();
@@ -142,7 +142,7 @@ describe('component config', function () {
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext1', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext2', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext5', { key: 'val-ws-defaults' });
-      helper.extensions.addExtensionToVariant('extensions', 'teambit.bit/aspect');
+      helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
       helper.bitJsonc.addToVariant(helper.scopes.localPath, 'extensions', 'propagate', false);
       helper.command.install();
       helper.command.compile();

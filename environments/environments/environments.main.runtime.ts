@@ -32,7 +32,7 @@ export type Descriptor = {
   services?: [];
 };
 
-export const DEFAULT_ENV = 'teambit.bit/node';
+export const DEFAULT_ENV = 'teambit.engineering/node';
 
 export class EnvsMain {
   static runtime = MainRuntime;
@@ -157,7 +157,7 @@ export class EnvsMain {
         : envInExtensionList.stringId;
       return new EnvDefinition(id, this.envSlot.get(id) as Environment);
     }
-    const defaultEnvId = 'teambit.bit/node';
+    const defaultEnvId = 'teambit.engineering/node';
     const defaultEnv = this.envSlot.get(defaultEnvId);
     if (!defaultEnv) throw new Error(`the default environment "${defaultEnvId}" was not registered`);
     return new EnvDefinition(defaultEnvId, defaultEnv);
@@ -201,7 +201,7 @@ export class EnvsMain {
    */
   getDescriptor(component: Component): Descriptor | null {
     // TODO: fix after resolving dep issue between envs -> dep resolver -> workspace -> scope.
-    const envsData = component.state.aspects.get('teambit.bit/workspace');
+    const envsData = component.state.aspects.get('teambit.workspace/workspace');
     if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
 
     return {

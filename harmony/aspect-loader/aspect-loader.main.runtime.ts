@@ -139,7 +139,7 @@ export class AspectLoaderMain {
     return ids.concat(this._reserved);
   }
 
-  private _reserved = ['teambit.bit/bit', 'teambit.bit/config'];
+  private _reserved = ['teambit.product/bit', 'teambit.harmony/config'];
 
   getUserAspects(): string[] {
     const coreAspectIds = this.getCoreAspectIds();

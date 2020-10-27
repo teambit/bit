@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const CacheAspect = Aspect.create({
-  id: 'teambit.bit/cache',
+  id: 'teambit.engineering/cache',
   dependencies: [],
   defaultConfig: {},
 });

@@ -76,7 +76,7 @@ export interface BuildTask {
    * the case where this is useful is when a task not only needs to be after another task, but also
    * after all environments were running that task.
    * a dependency is task.aspectId. if an aspect has multiple tasks, to be more specific, use
-   * "aspectId:name", e.g. "teambit.bit/compiler:TypescriptCompiler".
+   * "aspectId:name", e.g. "teambit.compilers/compiler:TypescriptCompiler".
    */
   dependencies?: string[];
 }
