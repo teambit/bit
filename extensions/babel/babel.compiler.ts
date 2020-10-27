@@ -9,16 +9,22 @@ import path from 'path';
 import { BabelCompilerOptions } from './compiler-options';
 
 export class BabelCompiler implements Compiler {
+  distDir: string;
+  distGlobPatterns: string[];
+  shouldCopyNonSupportedFiles: boolean;
+  artifactName: string;
   constructor(
-    readonly id,
+    readonly id: string,
     private logger: Logger,
     private compiler: CompilerMain,
     private options: BabelCompilerOptions
-  ) {}
-  distDir = 'dist';
-  distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
-  shouldCopyNonSupportedFiles = true;
-  artifactName = 'dist';
+  ) {
+    this.distDir = options.distDir || 'dist';
+    this.distGlobPatterns = options.distGlobPatterns || [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+    this.shouldCopyNonSupportedFiles =
+      typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
+    this.artifactName = options.artifactName || 'dist';
+  }
 
   /**
    * compile one file on the workspace
