@@ -1,7 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
-import { WorkspaceAspect } from '@teambit/workspace';
 
 import React from 'react';
 import { Newline, Text, render } from 'ink';
@@ -48,13 +47,13 @@ export class StartCmd implements Command {
     return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
-  private asyncRender(workspaceID, startingTimestamp, pubsub, commandFlags) {
+  private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
     render(
       <CliOutput
-        workspaceID={workspaceID}
         startingTimestamp={startingTimestamp}
         pubsub={pubsub}
         commandFlags={commandFlags}
+        uiServer={uiServer}
       />
     );
   }
@@ -86,17 +85,16 @@ export class StartCmd implements Command {
         port: port ? parseInt(port) : undefined,
         rebuild,
       })
-      .then(() => {
+      .then((uiServer) => {
         setTimeout(() => {
           this.clearConsole();
 
-          const workspaceID = WorkspaceAspect.id;
           const startingTimestamp = Date.now();
           const pubsub = this.pubsub;
           const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch };
 
           setTimeout(() => {
-            this.asyncRender(workspaceID, startingTimestamp, pubsub, commandFlags);
+            this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
           }, 200);
         }, 0);
       });
@@ -104,10 +102,10 @@ export class StartCmd implements Command {
     return (
       <>
         <CliOutput
-          workspaceID={WorkspaceAspect.id}
           startingTimestamp={Date.now()}
           pubsub={this.pubsub}
           commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
+          uiServer={null} // Didnt start yet
         />
       </>
     );

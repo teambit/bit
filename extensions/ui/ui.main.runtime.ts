@@ -166,14 +166,11 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
-    // TODO: is this the right place?
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
 
-    // TODO: need to wait until compilation done, then open browser
-    // await this.openBrowser(`http://${this.config.host}:${targetPort}`);
     return uiServer;
   }
 

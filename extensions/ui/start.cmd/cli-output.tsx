@@ -14,13 +14,13 @@ import { BundlerAspect, ComponentsServerStartedEvent } from '@teambit/bundler';
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
 import React from 'react';
-import { Newline, Text } from 'ink';
+import { Newline, Text, render } from 'ink';
 import open from 'open';
 
 import {
   Starting,
   ComponentPreviewServerStarted,
-  UIServersAreReady,
+  UIServersAreReadyInScope,
   TSErrors,
   WebpackErrors,
   CompilingOrUIServersAreReady,
@@ -37,13 +37,14 @@ type state = {
   webpackErrors: Array<any>;
   webpackWarnings: Array<any>;
   totalComponents: Array<any> | null;
+  isScope: boolean;
 };
 
 export type props = {
-  workspaceID: string;
   startingTimestamp: number;
   pubsub: PubsubMain;
   commandFlags: any;
+  uiServer: any;
 };
 
 export class CliOutput extends React.Component<props, state> {
@@ -52,7 +53,7 @@ export class CliOutput extends React.Component<props, state> {
     this.state = {
       compiledComponents: [],
       commandFlags: props.commandFlags,
-      mainUIServer: null,
+      mainUIServer: props.uiServer,
       componentServers: [],
       componentChanges: [],
       isBrowserOpen: false,
@@ -60,6 +61,7 @@ export class CliOutput extends React.Component<props, state> {
       webpackErrors: [],
       webpackWarnings: [],
       totalComponents: null,
+      isScope: !!props.uiServer?.uiRoot.scope,
     };
 
     this.registerToEvents(props.pubsub);
@@ -105,14 +107,22 @@ export class CliOutput extends React.Component<props, state> {
 
   private async onUiServerStarted(event) {
     const devServers = await event.data.uiRoot.devServers;
-    const totalComponents = await event.data.uiRoot.workspace.list();
-    devServers.forEach((server) => {
-      this.changeOrAddComponentServer(server, server.context.id, 'Started');
-    });
-    this.setState({
-      mainUIServer: event.data,
-      totalComponents,
-    });
+
+    if (!!event.data.uiRoot.scope) {
+      this.setState({
+        mainUIServer: event.data,
+        isScope: true,
+      });
+    } else {
+      const totalComponents = await event.data.uiRoot.workspace.list();
+      devServers.forEach((server) => {
+        this.changeOrAddComponentServer(server, server.context.id, 'Starting...');
+      });
+      this.setState({
+        mainUIServer: event.data,
+        totalComponents,
+      });
+    }
 
     if (!devServers.length) {
       this.unsafeOpenBrowser(this.state.mainUIServer);
@@ -186,12 +196,14 @@ export class CliOutput extends React.Component<props, state> {
       webpackWarnings,
       compiledComponents,
       totalComponents,
+      isScope,
     } = this.state;
     const { verbose } = this.state.commandFlags;
 
     // run in scope
-    if (mainUIServer && mainUIServer.uiRoot.scope) {
-      return <UIServersAreReady mainUIServer={mainUIServer} />;
+    if (isScope) {
+      render(<UIServersAreReadyInScope mainUIServer={mainUIServer} />);
+      return null;
     }
 
     return (
