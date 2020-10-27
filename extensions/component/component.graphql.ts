@@ -1,4 +1,3 @@
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
