@@ -206,7 +206,7 @@ export class WorkspaceCompiler {
   private async resolveIds(componentsIds: Array<string | BitId>): Promise<ComponentID[]> {
     const ids: ComponentID[] = componentsIds.length
       ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
-      : this.workspace.getAllComponentIds();
+      : await this.workspace.getAllComponentIds();
 
     return ids;
   }

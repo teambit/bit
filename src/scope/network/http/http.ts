@@ -68,7 +68,7 @@ export class Http implements Network {
 
   async pushMany(objectList: ObjectList): Promise<string[]> {
     const route = 'api/scope/put';
-    logger.debug(`Http.pushMany, total objects ${objectList.count()}`);
+    logger.debug(`Http.pushMany, url: ${this.url}/${route}  total objects ${objectList.count()}`);
 
     const pack = objectList.toTar();
 
@@ -84,6 +84,7 @@ export class Http implements Network {
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
     const route = 'api/scope/fetch';
+    logger.debug(`Http.fetch, url: ${this.url}/${route}`);
     const body = JSON.stringify({
       ids,
       fetchOptions,

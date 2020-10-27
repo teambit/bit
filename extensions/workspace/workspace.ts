@@ -284,9 +284,10 @@ export class Workspace implements ComponentFactory {
    * get all workspace component-ids, include vendor components.
    * (exclude nested dependencies in case dependencies are saved as components and not packages)
    */
-  getAllComponentIds(): ComponentID[] {
+  getAllComponentIds(): Promise<ComponentID[]> {
     const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
-    return bitIds.map((id) => new ComponentID(id));
+    const ids = bitIds.map((id) => this.resolveComponentId(id));
+    return Promise.all(ids);
   }
 
   // TODO: refactor asap to get seeders as ComponentID[] not strings (most of the places already has it that way)
