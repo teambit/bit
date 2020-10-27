@@ -187,7 +187,7 @@ export class CliOutput extends React.Component<props, state> {
   }
 
   private updateComponentServerStatus(id, status) {
-    const server = { ...this.state.componentServers.find((cs) => cs.id !== id) };
+    const server = this.state.componentServers.find((cs) => cs.id === id)?.server;
     if (!!server) {
       this.addOrUpdateComponentServer(id, status, server);
     }
