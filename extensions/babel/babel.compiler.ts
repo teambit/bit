@@ -127,6 +127,7 @@ export class BabelCompiler implements Compiler {
   private setConfigFileFalse() {
     this.options.babelTransformOptions = this.options.babelTransformOptions || {};
     this.options.babelTransformOptions.configFile = this.options.babelTransformOptions.configFile || false;
+    this.options.babelTransformOptions.babelrc = this.options.babelTransformOptions.babelrc || false;
   }
 
   getArtifactDefinition() {
