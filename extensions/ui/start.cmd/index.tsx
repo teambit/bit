@@ -107,7 +107,7 @@ export class StartCmd implements Command {
           startingTimestamp={Date.now()}
           pubsub={this.pubsub}
           commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
-          uiServer={null} // Didnt start yet
+          uiServer={null} // Didn't start yet
         />
       </>
     );

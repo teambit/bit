@@ -9,4 +9,5 @@ export { StartingMainUiServer } from './starting-main-ui-server';
 export { InkSpinner } from './ink-spinner';
 export { TSErrors } from './ts-errors';
 export { WebpackErrors } from './webpack-errors';
+export { WebpackWarnings } from './webpack-warnings';
 export { UIServersAreReadyInScope } from './ui-servers-is-ready-in-scope';
