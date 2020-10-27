@@ -1376,7 +1376,7 @@
         "exported": false,
         "lanes": []
     },
-    "crypto/checksum@0.0.87": {
+    "crypto/checksum": {
         "files": [
             {
                 "name": "checksum.spec.ts",
@@ -5006,7 +5006,7 @@
         "exported": false,
         "lanes": []
     },
-    "string/to-windows-compatible-path@0.0.87": {
+    "string/to-windows-compatible-path": {
         "files": [
             {
                 "name": "index.ts",
@@ -5153,7 +5153,7 @@
         "exported": false,
         "lanes": []
     },
-    "toolbox/query-string@0.0.87": {
+    "toolbox/query-string": {
         "files": [
             {
                 "name": "index.ts",
@@ -5177,7 +5177,7 @@
         "exported": false,
         "lanes": []
     },
-    "toolbox/string/capitalize@0.0.87": {
+    "toolbox/string/capitalize": {
         "files": [
             {
                 "name": "capitalize.spec.ts",
@@ -5201,7 +5201,7 @@
         "exported": false,
         "lanes": []
     },
-    "toolbox/time-format@0.0.87": {
+    "toolbox/time-format": {
         "files": [
             {
                 "name": "index.ts",

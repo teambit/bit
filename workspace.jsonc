@@ -257,16 +257,67 @@
         }
       }
     },
-    "components": {
+    "{ui/*}": {
       "teambit.bit/react": {}
     },
-    "extensions": {
+    "{aspects/*}": {
       "teambit.bit/aspect": {}
     },
     "toolbox": {
-      // "teambit.bit/react": {}
+      "defaultScope": "teambit.toolbox"
     },
-    "extensions/bit": {
+    "workspace": {
+      "defaultScope": "teambit.workspace"
+    },
+    "scope": {
+      "defaultScope": "teambit.scope"
+    },
+    "explorer": {
+      "defaultScope": "teambit.explorer"
+    },
+    "environments": {
+      "defaultScope": "teambit.environments"
+    },
+    "pkg": {
+      "defaultScope": "teambit.pkg"
+    },
+    "dependencies": {
+      "defaultScope": "teambit.dependencies"
+    },
+    "react": {
+      "defaultScope": "teambit.react"
+    },
+    "product": {
+      "defaultScope": "teambit.bit"
+    },
+    "preview": {
+      "defaultScope": "teambit.preview"
+    },
+    "pipelines": {
+      "defaultScope": "teambit.pipelines"
+    },
+    "harmony": {
+      "defaultScope": "teambit.harmony"
+    },
+    "compilers": {
+      "defaultScope": "teambit.compilers"
+    },
+    "defender": {
+      "defaultScope": "teambit.defender"
+    },
+    "component": {
+      "defaultScope": "teambit.defender"
+    },
+    "ui": {
+      "defaultScope": "teambit.ui"
+    },
+    "design": {
+      "defaultScope": "teambit.design"
+    },
+    "schemas": {
+      "defaultScope": "teambit.schemas"
+    },
+    "product/bit": {
       "teambit.bit/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [
