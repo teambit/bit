@@ -803,6 +803,11 @@
                 "test": false
             },
             {
+                "name": "aspect.section.module.scss",
+                "relativePath": "aspect.section.module.scss",
+                "test": false
+            },
+            {
                 "name": "aspect.section.tsx",
                 "relativePath": "aspect.section.tsx",
                 "test": false
@@ -1100,21 +1105,6 @@
             {
                 "name": "top-bar-nav.tsx",
                 "relativePath": "ui/top-bar-nav/top-bar-nav.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "ui/top-bar-widget-link/index.ts",
-                "test": false
-            },
-            {
-                "name": "top-bar-widget-link.module.scss",
-                "relativePath": "ui/top-bar-widget-link/top-bar-widget-link.module.scss",
-                "test": false
-            },
-            {
-                "name": "top-bar-widget-link.tsx",
-                "relativePath": "ui/top-bar-widget-link/top-bar-widget-link.tsx",
                 "test": false
             },
             {
@@ -6015,5 +6005,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.90"
+    "version": "14.8.9-dev.92"
 }

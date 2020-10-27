@@ -119,7 +119,7 @@ export function preparePackageJsonToWrite(
   const bitDependencies = getBitDependencies(component.dependencies.getAllIds());
   const bitDevDependencies = getBitDependencies(component.devDependencies.getAllIds());
   const bitExtensionDependencies = getBitDependencies(component.extensions.extensionsBitIds);
-  const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
+  const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix, isIsolated);
   const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   packageJson.addOrUpdateProperty('main', main);
   const addDependencies = (packageJsonFile: PackageJsonFile) => {
