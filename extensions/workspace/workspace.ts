@@ -31,8 +31,7 @@ import type { ScopeMain } from '@teambit/scope';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { ResolvedComponent } from '@teambit/utils.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link } from 'bit-bin/dist/api/consumer';
-import { importAction } from 'bit-bin/dist/api/consumer';
+import { link, importAction } from 'bit-bin/dist/api/consumer';
 import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
 import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
@@ -1115,7 +1114,7 @@ export class Workspace implements ComponentFactory {
       // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
       if (err instanceof NothingToImport) {
         // Do not write nothing to import warning
-        return;
+        return undefined;
       }
       throw err;
     }
