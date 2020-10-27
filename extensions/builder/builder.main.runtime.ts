@@ -226,6 +226,7 @@ export class BuilderMain {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
     const buildService = new BuilderService(workspace, logger, buildTaskSlot, 'getBuildPipe', 'build', artifactFactory);
+    envs.registerService(buildService);
     const deployService = new BuilderService(
       workspace,
       logger,

@@ -1,13 +1,17 @@
-import { EnvService, ExecutionContext } from '@teambit/environments';
+import { EnvDefinition, EnvService, ExecutionContext } from '@teambit/environments';
+import React from 'react';
+import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { Component } from '@teambit/component';
 import { BuildPipe } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { TaskSlot } from './builder.main.runtime';
-import { BuildContext } from './build-task';
+import { BuildContext, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
+import { TasksQueue } from './tasks-queue';
+import { BuilderAspect } from './builder.aspect';
 
 export type BuildServiceResults = {
   id: string;
@@ -16,9 +20,11 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
+export type BuilderDescriptor = TasksQueue;
+
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
-export class BuilderService implements EnvService<BuildServiceResults> {
+export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
   constructor(
     /**
      * workspace extension.
@@ -76,5 +82,30 @@ export class BuilderService implements EnvService<BuildServiceResults> {
     buildResults.hasErrors() ? this.logger.consoleFailure() : this.logger.consoleSuccess();
 
     return buildResults;
+  }
+
+  render(env: EnvDefinition) {
+    const tasksQueue = this.getDescriptor(env);
+
+    return (
+      <Text key={BuilderAspect.id}>
+        <Text color="cyan">total {tasksQueue.length} tasks are configured to be executed in the following order</Text>
+        <Newline />
+        {tasksQueue.map((taskItem, index) => (
+          <Text key={index}>
+            <Text>
+              {index + 1}. {BuildTaskHelper.serializeId(taskItem.task)}
+            </Text>
+            <Newline />
+          </Text>
+        ))}
+        <Newline />
+      </Text>
+    );
+  }
+
+  getDescriptor(env: EnvDefinition) {
+    const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], this.pipeNameOnEnv);
+    return tasksQueue;
   }
 }
