@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const WorkspaceAspect = Aspect.create({
-  id: 'teambit.bit/workspace',
+  id: 'teambit.workspace/workspace',
   dependencies: [],
   defaultConfig: {},
 });
