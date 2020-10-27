@@ -7,23 +7,21 @@ const  babelConfig = require('./babel.config.json');
 export class BabelEnv {
   constructor(private react: ReactMain) {}
 
-  /**
-   * icon of the extension.
-   */
-  icon() {
-    return this.react.icon;
-  }
-
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect];
 
   static async provider([envs, react, babel]: [EnvsMain, ReactMain, BabelMain]) {
+    const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
     const compilerOverride = envs.override({
       getCompiler: () => {
-        return babel.createCompiler({ babelTransformOptions: babelConfig })
+        return babelCompiler;
       },
     });
+    const babelTask = babelCompiler.createTask?.();
+    const tasks = babelTask ? [babelTask] : []
+    const compilerTaskOverride = react.overrideCompilerTasks(tasks);
     const harmonyReactEnv = react.compose([
-      compilerOverride
+      compilerOverride,
+      compilerTaskOverride
     ]);
 
     envs.registerEnv(harmonyReactEnv);

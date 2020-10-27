@@ -331,8 +331,7 @@ export default class CommandHelper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  build(id? = '') {
+  build(id = '') {
     return this.runCmd(`bit build ${id}`);
   }
 

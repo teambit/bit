@@ -35,6 +35,13 @@ export class Runtime {
     return this.run(service, options, [envRuntime]);
   }
 
+  async runOnce<T>(service: EnvService<T>, options?: { [key: string]: any }): Promise<any> {
+    if (!service.runOnce) throw new Error('a service must implement `runOnce()` in order to be executed');
+    const envsExecutionContext = this.runtimeEnvs.map((env) => new ExecutionContext(this, env));
+    const serviceResult = await service.runOnce(envsExecutionContext, options);
+    return serviceResult;
+  }
+
   /**
    * execute a service on all environments.
    */
@@ -63,7 +70,7 @@ export class Runtime {
         };
       } catch (err) {
         this.logger.error(err.message, err);
-        this.logger.consoleFailure(`env ${env.id} service has failed. ${err.message}`);
+        this.logger.consoleFailure(`service ${service.name} env ${env.id} has failed. ${err.message}`);
         errors.push(err);
         return {
           env,

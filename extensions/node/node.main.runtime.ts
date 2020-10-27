@@ -35,6 +35,11 @@ export class NodeMain {
   overrideBuildPipe = this.react.overrideBuildPipe.bind(this.react);
 
   /**
+   * override the build ts config.
+   */
+  overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
+
+  /**
    * override package json properties.
    */
   overridePackageJsonProps = this.react.overridePackageJsonProps.bind(this.react);

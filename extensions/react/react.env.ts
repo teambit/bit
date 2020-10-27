@@ -10,6 +10,7 @@ import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
+import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { Configuration } from 'webpack';
@@ -17,6 +18,7 @@ import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
+import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -62,11 +64,17 @@ export class ReactEnv implements Environment {
      */
     private tester: TesterMain,
 
-    private config: ReactMainConfig
+    private config: ReactMainConfig,
+
+    private eslint: ESLintMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
     return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
+  }
+
+  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
+    return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
 
   /**
@@ -92,9 +100,14 @@ export class ReactEnv implements Environment {
 
   /**
    * returns and configures the component linter.
-   * TODO: linter aspect, es-hint aspect
    */
-  getLinter() {}
+  getLinter() {
+    return this.eslint.createLinter({
+      config: eslintConfig,
+      // resolve all plugins from the react environment.
+      pluginPath: __dirname,
+    });
+  }
 
   /**
    * get the default react webpack config.
@@ -176,12 +189,13 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(): BuildTask[] {
-    return [this.getCompilerTask(), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
+    return [this.getCompilerTask(tsconfig), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
   }
 
-  private getCompilerTask() {
-    return this.compiler.createTask(this.getCompiler(buildTsConfig));
+  private getCompilerTask(tsconfig?: TsConfigSourceFile) {
+    const targetConfig = this.getBuildTsConfig(tsconfig);
+    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {
