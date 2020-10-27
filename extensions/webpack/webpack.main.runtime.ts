@@ -46,7 +46,8 @@ export class WebpackMain {
 
   getWebpackConfig(context: DevServerContext, config: Configuration) {
     return merge(
-      this.createConfig(context.entry, this.workspace.path, context.id, context.rootPath, context.publicPath),
+      // TODO: create the type for the webpack config
+      this.createConfig(context.entry, this.workspace.path, context.id, context.rootPath, context.publicPath) as any,
       config
     );
   }

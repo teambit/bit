@@ -14,7 +14,7 @@ import { BundlerAspect, ComponentsServerStartedEvent } from '@teambit/bundler';
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
 import React from 'react';
-import { Newline, Text, render } from 'ink';
+import { Newline } from 'ink';
 import open from 'open';
 
 import {
