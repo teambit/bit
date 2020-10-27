@@ -13,6 +13,7 @@ const GET_COMPONENT = gql`
           version
           scope
         }
+        packageName
         displayName
         server {
           env
