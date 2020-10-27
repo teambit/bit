@@ -114,7 +114,7 @@ export class PkgMain {
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
     const logPublisher = logger.createLogger(PkgAspect.id);
-    const host = await componentAspect.getHost();
+    const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);

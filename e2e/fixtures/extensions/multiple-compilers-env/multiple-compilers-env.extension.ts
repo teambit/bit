@@ -4,8 +4,8 @@ import { BabelAspect, BabelMain } from '@teambit/babel';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
 
-const  babelConfig = require('./babel.config.json');
-const  tsconfig = require('./tsconfig.json');
+const babelConfig = require('./babel.config.json');
+const tsconfig = require('./tsconfig.json');
 
 export class MultipleCompilersEnv {
   constructor(private react: ReactMain) {}
