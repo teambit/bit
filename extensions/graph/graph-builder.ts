@@ -2,7 +2,6 @@ import { ComponentID } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
-
 import { ComponentGraph } from './component-graph';
 
 export class GraphBuilder {

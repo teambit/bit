@@ -10,7 +10,6 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-
 import { sha1 } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
@@ -18,7 +17,6 @@ import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
-
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
 import { StartCmd } from './start.cmd';
@@ -164,11 +162,12 @@ export class UiMain {
       await uiServer.dev({ port: targetPort });
     } else {
       await this.buildIfChanged(name, uiRoot, rebuild);
+      await this.buildIfNoBundle(name, uiRoot);
       await uiServer.start({ port: targetPort });
     }
 
     // TODO: is this the right place?
-    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort));
+    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
@@ -186,8 +185,8 @@ export class UiMain {
   /**
    * Events
    */
-  private createUiServerStartedEvent = (targetHost, targetPort) => {
-    return new UiServerStartedEvent(Date.now(), targetHost, targetPort);
+  private createUiServerStartedEvent = (targetHost, targetPort, uiRoot) => {
+    return new UiServerStartedEvent(Date.now(), targetHost, targetPort, uiRoot);
   };
 
   /**
@@ -272,6 +271,19 @@ export class UiMain {
     if (hash !== hashed)
       this.logger.console(`${uiRoot.configFile} has been changed. Rebuilding UI assets for ${uiRoot.name}`);
     this.logger.console(`Building UI assets for ${uiRoot.name}`);
+    await this.build(name);
+    await this.cache.set(uiRoot.path, hash);
+  }
+
+  private async buildIfNoBundle(name: string, uiRoot: UIRoot) {
+    const config = createWebpackConfig(
+      uiRoot.path,
+      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
+      uiRoot.name
+    );
+    if (fs.pathExistsSync(config.output.path)) return;
+    if (fs.readdirSync(config.output.path).length > 0) return;
+    const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }

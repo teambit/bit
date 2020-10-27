@@ -1,7 +1,7 @@
 $animationTime: 300ms;
 
 .dismissButton {
-  display: none;
+  display: flex;
   justify-content: center;
   align-items: center;
 
@@ -9,17 +9,15 @@ $animationTime: 300ms;
   height: 40px;
 
   &:global(-entering) {
-    display: flex;
     animation: enter $animationTime forwards;
   }
 
-  &:global(-entered) {
-    display: flex;
+  &:global(-exiting) {
+    animation: exit $animationTime forwards;
   }
 
-  &:global(-exiting) {
-    display: flex;
-    animation: exit $animationTime forwards;
+  &:global(-exited) {
+    display: none;
   }
 }
 

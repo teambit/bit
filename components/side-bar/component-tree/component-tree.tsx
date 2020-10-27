@@ -1,53 +1,52 @@
 import { ComponentModel } from '@teambit/component';
-import { ComponentTreeSlot } from '@teambit/component-tree';
-import React, { useCallback, useMemo } from 'react';
-
-import { /* ScopeView, */ NamespaceView } from './component-nodes';
+import React, { useMemo } from 'react';
 import { ComponentTreeContextProvider } from './component-tree-context';
-import { ComponentView } from './component-view';
 import { indentStyle } from './indent';
-import { inflateToTree } from './inflate-paths';
-import { PayloadType } from './payload-type';
-import { TreeNodeContext, TreeNodeProps } from './recursive-tree';
+import { inflateToTree, attachPayload } from './inflate-paths';
+import { PayloadType, ScopePayload } from './payload-type';
+import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
 import { RootNode } from './root-node';
+import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type ComponentTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   components: ComponentModel[];
-  treeNodeSlot: ComponentTreeSlot;
+  TreeNode?: TreeNodeRenderer<PayloadType>;
 };
 
-export function ComponentTree({ components, onSelect, selected, treeNodeSlot }: ComponentTreeProps) {
-  const rootNode = useMemo(
-    () =>
-      inflateToTree(
-        components,
-        (c) => c.id.fullName,
-        (c) => c as PayloadType
-      ),
-    [components]
-  );
+export function ComponentTree({
+  components,
+  onSelect,
+  selected,
+  TreeNode = DefaultTreeNodeRenderer,
+}: ComponentTreeProps) {
+  const rootNode = useMemo(() => {
+    const tree = inflateToTree<ComponentModel, PayloadType>(components, (c) => c.id.toString({ ignoreVersion: true }));
 
-  const TreeNodeRenderer = useCallback(
-    function TreeNode(props: TreeNodeProps<PayloadType>) {
-      const children = props.node.children;
+    const payloadMap = calcPayload(components);
 
-      if (!children) return <ComponentView {...props} treeNodeSlot={treeNodeSlot} />;
-      // // TODO - handle scopes view
-      // if (!id.includes('/')) return ScopeView;
-      return <NamespaceView {...props} />;
-    },
-    [treeNodeSlot]
-  );
+    attachPayload(tree, payloadMap);
+
+    return tree;
+  }, [components]);
 
   return (
-    <div style={indentStyle(0)}>
-      <TreeNodeContext.Provider value={TreeNodeRenderer}>
+    <div style={indentStyle(1)}>
+      <TreeNodeContext.Provider value={TreeNode}>
         <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
-          <RootNode node={rootNode} />
+          <RootNode node={rootNode} depth={1} />
         </ComponentTreeContextProvider>
       </TreeNodeContext.Provider>
     </div>
   );
+}
+
+function calcPayload(components: ComponentModel[]) {
+  const payloadMap = new Map<string, PayloadType>(components.map((c) => [c.id.toString({ ignoreVersion: true }), c]));
+
+  const scopeIds = new Set(components.map((x) => x.id.scope).filter((x) => !!x));
+  scopeIds.forEach((x) => x && payloadMap.set(`${x}/`, new ScopePayload()));
+
+  return payloadMap;
 }

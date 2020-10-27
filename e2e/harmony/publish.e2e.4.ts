@@ -33,6 +33,7 @@ describe('publish functionality', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.disablePreview();
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
@@ -105,6 +106,7 @@ describe('publish functionality', function () {
     before(async function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fs.outputFile('ui/button.js', 'console.log("hello button");');
       helper.command.addComponent('ui', { i: 'ui/button' });
 
@@ -133,7 +135,6 @@ describe('publish functionality', function () {
         const output = helper.command.runCmd('node app.js');
         expect(output.trim()).to.be.equal('hello button');
       });
-      // @todo: make sure it gets also the scope-name
       describe('requiring the package from another component', () => {
         before(() => {
           helper.fs.outputFile('bar/foo.js', `const pkg = require('${pkgName}'); console.log(pkg);`);
@@ -142,7 +143,7 @@ describe('publish functionality', function () {
         it('should recognize that the package is a component', () => {
           const show = helper.command.showComponentParsed('bar');
           expect(show.dependencies).to.have.lengthOf(1);
-          expect(show.dependencies[0].id).equal('ui/button@0.0.1');
+          expect(show.dependencies[0].id).equal('my-scope/ui/button@0.0.1');
         });
       });
     });

@@ -1,0 +1,55 @@
+.aspectBox {
+  border: 1px solid var(--separator-color);
+  border-radius: 9px;
+  padding: 16px;
+  display: grid;
+}
+.titleLine {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+.titleLeft {
+  display: flex;
+  align-items: center;
+}
+.iconWrapper {
+  border-radius: 50%;
+  border: 1px solid #ededed;
+  margin-right: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  .icon {
+    width: 12px;
+    filter: brightness(0%);
+  }
+}
+.name {
+  font-size: 20px;
+}
+.aspectLink {
+  cursor: pointer;
+  color: var(--text-muted);
+}
+.sectionTitle {
+  margin-bottom: 16px;
+  font-weight: bold;
+  font-size: var(--p-xs);
+}
+.log {
+  overflow: hidden;
+  background: #282c34;
+  border-radius: 6px;
+  word-break: break-all;
+
+  &.config {
+    margin-bottom: 24px;
+  }
+  > div {
+    overflow-x: scroll;
+    padding: 16px;
+  }
+}

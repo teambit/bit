@@ -1,48 +1,116 @@
 import { expect } from 'chai';
 
-import { isMatchPattern, isMatchPatternItem, MATCH_ALL_ITEM, sortMatchesBySpecificity } from './variants.main.runtime';
+import {
+  isMatchPattern,
+  isMatchDirPatternItem,
+  isMatchNamespacePatternItem,
+  isMatchPatternItem,
+  MATCH_ALL_ITEM,
+  sortMatchesBySpecificity,
+} from './variants.main.runtime';
 
-describe('isMatchPatternItem', () => {
-  describe('match all', () => {
-    it('using match all pattern', () => {
-      const res = isMatchPatternItem('bar', MATCH_ALL_ITEM);
-      expect(res.match).to.be.true;
-      expect(res.specificity).to.equal(0);
-    });
-  });
+describe('isMatchDirPatternItem', () => {
   describe('item is matched', () => {
     it('exact match', () => {
-      const res = isMatchPatternItem('bar', 'bar');
+      const res = isMatchDirPatternItem('bar', 'bar');
       expect(res.match).to.be.true;
       expect(res.specificity).to.equal(1);
     });
 
-    it('dir is pattern is part of dir', () => {
-      const res = isMatchPatternItem('bar/foo', 'bar');
+    it('pattern is part of dir', () => {
+      const res = isMatchDirPatternItem('bar/foo', 'bar');
       expect(res.match).to.be.true;
       expect(res.specificity).to.equal(1);
     });
     it('specificity is larger than 1', () => {
-      const res = isMatchPatternItem('bar/foo/baz', 'bar/foo');
+      const res = isMatchDirPatternItem('bar/foo/baz', 'bar/foo');
       expect(res.match).to.be.true;
       expect(res.specificity).to.equal(2);
     });
   });
-  describe('item is matched', () => {
+  describe('item is not matched', () => {
     it('simple unmatch', () => {
-      const res = isMatchPatternItem('abc', 'def');
+      const res = isMatchDirPatternItem('abc', 'def');
       expect(res.match).to.be.false;
       expect(res.specificity).to.equal(-1);
     });
     it('same suffix only', () => {
-      const res = isMatchPatternItem('bar/foo', 'bzr/bar/foo');
+      const res = isMatchDirPatternItem('bar/foo', 'bzr/bar/foo');
       expect(res.match).to.be.false;
       expect(res.specificity).to.equal(-1);
     });
     it('dir is part of pattern item', () => {
-      const res = isMatchPatternItem('bar', 'bar/foo');
+      const res = isMatchDirPatternItem('bar', 'bar/foo');
       expect(res.match).to.be.false;
       expect(res.specificity).to.equal(-1);
+    });
+  });
+});
+
+describe('isMatchNamespacePatternItem', () => {
+  describe('item is matched', () => {
+    it('exact match', () => {
+      const res = isMatchNamespacePatternItem('bar', '{bar}');
+      expect(res.match).to.be.true;
+      expect(res.specificity).to.equal(1);
+    });
+
+    it('pattern is part of name and ends with *', () => {
+      const res = isMatchNamespacePatternItem('bar/foo', '{bar/*}');
+      expect(res.match).to.be.true;
+      expect(res.specificity).to.equal(1.1);
+    });
+    it('pattern is part of name and ends with * and name has more parts', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/*}');
+      expect(res.match).to.be.true;
+      expect(res.specificity).to.equal(1.1);
+    });
+    it('specificity is larger than 1', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/foo/*}');
+      expect(res.match).to.be.true;
+      expect(res.specificity).to.equal(2.2);
+    });
+    it('multiple *', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/baz/goo', '{bar/*/baz/*}');
+      expect(res.match).to.be.true;
+      expect(res.specificity).to.equal(2.4);
+    });
+  });
+  describe('item is not matched', () => {
+    it('simple unmatch', () => {
+      const res = isMatchNamespacePatternItem('abc', '{def}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+    it('name is part of pattern item', () => {
+      const res = isMatchNamespacePatternItem('bar', '{bar/foo}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+    it('pattern is part of name but not ends with *', () => {
+      const res = isMatchNamespacePatternItem('bar/foo', '{bar}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+    it('diff in the middle', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/goo/baz}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+    it('same suffix only', () => {
+      const res = isMatchNamespacePatternItem('bar/foo', '{bzr/bar/foo}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+  });
+});
+
+describe('isMatchPatternItem', () => {
+  describe('match all', () => {
+    it('using match all pattern', () => {
+      const res = isMatchPatternItem('bar', 'name', MATCH_ALL_ITEM);
+      expect(res.match).to.be.true;
+      expect(res.specificity).to.equal(0);
     });
   });
 });
@@ -50,23 +118,45 @@ describe('isMatchPatternItem', () => {
 describe('isMatchPattern', () => {
   describe('no matches at all', () => {
     it('should return match false with maxSpecificity as -1', () => {
-      const res = isMatchPattern('bar', 'foo, baz');
+      const res = isMatchPattern('bar', 'name', 'foo, baz');
       expect(res.match).to.be.false;
       expect(res.maxSpecificity).to.equal(-1);
     });
   });
-  describe('match one item', () => {
-    it('should return match true with the correct maxSpecificity', () => {
-      const res = isMatchPattern('bar/foo/baz', 'foo, bar/foo , baz');
+  describe('match one dir item', () => {
+    it.only('should return match true with the correct maxSpecificity', () => {
+      const res = isMatchPattern('bar/foo/baz', 'name', 'foo, bar/foo , baz');
       expect(res.match).to.be.true;
       expect(res.maxSpecificity).to.equal(2);
     });
   });
-  describe('match more than one item', () => {
+  describe('match more than one dir item', () => {
     it('should return match true with the correct maxSpecificity', () => {
-      const res = isMatchPattern('bar/foo/baz', 'bar/foo, bar/foo/baz , baz, bar');
+      const res = isMatchPattern('bar/foo/baz', 'name', 'bar/foo, bar/foo/baz , baz, bar');
       expect(res.match).to.be.true;
       expect(res.maxSpecificity).to.equal(3);
+    });
+  });
+  describe('match more than one namespace item', () => {
+    it('should return match true with the correct maxSpecificity', () => {
+      const res = isMatchPattern(
+        'bar/foo/baz',
+        'namespace1/namespace2/name',
+        '{namespace1/namespace2/name}, {namespace1/namespace2/*} , baz, bar'
+      );
+      expect(res.match).to.be.true;
+      expect(res.maxSpecificity).to.equal(3);
+    });
+  });
+  describe('match more than one namespace item and more than one dir item', () => {
+    it('should return match true with the correct maxSpecificity', () => {
+      const res = isMatchPattern(
+        'bar/foo/baz/goo',
+        'namespace1/namespace2/name',
+        '{namespace1/namespace2/name}, {namespace1/namespace2/*} , bar/foo, bar/foo/baz/goo , baz, bar'
+      );
+      expect(res.match).to.be.true;
+      expect(res.maxSpecificity).to.equal(4);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
+import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import { Capsule } from '@teambit/isolator';
 import fs from 'fs-extra';
 import path from 'path';
@@ -10,28 +10,43 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly id: string) {}
+  constructor(readonly aspectId: string, readonly name: string, private compilerInstance: Compiler) {
+    if (compilerInstance.artifactName) {
+      this.description += ` for artifact ${compilerInstance.artifactName}`;
+    }
+  }
+
+  async preBuild(context: BuildContext) {
+    if (!this.compilerInstance.preBuild) return;
+    await this.compilerInstance.preBuild(context);
+  }
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const compilerInstance: Compiler = context.env.getCompiler();
-    const buildResults = await compilerInstance.build(context);
+    const buildResults = await this.compilerInstance.build(context);
 
     await Promise.all(
-      context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, compilerInstance))
+      context.capsuleGraph.capsules.map((capsule) => this.copyNonSupportedFiles(capsule.capsule, this.compilerInstance))
     );
 
     return buildResults;
   }
 
+  async postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void> {
+    if (!this.compilerInstance.postBuild) return;
+    await this.compilerInstance.postBuild(context, tasksResults);
+  }
+
   async copyNonSupportedFiles(capsule: Capsule, compiler: Compiler) {
+    if (!compiler.shouldCopyNonSupportedFiles) {
+      return;
+    }
     const component = capsule.component;
     await Promise.all(
       component.filesystem.files.map(async (file) => {
         if (compiler.isFileSupported(file.path)) return;
         const content = file.contents;
-        await fs.outputFile(path.join(capsule.path, compiler.getDistDir(), file.relative), content);
+        await fs.outputFile(path.join(capsule.path, compiler.distDir, file.relative), content);
       })
     );
-    return { id: component.id, errors: [] };
   }
 }

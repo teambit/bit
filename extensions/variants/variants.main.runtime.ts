@@ -68,13 +68,13 @@ export class VariantsMain {
   }
 
   /**
-   * Gets the config for specific component after merge all matching patterns of the component dir in the variants section
+   * Gets the config for specific component after merge all matching patterns of the component dir and id in the variants section
    * @param rootDir
    */
-  byRootDir(rootDir: PathLinuxRelative): VariantsComponentConfig | undefined {
+  byRootDirAndName(rootDir: PathLinuxRelative, componentName: string): VariantsComponentConfig | undefined {
     const matches: MatchedPatternWithConfig[] = [];
     R.forEachObjIndexed((patternConfig, pattern) => {
-      const match = isMatchPattern(rootDir, pattern);
+      const match = isMatchPattern(rootDir, componentName, pattern);
 
       if (match.match) {
         matches.push({
@@ -125,9 +125,9 @@ export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
   return sortedMatches;
 }
 
-export function isMatchPattern(rootDir: PathLinuxRelative, pattern: string): MatchedPattern {
+export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string, pattern: string): MatchedPattern {
   const patternItems = pattern.split(PATTERNS_DELIMITER);
-  const matches = patternItems.map((item) => isMatchPatternItem(rootDir, item));
+  const matches = patternItems.map((item) => isMatchPatternItem(rootDir, componentName, item));
   const defaultVal: MatchedPatternItem = {
     match: false,
     specificity: -1,
@@ -140,7 +140,11 @@ export function isMatchPattern(rootDir: PathLinuxRelative, pattern: string): Mat
   };
 }
 
-export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: string): MatchedPatternItem {
+export function isMatchPatternItem(
+  rootDir: PathLinuxRelative,
+  componentName: string,
+  patternItem: string
+): MatchedPatternItem {
   const patternItemTrimmed = patternItem.trim();
   // Special case for * (match all)
   // We want to mark it with match true but the smallest specificity
@@ -150,8 +154,16 @@ export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: stri
       specificity: 0,
     };
   }
+  if (isDirItem(patternItem)) {
+    return isMatchDirPatternItem(rootDir, patternItem);
+  }
+  return isMatchNamespacePatternItem(componentName, patternItem);
+}
+
+export function isMatchDirPatternItem(rootDir: PathLinuxRelative, patternItem: string): MatchedPatternItem {
   // remove trailing / (will work for windows as well since the workspace.json always contain linux format)
-  const patternItemStriped = stripTrailingChar(patternItemTrimmed, '/');
+  const patternItemStriped = stripTrailingChar(patternItem, '/').trim();
+
   if (pathIsInside(rootDir, patternItemStriped)) {
     return {
       match: true,
@@ -162,6 +174,52 @@ export function isMatchPatternItem(rootDir: PathLinuxRelative, patternItem: stri
     match: false,
     specificity: -1,
   };
+}
+
+export function isMatchNamespacePatternItem(componentName: string, patternItem: string): MatchedPatternItem {
+  // remove trailing / (will work for windows as well since the workspace.json always contain linux format)
+  const withoutBrackets = patternItem.replace('{', '').replace('}', '').trim();
+  const patternItemStriped = stripTrailingChar(withoutBrackets, '/').trim();
+
+  let match = true;
+  let specificity = 0;
+  const splittedComp = componentName.split('/');
+  const splittedPattern = patternItemStriped.split('/');
+  if (splittedPattern.length > splittedComp.length) {
+    return {
+      match: false,
+      specificity: -1,
+    };
+  }
+
+  if (splittedPattern.length < splittedComp.length && splittedPattern[splittedPattern.length - 1] !== '*') {
+    return {
+      match: false,
+      specificity: -1,
+    };
+  }
+
+  splittedPattern.forEach((patternElement, index) => {
+    const componentElement = splittedComp[index];
+    if (patternElement === '*') {
+      specificity += index / 10;
+      return;
+    }
+    if (patternElement === componentElement) {
+      specificity += 1;
+      return;
+    }
+    match = false;
+  });
+
+  return {
+    match,
+    specificity: match ? specificity : -1,
+  };
+}
+
+function isDirItem(patternItem: string) {
+  return !patternItem.startsWith('{');
 }
 
 VariantsAspect.addRuntime(VariantsMain);

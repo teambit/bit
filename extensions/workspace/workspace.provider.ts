@@ -16,7 +16,6 @@ import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
@@ -98,6 +97,7 @@ export default async function provideWorkspace(
   if (!consumer) return undefined;
   // TODO: get the 'worksacpe' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
+
   const workspace = new Workspace(
     pubsub,
     config,
@@ -166,7 +166,7 @@ export default async function provideWorkspace(
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(logger, watcher));
+    cli.register(new WatchCommand(pubsub, logger, watcher));
   }
   component.registerHost(workspace);
 

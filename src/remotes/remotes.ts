@@ -1,12 +1,11 @@
-import groupArray from 'group-array';
 import { groupBy, prop } from 'ramda';
+import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 
 import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
-import { RemoteLaneId } from '../lane-id/lane-id';
 import logger from '../logger/logger';
-import CompsAndLanesObjects from '../scope/comps-and-lanes-objects';
 import DependencyGraph from '../scope/graph/scope-graph';
+import { ObjectList } from '../scope/objects/object-list';
 import Scope from '../scope/scope';
 import { flatten, forEach, prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
@@ -40,30 +39,27 @@ export default class Remotes extends Map<string, Remote> {
   }
 
   async fetch(
-    ids: BitId[] | RemoteLaneId[],
+    idsGroupedByScope: { [scopeName: string]: string[] }, // option.type determines the id: component-id/lane-id/object-id (hash)
     thisScope: Scope,
-    withoutDeps = false,
-    context?: Record<string, any>,
-    idsAreLanes = false
-  ): Promise<CompsAndLanesObjects> {
-    // TODO - Transfer the fetch logic into the ssh module,
-    // in order to close the ssh connection in the end of the multifetch instead of one fetch
-    const groupedIds = groupArray(ids, 'scope') as Record<string, BitId[]>;
-    const promises = [];
-    forEach(groupedIds, (scopeIds, scopeName) => {
-      promises.push(
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.resolve(scopeName, thisScope).then((remote) =>
-          remote.fetch(scopeIds, withoutDeps, context, undefined, idsAreLanes)
-        )
-      );
-    });
-
-    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) (idsAreLane: ${idsAreLanes}) on a remote`);
-    const manyCompsAndLanesObjects: CompsAndLanesObjects[] = await Promise.all(promises);
+    options: Partial<FETCH_OPTIONS> = {},
+    context?: Record<string, any>
+  ): Promise<ObjectList> {
+    const fetchOptions: FETCH_OPTIONS = {
+      type: 'component',
+      withoutDependencies: false,
+      includeArtifacts: false,
+      ...options,
+    };
+    logger.debug('[-] Running fetch on a remote, with the following options', fetchOptions);
+    const objectLists: ObjectList[] = await Promise.all(
+      Object.keys(idsGroupedByScope).map(async (scopeName) => {
+        const remote = await this.resolve(scopeName, thisScope);
+        return remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+      })
+    );
     logger.debug('[-] Returning from a remote');
 
-    return CompsAndLanesObjects.flatten(manyCompsAndLanesObjects);
+    return ObjectList.mergeMultipleInstances(objectLists);
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {

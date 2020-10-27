@@ -4,6 +4,7 @@ import gql from 'graphql-tag';
 import { GraphBuilder } from './graph-builder';
 import { ComponentGraph } from './component-graph';
 import { DependencyType } from './dependency';
+import { EdgeType } from './edge-type';
 
 export function graphSchema(graphBuilder: GraphBuilder): Schema {
   return {
@@ -64,8 +65,8 @@ export function graphSchema(graphBuilder: GraphBuilder): Schema {
   };
 }
 
-function getDependencyLifecycleType(edgeRawData: DependencyType): string {
-  if (edgeRawData === 'dev') return 'DEV';
-  if (edgeRawData === 'runtime') return 'RUNTIME';
-  return 'PEER';
+function getDependencyLifecycleType(edgeRawData: DependencyType): EdgeType {
+  if (edgeRawData === 'dev') return EdgeType.dev;
+  if (edgeRawData === 'runtime') return EdgeType.runtime;
+  return EdgeType.peer;
 }

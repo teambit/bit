@@ -4,7 +4,7 @@ The compiler is configured inside an environment and not directly on the compone
 
 ## As a task
 A task is running with `bit build` or during the tag process on the capsules or the workspace (depends on the specific compiler implementation).
-The env extension should have this compiler extension as a dependency first, then add to the `build()` array the following: `this.compiler.task`.
+The env extension should have this compiler extension as a dependency first, then add to the `getBuildPipe()` array the following: `this.compiler.createTask()`.
 
 ## As a command
 A command is running on the workspace.
@@ -29,7 +29,7 @@ The provider should implement `transpileFile` function as follows:
 ```
 transpileFile: (fileContent: string, options: { componentDir: string, filePath: string }) => Array<{ outputText: string, outputPath: string }> | null;
 ```
-In case the compiler receive an unsupported file, it should return null.
+In case the compiler receives an unsupported file, it should return null.
 
 2. compile for build (during the tag command)
 This compilation takes place on the isolated capsule.
@@ -39,3 +39,11 @@ From Compiler interface:
 build(context: BuildContext): Promise<BuildResults>;
 ```
 FYI, this api is going to be changed very soon. It should get components and capsules graph.
+
+## Points to consider when writing a compiler
+
+### Debugging experience on the workspace
+Since the dists are written into the node_modules/component-name/dist-dir, the debugger needs to know where to find the source files. This can be easily achieved by setting the `sourceRoot` of the source-map file to the component-dir. As a reminder, this directory is passed to the `transpile()` method.
+
+### Error handling during build process
+Without proper error handling, the `build()` will exit an the first error found. Catch the errors and add them to the `ComponentResult.errors[]` you return per component.

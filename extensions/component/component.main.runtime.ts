@@ -12,6 +12,7 @@ import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
 import { AspectEntry } from './aspect-entry';
+import { ComponentID } from './id';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
@@ -77,6 +78,10 @@ export class ComponentMain {
     }
 
     return this.getPriorHost();
+  }
+
+  getRoute(id: ComponentID, routeName: string) {
+    return `/api/${id.toString()}/~aspect/${routeName}`;
   }
 
   /**

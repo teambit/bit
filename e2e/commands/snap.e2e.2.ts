@@ -147,12 +147,14 @@ describe('bit snap command', function () {
       });
     });
   });
+  // these tests are failing on ssh. to make them work, run `bit config set features lanes` on the ssh machine first
   describe('local and remote do not have the same head', () => {
     let scopeAfterFirstSnap: string;
     let firstSnap: string;
     let secondSnap: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
@@ -625,6 +627,7 @@ describe('bit snap command', function () {
     before(() => {
       helper.command.setFeatures([LANES_FEATURE]);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents();
       helper.command.linkAndRewire();
       helper.command.snapAllComponents();

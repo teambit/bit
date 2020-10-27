@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import pathlib from 'path';
 
 import BitId from '../bit-id/bit-id';
-import { DEFAULT_LANE, SCOPE_JSON } from '../constants';
+import { DEFAULT_LANE, SCOPE_JSON, SCOPE_JSONC } from '../constants';
 import GeneralError from '../error/general-error';
 import { Remote } from '../remotes';
 import { cleanObject, writeFile } from '../utils';
@@ -11,6 +11,10 @@ import { ScopeJsonNotFound } from './exceptions';
 
 export function getPath(scopePath: string): string {
   return pathlib.join(scopePath, SCOPE_JSON);
+}
+
+export function getHarmonyPath(scopePath: string): string {
+  return pathlib.join(scopePath, SCOPE_JSONC);
 }
 
 export type ScopeJsonProps = {
@@ -60,6 +64,7 @@ export class ScopeJson {
   get name(): string {
     return this._name;
   }
+
   toPlainObject() {
     return cleanObject({
       name: this.name,

@@ -18,15 +18,6 @@ export class ScopeModel {
     readonly components: ComponentModel[]
   ) {}
 
-  parseName() {
-    const [owner, scopeName] = this.name.split('.');
-
-    return {
-      name: scopeName,
-      owner,
-    };
-  }
-
   static from(object: any) {
     const components = object.scope.components || [];
     return new ScopeModel(

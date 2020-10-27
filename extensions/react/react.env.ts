@@ -1,6 +1,6 @@
 import { TsConfigSourceFile } from 'typescript';
-import { merge } from 'lodash';
 import { BuildTask } from '@teambit/builder';
+import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
@@ -10,6 +10,7 @@ import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
+import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { Configuration } from 'webpack';
@@ -17,9 +18,11 @@ import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
+import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
+const buildTsConfig = require('./typescript/tsconfig.build.json');
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -61,11 +64,17 @@ export class ReactEnv implements Environment {
      */
     private tester: TesterMain,
 
-    private config: ReactMainConfig
+    private config: ReactMainConfig,
+
+    private eslint: ESLintMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge(targetTsConfig, defaultTsConfig) : defaultTsConfig;
+    return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
+  }
+
+  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
+    return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
 
   /**
@@ -82,7 +91,6 @@ export class ReactEnv implements Environment {
   getCompiler(targetConfig?: any): Compiler {
     // eslint-disable-next-line global-require
     const tsconfig = this.getTsConfig(targetConfig);
-
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
@@ -92,9 +100,14 @@ export class ReactEnv implements Environment {
 
   /**
    * returns and configures the component linter.
-   * TODO: linter aspect, es-hint aspect
    */
-  getLinter() {}
+  getLinter() {
+    return this.eslint.createLinter({
+      config: eslintConfig,
+      // resolve all plugins from the react environment.
+      pluginPath: __dirname,
+    });
+  }
 
   /**
    * get the default react webpack config.
@@ -134,6 +147,8 @@ export class ReactEnv implements Environment {
     return require.resolve('./docs');
   }
 
+  icon = 'https://static.bit.dev/extensions-icons/react.svg';
+
   /**
    * return a function which mounts a given component to DOM
    */
@@ -167,7 +182,6 @@ export class ReactEnv implements Environment {
       peerDependencies: {
         react: '^16.13.1' || this.config.reactVersion,
         'react-dom': '^16.13.1',
-        '@babel/runtime': '^7.11.2',
       },
     };
   }
@@ -175,8 +189,13 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getPipe(): BuildTask[] {
-    return [this.compiler.task, this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
+    return [this.getCompilerTask(tsconfig), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+  }
+
+  private getCompilerTask(tsconfig?: TsConfigSourceFile) {
+    const targetConfig = this.getBuildTsConfig(tsconfig);
+    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {

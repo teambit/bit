@@ -1,9 +1,14 @@
 import { ComponentID } from '@teambit/component';
 import Graph from 'bit-bin/dist/scope/graph/graph';
-
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 
+/**
+ * todo: this class is confusing.
+ * it has the entire graph including the dependencies of the seeder components.
+ * the `capsules` should be maybe `capsuleListOfEntireGraph`, and `seederCapsules` should be `capsules`.
+ * Also, the CapsuleList should be refactored to be just Array<Capsule>.
+ */
 export class Network {
   constructor(
     public capsules: CapsuleList,

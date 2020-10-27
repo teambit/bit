@@ -1,8 +1,6 @@
 .statusLine {
   display: flex;
-  justify-content: flex-end;
   align-items: baseline;
-  font-size: var(--p-xxs, 12px);
   .modified {
     color: #ff8b00 !important;
   }
