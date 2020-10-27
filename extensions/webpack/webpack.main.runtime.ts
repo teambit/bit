@@ -6,7 +6,7 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Configuration } from 'webpack';
 import merge from 'webpack-merge';
 
-import configFactory from './config/webpack.dev.config';
+import { configFactory } from './config/webpack.dev.config';
 import { WebpackAspect } from './webpack.aspect';
 import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
@@ -45,7 +45,10 @@ export class WebpackMain {
   }
 
   getWebpackConfig(context: DevServerContext, config: Configuration) {
-    return merge(this.createConfig(context.entry, this.workspace.path, context.rootPath, context.publicPath), config);
+    return merge(
+      this.createConfig(context.entry, this.workspace.path, context.id, context.rootPath, context.publicPath),
+      config
+    );
   }
 
   mergeConfig(target: Configuration, source: Configuration) {
@@ -56,8 +59,14 @@ export class WebpackMain {
     return new WebpackBundler(context.targets, envConfig, this.logger);
   }
 
-  private createConfig(entry: string[], rootPath: string, publicRoot?: string, publicPath?: string) {
-    return configFactory(rootPath, entry, publicRoot, publicPath, this.pubsub);
+  private createConfig(
+    entry: string[],
+    rootPath: string,
+    devServerID: string,
+    publicRoot?: string,
+    publicPath?: string
+  ) {
+    return configFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub);
   }
 
   static slots = [];

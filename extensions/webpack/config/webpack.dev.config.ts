@@ -15,7 +15,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
+export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -108,7 +108,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
         app.use(errorOverlayMiddleware());
       },
 
-      after(app) {
+      after(app, server, compiler) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -135,8 +135,8 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
       }),
 
       new WebpackCompilerDonePlugin({
-        options: { pubsub },
+        options: { pubsub, devServerID },
       }),
     ],
   };
-};
+}

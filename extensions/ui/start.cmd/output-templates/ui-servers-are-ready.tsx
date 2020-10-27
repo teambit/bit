@@ -48,6 +48,5 @@ export const CompilingOrUIServersAreReady = ({
   if (!!totalComponentsSum && totalComponentsSum <= compiledComponentsSum && !!mainUIServer) {
     return <UIServersAreReady mainUIServer={mainUIServer} />;
   }
-
-  return <CompiledComponents totalComponentsSum={totalComponentsSum} compiledComponentsSum={compiledComponentsSum} />;
+  return null;
 };

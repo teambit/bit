@@ -78,7 +78,7 @@ export class CliOutput extends React.Component<props, state> {
   private eventsListener = (event: BitBaseEvent<any>) => {
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
-        this.changeOrAddComponentServer(event.data, event.data.context.id, 'Running');
+        this.updateOrAddComponentServer(event.data.context.id, 'Running', event.data);
         this.safeOpenBrowser();
         break;
       case WebpackCompilationDoneEvent.TYPE:
@@ -116,7 +116,7 @@ export class CliOutput extends React.Component<props, state> {
     } else {
       const totalComponents = await event.data.uiRoot.workspace.list();
       devServers.forEach((server) => {
-        this.changeOrAddComponentServer(server, server.context.id, 'Starting...');
+        this.updateOrAddComponentServer(server.context.id, 'Starting...', server);
       });
       this.setState({
         mainUIServer: event.data,
@@ -138,6 +138,7 @@ export class CliOutput extends React.Component<props, state> {
       webpackWarnings: [...event.data.stats.compilation.warnings],
       compiledComponents: [...this.state.compiledComponents, ...successfullyCompiledComponents],
     });
+    this.updateOrAddComponentServer(event.data.devServerID, 'Done');
     this.safeOpenBrowser();
   };
 
@@ -160,10 +161,6 @@ export class CliOutput extends React.Component<props, state> {
 
   // Helpers
 
-  private areAllComponentServersRunning() {
-    return this.state.componentServers.every((cs) => cs.status === 'Running');
-  }
-
   private async safeOpenBrowser() {
     const { suppressBrowserLaunch } = this.state.commandFlags;
     const { isBrowserOpen, mainUIServer } = this.state;
@@ -181,7 +178,22 @@ export class CliOutput extends React.Component<props, state> {
     setTimeout(() => open(`http://${mainUIServer.targetHost}:${mainUIServer.targetPort}/`), 500);
   }
 
-  private changeOrAddComponentServer(server, id, status) {
+  private updateOrAddComponentServer(id, status, server?) {
+    if (!!server) {
+      this.addOrUpdateComponentServer(id, status, server);
+    } else {
+      this.updateComponentServerStatus(id, status);
+    }
+  }
+
+  private updateComponentServerStatus(id, status) {
+    const server = { ...this.state.componentServers.find((cs) => cs.id !== id) };
+    if (!!server) {
+      this.addOrUpdateComponentServer(id, status, server);
+    }
+  }
+
+  private addOrUpdateComponentServer(id, status, server) {
     this.setState({
       componentServers: [...this.state.componentServers.filter((cs) => cs.id !== id), { server, id, status }],
     });
