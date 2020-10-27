@@ -122,7 +122,7 @@ export class EnvsMain {
       return new EnvDefinition(envId, env as Environment);
     }
 
-    let id: string;
+    let id = '';
     const envEntry = component.state.aspects.entries.find((aspectEntry) => {
       id = aspectEntry.id.toString();
       env = this.envSlot.get(id);
