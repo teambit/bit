@@ -10,16 +10,21 @@ import { BitError } from 'bit-bin/dist/error/bit-error';
 import { TypeScriptCompilerOptions } from './compiler-options';
 
 export class TypescriptCompiler implements Compiler {
-  distDir = 'dist';
-  distGlobPatterns = [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
-  shouldCopyNonSupportedFiles = true;
-  artifactName = 'dist';
+  distDir: string;
+  distGlobPatterns: string[];
+  shouldCopyNonSupportedFiles: boolean;
+  artifactName: string;
+  constructor(readonly id: string, private logger: Logger, private options: TypeScriptCompilerOptions) {
+    this.distDir = options.distDir || 'dist';
+    this.distGlobPatterns = options.distGlobPatterns || [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+    this.shouldCopyNonSupportedFiles =
+      typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
+    this.artifactName = options.artifactName || 'dist';
+  }
 
   displayConfig() {
     return this.stringifyTsconfig(this.options.tsconfig);
   }
-
-  constructor(readonly id, private logger: Logger, private options: TypeScriptCompilerOptions) {}
 
   /**
    * compile one file on the workspace

@@ -1,5 +1,4 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
-import { ConcreteService } from '@teambit/environments';
 
 export type TranspileOpts = {
   componentDir: string; // absolute path of the component's root directory
@@ -13,12 +12,7 @@ export type TranspileOutput =
     }[]
   | null;
 
-export interface Compiler extends ConcreteService {
-  /**
-   * id of the compiler.
-   */
-  id: string;
-
+export interface CompilerOptions {
   /**
    * name of the compiler.
    */
@@ -28,11 +22,6 @@ export interface Compiler extends ConcreteService {
    * relative path of the dist directory inside the capsule. e.g. "dist".
    */
   distDir: string;
-
-  /**
-   * serialized config of the compiler.
-   */
-  displayConfig?(): string;
 
   /**
    * determines which ones of the generated files will be saved in the bit objects when tagging.
@@ -53,6 +42,18 @@ export interface Compiler extends ConcreteService {
    * the second for creating "esm". the artifact names would be "es5" and "esm" accordingly.
    */
   artifactName?: string;
+}
+
+export interface Compiler extends CompilerOptions {
+  /**
+   * id of the compiler.
+   */
+  id: string;
+
+  /**
+   * serialized config of the compiler.
+   */
+  displayConfig?(): string;
 
   /**
    * transpile a single file. this being used during development and get saved into the workspace

@@ -568,6 +568,8 @@ jobs:
         run: 'chmod 400 ~/.ssh/id_rsa'
       - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
+      # this is temporarily. we want to make sure the e2e-tests are passed when compiling by babel
+      - run: 'cd bit && bit compile'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
       - run: 'rm bit/node_modules/.bin/bit'
