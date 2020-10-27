@@ -5,7 +5,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import checksum from 'checksum';
+import { checksum } from '@teambit/crypto.checksum';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import findCacheDir from 'find-cache-dir';
@@ -24,7 +24,7 @@ import { RuntimeComponents } from './runtime-components';
 
 const noopResult = Promise.resolve({
   results: [],
-  toString: () => `preview extension stuff`,
+  toString: () => `updating link file`,
 });
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
@@ -98,7 +98,7 @@ export class PreviewMain {
   private runtimeComponents?: RuntimeComponents;
   private execContext?: ExecutionContext;
 
-  async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
+  private async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
     this.execContext = context;
     this.runtimeComponents = new RuntimeComponents(context.components);
 
@@ -142,7 +142,7 @@ export class PreviewMain {
     return filePath;
   }
 
-  getDefaultStrategies() {
+  private getDefaultStrategies() {
     return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
   }
 
