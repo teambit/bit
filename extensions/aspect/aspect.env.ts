@@ -42,10 +42,11 @@ export class AspectEnv implements Environment {
   }
 
   getBuildPipe() {
-    const tsCompiler = this.reactEnv.getCompiler(tsconfig);
-    tsCompiler.artifactName = 'declaration';
-    tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
-    tsCompiler.shouldCopyNonSupportedFiles = false;
+    const tsCompiler = this.reactEnv.getCompiler(tsconfig, {
+      artifactName: 'declaration',
+      distGlobPatterns: [`dist/**/*.d.ts`],
+      shouldCopyNonSupportedFiles: false,
+    });
 
     const babelCompiler = this.babel.createCompiler({ babelTransformOptions: babelConfig });
 
