@@ -1,3 +1,5 @@
+import { CompilerOptions } from '@teambit/compiler/types';
+
 export type TypeScriptCompilerOptions = {
   /**
    * tsconfig to use during compilation.
@@ -8,4 +10,4 @@ export type TypeScriptCompilerOptions = {
    * path for .d.ts files to include during build.
    */
   types: string[];
-};
+} & Partial<CompilerOptions>;

@@ -4,8 +4,8 @@ import { BabelAspect, BabelMain } from '@teambit/babel';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
 
-const  babelConfig = require('./babel.config.json');
-const  tsconfig = require('./tsconfig.json');
+const babelConfig = require('./babel.config.json');
+const tsconfig = require('./tsconfig.json');
 
 export class MultipleCompilersEnv {
   constructor(private react: ReactMain) {}
@@ -13,17 +13,23 @@ export class MultipleCompilersEnv {
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect, CompilerAspect];
 
   static async provider([envs, react, babel, compiler]: [EnvsMain, ReactMain, BabelMain, CompilerMain]) {
-    const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
-    babelCompiler.distGlobPatterns = [`${babelCompiler.distDir}/**`, `!${babelCompiler.distDir}/**/*.d.ts`, `!${babelCompiler.distDir}/tsconfig.tsbuildinfo`];
+    const babelCompiler = babel.createCompiler(
+      {
+        babelTransformOptions: babelConfig,
+        distDir: 'dist',
+        distGlobPatterns: [`dist/**`, `!dist/**/*.d.ts`, `!dist/tsconfig.tsbuildinfo`]
+      });
     const compilerOverride = envs.override({
       getCompiler: () => {
         return babelCompiler;
       },
     });
-    const tsCompiler = react.env.getCompiler(tsconfig);
-    tsCompiler.artifactName = 'declaration';
-    tsCompiler.distGlobPatterns = [`${tsCompiler.distDir}/**/*.d.ts`];
-    tsCompiler.shouldCopyNonSupportedFiles = false;
+    const tsCompiler = react.env.getCompiler(tsconfig, {
+      artifactName: 'declaration',
+      distGlobPatterns: [`dist/**/*.d.ts`],
+      shouldCopyNonSupportedFiles: false,
+    });
+
     const buildPipeOverride = react.overrideBuildPipe([
       compiler.createTask('BabelCompiler', babelCompiler),
       compiler.createTask('TypescriptCompiler', tsCompiler),

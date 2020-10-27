@@ -9,6 +9,9 @@ export function pkgSchema(pkg: PkgMain): Schema {
     typeDefs: gql`
       extend type Component {
         packageManifest: PackageManifest
+
+        # package name of the component.
+        packageName: String!
       }
 
       type TarDist {
@@ -35,6 +38,9 @@ export function pkgSchema(pkg: PkgMain): Schema {
     `,
     resolvers: {
       Component: {
+        packageName: (component: Component) => {
+          return pkg.getPackageName(component);
+        },
         packageManifest: (component: Component) => {
           return pkg.getManifest(component);
         },

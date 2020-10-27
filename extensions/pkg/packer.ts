@@ -92,9 +92,11 @@ export class Packer {
       dryRun
     );
     const component = capsule.component;
+    const metadata = _(packResult.metadata).omitBy(_.isUndefined).omit(['tarPath']).value();
+
     return {
       component,
-      metadata: _(packResult.metadata).omit(_.isUndefined),
+      metadata,
       errors: packResult.errors,
       startTime: packResult.startTime,
       endTime: packResult.endTime,

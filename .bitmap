@@ -19,6 +19,11 @@
                 "test": false
             },
             {
+                "name": "babel-config.ts",
+                "relativePath": "babel/babel-config.ts",
+                "test": false
+            },
+            {
                 "name": "core-exporter.task.ts",
                 "relativePath": "core-exporter.task.ts",
                 "test": false
@@ -40,7 +45,7 @@
         "exported": false,
         "lanes": []
     },
-    "aspect-loader": {
+    "aspect-loader@0.0.87": {
         "files": [
             {
                 "name": "aspect-definition.ts",
@@ -207,7 +212,7 @@
         "exported": false,
         "lanes": []
     },
-    "builder": {
+    "builder@0.0.87": {
         "files": [
             {
                 "name": "artifact-definition.ts",
@@ -361,7 +366,7 @@
         "exported": false,
         "lanes": []
     },
-    "bundler": {
+    "bundler@0.0.87": {
         "files": [
             {
                 "name": "browser-runtime.ts",
@@ -455,7 +460,7 @@
         "exported": false,
         "lanes": []
     },
-    "cache": {
+    "cache@0.0.87": {
         "files": [
             {
                 "name": "cache.aspect.ts",
@@ -484,7 +489,7 @@
         "exported": false,
         "lanes": []
     },
-    "changelog": {
+    "changelog@0.0.87": {
         "files": [
             {
                 "name": "changelog.aspect.ts",
@@ -528,7 +533,7 @@
         "exported": false,
         "lanes": []
     },
-    "cli": {
+    "cli@0.0.87": {
         "files": [
             {
                 "name": "bit",
@@ -592,7 +597,7 @@
         "exported": false,
         "lanes": []
     },
-    "command-bar": {
+    "command-bar@0.0.87": {
         "files": [
             {
                 "name": "command-bar.aspect.ts",
@@ -716,7 +721,7 @@
         "exported": false,
         "lanes": []
     },
-    "compiler": {
+    "compiler@0.0.87": {
         "files": [
             {
                 "name": "README.md",
@@ -785,7 +790,51 @@
         "exported": false,
         "lanes": []
     },
-    "component": {
+    "component-tree@0.0.87": {
+        "files": [
+            {
+                "name": "component-tree-node.ts",
+                "relativePath": "component-tree-node.ts",
+                "test": false
+            },
+            {
+                "name": "component-tree.aspect.ts",
+                "relativePath": "component-tree.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "component-tree.composition.tsx",
+                "relativePath": "component-tree.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-tree.docs.tsx",
+                "relativePath": "component-tree.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "component-tree.drawer.tsx",
+                "relativePath": "component-tree.drawer.tsx",
+                "test": false
+            },
+            {
+                "name": "component-tree.ui.runtime.tsx",
+                "relativePath": "component-tree.ui.runtime.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/component-tree",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "component@0.0.87": {
         "files": [
             {
                 "name": "aspect-entry.ts",
@@ -795,6 +844,11 @@
             {
                 "name": "aspect-list.ts",
                 "relativePath": "aspect-list.ts",
+                "test": false
+            },
+            {
+                "name": "aspect.section.module.scss",
+                "relativePath": "aspect.section.module.scss",
                 "test": false
             },
             {
@@ -1098,21 +1152,6 @@
                 "test": false
             },
             {
-                "name": "index.ts",
-                "relativePath": "ui/top-bar-widget-link/index.ts",
-                "test": false
-            },
-            {
-                "name": "top-bar-widget-link.module.scss",
-                "relativePath": "ui/top-bar-widget-link/top-bar-widget-link.module.scss",
-                "test": false
-            },
-            {
-                "name": "top-bar-widget-link.tsx",
-                "relativePath": "ui/top-bar-widget-link/top-bar-widget-link.tsx",
-                "test": false
-            },
-            {
                 "name": "use-component-query.ts",
                 "relativePath": "ui/use-component-query.ts",
                 "test": false
@@ -1139,51 +1178,7 @@
         "exported": false,
         "lanes": []
     },
-    "component-tree": {
-        "files": [
-            {
-                "name": "component-tree-node.ts",
-                "relativePath": "component-tree-node.ts",
-                "test": false
-            },
-            {
-                "name": "component-tree.aspect.ts",
-                "relativePath": "component-tree.aspect.ts",
-                "test": false
-            },
-            {
-                "name": "component-tree.composition.tsx",
-                "relativePath": "component-tree.composition.tsx",
-                "test": false
-            },
-            {
-                "name": "component-tree.docs.tsx",
-                "relativePath": "component-tree.docs.tsx",
-                "test": false
-            },
-            {
-                "name": "component-tree.drawer.tsx",
-                "relativePath": "component-tree.drawer.tsx",
-                "test": false
-            },
-            {
-                "name": "component-tree.ui.runtime.tsx",
-                "relativePath": "component-tree.ui.runtime.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/component-tree",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "compositions": {
+    "compositions@0.0.87": {
         "files": [
             {
                 "name": "composition.section.tsx",
@@ -1307,7 +1302,7 @@
         "exported": false,
         "lanes": []
     },
-    "config": {
+    "config@0.0.87": {
         "files": [
             {
                 "name": "config.aspect.ts",
@@ -1386,7 +1381,7 @@
         "exported": false,
         "lanes": []
     },
-    "crypto/checksum": {
+    "crypto/checksum@0.0.87": {
         "files": [
             {
                 "name": "checksum.spec.ts",
@@ -1425,7 +1420,7 @@
         "exported": false,
         "lanes": []
     },
-    "dependency-resolver": {
+    "dependency-resolver@0.0.87": {
         "files": [
             {
                 "name": "constants.ts",
@@ -1589,7 +1584,7 @@
         "exported": false,
         "lanes": []
     },
-    "deprecation": {
+    "deprecation@0.0.87": {
         "files": [
             {
                 "name": "deprecation.aspect.ts",
@@ -1618,7 +1613,7 @@
         "exported": false,
         "lanes": []
     },
-    "docs": {
+    "docs@0.0.87": {
         "files": [
             {
                 "name": "docs-store.tsx",
@@ -1702,7 +1697,7 @@
         "exported": false,
         "lanes": []
     },
-    "dummy": {
+    "dummy@0.0.87": {
         "files": [
             {
                 "name": "dummy.aspect.ts",
@@ -1726,7 +1721,7 @@
         "exported": false,
         "lanes": []
     },
-    "elements/keycap": {
+    "elements/keycap@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -1755,7 +1750,7 @@
         "exported": false,
         "lanes": []
     },
-    "environments": {
+    "environments@0.0.87": {
         "files": [
             {
                 "name": "README.md",
@@ -1894,7 +1889,7 @@
         "exported": false,
         "lanes": []
     },
-    "eslint": {
+    "eslint@0.0.87": {
         "files": [
             {
                 "name": "eslint.aspect.ts",
@@ -1923,7 +1918,7 @@
         "exported": false,
         "lanes": []
     },
-    "express": {
+    "express@0.0.87": {
         "files": [
             {
                 "name": "express.aspect.ts",
@@ -1987,7 +1982,7 @@
         "exported": false,
         "lanes": []
     },
-    "flows": {
+    "flows@0.0.87": {
         "files": [
             {
                 "name": "README.md",
@@ -2111,7 +2106,7 @@
         "exported": false,
         "lanes": []
     },
-    "generator": {
+    "generator@0.0.87": {
         "files": [
             {
                 "name": "README.md",
@@ -2160,7 +2155,7 @@
         "exported": false,
         "lanes": []
     },
-    "graph": {
+    "graph@0.0.87": {
         "files": [
             {
                 "name": "component-graph.ts",
@@ -2364,7 +2359,7 @@
         "exported": false,
         "lanes": []
     },
-    "graphql": {
+    "graphql@0.0.87": {
         "files": [
             {
                 "name": "create-link.ts",
@@ -2438,7 +2433,7 @@
         "exported": false,
         "lanes": []
     },
-    "hooks/use-in-out-transition": {
+    "hooks/use-in-out-transition@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2457,7 +2452,7 @@
         "exported": false,
         "lanes": []
     },
-    "insights": {
+    "insights@0.0.87": {
         "files": [
             {
                 "name": "duplicate-dependencies.tsx",
@@ -2600,7 +2595,7 @@
         "exported": false,
         "lanes": []
     },
-    "jest": {
+    "jest@0.0.87": {
         "files": [
             {
                 "name": "error.ts",
@@ -2639,7 +2634,7 @@
         "exported": false,
         "lanes": []
     },
-    "linter": {
+    "linter@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2693,7 +2688,7 @@
         "exported": false,
         "lanes": []
     },
-    "logger": {
+    "logger@0.0.87": {
         "files": [
             {
                 "name": "README.md",
@@ -2732,7 +2727,7 @@
         "exported": false,
         "lanes": []
     },
-    "node": {
+    "node@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2761,36 +2756,7 @@
         "exported": false,
         "lanes": []
     },
-    "notifications": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "notification-reducer.tsx",
-                "relativePath": "notification-reducer.tsx",
-                "test": false
-            },
-            {
-                "name": "notification.ui.runtime.tsx",
-                "relativePath": "notification.ui.runtime.tsx",
-                "test": false
-            },
-            {
-                "name": "notifications.aspect.ts",
-                "relativePath": "notifications.aspect.ts",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/aspect",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "notifications/api": {
+    "notifications/api@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2809,46 +2775,7 @@
         "exported": false,
         "lanes": []
     },
-    "notifications/notification": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "level-icon/index.ts",
-                "test": false
-            },
-            {
-                "name": "level-icon.module.scss",
-                "relativePath": "level-icon/level-icon.module.scss",
-                "test": false
-            },
-            {
-                "name": "level-icon.tsx",
-                "relativePath": "level-icon/level-icon.tsx",
-                "test": false
-            },
-            {
-                "name": "notification.module.scss",
-                "relativePath": "notification.module.scss",
-                "test": false
-            },
-            {
-                "name": "notification.tsx",
-                "relativePath": "notification.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "extensions/notifications/ui/notification",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "notifications/notification-center": {
+    "notifications/notification-center@0.0.87": {
         "files": [
             {
                 "name": "dismiss-button.module.scss",
@@ -2887,7 +2814,7 @@
         "exported": false,
         "lanes": []
     },
-    "notifications/notification-context": {
+    "notifications/notification-context@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2906,7 +2833,75 @@
         "exported": false,
         "lanes": []
     },
-    "pages/error": {
+    "notifications/notification@0.0.87": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "level-icon/index.ts",
+                "test": false
+            },
+            {
+                "name": "level-icon.module.scss",
+                "relativePath": "level-icon/level-icon.module.scss",
+                "test": false
+            },
+            {
+                "name": "level-icon.tsx",
+                "relativePath": "level-icon/level-icon.tsx",
+                "test": false
+            },
+            {
+                "name": "notification.module.scss",
+                "relativePath": "notification.module.scss",
+                "test": false
+            },
+            {
+                "name": "notification.tsx",
+                "relativePath": "notification.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/ui/notification",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "notifications@0.0.87": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "notification-reducer.tsx",
+                "relativePath": "notification-reducer.tsx",
+                "test": false
+            },
+            {
+                "name": "notification.ui.runtime.tsx",
+                "relativePath": "notification.ui.runtime.tsx",
+                "test": false
+            },
+            {
+                "name": "notifications.aspect.ts",
+                "relativePath": "notifications.aspect.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "extensions/notifications/aspect",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "pages/error@0.0.87": {
         "files": [
             {
                 "name": "error-page.module.scss",
@@ -2930,7 +2925,7 @@
         "exported": false,
         "lanes": []
     },
-    "pages/not-found": {
+    "pages/not-found@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2954,7 +2949,7 @@
         "exported": false,
         "lanes": []
     },
-    "pages/server-error": {
+    "pages/server-error@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -2978,7 +2973,7 @@
         "exported": false,
         "lanes": []
     },
-    "panels": {
+    "panels@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -3111,7 +3106,7 @@
         "exported": false,
         "lanes": []
     },
-    "pnpm": {
+    "pnpm@0.0.87": {
         "files": [
             {
                 "name": "create-resolver.ts",
@@ -3165,7 +3160,7 @@
         "exported": false,
         "lanes": []
     },
-    "preview": {
+    "preview@0.0.87": {
         "files": [
             {
                 "name": "bundling-strategy.ts",
@@ -3309,7 +3304,7 @@
         "exported": false,
         "lanes": []
     },
-    "pubsub": {
+    "pubsub@0.0.87": {
         "files": [
             {
                 "name": "bit-base-event.ts",
@@ -3552,7 +3547,7 @@
         "exported": false,
         "lanes": []
     },
-    "react-router": {
+    "react-router@0.0.87": {
         "files": [
             {
                 "name": "extend-path.spec.ts",
@@ -3626,7 +3621,7 @@
         "exported": false,
         "lanes": []
     },
-    "routing/external-link": {
+    "routing/external-link@0.0.87": {
         "files": [
             {
                 "name": "external-link.module.scss",
@@ -3650,7 +3645,7 @@
         "exported": false,
         "lanes": []
     },
-    "schema": {
+    "schema@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -3704,7 +3699,7 @@
         "exported": false,
         "lanes": []
     },
-    "scope": {
+    "scope@0.0.87": {
         "files": [
             {
                 "name": "components.drawer.tsx",
@@ -3853,7 +3848,7 @@
         "exported": false,
         "lanes": []
     },
-    "sidebar": {
+    "sidebar@0.0.87": {
         "files": [
             {
                 "name": "drawer.module.scss",
@@ -3937,7 +3932,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/aspect-box": {
+    "staged-components/aspect-box@0.0.87": {
         "files": [
             {
                 "name": "aspect-box.module.scss",
@@ -3961,7 +3956,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/cli-snippet": {
+    "staged-components/cli-snippet@0.0.87": {
         "files": [
             {
                 "name": "cli-snippet.module.scss",
@@ -3985,31 +3980,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/component-status": {
-        "files": [
-            {
-                "name": "component-status.module.scss",
-                "relativePath": "component-status.module.scss",
-                "test": false
-            },
-            {
-                "name": "component-status.tsx",
-                "relativePath": "component-status.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "components/component-status",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "staged-components/component-status-resolver": {
+    "staged-components/component-status-resolver@0.0.87": {
         "files": [
             {
                 "name": "color-override.ts",
@@ -4038,7 +4009,31 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/component-tooltip": {
+    "staged-components/component-status@0.0.87": {
+        "files": [
+            {
+                "name": "component-status.module.scss",
+                "relativePath": "component-status.module.scss",
+                "test": false
+            },
+            {
+                "name": "component-status.tsx",
+                "relativePath": "component-status.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/component-status",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "staged-components/component-tooltip@0.0.87": {
         "files": [
             {
                 "name": "component-tooltip.module.scss",
@@ -4062,7 +4057,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/corner": {
+    "staged-components/corner@0.0.87": {
         "files": [
             {
                 "name": "corner.module.scss",
@@ -4086,7 +4081,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/deprecation-icon": {
+    "staged-components/deprecation-icon@0.0.87": {
         "files": [
             {
                 "name": "deprecation-icon.tsx",
@@ -4105,7 +4100,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/empty-box": {
+    "staged-components/empty-box@0.0.87": {
         "files": [
             {
                 "name": "empty-box.module.scss",
@@ -4129,7 +4124,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/env-icon": {
+    "staged-components/env-icon@0.0.87": {
         "files": [
             {
                 "name": "env-icon.tsx",
@@ -4148,7 +4143,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/full-loader": {
+    "staged-components/full-loader@0.0.87": {
         "files": [
             {
                 "name": "full-loader.module.scss",
@@ -4172,7 +4167,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/main-dropdown": {
+    "staged-components/main-dropdown@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4196,7 +4191,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/pill-label": {
+    "staged-components/pill-label@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4220,7 +4215,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/preview-placeholder": {
+    "staged-components/preview-placeholder@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4244,7 +4239,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/scope-details": {
+    "staged-components/scope-details@0.0.87": {
         "files": [
             {
                 "name": "contributors.module.scss",
@@ -4283,7 +4278,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/scope-labels": {
+    "staged-components/scope-labels@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4307,7 +4302,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/scope-title": {
+    "staged-components/scope-title@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4331,7 +4326,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/side-bar": {
+    "staged-components/side-bar@0.0.87": {
         "files": [
             {
                 "name": "component-tree-context.tsx",
@@ -4580,7 +4575,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/test-row": {
+    "staged-components/test-row@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4604,7 +4599,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/test-table": {
+    "staged-components/test-table@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4648,7 +4643,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/top-bar": {
+    "staged-components/top-bar@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4672,7 +4667,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/version-dropdown": {
+    "staged-components/version-dropdown@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4696,7 +4691,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-components/avatar": {
+    "staged-components/workspace-components/avatar@0.0.87": {
         "files": [
             {
                 "name": "avatar-colors.module.scss",
@@ -4745,7 +4740,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-components/label": {
+    "staged-components/workspace-components/label@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4774,7 +4769,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-components/separator": {
+    "staged-components/workspace-components/separator@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4798,7 +4793,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-components/status": {
+    "staged-components/workspace-components/status@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4832,7 +4827,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-components/time-ago": {
+    "staged-components/workspace-components/time-ago@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4856,7 +4851,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-components/version-tag": {
+    "staged-components/workspace-components/version-tag@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4885,7 +4880,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-sections/contributors": {
+    "staged-components/workspace-sections/contributors@0.0.87": {
         "files": [
             {
                 "name": "contributors.module.scss",
@@ -4909,7 +4904,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-sections/version-block": {
+    "staged-components/workspace-sections/version-block@0.0.87": {
         "files": [
             {
                 "name": "change-log.data.ts",
@@ -4938,7 +4933,7 @@
         "exported": false,
         "lanes": []
     },
-    "staged-components/workspace-sections/version-label": {
+    "staged-components/workspace-sections/version-label@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -4962,7 +4957,7 @@
         "exported": false,
         "lanes": []
     },
-    "stencil": {
+    "stencil@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5016,7 +5011,7 @@
         "exported": false,
         "lanes": []
     },
-    "string/to-windows-compatible-path": {
+    "string/to-windows-compatible-path@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5035,7 +5030,7 @@
         "exported": false,
         "lanes": []
     },
-    "styles/ellipsis": {
+    "styles/ellipsis@0.0.87": {
         "files": [
             {
                 "name": "ellipsis.module.scss",
@@ -5059,7 +5054,7 @@
         "exported": false,
         "lanes": []
     },
-    "tester": {
+    "tester@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5163,7 +5158,7 @@
         "exported": false,
         "lanes": []
     },
-    "toolbox/query-string": {
+    "toolbox/query-string@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5187,7 +5182,7 @@
         "exported": false,
         "lanes": []
     },
-    "toolbox/string/capitalize": {
+    "toolbox/string/capitalize@0.0.87": {
         "files": [
             {
                 "name": "capitalize.spec.ts",
@@ -5211,7 +5206,7 @@
         "exported": false,
         "lanes": []
     },
-    "toolbox/time-format": {
+    "toolbox/time-format@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5230,7 +5225,7 @@
         "exported": false,
         "lanes": []
     },
-    "typescript": {
+    "typescript@0.0.87": {
         "files": [
             {
                 "name": "init.cmd.ts",
@@ -5284,7 +5279,7 @@
         "exported": false,
         "lanes": []
     },
-    "ui": {
+    "ui@0.0.87": {
         "files": [
             {
                 "name": "compose.tsx",
@@ -5513,7 +5508,7 @@
         "exported": false,
         "lanes": []
     },
-    "utils/capitalize": {
+    "utils/capitalize@0.0.87": {
         "files": [
             {
                 "name": "capitalize.ts",
@@ -5532,7 +5527,7 @@
         "exported": false,
         "lanes": []
     },
-    "utils/requireable-component": {
+    "utils/requireable-component@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5551,7 +5546,7 @@
         "exported": false,
         "lanes": []
     },
-    "utils/resolved-component": {
+    "utils/resolved-component@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5570,7 +5565,7 @@
         "exported": false,
         "lanes": []
     },
-    "utils/to-identifier": {
+    "utils/to-identifier@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -5589,7 +5584,7 @@
         "exported": false,
         "lanes": []
     },
-    "variants": {
+    "variants@0.0.87": {
         "files": [
             {
                 "name": "constants.ts",
@@ -5633,7 +5628,7 @@
         "exported": false,
         "lanes": []
     },
-    "webpack": {
+    "webpack@0.0.87": {
         "files": [
             {
                 "name": "html.js",
@@ -5697,7 +5692,7 @@
         "exported": false,
         "lanes": []
     },
-    "workspace": {
+    "workspace@0.0.87": {
         "files": [
             {
                 "name": "capsule-create.cmd.ts",
@@ -5981,7 +5976,7 @@
         "exported": false,
         "lanes": []
     },
-    "yarn": {
+    "yarn@0.0.87": {
         "files": [
             {
                 "name": "index.ts",
@@ -6010,5 +6005,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.90"
+    "version": "14.8.9-dev.93"
 }
