@@ -32,8 +32,10 @@ export function Compositions() {
     selectComposition(next);
   }, [component]);
 
-  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, component.compositions.length > 0);
+  const [isSidebarOpen, setSidebarOpenness] = useState(component.compositions.length > 0);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+  // collapse sidebar when empty, reopen when not
+  useEffect(() => setSidebarOpenness(component.compositions.length > 0), [component.compositions.length]);
 
   const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
 
@@ -48,7 +50,7 @@ export function Compositions() {
           placement="left"
           isOpen={isSidebarOpen}
           onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={handleSidebarToggle}
+          onClick={() => setSidebarOpenness((x) => !x)}
           tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
           className={styles.collapser}
         />
