@@ -199,7 +199,7 @@ export class EnvsMain {
   implements(env: EnvDefinition, service: EnvService<any>) {
     // TODO: remove this after refactoring everything and remove getDescriptor from being optional.
     if (!service.getDescriptor) return false;
-    return !!service.getDescriptor(env.env);
+    return !!service.getDescriptor(env);
   }
 
   /**
