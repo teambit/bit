@@ -5,7 +5,7 @@ import { NavigationSlot, NavLinkProps, RouteSlot } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-import CommandBarAspect, { CommandBarUI } from '@teambit/command-bar';
+import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import copy from 'copy-to-clipboard';
 import { ComponentAspect } from './component.aspect';
 import { Component } from './ui/component';
@@ -51,7 +51,37 @@ export class ComponentUI {
     this.registerPubSub();
   }
 
+  /**
+   * the current visible component
+   */
   private activeComponent?: ComponentModel;
+
+  /**
+   * key bindings used by component aspect
+   */
+  private keyBindings: CommandEntry[] = [
+    {
+      id: 'copyBitId', // extract to constant!
+      handler: () => {
+        copy(this.activeComponent?.id.toString() || '');
+      },
+      displayName: 'copy bit id',
+      keybinding: '.',
+    },
+    {
+      id: 'copyNpmId', // extract to constant!
+      handler: () => {
+        const packageName = this.activeComponent?.packageName;
+        if (packageName) {
+          const version = this.activeComponent?.id.version;
+          const versionString = version ? `@${version}` : '';
+          copy(`${packageName}${versionString}`);
+        }
+      },
+      displayName: 'copy npm id',
+      keybinding: ',',
+    },
+  ];
 
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
@@ -122,30 +152,7 @@ export class ComponentUI {
     const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot, commandBarUI);
     const section = new AspectSection();
 
-    componentUI.commandBarUI.addCommand(
-      {
-        id: 'copyId', // extract to constant!
-        handler: () => {
-          console.log('blaa', componentUI.activeComponent?.id.toString());
-          copy(componentUI.activeComponent?.id.toString() || '');
-        },
-        displayName: 'copy bit id',
-        keybinding: '.',
-      },
-      {
-        id: 'copyNpmId', // extract to constant!
-        handler: () => {
-          const packageName = componentUI.activeComponent?.packageName;
-          if (packageName) {
-            const version = componentUI.activeComponent?.id.version;
-            const versionString = version ? `@${version}` : '';
-            copy(`${packageName}${versionString}`);
-          }
-        },
-        displayName: 'copy npm id',
-        keybinding: ',',
-      }
-    );
+    componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
 
     componentUI.registerRoute(section.route);
     componentUI.registerWidget(section.navigationLink, section.order);
