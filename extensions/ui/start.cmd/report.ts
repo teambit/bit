@@ -21,6 +21,9 @@ export const report = async (
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   return new Promise((resolve, reject) => {
+    // https://github.com/nodejs/node/issues/22088
+    setInterval(() => {}, 5000);
+
     pubsub.sub(UIAspect.id, (event) => {
       if (event.type === UiServerStartedEvent.TYPE) {
         logger.console(`
