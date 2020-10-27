@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, Newline } from 'ink';
+import { Text } from 'ink';
 import moment from 'moment';
 
 export type compilingOrUIServersAreReadyProps = {

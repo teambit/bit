@@ -1,13 +1,14 @@
-const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
-const WebpackAspect = require('../webpack.aspect');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
+
 const path = require('path');
 const html = require('./html');
+
+const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default: '/sockjs-node'
@@ -108,7 +109,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(errorOverlayMiddleware());
       },
 
-      after(app, server, compiler) {
+      after(app) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 

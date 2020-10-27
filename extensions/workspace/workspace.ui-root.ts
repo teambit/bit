@@ -68,8 +68,6 @@ export class WorkspaceUIRoot implements UIRoot {
     const devServers = await this.getServers();
     devServers.forEach((server) => server.listen());
     this.workspace.watcher.watchAll();
-
-    return devServers;
   }
 
   private _serversPromise: Promise<ComponentServer[]>;

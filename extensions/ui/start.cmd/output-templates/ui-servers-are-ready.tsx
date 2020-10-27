@@ -12,12 +12,6 @@ export type uIServersAreReadyProps = {
   mainUIServer: any;
 };
 
-const CompiledComponents = ({ totalComponentsSum, compiledComponentsSum }) => (
-  <Text>
-    Compiled {compiledComponentsSum} components out of {totalComponentsSum}...
-  </Text>
-);
-
 const UIServersAreReady = ({ mainUIServer }: uIServersAreReadyProps) => (
   <>
     <Text>You can now view {mainUIServer.uiRoot.name} components in the browser</Text>

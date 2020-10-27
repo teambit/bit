@@ -108,7 +108,7 @@ export class CliOutput extends React.Component<props, state> {
   private async onUiServerStarted(event) {
     const devServers = await event.data.uiRoot.devServers;
 
-    if (!!event.data.uiRoot.scope) {
+    if (event.data.uiRoot.scope) {
       this.setState({
         mainUIServer: event.data,
         isScope: true,
@@ -179,7 +179,7 @@ export class CliOutput extends React.Component<props, state> {
   }
 
   private updateOrAddComponentServer(id, status, server?) {
-    if (!!server) {
+    if (server) {
       this.addOrUpdateComponentServer(id, status, server);
     } else {
       this.updateComponentServerStatus(id, status);
@@ -188,7 +188,7 @@ export class CliOutput extends React.Component<props, state> {
 
   private updateComponentServerStatus(id, status) {
     const server = this.state.componentServers.find((cs) => cs.id === id)?.server;
-    if (!!server) {
+    if (server) {
       this.addOrUpdateComponentServer(id, status, server);
     }
   }
@@ -207,7 +207,6 @@ export class CliOutput extends React.Component<props, state> {
       webpackErrors,
       webpackWarnings,
       compiledComponents,
-      totalComponents,
       isScope,
     } = this.state;
     const { verbose } = this.state.commandFlags;

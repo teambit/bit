@@ -3,11 +3,10 @@ import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
 
 import React from 'react';
-import { Newline, Text, render } from 'ink';
+import { render } from 'ink';
 
 import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
-import { ClearConsole } from './output-templates';
 import { report } from './report';
 
 export class StartCmd implements Command {
@@ -97,6 +96,9 @@ export class StartCmd implements Command {
             this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
           }, 200);
         }, 0);
+      })
+      .catch((e) => {
+        throw e;
       });
 
     return (
