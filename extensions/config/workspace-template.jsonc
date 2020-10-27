@@ -45,13 +45,13 @@
    **/
   "teambit.bit/variants": {
     /**
-     * wildcards can be used to configure components under a specific directory.
+     * "*" is a special rule which applied on all components in the workspace.
      **/
     "*": {
       /**
-       * apply the react environment on all components.
+       * uncomment to apply the react environment on all components.
        **/
-      "teambit.bit/react": { }
+      // "teambit.bit/react": { }
     }
   }
 }
