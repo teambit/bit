@@ -6,11 +6,14 @@ import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import syntaxHighlighter from 'consolehighlighter';
+import { PubSub } from 'graphql-subscriptions';
 
 import { NoTestFilesFound } from './exceptions';
 import { Tester, Tests } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
+
+export const OnTestsChanged = 'OnTestsChanged';
 
 export type TesterDescriptor = {
   /**
@@ -42,7 +45,9 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
      */
     readonly testsRegex: string,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private pubsub: PubSub
   ) {}
 
   render(env: Environment) {
@@ -96,12 +101,22 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       specFiles,
       rootPath: this.workspace.path,
       workspace: this.workspace,
-      watch: options.watch,
       debug: options.debug,
     });
 
+    if (options.watch) {
+      if (tester.onTestRunComplete) {
+        tester.onTestRunComplete((results) => {
+          results.components.forEach((component) => {
+            this.pubsub.publish(OnTestsChanged, {
+              testsChanged: { componentId: component.componentId.fullName, testsResults: component.results },
+            });
+          });
+        });
+      }
+      return tester.watch(testerContext);
+    }
+
     return tester.test(testerContext);
   }
-
-  watch() {}
 }

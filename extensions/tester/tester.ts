@@ -12,12 +12,6 @@ export type Tests = {
   errors?: Error[];
 };
 
-export type TestsWatchResults = {
-  bla: string;
-  watch: EventEmitter;
-  errors?: Error[];
-};
-
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
 
 export interface TesterContext extends ExecutionContext {
@@ -45,11 +39,6 @@ export interface TesterContext extends ExecutionContext {
    * rootPath of the component workspace.
    */
   rootPath: string;
-
-  /**
-   * determines whether tester is expected to run in watch mode.
-   */
-  watch?: boolean;
 
   /**
    * determines whether tester is expected to run in debug mode.
@@ -87,6 +76,12 @@ export interface Tester {
   id: string;
 
   /**
+   * on test run complete. (applies only during watch)
+   * @param callback
+   */
+  onTestRunComplete?(callback: CallbackFn): Promise<void>;
+
+  /**
    * execute tests on all components in the given execution context.
    */
   test(context: TesterContext): Promise<Tests>;
@@ -94,5 +89,6 @@ export interface Tester {
   /**
    * watch tests on all components
    */
-  watch(context: TesterContext): Promise<TestsWatchResults>;
+  watch(context: TesterContext): Promise<Tests>;
 }
+export type CallbackFn = (testSuite: Tests) => void;

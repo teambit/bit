@@ -12,15 +12,10 @@ class Watch {
   }
 
   // Get the prompt information for interactive plugins
-  getUsageInfo(globalConfig) {
-    console.log(globalConfig);
-  }
+  getUsageInfo(globalConfig) {}
 
   // Executed when the key from `getUsageInfo` is input
-  run(globalConfig, updateConfigAndRun) {
-    console.log(globalConfig);
-    console.log(updateConfigAndRun);
-  }
+  run(globalConfig, updateConfigAndRun) {}
 }
 
 module.exports = Watch;

@@ -1,13 +1,13 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain, EnvsExecutionResult } from '@teambit/environments';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 
-import { TestsWatchResults, Tests } from './tester';
+import { Tests } from './tester';
 import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
@@ -15,13 +15,16 @@ import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
 import { testerSchema } from './tester.graphql';
 
-export const OnTestsChanged = 'OnTestsChanged';
-
 export type TesterExtensionConfig = {
   /**
    * regex of the text environment.
    */
   testRegex: string;
+
+  /**
+   * determine whether to watch on start.
+   */
+  watchOnStart: boolean;
 };
 
 export type TesterOptions = {
@@ -72,6 +75,8 @@ export class TesterMain {
     readonly task: TesterTask
   ) {}
 
+  _testsResults: EnvsExecutionResult<Tests> | undefined;
+
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
     const envsRuntime = await this.envs.createEnvironment(components);
@@ -91,17 +96,9 @@ export class TesterMain {
     if (opts?.env) {
       return envsRuntime.runEnv(opts.env, this.service, options);
     }
-    //@ts-ignore
-    const results = await envsRuntime.run<TestsWatchResults>(this.service, options);
-    results.results.forEach((result) => {
-      result.data?.watch.on('onComplete', (results: Tests) => {
-        results.components.forEach((component) => {
-          this.graphql.pubsub.publish(OnTestsChanged, {
-            testsChanged: { componentId: component.componentId.fullName, testsResults: component.results },
-          });
-        });
-      });
-    });
+    const results = await envsRuntime.run(this.service, options);
+    this._testsResults = results;
+    return results;
   }
 
   async uiWatch() {
@@ -111,9 +108,15 @@ export class TesterMain {
 
   getTestsResults(component: Component): TestsResult | undefined {
     const entry = component.state.aspects.get(TesterAspect.id);
-    // TODO: type is ok, talk to @david about it
-    // @ts-ignore
-    return entry?.data.tests;
+    if (entry) return entry?.data.tests;
+    return this.getTestsResultsFromState(component);
+  }
+
+  private getTestsResultsFromState(component: Component) {
+    const env = this.envs.getEnv(component);
+    const envTests = this._testsResults?.results.find((data) => data.env.id === env.id);
+    const data = envTests?.data?.components?.find((c) => c.componentId.isEqual(component.id));
+    return data?.results;
   }
 
   private getOptions(options?: TesterOptions): TesterOptions {
@@ -130,6 +133,8 @@ export class TesterMain {
      * default test regex for which files tester to apply on.
      */
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
+
+    watchOnStart: true,
   };
 
   static async provider(
@@ -143,16 +148,20 @@ export class TesterMain {
       graphql,
       envs,
       workspace,
-      new TesterService(workspace, config.testRegex, logger),
+      new TesterService(workspace, config.testRegex, logger, graphql.pubsub),
       new TesterTask(TesterAspect.id)
     );
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
+      ui.registerOnStart(async () => {
+        if (!config.watchOnStart) return;
+        tester.uiWatch();
+      });
+
       cli.register(new TestCmd(tester, workspace, logger));
     }
 
     graphql.register(testerSchema(tester, graphql));
-    ui.registerOnStart(() => tester.uiWatch());
 
     return tester;
   }

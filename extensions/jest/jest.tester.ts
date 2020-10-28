@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 import { readFileSync } from 'fs';
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
-import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
+import { Tester, CallbackFn, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
@@ -15,6 +15,8 @@ export class JestTester implements Tester {
   configPath = this.jestConfig;
 
   displayName = 'Jest';
+
+  _callback: CallbackFn | undefined;
 
   displayConfig() {
     return readFileSync(this.jestConfig, 'utf8');
@@ -94,12 +96,13 @@ export class JestTester implements Tester {
     }, []);
   }
 
-  onTestRunComplete(testResults: AggregatedResult) {}
+  async onTestRunComplete(callback: CallbackFn) {
+    this._callback = callback;
+  }
 
   async test(context: TesterContext): Promise<Tests> {
     const config: any = {
       rootDir: context.rootPath,
-      watch: context.watch,
     };
 
     if (context.debug) config.runInBand = true;
@@ -128,9 +131,8 @@ export class JestTester implements Tester {
     return { components: componentTestResults, errors: globalErrors };
   }
 
-  watch(context: TesterContext): any {
+  watch(context: TesterContext): Promise<Tests> {
     return new Promise((resolve, reject) => {
-      const events = new EventEmitter();
       const config: any = {
         rootDir: context.rootPath,
         watch: true,
@@ -140,6 +142,7 @@ export class JestTester implements Tester {
             `${__dirname}/watch.js`,
             {
               onComplete: (results) => {
+                if (!this._callback) return;
                 const testResults = results.testResults;
                 const componentsWithTests = this.attachTestsToComponent(context, testResults);
                 const componentTestResults = this.buildTestsObj(
@@ -149,9 +152,12 @@ export class JestTester implements Tester {
                   jestConfigWithSpecs
                 );
                 const globalErrors = this.getErrors(testResults);
-
-                const a = { components: componentTestResults, errors: globalErrors };
-                events.emit('onComplete', a);
+                const watchTestResults = {
+                  errors: globalErrors,
+                  components: componentTestResults,
+                };
+                this._callback(watchTestResults);
+                resolve(watchTestResults);
               },
             },
           ],
@@ -170,7 +176,6 @@ export class JestTester implements Tester {
 
       const withEnv = Object.assign(jestConfigWithSpecs, config);
       runCLI(withEnv, [this.jestConfig]);
-      resolve({ watch: events });
     });
   }
 }

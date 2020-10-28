@@ -3,7 +3,9 @@ import { ComponentFactory } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
-import { TesterMain, OnTestsChanged } from './tester.main.runtime';
+import { TesterMain } from './tester.main.runtime';
+import { OnTestsChanged } from './tester.service';
+
 export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
   return {
     typeDefs: gql`
