@@ -10,7 +10,6 @@ import { TaskSlot } from './builder.main.runtime';
 import { BuildContext, BuildTaskHelper } from './build-task';
 import { ArtifactFactory } from './artifact';
 import { calculatePipelineOrder } from './build-pipeline-order';
-import { TasksQueue } from './tasks-queue';
 import { BuilderAspect } from './builder.aspect';
 
 export type BuildServiceResults = {
