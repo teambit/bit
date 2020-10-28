@@ -1,7 +1,6 @@
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { Component, ComponentID } from '@teambit/component';
 import { UIRoot, PostStartOptions, ProxyEntry } from '@teambit/ui';
-
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import { flatten } from 'bit-bin/dist/utils';
 import { PathOsBased } from 'bit-bin/dist/utils/path';

@@ -19,6 +19,11 @@
                 "test": false
             },
             {
+                "name": "babel-config.ts",
+                "relativePath": "babel/babel-config.ts",
+                "test": false
+            },
+            {
                 "name": "core-exporter.task.ts",
                 "relativePath": "core-exporter.task.ts",
                 "test": false
@@ -4009,6 +4014,21 @@
                 "test": false
             },
             {
+                "name": "ui-servers-is-ready-in-scope.tsx",
+                "relativePath": "start.cmd/output-templates/ui-servers-is-ready-in-scope.tsx",
+                "test": false
+            },
+            {
+                "name": "webpack-errors.tsx",
+                "relativePath": "start.cmd/output-templates/webpack-errors.tsx",
+                "test": false
+            },
+            {
+                "name": "webpack-warnings.tsx",
+                "relativePath": "start.cmd/output-templates/webpack-warnings.tsx",
+                "test": false
+            },
+            {
                 "name": "report.ts",
                 "relativePath": "start.cmd/report.ts",
                 "test": false
@@ -5539,8 +5559,8 @@
                 "test": false
             },
             {
-                "name": "webpack.dev.config.js",
-                "relativePath": "config/webpack.dev.config.js",
+                "name": "webpack.dev.config.ts",
+                "relativePath": "config/webpack.dev.config.ts",
                 "test": false
             },
             {
