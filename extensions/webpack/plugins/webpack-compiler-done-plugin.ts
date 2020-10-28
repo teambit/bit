@@ -3,13 +3,15 @@ import { WebpackAspect } from '../webpack.aspect';
 
 class WebpackCompilerDonePlugin {
   pubsub: any;
+  devServerID: string;
 
   constructor({ options }) {
     this.pubsub = options.pubsub;
+    this.devServerID = options.devServerID;
   }
 
   private createEvent = (stats) => {
-    return new WebpackCompilationDoneEvent(Date.now(), stats);
+    return new WebpackCompilationDoneEvent(Date.now(), stats, this.devServerID);
   };
 
   apply(compiler) {

@@ -1,4 +1,5 @@
 import type { TransformOptions } from '@babel/core';
+import { CompilerOptions } from '@teambit/compiler';
 
 export type BabelCompilerOptions = {
   /**
@@ -11,4 +12,4 @@ export type BabelCompilerOptions = {
    * ```
    */
   babelTransformOptions?: TransformOptions;
-};
+} & Partial<CompilerOptions>;

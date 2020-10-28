@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.91",
+  "version": "14.8.9-dev.100",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -104,6 +104,7 @@
     "babel-runtime": "^6.23.0",
     "bluebird": "^3.7.2",
     "chalk": "^2.4.1",
+    "checksum": "0.1.1",
     "chokidar": "^3.3.1",
     "cli-spinners": "^1.0.0",
     "commander": "^2.20.3",

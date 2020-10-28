@@ -9,16 +9,22 @@ import path from 'path';
 import { BabelCompilerOptions } from './compiler-options';
 
 export class BabelCompiler implements Compiler {
+  distDir: string;
+  distGlobPatterns: string[];
+  shouldCopyNonSupportedFiles: boolean;
+  artifactName: string;
   constructor(
-    readonly id,
+    readonly id: string,
     private logger: Logger,
     private compiler: CompilerMain,
     private options: BabelCompilerOptions
-  ) {}
-  distDir = 'dist';
-  distGlobPatterns = [`${this.distDir}/**`];
-  shouldCopyNonSupportedFiles = true;
-  artifactName = 'dist';
+  ) {
+    this.distDir = options.distDir || 'dist';
+    this.distGlobPatterns = options.distGlobPatterns || [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
+    this.shouldCopyNonSupportedFiles =
+      typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
+    this.artifactName = options.artifactName || 'dist';
+  }
 
   /**
    * compile one file on the workspace
@@ -37,7 +43,7 @@ export class BabelCompiler implements Compiler {
     transformOptions.filename = options.filePath;
     const result = babel.transformSync(fileContent, this.options.babelTransformOptions);
     if (!result) {
-      throw new Error(`babel returns no result`);
+      return null;
     }
     const code = result.code || '';
     const outputPath = this.replaceFileExtToJs(options.filePath);
@@ -59,6 +65,7 @@ export class BabelCompiler implements Compiler {
   async build(context: BuildContext): Promise<BuiltTaskResult> {
     const capsules = context.capsuleGraph.seedersCapsules;
     const componentsResults: ComponentResult[] = [];
+    this.setConfigFileFalse();
     const longProcessLogger = this.logger.createLongProcessLogger('compile babel components', capsules.length);
     await mapSeries(capsules, async (capsule) => {
       const currentComponentResult: ComponentResult = {
@@ -86,12 +93,13 @@ export class BabelCompiler implements Compiler {
     await fs.ensureDir(path.join(capsule.path, this.distDir));
     await Promise.all(
       sourceFiles.map(async (filePath) => {
+        if (!this.isFileSupported(filePath)) {
+          return;
+        }
         let result;
+        const absoluteFile = path.join(capsule.path, filePath);
         try {
-          result = await babel.transformFileAsync(
-            path.join(capsule.path, filePath),
-            this.options.babelTransformOptions
-          );
+          result = await babel.transformFileAsync(absoluteFile, this.options.babelTransformOptions);
         } catch (err) {
           componentResult.errors?.push(err);
         }
@@ -102,13 +110,24 @@ export class BabelCompiler implements Compiler {
         const distPathMap = `${distPath}.map`;
         const code = result.code || '';
         const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${distPathMap}` : code;
-        capsule.fs.writeFileSync(path.join(this.distDir, distPath), outputText);
+        await fs.outputFile(path.join(capsule.path, this.distDir, distPath), outputText);
         if (result.map) {
-          capsule.fs.writeFileSync(path.join(this.distDir, distPathMap), JSON.stringify(result.map));
+          await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), JSON.stringify(result.map));
         }
       })
     );
     componentResult.endTime = Date.now();
+  }
+
+  /**
+   * if it's not false, it searches for config files, which is probably not the expected behavior
+   * here as the configuration is passed programmatically.
+   * practically, when the configFile is not set, babel returns `null` for all files in the capsule
+   */
+  private setConfigFileFalse() {
+    this.options.babelTransformOptions = this.options.babelTransformOptions || {};
+    this.options.babelTransformOptions.configFile = this.options.babelTransformOptions.configFile || false;
+    this.options.babelTransformOptions.babelrc = this.options.babelTransformOptions.babelrc || false;
   }
 
   getArtifactDefinition() {

@@ -1,4 +1,3 @@
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
@@ -67,9 +66,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         # display name of the component
         displayName: String!
 
-        # package name of the component.
-        packageName: String
-
         # list of component releases.
         tags: [Tag]!
 
@@ -111,19 +107,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         aspects: (component: Component) => {
           const aspects = component.state.aspects.serialize();
           return aspects;
-        },
-        /**
-         * :TODO use legacy until @david will move it to the pkg extension.
-         */
-        packageName: (component: Component) => {
-          return componentIdToPackageName({
-            id: component.id._legacy,
-            bindingPrefix: component.state._consumer.bindingPrefix,
-            defaultScope: component.state._consumer.defaultScope,
-            withPrefix: true,
-            extensions: component.config.extensions,
-            isDependency: false,
-          });
         },
       },
       ComponentHost: {
