@@ -1,13 +1,13 @@
 {
   "$schema": "",
-  "teambit.workspace/workspace": {
+  "teambit.bit/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
-  "teambit.dependencies/dependency-resolver": {
+  "teambit.bit/dependency-resolver": {
     "packageManager": "teambit.dependencies/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
@@ -227,7 +227,7 @@
       }
     }
   },
-  "teambit.workspace/variants": {
+  "teambit.bit/variants": {
     "*": {
       "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
@@ -238,7 +238,7 @@
           "private": false
         }
       },
-      "teambit.dependencies/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "-"
@@ -255,13 +255,11 @@
             "react-dom": "^16.13.1"
           }
         }
-      }
+      },
+      "teambit.bit/aspect": {}
     },
     "{ui/*}": {
-      "teambit.react/react": {}
-    },
-    "{aspects/*}": {
-      "teambit.aspect/aspect": {}
+      "teambit.bit/react": {}
     },
     "toolbox": {
       "defaultScope": "teambit.toolbox"
@@ -323,7 +321,7 @@
           "packageManagerPublishArgs": [
             "--access public"
           ],
-          "name": "@teambit/{name}",
+          "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bin": {
