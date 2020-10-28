@@ -2,6 +2,7 @@
   border: 1px solid var(--separator-color);
   border-radius: 9px;
   padding: 16px;
+  display: grid;
 }
 .titleLine {
   display: flex;
@@ -41,11 +42,14 @@
 .log {
   overflow: hidden;
   background: #282c34;
-  padding: 16px;
   border-radius: 6px;
   word-break: break-all;
 
   &.config {
     margin-bottom: 24px;
+  }
+  > div {
+    overflow-x: scroll;
+    padding: 16px;
   }
 }

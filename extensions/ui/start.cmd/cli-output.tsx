@@ -17,38 +17,54 @@ import React from 'react';
 import { Newline, Text } from 'ink';
 import open from 'open';
 
-import { Starting, ComponentPreviewServerStarted, UIServersAreReady, TSErrors } from './output-templates';
+import {
+  Starting,
+  ComponentPreviewServerStarted,
+  UIServersAreReadyInScope,
+  TSErrors,
+  WebpackErrors,
+  WebpackWarnings,
+  CompilingOrUIServersAreReady,
+} from './output-templates';
 
 type state = {
+  compiledComponents: Array<any>;
   commandFlags: any;
   mainUIServer: any;
   componentServers: Array<any>;
   componentChanges: Array<any>;
-  isBrowserOpen: boolean;
   latestError: any;
   webpackErrors: Array<any>;
   webpackWarnings: Array<any>;
+  totalComponents: Array<any> | null;
+  isScope: boolean;
+  compiling: boolean;
 };
 
 export type props = {
-  workspaceID: string;
   startingTimestamp: number;
   pubsub: PubsubMain;
   commandFlags: any;
+  uiServer: any;
 };
 
 export class CliOutput extends React.Component<props, state> {
+  private isBrowserOpen = false;
+
   constructor(props: props) {
     super(props);
     this.state = {
+      compiledComponents: [],
       commandFlags: props.commandFlags,
-      mainUIServer: null,
+      mainUIServer: props.uiServer,
       componentServers: [],
       componentChanges: [],
-      isBrowserOpen: false,
       latestError: null,
       webpackErrors: [],
       webpackWarnings: [],
+      totalComponents: null,
+      isScope: !!props.uiServer?.uiRoot.scope,
+      compiling: false,
     };
 
     this.registerToEvents(props.pubsub);
@@ -65,10 +81,8 @@ export class CliOutput extends React.Component<props, state> {
   private eventsListener = (event: BitBaseEvent<any>) => {
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
-        this.changeOrAddComponentServer(event.data, event.data.context.id, 'Running');
-        if (this.areAllComponentServersRunning()) {
-          this.safeOpenBrowser();
-        }
+        this.updateOrAddComponentServer(event.data.context.id, 'Running', event.data);
+        this.safeOpenBrowser();
         break;
       case WebpackCompilationDoneEvent.TYPE:
         this.onWebpackCompilationDone(event);
@@ -88,6 +102,7 @@ export class CliOutput extends React.Component<props, state> {
       case CompilerErrorEvent.TYPE:
         this.setState({
           latestError: event.data.error,
+          compiling: false,
         });
         break;
       default:
@@ -96,29 +111,51 @@ export class CliOutput extends React.Component<props, state> {
 
   private async onUiServerStarted(event) {
     const devServers = await event.data.uiRoot.devServers;
-    devServers.forEach((server) => {
-      this.changeOrAddComponentServer(server, server.context.id, 'Started');
-    });
-    this.setState({
-      mainUIServer: event.data,
-    });
+
+    if (event.data.uiRoot.scope) {
+      this.setState({
+        mainUIServer: event.data,
+        isScope: true,
+      });
+    } else {
+      const totalComponents = await event.data.uiRoot.workspace.list();
+      devServers.forEach((server) => {
+        this.updateOrAddComponentServer(server.context.id, 'Starting...', server);
+      });
+      this.setState({
+        mainUIServer: event.data,
+        totalComponents,
+      });
+    }
 
     if (!devServers.length) {
+      this.unsafeOpenBrowser(this.state.mainUIServer);
+    } else {
       this.safeOpenBrowser();
     }
   }
 
   private onWebpackCompilationDone = (event) => {
+    const successfullyCompiledComponents = event.data.stats.compilation.errors.length ? [] : [event.data.stats.hash];
     this.setState({
       webpackErrors: [...event.data.stats.compilation.errors],
       webpackWarnings: [...event.data.stats.compilation.warnings],
+      compiledComponents: [...this.state.compiledComponents, ...successfullyCompiledComponents],
+      compiling: false,
     });
+    this.updateOrAddComponentServer(event.data.devServerID, 'Done');
+    this.safeOpenBrowser();
   };
 
   private onComponentChange(event) {
+    this.clearConsole();
+
     this.setState({
       componentChanges: [...this.state.componentChanges, event],
       latestError: null,
+      webpackErrors: [],
+      webpackWarnings: [],
+      compiling: true,
     });
   }
 
@@ -131,34 +168,84 @@ export class CliOutput extends React.Component<props, state> {
   };
 
   // Helpers
-
-  private areAllComponentServersRunning() {
-    return this.state.componentServers.every((cs) => cs.status === 'Running');
+  private clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  private safeOpenBrowser() {
+  private async safeOpenBrowser() {
     const { suppressBrowserLaunch } = this.state.commandFlags;
-    const { isBrowserOpen, mainUIServer } = this.state;
+    const { mainUIServer } = this.state;
 
-    if (mainUIServer && !isBrowserOpen && !suppressBrowserLaunch) {
-      this.setState({ isBrowserOpen: true });
+    if (mainUIServer && !suppressBrowserLaunch && !!this.state.compiledComponents.length) {
+      // TODO(uri): Bug two events for each server
+      if (this.state.compiledComponents.length / 2 >= this.state.componentServers.length) {
+        this.unsafeOpenBrowser(mainUIServer);
+      }
+    }
+  }
+
+  private unsafeOpenBrowser(mainUIServer) {
+    const { suppressBrowserLaunch } = this.state.commandFlags;
+
+    if (!this.isBrowserOpen && !suppressBrowserLaunch) {
+      this.isBrowserOpen = true;
       setTimeout(() => open(`http://${mainUIServer.targetHost}:${mainUIServer.targetPort}/`), 500);
     }
   }
 
-  private changeOrAddComponentServer(server, id, status) {
+  private updateOrAddComponentServer(id, status, server?) {
+    if (server) {
+      this.addOrUpdateComponentServer(id, status, server);
+    } else {
+      this.updateComponentServerStatus(id, status);
+    }
+  }
+
+  private updateComponentServerStatus(id, status) {
+    const server = this.state.componentServers.find((cs) => cs.id === id)?.server;
+    if (server) {
+      this.addOrUpdateComponentServer(id, status, server);
+    }
+  }
+
+  private addOrUpdateComponentServer(id, status, server) {
     this.setState({
       componentServers: [...this.state.componentServers.filter((cs) => cs.id !== id), { server, id, status }],
     });
   }
 
   render() {
-    const { componentServers, mainUIServer, latestError, webpackErrors, webpackWarnings } = this.state;
+    const {
+      componentServers,
+      mainUIServer,
+      latestError,
+      webpackErrors,
+      webpackWarnings,
+      compiledComponents,
+      isScope,
+      compiling,
+    } = this.state;
     const { verbose } = this.state.commandFlags;
 
     // run in scope
-    if (mainUIServer && mainUIServer.uiRoot.scope) {
-      return <UIServersAreReady mainUIServer={mainUIServer} />;
+    if (isScope) {
+      return <UIServersAreReadyInScope mainUIServer={mainUIServer} />;
+    }
+
+    if (latestError) {
+      return <TSErrors latestError={latestError} verbose={!!verbose} />;
+    }
+
+    if (webpackErrors.length) {
+      return <WebpackErrors errs={webpackErrors} verbose={!!verbose} />;
+    }
+
+    if (webpackWarnings.length) {
+      return <WebpackWarnings warnings={webpackWarnings} verbose={!!verbose} />;
+    }
+
+    if (compiling) {
+      return <Text>Compiling...</Text>;
     }
 
     return (
@@ -169,17 +256,11 @@ export class CliOutput extends React.Component<props, state> {
         <ComponentPreviewServerStarted items={componentServers} />
         <Newline />
 
-        <TSErrors latestError={latestError} verbose={!!verbose} />
-
-        {webpackErrors.map((err, index) => (
-          <Text key={index}>Error: {err}</Text>
-        ))}
-
-        {webpackWarnings.map((warning, index) => (
-          <Text key={index}>Warning: {warning}</Text>
-        ))}
-
-        <UIServersAreReady mainUIServer={mainUIServer} />
+        <CompilingOrUIServersAreReady
+          totalComponentsSum={this.state.componentServers.length}
+          compiledComponentsSum={compiledComponents.length}
+          mainUIServer={mainUIServer}
+        />
       </>
     );
   }

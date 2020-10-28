@@ -2,7 +2,7 @@ import { TsConfigSourceFile } from 'typescript';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { Compiler, CompilerMain } from '@teambit/compiler';
+import { Compiler, CompilerMain, CompilerOptions } from '@teambit/compiler';
 import { Environment } from '@teambit/environments';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
@@ -10,6 +10,7 @@ import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
+import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { Configuration } from 'webpack';
@@ -17,6 +18,7 @@ import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
+import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
 const defaultTsConfig = require('./typescript/tsconfig.json');
@@ -62,7 +64,9 @@ export class ReactEnv implements Environment {
      */
     private tester: TesterMain,
 
-    private config: ReactMainConfig
+    private config: ReactMainConfig,
+
+    private eslint: ESLintMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
@@ -84,21 +88,26 @@ export class ReactEnv implements Environment {
   /**
    * returns a component compiler.
    */
-  getCompiler(targetConfig?: any): Compiler {
-    // eslint-disable-next-line global-require
+  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}): Compiler {
     const tsconfig = this.getTsConfig(targetConfig);
     return this.ts.createCompiler({
       tsconfig,
       // TODO: @david please remove this line and refactor to be something that makes sense.
       types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
+      ...compilerOptions,
     });
   }
 
   /**
    * returns and configures the component linter.
-   * TODO: linter aspect, es-hint aspect
    */
-  getLinter() {}
+  getLinter() {
+    return this.eslint.createLinter({
+      config: eslintConfig,
+      // resolve all plugins from the react environment.
+      pluginPath: __dirname,
+    });
+  }
 
   /**
    * get the default react webpack config.

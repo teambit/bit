@@ -11,6 +11,9 @@ import CapsuleList from './capsule-list';
  */
 export class Network {
   constructor(
+    /**
+     * all capsules, including the dependencies of the seeders.
+     */
     public capsules: CapsuleList,
     public components: Graph,
     public seedersIds: ComponentID[],

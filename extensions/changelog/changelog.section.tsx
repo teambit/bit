@@ -1,6 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-
+import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './changelog.module.scss';
 import { ChangeLogPage } from './ui/change-log-page';
 
@@ -11,7 +11,7 @@ export class ChangelogSection implements Section {
   };
   navigationLink = {
     href: '~changelog',
-    children: 'History',
+    children: <Icon of="changelog" className={styles.icon} />,
   };
   order = 30;
 }

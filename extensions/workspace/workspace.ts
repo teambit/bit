@@ -31,7 +31,9 @@ import type { ScopeMain } from '@teambit/scope';
 import { RequireableComponent } from '@teambit/utils.requireable-component';
 import { ResolvedComponent } from '@teambit/utils.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link } from 'bit-bin/dist/api/consumer';
+import { link, importAction } from 'bit-bin/dist/api/consumer';
+import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
+import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
@@ -284,9 +286,10 @@ export class Workspace implements ComponentFactory {
    * get all workspace component-ids, include vendor components.
    * (exclude nested dependencies in case dependencies are saved as components and not packages)
    */
-  getAllComponentIds(): ComponentID[] {
+  getAllComponentIds(): Promise<ComponentID[]> {
     const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
-    return bitIds.map((id) => new ComponentID(id));
+    const ids = bitIds.map((id) => this.resolveComponentId(id));
+    return Promise.all(ids);
   }
 
   // TODO: refactor asap to get seeders as ComponentID[] not strings (most of the places already has it that way)
@@ -1082,8 +1085,39 @@ export class Workspace implements ComponentFactory {
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
+    this.logger.setStatusLine('importing missing objects');
+    await this.importObjects();
     this.logger.consoleSuccess();
     return installationMap;
+  }
+
+  // TODO: replace with a proper import API on the workspace
+  private async importObjects() {
+    const importOptions: ImportOptions = {
+      ids: [],
+      verbose: false,
+      merge: false,
+      objectsOnly: true,
+      withEnvironments: false,
+      override: false,
+      writeDists: false,
+      writeConfig: false,
+      installNpmPackages: false,
+      writePackageJson: false,
+      importDependenciesDirectly: false,
+      importDependents: false,
+    };
+    try {
+      const res = await importAction({ tester: false, compiler: false }, importOptions, []);
+      return res;
+    } catch (err) {
+      // TODO: this is a hack since the legacy throw an error, we should provide a way to not throw this error from the legacy
+      if (err instanceof NothingToImport) {
+        // Do not write nothing to import warning
+        return undefined;
+      }
+      throw err;
+    }
   }
 
   /**
