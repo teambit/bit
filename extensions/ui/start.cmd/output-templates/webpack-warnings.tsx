@@ -8,11 +8,9 @@ export type props = {
 
 export const WebpackWarnings = ({ warnings, verbose }) => {
   return warnings.map((warning, index) => (
-    <>
-      <Text key={index} color="orange">
-        {verbose ? warning.stack : warning.message}
-      </Text>
+    <Text key={index} color="yellow">
+      {verbose ? warning.stack : warning.message}
       <Newline />
-    </>
+    </Text>
   ));
 };

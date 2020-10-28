@@ -8,11 +8,9 @@ export type props = {
 
 export const WebpackErrors = ({ errs, verbose }) => {
   return errs.map((err, index) => (
-    <>
-      <Text key={index} color="red">
-        {verbose ? err.stack : err.message}
-      </Text>
+    <Text key={index} color="red">
+      {verbose ? err.stack : err.message}
       <Newline />
-    </>
+    </Text>
   ));
 };
