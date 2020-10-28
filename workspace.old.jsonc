@@ -1,14 +1,14 @@
 {
   "$schema": "",
-  "teambit.workspace/workspace": {
+  "teambit.bit/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
-  "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/pnpm",
+  "teambit.bit/dependency-resolver": {
+    "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
     "policy": {
@@ -227,9 +227,9 @@
       }
     }
   },
-  "teambit.workspace/variants": {
+  "teambit.bit/variants": {
     "*": {
-      "teambit.pkg/pkg": {
+      "teambit.bit/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
         ],
@@ -238,7 +238,7 @@
           "private": false
         }
       },
-      "teambit.dependencies/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "-"
@@ -256,27 +256,24 @@
           }
         }
       },
-      "teambit.environments/environments": {
-        "env": "teambit.harmony/aspect"
+      "teambit.bit/environments": {
+        "env": "teambit.bit/aspect"
       },
-      "teambit.harmony/aspect": {}
+      "teambit.bit/aspect": {}
     },
     "{modules/*}": {
-      "teambit.environments/environments": {
-        "env": "teambit.harmony/node"
+      "teambit.bit/environments": {
+        "env": "teambit.bit/node"
       },
-      "teambit.harmony/node": {}
+      "teambit.bit/node": {}
     },
     "{ui/*}": {
-      "teambit.environments/environments": {
-        "env": "teambit.react/react"
+      "teambit.bit/environments": {
+        "env": "teambit.bit/react"
       },
-      "teambit.react/react": {}
+      "teambit.bit/react": {}
     },
     "scopes/toolbox": {
-      "teambit.environments/environments": {
-        "env": "teambit.harmony/node"
-      },
       "defaultScope": "teambit.toolbox"
     },
     "scopes/workspace": {
@@ -331,7 +328,7 @@
       "defaultScope": "teambit.schemas"
     },
     "scopes/harmony/bit": {
-      "teambit.pkg/pkg": {
+      "teambit.bit/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [
             "--access public"
@@ -344,7 +341,7 @@
           }
         }
       },
-      "teambit.dependencies/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "14.8.9-dev.93",
@@ -373,7 +370,7 @@
       }
     },
     "scopes/defender/jest": {
-      "teambit.dependencies/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "peerDependencies": {
             "jest": "^26.0.1"
