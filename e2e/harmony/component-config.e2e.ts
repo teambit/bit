@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 
-import { AlreadyExistsError } from '../../extensions/workspace/component-config-file/exceptions';
+import { AlreadyExistsError } from '../../scopes/workspace/workspace/component-config-file/exceptions';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import GeneralHelper from '../../src/e2e-helper/e2e-general-helper';
 import Helper from '../../src/e2e-helper/e2e-helper';

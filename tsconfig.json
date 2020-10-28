@@ -20,7 +20,7 @@
   },
   "include": [
     "src",
-    "extensions",
+    "scopes",
     "e2e",
     "components",
     "toolbox"
