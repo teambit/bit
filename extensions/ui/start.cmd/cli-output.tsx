@@ -185,7 +185,9 @@ export class CliOutput extends React.Component<props, state> {
   }
 
   private unsafeOpenBrowser(mainUIServer) {
-    if (!this.isBrowserOpen) {
+    const { suppressBrowserLaunch } = this.state.commandFlags;
+
+    if (!this.isBrowserOpen && !suppressBrowserLaunch) {
       this.isBrowserOpen = true;
       setTimeout(() => open(`http://${mainUIServer.targetHost}:${mainUIServer.targetPort}/`), 500);
     }
