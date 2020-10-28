@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import Mousetrap from 'mousetrap';
 
@@ -12,6 +12,7 @@ import { commandBarCommands } from './command-bar.commands';
 import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
+import { CommandBarContext } from './ui/commad-bar-context';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
@@ -120,6 +121,10 @@ export class CommandBarUI {
     this.mousetrap.bind(key, this.run.bind(this, command));
   }
 
+  private renderContext = ({ children }: { children: ReactNode }) => {
+    return <CommandBarContext.Provider value={this}>{children}</CommandBarContext.Provider>;
+  };
+
   /**
    * internal. Opens and closes the command bar UI.
    */
@@ -158,6 +163,7 @@ export class CommandBarUI {
     });
 
     uiUi.registerHudItem(commandBar.getCommandBar());
+    uiUi.registerContext(commandBar.renderContext);
 
     return commandBar;
   }
