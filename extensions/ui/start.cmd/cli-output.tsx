@@ -14,7 +14,7 @@ import { BundlerAspect, ComponentsServerStartedEvent } from '@teambit/bundler';
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
 import React from 'react';
-import { Newline } from 'ink';
+import { Newline, Text } from 'ink';
 import open from 'open';
 
 import {
@@ -38,6 +38,7 @@ type state = {
   webpackWarnings: Array<any>;
   totalComponents: Array<any> | null;
   isScope: boolean;
+  compiling: boolean;
 };
 
 export type props = {
@@ -63,6 +64,7 @@ export class CliOutput extends React.Component<props, state> {
       webpackWarnings: [],
       totalComponents: null,
       isScope: !!props.uiServer?.uiRoot.scope,
+      compiling: false,
     };
 
     this.registerToEvents(props.pubsub);
@@ -100,6 +102,7 @@ export class CliOutput extends React.Component<props, state> {
       case CompilerErrorEvent.TYPE:
         this.setState({
           latestError: event.data.error,
+          compiling: false,
         });
         break;
       default:
@@ -138,6 +141,7 @@ export class CliOutput extends React.Component<props, state> {
       webpackErrors: [...event.data.stats.compilation.errors],
       webpackWarnings: [...event.data.stats.compilation.warnings],
       compiledComponents: [...this.state.compiledComponents, ...successfullyCompiledComponents],
+      compiling: false,
     });
     this.updateOrAddComponentServer(event.data.devServerID, 'Done');
     this.safeOpenBrowser();
@@ -151,6 +155,7 @@ export class CliOutput extends React.Component<props, state> {
       latestError: null,
       webpackErrors: [],
       webpackWarnings: [],
+      compiling: true,
     });
   }
 
@@ -216,6 +221,7 @@ export class CliOutput extends React.Component<props, state> {
       webpackWarnings,
       compiledComponents,
       isScope,
+      compiling,
     } = this.state;
     const { verbose } = this.state.commandFlags;
 
@@ -234,6 +240,10 @@ export class CliOutput extends React.Component<props, state> {
 
     if (webpackWarnings.length) {
       return <WebpackWarnings warnings={webpackWarnings} verbose={!!verbose} />;
+    }
+
+    if (compiling) {
+      return <Text>Compiling...</Text>;
     }
 
     return (
