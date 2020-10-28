@@ -1,13 +1,14 @@
-const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
-const WebpackAspect = require('../webpack.aspect');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
 const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
 const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
+
 const path = require('path');
 const html = require('./html');
+
+const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default: '/sockjs-node'
@@ -15,7 +16,7 @@ const sockPort = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
+export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -64,6 +65,7 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
     },
 
     devServer: {
+      quiet: true,
       stats: 'none',
 
       // Serve index.html as the base
@@ -80,8 +82,6 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
       // Use 'ws' instead of 'sockjs-node' on server since we're using native
       // websockets in `webpackHotDevClient`.
       transportMode: 'ws',
-
-      // quiet: true,
 
       injectClient: false,
 
@@ -136,8 +136,8 @@ module.exports = function (workspaceDir, entryFiles, publicRoot, publicPath, pub
       }),
 
       new WebpackCompilerDonePlugin({
-        options: { pubsub },
+        options: { pubsub, devServerID },
       }),
     ],
   };
-};
+}
