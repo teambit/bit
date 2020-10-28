@@ -20,7 +20,7 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
-export type BuilderDescriptor = TasksQueue;
+export type BuilderDescriptor = { tasks: string[] };
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
@@ -89,12 +89,14 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
 
     return (
       <Text key={BuilderAspect.id}>
-        <Text color="cyan">total {tasksQueue.length} tasks are configured to be executed in the following order</Text>
+        <Text color="cyan">
+          total {tasksQueue.tasks.length} tasks are configured to be executed in the following order
+        </Text>
         <Newline />
-        {tasksQueue.map((taskItem, index) => (
+        {tasksQueue.tasks.map((task, index) => (
           <Text key={index}>
             <Text>
-              {index + 1}. {BuildTaskHelper.serializeId(taskItem.task)}
+              {index + 1}. {task}
             </Text>
             <Newline />
           </Text>
@@ -106,6 +108,6 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
 
   getDescriptor(env: EnvDefinition) {
     const tasksQueue = calculatePipelineOrder(this.taskSlot, [env], this.pipeNameOnEnv);
-    return tasksQueue;
+    return { tasks: tasksQueue.map(({ task }) => BuildTaskHelper.serializeId(task)) };
   }
 }
