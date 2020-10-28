@@ -25,20 +25,16 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
         envIcon={component.environment?.icon}
         preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
       />
-      {shouldPreviewButton && (
-        <LoadPreview onClick={showPreview} isModified={component.status?.modifyInfo?.hasModifiedFiles} />
-      )}
+      {shouldPreviewButton && <LoadPreview onClick={showPreview} />}
     </div>
   );
 }
 
-type LoadPreviewProps = {
-  isModified: boolean;
-} & React.HTMLAttributes<HTMLDivElement>;
+type LoadPreviewProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
-function LoadPreview({ onClick, isModified }: LoadPreviewProps) {
+function LoadPreview({ onClick }: LoadPreviewProps) {
   return (
-    <div className={classNames(styles.loadPreview, isModified && styles.modified)} onClick={onClick}>
+    <div className={classNames(styles.loadPreview)} onClick={onClick}>
       <Icon of="fat-arrow-down" className={styles.icon} />
       <span>Live preview</span>
     </div>
