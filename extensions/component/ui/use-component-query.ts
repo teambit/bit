@@ -65,7 +65,7 @@ export function useComponentQuery(componentId: string, host: string) {
         if (!subscriptionData.data) return prev;
 
         const updatedComponent = subscriptionData?.data?.componentChanged?.component;
-        // TODO add id to subscription to pre-filter on server side
+        // TODO -  add `id` param to componentChanged subscription, and pre-filter on server side
         if (!updatedComponent || prev.getHost.get.id.name !== updatedComponent.id.name) return prev;
 
         return {

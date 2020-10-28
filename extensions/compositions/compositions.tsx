@@ -7,7 +7,7 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { Collapser } from '@teambit/staged-components.side-bar';
 import { EmptyBox } from '@teambit/staged-components.empty-box';
 import head from 'lodash.head';
-import React, { useContext, useEffect, useReducer, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
