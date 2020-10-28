@@ -110,7 +110,6 @@
         "cacache": "^15.0.5",
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
-        "checksum": "0.1.1",
         "classnames": "^2.2.6",
         "cleargraph": "^5.4.0",
         "consolehighlighter": "0.1.5",
