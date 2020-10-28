@@ -1,15 +1,16 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TooltipDrawer } from '@teambit/evangelist.surfaces.tooltip';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
-import React, { ReactNode } from 'react';
-
+import React, { ReactNode, useContext } from 'react';
+import { CommandBarContext } from '@teambit/command-bar';
+import { KeyCombo } from '@teambit/elements.keycap';
 import styles from './main-dropdown.module.scss';
 
 // type MainDropdownProps = {
 // } & React.HTMLAttributes<HTMLDivElement>;
 
 export function MainDropdown() {
+  const commandBar = useContext(CommandBarContext);
   return (
     <div className={styles.mainDropdown}>
       <TooltipDrawer
@@ -25,29 +26,16 @@ export function MainDropdown() {
         )}
       >
         <div>
-          <MenuBlock title="General">
+          <MenuBlock title="Shortcuts">
             <div>
-              <Line title="search" of="thin-arrow-up"></Line>
-              <Line title="Command search" of="thin-arrow-up"></Line>
-              <Line title="shortcuts" of="thin-arrow-up"></Line>
-            </div>
-          </MenuBlock>
-          <MenuBlock title="component bar">
-            <div>
-              <Line title="Show component bar" of="thin-arrow-up"></Line>
-              <Line title="Next component" of="thin-arrow-up"></Line>
-              <Line title="Previous component" of="thin-arrow-up"></Line>
-            </div>
-          </MenuBlock>
-          <MenuBlock title="tab navigation">
-            <div>
-              <Line title="Next tab" of="thin-arrow-up"></Line>
-              <Line title="Previous tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Overview tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Compositions tab" of="thin-arrow-up"></Line>
-              <Line title="Go to History tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Tests tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Version menu" of="thin-arrow-up"></Line>
+              <Line
+                title="Open/close sidebar"
+                keyChar="mod + k"
+                onClick={() => commandBar?.run('command-bar.open')}
+              ></Line>
+              <Line title="Open/close sidebar" keyChar="s" onClick={() => commandBar?.run('sidebar')}></Line>
+              <Line title="Copy component id" keyChar="." onClick={() => commandBar?.run('copyBitId')}></Line>
+              <Line title="copy component npm id" keyChar="," onClick={() => commandBar?.run('copyNpmId')}></Line>
             </div>
           </MenuBlock>
         </div>
@@ -56,11 +44,18 @@ export function MainDropdown() {
   );
 }
 
-function Line({ title, of }: { title: string; of: string }) {
+type LineProps = {
+  title: string;
+  keyChar: string;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+function Line({ title, keyChar, onClick }: LineProps) {
   return (
-    <div className={classNames(hoverable, styles.line)}>
+    <div className={classNames(styles.line)} onClick={onClick}>
       <div>{title}</div>
-      <Icon of={of} className={styles.key} />
+      <pre>
+        <KeyCombo className={styles.keyBinding}>{keyChar}</KeyCombo>
+      </pre>
     </div>
   );
 }

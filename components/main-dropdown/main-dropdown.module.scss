@@ -48,7 +48,7 @@
 }
 
 .menuBlock {
-  padding: 16px 8px 10px 8px;
+  padding: 16px 0 10px 0;
   border-bottom: 1px solid var(--border-color);
   &:last-child {
     border-bottom: none;
@@ -73,11 +73,17 @@
   align-items: center;
   height: 36px;
   padding: 0 16px;
+  &:hover {
+    background-color: var(--muted-color);
+  }
   > div {
     text-transform: capitalize;
   }
-  .key {
-    font-size: 15px;
-    color: #6c707c;
+  .keyBinding {
+    background-color: var(--bg-dent);
+    border-bottom: 2px solid #cccaca;
+    padding: 3px 8px;
+    color: var(--text-muted);
+    border-radius: 3px;
   }
 }

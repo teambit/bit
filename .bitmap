@@ -660,6 +660,16 @@
                 "test": false
             },
             {
+                "name": "commad-bar-context.tsx",
+                "relativePath": "ui/commad-bar-context/commad-bar-context.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "ui/commad-bar-context/index.ts",
+                "test": false
+            },
+            {
                 "name": "command-bar-item.module.scss",
                 "relativePath": "ui/command-bar-item/command-bar-item.module.scss",
                 "test": false
