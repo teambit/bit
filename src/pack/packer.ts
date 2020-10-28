@@ -1,4 +1,4 @@
-import { checksumFile } from '@teambit/crypto.checksum';
+import { checksumFile } from '../utils';
 import execa from 'execa';
 import fs from 'fs-extra';
 import path from 'path';
