@@ -14,7 +14,7 @@ import { BundlerAspect, ComponentsServerStartedEvent } from '@teambit/bundler';
 import { CompilerAspect, CompilerErrorEvent } from '@teambit/compiler';
 
 import React from 'react';
-import { Newline, Text } from 'ink';
+import { Newline, Text, render } from 'ink';
 import open from 'open';
 
 import {
@@ -229,7 +229,8 @@ export class CliOutput extends React.Component<props, state> {
 
     // run in scope
     if (isScope) {
-      return <UIServersAreReadyInScope mainUIServer={mainUIServer} />;
+      render(<UIServersAreReadyInScope mainUIServer={mainUIServer} />);
+      return null;
     }
 
     if (latestError) {

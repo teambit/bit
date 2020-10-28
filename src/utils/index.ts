@@ -13,6 +13,7 @@ import outputFile from './fs-output-file';
 import outputJsonFile from './fs-output-json-sync';
 import rmDir from './fs-rmdir';
 import writeFile from './fs-write-file';
+import { checksum, checksumFile } from './checksum';
 import currentDirName from './fs/current-dir-name';
 import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import calculateFileInfo from './fs/file-info';
@@ -102,6 +103,8 @@ export {
   empty,
   filter,
   cleanChar,
+  checksum,
+  checksumFile,
   writeFile,
   cleanObject,
   readDirIgnoreDsStore,
