@@ -114,7 +114,7 @@ export class PkgMain {
     [packageJsonPropsRegistry]: [PackageJsonPropsRegistry]
   ) {
     const logPublisher = logger.createLogger(PkgAspect.id);
-    const host = await componentAspect.getHost();
+    const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
@@ -302,6 +302,10 @@ export class PkgMain {
     }
     const currentExtension = updatedComponent.state.aspects.get(PkgAspect.id);
     const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    // If for some reason the version has no package.json manifest, return undefined
+    if (!currentData?.pkgJson) {
+      return undefined;
+    }
     const pkgJson = currentData?.pkgJson ?? {};
     const checksum = currentData?.checksum;
     if (!checksum) {

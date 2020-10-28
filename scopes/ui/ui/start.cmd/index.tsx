@@ -1,13 +1,12 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
-import { WorkspaceAspect } from '@teambit/workspace';
 
 import React from 'react';
+import { render } from 'ink';
 
 import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
-import { ClearConsole } from './output-templates';
 import { report } from './report';
 
 export class StartCmd implements Command {
@@ -47,6 +46,21 @@ export class StartCmd implements Command {
     return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
+  private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
+    render(
+      <CliOutput
+        startingTimestamp={startingTimestamp}
+        pubsub={pubsub}
+        commandFlags={commandFlags}
+        uiServer={uiServer}
+      />
+    );
+  }
+
+  private clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+  }
+
   async render(
     [uiRootName, userPattern]: [string, string],
     {
@@ -62,22 +76,38 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    this.ui.createRuntime({
-      uiRootName,
-      pattern,
-      dev,
-      port: port ? parseInt(port) : undefined,
-      rebuild,
-    });
+    this.ui
+      .createRuntime({
+        uiRootName,
+        pattern,
+        dev,
+        port: port ? parseInt(port) : undefined,
+        rebuild,
+      })
+      .then((uiServer) => {
+        setTimeout(() => {
+          this.clearConsole();
+
+          const startingTimestamp = Date.now();
+          const pubsub = this.pubsub;
+          const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch };
+
+          setTimeout(() => {
+            this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
+          }, 200);
+        }, 0);
+      })
+      .catch((e) => {
+        throw e;
+      });
 
     return (
       <>
-        <ClearConsole verbose={!!verbose} />
         <CliOutput
-          workspaceID={WorkspaceAspect.id}
           startingTimestamp={Date.now()}
           pubsub={this.pubsub}
           commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
+          uiServer={null} // Didn't start yet
         />
       </>
     );

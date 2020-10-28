@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.93",
+  "version": "14.8.9-dev.100",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -95,6 +95,7 @@
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
     "@teambit/gitconfig": "^2.0.6",
+    "@typescript-eslint/typescript-estree": "^2.29.0",
     "graphql-request": "3.0.0",
     "@vuedoc/parser": "^2.3.0",
     "acorn": "^6.0.0",
@@ -104,6 +105,7 @@
     "babel-runtime": "^6.23.0",
     "bluebird": "^3.7.2",
     "chalk": "^2.4.1",
+    "checksum": "0.1.1",
     "chokidar": "^3.3.1",
     "cli-spinners": "^1.0.0",
     "commander": "^2.20.3",
