@@ -8,8 +8,8 @@ import { UIAspect, UiMain } from '@teambit/ui';
 import { checksum } from '@teambit/crypto.checksum';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
-import findCacheDir from 'find-cache-dir';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { CacheAspect, CacheMain } from '@teambit/cache';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -19,7 +19,6 @@ import { PreviewRoute } from './preview.route';
 import { PreviewTask } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
-import { CacheError } from './cache-error';
 import { RuntimeComponents } from './runtime-components';
 
 const noopResult = Promise.resolve({
@@ -180,7 +179,15 @@ export class PreviewMain {
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
   static runtime = MainRuntime;
-  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect, WorkspaceAspect];
+  static dependencies = [
+    BundlerAspect,
+    BuilderAspect,
+    ComponentAspect,
+    UIAspect,
+    EnvsAspect,
+    WorkspaceAspect,
+    CacheAspect,
+  ];
 
   static defaultConfig = {
     bundlingStrategy: 'env',
@@ -188,20 +195,27 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace, cacheMain]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
       UiMain,
       EnvsMain,
-      Workspace
+      Workspace,
+      CacheMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
   ) {
-    const cacheFolder = findCacheDir({ name: PreviewAspect.id, create: true });
-    if (!cacheFolder) throw new CacheError();
-    const preview = new PreviewMain(previewSlot, uiMain, envs, config, bundlingStrategySlot, builder, cacheFolder);
+    const preview = new PreviewMain(
+      previewSlot,
+      uiMain,
+      envs,
+      config,
+      bundlingStrategySlot,
+      builder,
+      cacheMain.getCacheFolder(PreviewAspect.id)
+    );
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([
