@@ -6,8 +6,8 @@ import {
   PayloadType,
   TreeNodeProps,
   ScopePayload,
-} from '@teambit/staged-components.side-bar';
-import { FullLoader } from '@teambit/staged-components.full-loader';
+} from '@teambit/ui.side-bar';
+import { FullLoader } from '@teambit/ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Drawer } from '@teambit/sidebar';
 import { useScope } from './ui/use-scope';

@@ -1,7 +1,7 @@
 import React from 'react';
 import cn from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { MessageLevel } from '@teambit/notifications.api';
+import { MessageLevel } from '@teambit/ui.notifications.api';
 import { colorPalette } from '@teambit/base-ui.theme.color-palette';
 import styles from './level-icon.module.scss';
 

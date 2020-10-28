@@ -1,4 +1,4 @@
-import { ResolvedComponent } from '@teambit/harmony.modules.resolved-component';
+import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import fs from 'fs-extra';
 import path from 'path';

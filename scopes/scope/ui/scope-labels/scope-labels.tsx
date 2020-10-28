@@ -1,6 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ScopeBadgeSlot } from '@teambit/scope';
-import { PillLabel } from '@teambit/staged-components.pill-label';
+import { PillLabel } from '@teambit/ui.pill-label';
 import classNames from 'classnames';
 import React from 'react';
 

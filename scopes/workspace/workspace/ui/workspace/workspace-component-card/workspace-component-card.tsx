@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import React, { useState } from 'react';
 import { ComponentModel } from '@teambit/component';
-import { PreviewPlaceholder } from '@teambit/staged-components.preview-placeholder';
+import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
 import styles from './workspace-component-card.module.scss';
 
 type WorkspaceComponentCardProps = {

@@ -1,5 +1,5 @@
 import { Drawer } from '@teambit/sidebar';
-import { FullLoader } from '@teambit/staged-components.full-loader';
+import { FullLoader } from '@teambit/ui.full-loader';
 import {
   ComponentTree,
   TreeNodeProps,
@@ -8,7 +8,7 @@ import {
   ScopeTreeNode,
   NamespaceTreeNode,
   ScopePayload,
-} from '@teambit/staged-components.side-bar';
+} from '@teambit/ui.side-bar';
 
 import React, { useCallback } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';

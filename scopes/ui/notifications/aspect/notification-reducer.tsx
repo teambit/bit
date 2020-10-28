@@ -1,4 +1,4 @@
-import { Message } from '@teambit/notifications.api';
+import { Message } from '@teambit/ui.notifications.api';
 
 export type NotificationAction = {
   type: 'add' | 'dismiss' | 'clear';

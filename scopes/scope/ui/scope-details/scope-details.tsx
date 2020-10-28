@@ -1,7 +1,7 @@
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { ScopeBadgeSlot } from '@teambit/scope';
-import { ScopeLabels } from '@teambit/staged-components.scope-labels';
-import { ScopeTitle } from '@teambit/staged-components.scope-title';
+import { ScopeLabels } from '@teambit/ui.scope-labels';
+import { ScopeTitle } from '@teambit/ui.scope-title';
 import classNames from 'classnames';
 import React from 'react';
 

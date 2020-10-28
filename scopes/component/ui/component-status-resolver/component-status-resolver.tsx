@@ -2,8 +2,8 @@ import { ComponentID } from '@teambit/component';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import React from 'react';
 import classNames from 'classnames';
-import { ComponentStatus } from '@teambit/staged-components.component-status';
-import { StatusTooltip } from '@teambit/staged-components.component-tooltip';
+import { ComponentStatus } from '@teambit/ui.component-status';
+import { StatusTooltip } from '@teambit/ui.component-tooltip';
 import { getOverrideColor } from './color-override';
 import styles from './component-status-resolver.module.scss';
 

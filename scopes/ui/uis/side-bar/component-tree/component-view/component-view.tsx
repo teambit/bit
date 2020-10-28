@@ -1,7 +1,7 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { NavLink } from '@teambit/react-router';
-import { EnvIcon } from '@teambit/staged-components.env-icon';
-import { DeprecationIcon } from '@teambit/staged-components.deprecation-icon';
+import { EnvIcon } from '@teambit/ui.env-icon';
+import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';

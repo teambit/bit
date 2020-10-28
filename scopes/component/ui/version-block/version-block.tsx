@@ -1,7 +1,7 @@
 import { Author, Snap } from '@teambit/component';
 import { H3 } from '@teambit/documenter.ui.heading';
-import { Contributors } from '@teambit/staged-components.workspace-sections.contributors';
-import { Labels } from '@teambit/staged-components.workspace-sections.version-label';
+import { Contributors } from '@teambit/ui.contributors';
+import { Labels } from '@teambit/ui.version-label';
 import classNames from 'classnames';
 import React, { HTMLAttributes } from 'react';
 

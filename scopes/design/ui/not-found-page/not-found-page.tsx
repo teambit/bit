@@ -1,7 +1,7 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { ErrorPage } from '@teambit/pages.error';
-import { ExternalLink } from '@teambit/routing.external-link';
+import { ErrorPage } from '@teambit/ui.error-page';
+import { ExternalLink } from '@teambit/ui.external-link';
 import styles from './not-found-page.module.scss';
 
 type NotFoundPageProps = {} & React.HTMLAttributes<HTMLDivElement>;

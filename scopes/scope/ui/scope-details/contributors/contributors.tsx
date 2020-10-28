@@ -1,4 +1,4 @@
-import { AccountObj, UserAvatar } from '@teambit/staged-components.workspace-components.avatar';
+import { AccountObj, UserAvatar } from '@teambit/ui.avatar';
 import React from 'react';
 import styles from './contributors.module.scss';
 

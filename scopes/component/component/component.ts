@@ -1,5 +1,5 @@
 import { AnyFS } from '@teambit/any-fs';
-import { capitalize } from '@teambit/utils.capitalize';
+import { capitalize } from '@teambit/string.capitalize';
 import { SemVer } from 'semver';
 
 import { ComponentFactory } from './component-factory';

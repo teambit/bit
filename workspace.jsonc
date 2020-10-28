@@ -8,7 +8,7 @@
     // "vendorDirectory": "vendor",
   },
   "teambit.bit/dependency-resolver": {
-    "packageManager": "teambit.dependencies/pnpm",
+    "packageManager": "teambit.bit/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
     "policy": {
@@ -229,7 +229,7 @@
   },
   "teambit.bit/variants": {
     "*": {
-      "teambit.pkg/pkg": {
+      "teambit.bit/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
         ],
@@ -256,67 +256,79 @@
           }
         }
       },
+      "teambit.bit/environments": {
+        "env": "teambit.bit/aspect"
+      },
       "teambit.bit/aspect": {}
     },
+    "{modules/*}": {
+      "teambit.bit/environments": {
+        "env": "teambit.bit/node"
+      },
+      "teambit.bit/node": {}
+    },
     "{ui/*}": {
+      "teambit.bit/environments": {
+        "env": "teambit.bit/react"
+      },
       "teambit.bit/react": {}
     },
-    "toolbox": {
+    "scopes/toolbox": {
       "defaultScope": "teambit.toolbox"
     },
-    "workspace": {
+    "scopes/workspace": {
       "defaultScope": "teambit.workspace"
     },
-    "scope": {
+    "scopes/scope": {
       "defaultScope": "teambit.scope"
     },
-    "explorer": {
+    "scopes/explorer": {
       "defaultScope": "teambit.explorer"
     },
-    "environments": {
+    "scopes/environments": {
       "defaultScope": "teambit.environments"
     },
-    "pkg": {
+    "scopes/pkg": {
       "defaultScope": "teambit.pkg"
     },
-    "dependencies": {
+    "scopes/dependencies": {
       "defaultScope": "teambit.dependencies"
     },
-    "react": {
+    "scopes/react": {
       "defaultScope": "teambit.react"
     },
-    "product": {
+    "scopes/product": {
       "defaultScope": "teambit.product"
     },
-    "preview": {
+    "scopes/preview": {
       "defaultScope": "teambit.preview"
     },
-    "pipelines": {
+    "scopes/pipelines": {
       "defaultScope": "teambit.pipelines"
     },
-    "harmony": {
+    "scopes/harmony": {
       "defaultScope": "teambit.harmony"
     },
-    "compilers": {
+    "scopes/compilers": {
       "defaultScope": "teambit.compilers"
     },
-    "defender": {
+    "scopes/defender": {
       "defaultScope": "teambit.defender"
     },
-    "component": {
+    "scopes/component": {
       "defaultScope": "teambit.defender"
     },
-    "ui": {
+    "scopes/ui": {
       "defaultScope": "teambit.ui"
     },
-    "design": {
+    "scopes/design": {
       "defaultScope": "teambit.design"
     },
-    "schemas": {
+    "scopes/schemas": {
       "defaultScope": "teambit.schemas"
     },
-    "product/bit": {
-      "teambit.pkg/pkg": {
+    "scopes/harmony/bit": {
+      "teambit.bit/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [
             "--access public"
@@ -329,7 +341,7 @@
           }
         }
       },
-      "teambit.dependencies/dependency-resolver": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "14.8.9-dev.93",
@@ -357,8 +369,8 @@
         }
       }
     },
-    "extensions/jest": {
-      "teambit.dependencies/dependency-resolver": {
+    "scopes/defender/jest": {
+      "teambit.bit/dependency-resolver": {
         "policy": {
           "peerDependencies": {
             "jest": "^26.0.1"

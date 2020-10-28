@@ -1,9 +1,9 @@
-import { AspectBox } from '@teambit/staged-components.aspect-box';
+import { AspectBox } from '@teambit/ui.aspect-box';
 import { ComponentContext } from '@teambit/component';
 import React, { useContext } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { gql } from 'apollo-boost';
-import { EmptyBox } from '@teambit/staged-components.empty-box';
+import { EmptyBox } from '@teambit/ui.empty-box';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import styles from './aspect-page.module.scss';

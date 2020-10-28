@@ -1,4 +1,4 @@
-import { capitalize } from '@teambit/utils.capitalize';
+import { capitalize } from '@teambit/string.capitalize';
 
 export type CompositionProps = {
   identifier: string;

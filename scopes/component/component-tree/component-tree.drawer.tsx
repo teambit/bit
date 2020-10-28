@@ -1,7 +1,7 @@
 // import { useComponentHost } from '@teambit/component';
 // import { Drawer } from '@teambit/sidebar';
-// import { FullLoader } from '@teambit/staged-components.full-loader';
-// import { ComponentTree } from '@teambit/staged-components.side-bar';
+// import { FullLoader } from '@teambit/uis.full-loader';
+// import { ComponentTree } from '@teambit/uis.side-bar';
 // import React from 'react';
 
 // import { ComponentTreeSlot } from './component-tree.ui.runtime';

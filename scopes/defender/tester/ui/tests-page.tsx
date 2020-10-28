@@ -1,14 +1,14 @@
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
-import { EmptyBox } from '@teambit/staged-components.empty-box';
+import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
 import { gql } from 'apollo-boost';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import { useQuery } from '@apollo/react-hooks';
 
-import { TestTable } from '@teambit/staged-components.test-table';
+import { TestTable } from '@teambit/ui.test-table';
 
 import styles from './tests-page.module.scss';
 

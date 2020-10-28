@@ -1,6 +1,6 @@
-import { UserAvatar } from '@teambit/staged-components.workspace-components.avatar';
-import { TimeAgo } from '@teambit/staged-components.workspace-components.time-ago';
-import { AccountObj } from '@teambit/staged-components.workspace-sections.version-block';
+import { UserAvatar } from '@teambit/ui.avatar';
+import { TimeAgo } from '@teambit/ui.time-ago';
+import { AccountObj } from '@teambit/ui.version-block';
 import classNames from 'classnames';
 import React from 'react';
 

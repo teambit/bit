@@ -1,8 +1,8 @@
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
-import { VersionBlock } from '@teambit/staged-components.workspace-sections.version-block';
-import { EmptyBox } from '@teambit/staged-components.empty-box';
+import { VersionBlock } from '@teambit/ui.version-block';
+import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 

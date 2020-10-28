@@ -1,7 +1,7 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
-import { VersionLabel } from '@teambit/staged-components.workspace-sections.version-label';
+import { VersionLabel } from '@teambit/ui.version-label';
 import classNames from 'classnames';
 import React from 'react';
 

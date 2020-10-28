@@ -33,7 +33,7 @@ import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
 import { ScopeAspect } from '@teambit/scope';
-import { StencilAspect } from '@teambit/stencil';
+// import { StencilAspect } from '@teambit/stencil';
 import { TesterAspect } from '@teambit/tester';
 import { TypescriptAspect } from '@teambit/typescript';
 import { BabelAspect } from '@teambit/babel';
@@ -73,7 +73,7 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
-  [StencilAspect.id]: StencilAspect,
+  // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
   [TesterAspect.id]: TesterAspect,
   [BuilderAspect.id]: BuilderAspect,

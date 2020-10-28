@@ -5,8 +5,8 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
-import { Collapser } from '@teambit/staged-components.side-bar';
-import { EmptyBox } from '@teambit/staged-components.empty-box';
+import { Collapser } from '@teambit/ui.side-bar';
+import { EmptyBox } from '@teambit/ui.empty-box';
 import { gql } from 'apollo-boost';
 import head from 'lodash.head';
 import R from 'ramda';
