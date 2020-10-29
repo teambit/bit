@@ -26,30 +26,28 @@ export class CompileCmd implements Command {
   constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
 
   async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
-    return new Promise(async (resolve, reject) => {
-      const startTimestamp = process.hrtime();
-      this.logger.setStatusLine('Compiling your components, hold tight.');
-      this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
+    const startTimestamp = process.hrtime();
+    this.logger.setStatusLine('Compiling your components, hold tight.');
+    this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
-      let outputString = '';
+    let outputString = '';
 
-      await this.compile.compileComponents(components, { verbose, noCache });
-      const compileTimeLength = process.hrtime(startTimestamp);
+    await this.compile.compileComponents(components, { verbose, noCache });
+    const compileTimeLength = process.hrtime(startTimestamp);
 
-      outputString += '\n';
-      outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-      outputString += formatCompileResults(this.componentsStatus, verbose);
-      outputString += '\n';
+    outputString += '\n';
+    outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
+    outputString += formatCompileResults(this.componentsStatus, verbose);
+    outputString += '\n';
 
-      outputString += this.getStatusLine(this.componentsStatus, compileTimeLength);
+    outputString += this.getStatusLine(this.componentsStatus, compileTimeLength);
 
-      this.logger.clearStatusLine();
+    this.logger.clearStatusLine();
 
-      resolve({
-        data: outputString,
-        code: this.getExitCode(this.componentsStatus),
-      });
-    });
+    return {
+      data: outputString,
+      code: this.getExitCode(this.componentsStatus),
+    };
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
