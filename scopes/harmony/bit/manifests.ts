@@ -44,6 +44,8 @@ import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from '@teambit/linter';
 import { ChangelogAspect } from '@teambit/changelog';
 import { CommandBarAspect } from '@teambit/command-bar';
+import { SidebarAspect } from '@teambit/sidebar';
+import { ComponentTreeAspect } from '@teambit/component-tree';
 import { ESLintAspect } from '@teambit/eslint';
 import { BitAspect } from './bit.aspect';
 
@@ -94,6 +96,8 @@ export const manifestsMap = {
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
   [CommandBarAspect.id]: CommandBarAspect,
+  [SidebarAspect.id]: SidebarAspect,
+  [ComponentTreeAspect.id]: ComponentTreeAspect,
 };
 
 export function isCoreAspect(id: string) {
