@@ -1,12 +1,18 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
+import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 
 import { formatCompileResults } from './output-formatter';
 import { WorkspaceCompiler } from './workspace-compiler';
 
+// IDs & events
+import { CompilerAspect } from './compiler.aspect';
+import { ComponentCompilationOnDoneEvent } from './events';
+
 export class CompileCmd implements Command {
+  componentsStatus: Array<any> = [];
   name = 'compile [component...]';
   description = 'Compile components';
   alias = '';
@@ -17,29 +23,33 @@ export class CompileCmd implements Command {
     ['j', 'json', 'return the compile results in json format'],
   ] as CommandOptions;
 
-  constructor(private compile: WorkspaceCompiler, private logger: Logger) {}
+  constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
 
   async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
-    const startTimestamp = process.hrtime();
-    this.logger.setStatusLine('Compiling your components, hold tight.');
+    return new Promise(async (resolve, reject) => {
+      const startTimestamp = process.hrtime();
+      this.logger.setStatusLine('Compiling your components, hold tight.');
+      this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
-    let outputString = '';
-    const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
-    const compileTimeLength = process.hrtime(startTimestamp);
+      let outputString = '';
 
-    outputString += '\n';
-    outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-    outputString += formatCompileResults(compileResults, verbose);
-    outputString += '\n';
+      await this.compile.compileComponents(components, { verbose, noCache });
+      const compileTimeLength = process.hrtime(startTimestamp);
 
-    const taskSummary = `${chalk.green('√')} ${compileResults.length} components passed\nFinished. (${prettyTime(
-      compileTimeLength
-    )})`;
+      outputString += '\n';
+      outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
+      outputString += formatCompileResults(this.componentsStatus, verbose);
+      outputString += '\n';
 
-    outputString += taskSummary;
-    this.logger.clearStatusLine();
+      outputString += this.getStatusLine(this.componentsStatus, compileTimeLength);
 
-    return outputString;
+      this.logger.clearStatusLine();
+
+      resolve({
+        data: outputString,
+        code: this.getExitCode(this.componentsStatus),
+      });
+    });
   }
 
   async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
@@ -50,5 +60,39 @@ export class CompileCmd implements Command {
       // @todo: fix the code once compile is ready.
       code: 0,
     };
+  }
+
+  private getSummaryIcon(componentsStatus) {
+    switch (componentsStatus.filter((component) => component.errors.length).length) {
+      case 0:
+        return chalk.green('✔');
+      case componentsStatus.length:
+        return chalk.red('✗');
+      default:
+        return chalk.yellow('⍻');
+    }
+  }
+
+  private getExitCode(componentsStatus) {
+    return componentsStatus.filter((component) => component.errors.length).length ? 1 : 0;
+  }
+
+  private getStatusLine(componentsStatus, compileTimeLength) {
+    const numberOfComponents = componentsStatus.length;
+    const numberOfFailingComponents = componentsStatus.filter((component) => component.errors.length).length;
+    const numberOfSuccessfulComponents = componentsStatus.filter((component) => !component.errors.length).length;
+
+    const icon = this.getSummaryIcon(componentsStatus);
+    const summaryLine = numberOfFailingComponents
+      ? `${icon} ${numberOfFailingComponents}\\${numberOfComponents} components failed to compile.`
+      : `${icon} ${numberOfSuccessfulComponents}\\${numberOfComponents} components compiled sucssefuly.`;
+
+    return `${summaryLine}\nFinished. (${prettyTime(compileTimeLength)})`;
+  }
+
+  private onComponentCompilationDone(event: BitBaseEvent<any>) {
+    if (event.type === ComponentCompilationOnDoneEvent.TYPE) {
+      this.componentsStatus.push(event.data);
+    }
   }
 }

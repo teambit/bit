@@ -18,7 +18,7 @@ import logger from 'bit-bin/dist/logger/logger';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
-import { CompilerErrorEvent } from './events';
+import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
 
 import { Compiler } from './types';
 
@@ -47,6 +47,7 @@ export class ComponentCompiler {
     }
     await Promise.all(this.component.files.map((file) => this.compileOneFileWithNewCompiler(file)));
     this.throwOnCompileErrors(noThrow);
+
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
     const dataToPersist = new DataToPersist();
@@ -55,6 +56,10 @@ export class ComponentCompiler {
     await dataToPersist.persistAllToFS();
     const buildResults = this.dists.map((distFile) => distFile.path);
     if (this.component.compiler) loader.succeed();
+    this.pubsub.pub(
+      CompilerAspect.id,
+      new ComponentCompilationOnDoneEvent(this.compileErrors, this.component, buildResults)
+    );
     return { component: this.component.id.toString(), buildResults };
   }
 

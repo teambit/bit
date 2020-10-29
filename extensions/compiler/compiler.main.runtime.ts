@@ -47,7 +47,7 @@ export class CompilerMain {
     envs.registerService(new CompilerService());
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler);
     const logger = loggerMain.createLogger(CompilerAspect.id);
-    cli.register(new CompileCmd(workspaceCompiler, logger));
+    cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
     return compilerMain;
   }
 }
