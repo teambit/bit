@@ -1,8 +1,8 @@
-import { checksumFile } from '@teambit/crypto.checksum';
 import execa from 'execa';
 import fs from 'fs-extra';
 import path from 'path';
 import isRelative from 'is-relative-path';
+import { checksumFile } from '../utils';
 import IsolatedEnvironment from '../environment';
 import { isSnap } from '../version/version-parser';
 import defaultLogger, { IBitLogger } from '../logger/logger';
