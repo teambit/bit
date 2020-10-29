@@ -122,20 +122,14 @@ export class EnvsMain {
       return new EnvDefinition(envId, env as Environment);
     }
 
-    let id = '';
     const envEntry = component.state.aspects.entries.find((aspectEntry) => {
-      id = aspectEntry.id.toString();
+      const id = aspectEntry.id.toString();
       env = this.envSlot.get(id);
-      if (!env) {
-        // during the tag process, the version in the aspect-entry-id is changed and is not the
-        // same as it was when it registered to the slot.
-        id = aspectEntry.id.toString({ ignoreVersion: true });
-        env = this.envSlot.get(id);
-      }
       return !!env;
     });
 
     if (!envEntry) return this.getDefaultEnv();
+    const id = envEntry.id.toString();
     return new EnvDefinition(id, env as Environment);
   }
 

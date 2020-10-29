@@ -221,7 +221,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.100",
+        "bit-bin": "14.8.9-dev.106",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -251,7 +251,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.100",
+            "bit-bin": "14.8.9-dev.106",
             "react-dom": "^16.13.1"
           }
         }
@@ -284,6 +284,15 @@
     },
     "scopes/scope": {
       "defaultScope": "teambit.scope"
+    },
+    "scopes/compositions": {
+      "defaultScope": "teambit.compositions"
+    },
+    "scopes/docs": {
+      "defaultScope": "teambit.docs"
+    },
+    "scopes/generator": {
+      "defaultScope": "teambit.generator"
     },
     "scopes/explorer": {
       "defaultScope": "teambit.explorer"
@@ -347,7 +356,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.100",
+            "bit-bin": "14.8.9-dev.106",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
@@ -381,8 +390,8 @@
         }
       }
     },
-    "extensions/aspect": {
-      "teambit.bit/dependency-resolver": {
+    "scopes/harmony/aspect": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "@babel/core": "7.11.6",

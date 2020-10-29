@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.100",
+  "version": "14.8.9-dev.106",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -140,7 +140,6 @@
     "isbinaryfile": "^4.0.4",
     "lodash": "^4.17.15",
     "lodash.assignwith": "^4.2.0",
-    "@typescript-eslint/typescript-estree": "^2.29.0",
     "lodash.groupby": "^4.6.0",
     "lodash.merge": "^4.6.2",
     "lodash.partition": "^4.6.0",
