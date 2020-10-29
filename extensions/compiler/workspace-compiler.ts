@@ -41,12 +41,13 @@ export class ComponentCompiler {
     private compileErrors: { path: string; error: Error }[] = []
   ) {}
 
-  async compile(noThrow = true): Promise<BuildResult> {
+  async compile(shouldThrow = true): Promise<BuildResult> {
     if (!this.compilerInstance.transpileFile) {
       throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
     }
     await Promise.all(this.component.files.map((file) => this.compileOneFileWithNewCompiler(file)));
-    this.throwOnCompileErrors(noThrow);
+    this.throwOnCompileErrors(shouldThrow);
+
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
     const dataToPersist = new DataToPersist();
@@ -58,7 +59,7 @@ export class ComponentCompiler {
     return { component: this.component.id.toString(), buildResults };
   }
 
-  private throwOnCompileErrors(noThrow = true) {
+  private throwOnCompileErrors(shouldThrow = true) {
     if (this.compileErrors.length) {
       this.compileErrors.forEach((errorItem) => {
         logger.error(`compilation error at ${errorItem.path}`, errorItem.error);
@@ -69,7 +70,7 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 
       this.pubsub.pub(CompilerAspect.id, new CompilerErrorEvent(err));
 
-      if (!noThrow) {
+      if (shouldThrow) {
         throw err;
       }
 
@@ -140,7 +141,7 @@ export class WorkspaceCompiler {
   async compileComponents(
     componentsIds: string[] | BitId[], // when empty, it compiles all
     options: LegacyCompilerOptions,
-    noThrow?: boolean
+    shouldThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
     const componentIds = await this.resolveIds(componentsIds);
@@ -168,7 +169,7 @@ export class WorkspaceCompiler {
     if (componentsAndNewCompilers.length) {
       newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
         componentsAndNewCompilers,
-        (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
+        (componentAndNewCompilers) => componentAndNewCompilers.compile(shouldThrow)
       );
     }
     if (componentsWithLegacyCompilers.length) {
