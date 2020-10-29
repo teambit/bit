@@ -22,7 +22,7 @@ describe.skip('http protocol', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
-      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();

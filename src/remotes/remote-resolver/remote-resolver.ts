@@ -54,7 +54,7 @@ const hubResolver = async (scopeName) => {
   const harmonyScope = scope && scope.getScope && scope.getScope.isLegacy === false;
 
   if (harmonyScope) {
-    return `https://${scope.getScope.apis.url}`;
+    return scope.getScope.apis.url;
   }
   const hubPrefix = `ssh://bit@${hubDomain}:`;
   return hubPrefix + scopeName;
