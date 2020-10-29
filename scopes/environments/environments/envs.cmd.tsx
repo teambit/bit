@@ -30,7 +30,7 @@ export class EnvsCmd implements Command {
             </Text>
             <Newline />
             <Newline />
-            {service.render(env.env)}
+            {service.render(env)}
           </Text>
         );
       return (

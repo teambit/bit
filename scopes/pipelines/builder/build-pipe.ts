@@ -1,4 +1,4 @@
-import { EnvRuntime } from '@teambit/environments';
+import { EnvDefinition } from '@teambit/environments';
 import { compact } from 'ramda-adjunct';
 import { ComponentMap } from '@teambit/component';
 import { Logger, LongProcessLogger } from '@teambit/logger';
@@ -20,7 +20,7 @@ export type TaskResults = {
   /**
    * environment were the task was running
    */
-  env: EnvRuntime;
+  env: EnvDefinition;
 
   /**
    * component build results.
@@ -81,7 +81,7 @@ export class BuildPipe {
     this.logger.consoleSuccess();
   }
 
-  private async executeTask(task: BuildTask, env: EnvRuntime): Promise<TaskResults | null> {
+  private async executeTask(task: BuildTask, env: EnvDefinition): Promise<TaskResults | null> {
     const taskId = BuildTaskHelper.serializeId(task);
     const taskName = `${taskId}${task.description ? ` (${task.description})` : ''}`;
     this.longProcessLogger.logProgress(`env "${env.id}", task "${taskName}"`);
