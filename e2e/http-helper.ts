@@ -5,7 +5,9 @@ import rightpad from 'pad-right';
 
 import Helper from '../src/e2e-helper/e2e-helper';
 
-const HTTP_TIMEOUT_FOR_MSG = 60000; // 1 min
+const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
+
+const HTTP_SERVER_READY_MSG = 'Main UI server is running on';
 
 export class HttpHelper {
   httpProcess: ChildProcess;
@@ -20,8 +22,7 @@ export class HttpHelper {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
-        const msg = 'Starting the development servers';
-        if (data.includes(msg)) {
+        if (data.includes(HTTP_SERVER_READY_MSG)) {
           if (this.helper.debugMode) console.log('http server is up and running');
           resolve();
         }
