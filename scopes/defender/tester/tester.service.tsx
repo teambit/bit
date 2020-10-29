@@ -1,7 +1,7 @@
 import { Logger } from '@teambit/logger';
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, ExecutionContext, Environment } from '@teambit/environments';
+import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/environments';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
@@ -45,7 +45,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     private logger: Logger
   ) {}
 
-  render(env: Environment) {
+  render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
     return (
       <Text key={descriptor?.id}>
@@ -67,9 +67,9 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     );
   }
 
-  getDescriptor(environment: Environment) {
-    if (!environment.getTester) return undefined;
-    const tester: Tester = environment.getTester();
+  getDescriptor(environment: EnvDefinition) {
+    if (!environment.env.getTester) return undefined;
+    const tester: Tester = environment.env.getTester();
 
     return {
       id: tester.id || '',
