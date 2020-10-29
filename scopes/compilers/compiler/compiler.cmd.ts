@@ -60,8 +60,12 @@ export class CompileCmd implements Command {
     };
   }
 
+  private getErrors(componentsStatus) {
+    return componentsStatus.filter((component) => component.errors.length).length;
+  }
+
   private getSummaryIcon(componentsStatus) {
-    switch (componentsStatus.filter((component) => component.errors.length).length) {
+    switch (this.getErrors(componentsStatus).length) {
       case 0:
         return chalk.green('✔');
       case componentsStatus.length:
@@ -72,12 +76,12 @@ export class CompileCmd implements Command {
   }
 
   private getExitCode(componentsStatus) {
-    return componentsStatus.filter((component) => component.errors.length).length ? 1 : 0;
+    return this.getErrors(componentsStatus).length ? 1 : 0;
   }
 
   private getStatusLine(componentsStatus, compileTimeLength) {
     const numberOfComponents = componentsStatus.length;
-    const numberOfFailingComponents = componentsStatus.filter((component) => component.errors.length).length;
+    const numberOfFailingComponents = this.getErrors(componentsStatus).length;
     const numberOfSuccessfulComponents = componentsStatus.filter((component) => !component.errors.length).length;
 
     const icon = this.getSummaryIcon(componentsStatus);
