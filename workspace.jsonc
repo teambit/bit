@@ -309,9 +309,6 @@
     "scopes/react": {
       "defaultScope": "teambit.react"
     },
-    "scopes/product": {
-      "defaultScope": "teambit.product"
-    },
     "scopes/preview": {
       "defaultScope": "teambit.preview"
     },
@@ -328,7 +325,7 @@
       "defaultScope": "teambit.defender"
     },
     "scopes/component": {
-      "defaultScope": "teambit.defender"
+      "defaultScope": "teambit.component"
     },
     "scopes/ui": {
       "defaultScope": "teambit.ui"

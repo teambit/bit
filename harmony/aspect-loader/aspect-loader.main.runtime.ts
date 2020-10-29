@@ -4,7 +4,7 @@ import { Component } from '@teambit/component';
 import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { RequireableComponent } from '@teambit/modules.requireable-component';
+import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 
 import { difference } from 'ramda';

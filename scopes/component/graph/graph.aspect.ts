@@ -1,7 +1,7 @@
 import { Aspect } from '@teambit/harmony';
 
 export const GraphAspect = Aspect.create({
-  id: 'teambit.bit/graph',
+  id: 'teambit.component/graph',
   dependencies: [],
   defaultConfig: {},
 });
