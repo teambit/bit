@@ -62,7 +62,8 @@
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
     "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'",
     "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts",
-    "nightly": "git tag -d manual-nightly && git push --delete origin manual-nightly && git tag manual-nightly && git push origin manual-nightly",
+    "assert:master": "node ./scripts/assert-master.js",
+    "nightly": "npm run assert:master && git tag -d manual-nightly && git push --delete origin manual-nightly && git tag manual-nightly && git push origin manual-nightly",
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
