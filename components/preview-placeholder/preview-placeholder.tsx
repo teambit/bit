@@ -1,5 +1,4 @@
 import { ComponentComposition } from '@teambit/compositions';
-import ReactTooltip from 'react-tooltip';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import React from 'react';
 import { ComponentModel } from '@teambit/component';
@@ -20,9 +19,6 @@ export function PreviewPlaceholder({
     <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
       <Icon of="img" />
       <div>No preview available</div>
-      <ReactTooltip className={styles.tooltip} place="bottom" id={name} effect="solid">
-        Preview is generated from compositions during CI
-      </ReactTooltip>
     </div>
   );
 }
