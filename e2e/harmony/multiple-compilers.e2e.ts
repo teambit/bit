@@ -74,14 +74,14 @@ describe('multiple compilers - babel and typescript', function () {
           expect(dist.files).to.have.lengthOf(2);
           const files = dist.files.map((f) => f.relativePath);
           expect(files).to.deep.equal(['dist/foo.js', 'dist/foo.js.map']);
-          expect(dist.generatedBy).to.equal('teambit.bit/babel');
+          expect(dist.generatedBy).to.equal('teambit.compilers/babel');
         });
         it('should save the .d.ts files under "declaration" artifact', () => {
           const declaration = artifacts.find((a) => a.name === 'declaration');
           expect(declaration).to.not.be.undefined;
           expect(declaration.files).to.have.lengthOf(1);
           expect(declaration.files[0].relativePath).to.equal('dist/foo.d.ts');
-          expect(declaration.generatedBy).to.equal('teambit.bit/typescript');
+          expect(declaration.generatedBy).to.equal('teambit.compilers/typescript');
         });
       });
     });
@@ -96,9 +96,9 @@ describe('multiple compilers - babel and typescript', function () {
       helper.fixtures.populateComponentsTS(4, undefined, true);
       const babelEnv = helper.env.setBabelWithTsHarmony();
       helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
-      helper.extensions.addExtensionToVariant('comp2', 'teambit.bit/react');
+      helper.extensions.addExtensionToVariant('comp2', 'teambit.react/react');
       helper.extensions.addExtensionToVariant('comp3', `my-scope/${babelEnv}`);
-      helper.extensions.addExtensionToVariant('comp4', 'teambit.bit/react');
+      helper.extensions.addExtensionToVariant('comp4', 'teambit.react/react');
       helper.command.compile();
       buildOutput = helper.command.build();
     });
