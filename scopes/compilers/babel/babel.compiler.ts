@@ -41,8 +41,12 @@ export class BabelCompiler implements Compiler {
     transformOptions.sourceRoot = options.componentDir;
     transformOptions.sourceFileName = options.filePath;
     transformOptions.filename = options.filePath;
+    this.setConfigFileFalse();
     const result = babel.transformSync(fileContent, this.options.babelTransformOptions);
     if (!result) {
+      this.logger.debug(
+        `getting an empty response from Babel for the file ${options.filePath}. it might be configured to be ignored`
+      );
       return null;
     }
     const code = result.code || '';
@@ -104,6 +108,9 @@ export class BabelCompiler implements Compiler {
           componentResult.errors?.push(err);
         }
         if (!result || !result.code) {
+          this.logger.debug(
+            `getting an empty response from Babel for the file ${filePath}. it might be configured to be ignored`
+          );
           return;
         }
         const distPath = this.replaceFileExtToJs(filePath);
