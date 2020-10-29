@@ -1,14 +1,15 @@
 /* eslint-disable max-classes-per-file */
 import { BitBaseEvent } from '@teambit/pubsub';
-import { BuildResult, CompileError } from '../workspace-compiler';
 
 import type ConsumerComponent from 'bit-bin/dist/consumer/component';
+
+import { CompileError } from '../workspace-compiler';
 
 class ComponentCompilationOnDoneEventData {
   constructor(
     readonly errors: Array<CompileError>,
     readonly component: ConsumerComponent,
-    readonly buildResults: Array<BuildResult>
+    readonly buildResults: string[]
   ) {}
 }
 
@@ -18,7 +19,7 @@ export class ComponentCompilationOnDoneEvent extends BitBaseEvent<ComponentCompi
   constructor(
     readonly errors: Array<CompileError>,
     readonly component: ConsumerComponent,
-    readonly buildResults: Array<BuildResult>,
+    readonly buildResults: string[],
     readonly timestamp = Date.now().toString()
   ) {
     super(

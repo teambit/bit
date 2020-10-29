@@ -4,17 +4,17 @@ import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 
+import type ConsumerComponent from 'bit-bin/dist/consumer/component';
+
 import { formatCompileResults } from './output-formatter';
-import { BuildResult, CompileError, WorkspaceCompiler } from './workspace-compiler';
+import { CompileError, WorkspaceCompiler } from './workspace-compiler';
 
 // IDs & events
 import { CompilerAspect } from './compiler.aspect';
 import { ComponentCompilationOnDoneEvent } from './events';
 
-import type ConsumerComponent from 'bit-bin/dist/consumer/component';
-
 type ComponentsStatus = {
-  buildResults: Array<BuildResult>;
+  buildResults: string[];
   component: Array<ConsumerComponent>;
   errors: Array<CompileError>;
 };
