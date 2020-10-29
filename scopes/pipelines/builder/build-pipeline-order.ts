@@ -1,7 +1,6 @@
 import R from 'ramda';
 import { Graph } from 'cleargraph';
-import { Environment } from '@teambit/environments';
-import { EnvRuntime } from '@teambit/environments/runtime';
+import { EnvDefinition, Environment } from '@teambit/environments';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 import { TasksQueue } from './tasks-queue';
@@ -9,7 +8,7 @@ import { TasksQueue } from './tasks-queue';
 type TaskDependenciesGraph = Graph<string, string>;
 type Location = 'start' | 'middle' | 'end';
 type TasksLocationGraph = { location: Location; graph: TaskDependenciesGraph };
-type PipelineEnv = { env: EnvRuntime; pipeline: BuildTask[] };
+type PipelineEnv = { env: EnvDefinition; pipeline: BuildTask[] };
 type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipelineEnvs: PipelineEnv[] };
 
 /**
@@ -44,7 +43,7 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
  */
 export function calculatePipelineOrder(
   taskSlot: TaskSlot,
-  envs: EnvRuntime[],
+  envs: EnvDefinition[],
   pipeNameOnEnv = 'getBuildPipe'
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
@@ -53,15 +52,15 @@ export function calculatePipelineOrder(
     graphs.push({ location, graph: new Graph<string, string>() });
   });
   const pipelineEnvs: PipelineEnv[] = [];
-  envs.forEach((envRuntime) => {
-    if (envRuntime.env.getPipe) {
+  envs.forEach((envDefinition) => {
+    if (envDefinition.env.getPipe) {
       // @todo: remove once this confusion is over
       throw new Error(
-        `Fatal: a breaking API has introduced. Please change "getPipe()" method on "${envRuntime.id}" to "getBuildPipe()"`
+        `Fatal: a breaking API has introduced. Please change "getPipe()" method on "${envDefinition.id}" to "getBuildPipe()"`
       );
     }
-    const pipeline = getPipelineForEnv(taskSlot, envRuntime.env, pipeNameOnEnv);
-    pipelineEnvs.push({ env: envRuntime, pipeline });
+    const pipeline = getPipelineForEnv(taskSlot, envDefinition.env, pipeNameOnEnv);
+    pipelineEnvs.push({ env: envDefinition, pipeline });
   });
 
   const flattenedPipeline: BuildTask[] = R.flatten(pipelineEnvs.map((pipelineEnv) => pipelineEnv.pipeline));

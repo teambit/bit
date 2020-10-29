@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
 import syntaxHighlighter from 'consolehighlighter';
-import { EnvService, Environment } from '@teambit/environments';
+import { EnvService, EnvDefinition } from '@teambit/environments';
 
 export type CompilerDescriptor = {
   id: string;
@@ -12,7 +12,7 @@ export type CompilerDescriptor = {
 export class CompilerService implements EnvService<{}, CompilerDescriptor> {
   name = 'Compile';
 
-  render(env: Environment) {
+  render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
 
     return (
@@ -27,9 +27,9 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
     );
   }
 
-  getDescriptor(env: Environment) {
-    if (!env.getCompiler) return undefined;
-    const compiler = env.getCompiler();
+  getDescriptor(env: EnvDefinition) {
+    if (!env.env.getCompiler) return undefined;
+    const compiler = env.env.getCompiler();
 
     return {
       id: compiler.id,

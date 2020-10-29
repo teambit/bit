@@ -1,8 +1,8 @@
-import { EnvRuntime } from '@teambit/environments/runtime';
+import { EnvDefinition } from '@teambit/environments';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import { InvalidTask } from './exceptions';
 
-type EnvTask = { env: EnvRuntime; task: BuildTask };
+type EnvTask = { env: EnvDefinition; task: BuildTask };
 
 export class TasksQueue extends Array<EnvTask> {
   toString() {

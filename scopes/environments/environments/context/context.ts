@@ -1,4 +1,5 @@
 import type { Component } from '@teambit/component';
+import { EnvDefinition } from '../env-definition';
 
 import { EnvRuntime, Runtime } from '../runtime';
 
@@ -38,6 +39,10 @@ export class ExecutionContext {
    */
   get env(): any {
     return this.envRuntime.env;
+  }
+
+  get envDefinition(): EnvDefinition {
+    return new EnvDefinition(this.id, this.env);
   }
 
   apply<T>(name: string, args: any[]): T {
