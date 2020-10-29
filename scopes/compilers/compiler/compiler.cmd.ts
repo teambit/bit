@@ -5,14 +5,22 @@ import chalk from 'chalk';
 import prettyTime from 'pretty-time';
 
 import { formatCompileResults } from './output-formatter';
-import { WorkspaceCompiler } from './workspace-compiler';
+import { BuildResult, CompileError, WorkspaceCompiler } from './workspace-compiler';
 
 // IDs & events
 import { CompilerAspect } from './compiler.aspect';
 import { ComponentCompilationOnDoneEvent } from './events';
 
+import type ConsumerComponent from 'bit-bin/dist/consumer/component';
+
+type ComponentsStatus = {
+  buildResults: Array<BuildResult>;
+  component: Array<ConsumerComponent>;
+  errors: Array<CompileError>;
+};
+
 export class CompileCmd implements Command {
-  componentsStatus: Array<any> = [];
+  componentsStatus: Array<ComponentsStatus> = [];
   name = 'compile [component...]';
   description = 'Compile components';
   alias = '';
@@ -60,12 +68,12 @@ export class CompileCmd implements Command {
     };
   }
 
-  private getErrors(componentsStatus) {
-    return componentsStatus.filter((component) => component.errors.length).length;
+  private failedComponents(componentsStatus: ComponentsStatus[]): ComponentsStatus[] {
+    return componentsStatus.filter((component) => component.errors.length);
   }
 
-  private getSummaryIcon(componentsStatus) {
-    switch (this.getErrors(componentsStatus).length) {
+  private getSummaryIcon(componentsStatus: ComponentsStatus[]) {
+    switch (this.failedComponents(componentsStatus).length) {
       case 0:
         return chalk.green('✔');
       case componentsStatus.length:
@@ -75,13 +83,13 @@ export class CompileCmd implements Command {
     }
   }
 
-  private getExitCode(componentsStatus) {
-    return this.getErrors(componentsStatus).length ? 1 : 0;
+  private getExitCode(componentsStatus: ComponentsStatus[]) {
+    return this.failedComponents(componentsStatus).length ? 1 : 0;
   }
 
-  private getStatusLine(componentsStatus, compileTimeLength) {
+  private getStatusLine(componentsStatus: ComponentsStatus[], compileTimeLength) {
     const numberOfComponents = componentsStatus.length;
-    const numberOfFailingComponents = this.getErrors(componentsStatus).length;
+    const numberOfFailingComponents = this.failedComponents(componentsStatus).length;
     const numberOfSuccessfulComponents = componentsStatus.filter((component) => !component.errors.length).length;
 
     const icon = this.getSummaryIcon(componentsStatus);

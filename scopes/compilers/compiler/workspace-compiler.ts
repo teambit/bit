@@ -22,13 +22,15 @@ import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
 
 import { Compiler } from './types';
 
-type BuildResult = { component: string; buildResults: string[] | null | undefined };
+export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
 type LegacyCompilerOptions = {
   noCache?: boolean;
   verbose?: boolean;
   dontPrintEnvMsg?: boolean;
 };
+
+export type CompileError = { path: string; error: Error };
 
 export class ComponentCompiler {
   constructor(
@@ -38,7 +40,7 @@ export class ComponentCompiler {
     private compilerInstance: Compiler,
     private compilerId: string,
     private dists: Dist[] = [],
-    private compileErrors: { path: string; error: Error }[] = []
+    private compileErrors: CompileError[] = []
   ) {}
 
   async compile(noThrow = true): Promise<BuildResult> {
