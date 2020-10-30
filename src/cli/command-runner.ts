@@ -115,7 +115,7 @@ function serializeErrAndExit(err, commandName: string) {
   return process.stderr.write(data, () => logger.exitAfterFlush(code, commandName));
 }
 
-export function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
+export async function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
   loader.off();
   logger.error(`got an error from command ${commandName}: ${err}`);
   logger.error(err.stack || '<no error stack was found>');
@@ -124,7 +124,7 @@ export function handleErrorAndExit(err: Error, commandName: string, shouldSerial
   return logErrAndExit(message, commandName);
 }
 
-export function handleUnhandledRejection(err: Error | null | undefined | {}) {
+export async function handleUnhandledRejection(err: Error | null | undefined | {}) {
   // eslint-disable-next-line no-console
   console.error('** unhandled rejection found, please make sure the promise is resolved/rejected correctly! **');
   if (err instanceof Error) {

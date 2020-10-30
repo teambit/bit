@@ -46,7 +46,7 @@ async function initApp() {
     await runCLI();
   } catch (err) {
     const originalError = err.originalError || err;
-    handleErrorAndExit(originalError, process.argv[2]);
+    await handleErrorAndExit(originalError, process.argv[2]);
   }
 }
 
