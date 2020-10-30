@@ -304,6 +304,7 @@ export default class ImportComponents {
     const missingDeps: BitId[] = [];
     await Promise.all(
       dependencies.map(async (dep) => {
+        if (!dep.hasScope()) return;
         const isInScope = await this.scope.isComponentInScope(dep);
         if (!isInScope) missingDeps.push(dep);
       })
