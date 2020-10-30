@@ -18,7 +18,7 @@ export class HttpHelper {
       const cwd = this.helper.scopes.remotePath;
       if (this.helper.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line no-console
       if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-      this.httpProcess = childProcess.exec(cmd, { cwd });
+      this.httpProcess = childProcess.spawn(this.helper.command.bitBin, ['start', '--verbose'], { cwd });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
