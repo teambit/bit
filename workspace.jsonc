@@ -327,8 +327,8 @@
     "scopes/component": {
       "defaultScope": "teambit.component"
     },
-    "scopes/ui": {
-      "defaultScope": "teambit.ui"
+    "scopes/ui-foundation": {
+      "defaultScope": "teambit.ui-foundation"
     },
     "scopes/design": {
       "defaultScope": "teambit.design"
