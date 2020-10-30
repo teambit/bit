@@ -94,8 +94,8 @@ export class CommandRunner {
     }
   }
 
-  private writeAndExit(data: string, exitCode: number) {
-    return process.stdout.write(data, () => logger.exitAfterFlush(exitCode, this.command.name));
+  private async writeAndExit(data: string, exitCode: number) {
+    return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.command.name));
   }
 
   private async runMigrateIfNeeded(): Promise<any> {
@@ -134,8 +134,8 @@ export function handleUnhandledRejection(err: Error | null | undefined | {}) {
   return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
 }
 
-export function logErrAndExit(err: Error | string, commandName: string) {
+export async function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
   console.error(err); // eslint-disable-line
-  logger.exitAfterFlush(1, commandName);
+  await logger.exitAfterFlush(1, commandName);
 }
