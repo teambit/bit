@@ -35,6 +35,7 @@ import { manifestsMap } from './manifests';
 import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 initApp();
 
 async function initApp() {

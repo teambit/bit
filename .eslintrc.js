@@ -11,7 +11,7 @@ module.exports = {
     },
   },
   parserOptions: {
-    // project: require.resolve('./tsconfig.json'),
+    project: require.resolve('./tsconfig.json'),
     createDefaultProgram: true,
     ecmaFeatures: {
       jsx: true, // Allows for the parsing of JSX
@@ -45,6 +45,7 @@ module.exports = {
       'error',
       { functions: false, classes: true, variables: true, typedefs: true },
     ],
+    '@typescript-eslint/no-floating-promises': 'error',
 
     // ERRORS OF plugin:@typescript-eslint/recommended
     '@typescript-eslint/no-var-requires': 'off',
