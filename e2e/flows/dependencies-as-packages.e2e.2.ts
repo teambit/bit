@@ -14,7 +14,7 @@ chai.use(require('chai-fs'));
   function () {
     this.timeout(0);
     let helper: Helper;
-    let npmCiRegistry;
+    let npmCiRegistry: NpmCiRegistry;
     before(() => {
       helper = new Helper();
       helper.command.setFeatures('legacy-workspace-config');
