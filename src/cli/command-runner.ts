@@ -94,8 +94,8 @@ export class CommandRunner {
     }
   }
 
-  private writeAndExit(data: string, exitCode: number) {
-    return process.stdout.write(data, () => logger.exitAfterFlush(exitCode, this.command.name));
+  private async writeAndExit(data: string, exitCode: number) {
+    return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.command.name));
   }
 
   private async runMigrateIfNeeded(): Promise<any> {
@@ -115,7 +115,7 @@ function serializeErrAndExit(err, commandName: string) {
   return process.stderr.write(data, () => logger.exitAfterFlush(code, commandName));
 }
 
-export function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
+export async function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
   loader.off();
   logger.error(`got an error from command ${commandName}: ${err}`);
   logger.error(err.stack || '<no error stack was found>');
@@ -124,7 +124,7 @@ export function handleErrorAndExit(err: Error, commandName: string, shouldSerial
   return logErrAndExit(message, commandName);
 }
 
-export function handleUnhandledRejection(err: Error | null | undefined | {}) {
+export async function handleUnhandledRejection(err: Error | null | undefined | {}) {
   // eslint-disable-next-line no-console
   console.error('** unhandled rejection found, please make sure the promise is resolved/rejected correctly! **');
   if (err instanceof Error) {
@@ -134,8 +134,8 @@ export function handleUnhandledRejection(err: Error | null | undefined | {}) {
   return handleErrorAndExit(new Error(`unhandledRejections found. err ${err}`), process.argv[2]);
 }
 
-export function logErrAndExit(err: Error | string, commandName: string) {
+export async function logErrAndExit(err: Error | string, commandName: string) {
   if (!err) throw new Error(`logErrAndExit expects to get either an Error or a string, got nothing`);
   console.error(err); // eslint-disable-line
-  logger.exitAfterFlush(1, commandName);
+  await logger.exitAfterFlush(1, commandName);
 }

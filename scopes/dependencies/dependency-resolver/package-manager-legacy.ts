@@ -62,6 +62,7 @@ export default class PackageManager {
         this.logger.info(`${componentId}, ${packageManager === 'npm' ? '$ npm install --no-package-lock' : '$ yarn'}`); // TODO: better
         installProc.stdout!.on('data', (d) => this.logger.info(`${componentId}, ${d.toString()}`));
         installProc.stderr!.on('data', (d) => this.logger.warn(`${componentId}, ${d.toString()}`));
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         installProc.on('error', (e) => {
           console.log('error:', e); // eslint-disable-line no-console
           this.logger.error(`${componentId}, ${e}`);
@@ -92,9 +93,11 @@ export default class PackageManager {
         child.stdout.on('data', (d) => this.logger.info(`${folder} ${d.toString()}`));
         // @ts-ignore
         child.stderr.on('data', (d) => this.logger.warn(`${folder} ${d.toString()}`));
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         child.on('error', (e) => {
           reject(e);
         });
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         child.on('close', (exitStatus) => {
           if (exitStatus) {
             reject(new Error(`${folder}`));

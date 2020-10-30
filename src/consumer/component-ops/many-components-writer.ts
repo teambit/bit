@@ -23,7 +23,7 @@ import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { moveExistingComponent } from './move-components';
 
 interface ExternalPackageInstaller {
-  install: Function;
+  install: () => Promise<any>;
 }
 
 export interface ManyComponentsWriterParams {

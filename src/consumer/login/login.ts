@@ -123,6 +123,7 @@ export default function loginToBitSrc(
       );
       if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         open(encoded, { url: true });
       } else {
         console.log(chalk.yellow(`Go to the following link in your browser::\n${encoded}`)); // eslint-disable-line no-console
