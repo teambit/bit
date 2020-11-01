@@ -9,7 +9,6 @@ import objectHash from 'object-hash';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { CacheAspect, CacheMain } from '@teambit/cache';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
@@ -52,7 +51,7 @@ export class PreviewMain {
 
     private builder: BuilderMain,
 
-    private cacheFolder: string
+    private tempFolder: string
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
@@ -79,7 +78,7 @@ export class PreviewMain {
     prefix: string,
     moduleMap: ComponentMap<string[]>,
     defaultModule?: string,
-    dirName: string = this.cacheFolder
+    dirName: string = this.tempFolder
   ) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
     const hash = objectHash(contents);
@@ -179,15 +178,7 @@ export class PreviewMain {
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
   static runtime = MainRuntime;
-  static dependencies = [
-    BundlerAspect,
-    BuilderAspect,
-    ComponentAspect,
-    UIAspect,
-    EnvsAspect,
-    WorkspaceAspect,
-    CacheAspect,
-  ];
+  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect, WorkspaceAspect];
 
   static defaultConfig = {
     bundlingStrategy: 'env',
@@ -195,14 +186,13 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, cacheMain]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
       UiMain,
       EnvsMain,
-      Workspace,
-      CacheMain
+      Workspace
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
