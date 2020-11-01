@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+// import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { ParserNotFound } from './exceptions';
 import { Parser } from './parser';
@@ -47,7 +47,7 @@ export class SchemaMain {
   async getSchema(component: Component): Promise<SemanticSchema> {
     const env = this.envs.getEnv(component);
     const schemaExtractor: SchemaExtractor = env.env.getSchemaExtractor();
-    schemaExtractor.extract(component);
+    await schemaExtractor.extract(component);
 
     return {
       exports: [],
@@ -64,11 +64,11 @@ export class SchemaMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [WorkspaceAspect, EnvsAspect];
+  static dependencies = [EnvsAspect];
 
   static slots = [Slot.withType<Parser>()];
 
-  static async provider([workspace, envs]: [Workspace, EnvsMain], config, [parserSlot]: [ParserSlot]) {
+  static async provider([envs]: [EnvsMain], config, [parserSlot]: [ParserSlot]) {
     const schema = new SchemaMain(parserSlot, envs);
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);
