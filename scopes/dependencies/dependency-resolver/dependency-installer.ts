@@ -113,7 +113,7 @@ export class DependencyInstaller {
       return;
     }
     const src = this.aspectLoader.mainAspect.path;
-    fs.ensureDir(path.dirname(target));
+    await fs.ensureDir(path.dirname(target));
     createSymlinkOrCopy(src, target);
   }
 

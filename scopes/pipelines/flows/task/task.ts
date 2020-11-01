@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 /* eslint-disable max-classes-per-file */
 
 import { Capsule, ContainerExec } from '@teambit/isolator';

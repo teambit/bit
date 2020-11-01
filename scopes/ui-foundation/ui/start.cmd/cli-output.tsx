@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import type { PubsubMain } from '@teambit/pubsub';
 
 // Import the IDs & Events

@@ -1,12 +1,11 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
-
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, LATEST_BIT_VERSION } from '../../constants';
 import { Consumer } from '../../consumer';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -223,14 +222,18 @@ export default class ImportComponents {
     return remotes.scopeGraphs(bitIds, this.consumer.scope);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   async importAccordingToBitMap(): ImportResult {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
+    const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
     const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
-    const componentsIdsToImport = [...authoredExportedComponents, ...importedComponents];
+    const componentsIdsToImport = BitIds.fromArray([
+      ...authoredExportedComponents,
+      ...importedComponents,
+      ...idsOfDepsInstalledAsPackages,
+    ]);
 
     let compiler;
     let tester;
@@ -245,15 +248,14 @@ export default class ImportComponents {
         throw new NothingToImport();
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     await this._throwForModifiedOrNewComponents(componentsIdsToImport);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const beforeImportVersions = await this._getCurrentVersions(componentsIdsToImport);
 
-    let componentsAndDependencies = [];
+    let componentsAndDependencies: ComponentWithDependencies[] = [];
     if (componentsIdsToImport.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      componentsAndDependencies = await this.consumer.importComponents(componentsIdsToImport, true);
+      // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
+      const idsWithLatestVersion = componentsIdsToImport.map((id) => id.changeVersion(LATEST_BIT_VERSION));
+      componentsAndDependencies = await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }
@@ -282,8 +284,34 @@ export default class ImportComponents {
     return { dependencies: componentsAndDependencies, importDetails };
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  async _getCurrentVersions(ids: BitIds): ImportedVersions {
+  /**
+   * author might require bit-components that were installed via a package-manager. in that case,
+   * the objects are not imported until bit build or bit tag was running. this makes sure to get
+   * the objects on 'bit import', so then in the UI, they'll be shown nicely.
+   */
+  async getIdsOfDepsInstalledAsPackages() {
+    if (!this.options.objectsOnly) {
+      // this is needed only when importing objects. we don't want these components to be written to the fs
+      return [];
+    }
+    const authoredNonExportedComponentsIds = this.consumer.bitMap.getAuthoredNonExportedComponents();
+    const { components: authoredNonExportedComponents } = await this.consumer.loadComponents(
+      BitIds.fromArray(authoredNonExportedComponentsIds),
+      false
+    );
+    const dependencies: BitId[] = R.flatten(authoredNonExportedComponents.map((c) => c.getAllDependenciesIds()));
+    const missingDeps: BitId[] = [];
+    await Promise.all(
+      dependencies.map(async (dep) => {
+        if (!dep.hasScope()) return;
+        const isInScope = await this.scope.isComponentInScope(dep);
+        if (!isInScope) missingDeps.push(dep);
+      })
+    );
+    return missingDeps;
+  }
+
+  async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {
     const versionsP = ids.map(async (id) => {
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       const idStr = id.toStringWithoutVersion();

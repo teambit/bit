@@ -208,9 +208,11 @@ export async function exportMany({
       // all exported from master
       const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
       await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
-      componentsAndObjects.forEach(({ component }) => {
-        scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getHead());
-      });
+      await Promise.all(
+        componentsAndObjects.map(async ({ component }) => {
+          await scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getHead());
+        })
+      );
     }
 
     await scope.objects.persist();
