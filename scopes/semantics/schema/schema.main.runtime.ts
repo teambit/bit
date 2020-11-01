@@ -1,10 +1,14 @@
 import { MainRuntime } from '@teambit/cli';
+import { Component } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { EnvsAspect, EnvsMain } from '@teambit/environments';
 import { ParserNotFound } from './exceptions';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { Module } from './schemas';
+import { SemanticSchema } from './semantic-schema';
+import { SchemaExtractor } from './schema-extractor';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -16,7 +20,9 @@ export class SchemaMain {
     /**
      * parsers slot.
      */
-    private parserSlot: ParserSlot
+    private parserSlot: ParserSlot,
+
+    private envs: EnvsMain
   ) {}
 
   /**
@@ -35,6 +41,20 @@ export class SchemaMain {
   }
 
   /**
+   * get a schema of a component.
+   * @param component target component.
+   */
+  async getSchema(component: Component): Promise<SemanticSchema> {
+    const env = this.envs.getEnv(component);
+    const schemaExtractor: SchemaExtractor = env.env.getSchemaExtractor();
+    schemaExtractor.extract(component);
+
+    return {
+      exports: [],
+    };
+  }
+
+  /**
    * register a new parser.
    */
   registerParser(parser: Parser): SchemaMain {
@@ -44,10 +64,18 @@ export class SchemaMain {
 
   static runtime = MainRuntime;
 
+  static dependencies = [WorkspaceAspect, EnvsAspect];
+
   static slots = [Slot.withType<Parser>()];
 
-  static async provider(deps, config, [parserSlot]: [ParserSlot]) {
-    return new SchemaMain(parserSlot);
+  static async provider([workspace, envs]: [Workspace, EnvsMain], config, [parserSlot]: [ParserSlot]) {
+    const schema = new SchemaMain(parserSlot, envs);
+    // workspace.onComponentLoad(async (component) => {
+    //   const apiSchema = await schema.getSchema(component);
+    //   return {};
+    // });
+
+    return schema;
   }
 }
 

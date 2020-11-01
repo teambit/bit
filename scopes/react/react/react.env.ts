@@ -122,6 +122,13 @@ export class ReactEnv implements Environment {
   }
 
   /**
+   * get a schema generator instance configured with the correct tsconfig.
+   */
+  getSchemaExtractor(tsconfig: TsConfigSourceFile) {
+    return this.ts.createSchemaExtractor(this.getTsConfig(tsconfig));
+  }
+
+  /**
    * returns and configures the React component dev server.
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {

@@ -1,9 +1,10 @@
+import { TsConfigSourceFile } from 'typescript';
 import { MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
-
+import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
 import { TypescriptCompiler } from './typescript.compiler';
@@ -18,7 +19,12 @@ export class TypescriptMain {
     return new TypescriptCompiler(TypescriptAspect.id, this.logger, options);
   }
 
-  resolveTypeFile() {}
+  /**
+   * create an instance of a typescript semantic schema extractor.
+   */
+  createSchemaExtractor(tsconfig: TsConfigSourceFile) {
+    return new TypeScriptExtractor(tsconfig);
+  }
 
   /**
    * add the default package json properties to the component

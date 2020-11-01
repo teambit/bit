@@ -133,7 +133,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/babel",
+        "rootDir": "scopes/compilation/babel",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -455,7 +455,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/bundler",
+        "rootDir": "scopes/compilation/bundler",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -785,7 +785,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/compiler",
+        "rootDir": "scopes/compilation/compiler",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3441,6 +3441,11 @@
                 "test": false
             },
             {
+                "name": "schema-extractor.ts",
+                "relativePath": "schema-extractor.ts",
+                "test": false
+            },
+            {
                 "name": "schema.aspect.ts",
                 "relativePath": "schema.aspect.ts",
                 "test": false
@@ -3448,6 +3453,11 @@
             {
                 "name": "schema.main.runtime.ts",
                 "relativePath": "schema.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "schema.service.ts",
+                "relativePath": "schema.service.ts",
                 "test": false
             },
             {
@@ -3464,10 +3474,15 @@
                 "name": "module.ts",
                 "relativePath": "schemas/module.ts",
                 "test": false
+            },
+            {
+                "name": "semantic-schema.ts",
+                "relativePath": "semantic-schema.ts",
+                "test": false
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/schemas/schema",
+        "rootDir": "scopes/semantics/schema",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3890,6 +3905,11 @@
                 "test": false
             },
             {
+                "name": "typescript.extractor.ts",
+                "relativePath": "typescript.extractor.ts",
+                "test": false
+            },
+            {
                 "name": "typescript.main.runtime.ts",
                 "relativePath": "typescript.main.runtime.ts",
                 "test": false
@@ -3901,7 +3921,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/typescript",
+        "rootDir": "scopes/typescript/typescript",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -5605,7 +5625,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/webpack",
+        "rootDir": "scopes/compilation/webpack",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

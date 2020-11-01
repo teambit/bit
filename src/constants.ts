@@ -451,7 +451,7 @@ export const IMPORT_PENDING_MSG =
 export enum Extensions {
   dependencyResolver = 'teambit.dependencies/dependency-resolver',
   pkg = 'teambit.pkg/pkg',
-  compiler = 'teambit.compilers/compiler',
+  compiler = 'teambit.compilation/compiler',
   envs = 'teambit.environments/environments',
   builder = 'teambit.pipelines/builder',
 }
