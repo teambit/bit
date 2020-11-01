@@ -978,9 +978,10 @@ export class Workspace implements ComponentFactory {
   }
 
   getTempDir(aspectId: string): string {
-    const cacheFolder = findCacheDir({ name: aspectId, create: true });
-    if (!cacheFolder) throw new TempDirMissing();
-    return cacheFolder;
+    const PREFIX = 'bit';
+    const cacheDir = findCacheDir({ name: join(PREFIX, aspectId), create: true });
+    if (!cacheDir) throw new TempDirMissing();
+    return cacheDir;
   }
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
