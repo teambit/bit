@@ -5,7 +5,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import objectHash from 'object-hash'
+import objectHash from 'object-hash';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -82,7 +82,7 @@ export class PreviewMain {
     dirName: string = this.cacheFolder
   ) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
-    const hash = checksum(contents);
+    const hash = objectHash(contents);
     const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
 
     // write only if link has changed (prevents triggering fs watches)
@@ -227,19 +227,19 @@ export class PreviewMain {
     if (!config.disabled) builder.registerBuildTask(new PreviewTask(bundler, preview));
 
     if (workspace) {
-      workspace.registerOnComponentAdd((x) => {
+      workspace.registerOnComponentAdd(async (x) => {
         preview.runtimeComponents?.add(x);
         await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
 
-      workspace.registerOnComponentChange((x) => {
+      workspace.registerOnComponentChange(async (x) => {
         preview.runtimeComponents?.update(x);
         await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
 
-      workspace.registerOnComponentRemove((x) => {
+      workspace.registerOnComponentRemove(async (x) => {
         preview.runtimeComponents?.remove(x);
         await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
