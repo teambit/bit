@@ -863,8 +863,10 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!coreAspects) {
       return;
     }
+
+    const defaultScope = this.component.defaultScope;
     // @todo: remove this hack, once we have a better idea how to recognize core components
-    if (this.component.defaultScope === 'teambit.bit' || this.component.defaultScope === 'teambit3.bit') {
+    if (defaultScope && defaultScope.startsWith('teambit') && this.component.id.name.split('/').length === 1) {
       // this component itself is a core-extension/core-aspect/core-component, do not filter.
       return;
     }

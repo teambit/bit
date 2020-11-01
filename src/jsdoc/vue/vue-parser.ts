@@ -80,6 +80,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
       // read more about it here:
       // https://gitlab.com/vuedoc/parser/issues/56#note_219267637
       const parsingDomain = domain.create();
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       parsingDomain
         .on('error', (err) => {
           logger.debug(`failed parsing vue docs on path ${filePath} with unhandled error`, err);

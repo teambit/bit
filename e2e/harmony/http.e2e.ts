@@ -4,7 +4,7 @@ import Helper from '../../src/e2e-helper/e2e-helper';
 import { HttpHelper } from '../http-helper';
 
 // @todo: for some reason it fails on the CI. Maybe due to the browser opening.
-describe.skip('http protocol', function () {
+describe('http protocol', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -22,7 +22,7 @@ describe.skip('http protocol', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
-      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();

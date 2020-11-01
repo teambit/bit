@@ -38,7 +38,7 @@ describe('pkg extension', function () {
           'some-key': 'some-val',
         },
       };
-      helper.extensions.addExtensionToVariant('bar', 'teambit.bit/pkg', pkgConfig);
+      helper.extensions.addExtensionToVariant('bar', 'teambit.pkg/pkg', pkgConfig);
       helper.command.createCapsuleHarmony('bar/foo');
       helper.command.createCapsuleHarmony('utils/is-type');
       // We do this because the create capsule dir with json is not working because of pnpm output
@@ -93,7 +93,7 @@ describe('pkg extension', function () {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.harmony/aspect');
         helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
         helper.scopeHelper.linkBitBin();
         helper.command.link();
