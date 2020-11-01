@@ -24,7 +24,7 @@ export class CompileCmd implements Command {
     this.logger.setStatusLine('Compiling your components, hold tight.');
 
     let outputString = '';
-    const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
+    const compileResults = await this.compile.compileComponents(components, { verbose, noCache }, false);
     const compileTimeLength = process.hrtime(startTimestamp);
 
     outputString += '\n';
