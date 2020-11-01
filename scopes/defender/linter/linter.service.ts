@@ -1,4 +1,4 @@
-import { EnvService, ExecutionContext } from '@teambit/environments';
+import { EnvService, ExecutionContext } from '@teambit/envs';
 import { Linter, LintResults } from './linter';
 import { LinterContext } from './linter-context';
 import { LinterConfig } from './linter.main.runtime';

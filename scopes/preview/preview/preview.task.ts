@@ -1,5 +1,5 @@
 import { resolve, join } from 'path';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
 import { Compiler } from '@teambit/compiler';

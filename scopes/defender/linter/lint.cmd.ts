@@ -7,6 +7,7 @@ import { LinterMain } from './linter.main.runtime';
 export class LintCmd implements Command {
   name = 'lint';
   description = 'lint subset of components in your workspace.';
+  group = 'component';
   options = [];
 
   constructor(private linter: LinterMain, private componentHost: ComponentFactory, private logger: Logger) {}

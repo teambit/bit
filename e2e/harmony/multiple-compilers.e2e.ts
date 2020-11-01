@@ -74,14 +74,14 @@ describe('multiple compilers - babel and typescript', function () {
           expect(dist.files).to.have.lengthOf(2);
           const files = dist.files.map((f) => f.relativePath);
           expect(files).to.deep.equal(['dist/foo.js', 'dist/foo.js.map']);
-          expect(dist.generatedBy).to.equal('teambit.compilers/babel');
+          expect(dist.generatedBy).to.equal('teambit.compilation/babel');
         });
         it('should save the .d.ts files under "declaration" artifact', () => {
           const declaration = artifacts.find((a) => a.name === 'declaration');
           expect(declaration).to.not.be.undefined;
           expect(declaration.files).to.have.lengthOf(1);
           expect(declaration.files[0].relativePath).to.equal('dist/foo.d.ts');
-          expect(declaration.generatedBy).to.equal('teambit.compilers/typescript');
+          expect(declaration.generatedBy).to.equal('teambit.typescript/typescript');
         });
       });
     });

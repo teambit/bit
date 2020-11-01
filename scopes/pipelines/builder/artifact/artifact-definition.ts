@@ -8,9 +8,9 @@ export type ArtifactDefinition = {
 
   /**
    * aspect id that created the artifact. sometimes it's not the same as the task.id.
-   * e.g. teambit.compilers/compiler executes teambit.compilers/typescript code that generates dists artifacts
-   * the generatedBy in this case is the teambit.compilers/typescript while the task.id is
-   * teambit.compilers/compiler
+   * e.g. teambit.compilation/compiler executes teambit.typescript/typescript code that generates dists artifacts
+   * the generatedBy in this case is the teambit.typescript/typescript while the task.id is
+   * teambit.compilation/compiler
    */
   generatedBy?: string;
 

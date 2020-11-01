@@ -22,7 +22,7 @@ import {
   PackageManagerInstallOptions,
   PolicyDep,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/environments';
+import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
