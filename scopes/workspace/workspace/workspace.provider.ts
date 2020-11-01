@@ -4,7 +4,7 @@ import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
 import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { EnvsMain } from '@teambit/environments';
+import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
 import { IsolatorMain } from '@teambit/isolator';

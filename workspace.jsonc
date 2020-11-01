@@ -41,26 +41,26 @@
         "@stencil/webpack": "0.0.6",
         "@svgr/webpack": "^5.4.0",
         "@teambit/any-fs": "0.0.5",
-        "@teambit/base-ui.constants.storage": "^0.5.1",
-        "@teambit/base-ui.css-components.roundness": "^0.5.1",
-        "@teambit/base-ui.elements.separator": "^0.5.1",
-        "@teambit/base-ui.input.error": "^0.5.1",
-        "@teambit/base-ui.layout.breakpoints": "^0.5.1",
-        "@teambit/base-ui.layout.grid-component": "^0.5.1",
-        "@teambit/base-ui.layout.page-frame": "^0.5.1",
-        "@teambit/base-ui.surfaces.card": "^0.5.1",
-        "@teambit/base-ui.surfaces.split-pane.hover-splitter": "^0.5.1",
-        "@teambit/base-ui.surfaces.split-pane.split-pane": "^0.5.1",
-        "@teambit/base-ui.text.muted-text": "^0.5.1",
-        "@teambit/base-ui.text.paragraph": "^0.5.1",
-        "@teambit/base-ui.text.themed-text": "^0.5.1",
-        "@teambit/base-ui.theme.color-palette": "^0.5.1",
-        "@teambit/base-ui.theme.colors": "^0.5.1",
-        "@teambit/base-ui.theme.dark-theme": "^0.5.1",
-        "@teambit/base-ui.theme.sizes": "^0.5.1",
-        "@teambit/base-ui.theme.theme-provider": "^0.5.1",
-        "@teambit/base-ui.utils.sub-paths": "^0.5.1",
-        "@teambit/base-ui.utils.time-ago": "^0.5.1",
+        "@teambit/base-ui.constants.storage": "0.5.1",
+        "@teambit/base-ui.css-components.roundness": "0.5.1",
+        "@teambit/base-ui.elements.separator": "0.5.1",
+        "@teambit/base-ui.input.error": "0.5.1",
+        "@teambit/base-ui.layout.breakpoints": "0.5.1",
+        "@teambit/base-ui.layout.grid-component": "0.5.1",
+        "@teambit/base-ui.layout.page-frame": "0.5.1",
+        "@teambit/base-ui.surfaces.card": "0.5.1",
+        "@teambit/base-ui.surfaces.split-pane.hover-splitter": "0.5.1",
+        "@teambit/base-ui.surfaces.split-pane.split-pane": "0.5.1",
+        "@teambit/base-ui.text.muted-text": "0.5.1",
+        "@teambit/base-ui.text.paragraph": "0.5.1",
+        "@teambit/base-ui.text.themed-text": "0.5.1",
+        "@teambit/base-ui.theme.color-palette": "0.5.1",
+        "@teambit/base-ui.theme.colors": "0.5.1",
+        "@teambit/base-ui.theme.dark-theme": "0.5.1",
+        "@teambit/base-ui.theme.sizes": "0.5.1",
+        "@teambit/base-ui.theme.theme-provider": "0.5.1",
+        "@teambit/base-ui.utils.sub-paths": "0.5.1",
+        "@teambit/base-ui.utils.time-ago": "0.5.1",
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "^0.2.0",
         "@teambit/documenter.theme.theme-context": "^0.2.0",
@@ -88,7 +88,28 @@
         "@teambit/harmony": "0.2.7",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
+        "@types/cacache": "^12.0.1",
+        "@types/classnames": "^2.2.10",
+        "@types/cors": "^2.8.6",
+        "@types/cross-spawn": "^6.0.2",
+        "@types/dagre": "0.7.44",
+        "@types/didyoumean": "^1.2.0",
+        "@types/get-port": "^4.2.0",
+        "@types/history": "^4.7.6",
+        "@types/lodash.head": "^4.0.6",
+        "@types/mocha": "-",
+        "@types/mousetrap": "^1.6.3",
         "@types/node-fetch": "2.5.7",
+        "@types/proper-lockfile": "^4.1.1",
+        "@types/puppeteer": "^3.0.1",
+        "@types/react": "16.9.43",
+        "@types/react-router-dom": "^5.1.5",
+        "@types/react-tabs": "^2.3.2",
+        "@types/react-transition-group": "^4.4.0",
+        "@types/socket.io-client": "^1.4.33",
+        "@types/webpack": "^4.41.13",
+        "@types/webpack-dev-server": "^3.10.1",
+        "@types/webpack-merge": "^4.1.5",
         "@yarnpkg/cli": "2.3.2",
         "@yarnpkg/core": "2.3.1",
         "@yarnpkg/fslib": "2.3.0",
@@ -187,6 +208,7 @@
         "subscriptions-transport-ws": "^0.9.16",
         "supi": "0.42.0",
         "terser-webpack-plugin": "^4.1.0",
+        "typedoc": "0.18.0",
         "url-loader": "^4.1.0",
         "webpack": "4.42.0",
         "webpack-dev-middleware": "^3.7.2",
@@ -194,34 +216,13 @@
         "webpack-hot-middleware": "^2.25.0",
         "webpack-manifest-plugin": "^2.2.0",
         "webpack-merge": "^4.2.2",
-        "workbox-webpack-plugin": "^5.1.3",
-        "@types/mocha": "-",
-        "@types/cacache": "^12.0.1",
-        "@types/classnames": "^2.2.10",
-        "@types/cors": "^2.8.6",
-        "@types/cross-spawn": "^6.0.2",
-        "@types/get-port": "^4.2.0",
-        "@types/dagre": "0.7.44",
-        "@types/didyoumean": "^1.2.0",
-        "@types/puppeteer": "^3.0.1",
-        "@types/react": "16.9.43",
-        "@types/react-router-dom": "^5.1.5",
-        "@types/react-tabs": "^2.3.2",
-        "@types/react-transition-group": "^4.4.0",
-        "@types/socket.io-client": "^1.4.33",
-        "@types/webpack": "^4.41.13",
-        "@types/webpack-dev-server": "^3.10.1",
-        "@types/history": "^4.7.6",
-        "@types/proper-lockfile": "^4.1.1",
-        "@types/lodash.head": "^4.0.6",
-        "@types/webpack-merge": "^4.1.5",
-        "@types/mousetrap": "^1.6.3"
+        "workbox-webpack-plugin": "^5.1.3"
       },
       "peerDependencies": {
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.107",
+        "bit-bin": "14.8.9-dev.109",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -251,30 +252,30 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.107",
+            "bit-bin": "14.8.9-dev.109",
             "react-dom": "^16.13.1"
           }
         }
       },
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.harmony/aspect"
       },
       "teambit.harmony/aspect": {}
     },
     "{modules/*}": {
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
     },
     "{ui/*}": {
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
       "teambit.react/react": {}
     },
     "scopes/toolbox": {
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "defaultScope": "teambit.toolbox"
@@ -297,8 +298,8 @@
     "scopes/explorer": {
       "defaultScope": "teambit.explorer"
     },
-    "scopes/environments": {
-      "defaultScope": "teambit.environments"
+    "scopes/envs": {
+      "defaultScope": "teambit.envs"
     },
     "scopes/pkg": {
       "defaultScope": "teambit.pkg"
@@ -318,8 +319,8 @@
     "scopes/harmony": {
       "defaultScope": "teambit.harmony"
     },
-    "scopes/compilers": {
-      "defaultScope": "teambit.compilers"
+    "scopes/compilation": {
+      "defaultScope": "teambit.compilation"
     },
     "scopes/defender": {
       "defaultScope": "teambit.defender"
@@ -333,8 +334,11 @@
     "scopes/design": {
       "defaultScope": "teambit.design"
     },
-    "scopes/schemas": {
-      "defaultScope": "teambit.schemas"
+    "scopes/typescript": {
+      "defaultScope": "teambit.typescript"
+    },
+    "scopes/semantics": {
+      "defaultScope": "teambit.semantics"
     },
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
@@ -353,7 +357,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.107",
+            "bit-bin": "14.8.9-dev.109",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
