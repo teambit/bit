@@ -101,6 +101,19 @@ describe('bit import command with no ids', function () {
         expect(statusOutput).to.have.string('modified components');
       });
     });
+    describe('after tagging', () => {
+      let output;
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(localScope);
+        helper.command.tagAllComponents();
+        output = helper.command.runCmd('bit import --merge=manual');
+      });
+      it('should display a successful message', () => {
+        // before, it'd throw an error component-not-found as the tag exists only locally
+        expect(output).to.have.string('successfully imported');
+        expect(output).to.have.string('bar/foo');
+      });
+    });
   });
 
   describe('with an AUTHORED component which was only tagged but not exported', () => {
