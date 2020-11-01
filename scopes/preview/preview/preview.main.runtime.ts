@@ -214,7 +214,7 @@ export class PreviewMain {
       config,
       bundlingStrategySlot,
       builder,
-      cacheMain.projectCacheFolder(PreviewAspect.id)
+      workspace.getTempDir(PreviewAspect.id)
     );
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);

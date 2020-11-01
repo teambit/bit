@@ -1,11 +1,9 @@
 import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import findCacheDir from 'find-cache-dir';
 import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import cacache from 'cacache';
 
 import { CacheAspect } from './cache.aspect';
-import { CacheNotFoundError } from './cache-not-found-error';
 
 export type CacheConfig = {
   cacheDirectory: string;
@@ -52,12 +50,6 @@ export class CacheMain {
 
   private get globalCacheFolder() {
     return this.config.cacheDirectory;
-  }
-
-  projectCacheFolder(aspectId: string) {
-    const cacheFolder = findCacheDir({ name: aspectId, create: true });
-    if (!cacheFolder) throw new CacheNotFoundError();
-    return cacheFolder;
   }
 
   static async provider([loggerFactory]: [LoggerMain], config: CacheConfig) {

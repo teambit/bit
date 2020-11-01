@@ -49,6 +49,7 @@ import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
+import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { merge, slice } from 'lodash';
 import path, { join } from 'path';
@@ -78,6 +79,7 @@ import {
   OnComponentRemoveSlot,
 } from './workspace.provider';
 import { Issues } from './workspace-component/issues';
+import { TempDirMissing } from './missing-temp-error';
 
 export type EjectConfResult = {
   configPath: string;
@@ -973,6 +975,12 @@ export class Workspace implements ComponentFactory {
     const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
     return join(modulePath, dist);
+  }
+
+  getTempDir(aspectId: string): string {
+    const cacheFolder = findCacheDir({ name: aspectId, create: true });
+    if (!cacheFolder) throw new TempDirMissing();
+    return cacheFolder;
   }
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
