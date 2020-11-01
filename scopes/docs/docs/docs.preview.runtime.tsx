@@ -17,11 +17,6 @@ export class DocsPreview {
   ) {}
 
   render = (componentId: string, modules: PreviewModule, [compositions]: [any]) => {
-    if (!modules.componentMap[componentId]) {
-      modules.mainModule.default(this.graphql.getProvider, componentId, {}, compositions);
-      return;
-    }
-
     const docsModule = this.selectPreviewModel(componentId, modules);
 
     modules.mainModule.default(this.graphql.getProvider, componentId, docsModule, compositions);
@@ -29,6 +24,7 @@ export class DocsPreview {
 
   selectPreviewModel(componentId: string, modules: PreviewModule) {
     const relevant = modules.componentMap[componentId];
+    if (!relevant) return undefined;
 
     // only one doc file is supported.
     return relevant[0];

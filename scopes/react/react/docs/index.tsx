@@ -2,8 +2,14 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 
 import { DocsApp } from './docs-app';
+import { DocsFile } from './examples-overview/example';
 
-export default function DocsRoot(Provider: React.ComponentType, componentId: string, docs: any, compositions: any) {
+export default function DocsRoot(
+  Provider: React.ComponentType,
+  componentId: string,
+  docs: DocsFile | undefined,
+  compositions: any
+) {
   ReactDOM.render(
     <DocsApp Provider={Provider} compositions={compositions} docs={docs} componentId={componentId} />,
     document.getElementById('root')
