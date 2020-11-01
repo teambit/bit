@@ -1,8 +1,11 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 
-import { UNABLE_TO_LOAD_EXTENSION, UNABLE_TO_LOAD_EXTENSION_FROM_LIST } from '../../extensions/aspect-loader/constants';
-import { CannotLoadExtension } from '../../extensions/aspect-loader/exceptions';
+import {
+  UNABLE_TO_LOAD_EXTENSION,
+  UNABLE_TO_LOAD_EXTENSION_FROM_LIST,
+} from '../../scopes/harmony/aspect-loader/constants';
+import { CannotLoadExtension } from '../../scopes/harmony/aspect-loader/exceptions';
 // TODO: think about how to change this require or move this tests
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -31,7 +34,7 @@ describe('load extensions', function () {
       before(() => {
         helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
         helper.fixtures.copyFixtureExtensions('dummy-extension');
-        helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.harmony/aspect');
         helper.command.addComponent('dummy-extension');
         helper.command.linkAndCompile();
         helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
@@ -46,7 +49,7 @@ describe('load extensions', function () {
         helper.scopeHelper.reInitLocalWorkspaceHarmonyForNewAspects();
         helper.fixtures.copyFixtureExtensions('non-requireable-aspect');
         helper.command.addComponent('non-requireable-aspect');
-        helper.extensions.addExtensionToVariant('non-requireable-aspect', 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant('non-requireable-aspect', 'teambit.harmony/aspect');
         helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-aspect', config);
         helper.command.linkAndCompile();
       });
@@ -76,7 +79,7 @@ describe('load extensions', function () {
         helper.fixtures.copyFixtureExtensions('extension-provider-error');
         helper.command.addComponent('extension-provider-error');
         helper.extensions.addExtensionToWorkspace('my-scope/extension-provider-error', config);
-        helper.extensions.addExtensionToVariant('extension-provider-error', 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant('extension-provider-error', 'teambit.harmony/aspect');
         helper.command.linkAndCompile();
       });
       it.skip('when config set to throw error on failed extensions', () => {
@@ -115,7 +118,7 @@ describe('load extensions', function () {
       helper.command.addComponent('affected-comp1', { i: 'affected/comp1' });
       helper.fs.outputFile(path.join('not-affected-comp2', 'comp2.js'), '');
       helper.command.addComponent('not-affected-comp2', { i: 'not-affected/comp2' });
-      helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.bit/aspect');
+      helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.harmony/aspect');
     });
     describe('loading simple extension', () => {
       before(() => {

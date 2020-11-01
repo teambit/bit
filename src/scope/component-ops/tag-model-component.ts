@@ -284,7 +284,7 @@ export default async function tagModelComponent({
     const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) => func(ids));
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     allComponentsToTag.forEach((comp) => {
-      const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
+      const pkgExt = comp.extensions.findCoreExtension('teambit.pkg/pkg');
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });

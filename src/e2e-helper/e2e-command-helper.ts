@@ -217,7 +217,7 @@ export default class CommandHelper {
   }
   getArtifacts(id: string) {
     const comp = this.catComponent(`${id}@latest`);
-    const builderExt = comp.extensions.find((ext) => ext.name === 'teambit.bit/builder');
+    const builderExt = comp.extensions.find((ext) => ext.name === 'teambit.pipelines/builder');
     if (!builderExt) throw new Error(`unable to find builder data for ${id}`);
     const artifacts = builderExt.data.artifacts;
     if (!artifacts) throw new Error(`unable to find artifacts data for ${id}`);

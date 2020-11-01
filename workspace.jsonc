@@ -1,14 +1,14 @@
 {
   "$schema": "",
-  "teambit.bit/workspace": {
+  "teambit.workspace/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
-  "teambit.bit/dependency-resolver": {
-    "packageManager": "teambit.bit/pnpm",
+  "teambit.dependencies/dependency-resolver": {
+    "packageManager": "teambit.dependencies/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
     "policy": {
@@ -221,15 +221,15 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.105",
+        "bit-bin": "14.8.9-dev.107",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
     }
   },
-  "teambit.bit/variants": {
+  "teambit.workspace/variants": {
     "*": {
-      "teambit.bit/pkg": {
+      "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
         ],
@@ -238,7 +238,7 @@
           "private": false
         }
       },
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "-"
@@ -251,28 +251,98 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.105",
+            "bit-bin": "14.8.9-dev.107",
             "react-dom": "^16.13.1"
           }
         }
-      }
+      },
+      "teambit.environments/environments": {
+        "env": "teambit.harmony/aspect"
+      },
+      "teambit.harmony/aspect": {}
     },
-    "components": {
-      "teambit.bit/react": {}
+    "{modules/*}": {
+      "teambit.environments/environments": {
+        "env": "teambit.harmony/node"
+      },
+      "teambit.harmony/node": {}
     },
-    "extensions": {
-      "teambit.bit/aspect": {}
+    "{ui/*}": {
+      "teambit.environments/environments": {
+        "env": "teambit.react/react"
+      },
+      "teambit.react/react": {}
     },
-    "toolbox": {
-      // "teambit.bit/react": {}
+    "scopes/toolbox": {
+      "teambit.environments/environments": {
+        "env": "teambit.harmony/node"
+      },
+      "defaultScope": "teambit.toolbox"
     },
-    "extensions/bit": {
-      "teambit.bit/pkg": {
+    "scopes/workspace": {
+      "defaultScope": "teambit.workspace"
+    },
+    "scopes/scope": {
+      "defaultScope": "teambit.scope"
+    },
+    "scopes/compositions": {
+      "defaultScope": "teambit.compositions"
+    },
+    "scopes/docs": {
+      "defaultScope": "teambit.docs"
+    },
+    "scopes/generator": {
+      "defaultScope": "teambit.generator"
+    },
+    "scopes/explorer": {
+      "defaultScope": "teambit.explorer"
+    },
+    "scopes/environments": {
+      "defaultScope": "teambit.environments"
+    },
+    "scopes/pkg": {
+      "defaultScope": "teambit.pkg"
+    },
+    "scopes/dependencies": {
+      "defaultScope": "teambit.dependencies"
+    },
+    "scopes/react": {
+      "defaultScope": "teambit.react"
+    },
+    "scopes/preview": {
+      "defaultScope": "teambit.preview"
+    },
+    "scopes/pipelines": {
+      "defaultScope": "teambit.pipelines"
+    },
+    "scopes/harmony": {
+      "defaultScope": "teambit.harmony"
+    },
+    "scopes/compilers": {
+      "defaultScope": "teambit.compilers"
+    },
+    "scopes/defender": {
+      "defaultScope": "teambit.defender"
+    },
+    "scopes/component": {
+      "defaultScope": "teambit.component"
+    },
+    "scopes/ui-foundation": {
+      "defaultScope": "teambit.ui-foundation"
+    },
+    "scopes/design": {
+      "defaultScope": "teambit.design"
+    },
+    "scopes/schemas": {
+      "defaultScope": "teambit.schemas"
+    },
+    "scopes/harmony/bit": {
+      "teambit.pkg/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [
             "--access public"
           ],
-          "name": "@teambit/{name}",
+          "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bin": {
@@ -280,10 +350,10 @@
           }
         }
       },
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.105",
+            "bit-bin": "14.8.9-dev.107",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
@@ -308,8 +378,8 @@
         }
       }
     },
-    "extensions/jest": {
-      "teambit.bit/dependency-resolver": {
+    "scopes/defender/jest": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "peerDependencies": {
             "jest": "^26.0.1"
@@ -317,8 +387,8 @@
         }
       }
     },
-    "extensions/aspect": {
-      "teambit.bit/dependency-resolver": {
+    "scopes/harmony/aspect": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "@babel/core": "7.11.6",
@@ -326,7 +396,6 @@
             "@babel/plugin-proposal-class-properties": "^7.8.3",
             "@babel/plugin-proposal-decorators": "^7.8.3",
             "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
-            "@babel/plugin-transform-async-to-generator": "^7.8.3",
             "@babel/plugin-transform-modules-commonjs": "^7.8.3",
             "@babel/plugin-transform-runtime": "^7.8.3",
             "@babel/preset-env": "^7.10.1",
