@@ -5,8 +5,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { checksum } from 'checksum';
-// import { checksum } from '@teambit/crypto.checksum';
+import checksum from 'checksum';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
@@ -22,10 +21,10 @@ import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { RuntimeComponents } from './runtime-components';
 
-const noopResult = Promise.resolve({
+const noopResult = {
   results: [],
   toString: () => `updating link file`,
-});
+};
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -227,23 +226,22 @@ export class PreviewMain {
 
     if (!config.disabled) builder.registerBuildTask(new PreviewTask(bundler, preview));
 
-    // TODO - workspace is never undefined
     if (workspace) {
       workspace.registerOnComponentAdd((x) => {
         preview.runtimeComponents?.add(x);
-        preview.updateLinkFiles(preview.runtimeComponents?.components);
+        await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
 
       workspace.registerOnComponentChange((x) => {
         preview.runtimeComponents?.update(x);
-        preview.updateLinkFiles(preview.runtimeComponents?.components);
+        await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
 
       workspace.registerOnComponentRemove((x) => {
         preview.runtimeComponents?.remove(x);
-        preview.updateLinkFiles(preview.runtimeComponents?.components);
+        await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
     }
