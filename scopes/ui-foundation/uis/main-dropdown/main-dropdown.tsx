@@ -3,7 +3,7 @@ import { TooltipDrawer } from '@teambit/evangelist.surfaces.tooltip';
 import classNames from 'classnames';
 import React, { ReactNode, useContext } from 'react';
 import { CommandBarContext } from '@teambit/command-bar';
-import { KeyCombo } from '@teambit/elements.keycap';
+import { KeyCombo } from '@teambit/ui.keycap';
 import styles from './main-dropdown.module.scss';
 
 // type MainDropdownProps = {
