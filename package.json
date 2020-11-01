@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.107",
+  "version": "14.8.9-dev.109",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -62,6 +62,8 @@
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
     "brew-bump": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump'",
     "types-wip": "tsc -p tsconfig.types-clean.json --outfile dist/index.d.ts",
+    "assert:master": "node ./scripts/assert-master.js",
+    "nightly": "npm run assert:master && git tag -d manual-nightly && git push --delete origin manual-nightly && git tag manual-nightly && git push origin manual-nightly",
     "build:ext": "tsc -p tsconfig.extensions.json",
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
@@ -211,7 +213,6 @@
     "@babel/plugin-proposal-class-properties": "^7.8.3",
     "@babel/plugin-proposal-decorators": "^7.8.3",
     "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
-    "@babel/plugin-transform-async-to-generator": "^7.8.3",
     "@babel/plugin-transform-modules-commonjs": "^7.8.3",
     "@babel/plugin-transform-runtime": "^7.8.3",
     "@babel/preset-env": "^7.10.1",

@@ -1,5 +1,5 @@
 import type { Component } from '@teambit/component';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
 import type { ComponentResult } from './types';
 import type { ArtifactDefinition } from './artifact';
@@ -76,7 +76,7 @@ export interface BuildTask {
    * the case where this is useful is when a task not only needs to be after another task, but also
    * after all environments were running that task.
    * a dependency is task.aspectId. if an aspect has multiple tasks, to be more specific, use
-   * "aspectId:name", e.g. "teambit.compilers/compiler:TypescriptCompiler".
+   * "aspectId:name", e.g. "teambit.compilation/compiler:TypescriptCompiler".
    */
   dependencies?: string[];
 }

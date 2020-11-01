@@ -7,7 +7,7 @@
 // import { OverviewLink } from './overview-link/overview-link';
 // import { ComponentID } from '@teambit/component';
 // import { DeprecationInfo } from '@teambit/deprecation';
-// import { Descriptor } from '@teambit/environments';
+// import { Descriptor } from '@teambit/envs';
 
 // export type Component = {
 //   id: ComponentID;

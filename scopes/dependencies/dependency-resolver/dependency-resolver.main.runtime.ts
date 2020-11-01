@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import type { Config } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';

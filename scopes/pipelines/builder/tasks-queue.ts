@@ -1,4 +1,4 @@
-import { EnvDefinition } from '@teambit/environments';
+import { EnvDefinition } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import { InvalidTask } from './exceptions';
 

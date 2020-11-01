@@ -21,7 +21,7 @@ export type EnvironmentOptions = {
   compiler: boolean;
 };
 
-export default (async function importAction(
+export default async function importAction(
   environmentOptions: EnvironmentOptions,
   importOptions: ImportOptions,
   packageManagerArgs: string[]
@@ -76,7 +76,7 @@ export default (async function importAction(
   Analytics.setExtraData('num_components', bitIds.length);
   await consumer.onDestroy();
   return { dependencies, envComponents, importDetails, warnings };
-});
+}
 
 // TODO: refactor to better use of semver
 // TODO: move to bit-javascript

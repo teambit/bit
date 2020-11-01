@@ -133,7 +133,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/babel",
+        "rootDir": "scopes/compilation/babel",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -455,7 +455,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/bundler",
+        "rootDir": "scopes/compilation/bundler",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -759,6 +759,11 @@
                 "test": false
             },
             {
+                "name": "component-compilation-on-done.ts",
+                "relativePath": "events/component-compilation-on-done.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "events/index.ts",
                 "test": false
@@ -785,7 +790,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/compiler",
+        "rootDir": "scopes/compilation/compiler",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -1658,7 +1663,7 @@
         "exported": false,
         "lanes": []
     },
-    "environments": {
+    "envs": {
         "files": [
             {
                 "name": "README.md",
@@ -1792,7 +1797,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/environments/environments",
+        "rootDir": "scopes/envs/envs",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3441,6 +3446,90 @@
                 "test": false
             },
             {
+                "name": "schema-extractor.ts",
+                "relativePath": "schema-extractor.ts",
+                "test": false
+            },
+            {
+                "name": "schema.aspect.ts",
+                "relativePath": "schema.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "schema.main.runtime.ts",
+                "relativePath": "schema.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "schema.service.ts",
+                "relativePath": "schema.service.ts",
+                "test": false
+            },
+            {
+                "name": "export.ts",
+                "relativePath": "schemas/export.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "schemas/index.ts",
+                "test": false
+            },
+            {
+                "name": "react-router.aspect.ts",
+                "relativePath": "react-router.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "react-router.ui.runtime.tsx",
+                "relativePath": "react-router.ui.runtime.tsx",
+                "test": false
+            },
+            {
+                "name": "route-context.tsx",
+                "relativePath": "route-context.tsx",
+                "test": false
+            },
+            {
+                "name": "route.ts",
+                "relativePath": "route.ts",
+                "test": false
+            },
+            {
+                "name": "slot-router.tsx",
+                "relativePath": "slot-router.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "schema": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "exceptions/index.ts",
+                "test": false
+            },
+            {
+                "name": "parser-not-found.ts",
+                "relativePath": "exceptions/parser-not-found.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "parser.ts",
+                "relativePath": "parser.ts",
+                "test": false
+            },
+            {
                 "name": "schema.aspect.ts",
                 "relativePath": "schema.aspect.ts",
                 "test": false
@@ -3464,10 +3553,15 @@
                 "name": "module.ts",
                 "relativePath": "schemas/module.ts",
                 "test": false
+            },
+            {
+                "name": "semantic-schema.ts",
+                "relativePath": "semantic-schema.ts",
+                "test": false
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/schemas/schema",
+        "rootDir": "scopes/semantics/schema",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -3890,6 +3984,11 @@
                 "test": false
             },
             {
+                "name": "typescript.extractor.ts",
+                "relativePath": "typescript.extractor.ts",
+                "test": false
+            },
+            {
                 "name": "typescript.main.runtime.ts",
                 "relativePath": "typescript.main.runtime.ts",
                 "test": false
@@ -3901,7 +4000,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/typescript",
+        "rootDir": "scopes/typescript/typescript",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4429,7 +4528,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/environments/ui/env-icon",
+        "rootDir": "scopes/envs/ui/env-icon",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -5605,7 +5704,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/compilers/webpack",
+        "rootDir": "scopes/compilation/webpack",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -5923,5 +6022,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.107"
+    "version": "14.8.9-dev.109"
 }
