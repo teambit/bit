@@ -665,13 +665,13 @@
                 "test": false
             },
             {
-                "name": "commad-bar-context.tsx",
-                "relativePath": "ui/commad-bar-context/commad-bar-context.tsx",
+                "name": "command-bar-context.tsx",
+                "relativePath": "ui/command-bar-context/command-bar-context.tsx",
                 "test": false
             },
             {
                 "name": "index.ts",
-                "relativePath": "ui/commad-bar-context/index.ts",
+                "relativePath": "ui/command-bar-context/index.ts",
                 "test": false
             },
             {

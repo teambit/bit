@@ -12,7 +12,7 @@ import { commandBarCommands } from './command-bar.commands';
 import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
-import { CommandBarContext } from './ui/commad-bar-context';
+import { CommandBarContext } from './ui/command-bar-context';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
