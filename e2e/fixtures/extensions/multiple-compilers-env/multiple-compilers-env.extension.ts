@@ -1,4 +1,4 @@
-import { EnvsMain, EnvsAspect } from '@teambit/environments';
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import type { CompilerMain } from '@teambit/compiler';

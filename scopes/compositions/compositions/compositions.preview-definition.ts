@@ -1,5 +1,5 @@
 import { Component, ComponentMap } from '@teambit/component';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 import { PreviewDefinition } from '@teambit/preview';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 

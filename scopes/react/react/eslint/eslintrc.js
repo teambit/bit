@@ -19,6 +19,8 @@ module.exports = {
   },
 };
 /**
+ * @gilad please set these deps.
+ *
  * "eslint-plugin-import": "^2.22.0",
  * "eslint-plugin-jest": "^24.1.0",
  * "@typescript-eslint/eslint-plugin": "^4.4.1",

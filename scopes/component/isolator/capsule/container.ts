@@ -60,6 +60,8 @@ export default class FsContainer implements Container<Exec, AnyFS> {
       stdio: ['ipc'],
     });
 
+    // @TODO: FIX! This probably causes errors ad the promise is not handled properly!
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     subprocessP.on('message', function (msg: any) {
       exec.emit('message', msg);
     });
@@ -67,6 +69,8 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     subprocessP.stderr?.pipe(exec.stderr);
     subprocessP.stdout?.pipe(exec.stdout);
     ['close', 'exit'].forEach(function (eventName: string) {
+      // @TODO: FIX! This probably causes errors ad the promise is not handled properly!
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       subprocessP.on(eventName, function (statusCode) {
         exec.setStatus(statusCode);
       });

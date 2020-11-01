@@ -220,7 +220,7 @@ export default class ComponentWriter {
       // build-pipeline. when capsules are written via the scope, we do need the dists.
       return;
     }
-    const extensionsNamesForArtifacts = ['teambit.compilers/compiler'];
+    const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
     const artifactsFiles = extensionsNamesForArtifacts.map((extName) =>
       getArtifactFilesByExtension(this.component.extensions, extName)
     );

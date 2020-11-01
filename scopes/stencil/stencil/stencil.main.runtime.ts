@@ -2,7 +2,7 @@ import { TranspileOptions } from '@stencil/core/compiler';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect } from '@teambit/compiler';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import type { WebpackMain } from '@teambit/webpack';
 // import { StencilDevServer } from './stencil.dev-server';
 import { WebpackAspect } from '@teambit/webpack';

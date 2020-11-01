@@ -3,7 +3,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain, CompilerOptions } from '@teambit/compiler';
-import { Environment } from '@teambit/environments';
+import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -119,6 +119,13 @@ export class ReactEnv implements Environment {
       .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
 
     return webpackConfigFactory(this.workspace.path, packagePaths, context.id);
+  }
+
+  /**
+   * get a schema generator instance configured with the correct tsconfig.
+   */
+  getSchemaExtractor(tsconfig: TsConfigSourceFile) {
+    return this.ts.createSchemaExtractor(this.getTsConfig(tsconfig));
   }
 
   /**

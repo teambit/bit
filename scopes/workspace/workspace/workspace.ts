@@ -22,7 +22,7 @@ import {
   PackageManagerInstallOptions,
   PolicyDep,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/environments';
+import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -450,7 +450,7 @@ export class Workspace implements ComponentFactory {
     await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
-      this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
+      await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
       results.push({ extensionId: extension, results: onChangeResult });
     });
 
@@ -465,7 +465,7 @@ export class Workspace implements ComponentFactory {
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
-      this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
+      await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
     });
 

@@ -379,6 +379,10 @@ export default class BitMap {
     const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter((id) => id.hasScope());
   }
+  getAuthoredNonExportedComponents(): BitId[] {
+    const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
+    return authoredIds.filter((id) => !id.hasScope());
+  }
 
   _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {
     const absolutePath = path.resolve(pathToChange);

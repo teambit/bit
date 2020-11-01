@@ -1,7 +1,7 @@
 import { Logger } from '@teambit/logger';
 import React from 'react';
 import { Text, Newline } from 'ink';
-import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/environments';
+import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
