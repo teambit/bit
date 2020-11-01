@@ -24,6 +24,7 @@ export class CompositionsPreview {
   selectPreviewModel(componentId: string, previewModule: PreviewModule) {
     const files = previewModule.componentMap[componentId] || [];
 
+    // allow compositions to come from many files. It is assumed they will have unique named
     const combined = Object.assign({}, ...files);
     return combined;
   }
