@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import { PathOsBased } from 'bit-bin/dist/utils/path';
 

@@ -1,4 +1,4 @@
-import { EnvService, ExecutionContext } from '@teambit/environments';
+import { EnvService, ExecutionContext } from '@teambit/envs';
 import { UIRoot } from '@teambit/ui';
 import { PubsubMain } from '@teambit/pubsub';
 

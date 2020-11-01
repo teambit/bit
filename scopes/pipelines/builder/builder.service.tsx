@@ -1,4 +1,4 @@
-import { EnvDefinition, EnvService, ExecutionContext } from '@teambit/environments';
+import { EnvDefinition, EnvService, ExecutionContext } from '@teambit/envs';
 import React from 'react';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';

@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { PubsubAspect, PubsubMain } from '@teambit/pubsub';

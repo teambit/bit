@@ -1,6 +1,6 @@
 import { Component } from '@teambit/component';
 import { BuildContext } from '@teambit/builder';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 
 export type Target = {
   /**

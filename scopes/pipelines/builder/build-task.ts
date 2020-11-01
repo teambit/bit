@@ -1,5 +1,5 @@
 import type { Component } from '@teambit/component';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 import type { Network } from '@teambit/isolator';
 import type { ComponentResult } from './types';
 import type { ArtifactDefinition } from './artifact';

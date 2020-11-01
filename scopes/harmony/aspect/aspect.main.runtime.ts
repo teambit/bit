@@ -1,7 +1,7 @@
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { MainRuntime } from '@teambit/cli';
-import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/environments';
+import { EnvsAspect, EnvsMain, EnvTransformer } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';

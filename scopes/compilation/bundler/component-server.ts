@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 import { PubsubMain } from '@teambit/pubsub';
 
 import { AddressInfo } from 'net';

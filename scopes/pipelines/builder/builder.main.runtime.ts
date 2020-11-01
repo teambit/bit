@@ -3,7 +3,7 @@ import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact'
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';

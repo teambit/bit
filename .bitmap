@@ -1658,7 +1658,7 @@
         "exported": false,
         "lanes": []
     },
-    "environments": {
+    "envs": {
         "files": [
             {
                 "name": "README.md",
@@ -1792,7 +1792,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/environments/environments",
+        "rootDir": "scopes/envs/envs",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4449,7 +4449,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/environments/ui/env-icon",
+        "rootDir": "scopes/envs/ui/env-icon",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

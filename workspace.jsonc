@@ -257,25 +257,25 @@
           }
         }
       },
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.harmony/aspect"
       },
       "teambit.harmony/aspect": {}
     },
     "{modules/*}": {
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
     },
     "{ui/*}": {
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
       "teambit.react/react": {}
     },
     "scopes/toolbox": {
-      "teambit.environments/environments": {
+      "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "defaultScope": "teambit.toolbox"
@@ -298,8 +298,8 @@
     "scopes/explorer": {
       "defaultScope": "teambit.explorer"
     },
-    "scopes/environments": {
-      "defaultScope": "teambit.environments"
+    "scopes/envs": {
+      "defaultScope": "teambit.envs"
     },
     "scopes/pkg": {
       "defaultScope": "teambit.pkg"

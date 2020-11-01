@@ -1,4 +1,4 @@
-import { Environment } from '@teambit/environments';
+import { Environment } from '@teambit/envs';
 
 export class NodeEnv implements Environment {
   getDependencies() {

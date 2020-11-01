@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Component } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 // import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { EnvsAspect, EnvsMain } from '@teambit/environments';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ParserNotFound } from './exceptions';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';

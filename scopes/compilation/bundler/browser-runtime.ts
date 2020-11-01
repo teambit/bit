@@ -1,4 +1,4 @@
-import { ExecutionContext } from '@teambit/environments';
+import { ExecutionContext } from '@teambit/envs';
 
 export type BrowserRuntime = {
   entry: (context: ExecutionContext) => Promise<string[]>;

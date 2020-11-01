@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
 import syntaxHighlighter from 'consolehighlighter';
-import { EnvService, EnvDefinition } from '@teambit/environments';
+import { EnvService, EnvDefinition } from '@teambit/envs';
 
 export type CompilerDescriptor = {
   id: string;

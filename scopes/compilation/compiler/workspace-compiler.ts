@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { Component, ComponentID } from '@teambit/component';
-import { EnvsMain } from '@teambit/environments';
+import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
 

@@ -452,6 +452,6 @@ export enum Extensions {
   dependencyResolver = 'teambit.dependencies/dependency-resolver',
   pkg = 'teambit.pkg/pkg',
   compiler = 'teambit.compilation/compiler',
-  envs = 'teambit.environments/environments',
+  envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
 }

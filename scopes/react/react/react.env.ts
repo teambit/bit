@@ -3,7 +3,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { Compiler, CompilerMain, CompilerOptions } from '@teambit/compiler';
-import { Environment } from '@teambit/environments';
+import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
