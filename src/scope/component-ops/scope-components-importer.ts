@@ -397,7 +397,7 @@ export default class ScopeComponentsImporter {
     const objectList = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
     const bitObjectsList = await objectList.toBitObjects();
     this.scope.objects.addMany(bitObjectsList.getAll());
-    this.scope.objects.persist();
+    await this.scope.objects.persist();
   }
 }
 

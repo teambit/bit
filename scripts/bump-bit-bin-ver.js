@@ -24,6 +24,11 @@ const rootDir = path.resolve(__dirname, '..');
 const sed = `sed -i "s/${currentBitBinVersionInCode}/${nextBitBinVersion}/g"`;
 execSync(`${sed} package.json`, { cwd: rootDir });
 execSync(`${sed} workspace.jsonc`, { cwd: rootDir });
-execSync(`find **/component.json -type f -exec ${sed} {} \\;`, { cwd: rootDir });
+try {
+  execSync('shopt -s globstar', { cwd: rootDir }); // enables the double asterisks
+} catch (err) {
+  // probably mac. no need for this in mac anyway.
+}
+execSync(`find scopes/**/component.json -type f -exec ${sed} {} \\;`, { cwd: rootDir });
 
 console.log(`completed changing all occurrences of "${currentBitBinVersionInCode}" to "${nextBitBinVersion}"`);

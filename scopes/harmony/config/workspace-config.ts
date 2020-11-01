@@ -271,7 +271,7 @@ export class WorkspaceConfig implements HostConfig {
     const workspaceJsoncPath = WorkspaceConfig.composeWorkspaceJsoncPath(dirPath);
     if (resetHard) {
       // Call the legacy reset hard to make sure there is no old bit.json kept
-      LegacyWorkspaceConfig.reset(dirPath, true);
+      await LegacyWorkspaceConfig.reset(dirPath, true);
       if (workspaceJsoncPath) {
         logger.info(`deleting the consumer bit.jsonc file at ${workspaceJsoncPath}`);
         await fs.remove(workspaceJsoncPath);

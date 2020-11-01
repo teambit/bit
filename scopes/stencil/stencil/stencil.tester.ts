@@ -11,7 +11,7 @@ export class StencilTester implements Tester {
       rootDir: this.workspace.path,
     });
 
-    testing.run({});
+    await testing.run({});
 
     return {
       // @ts-ignore

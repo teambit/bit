@@ -56,7 +56,7 @@ export default class VisualDependencyGraph {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   static async loadFromGraphlib(graphlib: Graph, config: ConfigProps = {}): Promise<VisualDependencyGraph> {
     const mergedConfig = Object.assign({}, defaultConfig, config);
-    checkGraphvizInstalled(config.graphVizPath);
+    await checkGraphvizInstalled(config.graphVizPath);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const graph: Digraph = VisualDependencyGraph.buildDependenciesGraph(graphlib, mergedConfig);
     return new VisualDependencyGraph(graphlib, graph, mergedConfig);

@@ -18,7 +18,7 @@ require('events').EventEmitter.defaultMaxListeners = 100; // set max listeners t
 
 require('regenerator-runtime/runtime');
 
-process.on('unhandledRejection', (err) => handleUnhandledRejection(err));
+process.on('unhandledRejection', async (err) => handleUnhandledRejection(err));
 
 // by default Bluebird enables the longStackTraces when env is `development`, or when
 // BLUEBIRD_DEBUG is set.

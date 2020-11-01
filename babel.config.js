@@ -27,7 +27,6 @@ module.exports = function (api) {
     ['@babel/plugin-transform-runtime'],
     ['@babel/plugin-proposal-object-rest-spread'],
     ['@babel/plugin-proposal-class-properties'],
-    ['@babel/plugin-transform-async-to-generator'],
   ];
 
   return {
