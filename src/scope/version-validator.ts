@@ -332,9 +332,9 @@ ${duplicationStr}`);
   if (version.isLegacy) {
     // mainly to make sure that all Harmony components are saved with schema
     // if they don't have schema, they'll fail on this test
-    if (version.extensions && version.extensions.some((e) => e.name && e.name === 'teambit.bit/builder')) {
+    if (version.extensions && version.extensions.some((e) => e.name && e.name === 'teambit.pipelines/builder')) {
       throw new VersionInvalid(
-        `${message}, the extensions should not include "teambit.bit/builder" as of the schema "${schema}"`
+        `${message}, the extensions should not include "teambit.pipelines/builder" as of the schema "${schema}"`
       );
     }
   }

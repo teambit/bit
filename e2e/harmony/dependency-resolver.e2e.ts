@@ -49,7 +49,7 @@ describe('dependency-resolver extension', function () {
             },
           },
         };
-        helper.extensions.addExtensionToVariant('bar', 'teambit.bit/dependency-resolver', depResolverConfig);
+        helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
         barFooOutput = helper.command.showComponentParsed('bar/foo');
         isTypeOutput = helper.command.showComponentParsed('utils/is-type');
       });
@@ -73,7 +73,7 @@ describe('dependency-resolver extension', function () {
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         // TODO: use custom env with versions provided from outside in the config by the user
-        helper.extensions.addExtensionToVariant('bar', 'teambit.bit/react', {});
+        helper.extensions.addExtensionToVariant('bar', 'teambit.react/react', {});
         barFooOutput = helper.command.showComponentParsed('bar/foo');
       });
       it('should have the updated dependencies for bar/foo from the env', function () {
@@ -102,7 +102,7 @@ describe('dependency-resolver extension', function () {
           helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
           helper.npm.installNpmPackage('@teambit/harmony');
           helper.extensions.addExtensionToVariant('bar', 'my-scope/extension-add-dependencies', config);
-          helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/aspect');
+          helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
           helper.command.install();
           helper.command.compile();
           barFooOutput = helper.command.showComponentParsed('bar/foo');

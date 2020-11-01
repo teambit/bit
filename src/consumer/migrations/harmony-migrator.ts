@@ -36,7 +36,7 @@ export class HarmonyMigrator {
   private async initAsHarmony() {
     if (!this.consumer.isLegacy) return; // it's already Harmony.
     this.backupAndRemoveBitJson();
-    this.backupAndRemoveBitPropInPkgJson();
+    await this.backupAndRemoveBitPropInPkgJson();
     addFeature(HARMONY_FEATURE);
     const workspacePath = this.consumer.getPath();
     // because Harmony feature is added, the load writes the workspace.jsonc because the configuration

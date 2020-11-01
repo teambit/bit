@@ -157,5 +157,5 @@ export function deserializeArtifactFiles(obj: { paths: string[]; vinyls: Artifac
 }
 
 function getBuildArtifacts(extensions: ExtensionDataList): ArtifactObject[] {
-  return extensions.findExtension('teambit.bit/builder')?.data?.artifacts || [];
+  return extensions.findExtension('teambit.pipelines/builder')?.data?.artifacts || [];
 }

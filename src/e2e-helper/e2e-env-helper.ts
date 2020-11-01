@@ -207,12 +207,13 @@ export default class EnvHelper {
     const EXTENSIONS_BASE_FOLDER = 'multiple-compilers-env';
     this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
     this.command.addComponent(EXTENSIONS_BASE_FOLDER);
-    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/aspect');
+    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
     this.scopeHelper.linkBitBin();
     this.command.link();
-    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.bit/dependency-resolver', {
+    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
       policy: {
         dependencies: {
+          '@babel/runtime': '^7.8.4',
           '@babel/core': '7.11.6',
           '@babel/preset-env': '7.11.5',
           '@babel/preset-typescript': '7.10.4',

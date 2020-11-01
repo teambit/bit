@@ -1,14 +1,14 @@
 {
   "$schema": "",
-  "teambit.bit/workspace": {
+  "teambit.workspace/workspace": {
     "name": "bit",
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
     // "vendorDirectory": "vendor",
   },
-  "teambit.bit/dependency-resolver": {
-    "packageManager": "teambit.bit/pnpm",
+  "teambit.dependencies/dependency-resolver": {
+    "packageManager": "teambit.dependencies/pnpm",
     "strictPeerDependencies": true,
     "extraArgs": [],
     "policy": {
@@ -16,6 +16,7 @@
         "@apollo/react-common": "^3.1.4",
         "@apollo/react-hooks": "^3.1.5",
         "@babel/core": "7.11.6",
+        "@babel/preset-typescript": "7.10.4",
         "@graphql-modules/core": "^0.7.17",
         "@jest/test-result": "26.3.0",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
@@ -40,50 +41,50 @@
         "@stencil/webpack": "0.0.6",
         "@svgr/webpack": "^5.4.0",
         "@teambit/any-fs": "0.0.5",
-        "@teambit/base-ui.constants.storage": "^0.4.3",
-        "@teambit/base-ui.css-components.roundness": "^0.4.3",
-        "@teambit/base-ui.elements.separator": "^0.4.3",
-        "@teambit/base-ui.input.error": "^0.4.3",
-        "@teambit/base-ui.layout.breakpoints": "^0.4.3",
-        "@teambit/base-ui.layout.grid-component": "^0.4.3",
-        "@teambit/base-ui.layout.page-frame": "^0.4.3",
-        "@teambit/base-ui.surfaces.card": "^0.4.3",
-        "@teambit/base-ui.surfaces.split-pane.hover-splitter": "^0.4.3",
-        "@teambit/base-ui.surfaces.split-pane.split-pane": "^0.4.3",
-        "@teambit/base-ui.text.muted-text": "^0.4.3",
-        "@teambit/base-ui.text.paragraph": "^0.4.3",
-        "@teambit/base-ui.text.themed-text": "^0.4.3",
-        "@teambit/base-ui.theme.color-palette": "^0.4.3",
-        "@teambit/base-ui.theme.colors": "^0.4.3",
-        "@teambit/base-ui.theme.dark-theme": "^0.4.3",
-        "@teambit/base-ui.theme.sizes": "^0.4.3",
-        "@teambit/base-ui.theme.theme-provider": "^0.4.3",
-        "@teambit/base-ui.utils.sub-paths": "^0.4.3",
-        "@teambit/base-ui.utils.time-ago": "^0.4.3",
+        "@teambit/base-ui.constants.storage": "^0.5.1",
+        "@teambit/base-ui.css-components.roundness": "^0.5.1",
+        "@teambit/base-ui.elements.separator": "^0.5.1",
+        "@teambit/base-ui.input.error": "^0.5.1",
+        "@teambit/base-ui.layout.breakpoints": "^0.5.1",
+        "@teambit/base-ui.layout.grid-component": "^0.5.1",
+        "@teambit/base-ui.layout.page-frame": "^0.5.1",
+        "@teambit/base-ui.surfaces.card": "^0.5.1",
+        "@teambit/base-ui.surfaces.split-pane.hover-splitter": "^0.5.1",
+        "@teambit/base-ui.surfaces.split-pane.split-pane": "^0.5.1",
+        "@teambit/base-ui.text.muted-text": "^0.5.1",
+        "@teambit/base-ui.text.paragraph": "^0.5.1",
+        "@teambit/base-ui.text.themed-text": "^0.5.1",
+        "@teambit/base-ui.theme.color-palette": "^0.5.1",
+        "@teambit/base-ui.theme.colors": "^0.5.1",
+        "@teambit/base-ui.theme.dark-theme": "^0.5.1",
+        "@teambit/base-ui.theme.sizes": "^0.5.1",
+        "@teambit/base-ui.theme.theme-provider": "^0.5.1",
+        "@teambit/base-ui.utils.sub-paths": "^0.5.1",
+        "@teambit/base-ui.utils.time-ago": "^0.5.1",
         "@teambit/capsule": "0.0.12",
-        "@teambit/documenter.code.react-playground": "^0.1.1",
-        "@teambit/documenter.theme.theme-context": "^0.1.1",
-        "@teambit/documenter.types.docs-file": "^0.1.1",
-        "@teambit/documenter.ui.consumable-link": "^0.1.1",
-        "@teambit/documenter.ui.heading": "^0.1.1",
-        "@teambit/documenter.ui.import-action": "^0.1.1",
-        "@teambit/documenter.ui.label-list": "^0.1.1",
-        "@teambit/documenter.ui.linked-heading": "^0.1.1",
-        "@teambit/documenter.ui.property-table": "^0.1.1",
-        "@teambit/documenter.ui.section": "^0.1.1",
-        "@teambit/documenter.ui.separator": "^0.1.1",
-        "@teambit/documenter.ui.sub-title": "^0.1.1",
-        "@teambit/evangelist.elements.button": "^0.4.4",
-        "@teambit/evangelist.elements.heading": "^0.4.4",
-        "@teambit/evangelist.elements.icon": "^0.4.4",
-        "@teambit/evangelist.elements.image": "^0.4.4",
-        "@teambit/evangelist.elements.x-button": "0.4.4",
-        "@teambit/evangelist.input.input": "^0.4.4",
-        "@teambit/evangelist.surfaces.dropdown": "0.4.4",
-        "@teambit/evangelist.surfaces.tooltip": "0.4.4",
-        "@teambit/evangelist.theme.icon-font": "^0.4.4",
-        "@teambit/explorer.ui.component-card": "^0.0.3",
-        "@teambit/explorer.ui.component-grid": "^0.0.3",
+        "@teambit/documenter.code.react-playground": "^0.2.0",
+        "@teambit/documenter.theme.theme-context": "^0.2.0",
+        "@teambit/documenter.types.docs-file": "^0.2.0",
+        "@teambit/documenter.ui.consumable-link": "^0.2.0",
+        "@teambit/documenter.ui.heading": "^0.2.0",
+        "@teambit/documenter.ui.import-action": "^0.2.0",
+        "@teambit/documenter.ui.label-list": "^0.2.0",
+        "@teambit/documenter.ui.linked-heading": "^0.2.0",
+        "@teambit/documenter.ui.property-table": "^0.2.0",
+        "@teambit/documenter.ui.section": "^0.2.0",
+        "@teambit/documenter.ui.separator": "^0.2.0",
+        "@teambit/documenter.ui.sub-title": "^0.2.0",
+        "@teambit/evangelist.elements.button": "^0.5.0",
+        "@teambit/evangelist.elements.heading": "^0.5.0",
+        "@teambit/evangelist.elements.icon": "^0.5.0",
+        "@teambit/evangelist.elements.image": "^0.5.0",
+        "@teambit/evangelist.elements.x-button": "0.5.0",
+        "@teambit/evangelist.input.input": "^0.5.0",
+        "@teambit/evangelist.surfaces.dropdown": "0.5.0",
+        "@teambit/evangelist.surfaces.tooltip": "0.5.0",
+        "@teambit/evangelist.theme.icon-font": "^0.5.0",
+        "@teambit/explorer.ui.component-card": "^0.6.0",
+        "@teambit/explorer.ui.component-grid": "^0.6.0",
         "@teambit/harmony": "0.2.7",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
@@ -109,7 +110,6 @@
         "cacache": "^15.0.5",
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
-        "checksum": "0.1.1",
         "classnames": "^2.2.6",
         "cleargraph": "^5.4.0",
         "consolehighlighter": "0.1.5",
@@ -221,15 +221,15 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.93",
+        "bit-bin": "14.8.9-dev.107",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
     }
   },
-  "teambit.bit/variants": {
+  "teambit.workspace/variants": {
     "*": {
-      "teambit.bit/pkg": {
+      "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
         ],
@@ -238,7 +238,7 @@
           "private": false
         }
       },
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
             "bit-bin": "-"
@@ -251,28 +251,98 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.93",
+            "bit-bin": "14.8.9-dev.107",
             "react-dom": "^16.13.1"
           }
         }
-      }
+      },
+      "teambit.environments/environments": {
+        "env": "teambit.harmony/aspect"
+      },
+      "teambit.harmony/aspect": {}
     },
-    "components": {
-      "teambit.bit/react": {}
+    "{modules/*}": {
+      "teambit.environments/environments": {
+        "env": "teambit.harmony/node"
+      },
+      "teambit.harmony/node": {}
     },
-    "extensions": {
-      "teambit.bit/aspect": {}
+    "{ui/*}": {
+      "teambit.environments/environments": {
+        "env": "teambit.react/react"
+      },
+      "teambit.react/react": {}
     },
-    "toolbox": {
-      // "teambit.bit/react": {}
+    "scopes/toolbox": {
+      "teambit.environments/environments": {
+        "env": "teambit.harmony/node"
+      },
+      "defaultScope": "teambit.toolbox"
     },
-    "extensions/bit": {
-      "teambit.bit/pkg": {
+    "scopes/workspace": {
+      "defaultScope": "teambit.workspace"
+    },
+    "scopes/scope": {
+      "defaultScope": "teambit.scope"
+    },
+    "scopes/compositions": {
+      "defaultScope": "teambit.compositions"
+    },
+    "scopes/docs": {
+      "defaultScope": "teambit.docs"
+    },
+    "scopes/generator": {
+      "defaultScope": "teambit.generator"
+    },
+    "scopes/explorer": {
+      "defaultScope": "teambit.explorer"
+    },
+    "scopes/environments": {
+      "defaultScope": "teambit.environments"
+    },
+    "scopes/pkg": {
+      "defaultScope": "teambit.pkg"
+    },
+    "scopes/dependencies": {
+      "defaultScope": "teambit.dependencies"
+    },
+    "scopes/react": {
+      "defaultScope": "teambit.react"
+    },
+    "scopes/preview": {
+      "defaultScope": "teambit.preview"
+    },
+    "scopes/pipelines": {
+      "defaultScope": "teambit.pipelines"
+    },
+    "scopes/harmony": {
+      "defaultScope": "teambit.harmony"
+    },
+    "scopes/compilers": {
+      "defaultScope": "teambit.compilers"
+    },
+    "scopes/defender": {
+      "defaultScope": "teambit.defender"
+    },
+    "scopes/component": {
+      "defaultScope": "teambit.component"
+    },
+    "scopes/ui-foundation": {
+      "defaultScope": "teambit.ui-foundation"
+    },
+    "scopes/design": {
+      "defaultScope": "teambit.design"
+    },
+    "scopes/schemas": {
+      "defaultScope": "teambit.schemas"
+    },
+    "scopes/harmony/bit": {
+      "teambit.pkg/pkg": {
         "packageJson": {
           "packageManagerPublishArgs": [
             "--access public"
           ],
-          "name": "@teambit/{name}",
+          "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
           "bin": {
@@ -280,10 +350,10 @@
           }
         }
       },
-      "teambit.bit/dependency-resolver": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.93",
+            "bit-bin": "14.8.9-dev.107",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
@@ -308,11 +378,29 @@
         }
       }
     },
-    "extensions/jest": {
-      "teambit.bit/dependency-resolver": {
+    "scopes/defender/jest": {
+      "teambit.dependencies/dependency-resolver": {
         "policy": {
           "peerDependencies": {
             "jest": "^26.0.1"
+          }
+        }
+      }
+    },
+    "scopes/harmony/aspect": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "@babel/core": "7.11.6",
+            "@babel/preset-typescript": "7.10.4",
+            "@babel/plugin-proposal-class-properties": "^7.8.3",
+            "@babel/plugin-proposal-decorators": "^7.8.3",
+            "@babel/plugin-proposal-object-rest-spread": "^7.8.3",
+            "@babel/plugin-transform-modules-commonjs": "^7.8.3",
+            "@babel/plugin-transform-runtime": "^7.8.3",
+            "@babel/preset-env": "^7.10.1",
+            "babel-plugin-transform-typescript-metadata": "^0.2.2",
+            "@babel/preset-react": "^7.10.1"
           }
         }
       }

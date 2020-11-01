@@ -31,19 +31,19 @@ describe('harmony extension config', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
-        helper.extensions.addExtensionToVariant('*', 'teambit.bit/scope', config);
+        helper.extensions.addExtensionToVariant('*', 'teambit.scope/scope', config);
         helper.command.tagAllComponents();
         componentVersionModel = helper.command.catComponent('bar/foo@0.0.1');
         extensionData = componentVersionModel.extensions;
         devDeps = componentVersionModel.devDependencies;
-        scopeExtensionEntry = extensionData.find((ext) => ext.name === 'teambit.bit/scope');
+        scopeExtensionEntry = extensionData.find((ext) => ext.name === 'teambit.scope/scope');
       });
       it('should persist core extension config during tag', () => {
         expect(scopeExtensionEntry).to.not.be.undefined;
         expect(scopeExtensionEntry.config).to.deep.equal(config);
       });
       it('should not have version for core extension in the models', () => {
-        expect(extensionData[0].name).to.equal('teambit.bit/scope');
+        expect(extensionData[0].name).to.equal('teambit.scope/scope');
       });
       it('should not insert core extensions into the component dev deps', () => {
         expect(devDeps).to.be.length(0);
@@ -64,7 +64,7 @@ describe('harmony extension config', function () {
         helper.fixtures.copyFixtureExtensions(EXTENSION_FOLDER);
         helper.command.addComponent(EXTENSION_FOLDER);
         helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
-        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.bit/aspect');
+        helper.extensions.addExtensionToVariant(EXTENSION_FOLDER, 'teambit.harmony/aspect');
         helper.command.link();
         helper.command.compile();
         localBeforeTag = helper.scopeHelper.cloneLocalScope();
