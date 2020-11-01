@@ -80,6 +80,7 @@ export default function run(): Promise<void> {
     });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
 run();
 
 function serializeResults(results): SerializedSpecsResultsWithComponentId {

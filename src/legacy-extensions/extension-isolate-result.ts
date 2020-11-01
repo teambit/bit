@@ -23,8 +23,8 @@ export default class ExtensionIsolateResult {
     this.componentWithDependencies = componentWithDependencies;
   }
 
-  capsuleExec(cmd, options) {
-    this.isolator.capsuleExec(cmd, options);
+  async capsuleExec(cmd, options) {
+    await this.isolator.capsuleExec(cmd, options);
   }
 
   async writeDists(builtFiles, mainDist): Promise<void> {
@@ -50,12 +50,12 @@ export default class ExtensionIsolateResult {
     );
 
     if (distsToWrite) {
-      distsToWrite.persistAllToCapsule(this.capsule);
+      await distsToWrite.persistAllToCapsule(this.capsule);
     }
   }
 
-  writeLinks() {
-    this.isolator.writeLinks();
+  async writeLinks() {
+    await this.isolator.writeLinks();
   }
 
   getDependenciesLinks(): Vinyl[] {

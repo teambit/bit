@@ -58,7 +58,7 @@ export class PubsubPreview {
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
-    pubsubPreview.updateParentPubsubWithRetry();
+    await pubsubPreview.updateParentPubsubWithRetry();
     return pubsubPreview;
   }
 }

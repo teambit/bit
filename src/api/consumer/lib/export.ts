@@ -103,7 +103,7 @@ async function exportComponents({
   }
   let componentsToExport: Component[] | undefined;
   if (codemod) {
-    _throwForModified(consumer, idsToExport);
+    await _throwForModified(consumer, idsToExport);
     const { components } = await consumer.loadComponents(idsToExport);
     componentsToExport = components;
   }
