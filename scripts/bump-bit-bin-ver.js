@@ -19,9 +19,9 @@ console.log('nextBitBinVersion', nextBitBinVersion);
 
 const rootDir = path.resolve(__dirname, '..');
 // use the following sed for Mac.
-const sed = `sed -i '' "s/${currentBitBinVersionInCode}/${nextBitBinVersion}/g"`;
+// const sed = `sed -i '' "s/${currentBitBinVersionInCode}/${nextBitBinVersion}/g"`;
 // use the following sed for linux.
-// const sed = `sed -i "s/${currentBitBinVersionInCode}/${nextBitBinVersion}/g"`;
+const sed = `sed -i "s/${currentBitBinVersionInCode}/${nextBitBinVersion}/g"`;
 execSync(`${sed} package.json`, { cwd: rootDir });
 execSync(`${sed} workspace.jsonc`, { cwd: rootDir });
 execSync(`find scopes -name component.json -exec ${sed} {} \\;`, { cwd: rootDir });
