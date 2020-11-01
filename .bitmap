@@ -43,13 +43,7 @@
         "rootDir": "scopes/harmony/aspect",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "aspect-loader": {
         "files": [
@@ -98,13 +92,7 @@
         "rootDir": "scopes/harmony/aspect-loader",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "babel": {
         "files": [
@@ -148,13 +136,7 @@
         "rootDir": "scopes/compilation/babel",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "bit": {
         "files": [
@@ -228,13 +210,7 @@
         "rootDir": "scopes/harmony/bit",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "builder": {
         "files": [
@@ -388,13 +364,7 @@
         "rootDir": "scopes/pipelines/builder",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "bundler": {
         "files": [
@@ -488,13 +458,7 @@
         "rootDir": "scopes/compilation/bundler",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "cache": {
         "files": [
@@ -523,13 +487,7 @@
         "rootDir": "scopes/harmony/cache",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "changelog": {
         "files": [
@@ -573,13 +531,7 @@
         "rootDir": "scopes/component/changelog",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "cli": {
         "files": [
@@ -643,13 +595,7 @@
         "rootDir": "scopes/harmony/cli",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "command-bar": {
         "files": [
@@ -773,13 +719,7 @@
         "rootDir": "scopes/explorer/command-bar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "compiler": {
         "files": [
@@ -819,6 +759,11 @@
                 "test": false
             },
             {
+                "name": "component-compilation-on-done.ts",
+                "relativePath": "events/component-compilation-on-done.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "events/index.ts",
                 "test": false
@@ -848,13 +793,7 @@
         "rootDir": "scopes/compilation/compiler",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "component": {
         "files": [
@@ -1198,13 +1137,7 @@
         "rootDir": "scopes/component/component",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "component-tree": {
         "files": [
@@ -1248,13 +1181,7 @@
         "rootDir": "scopes/component/component-tree",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "compositions": {
         "files": [
@@ -1378,13 +1305,7 @@
         "rootDir": "scopes/compositions/compositions",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "config": {
         "files": [
@@ -1463,13 +1384,7 @@
         "rootDir": "scopes/harmony/config",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "dependency-resolver": {
         "files": [
@@ -1633,13 +1548,7 @@
         "rootDir": "scopes/dependencies/dependency-resolver",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "deprecation": {
         "files": [
@@ -1668,13 +1577,7 @@
         "rootDir": "scopes/component/deprecation",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "docs": {
         "files": [
@@ -1758,13 +1661,7 @@
         "rootDir": "scopes/docs/docs",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "envs": {
         "files": [
@@ -1903,13 +1800,7 @@
         "rootDir": "scopes/envs/envs",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "eslint": {
         "files": [
@@ -1938,13 +1829,7 @@
         "rootDir": "scopes/defender/eslint",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "express": {
         "files": [
@@ -2008,13 +1893,7 @@
         "rootDir": "scopes/harmony/express",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "flows": {
         "files": [
@@ -2138,13 +2017,7 @@
         "rootDir": "scopes/pipelines/flows",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "generator": {
         "files": [
@@ -2193,13 +2066,7 @@
         "rootDir": "scopes/generator/generator",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "graph": {
         "files": [
@@ -2403,13 +2270,7 @@
         "rootDir": "scopes/component/graph",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "graphql": {
         "files": [
@@ -2483,13 +2344,7 @@
         "rootDir": "scopes/harmony/graphql",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "insights": {
         "files": [
@@ -2563,13 +2418,7 @@
         "rootDir": "scopes/explorer/insights",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "isolator": {
         "files": [
@@ -2638,13 +2487,7 @@
         "rootDir": "scopes/component/isolator",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "jest": {
         "files": [
@@ -2683,13 +2526,7 @@
         "rootDir": "scopes/defender/jest",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "linter": {
         "files": [
@@ -2743,13 +2580,7 @@
         "rootDir": "scopes/defender/linter",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "logger": {
         "files": [
@@ -2788,13 +2619,7 @@
         "rootDir": "scopes/harmony/logger",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "modules/checksum": {
         "files": [
@@ -2833,13 +2658,7 @@
         "rootDir": "scopes/pkg/modules/checksum",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "modules/requireable-component": {
         "files": [
@@ -2858,13 +2677,7 @@
         "rootDir": "scopes/harmony/modules/requireable-component",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "modules/resolved-component": {
         "files": [
@@ -2883,13 +2696,7 @@
         "rootDir": "scopes/harmony/modules/resolved-component",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "node": {
         "files": [
@@ -2918,13 +2725,7 @@
         "rootDir": "scopes/harmony/node",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "notifications": {
         "files": [
@@ -2953,13 +2754,7 @@
         "rootDir": "scopes/ui-foundation/notifications/aspect",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "panels": {
         "files": [
@@ -2993,13 +2788,7 @@
         "rootDir": "scopes/ui-foundation/panels",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "path/to-windows-compatible-path": {
         "files": [
@@ -3018,13 +2807,7 @@
         "rootDir": "scopes/toolbox/path/to-windows-compatible-path",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "pkg": {
         "files": [
@@ -3123,13 +2906,7 @@
         "rootDir": "scopes/pkg/pkg",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "pnpm": {
         "files": [
@@ -3183,13 +2960,7 @@
         "rootDir": "scopes/dependencies/pnpm",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "preview": {
         "files": [
@@ -3333,13 +3104,7 @@
         "rootDir": "scopes/preview/preview",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "pubsub": {
         "files": [
@@ -3378,13 +3143,7 @@
         "rootDir": "scopes/harmony/pubsub",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "react": {
         "files": [
@@ -3588,13 +3347,7 @@
         "rootDir": "scopes/react/react",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "react-router": {
         "files": [
@@ -3668,13 +3421,7 @@
         "rootDir": "scopes/ui-foundation/react-router",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "schema": {
         "files": [
@@ -3743,13 +3490,7 @@
         "rootDir": "scopes/semantics/schema",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "scope": {
         "files": [
@@ -3898,13 +3639,7 @@
         "rootDir": "scopes/scope/scope",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "sidebar": {
         "files": [
@@ -3988,13 +3723,7 @@
         "rootDir": "scopes/ui-foundation/sidebar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "string/capitalize": {
         "files": [
@@ -4018,13 +3747,7 @@
         "rootDir": "scopes/toolbox/string/capitalize",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "tester": {
         "files": [
@@ -4128,13 +3851,7 @@
         "rootDir": "scopes/defender/tester",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "time/time-format": {
         "files": [
@@ -4153,13 +3870,7 @@
         "rootDir": "scopes/toolbox/time/time-format",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "typescript": {
         "files": [
@@ -4218,13 +3929,7 @@
         "rootDir": "scopes/typescript/typescript",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui": {
         "files": [
@@ -4468,13 +4173,7 @@
         "rootDir": "scopes/ui-foundation/ui",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/aspect-box": {
         "files": [
@@ -4498,13 +4197,7 @@
         "rootDir": "scopes/harmony/ui/aspect-box",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/avatar": {
         "files": [
@@ -4553,13 +4246,7 @@
         "rootDir": "scopes/design/ui/Avatar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/cli-snippet": {
         "files": [
@@ -4583,13 +4270,7 @@
         "rootDir": "scopes/design/ui/cli-snippet",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/component-status": {
         "files": [
@@ -4613,13 +4294,7 @@
         "rootDir": "scopes/component/ui/component-status",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/component-status-resolver": {
         "files": [
@@ -4648,13 +4323,7 @@
         "rootDir": "scopes/component/ui/component-status-resolver",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/component-tooltip": {
         "files": [
@@ -4678,13 +4347,7 @@
         "rootDir": "scopes/component/ui/component-tooltip",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/contributors": {
         "files": [
@@ -4708,13 +4371,7 @@
         "rootDir": "scopes/design/ui/contributors",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/corner": {
         "files": [
@@ -4738,13 +4395,7 @@
         "rootDir": "scopes/ui-foundation/uis/corner",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/deprecation-icon": {
         "files": [
@@ -4763,13 +4414,7 @@
         "rootDir": "scopes/component/ui/deprecation-icon",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/empty-box": {
         "files": [
@@ -4793,13 +4438,7 @@
         "rootDir": "scopes/design/ui/empty-box",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/env-icon": {
         "files": [
@@ -4818,13 +4457,7 @@
         "rootDir": "scopes/envs/ui/env-icon",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/error-page": {
         "files": [
@@ -4848,13 +4481,7 @@
         "rootDir": "scopes/design/ui/error-page",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/external-link": {
         "files": [
@@ -4878,13 +4505,7 @@
         "rootDir": "scopes/design/ui/external-link",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/full-loader": {
         "files": [
@@ -4908,13 +4529,7 @@
         "rootDir": "scopes/ui-foundation/uis/full-loader",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/hooks/use-bind-key": {
         "files": [
@@ -4933,13 +4548,7 @@
         "rootDir": "scopes/ui-foundation/uis/hooks/use-bind-key",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/hooks/use-in-out-transition": {
         "files": [
@@ -4958,13 +4567,7 @@
         "rootDir": "scopes/ui-foundation/uis/hooks/use-in-out-transition",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/keycap": {
         "files": [
@@ -4993,13 +4596,7 @@
         "rootDir": "scopes/ui-foundation/uis/keycap",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/label": {
         "files": [
@@ -5028,13 +4625,7 @@
         "rootDir": "scopes/design/ui/label",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/main-dropdown": {
         "files": [
@@ -5058,13 +4649,7 @@
         "rootDir": "scopes/ui-foundation/uis/main-dropdown",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/notifications/api": {
         "files": [
@@ -5083,13 +4668,7 @@
         "rootDir": "scopes/ui-foundation/notifications/ui/api",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/notifications/notification": {
         "files": [
@@ -5128,13 +4707,7 @@
         "rootDir": "scopes/ui-foundation/notifications/ui/notification",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/notifications/notification-center": {
         "files": [
@@ -5173,13 +4746,7 @@
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-center",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/notifications/notification-context": {
         "files": [
@@ -5198,13 +4765,7 @@
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-context",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/pages/not-found": {
         "files": [
@@ -5228,13 +4789,7 @@
         "rootDir": "scopes/design/ui/not-found-page",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/pages/server-error": {
         "files": [
@@ -5258,13 +4813,7 @@
         "rootDir": "scopes/design/ui/server-error-page",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/pill-label": {
         "files": [
@@ -5288,13 +4837,7 @@
         "rootDir": "scopes/design/ui/pill-label",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/preview-placeholder": {
         "files": [
@@ -5318,13 +4861,7 @@
         "rootDir": "scopes/preview/ui/preview-placeholder",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/scope-details": {
         "files": [
@@ -5363,13 +4900,7 @@
         "rootDir": "scopes/scope/ui/scope-details",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/scope-labels": {
         "files": [
@@ -5393,13 +4924,7 @@
         "rootDir": "scopes/scope/ui/scope-labels",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/scope-title": {
         "files": [
@@ -5423,13 +4948,7 @@
         "rootDir": "scopes/scope/ui/scope-title",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/separator": {
         "files": [
@@ -5453,13 +4972,7 @@
         "rootDir": "scopes/design/ui/separator",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/side-bar": {
         "files": [
@@ -5708,13 +5221,7 @@
         "rootDir": "scopes/ui-foundation/uis/side-bar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/status": {
         "files": [
@@ -5748,13 +5255,7 @@
         "rootDir": "scopes/workspace/ui/status",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/styles/ellipsis": {
         "files": [
@@ -5778,13 +5279,7 @@
         "rootDir": "scopes/design/ui/styles/ellipsis",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/test-row": {
         "files": [
@@ -5808,13 +5303,7 @@
         "rootDir": "scopes/defender/ui/test-row",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/test-table": {
         "files": [
@@ -5858,13 +5347,7 @@
         "rootDir": "scopes/defender/ui/test-table",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/time-ago": {
         "files": [
@@ -5888,13 +5371,7 @@
         "rootDir": "scopes/design/ui/time-ago",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/top-bar": {
         "files": [
@@ -5918,13 +5395,7 @@
         "rootDir": "scopes/ui-foundation/uis/top-bar",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/version-block": {
         "files": [
@@ -5953,13 +5424,7 @@
         "rootDir": "scopes/component/ui/version-block",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/version-dropdown": {
         "files": [
@@ -5983,13 +5448,7 @@
         "rootDir": "scopes/component/ui/version-dropdown",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/version-label": {
         "files": [
@@ -6013,13 +5472,7 @@
         "rootDir": "scopes/component/ui/version-label",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "ui/version-tag": {
         "files": [
@@ -6048,13 +5501,7 @@
         "rootDir": "scopes/component/ui/version-tag",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "url/query-string": {
         "files": [
@@ -6078,13 +5525,7 @@
         "rootDir": "scopes/toolbox/url/query-string",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "variants": {
         "files": [
@@ -6128,13 +5569,7 @@
         "rootDir": "scopes/workspace/variants",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "webpack": {
         "files": [
@@ -6198,13 +5633,7 @@
         "rootDir": "scopes/compilation/webpack",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "workspace": {
         "files": [
@@ -6488,13 +5917,7 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "yarn": {
         "files": [
@@ -6523,13 +5946,7 @@
         "rootDir": "scopes/dependencies/yarn",
         "origin": "AUTHORED",
         "exported": false,
-        "lanes": [],
-        "nextVersion": {
-            "version": "0.0.101",
-            "message": "",
-            "username": "Ran Mizrahi",
-            "email": "ran@bit.dev"
-        }
+        "lanes": []
     },
     "version": "14.8.9-dev.109"
 }
