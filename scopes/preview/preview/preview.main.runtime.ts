@@ -5,7 +5,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/environments';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import checksum from 'checksum';
+import objectHash from 'object-hash'
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
