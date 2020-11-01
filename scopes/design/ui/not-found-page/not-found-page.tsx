@@ -2,11 +2,9 @@ import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { ErrorPage } from '@teambit/ui.error-page';
 import { ExternalLink } from '@teambit/ui.external-link';
-import { Theme } from '@teambit/base-ui.theme.theme-provider';
-import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
 import styles from './not-found-page.module.scss';
 
-type NotFoundPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
+export type NotFoundPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * A component that shows a 404 error page
@@ -26,15 +24,5 @@ export function NotFoundPage({ ...rest }: NotFoundPageProps) {
         </ExternalLink>
       </div>
     </ErrorPage>
-  );
-}
-
-/** A 404 page with fonts included  */
-export function StandaloneNotFoundPage() {
-  return (
-    <Theme>
-      <EvaIconFont query="av92bs" />
-      <NotFoundPage />
-    </Theme>
   );
 }
