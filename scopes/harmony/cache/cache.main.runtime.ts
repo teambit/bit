@@ -35,7 +35,7 @@ export class CacheMain {
   async set(key: string, data: string): Promise<boolean> {
     this.logger.debug(`put cache to ${key} with data ${data}`);
     return cacache
-      .put(this.getCacheFolder(CacheAspect.id, { global: true }), key, data)
+      .put(this.globalCacheFolder, key, data)
       .then(() => true)
       .catch(() => false);
   }
@@ -43,16 +43,18 @@ export class CacheMain {
   async get(key: string): Promise<string | null> {
     this.logger.debug(`get cache for ${key}`);
     return cacache
-      .get(this.getCacheFolder(CacheAspect.id, { global: true }), key)
+      .get(this.globalCacheFolder, key)
       .then((cacheObject) => {
         return cacheObject.data.toString();
       })
       .catch(() => null);
   }
 
-  getCacheFolder(aspectId: string, { global = false } = {}) {
-    if (global) return this.config.cacheDirectory;
+  private get globalCacheFolder() {
+    return this.config.cacheDirectory;
+  }
 
+  projectCacheFolder(aspectId: string) {
     const cacheFolder = findCacheDir({ name: aspectId, create: true });
     if (!cacheFolder) throw new CacheNotFoundError();
     return cacheFolder;
