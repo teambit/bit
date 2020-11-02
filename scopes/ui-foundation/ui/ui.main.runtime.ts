@@ -19,7 +19,7 @@ import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
-import { StartCmd } from './start.cmd';
+import { StartCmd } from './start-cmd';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
