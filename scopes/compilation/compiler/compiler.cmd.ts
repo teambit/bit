@@ -13,9 +13,9 @@ import { CompileError, WorkspaceCompiler } from './workspace-compiler';
 import { CompilerAspect } from './compiler.aspect';
 import { ComponentCompilationOnDoneEvent } from './events';
 
-type ComponentsStatus = {
+export type ComponentsStatus = {
   buildResults: string[];
-  component: Array<ConsumerComponent>;
+  component: ConsumerComponent;
   errors: Array<CompileError>;
 };
 

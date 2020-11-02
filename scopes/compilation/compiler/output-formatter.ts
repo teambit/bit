@@ -1,6 +1,7 @@
 import chalk from 'chalk';
+import type { ComponentsStatus } from './compiler.cmd';
 
-export const formatCompileResults = (compileResults, verbose) =>
+export const formatCompileResults = (compileResults: Array<ComponentsStatus>, verbose: boolean) =>
   compileResults
     .map((componentResult) => ({
       componentId: componentResult.component.name,
