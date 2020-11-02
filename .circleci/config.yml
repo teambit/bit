@@ -536,6 +536,7 @@ jobs:
           command: cd bit && bit tag --persist
           no_output_timeout: '25m'
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
+      - run: cd bit && bit export"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
