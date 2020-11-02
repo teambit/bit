@@ -7,7 +7,8 @@ import { TestsResult } from './tests-results';
 export type Tests = {
   components: {
     componentId: ComponentID;
-    results: TestsResult;
+    results?: TestsResult;
+    loading?: boolean;
   }[];
   errors?: Error[];
 };

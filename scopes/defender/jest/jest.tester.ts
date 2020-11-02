@@ -135,12 +135,14 @@ export class JestTester implements Tester {
     return new Promise((resolve, reject) => {
       const config: any = {
         rootDir: context.rootPath,
-        watch: true,
+        //watch: true,
         watchAll: true,
+        //reporters: [`${__dirname}/reporter.js`],
         watchPlugins: [
           [
             `${__dirname}/watch.js`,
             {
+              specFiles: context.specFiles,
               onComplete: (results) => {
                 if (!this._callback) return;
                 const testResults = results.testResults;
@@ -157,7 +159,6 @@ export class JestTester implements Tester {
                   components: componentTestResults,
                 };
                 this._callback(watchTestResults);
-                resolve(watchTestResults);
               },
             },
           ],
@@ -169,6 +170,9 @@ export class JestTester implements Tester {
         specs.forEach((spec) => acc.push(spec.path));
         return acc;
       }, []);
+
+      const loadingComponents = context.components.map((c) => ({ componentId: c.id, loading: true }));
+      if (this._callback) this._callback({ components: loadingComponents });
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
         testMatch: testFiles,

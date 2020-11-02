@@ -66,7 +66,9 @@ export class WorkspaceUIRoot implements UIRoot {
   async postStart(options?: PostStartOptions) {
     const devServers = await this.getServers();
     devServers.forEach((server) => server.listen());
-    await this.workspace.watcher.watchAll();
+    // DON'T add wait! this promise never resolve so it's stop all the start process!
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.workspace.watcher.watchAll();
   }
 
   private _serversPromise: Promise<ComponentServer[]>;

@@ -9,7 +9,7 @@ import syntaxHighlighter from 'consolehighlighter';
 import { PubSub } from 'graphql-subscriptions';
 
 import { NoTestFilesFound } from './exceptions';
-import { Tester, Tests } from './tester';
+import { Tester, Tests, CallbackFn } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 
@@ -50,6 +50,8 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     private pubsub: PubSub
   ) {}
 
+  _callback: CallbackFn | undefined;
+
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
     return (
@@ -84,6 +86,10 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     };
   }
 
+  async onTestRunComplete(callback: CallbackFn) {
+    this._callback = callback;
+  }
+
   async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, detectTestFiles);
@@ -107,6 +113,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     if (options.watch) {
       if (tester.onTestRunComplete) {
         tester.onTestRunComplete((results) => {
+          if (this._callback) this._callback(results);
           results.components.forEach((component) => {
             this.pubsub.publish(OnTestsChanged, {
               testsChanged: { componentId: component.componentId.fullName, testsResults: component.results },

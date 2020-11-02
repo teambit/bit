@@ -10,11 +10,16 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
   return {
     typeDefs: gql`
       extend type ComponentHost {
-        getTests(id: String!): TestsResults
+        getTests(id: String!): Tests
       }
 
       type Subscription {
         testsChanged: TestsChanged
+      }
+
+      type Tests {
+        loading: Boolean!
+        testsResults: TestsResults
       }
 
       type TestsChanged {

@@ -7,7 +7,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 
-import { Tests } from './tester';
+import { Tests, CallbackFn } from './tester';
 import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
@@ -42,6 +42,8 @@ export type TesterOptions = {
    * initiate the tester on given env.
    */
   env?: string;
+
+  callback?: CallbackFn;
 };
 
 export class TesterMain {
@@ -75,7 +77,7 @@ export class TesterMain {
     readonly task: TesterTask
   ) {}
 
-  _testsResults: EnvsExecutionResult<Tests> | undefined;
+  _testsResults: Tests | undefined;
 
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
@@ -96,9 +98,10 @@ export class TesterMain {
     if (opts?.env) {
       return envsRuntime.runEnv(opts.env, this.service, options);
     }
-    const results = await envsRuntime.run(this.service, options);
-    this._testsResults = results;
-    return results;
+    this.service.onTestRunComplete((results) => {
+      this._testsResults = results;
+    });
+    await envsRuntime.run(this.service, options);
   }
 
   async uiWatch() {
@@ -106,17 +109,15 @@ export class TesterMain {
     this.watch(components, { watch: true, debug: false });
   }
 
-  getTestsResults(component: Component): TestsResult | undefined {
+  getTestsResults(component: Component): { testsResults?: TestsResult; loading: boolean } | undefined {
     const entry = component.state.aspects.get(TesterAspect.id);
     if (entry) return entry?.data.tests;
     return this.getTestsResultsFromState(component);
   }
 
   private getTestsResultsFromState(component: Component) {
-    const env = this.envs.getEnv(component);
-    const envTests = this._testsResults?.results.find((data) => data.env.id === env.id);
-    const data = envTests?.data?.components?.find((c) => c.componentId.isEqual(component.id));
-    return data?.results;
+    const tests = this._testsResults?.components.find((c) => c.componentId.isEqual(component.id));
+    return { testsResults: tests?.results, loading: tests?.loading || false };
   }
 
   private getOptions(options?: TesterOptions): TesterOptions {
