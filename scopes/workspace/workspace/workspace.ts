@@ -977,7 +977,7 @@ export class Workspace implements ComponentFactory {
     return join(modulePath, dist);
   }
 
-  getTempDir(aspectId: string): string {
+  getTempDir(aspectId: string) {
     const PREFIX = 'bit';
     const cacheDir = findCacheDir({ name: join(PREFIX, aspectId), create: true });
     if (!cacheDir) throw new TempDirMissing();

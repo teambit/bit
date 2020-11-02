@@ -5,6 +5,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambi
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
+import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import objectHash from 'object-hash';
 import { writeFileSync } from 'fs-extra';
 import { join } from 'path';
@@ -24,6 +25,8 @@ const noopResult = {
   results: [],
   toString: () => `updating link file`,
 };
+
+const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -192,7 +195,7 @@ export class PreviewMain {
       ComponentMain,
       UiMain,
       EnvsMain,
-      Workspace
+      Workspace | undefined
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
@@ -204,7 +207,7 @@ export class PreviewMain {
       config,
       bundlingStrategySlot,
       builder,
-      workspace.getTempDir(PreviewAspect.id)
+      workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR
     );
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);
