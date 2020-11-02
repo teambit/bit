@@ -59,6 +59,11 @@ export function useComponentQuery(componentId: string, host: string) {
   });
 
   useEffect(() => {
+    // @TODO @Kutner fix subscription for scope
+    if (host !== 'teambit.workspace/workspace') {
+      return () => {};
+    }
+
     const unsub = subscribeToMore({
       document: SUB_COMPONENT,
       updateQuery: (prev, { subscriptionData }) => {
