@@ -30,13 +30,9 @@ export class GraphUI {
   static slots = [Slot.withType<ComponentWidget>()];
   static async provider([componentUI]: [ComponentUI], config, [componentWidgetSlot]: [ComponentWidgetSlot]) {
     const graphUI = new GraphUI(componentWidgetSlot);
-
-    // TODO - remove feature flag when data provider works for all workspaces
-    if (window.location.pathname === '/enable-graph') {
-      const section = new GraphSection(componentWidgetSlot);
-      componentUI.registerNavigation(section.navigationLink, section.order);
-      componentUI.registerRoute(section.route);
-    }
+    const section = new GraphSection(componentWidgetSlot);
+    componentUI.registerNavigation(section.navigationLink, section.order);
+    componentUI.registerRoute(section.route);
 
     return graphUI;
   }
