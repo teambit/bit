@@ -306,20 +306,6 @@ export class DependencyResolverMain {
     policy[keyName] = sortObject(policy[keyName]);
   }
 
-  findInPolicy(policy: DependenciesPolicy, packageName: string): PolicyDep | undefined {
-    let result;
-    forEachObjIndexed((depObject, keyName: DepObjectKeyName) => {
-      if (!result && depObject[packageName]) {
-        result = {
-          packageName,
-          version: depObject[packageName],
-          lifecycleType: LIFECYCLE_TYPE_BY_KEY_NAME[keyName],
-        };
-      }
-    }, policy);
-    return result;
-  }
-
   /**
    * register new dependencies policies
    */

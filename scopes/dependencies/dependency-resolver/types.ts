@@ -2,10 +2,7 @@ import { ComponentConfig, ComponentFS } from '@teambit/component';
 import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersion = string;
+
 export type PackageName = string;
 
 export type RegistryName = string;
@@ -19,10 +16,6 @@ export type Registry = {
 
 export type RegistriesMap = Record<RegistryName, Registry>;
 
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersionRule = SemverVersion | '-';
 export type DetailedDependencyPolicy = {
   version: SemverVersion;
   /**
@@ -30,25 +23,6 @@ export type DetailedDependencyPolicy = {
    */
   force?: boolean;
 };
-
-// TODO: add DetailedDependencyPolicy once support the force prop
-// export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;
-export type DependencyPolicy = SemverVersionRule;
-
-export interface DependenciesPolicyObject {
-  [dependencyId: string]: DependencyPolicy;
-}
-
-export interface DependenciesPolicy extends WorkspaceDependenciesPolicy {
-  devDependencies?: DependenciesPolicyObject;
-}
-
-export interface WorkspaceDependenciesPolicy {
-  // There is no dev dependencies here since to decide if a dependency is a dev dependency or runtime dependency
-  // we calculate it based on the dev files pattern
-  dependencies?: DependenciesPolicyObject;
-  peerDependencies?: DependenciesPolicyObject;
-}
 
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspaceDependenciesPolicy;
