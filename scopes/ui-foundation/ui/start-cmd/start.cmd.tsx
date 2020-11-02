@@ -8,6 +8,7 @@ import { render } from 'ink';
 import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
 import { report } from './report';
+import { UIServer } from '../ui-server';
 
 export class StartCmd implements Command {
   startingtimestamp;
@@ -46,7 +47,7 @@ export class StartCmd implements Command {
     return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
-  private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
+  private asyncRender(startingTimestamp: number, pubsub: PubsubMain, commandFlags: Object, uiServer: UIServer) {
     render(
       <CliOutput
         startingTimestamp={startingTimestamp}
@@ -84,7 +85,7 @@ export class StartCmd implements Command {
         port: port ? parseInt(port) : undefined,
         rebuild,
       })
-      .then((uiServer) => {
+      .then((uiServer: UIServer) => {
         setTimeout(() => {
           this.clearConsole();
 
