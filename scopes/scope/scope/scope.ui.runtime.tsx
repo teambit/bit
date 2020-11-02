@@ -93,7 +93,7 @@ export class ScopeUI {
       {
         exact: true,
         path: '/',
-        children: <ScopeMenu widgetSlot={this.menuWidgetSlot} /* menuItemSlot={this.menuItemSlot} */ />,
+        children: <ScopeMenu widgetSlot={this.menuWidgetSlot} menuItemSlot={this.menuItemSlot} />,
       },
     ]);
   }
