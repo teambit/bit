@@ -377,6 +377,10 @@ export class ScopeMain implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId);
   }
 
+  async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {
+    return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
+  }
+
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
 
