@@ -1,1 +1,1 @@
-export { MainDropdown } from './main-dropdown';
+export { MainDropdown, MenuItem, MenuItemSlot } from './main-dropdown';

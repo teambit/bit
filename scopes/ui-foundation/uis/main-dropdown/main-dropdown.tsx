@@ -1,16 +1,29 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TooltipDrawer } from '@teambit/evangelist.surfaces.tooltip';
 import classNames from 'classnames';
-import React, { ReactNode, useContext } from 'react';
-import { CommandBarContext } from '@teambit/command-bar';
+import React, { ReactNode } from 'react';
+import { SlotRegistry } from '@teambit/harmony';
 import { KeyCombo } from '@teambit/ui.keycap';
 import styles from './main-dropdown.module.scss';
 
-// type MainDropdownProps = {
-// } & React.HTMLAttributes<HTMLDivElement>;
+export type MenuItem = {
+  category: string;
+  title: any; // TODO - fix
+  keyChar?: string;
+  handler: any; // TODO - fix
+};
 
-export function MainDropdown() {
-  const commandBar = useContext(CommandBarContext);
+export type MenuItemSlot = SlotRegistry<MenuItem[]>;
+
+type MainDropdownProps = {
+  menuItems: ItemsByCategory;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+type ItemsByCategory = {
+  [key: string]: MenuItem[];
+};
+
+export function MainDropdown({ menuItems }: MainDropdownProps) {
   return (
     <div className={styles.mainDropdown}>
       <TooltipDrawer
@@ -26,18 +39,24 @@ export function MainDropdown() {
         )}
       >
         <div>
-          <MenuBlock title="Shortcuts">
-            <div>
-              <Line
-                title="Open/close sidebar"
-                keyChar="mod + k"
-                onClick={() => commandBar?.run('command-bar.open')}
-              ></Line>
-              <Line title="Open/close sidebar" keyChar="s" onClick={() => commandBar?.run('sidebar')}></Line>
-              <Line title="Copy component id" keyChar="." onClick={() => commandBar?.run('copyBitId')}></Line>
-              <Line title="copy component npm id" keyChar="," onClick={() => commandBar?.run('copyNpmId')}></Line>
-            </div>
-          </MenuBlock>
+          {Object.keys(menuItems).map((category, index) => {
+            return (
+              <MenuBlock key={index} title={category}>
+                {menuItems[category].map((item) => {
+                  return (
+                    item && (
+                      <Line
+                        key={`${item.title}${item.keyChar}`}
+                        title={item.title}
+                        keyChar={item.keyChar}
+                        onClick={() => item.handler}
+                      ></Line>
+                    )
+                  );
+                })}
+              </MenuBlock>
+            );
+          })}
         </div>
       </TooltipDrawer>
     </div>
@@ -45,17 +64,19 @@ export function MainDropdown() {
 }
 
 type LineProps = {
-  title: string;
-  keyChar: string;
+  title: any; // TODO - fix
+  keyChar?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 function Line({ title, keyChar, onClick }: LineProps) {
   return (
     <div className={classNames(styles.line)} onClick={onClick}>
       <div>{title}</div>
-      <pre>
-        <KeyCombo className={styles.keyBinding}>{keyChar}</KeyCombo>
-      </pre>
+      {keyChar && (
+        <pre>
+          <KeyCombo>{keyChar}</KeyCombo>
+        </pre>
+      )}
     </div>
   );
 }
