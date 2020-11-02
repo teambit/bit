@@ -41,18 +41,21 @@ const GET_COMPONENT = gql`
   query($id: String!) {
     getHost {
       getTests(id: $id) {
-        testFiles {
-          file
-          duration
-          pass
-          failed
-          pending
-          tests {
-            ancestor
+        loading
+        testsResults {
+          testFiles {
+            file
             duration
-            status
-            name
-            error
+            pass
+            failed
+            pending
+            tests {
+              ancestor
+              duration
+              status
+              name
+              error
+            }
           }
         }
       }
@@ -69,8 +72,12 @@ export function TestsPage({ className }: TestsPageProps) {
     variables: { id: component.id._legacy.name },
   });
 
-  if (!data && !(onTestsChanged?.data?.testsChanged?.componentId != component.id.fullName)) return null;
-  const testResults = data?.getHost?.getTests?.testFiles || onTestsChanged.data?.testsChanged.testsResults.testFiles;
+  if (data?.getHost?.getTests?.loading) return <div>loading</div>;
+  let testResults =
+    onTestsChanged.data?.testsChanged.testsResults.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
+  if (onTestsChanged?.data && onTestsChanged?.data?.testsChanged?.componentId != component.id.fullName) {
+    testResults = data?.getHost?.getTests?.testsResults?.testFiles;
+  }
 
   if (testResults === null) {
     return (

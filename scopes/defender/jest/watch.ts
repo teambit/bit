@@ -6,7 +6,7 @@ export type PluginConfig = {
   specFiles: SpecFiles;
 };
 
-export default class Watch implements WatchPlugin {
+class Watch implements WatchPlugin {
   _stdin: NodeJS.ReadStream;
 
   _stdout: NodeJS.WriteStream;
@@ -54,3 +54,5 @@ export default class Watch implements WatchPlugin {
     });
   }
 }
+
+module.exports = Watch;
