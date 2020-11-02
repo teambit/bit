@@ -2756,6 +2756,25 @@
         "exported": false,
         "lanes": []
     },
+    "ui/pages/standalone-not-found-page": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "standalone-not-found.tsx",
+                "relativePath": "standalone-not-found.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/pages/standalone-not-found-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "panels@0.0.103": {
         "files": [
             {
