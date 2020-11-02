@@ -33,7 +33,7 @@ import IdExportedAlready from './exceptions/id-exported-already';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
-type DefaultScopeGetter = (id: BitId) => Promise<string>;
+type DefaultScopeGetter = (id: BitId) => Promise<string | undefined>;
 
 let getDefaultScope: DefaultScopeGetter;
 export function registerDefaultScopeGetter(func: DefaultScopeGetter) {
@@ -250,7 +250,9 @@ async function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: s
     }
     if (getDefaultScope && typeof getDefaultScope === 'function') {
       finalScope = await getDefaultScope(id);
-      return id.changeScope(finalScope);
+      if (finalScope) {
+        return id.changeScope(finalScope);
+      }
     }
     return id;
   });
