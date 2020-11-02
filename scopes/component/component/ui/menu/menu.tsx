@@ -1,10 +1,11 @@
 // import { NavigationSlot } from '@teambit/react-router';
-import { MainDropdown } from '@teambit/ui.main-dropdown';
+import { MainDropdown, MenuItemSlot } from '@teambit/ui.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/ui.version-dropdown';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 // import { TopBarWidgetLink } from '../top-bar-widget-link';
 import { useComponent } from '../use-component';
@@ -20,16 +21,18 @@ export type MenuProps = {
   navigationSlot: OrderedNavigationSlot;
   widgetSlot: OrderedNavigationSlot;
   host: string;
+  menuItemSlot: MenuItemSlot;
 };
 
 /**
  * top bar menu.
  */
-export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps) {
+export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot }: MenuProps) {
   const { component } = useComponent(host);
+  const mainMenuItems = useMemo(() => groupBy(flatten(menuItemSlot.values()), 'category'), [menuItemSlot]);
+
   if (!component) return <FullLoader />;
 
-  // const widgetLinks = widgetSlot?.toArray();
   const versionList = component.tags
     ?.toArray()
     .map((tag) => tag?.version?.version)
@@ -52,7 +55,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host }: MenuProps)
         {/* <span className={styles.widget}>
           <Icon className={classnames(styles.icon)} of="dependency" />
         </span> */}
-        <MainDropdown />
+        <MainDropdown menuItems={mainMenuItems} />
       </div>
     </div>
   );
