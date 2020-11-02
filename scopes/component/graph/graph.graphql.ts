@@ -53,7 +53,7 @@ export function graphSchema(graphBuilder: GraphBuilder): Schema {
             return {
               sourceId: edge.sourceId,
               targetId: edge.targetId,
-              dependencyLifecycleType: getDependencyLifecycleType(edge.edge),
+              dependencyLifecycleType: getDependencyLifecycleType(edge.edge.type),
             };
           });
         },
