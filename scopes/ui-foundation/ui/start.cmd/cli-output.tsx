@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-floating-promises */
 import type { PubsubMain } from '@teambit/pubsub';
 
 // Import the IDs & Events
@@ -71,7 +70,7 @@ export class CliOutput extends React.Component<props, state> {
     this.registerToEvents(props.pubsub);
   }
 
-  private registerToEvents(pubsub) {
+  private registerToEvents(pubsub: PubsubMain) {
     pubsub.sub(UIAspect.id, this.eventsListener);
     pubsub.sub(WebpackAspect.id, this.eventsListener);
     pubsub.sub(BundlerAspect.id, this.eventsListener);
@@ -79,7 +78,7 @@ export class CliOutput extends React.Component<props, state> {
     pubsub.sub(CompilerAspect.id, this.eventsListener);
   }
 
-  private eventsListener = (event: BitBaseEvent<any>) => {
+  private eventsListener = async (event: BitBaseEvent<any>) => {
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
         this.updateOrAddComponentServer(event.data.context.id, 'Running', event.data);
@@ -89,7 +88,7 @@ export class CliOutput extends React.Component<props, state> {
         this.onWebpackCompilationDone(event);
         break;
       case UiServerStartedEvent.TYPE:
-        this.onUiServerStarted(event);
+        await this.onUiServerStarted(event);
         break;
       case OnComponentChangeEvent.TYPE:
         this.onComponentChange(event);
@@ -173,7 +172,7 @@ export class CliOutput extends React.Component<props, state> {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  private async safeOpenBrowser() {
+  private safeOpenBrowser() {
     const { suppressBrowserLaunch } = this.state.commandFlags;
     const { mainUIServer } = this.state;
 

@@ -6,16 +6,16 @@ import { PubsubAspect } from './pubsub.aspect';
 export class PubsubMain {
   private topicMap = {};
 
-  private createOrGetTopic = (topicUUID) => {
+  private createOrGetTopic = (topicUUID: string) => {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
   };
 
-  public sub(topicUUID, callback) {
+  public sub(topicUUID: string, callback: Function) {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].push(callback);
   }
 
-  public pub(topicUUID, event: BitBaseEvent<any>) {
+  public pub(topicUUID: string, event: BitBaseEvent<any>) {
     this.createOrGetTopic(topicUUID);
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   }
