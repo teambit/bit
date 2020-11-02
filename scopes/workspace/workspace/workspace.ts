@@ -79,7 +79,6 @@ import {
   OnComponentRemoveSlot,
 } from './workspace.provider';
 import { Issues } from './workspace-component/issues';
-import { TempDirMissing } from './missing-temp-error';
 
 export type EjectConfResult = {
   configPath: string;
@@ -977,10 +976,19 @@ export class Workspace implements ComponentFactory {
     return join(modulePath, dist);
   }
 
-  getTempDir(aspectId: string) {
+  /**
+   * Provides a cache folder, unique per key.
+   * Return value may be undefined, if workspace folder is unconventional (bare-scope, no node_modules, etc)
+   */
+  getTempDir(
+    /*
+     * unique key, i.e. aspect or component id
+     */
+    id: string
+  ) {
     const PREFIX = 'bit';
-    const cacheDir = findCacheDir({ name: join(PREFIX, aspectId), create: true });
-    if (!cacheDir) throw new TempDirMissing();
+    const cacheDir = findCacheDir({ name: join(PREFIX, id), create: true });
+
     return cacheDir;
   }
 
