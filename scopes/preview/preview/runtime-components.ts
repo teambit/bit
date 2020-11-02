@@ -1,5 +1,6 @@
 import { Component, ComponentID } from '@teambit/component';
 
+// TODO - use workspace.list() instead of this
 export class RuntimeComponents {
   constructor(public components: Component[] = []) {}
   add(added: Component) {

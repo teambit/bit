@@ -218,18 +218,21 @@ export class PreviewMain {
 
     if (workspace) {
       workspace.registerOnComponentAdd(async (x) => {
+        // TODO - use workspace.list() instead of this
         preview.runtimeComponents?.add(x);
         await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
 
       workspace.registerOnComponentChange(async (x) => {
+        // TODO - use workspace.list() instead of this
         preview.runtimeComponents?.update(x);
         await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
       });
 
       workspace.registerOnComponentRemove(async (x) => {
+        // TODO - use workspace.list() instead of this
         preview.runtimeComponents?.remove(x);
         await preview.updateLinkFiles(preview.runtimeComponents?.components);
         return noopResult;
