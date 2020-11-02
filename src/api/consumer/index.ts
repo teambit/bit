@@ -5,7 +5,7 @@ import checkout from './lib/checkout';
 import dependencyStatus from './lib/dependency_status';
 import { deprecate, undeprecate } from './lib/deprecation';
 import ejectAction from './lib/eject';
-import exportAction from './lib/export';
+import exportAction, { registerDefaultScopeGetter } from './lib/export';
 import fetch from './lib/fetch';
 import getComponentLogs from './lib/get-component-logs';
 import getConsumerComponent from './lib/get-consumer-component';
@@ -41,6 +41,7 @@ export {
   isolate,
   config,
   exportAction,
+  registerDefaultScopeGetter,
   remove,
   deprecate,
   undeprecate,
