@@ -2,6 +2,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { TooltipDrawer } from '@teambit/evangelist.surfaces.tooltip';
 import classNames from 'classnames';
 import React, { ReactNode } from 'react';
+import { isEmpty } from 'lodash';
 import { SlotRegistry } from '@teambit/harmony';
 import { KeyCombo } from '@teambit/ui.keycap';
 import styles from './main-dropdown.module.scss';
@@ -24,6 +25,7 @@ type ItemsByCategory = {
 };
 
 export function MainDropdown({ menuItems }: MainDropdownProps) {
+  if (!menuItems || isEmpty(menuItems)) return null;
   return (
     <div className={styles.mainDropdown}>
       <TooltipDrawer
