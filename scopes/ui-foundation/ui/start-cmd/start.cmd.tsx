@@ -5,10 +5,10 @@ import { Logger } from '@teambit/logger';
 import React from 'react';
 import { render } from 'ink';
 
-import type { UiMain } from '../ui.main.runtime';
+import type { UiMain } from '@teambit/ui/ui.main.runtime';
 import { CliOutput } from './cli-output';
 import { report } from './report';
-import { UIServer } from '../ui-server';
+import { UIServer } from '@teambit/ui/ui-server';
 
 export class StartCmd implements Command {
   startingtimestamp;

@@ -26,9 +26,9 @@ import {
   WebpackErrors,
   WebpackWarnings,
   CompilingOrUIServersAreReady,
-} from './output-templates';
+} from '@teambit/ui-servers-are-ready';
 
-type state = {
+type CliOutputState = {
   compiledComponents: Array<any>;
   commandFlags: any;
   mainUIServer: any;
@@ -42,17 +42,17 @@ type state = {
   compiling: boolean;
 };
 
-export type props = {
+export type CliOutputProps = {
   startingTimestamp: number;
   pubsub: PubsubMain;
   commandFlags: any;
   uiServer: any;
 };
 
-export class CliOutput extends React.Component<props, state> {
+export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   private isBrowserOpen = false;
 
-  constructor(props: props) {
+  constructor(props: CliOutputProps) {
     super(props);
     this.state = {
       compiledComponents: [],
