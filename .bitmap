@@ -2737,7 +2737,7 @@
         "exported": false,
         "lanes": []
     },
-    "ui/notifications/api@0.0.103": {
+    "notifications": {
         "files": [
             {
                 "name": "index.ts",
