@@ -153,6 +153,9 @@ export default async function provideWorkspace(
     };
   });
 
+  /**
+   * Add default scope from harmony during export
+   */
   registerDefaultScopeGetter(async (id: BitId) => {
     const componentId = await workspace.resolveComponentId(id);
     const defaultScope = await workspace.componentDefaultScope(componentId);
