@@ -29,6 +29,7 @@ export class GraphBuilder {
       this._initialized = true;
       return this._graph;
     }
+    // Build graph from scope
     if (this.scope) {
       let listIds = ids && ids.length ? ids : (await this.scope.list()).map((comp) => comp.id);
       if (typeof listIds[0] === 'string') {
