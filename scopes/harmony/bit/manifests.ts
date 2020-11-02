@@ -11,7 +11,7 @@ import { ConfigAspect } from '@teambit/config';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
-import { EnvsAspect } from '@teambit/environments';
+import { EnvsAspect } from '@teambit/envs';
 import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
 import { YarnAspect } from '@teambit/yarn';

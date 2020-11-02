@@ -4,7 +4,7 @@ import { BundlerMain } from '@teambit/bundler';
 import { CLIMain } from '@teambit/cli';
 import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
-import { EnvsMain } from '@teambit/environments';
+import { EnvsMain } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony, SlotRegistry } from '@teambit/harmony';
 import { IsolatorMain } from '@teambit/isolator';
@@ -14,6 +14,8 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
+import { BitId } from 'bit-bin/dist/bit-id';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
@@ -149,6 +151,15 @@ export default async function provideWorkspace(
       defaultScope,
       extensions: ExtensionDataList.fromArray(extensionsWithLegacyIds),
     };
+  });
+
+  /**
+   * Add default scope from harmony during export.
+   */
+  registerDefaultScopeGetter(async (id: BitId) => {
+    const componentId = await workspace.resolveComponentId(id);
+    const defaultScope = await workspace.componentDefaultScope(componentId);
+    return defaultScope;
   });
 
   onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));

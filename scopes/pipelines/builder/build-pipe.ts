@@ -1,4 +1,4 @@
-import { EnvDefinition } from '@teambit/environments';
+import { EnvDefinition } from '@teambit/envs';
 import { compact } from 'ramda-adjunct';
 import { ComponentMap } from '@teambit/component';
 import { Logger, LongProcessLogger } from '@teambit/logger';

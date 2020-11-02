@@ -22,7 +22,7 @@ import {
   PackageManagerInstallOptions,
   PolicyDep,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/environments';
+import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -628,21 +628,21 @@ export class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.componentDefaultScopeFromComponentDir(relativeComponentDir, componentId.fullName);
+    return this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, componentId.fullName);
   }
 
-  async componentDefaultScopeFromComponentDir(
+  async componentDefaultScopeFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir, name);
+    const componentConfigFile = await this.componentConfigFileFromComponentDirAndName(relativeComponentDir, name);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir, name);
+    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 
-  private async componentDefaultScopeFromComponentDirWithoutConfigFile(
+  private async componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
@@ -786,17 +786,17 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDir(relativeComponentDir, id.fullName);
+    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
   }
 
-  private async componentConfigFileFromComponentDir(
+  private async componentConfigFileFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(
+      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
         relativeComponentDir,
         name
       );
@@ -1167,7 +1167,7 @@ export class Workspace implements ComponentFactory {
       throw err;
     }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
-    const defaultScope = await this.componentDefaultScopeFromComponentDir(
+    const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
       relativeComponentDir,
       legacyId.toStringWithoutScopeAndVersion()
     );

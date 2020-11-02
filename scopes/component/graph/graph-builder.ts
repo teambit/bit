@@ -1,7 +1,10 @@
 import { ComponentID } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
-import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
+import {
+  buildOneGraphForComponents,
+  buildOneGraphForComponentsUsingScope,
+} from 'bit-bin/dist/scope/graph/components-graph';
 import { ComponentGraph } from './component-graph';
 
 export class GraphBuilder {
@@ -26,8 +29,17 @@ export class GraphBuilder {
       this._initialized = true;
       return this._graph;
     }
-    // TODO: implement using buildOneGraphForComponentsUsingScope (probably)
+    // Build graph from scope
     if (this.scope) {
+      let listIds = ids && ids.length ? ids : (await this.scope.list()).map((comp) => comp.id);
+      if (typeof listIds[0] === 'string') {
+        listIds = await this.scope.resolveMultipleComponentIds(listIds);
+      }
+      // @ts-ignore
+      const bitIds = listIds.map((id) => id._legacy);
+      const legacyGraph = await buildOneGraphForComponentsUsingScope(bitIds, this.scope.legacyScope);
+      const graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.scope);
+      this._graph = graph;
       this._initialized = true;
       return this._graph;
     }

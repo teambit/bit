@@ -4,7 +4,7 @@ import { BundlerAspect } from '@teambit/bundler';
 import { CLIAspect, MainRuntime } from '@teambit/cli';
 import { ComponentAspect } from '@teambit/component';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
-import { EnvsAspect } from '@teambit/environments';
+import { EnvsAspect } from '@teambit/envs';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Slot } from '@teambit/harmony';
 import { IsolatorAspect } from '@teambit/isolator';

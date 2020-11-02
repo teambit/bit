@@ -5,7 +5,7 @@ import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
 import { Component } from '@teambit/component';
-import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/environments';
+import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import type { JestMain } from '@teambit/jest';

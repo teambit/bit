@@ -1,6 +1,6 @@
 import { BabelMain } from '@teambit/babel';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
-import { Environment } from '@teambit/environments';
+import { Environment } from '@teambit/envs';
 import { merge } from 'lodash';
 import { TsConfigSourceFile } from 'typescript';
 import { ReactEnv } from '@teambit/react';
@@ -39,6 +39,10 @@ export class AspectEnv implements Environment {
 
   getCompiler() {
     return this.babel.createCompiler({ babelTransformOptions: babelConfig });
+  }
+
+  createTsCompiler(tsConfig: TsConfigSourceFile) {
+    return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
   getBuildPipe() {
