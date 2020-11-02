@@ -7,10 +7,10 @@ import { KeyCombo } from '@teambit/ui.keycap';
 import styles from './main-dropdown.module.scss';
 
 export type MenuItem = {
-  category: string;
-  title: any; // TODO - fix
+  category?: string;
+  title: ReactNode;
   keyChar?: string;
-  handler: any; // TODO - fix
+  handler: () => void;
 };
 
 export type MenuItemSlot = SlotRegistry<MenuItem[]>;
@@ -47,9 +47,9 @@ export function MainDropdown({ menuItems }: MainDropdownProps) {
                     item && (
                       <Line
                         key={`${item.title}${item.keyChar}`}
-                        title={item.title}
+                        lineTitle={item.title}
                         keyChar={item.keyChar}
-                        onClick={() => item.handler}
+                        onClick={item.handler}
                       ></Line>
                     )
                   );
@@ -64,14 +64,14 @@ export function MainDropdown({ menuItems }: MainDropdownProps) {
 }
 
 type LineProps = {
-  title: any; // TODO - fix
+  lineTitle: ReactNode;
   keyChar?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-function Line({ title, keyChar, onClick }: LineProps) {
+function Line({ lineTitle, keyChar, onClick, ...rest }: LineProps) {
   return (
-    <div className={classNames(styles.line)} onClick={onClick}>
-      <div>{title}</div>
+    <div {...rest} className={classNames(styles.line)} onClick={onClick}>
+      <div>{lineTitle}</div>
       {keyChar && (
         <pre>
           <KeyCombo>{keyChar}</KeyCombo>

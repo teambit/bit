@@ -64,7 +64,7 @@ export class ComponentUI {
       handler: () => {
         copy(this.activeComponent?.id.toString() || '');
       },
-      displayName: 'copy bit id',
+      displayName: 'Copy component ID',
       keybinding: '.',
     },
     {
@@ -77,7 +77,7 @@ export class ComponentUI {
           copy(`${packageName}${versionString}`);
         }
       },
-      displayName: 'copy npm id',
+      displayName: 'Copy component package name',
       keybinding: ',',
     },
   ];
@@ -87,25 +87,25 @@ export class ComponentUI {
       category: 'general',
       title: 'Open command bar',
       keyChar: 'mod + k',
-      handler: this.commandBarUI?.run('command-bar.open'),
+      handler: () => this.commandBarUI?.run('command-bar.open'),
     },
     {
       category: 'general',
       title: 'Toggle component list',
       keyChar: 's',
-      handler: this.commandBarUI?.run('sidebar'),
+      handler: () => this.commandBarUI?.run('sidebar'),
     },
     {
       category: 'workflow',
       title: 'Copy component ID',
       keyChar: '.',
-      handler: this.commandBarUI?.run('copyBitId'),
+      handler: () => this.commandBarUI?.run('copyBitId'),
     },
     {
       category: 'workflow',
       title: 'Copy component package name',
       keyChar: ',',
-      handler: this.commandBarUI?.run('copyNpmId'),
+      handler: () => this.commandBarUI?.run('copyNpmId'),
     },
   ];
 

@@ -4,7 +4,8 @@ import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
-
+import copy from 'copy-to-clipboard';
+import { ReactRouterUI, ReactRouterAspect } from '@teambit/react-router';
 import { CommandBar } from './ui/command-bar';
 import { CommandSearcher } from './ui/command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
@@ -83,6 +84,7 @@ export class CommandBarUI {
    * @param commandId
    */
   run(commandId: CommandId) {
+    console.log('command id', this.getCommand(commandId));
     const commandEntry = this.getCommand(commandId);
     if (!commandEntry) return undefined;
 
@@ -104,11 +106,13 @@ export class CommandBarUI {
   };
 
   private getCommand(id: CommandId) {
+    console.log('command slot!!', id, this.commandSlot.values());
     const relevantCommands = this.commandSlot
       .values()
       .map((commands) => commands.find((command) => command.id === id))
       .filter((x) => !!x);
 
+    // console.log("relevantCommands", relevantCommands)
     return relevantCommands.pop();
   }
 
@@ -137,7 +141,12 @@ export class CommandBarUI {
     return <CommandBar key="CommandBarUI" search={this.search} commander={this} />;
   };
 
-  constructor(private searcherSlot: SearcherSlot, private commandSlot: CommandSlot, pubSub: PubsubUI) {
+  constructor(
+    private searcherSlot: SearcherSlot,
+    private commandSlot: CommandSlot,
+    pubSub: PubsubUI,
+    reactRouterUI: ReactRouterUI
+  ) {
     this.addSearcher(this.commandSearcher);
     pubSub.sub(CommandBarAspect.id, (e: KeyEvent) => {
       const keyboardEvent = new KeyboardEvent(e.type, e.data);
@@ -145,22 +154,32 @@ export class CommandBarUI {
     });
   }
 
-  static dependencies = [UIAspect, PubsubAspect];
+  static dependencies = [UIAspect, PubsubAspect, ReactRouterAspect];
   static slots = [Slot.withType<SearchProvider>(), Slot.withType<CommandEntry[]>()];
   static runtime = UIRuntime;
   static async provider(
-    [uiUi, pubsubUI]: [UiUI, PubsubUI],
+    [uiUi, pubsubUI, reactRouterUI]: [UiUI, PubsubUI, ReactRouterUI],
     config,
     [searcherSlot, commandSlots]: [SearcherSlot, CommandSlot]
   ) {
-    const commandBar = new CommandBarUI(searcherSlot, commandSlots, pubsubUI);
+    const commandBar = new CommandBarUI(searcherSlot, commandSlots, pubsubUI, reactRouterUI);
 
-    commandBar.addCommand({
-      id: commandBarCommands.open,
-      handler: commandBar.open,
-      displayName: 'open command bar',
-      keybinding: 'mod+k',
-    });
+    commandBar.addCommand(
+      {
+        id: commandBarCommands.open,
+        handler: commandBar.open,
+        displayName: 'Open command bar',
+        keybinding: 'mod+k',
+      }
+      // {
+      //   id: commandBarCommands.copyUrl,
+      //   handler: () => {
+      //     copy(reactRouterUI.getRoute() || '');
+      //   },
+      //   displayName: 'open command bar',
+      //   keybinding: 'u',
+      // }
+    );
 
     uiUi.registerHudItem(commandBar.getCommandBar());
     uiUi.registerContext(commandBar.renderContext);

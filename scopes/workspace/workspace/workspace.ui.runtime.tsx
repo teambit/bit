@@ -13,9 +13,9 @@ import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
 
-export type MenuItem = {
-  label: JSX.Element | string | null;
-};
+// export type MenuItem = {
+//   label: JSX.Element | string | null;
+// };
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -88,7 +88,7 @@ export class WorkspaceUI {
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar', // extract to constant!
       handler: () => {},
-      displayName: 'open/close sidebar',
+      displayName: 'Toggle component list',
       keybinding: 's',
     });
     this.setKeyBindHandler = setKeyBindHandler;

@@ -147,7 +147,7 @@ export class ScopeUI {
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
       id: 'sidebar', // extract to constant!
       handler: () => {},
-      displayName: 'open/close sidebar',
+      displayName: 'Toggle component list',
       keybinding: 's',
     });
     this.setKeyBindHandler = setKeyBindHandler;
