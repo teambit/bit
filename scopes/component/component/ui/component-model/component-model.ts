@@ -1,6 +1,6 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
-import { Descriptor } from '@teambit/environments';
+import { Descriptor } from '@teambit/envs';
 
 import { ComponentID } from '../../id';
 import { Tag } from '../../tag';

@@ -2,7 +2,7 @@ import { BuildTask } from '@teambit/builder';
 import { DevServer, DevServerContext } from '@teambit/bundler';
 import type { CompilerMain } from '@teambit/compiler';
 import { Compiler } from '@teambit/compiler';
-import { Environment } from '@teambit/environments';
+import { Environment } from '@teambit/envs';
 import { Tester } from '@teambit/tester';
 import type { WebpackMain } from '@teambit/webpack';
 

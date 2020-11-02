@@ -1,6 +1,6 @@
 import R from 'ramda';
 import { Graph } from 'cleargraph';
-import { EnvDefinition, Environment } from '@teambit/environments';
+import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
 import { TasksQueue } from './tasks-queue';

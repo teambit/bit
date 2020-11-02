@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName } from '@teambit/aspect-loader';
 import { Capsule } from '@teambit/isolator';
-import { Environment } from '@teambit/environments';
+import { Environment } from '@teambit/envs';
 
 export class CoreExporterTask implements BuildTask {
   constructor(private env: Environment, private aspectLoader: AspectLoaderMain) {}
