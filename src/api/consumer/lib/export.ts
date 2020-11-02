@@ -168,7 +168,6 @@ async function getComponentsToExport(
     bitIds: BitIds
   ): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds }> => {
     const idsWithFutureScope = await getIdsWithFutureScope(bitIds, consumer, remote);
-    console.log(idsWithFutureScope);
     if (remote) return { idsToExport: bitIds, missingScope: [], idsWithFutureScope };
     const [idsToExport, missingScope] = R.partition((id) => {
       const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
