@@ -65,7 +65,8 @@ commands: # reusable commands
   bit_config:
     parameters:
       env:
-        default: 'hub-stg'
+        # default: 'hub-stg'
+        default: 'hub'
         type: string
     steps:
       - run: 'bit config set analytics_reporting false'
