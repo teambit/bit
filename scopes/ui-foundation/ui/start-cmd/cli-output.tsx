@@ -18,15 +18,13 @@ import React from 'react';
 import { Newline, Text, render } from 'ink';
 import open from 'open';
 
-import {
-  Starting,
-  ComponentPreviewServerStarted,
-  UIServersAreReadyInScope,
-  TSErrors,
-  WebpackErrors,
-  WebpackWarnings,
-  CompilingOrUIServersAreReady,
-} from '@teambit/ui-servers-are-ready';
+import { Starting } from '@teambit/ink.starting';
+import { ComponentPreviewServerStarted } from '@teambit/ink.component-preview-server-started';
+import { UIServersAreReadyInScope } from '@teambit/ink.ui-servers-is-ready-in-scope';
+import { TSErrors } from '@teambit/ink.ts-errors';
+import { WebpackErrors } from '@teambit/ink.webpack-errors';
+import { WebpackWarnings } from '@teambit/ink.webpack-warnings';
+import { CompilingOrUIServersAreReady } from '@teambit/ink.compiling-or-ui-servers-are-ready';
 
 type CliOutputState = {
   compiledComponents: Array<any>;

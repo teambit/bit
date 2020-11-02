@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, Text } from 'ink';
-import { ComponentPreviewServerStartedHeaders } from '.';
+import { ComponentPreviewServerStartedHeaders } from '@teambit/ink.component-preview-server-started-headers';
 
 export type props = {
   items: Array<any>;
