@@ -2,7 +2,9 @@ import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
+import { Menu } from '@teambit/ui.menu';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
+import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
@@ -12,10 +14,6 @@ import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
-
-// export type MenuItem = {
-//   label: JSX.Element | string | null;
-// };
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
 
@@ -36,6 +34,8 @@ export class WorkspaceUI {
      */
     private menuSlot: RouteSlot,
 
+    private menuItemSlot: MenuItemSlot,
+
     private sidebar: SidebarUI,
 
     private sidebarSlot: SidebarWidgetSlot,
@@ -44,8 +44,6 @@ export class WorkspaceUI {
 
     reactRouterUI: ReactRouterUI
   ) {
-    // TODO: @oded please never add logic in the constructor - this should be done from the provider.
-    this.registerExplicitRoutes();
     this.componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
   }
 
@@ -59,22 +57,14 @@ export class WorkspaceUI {
     return this;
   }
 
-  private registerExplicitRoutes() {
-    this.routeSlot.register({
-      path: this.componentUi.routePath,
-      children: this.componentUi.getComponentUI(WorkspaceAspect.id),
-    });
-
-    this.menuSlot.register({
-      path: this.componentUi.routePath,
-      children: this.componentUi.getMenu(WorkspaceAspect.id),
-    });
-  }
-
   registerSidebarWidget(componentTreeNode: ComponentTreeNode) {
     this.sidebarSlot.register(componentTreeNode);
     return this;
   }
+
+  registerMenuItem = (menuItems: MenuItem[]) => {
+    this.menuItemSlot.register(menuItems);
+  };
 
   setComponents = (components: ComponentModel[]) => {
     this.componentSearcher.update(components);
@@ -111,6 +101,21 @@ export class WorkspaceUI {
     };
   }
 
+  private menuItems: MenuItem[] = [
+    {
+      category: 'general',
+      title: 'Open command bar',
+      keyChar: 'mod + k',
+      handler: () => this.commandBarUI?.run('command-bar.open'),
+    },
+    {
+      category: 'general',
+      title: 'Toggle component list',
+      keyChar: 's',
+      handler: () => this.commandBarUI?.run('sidebar'),
+    },
+  ];
+
   static dependencies = [
     UIAspect,
     ComponentAspect,
@@ -123,7 +128,12 @@ export class WorkspaceUI {
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<RouteProps>(), Slot.withType<ComponentTreeNode>()];
+  static slots = [
+    Slot.withType<RouteProps>(),
+    Slot.withType<RouteProps>(),
+    Slot.withType<ComponentTreeNode>(),
+    Slot.withType<MenuItemSlot>(),
+  ];
 
   static async provider(
     [ui, componentUi, sidebar, componentTree, commandBarUI, reactRouterUI, graphUI]: [
@@ -136,7 +146,7 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [routeSlot, menuSlot, sidebarSlot]: [RouteSlot, RouteSlot, SidebarWidgetSlot]
+    [routeSlot, menuSlot, menuItemSlot, sidebarSlot]: [RouteSlot, RouteSlot, MenuItemSlot, SidebarWidgetSlot]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
@@ -146,13 +156,31 @@ export class WorkspaceUI {
       routeSlot,
       componentUi,
       menuSlot,
+      menuItemSlot,
       sidebar,
       sidebarSlot,
       commandBarUI,
       reactRouterUI
     );
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
+    workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
+    workspaceUI.menuSlot.register([
+      {
+        exact: true,
+        path: '/',
+        children: <Menu menuItemSlot={workspaceUI.menuItemSlot} />,
+      },
+      {
+        path: workspaceUI.componentUi.routePath,
+        children: workspaceUI.componentUi.getMenu(WorkspaceAspect.id),
+      },
+    ]);
+
+    workspaceUI.routeSlot.register({
+      path: workspaceUI.componentUi.routePath,
+      children: workspaceUI.componentUi.getComponentUI(WorkspaceAspect.id),
+    });
     return workspaceUI;
   }
 }

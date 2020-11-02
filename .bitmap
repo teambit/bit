@@ -2737,7 +2737,7 @@
         "exported": false,
         "lanes": []
     },
-    "notifications@0.0.103": {
+    "ui/notifications/api@0.0.103": {
         "files": [
             {
                 "name": "index.ts",
@@ -4417,7 +4417,31 @@
         "exported": false,
         "lanes": []
     },
-    "ui/notifications/api@0.0.103": {
+    "ui/menu": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "menu.module.scss",
+                "relativePath": "menu.module.scss",
+                "test": false
+            },
+            {
+                "name": "menu.tsx",
+                "relativePath": "menu.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/menu",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/notifications/api": {
         "files": [
             {
                 "name": "index.ts",

@@ -6,18 +6,16 @@ import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ComponentType, ReactNode } from 'react';
+import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
+import { MenuWidget, MenuWidgetSlot } from '@teambit/ui.menu';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
+import { ScopeMenu } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
 import { ComponentsDrawer } from './components.drawer';
 import { ScopeBadge } from './scope-badge';
-import { ScopeMenu } from './ui/menu';
-
-export type MenuItem = {
-  label: JSX.Element | string | null;
-};
 
 export type ScopeBadgeSlot = SlotRegistry<ScopeBadge>;
 
@@ -28,10 +26,6 @@ export type SidebarSlot = SlotRegistry<ComponentTreeNode>;
 export type ScopeOverview = ComponentType;
 
 export type ScopeOverviewSlot = SlotRegistry<ScopeOverview>;
-
-export type MenuWidget = ComponentType;
-
-export type MenuWidgetSlot = SlotRegistry<MenuWidget[]>;
 
 export class ScopeUI {
   constructor(
@@ -59,7 +53,12 @@ export class ScopeUI {
 
     private scopeBadgeSlot: ScopeBadgeSlot,
 
-    private menuWidgetSlot: MenuWidgetSlot
+    private menuWidgetSlot: MenuWidgetSlot,
+
+    /**
+     * main dropdown item slot
+     */
+    private menuItemSlot: MenuItemSlot
   ) {}
 
   private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
@@ -91,7 +90,11 @@ export class ScopeUI {
         path: this.componentUi.routePath,
         children: this.componentUi.getMenu(ScopeAspect.id),
       },
-      { exact: true, path: '/', children: <ScopeMenu widgetSlot={this.menuWidgetSlot} /> }, // what happens when we have multiple scopes like in symphony?
+      {
+        exact: true,
+        path: '/',
+        children: <ScopeMenu widgetSlot={this.menuWidgetSlot} /* menuItemSlot={this.menuItemSlot} */ />,
+      },
     ]);
   }
 
@@ -140,6 +143,10 @@ export class ScopeUI {
     return this._context();
   }
 
+  registerMenuItem = (menuItems: MenuItem[]) => {
+    this.menuItemSlot.register(menuItems);
+  };
+
   uiRoot(): UIRoot {
     this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
@@ -177,6 +184,21 @@ export class ScopeUI {
     this.componentSearcher.update(components);
   };
 
+  private menuItems: MenuItem[] = [
+    {
+      category: 'general',
+      title: 'Open command bar',
+      keyChar: 'mod + k',
+      handler: () => this.commandBarUI?.run('command-bar.open'),
+    },
+    {
+      category: 'general',
+      title: 'Toggle component list',
+      keyChar: 's',
+      handler: () => this.commandBarUI?.run('sidebar'),
+    },
+  ];
+
   static dependencies = [UIAspect, ComponentAspect, SidebarAspect, CommandBarAspect, ReactRouterAspect];
   static runtime = UIRuntime;
   static slots = [
@@ -186,6 +208,7 @@ export class ScopeUI {
     Slot.withType<ScopeBadge>(),
     Slot.withType<ScopeOverview>(),
     Slot.withType<MenuWidget[]>(),
+    Slot.withType<MenuItemSlot>(),
   ];
 
   static async provider(
@@ -197,12 +220,13 @@ export class ScopeUI {
       ReactRouterUI
     ],
     config,
-    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot]: [
+    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot, menuItemSlot]: [
       RouteSlot,
       RouteSlot,
       SidebarSlot,
       ScopeBadgeSlot,
-      MenuWidgetSlot
+      MenuWidgetSlot,
+      MenuItemSlot
     ]
   ) {
     const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
@@ -215,9 +239,11 @@ export class ScopeUI {
       commandBarUI,
       componentSearcher,
       scopeBadgeSlot,
-      menuWidgetSlot
+      menuWidgetSlot,
+      menuItemSlot
     );
     scopeUi.registerExplicitRoutes();
+    scopeUi.registerMenuItem(scopeUi.menuItems);
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
 
     return scopeUi;
