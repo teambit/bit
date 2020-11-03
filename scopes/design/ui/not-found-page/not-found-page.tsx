@@ -4,7 +4,7 @@ import { ErrorPage } from '@teambit/ui.error-page';
 import { ExternalLink } from '@teambit/ui.external-link';
 import styles from './not-found-page.module.scss';
 
-type NotFoundPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
+export type NotFoundPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * A component that shows a 404 error page
