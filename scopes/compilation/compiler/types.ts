@@ -78,11 +78,6 @@ export interface Compiler extends CompilerOptions {
   isFileSupported(filePath: string): boolean;
 
   /**
-   * enable changing the capsule package.json before publishing the package
-   */
-  changePackageJsonBeforePublish?(packageJson: Record<string, any>): void;
-
-  /**
    * sugar to create a Compiler task via the concrete compiler
    */
   createTask?(name?: string): BuildTask;
