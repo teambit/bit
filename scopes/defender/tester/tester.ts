@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';

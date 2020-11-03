@@ -106,7 +106,7 @@ export class TesterMain {
 
   async uiWatch() {
     const components = await this.workspace.list();
-    this.watch(components, { watch: true, debug: false });
+    return this.watch(components, { watch: true, debug: false });
   }
 
   getTestsResults(component: Component): { testsResults?: TestsResult; loading: boolean } | undefined {
@@ -156,7 +156,7 @@ export class TesterMain {
       cli.unregister('test');
       ui.registerOnStart(async () => {
         if (!config.watchOnStart) return;
-        tester.uiWatch();
+        return tester.uiWatch();
       });
 
       cli.register(new TestCmd(tester, workspace, logger));

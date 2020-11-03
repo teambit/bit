@@ -86,7 +86,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     };
   }
 
-  async onTestRunComplete(callback: CallbackFn) {
+  onTestRunComplete(callback: CallbackFn) {
     this._callback = callback;
   }
 
