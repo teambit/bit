@@ -1,4 +1,3 @@
-import { EventEmitter } from 'events';
 import { readFileSync } from 'fs';
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
@@ -132,12 +131,20 @@ export class JestTester implements Tester {
   }
 
   watch(context: TesterContext): Promise<Tests> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
+      // eslint-disable-next-line
+      const jestConfig = require(this.jestConfig);
+      const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
+        specs.forEach((spec) => acc.push(spec.path));
+        return acc;
+      }, []);
+
+      const jestConfigWithSpecs = Object.assign(jestConfig, {
+        testMatch: testFiles,
+      });
       const config: any = {
         rootDir: context.rootPath,
-        //watch: true,
         watchAll: true,
-        //reporters: [`${__dirname}/reporter.js`],
         watchPlugins: [
           [
             `${__dirname}/watch.js`,
@@ -159,24 +166,15 @@ export class JestTester implements Tester {
                   components: componentTestResults,
                 };
                 this._callback(watchTestResults);
+                resolve();
               },
             },
           ],
         ],
       };
-      // eslint-disable-next-line
-      const jestConfig = require(this.jestConfig);
-      const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
-        specs.forEach((spec) => acc.push(spec.path));
-        return acc;
-      }, []);
 
       const loadingComponents = context.components.map((c) => ({ componentId: c.id, loading: true }));
       if (this._callback) this._callback({ components: loadingComponents });
-
-      const jestConfigWithSpecs = Object.assign(jestConfig, {
-        testMatch: testFiles,
-      });
 
       const withEnv = Object.assign(jestConfigWithSpecs, config);
       runCLI(withEnv, [this.jestConfig]);

@@ -101,7 +101,7 @@ export class TesterMain {
     this.service.onTestRunComplete((results) => {
       this._testsResults = results;
     });
-    await envsRuntime.run(this.service, options);
+    return envsRuntime.run(this.service, options);
   }
 
   async uiWatch() {

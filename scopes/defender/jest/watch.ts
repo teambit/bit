@@ -22,8 +22,8 @@ class Watch implements WatchPlugin {
   _onComplete: (testSuite: any) => void;
 
   constructor({
-    stdin,
-    stdout,
+    // stdin,
+    // stdout,
     config,
   }: {
     stdin: NodeJS.ReadStream;
@@ -38,6 +38,7 @@ class Watch implements WatchPlugin {
     const component = this._specFiles.toArray().find(([, specs]) => {
       const paths = specs.map((spec) => spec.path);
       if (paths.includes(specFile)) return true;
+      return false;
     });
     return component?.[0];
   }

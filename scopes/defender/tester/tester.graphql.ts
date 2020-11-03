@@ -1,6 +1,5 @@
-import { GraphqlMain } from '@teambit/graphql';
+import { GraphqlMain, Schema } from '@teambit/graphql';
 import { ComponentFactory } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
 import { withFilter } from 'graphql-subscriptions';
 import gql from 'graphql-tag';
 

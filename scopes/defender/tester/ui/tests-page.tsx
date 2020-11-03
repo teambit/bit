@@ -1,4 +1,4 @@
-import { useSubscription } from '@apollo/react-hooks';
+import { useSubscription, useQuery } from '@apollo/react-hooks';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
@@ -6,9 +6,6 @@ import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
 import { gql } from 'apollo-boost';
 import React, { HTMLAttributes, useContext } from 'react';
-
-import { useQuery } from '@apollo/react-hooks';
-
 import { TestTable } from '@teambit/ui.test-table';
 
 import styles from './tests-page.module.scss';
@@ -80,7 +77,7 @@ export function TestsPage({ className }: TestsPageProps) {
         link="https://bit-new-docs.netlify.app/docs/testing/test-components"
       />
     );
-  let testResults =
+  const testResults =
     onTestsChanged.data?.testsChanged.testsResults.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
   if (testResults === null) {
     return (

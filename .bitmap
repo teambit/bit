@@ -1183,7 +1183,7 @@
         "exported": false,
         "lanes": []
     },
-    "compositions@0.0.108": {
+    "compositions": {
         "files": [
             {
                 "name": "composition.section.tsx",
@@ -2972,7 +2972,7 @@
         "exported": false,
         "lanes": []
     },
-    "preview@0.0.108": {
+    "preview": {
         "files": [
             {
                 "name": "bundling-strategy.ts",
@@ -3512,7 +3512,7 @@
         "exported": false,
         "lanes": []
     },
-    "scope@0.0.108": {
+    "scope": {
         "files": [
             {
                 "name": "components.drawer.tsx",
@@ -4591,7 +4591,7 @@
         "exported": false,
         "lanes": []
     },
-    "ui/pages/standalone-not-found-page@0.0.108": {
+    "ui/pages/standalone-not-found-page": {
         "files": [
             {
                 "name": "index.ts",
@@ -5674,7 +5674,7 @@
         "exported": false,
         "lanes": []
     },
-    "workspace@0.0.108": {
+    "workspace": {
         "files": [
             {
                 "name": "capsule-create.cmd.ts",
