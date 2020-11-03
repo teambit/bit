@@ -53,7 +53,7 @@ export class TesterTask implements BuildTask {
       componentsResults: testsResults.components.map((componentTests) => ({
         component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
         metadata: { tests: componentTests.results },
-        errors: componentTests.results?.testFiles.map((testFile) => testFile.error),
+        errors: componentTests.results?.testFiles.map((testFile) => testFile.error?.failureMessage),
       })),
     };
   }
