@@ -151,8 +151,8 @@ export default class ScopeHelper {
     return this.command.runCmd(`bit remote add file://${remoteScopePath} ${globalArg}`, localScopePath);
   }
 
-  addRemoteHttpScope() {
-    return this.command.runCmd('bit remote add http://localhost:3000');
+  addRemoteHttpScope(port = '3000') {
+    return this.command.runCmd(`bit remote add http://localhost:${port}`);
   }
 
   removeRemoteScope(remoteScope: string = this.scopes.remote, isGlobal = false) {
