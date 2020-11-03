@@ -1,4 +1,3 @@
-import graphLib, { Graph } from 'graphlib';
 import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
@@ -14,7 +13,6 @@ import replacePackageName from '../../utils/string/replace-package-name';
 import ComponentObjects from '../component-objects';
 import { MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
-import { buildOneGraphForComponentsAndMultipleVersions } from '../graph/components-graph';
 import { Lane, ModelComponent, Symlink, Version } from '../models';
 import Source from '../models/source';
 import { BitObject, Ref } from '../objects';
@@ -22,6 +20,8 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
+
+type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -75,28 +75,42 @@ export async function exportMany({
     ids = BitIds.uniqFromArray(ids);
   }
   const remotes: Remotes = await getScopeRemotes(scope);
-  if (remoteName) {
-    logger.debugAndAddBreadCrumb('export-scope-components', 'export all ids to one remote');
-    return exportIntoRemote(remoteName, ids, lanesObjects);
-  }
-  logger.debugAndAddBreadCrumb('export-scope-components', 'export ids to multiple remotes');
-  const groupedByScope = await sortAndGroupByScope();
-  const groupedByScopeString = groupedByScope
-    .map((item) => `scope "${item.scopeName}": ${item.ids.toString()}`)
+  const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
+  const groupedByScopeString = Object.keys(idsGroupedByScope)
+    .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-  const results = await mapSeries(groupedByScope, (result) => exportIntoRemote(result.scopeName, result.ids));
+  const manyObjectsPerRemote = await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
+    getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], lanesObjects)
+  );
+  manyObjectsPerRemote.forEach((objectsPerRemote) => {
+    objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
+      addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
+    );
+  });
+  await pushToRemotes();
+  const results = await updateLocalObjects(lanesObjects);
   return {
     newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
     exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
   };
 
-  async function exportIntoRemote(
+  type ObjectListPerName = { [name: string]: ObjectList };
+  type ObjectsPerRemote = {
+    remote: Remote;
+    objectList: ObjectList;
+    objectListPerName: ObjectListPerName;
+    idsToChangeLocally: BitIds;
+    componentsAndObjects: ModelComponentAndObjects[];
+    exportedIds?: string[];
+  };
+
+  async function getUpdatedObjectsToExport(
     remoteNameStr: string,
     bitIds: BitIds,
     lanes: Lane[] = []
-  ): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
+  ): Promise<ObjectsPerRemote> {
     bitIds.throwForDuplicationIgnoreVersion();
     const remote: Remote = await remotes.resolve(remoteNameStr, scope);
     const componentObjects = await mapSeries(bitIds, (id) => scope.sources.getObjects(id));
@@ -105,8 +119,9 @@ export async function exportMany({
     );
     const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
     const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
-    const componentsAndObjects: Array<{ component: ModelComponent; objects: BitObject[] }> = [];
+    const componentsAndObjects: ModelComponentAndObjects[] = [];
     const objectList = new ObjectList();
+    const objectListPerName: ObjectListPerName = {};
     const processComponentObjects = async (componentObject: ComponentObjects) => {
       const componentAndObject = componentObject.toObjects();
       const localVersions = componentAndObject.component.getLocalVersions();
@@ -123,7 +138,8 @@ export async function exportMany({
         remoteNameStr,
         includeDependencies,
         bitIds,
-        codemod
+        codemod,
+        idsWithFutureScope
       );
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       componentAndObject.component.addScopeListItem(remoteObj);
@@ -161,7 +177,9 @@ export async function exportMany({
         return componentAndObject.component.collectVersionsObjects(scope.objects, localVersions);
       };
       const objectsBuffer = await getObjectsData();
-      objectList.addIfNotExist([componentData, ...objectsBuffer]);
+      const allObjectsData = [componentData, ...objectsBuffer];
+      objectListPerName[componentAndObject.component.name] = new ObjectList(allObjectsData);
+      objectList.addIfNotExist(allObjectsData);
     };
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
     await mapSeries(componentObjects, processComponentObjects);
@@ -174,149 +192,108 @@ export async function exportMany({
       })
     );
     objectList.addIfNotExist(lanesData);
-    let exportedIds: string[];
-    try {
-      exportedIds = await remote.pushMany(objectList, context);
-      logger.debugAndAddBreadCrumb(
-        'exportMany',
-        'successfully pushed all ids to the bare-scope, going to save them back to local scope'
-      );
-    } catch (err) {
-      logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
-      return Promise.reject(err);
-    }
-    await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id)));
-    // @ts-ignore
-    idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
-    componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
-
-    // update lanes
-    await Promise.all(
-      lanes.map(async (lane) => {
-        if (idsToChangeLocally.length) {
-          // otherwise, we don't want to update scope-name of components in the lane object
-          scope.objects.add(lane);
-          // this is needed so later on we can add the tracking data and update .bitmap
-          // @todo: support having a different name on the remote by a flag
-          lane.remoteLaneId = RemoteLaneId.from(lane.name, remoteNameStr);
-        }
-        await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
-      })
-    );
-    const currentLane = scope.lanes.getCurrentLaneName();
-    if (currentLane === DEFAULT_LANE && !lanes.length) {
-      // all exported from master
-      const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
-      await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
-      await Promise.all(
-        componentsAndObjects.map(async ({ component }) => {
-          await scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getHead());
-        })
-      );
-    }
-
-    await scope.objects.persist();
-    const newIdsOnRemote = exportedIds.map((id) => BitId.parse(id, true));
-    // remove version. exported component might have multiple versions exported
-    const idsWithRemoteScope: BitId[] = newIdsOnRemote.map((id) => id.changeVersion(undefined));
-    const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
-    return {
-      newIdsOnRemote,
-      exported: idsWithRemoteScopeUniq,
-      updatedLocally: BitIds.fromArray(
-        idsWithRemoteScopeUniq.filter((id) => idsToChangeLocally.hasWithoutScopeAndVersion(id))
-      ),
-    };
+    return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
-  /**
-   * the topological sort is needed in case components have dependencies in other scopes.
-   * without sorting, in case remoteA/compA depends on remoteB/compB and remoteA/compA was exported
-   * first, remoteA will throw an error that remoteB/compB was not found.
-   * sorting the components topologically, ensure we export remoteB/compB first.
-   *
-   * there are a few cases to consider:
-   * 1) in case there are cycle dependencies between the scopes, it's impossible to toposort.
-   * 2) the cycle dependencies can be between different versions. e.g. remoteA/compA@0.0.1 requires
-   * remoteB/compB@0.0.1 and remoteB/compB@0.0.2 requires remoteA/compA@0.0.2.
-   * that's why when building the graph we take all versions into account and build the graph
-   * without the version number, so then we could let the graph's algorithm finding the cycle.
-   * 3) it's possible to have circle dependencies inside the same scope, and non-circle
-   * dependencies between the different scopes. in this case, the toposort should be done after
-   * removing the ids participated in the circular.
-   *
-   * once the sort is done, it returns an array of { scopeName: string; ids: BitIds }.
-   * keep in mind that this array might have multiple items with the same scopeName, that's totally
-   * valid and it will cause multiple round-trip to the same scope. there is no other way around
-   * it.
-   * the sort is done after eliminating circles, so it's possible to execute topsort. once the
-   * components are topological sorted, they are added one by one to the results array. If the last
-   * item in the array has the same scope as the currently inserted component, it can be added to
-   * the same scope group. otherwise, a new item needs to be added to the array with the new scope.
-   */
-  async function sortAndGroupByScope(): Promise<{ scopeName: string; ids: BitIds }[]> {
-    const grouped = ids.toGroupByScopeName(idsWithFutureScope);
-    const groupedArrayFormat = Object.keys(grouped).map((scopeName) => ({ scopeName, ids: grouped[scopeName] }));
-    if (Object.keys(grouped).length <= 1) {
-      return groupedArrayFormat;
-    }
-    // when exporting to multiple scopes, there is a chance of dependencies between the different scopes
-    const componentsAndVersions = await scope.getComponentsAndAllLocalUnexportedVersions(ids);
-    const graph: Graph = buildOneGraphForComponentsAndMultipleVersions(componentsAndVersions);
-    const cycles = graphLib.alg.findCycles(graph);
-    const groupedArraySorted: { scopeName: string; ids: BitIds }[] = [];
-    const addToGroupedSorted = (id: BitId) => {
-      if (groupedArraySorted.length) {
-        const lastItem = groupedArraySorted[groupedArraySorted.length - 1];
-        if (lastItem.scopeName === id.scope) {
-          lastItem.ids.push(id);
-          return;
-        }
+  function addDependenciesToObjectList(
+    objectsPerRemote: ObjectsPerRemote,
+    componentAndObjects: ModelComponentAndObjects
+  ): void {
+    const addDepsIfCurrentlyExported = (id: BitId) => {
+      const depScope = id.scope;
+      if (!depScope) throw new Error(`export-scope-components, unable to export ${id.toString()}, it has no scope`);
+      if (depScope === componentAndObjects.component.scope) {
+        return; // it's already included in the ObjectList.
       }
-      const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
-      if (idWithFutureScope) {
-        groupedArraySorted.push({ scopeName: idWithFutureScope.scope as string, ids: new BitIds(id) });
+      const dependencyObjects = manyObjectsPerRemote.find((obj) => obj.remote.name === depScope);
+      if (!dependencyObjects) {
+        return; // this id is not currently exported. the remote will import it during the push.
       }
-      // otherwise, it's in the graph, but not in the idWithFutureScope array. this is probably just a
-      // dependency of one of the pending-export ids, and that dependency is not supposed to be
-      // export, so just ignore it.
+      const dependencyObjectList = dependencyObjects.objectListPerName[id.name];
+      if (!dependencyObjectList) {
+        return; // this id is not currently exported. the remote will import it during the push.
+      }
+      objectsPerRemote.objectList.mergeObjectList(dependencyObjectList);
     };
-    if (cycles.length) {
-      const cyclesWithMultipleScopes = cycles.filter((cycle) => {
-        const bitIds = cycle.map((s) => graph.node(s));
-        const firstScope = bitIds[0].scope;
-        return bitIds.some((id) => id.scope !== firstScope);
-      });
-      if (cyclesWithMultipleScopes.length) {
-        throw new GeneralError(`fatal: unable to export. the following components have circular dependencies between two or more scopes
-${cyclesWithMultipleScopes.map((c) => c.join(', ')).join('\n')}
-please untag the problematic components and eliminate the circle between the scopes.
-tip: use "bit graph [--all-versions]" to get a visual look of the circular dependencies`);
-      }
-      // there are circles but they are all from the same scope, add them to groupedArraySorted
-      // first, then, remove from the graph, so it will be possible to execute topsort
-      cycles.forEach((cycle) => {
-        cycle.forEach((node) => {
-          const id = graph.node(node);
-          addToGroupedSorted(id);
-          graph.removeNode(node);
-        });
-      });
-    }
-    // @todo: optimize in case each one of the ids has all its dependencies from the same scope,
-    // return groupedArrayFormat
-    let sortedComponents;
-    try {
-      sortedComponents = graphLib.alg.topsort(graph);
-    } catch (err) {
-      // should never arrive here, it's just a precaution, as topsort doesn't fail nicely
-      logger.error(err);
-      throw new Error(`fatal: graphlib was unable to topsort the components. circles: ${cycles}`);
-    }
-    const sortedComponentsIds = sortedComponents.map((s) => graph.node(s)).reverse();
-    sortedComponentsIds.forEach((id) => addToGroupedSorted(id));
+    // @ts-ignore
+    const versionsObjects: Version[] = componentAndObjects.objects.filter((object) => object instanceof Version);
+    versionsObjects.forEach((version: Version) => {
+      version.flattenedDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
+      version.flattenedDevDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
+    });
+  }
 
-    return groupedArraySorted;
+  async function pushToRemotes(): Promise<void> {
+    await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
+      const { remote, objectList } = objectsPerRemote;
+      let exportedIds: string[];
+      const succeededRemotes: Remote[] = [];
+      try {
+        exportedIds = await remote.pushMany(objectList, context);
+        logger.debugAndAddBreadCrumb(
+          'exportMany',
+          'successfully pushed all ids to the bare-scope, going to save them back to local scope'
+        );
+        succeededRemotes.push(remote);
+        objectsPerRemote.exportedIds = exportedIds;
+      } catch (err) {
+        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
+        // TODO: roll back all succeededRemotes.
+        throw err;
+      }
+    });
+  }
+
+  async function updateLocalObjects(
+    lanes: Lane[]
+  ): Promise<Array<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }>> {
+    return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
+      const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
+      const remoteNameStr = remote.name;
+      await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id)));
+      // @ts-ignore
+      idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
+      componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
+
+      // update lanes
+      await Promise.all(
+        lanes.map(async (lane) => {
+          if (idsToChangeLocally.length) {
+            // otherwise, we don't want to update scope-name of components in the lane object
+            scope.objects.add(lane);
+            // this is needed so later on we can add the tracking data and update .bitmap
+            // @todo: support having a different name on the remote by a flag
+            lane.remoteLaneId = RemoteLaneId.from(lane.name, remoteNameStr);
+          }
+          await scope.objects.remoteLanes.syncWithLaneObject(remoteNameStr, lane);
+        })
+      );
+      const currentLane = scope.lanes.getCurrentLaneName();
+      if (currentLane === DEFAULT_LANE && !lanes.length) {
+        // all exported from master
+        const remoteLaneId = RemoteLaneId.from(DEFAULT_LANE, remoteNameStr);
+        await scope.objects.remoteLanes.loadRemoteLane(remoteLaneId);
+        await Promise.all(
+          componentsAndObjects.map(async ({ component }) => {
+            await scope.objects.remoteLanes.addEntry(remoteLaneId, component.toBitId(), component.getHead());
+          })
+        );
+      }
+
+      await scope.objects.persist();
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const newIdsOnRemote = exportedIds!.map((id) => BitId.parse(id, true));
+      // remove version. exported component might have multiple versions exported
+      const idsWithRemoteScope: BitId[] = newIdsOnRemote.map((id) => id.changeVersion(undefined));
+      const idsWithRemoteScopeUniq = BitIds.uniqFromArray(idsWithRemoteScope);
+      return {
+        newIdsOnRemote,
+        exported: idsWithRemoteScopeUniq,
+        updatedLocally: BitIds.fromArray(
+          idsWithRemoteScopeUniq.filter((id) => idsToChangeLocally.hasWithoutScopeAndVersion(id))
+        ),
+      };
+    });
   }
 
   async function getDependenciesImportIfNeeded(): Promise<BitId[]> {
@@ -410,11 +387,12 @@ async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitId
  */
 async function convertToCorrectScope(
   scope: Scope,
-  componentsObjects: { component: ModelComponent; objects: BitObject[] },
+  componentsObjects: ModelComponentAndObjects,
   remoteScope: string,
   fork: boolean,
   exportingIds: BitIds,
-  codemod: boolean
+  codemod: boolean,
+  idsWithFutureScope: BitIds
 ): Promise<boolean> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const versionsObjects: Version[] = componentsObjects.objects.filter((object) => object instanceof Version);
@@ -528,6 +506,11 @@ async function convertToCorrectScope(
       const dependencyObject = scope.objects.loadSync(depId.hash());
       if (dependencyObject instanceof Symlink) {
         return dependencyId.changeScope(dependencyObject.realScope);
+      }
+      const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
+      if (currentlyExportedDep && currentlyExportedDep.scope) {
+        // it's possible that a dependency has a different defaultScope settings.
+        return dependencyId.changeScope(currentlyExportedDep.scope);
       }
       return dependencyId.changeScope(remoteScope);
     }

@@ -528,7 +528,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     inScope = false,
     local = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
-    if (inScope) component.scope = this.scope.name;
+    // if (inScope) component.scope = this.scope.name;
     const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
     // @ts-ignore
     // const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
