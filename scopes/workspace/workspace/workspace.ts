@@ -49,6 +49,7 @@ import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
+import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { merge, slice } from 'lodash';
 import path, { join } from 'path';
@@ -628,21 +629,21 @@ export class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.componentDefaultScopeFromComponentDir(relativeComponentDir, componentId.fullName);
+    return this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, componentId.fullName);
   }
 
-  async componentDefaultScopeFromComponentDir(
+  async componentDefaultScopeFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir, name);
+    const componentConfigFile = await this.componentConfigFileFromComponentDirAndName(relativeComponentDir, name);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir, name);
+    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 
-  private async componentDefaultScopeFromComponentDirWithoutConfigFile(
+  private async componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
@@ -786,17 +787,17 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDir(relativeComponentDir, id.fullName);
+    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
   }
 
-  private async componentConfigFileFromComponentDir(
+  private async componentConfigFileFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(
+      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
         relativeComponentDir,
         name
       );
@@ -973,6 +974,22 @@ export class Workspace implements ComponentFactory {
     const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
     return join(modulePath, dist);
+  }
+
+  /**
+   * Provides a cache folder, unique per key.
+   * Return value may be undefined, if workspace folder is unconventional (bare-scope, no node_modules, etc)
+   */
+  getTempDir(
+    /*
+     * unique key, i.e. aspect or component id
+     */
+    id: string
+  ) {
+    const PREFIX = 'bit';
+    const cacheDir = findCacheDir({ name: join(PREFIX, id), create: true });
+
+    return cacheDir;
   }
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
@@ -1167,7 +1184,7 @@ export class Workspace implements ComponentFactory {
       throw err;
     }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
-    const defaultScope = await this.componentDefaultScopeFromComponentDir(
+    const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
       relativeComponentDir,
       legacyId.toStringWithoutScopeAndVersion()
     );

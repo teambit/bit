@@ -29,10 +29,13 @@ export function CompositionsPanel({
 
   return (
     <ul {...rest} className={classNames(className)}>
-      {compositions.map((composition, key) => {
+      {compositions.map((composition) => {
         // TODO - move to composition panel node
         return (
-          <li key={key} className={classNames(styles.linkWrapper, composition === active && styles.active)}>
+          <li
+            key={composition.identifier}
+            className={classNames(styles.linkWrapper, composition === active && styles.active)}
+          >
             <a className={styles.panelLink} onClick={() => handleSelect(composition)}>
               <span className={styles.box}></span>
               <span className={styles.name}>{composition.displayName}</span>
