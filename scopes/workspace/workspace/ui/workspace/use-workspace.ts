@@ -1,4 +1,4 @@
-import { useSubscription } from '@apollo/react-hooks';
+import { useEffect, useMemo } from 'react';
 import { useDataQuery } from '@teambit/ui';
 import gql from 'graphql-tag';
 
@@ -77,22 +77,57 @@ const COMPONENT_SUBSCRIPTION_CHANGED = gql`
 `;
 
 export function useWorkspace() {
-  const { data } = useDataQuery(WORKSPACE);
-  const onComponentAdded = useSubscription(COMPONENT_SUBSCRIPTION_ADDED);
-  const onComponentChanged = useSubscription(COMPONENT_SUBSCRIPTION_CHANGED);
-  if (onComponentAdded.data && data) {
-    data.workspace.components.push(onComponentAdded.data.componentAdded.component);
-  }
+  const { data, subscribeToMore } = useDataQuery(WORKSPACE);
 
-  // TODO: write it more pretty
-  if (onComponentChanged.data && data) {
-    const updatedComponent = onComponentChanged.data.componentChanged.component;
-    // replace the component
-    data.workspace.components = data.workspace.components.map((component) =>
-      component.id.name === updatedComponent.id.name ? updatedComponent : component
-    );
-  }
+  useEffect(() => {
+    const unSubCompAddition = subscribeToMore({
+      document: COMPONENT_SUBSCRIPTION_ADDED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const update = subscriptionData.data;
+        if (!update) return prev;
 
-  if (data) return Workspace.from(data.workspace);
-  return undefined;
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: [...prev.workspace.components, update.componentAdded.component],
+          },
+        };
+      },
+    });
+
+    const unSubCompChange = subscribeToMore({
+      document: COMPONENT_SUBSCRIPTION_CHANGED,
+      updateQuery: (prev, { subscriptionData }) => {
+        const update = subscriptionData.data;
+        if (!update) return prev;
+
+        const updatedComponent = update.componentChanged.component;
+        update.componentChanged.component;
+
+        return {
+          ...prev,
+          workspace: {
+            ...prev.workspace,
+            components: prev.workspace.components.map((component) =>
+              component.id.name === updatedComponent.id.name ? updatedComponent : component
+            ),
+          },
+        };
+      },
+    });
+
+    // TODO - sub to component removal
+
+    return () => {
+      unSubCompAddition();
+      unSubCompChange();
+    };
+  }, []);
+
+  const workspace = data?.workspace;
+
+  return useMemo(() => {
+    return workspace ? Workspace.from(workspace) : undefined;
+  }, [workspace]);
 }

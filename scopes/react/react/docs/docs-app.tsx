@@ -5,7 +5,7 @@ import { Base } from './base';
 
 export type DocsAppProps = {
   Provider: React.ComponentType;
-  docs: docsFile;
+  docs?: docsFile;
   componentId: string;
   compositions: [React.ComponentType];
 };

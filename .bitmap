@@ -1299,6 +1299,11 @@
                 "name": "use-compositions.tsx",
                 "relativePath": "ui/use-compositions.tsx",
                 "test": false
+            },
+            {
+                "name": "use-properties.ts",
+                "relativePath": "use-properties.ts",
+                "test": false
             }
         ],
         "mainFile": "index.ts",
@@ -3080,6 +3085,11 @@
                 "test": false
             },
             {
+                "name": "runtime-components.ts",
+                "relativePath": "runtime-components.ts",
+                "test": false
+            },
+            {
                 "name": "component-strategy.ts",
                 "relativePath": "strategies/component-strategy.ts",
                 "test": false
@@ -3092,6 +3102,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "strategies/index.ts",
+                "test": false
+            },
+            {
+                "name": "preview-module.ts",
+                "relativePath": "types/preview-module.ts",
                 "test": false
             },
             {
@@ -4821,6 +4836,25 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/server-error-page",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/pages/standalone-not-found-page": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "standalone-not-found.tsx",
+                "relativePath": "standalone-not-found.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/pages/standalone-not-found-page",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

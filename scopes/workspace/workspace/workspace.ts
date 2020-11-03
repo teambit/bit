@@ -49,6 +49,7 @@ import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
+import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { merge, slice } from 'lodash';
 import path, { join } from 'path';
@@ -973,6 +974,22 @@ export class Workspace implements ComponentFactory {
     const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
     return join(modulePath, dist);
+  }
+
+  /**
+   * Provides a cache folder, unique per key.
+   * Return value may be undefined, if workspace folder is unconventional (bare-scope, no node_modules, etc)
+   */
+  getTempDir(
+    /*
+     * unique key, i.e. aspect or component id
+     */
+    id: string
+  ) {
+    const PREFIX = 'bit';
+    const cacheDir = findCacheDir({ name: join(PREFIX, id), create: true });
+
+    return cacheDir;
   }
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
