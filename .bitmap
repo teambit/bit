@@ -4653,6 +4653,25 @@
         "exported": false,
         "lanes": []
     },
+    "ui/queries/get-docs": {
+        "files": [
+            {
+                "name": "get-docs.ts",
+                "relativePath": "get-docs.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/docs/ui/queries/get-docs",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "ui/scope-details@0.0.108": {
         "files": [
             {
