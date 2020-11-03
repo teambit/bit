@@ -16,7 +16,7 @@ import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
 
 export type DocsSectionProps = {
-  docs: docsFile;
+  docs?: docsFile;
   compositions: React.ComponentType[];
   componentId: string;
 } & HTMLAttributes<HTMLDivElement>;

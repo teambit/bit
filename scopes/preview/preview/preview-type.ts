@@ -1,3 +1,5 @@
+import { PreviewModule } from './types/preview-module';
+
 export interface PreviewType {
   /**
    * preview name to register.
@@ -19,4 +21,9 @@ export interface PreviewType {
    * which other extension modules to include in the preview context.
    */
   include?: string[];
+
+  /**
+   * select relevant information to show in preview context
+   */
+  selectPreviewModel?: (componentId: string, module: PreviewModule) => any;
 }

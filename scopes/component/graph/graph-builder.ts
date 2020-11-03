@@ -36,7 +36,15 @@ export class GraphBuilder {
         listIds = await this.scope.resolveMultipleComponentIds(listIds);
       }
       // @ts-ignore
-      const bitIds = listIds.map((id) => id._legacy);
+      const bitIds = listIds.map((id) => {
+        let bitId = id._legacy;
+        // The resolve bitId in scope will remove the scope name in case it's the same as the scope
+        // We restore it back to use it correctly in the legacy code.
+        if (!bitId.hasScope()) {
+          bitId = bitId.changeScope(this.scope?.name);
+        }
+        return bitId;
+      });
       const legacyGraph = await buildOneGraphForComponentsUsingScope(bitIds, this.scope.legacyScope);
       const graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.scope);
       this._graph = graph;
