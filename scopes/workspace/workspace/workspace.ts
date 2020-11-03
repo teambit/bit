@@ -1165,23 +1165,22 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    let legacyId: BitId;
-    try {
-      legacyId = this.consumer.getParsedId(id.toString(), true, true);
-    } catch (err) {
-      if (err.name === 'MissingBitMapComponent') {
-        try {
-          // handle component versions in the scope that doesn't exists on the workspace.
-          const [idWithoutVersion, version] = id.toString().split('@');
-          const _id = this.consumer.getParsedId(idWithoutVersion, false, true);
-          const withVersion = _id.changeVersion(version);
-          return this.scope.resolveComponentId(withVersion);
-        } catch (error) {
-          legacyId = BitId.parse(id.toString(), true);
-          return ComponentID.fromLegacy(legacyId);
-        }
+    let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
+    if (!legacyId) {
+      try {
+        // Removed for now by @gilad. if we want to search without the version in case the version doesn't exist in the bitmap (but the component does)
+        // we should remove the version before calling get parsed id in the first place (inside the first try)
+        // const [idWithoutVersion, version] = id.toString().split('@');
+        // const _id = this.consumer.getParsedId(idWithoutVersion, false, true);
+        // const withVersion = _id.changeVersion(version);
+        // return this.scope.resolveComponentId(withVersion);
+
+        // handle component versions in the scope that doesn't exists on the workspace.
+        return this.scope.resolveComponentId(id.toString());
+      } catch (error) {
+        legacyId = BitId.parse(id.toString(), true);
+        return ComponentID.fromLegacy(legacyId);
       }
-      throw err;
     }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
     const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(

@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { readdirSync } from 'fs-extra';
 import { resolve, join } from 'path';
@@ -292,14 +293,10 @@ export class ScopeMain implements ComponentFactory {
     const newId = id.changeVersion(versionStr);
     const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
     const snap = this.createSnapFromVersion(version);
+    const state = await this.createStateFromVersion(id, version);
+    const tagMap = await this.getTagMap(modelComponent);
 
-    return new Component(
-      newId,
-      snap,
-      await this.createStateFromVersion(id, version),
-      await this.getTagMap(modelComponent),
-      this
-    );
+    return new Component(newId, snap, state, tagMap, this);
   }
 
   /**
@@ -383,19 +380,15 @@ export class ScopeMain implements ComponentFactory {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-
-    await Promise.all(
-      Object.keys(modelComponent.versions).map(async (versionStr: string) => {
-        const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
-        // TODO: what to return if no version in objects
-        if (version) {
-          const snap = this.createSnapFromVersion(version);
-          const tag = new Tag(snap, new SemVer(versionStr));
-
-          tagMap.set(tag.version, tag);
-        }
-      })
-    );
+    await Bluebird.mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
+      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
+      // TODO: what to return if no version in objects
+      if (version) {
+        const snap = this.createSnapFromVersion(version);
+        const tag = new Tag(snap, new SemVer(versionStr));
+        tagMap.set(tag.version, tag);
+      }
+    });
 
     return tagMap;
   }

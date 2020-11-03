@@ -252,11 +252,18 @@ export default class Consumer {
     return bitId;
   }
 
-  getParsedIdIfExist(id: BitIdStr, searchWithoutScopeInProvidedId = false): BitId | undefined {
+  getParsedIdIfExist(
+    id: BitIdStr,
+    useVersionFromBitmap = false,
+    searchWithoutScopeInProvidedId = false
+  ): BitId | undefined {
     const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
     if (!bitId) return undefined;
-    const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version);
+    if (!useVersionFromBitmap) {
+      const version = BitId.getVersionOnlyFromString(id);
+      return bitId.changeVersion(version || LATEST);
+    }
+    return bitId;
   }
 
   /**

@@ -100,8 +100,11 @@ export default class Repository {
     return fs.pathExists(objectPath);
   }
 
-  load(ref: Ref, throws = false): Promise<BitObject> {
-    if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
+  async load(ref: Ref, throws = false): Promise<BitObject> {
+    const cached = this.getCache(ref);
+    if (cached) {
+      return cached;
+    }
     // @ts-ignore @todo: fix! it should return BitObject | null.
     return fs
       .readFile(this.objectPath(ref))
