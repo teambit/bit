@@ -133,13 +133,17 @@ export class DocsMain {
   ]) {
     const logger = loggerAspect.createLogger(DocsAspect.id);
     const docs = new DocsMain(preview, pkg, compiler, workspace, logger);
-    workspace.onComponentLoad(async (component) => {
-      const description = await docs.computeDescription(component);
 
-      return {
-        description,
-      };
-    });
+    if (workspace) {
+      workspace.onComponentLoad(async (component) => {
+        const description = await docs.computeDescription(component);
+
+        return {
+          description,
+        };
+      });
+    }
+
     graphql.register(docsSchema(docs));
 
     preview.registerDefinition(new DocsPreviewDefinition(docs));
