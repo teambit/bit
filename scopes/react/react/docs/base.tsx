@@ -37,7 +37,6 @@ const GET_COMPONENT = gql`
           identifier
         }
       }
-      # TODO - consult Gilad about moving this to properties fragment
       getDocs(id: $id) {
         ...docsFields
       }
@@ -46,7 +45,6 @@ const GET_COMPONENT = gql`
   ${docsFields}
 `;
 
-// TODO - update docs type to have these as optional
 const defaultDocs = {
   examples: [],
   labels: [],
