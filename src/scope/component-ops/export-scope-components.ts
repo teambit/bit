@@ -325,7 +325,7 @@ async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitId
   const mergeResults = await Promise.all(
     components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(component, versions, true, false);
+        const result = await scope.sources.merge(component, versions, false);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {

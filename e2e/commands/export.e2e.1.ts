@@ -743,7 +743,6 @@ describe('bit export command', function () {
           expect(output).to.have.string('exported the following 2 component');
         });
       });
-      // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
       describe('circular dependencies between the scopes', () => {
         let output;
         before(() => {
@@ -756,10 +755,8 @@ describe('bit export command', function () {
           helper.scopeHelper.addRemoteScope(anotherRemotePath, helper.scopes.remotePath);
           output = helper.general.runWithTryCatch('bit export');
         });
-        it('should throw an error about circle dependencies', () => {
-          expect(output).to.have.string(
-            'unable to export. the following components have circular dependencies between two or more scopes'
-          );
+        it('should export them successfully', () => {
+          expect(output).to.have.string('exported the following 2 component');
         });
       });
       describe('circular dependencies between the scopes in different versions', () => {
@@ -779,10 +776,8 @@ describe('bit export command', function () {
           helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, anotherRemotePath);
           output = helper.general.runWithTryCatch('bit export');
         });
-        it('should throw an error about circle dependencies', () => {
-          expect(output).to.have.string(
-            'unable to export. the following components have circular dependencies between two or more scopes'
-          );
+        it('should export them successfully', () => {
+          expect(output).to.have.string('exported the following 2 component');
         });
       });
       // @todo: change the tagLegacy to tag once librarian is the package-manager for capsule to support cyclic
