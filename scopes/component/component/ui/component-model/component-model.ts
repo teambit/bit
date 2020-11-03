@@ -14,6 +14,7 @@ import { TagProps } from '../../tag/tag';
 export type ComponentModelProps = {
   id: string;
   version: string;
+  description: string;
   server: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
@@ -79,8 +80,12 @@ export class ComponentModel {
     /**
      * env descriptor.
      */
+    readonly environment?: Descriptor,
 
-    readonly environment?: Descriptor
+    /**
+     * description of the component.
+     */
+    readonly description = ''
   ) {}
 
   get version() {
@@ -102,6 +107,7 @@ export class ComponentModel {
     env,
     status,
     issuesCount,
+    description,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -113,7 +119,8 @@ export class ComponentModel {
       issuesCount,
       status,
       deprecation,
-      env
+      env,
+      description
     );
   }
 

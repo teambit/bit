@@ -82,7 +82,7 @@ export class CliOutput extends React.Component<props, state> {
   private eventsListener = (event: BitBaseEvent<any>) => {
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
-        this.updateOrAddComponentServer(event.data.context.id, 'Running', event.data);
+        this.updateOrAddComponentServer(event.data.context.id, 'Starting...', event.data);
         this.safeOpenBrowser();
         break;
       case WebpackCompilationDoneEvent.TYPE:
@@ -144,7 +144,7 @@ export class CliOutput extends React.Component<props, state> {
       compiledComponents: [...this.state.compiledComponents, ...successfullyCompiledComponents],
       compiling: false,
     });
-    this.updateOrAddComponentServer(event.data.devServerID, 'Done');
+    this.updateOrAddComponentServer(event.data.devServerID, 'Running');
     this.safeOpenBrowser();
   };
 
