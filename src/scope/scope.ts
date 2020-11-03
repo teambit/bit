@@ -832,6 +832,10 @@ export default class Scope {
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
     if (!idHasScope) {
+      if (id.includes('.')) {
+        // we allow . only on scope names, so if it has . it must be with scope name
+        return BitId.parse(id, true);
+      }
       // if it's not in the scope, it's probably new, we assume it doesn't have scope.
       return BitId.parse(id, false);
     }
