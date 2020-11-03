@@ -111,7 +111,7 @@ export class TesterMain {
 
   getTestsResults(component: Component): { testsResults?: TestsResult; loading: boolean } | undefined {
     const entry = component.state.aspects.get(TesterAspect.id);
-    if (entry) return entry?.data.tests;
+    if (entry && !component.isModified) return entry?.data.tests;
     return this.getTestsResultsFromState(component);
   }
 
