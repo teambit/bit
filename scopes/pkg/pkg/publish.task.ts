@@ -1,10 +1,6 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskLocation } from '@teambit/builder';
-import { Compiler } from '@teambit/compiler';
 import { Logger } from '@teambit/logger';
 import { Capsule } from '@teambit/isolator';
-
-import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
-
 import { Publisher } from './publisher';
 import { Packer } from './packer';
 
@@ -37,8 +33,6 @@ export class PublishTask implements BuildTask {
     });
     this.logger.info(`going to run publish on ${capsulesToPublish.length} out of ${capsules.length}`);
 
-    await this.letCompilersChangePackageJsonBeforePublish(context);
-
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
     this.logger.info(`going to run pack dry-run on ${capsulesToPack.length} out of ${capsules.length}`);
 
@@ -49,18 +43,5 @@ export class PublishTask implements BuildTask {
       componentsResults: publishResults.concat(packResults),
       artifacts: [packArtifactsDefs],
     };
-  }
-
-  async letCompilersChangePackageJsonBeforePublish(context: BuildContext) {
-    const compilerInstance: Compiler = context.env.getCompiler();
-    if (!compilerInstance) return;
-    await Promise.all(
-      context.capsuleGraph.seedersCapsules.map(async (capsule) => {
-        const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
-        if (!compilerInstance.changePackageJsonBeforePublish) return;
-        compilerInstance.changePackageJsonBeforePublish(packageJson.packageJsonObject);
-        await packageJson.write();
-      })
-    );
   }
 }
