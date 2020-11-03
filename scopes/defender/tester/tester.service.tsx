@@ -110,7 +110,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       debug: options.debug,
     });
 
-    if (options.watch) {
+    if (options.watch && tester.watch) {
       if (tester.onTestRunComplete) {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         tester.onTestRunComplete((results) => {

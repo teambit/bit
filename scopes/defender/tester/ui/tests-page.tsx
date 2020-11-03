@@ -79,7 +79,7 @@ export function TestsPage({ className }: TestsPageProps) {
     );
   const testResults =
     onTestsChanged.data?.testsChanged.testsResults.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
-  if (testResults === null) {
+  if (testResults === null || !testResults) {
     return (
       <EmptyBox
         title="This component doesn’t have any test."
