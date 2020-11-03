@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import path from 'path';
 import { checksum, checksumFile } from './checksum';
 
-describe.only('checksum()', () => {
+describe('checksum()', () => {
   describe('string()', () => {
     it('should checksum a string', () => {
       // @ts-ignore
