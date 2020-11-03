@@ -13,7 +13,7 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-import { ResolvedPackageVersion, Registries } from '@teambit/dependency-resolver';
+import { ResolvedPackageVersion, Registries, NPM_REGISTRY } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
@@ -187,7 +187,7 @@ export async function resolveRemoteVersion(
 
 async function getRegistriesMap(registries: Registries): Promise<RegistriesMap> {
   const registriesMap = {
-    default: registries.defaultRegistry.uri || 'https://registry.npmjs.org/',
+    default: registries.defaultRegistry.uri || NPM_REGISTRY,
   };
 
   Object.entries(registries.scopes).forEach(([registryName, registry]) => {

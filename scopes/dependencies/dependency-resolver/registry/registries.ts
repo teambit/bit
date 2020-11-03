@@ -12,4 +12,8 @@ export class Registries {
      */
     readonly scopes: Record<string, Registry>
   ) {}
+
+  setDefaultRegistry(registry: Registry): Registries {
+    return new Registries(registry, this.scopes);
+  }
 }
