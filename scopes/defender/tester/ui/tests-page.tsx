@@ -14,9 +14,8 @@ import { TestTable } from '@teambit/ui.test-table';
 import styles from './tests-page.module.scss';
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
-  subscription OnTestsChanged {
-    testsChanged {
-      componentId
+  subscription OnTestsChanged($id: String!) {
+    testsChanged(id: $id) {
       testsResults {
         testFiles {
           file
@@ -66,19 +65,23 @@ const GET_COMPONENT = gql`
 type TestsPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function TestsPage({ className }: TestsPageProps) {
-  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED);
   const component = useContext(ComponentContext);
+  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id: component.id.toString() } });
   const { data } = useQuery(GET_COMPONENT, {
     variables: { id: component.id._legacy.name },
   });
 
-  if (data?.getHost?.getTests?.loading) return <div>loading</div>;
+  // TODO: change loading EmptyBox
+  if (data?.getHost?.getTests?.loading)
+    return (
+      <EmptyBox
+        title="This test are loading"
+        linkText="Learn how to add tests to your components"
+        link="https://bit-new-docs.netlify.app/docs/testing/test-components"
+      />
+    );
   let testResults =
     onTestsChanged.data?.testsChanged.testsResults.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
-  if (onTestsChanged?.data && onTestsChanged?.data?.testsChanged?.componentId != component.id.fullName) {
-    testResults = data?.getHost?.getTests?.testsResults?.testFiles;
-  }
-
   if (testResults === null) {
     return (
       <EmptyBox

@@ -1,6 +1,7 @@
 import { GraphqlMain } from '@teambit/graphql';
 import { ComponentFactory } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
+import { withFilter } from 'graphql-subscriptions';
 import gql from 'graphql-tag';
 
 import { TesterMain } from './tester.main.runtime';
@@ -14,7 +15,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
       }
 
       type Subscription {
-        testsChanged: TestsChanged
+        testsChanged(id: String!): Tests
       }
 
       type Tests {
@@ -23,7 +24,6 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
       }
 
       type TestsChanged {
-        componentId: String
         testsResults: TestsResults
       }
 
@@ -60,7 +60,12 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
     resolvers: {
       Subscription: {
         testsChanged: {
-          subscribe: () => graphql.pubsub.asyncIterator(OnTestsChanged),
+          subscribe: withFilter(
+            () => graphql.pubsub.asyncIterator(OnTestsChanged),
+            (payload, variables) => {
+              return payload.testsChanged.id === variables.id;
+            }
+          ),
         },
       },
 

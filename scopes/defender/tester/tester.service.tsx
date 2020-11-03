@@ -116,7 +116,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
           if (this._callback) this._callback(results);
           results.components.forEach((component) => {
             this.pubsub.publish(OnTestsChanged, {
-              testsChanged: { componentId: component.componentId.fullName, testsResults: component.results },
+              testsChanged: { id: component.componentId.toString(), testsResults: component.results },
             });
           });
         });
