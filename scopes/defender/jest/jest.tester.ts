@@ -177,7 +177,7 @@ export class JestTester implements Tester {
       if (this._callback) this._callback({ components: loadingComponents });
 
       const withEnv = Object.assign(jestConfigWithSpecs, config);
-      runCLI(withEnv, [this.jestConfig]);
+      return runCLI(withEnv, [this.jestConfig]);
     });
   }
 }

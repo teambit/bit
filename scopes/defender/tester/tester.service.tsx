@@ -112,9 +112,11 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
     if (options.watch) {
       if (tester.onTestRunComplete) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
         tester.onTestRunComplete((results) => {
           if (this._callback) this._callback(results);
           results.components.forEach((component) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.pubsub.publish(OnTestsChanged, {
               testsChanged: { id: component.componentId.toString(), testsResults: component.results },
             });
