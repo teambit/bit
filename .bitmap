@@ -2636,45 +2636,6 @@
         "exported": false,
         "lanes": []
     },
-    "modules/checksum": {
-        "files": [
-            {
-                "name": "checksum.spec.ts",
-                "relativePath": "checksum.spec.ts",
-                "test": false
-            },
-            {
-                "name": "checksum.ts",
-                "relativePath": "checksum.ts",
-                "test": false
-            },
-            {
-                "name": "1px.gif",
-                "relativePath": "fixtures/1px.gif",
-                "test": false
-            },
-            {
-                "name": "dshaw.txt",
-                "relativePath": "fixtures/dshaw.txt",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "readme.md",
-                "relativePath": "readme.md",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/pkg/modules/checksum",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
     "modules/requireable-component": {
         "files": [
             {
