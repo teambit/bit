@@ -81,7 +81,7 @@ export async function exportMany({
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
   const manyObjectsPerRemote = await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
-    getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], lanesObjects)
+    getUpdatedObjectsToExport(remoteName || scopeName, idsGroupedByScope[scopeName], lanesObjects)
   );
   manyObjectsPerRemote.forEach((objectsPerRemote) => {
     objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>

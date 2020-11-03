@@ -1316,7 +1316,7 @@ describe('bit export command', function () {
       helper.command.tagAllComponents();
       exportOutput = helper.command.export();
     });
-    it.only('should export them successfully with no errors', () => {
+    it('should export them successfully with no errors', () => {
       expect(exportOutput).to.have.string('exported the following 2 component');
       const scope1 = helper.command.listRemoteScopeParsed();
       expect(scope1).to.have.lengthOf(1);
