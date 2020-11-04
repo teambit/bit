@@ -117,26 +117,17 @@ export class PkgMain {
     const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
-    const pkg = new PkgMain(
-      config,
-      packageJsonPropsRegistry,
-      workspace,
-      scope,
-      builder,
-      packer,
-      envs,
-      dryRunTask,
-      preparePackagesTask,
-      componentAspect
-    );
+    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
 
     graphql.register(pkgSchema(pkg));
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
 
+    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
+    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
+    builder.registerBuildTask(preparePackagesTask);
+    builder.registerBuildTask(dryRunTask);
     builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, packer, logPublisher));
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
@@ -194,10 +185,6 @@ export class PkgMain {
      * envs extension.
      */
     private envs: EnvsMain,
-
-    readonly dryRunTask: PublishDryRunTask,
-
-    readonly preparePackagesTask: PreparePackagesTask,
 
     private componentAspect: ComponentMain
   ) {}
