@@ -41,6 +41,10 @@ export class AspectEnv implements Environment {
     return this.babel.createCompiler({ babelTransformOptions: babelConfig });
   }
 
+  createTsCompiler(tsConfig: TsConfigSourceFile) {
+    return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
+  }
+
   getBuildPipe() {
     const tsCompiler = this.reactEnv.getCompiler(tsconfig, {
       artifactName: 'declaration',

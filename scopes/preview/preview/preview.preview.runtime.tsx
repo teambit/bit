@@ -5,15 +5,11 @@ import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { ClickInsideAnIframeEvent } from './events';
+import { PreviewModule } from './types/preview-module';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
-const PREVIEW_MODULES = {};
-
-type previewModule = {
-  componentMap: Record<string, any[]>;
-  mainModule: { default: () => void };
-};
+const PREVIEW_MODULES: Record<string, PreviewModule> = {};
 
 export class PreviewPreview {
   constructor(
@@ -50,14 +46,14 @@ export class PreviewPreview {
       throw new PreviewNotFound(previewName);
     }
 
-    const includes = preview.include
-      ? preview.include
-          .map((prevName) => {
-            if (!PREVIEW_MODULES[prevName].componentMap[componentId]) return undefined;
-            return PREVIEW_MODULES[prevName].componentMap[componentId][0];
-          })
-          .filter((module) => !!module)
-      : [];
+    const includes = (preview.include || [])
+      .map((prevName) => {
+        const includedPreview = this.getPreview(prevName);
+        if (!includedPreview) return undefined;
+
+        return includedPreview.selectPreviewModel?.(componentId, PREVIEW_MODULES[prevName]);
+      })
+      .filter((module) => !!module);
 
     return preview.render(componentId, PREVIEW_MODULES[name], includes);
   };

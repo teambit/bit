@@ -18,12 +18,14 @@ export class ObjectList {
     return this.objects.length;
   }
 
-  static mergeMultipleInstances(ObjectLists: ObjectList[]): ObjectList {
+  static mergeMultipleInstances(objectLists: ObjectList[]): ObjectList {
     const objectList = new ObjectList();
-    ObjectLists.forEach((objList) => objectList.addIfNotExist(objList.objects));
+    objectLists.forEach((objList) => objectList.mergeObjectList(objList));
     return objectList;
   }
-
+  mergeObjectList(objectList: ObjectList) {
+    this.addIfNotExist(objectList.objects);
+  }
   static fromJsonString(jsonStr: string): ObjectList {
     const jsonParsed = JSON.parse(jsonStr);
     if (!Array.isArray(jsonParsed)) {
