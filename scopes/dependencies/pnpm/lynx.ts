@@ -139,7 +139,8 @@ export async function install(
 export async function resolveRemoteVersion(
   packageName: string,
   rootDir: string,
-  storeDir: string
+  storeDir: string,
+  registries: Registries
 ): Promise<ResolvedPackageVersion> {
   const { resolve } = await generateResolverAndFetcher(storeDir);
   const resolveOpts = {
@@ -148,8 +149,8 @@ export async function resolveRemoteVersion(
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const pnpmConfig = await readConfig();
-    const registry = pickRegistryForPackage(pnpmConfig.config.registries, parsedPackage);
+    const registriesMap = await getRegistriesMap(registries);
+    const registry = pickRegistryForPackage(registriesMap, parsedPackage);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
       pref: parsedPackage.version,

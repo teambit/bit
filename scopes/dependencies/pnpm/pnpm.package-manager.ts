@@ -89,7 +89,8 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { resolveRemoteVersion } = require('./lynx');
     const storeDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
-    return resolveRemoteVersion(packageName, options.rootDir, storeDir);
+    const registries = await this.depResolver.getRegistries();
+    return resolveRemoteVersion(packageName, options.rootDir, storeDir, registries);
   }
 
   async getRegistries(): Promise<Registries> {
