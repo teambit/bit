@@ -143,8 +143,13 @@ export class JestTester implements Tester {
         testMatch: testFiles,
       });
       const config: any = {
+        //json:true,
+        silent: true,
         rootDir: context.rootPath,
-        watchAll: true,
+        cache: false,
+        watch: true,
+        //watchAll: true,
+        reporters: [`${__dirname}/reporter.js`],
         watchPlugins: [
           [
             `${__dirname}/watch.js`,

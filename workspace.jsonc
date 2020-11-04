@@ -94,6 +94,7 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
+        "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
         "@types/lodash.head": "^4.0.6",
@@ -162,6 +163,7 @@
         "is-primitive": "3.0.1",
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",
+        "jest-util": "26.6.2",
         "jest-watcher": "26.6.2",
         "join-path": "^1.1.1",
         "json-formatter-js": "2.3.4",
@@ -218,8 +220,7 @@
         "webpack-hot-middleware": "^2.25.0",
         "webpack-manifest-plugin": "^2.2.0",
         "webpack-merge": "^4.2.2",
-        "workbox-webpack-plugin": "^5.1.3",
-        "@types/find-cache-dir": "3.2.0"
+        "workbox-webpack-plugin": "^5.1.3"
       },
       "peerDependencies": {
         "react": "^16.13.1",

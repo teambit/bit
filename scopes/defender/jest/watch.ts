@@ -1,3 +1,9 @@
+global.console.log = () => true;
+global.console.error = () => true;
+global.console.warn = () => true;
+global.console.debug = () => true;
+
+import { clearLine } from 'jest-util';
 import { Prompt, WatchPlugin, JestHookSubscriber, UsageData } from 'jest-watcher';
 import { SpecFiles } from '@teambit/tester';
 
@@ -22,14 +28,16 @@ class Watch implements WatchPlugin {
   _onComplete: (testSuite: any) => void;
 
   constructor({
-    // stdin,
-    // stdout,
+    stdin,
+    stdout,
     config,
   }: {
     stdin: NodeJS.ReadStream;
     stdout: NodeJS.WriteStream;
     config: PluginConfig;
   }) {
+    this._stdin = stdin;
+    this._stdout = stdout;
     this._specFiles = config.specFiles;
     this._onComplete = config.onComplete;
   }

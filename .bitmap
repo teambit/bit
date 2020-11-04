@@ -2537,6 +2537,11 @@
                 "test": false
             },
             {
+                "name": "reporter.ts",
+                "relativePath": "reporter.ts",
+                "test": false
+            },
+            {
                 "name": "watch.ts",
                 "relativePath": "watch.ts",
                 "test": false
