@@ -1318,7 +1318,8 @@ describe('bit export command', function () {
       const scope2 = helper.command.listRemoteScopeParsed(anotherRemote);
       expect(scope2).to.have.lengthOf(1);
     });
-    // @todo
-    it('bit status should be clean', () => {});
+    it('bit status should be clean', () => {
+      helper.command.expectStatusToBeClean();
+    });
   });
 });
