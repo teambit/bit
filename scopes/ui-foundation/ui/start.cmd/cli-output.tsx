@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import type { PubsubMain } from '@teambit/pubsub';
 
 // Import the IDs & Events
 import { BitBaseEvent } from '@teambit/pubsub';
-import type { WebpackCompilationStartedEventData } from '@teambit/webpack';
 import {
   WorkspaceAspect,
   OnComponentChangeEvent,
@@ -33,7 +34,6 @@ type state = {
   commandFlags: any;
   mainUIServer: any;
   componentServers: Array<any>;
-  latestError: any;
   webpackErrors: Array<any>;
   webpackWarnings: Array<any>;
   totalComponents: Array<any> | null;
@@ -58,7 +58,6 @@ export class CliOutput extends React.Component<props, state> {
       commandFlags: props.commandFlags,
       mainUIServer: props.uiServer,
       componentServers: [],
-      latestError: null,
       webpackErrors: [],
       webpackWarnings: [],
       totalComponents: null,
@@ -84,22 +83,22 @@ export class CliOutput extends React.Component<props, state> {
         this.safeOpenBrowser();
         break;
       case WebpackCompilationStartedEvent.TYPE:
-        this.onWebpackCompilationStarted(event);
+        this.onWebpackCompilationStarted(event as WebpackCompilationStartedEvent);
         break;
       case WebpackCompilationDoneEvent.TYPE:
-        this.onWebpackCompilationDone(event);
+        this.onWebpackCompilationDone(event as WebpackCompilationDoneEvent);
         break;
       case UiServerStartedEvent.TYPE:
-        this.onUiServerStarted(event);
+        this.onUiServerStarted(event as UiServerStartedEvent);
         break;
       case OnComponentChangeEvent.TYPE:
-        this.onComponentChange(event);
+        this.onComponentChange(event as OnComponentChangeEvent);
         break;
       case OnComponentAddEvent.TYPE:
-        this.onComponentAdd(event);
+        this.onComponentAdd(event as OnComponentAddEvent);
         break;
       case OnComponentRemovedEvent.TYPE:
-        this.onComponentRemoved(event);
+        this.onComponentRemoved(event as OnComponentRemovedEvent);
         break;
       case CompilerErrorEvent.TYPE:
         // TODO: for now completely ignoring compiler errors.
@@ -108,7 +107,7 @@ export class CliOutput extends React.Component<props, state> {
     }
   };
 
-  private async onUiServerStarted(event) {
+  private async onUiServerStarted(event: UiServerStartedEvent) {
     const devServers = await event.data.uiRoot.devServers;
 
     if (event.data.uiRoot.scope) {
@@ -131,11 +130,10 @@ export class CliOutput extends React.Component<props, state> {
     }
   }
 
-  private onWebpackCompilationStarted = (event: BitBaseEvent<ComponentsServerStartedEvent>) => {
+  private onWebpackCompilationStarted = (_event: WebpackCompilationStartedEvent) => {
     if (this.isOnRunningMode()) {
       this.clearConsole();
       this.setState({
-        latestError: null,
         webpackErrors: [],
         webpackWarnings: [],
         compiling: true,
@@ -143,7 +141,7 @@ export class CliOutput extends React.Component<props, state> {
     }
   };
 
-  private onWebpackCompilationDone = (event) => {
+  private onWebpackCompilationDone = (event: WebpackCompilationDoneEvent) => {
     const successfullyCompiledComponents = event.data.stats.compilation.errors.length ? [] : [event.data.stats.hash];
     this.setState({
       webpackErrors: [...event.data.stats.compilation.errors],
@@ -155,16 +153,15 @@ export class CliOutput extends React.Component<props, state> {
     this.safeOpenBrowser();
   };
 
-  private onComponentChange(event) {
-    //TODO: What to do here?
-  }
+  // TODO: What to do here?
+  private onComponentChange(_event: OnComponentChangeEvent) {}
 
-  private onComponentRemoved = (event) => {
-    this.onComponentChange(event);
+  private onComponentRemoved = (_event: OnComponentRemovedEvent) => {
+    // this.onComponentChange(event);
   };
 
-  private onComponentAdd = (event) => {
-    this.onComponentChange(event);
+  private onComponentAdd = (_event: OnComponentAddEvent) => {
+    // this.onComponentChange(event);
   };
 
   // Helpers
@@ -222,7 +219,6 @@ export class CliOutput extends React.Component<props, state> {
     const {
       componentServers,
       mainUIServer,
-      latestError,
       webpackErrors,
       webpackWarnings,
       compiledComponents,
