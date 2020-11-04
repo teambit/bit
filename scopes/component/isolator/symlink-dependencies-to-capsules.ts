@@ -20,12 +20,12 @@ export async function symlinkDependenciesToCapsules(capsules: Capsule[], capsule
 
 export async function symlinkOnCapsuleRoot(capsuleList: CapsuleList, logger: Logger, capsuleRoot: string) {
   const modulesPath = path.join(capsuleRoot, 'node_modules');
-  const symlinks = capsuleList.map(({ capsule, id }) => {
+  const symlinks = capsuleList.map((capsule) => {
     const packageName = componentIdToPackageName(capsule.component.state._consumer);
     const dest = path.join(modulesPath, packageName);
     const src = path.relative(path.resolve(dest, '..'), capsule.path);
 
-    return new Symlink(src, dest, id._legacy);
+    return new Symlink(src, dest, capsule.component.id._legacy);
   });
 
   await Promise.all(symlinks.map((symlink) => symlink.writeWithNativeFS()));
