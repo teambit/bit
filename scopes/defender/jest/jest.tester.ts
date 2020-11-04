@@ -167,6 +167,7 @@ export class JestTester implements Tester {
                 );
                 const globalErrors = this.getErrors(testResults);
                 const watchTestResults = {
+                  loading: false,
                   errors: globalErrors,
                   components: componentTestResults,
                 };

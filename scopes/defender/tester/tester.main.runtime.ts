@@ -135,7 +135,7 @@ export class TesterMain {
      */
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
 
-    watchOnStart: false,
+    watchOnStart: true,
   };
 
   static async provider(
