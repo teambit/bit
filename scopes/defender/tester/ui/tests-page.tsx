@@ -20,6 +20,9 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
           pass
           failed
           pending
+          error {
+            failureMessage
+          }
           tests {
             ancestor
             duration
@@ -45,6 +48,9 @@ const GET_COMPONENT = gql`
             pass
             failed
             pending
+            error {
+              failureMessage
+            }
             tests {
               ancestor
               duration
@@ -69,17 +75,10 @@ export function TestsPage({ className }: TestsPageProps) {
   });
 
   // TODO: change loading EmptyBox
-  if (data?.getHost?.getTests?.loading)
-    return (
-      <EmptyBox
-        title="This test are loading"
-        linkText="Learn how to add tests to your components"
-        link="https://bit-new-docs.netlify.app/docs/testing/test-components"
-      />
-    );
+  if (data?.getHost?.getTests?.loading) return 'Loading...';
   const testResults =
-    onTestsChanged.data?.testsChanged.testsResults.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
-  if (testResults === null || !testResults) {
+    onTestsChanged.data?.testsChanged?.testsResults?.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
+  if (testResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any test."
