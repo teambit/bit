@@ -104,7 +104,7 @@ export class Publisher {
     const componentIds = await this.workspace.resolveMultipleComponentIds(idsToPublish);
     const components = await this.workspace.scope.getMany(componentIds);
     const capsules = await this.isolator.isolateComponents(components, { baseDir: this.workspace.scope.path });
-    return capsules.getAllCapsules();
+    return capsules;
   }
 
   /**

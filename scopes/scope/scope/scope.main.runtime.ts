@@ -165,7 +165,7 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
 
-    return capsules.map(({ capsule }) => {
+    return capsules.map((capsule) => {
       // return RequireableComponent.fromCapsule(capsule);
       return new RequireableComponent(capsule.component, () => {
         const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
