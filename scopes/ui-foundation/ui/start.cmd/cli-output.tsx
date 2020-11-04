@@ -23,7 +23,6 @@ import {
   Starting,
   ComponentPreviewServerStarted,
   UIServersAreReadyInScope,
-  TSErrors,
   WebpackErrors,
   WebpackWarnings,
   CompilingOrUIServersAreReady,
@@ -237,10 +236,6 @@ export class CliOutput extends React.Component<props, state> {
       render(<UIServersAreReadyInScope mainUIServer={mainUIServer} />);
       return null;
     }
-
-    // if (latestError) {
-    //   return <TSErrors latestError={latestError} verbose={!!verbose} />;
-    // }
 
     if (webpackErrors.length) {
       return <WebpackErrors errs={webpackErrors} verbose={!!verbose} />;
