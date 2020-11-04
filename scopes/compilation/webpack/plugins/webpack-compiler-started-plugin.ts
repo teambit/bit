@@ -10,13 +10,14 @@ class WebpackCompilerStartedPlugin {
     this.devServerID = options.devServerID;
   }
 
-  private createEvent = (context, entry) => {
-    return new WebpackCompilationStartedEvent(Date.now(), context, entry);
+  private createEvent = (params: object) => {
+    return new WebpackCompilationStartedEvent(Date.now(), params);
   };
 
   apply(compiler) {
-    compiler.hooks.entryOption.tap('webpack-compiler-started-plugin', (context, entry) => {
-      this.pubsub.pub(WebpackAspect.id, this.createEvent(context, entry));
+    compiler.hooks.beforeCompile.tapAsync('webpack-compiler-started-plugin', (params: object, callback: Function) => {
+      this.pubsub.pub(WebpackAspect.id, this.createEvent(params));
+      callback();
     });
   }
 }
