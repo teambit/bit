@@ -10,6 +10,7 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
+import { OnTagOpts } from 'bit-bin/dist/scope/scope';
 import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
@@ -87,12 +88,15 @@ export class BuilderMain {
     });
   }
 
-  async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
+  async tagListener(components: Component[], options: OnTagOpts = {}): Promise<ComponentMap<AspectList>> {
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
-    const deployEnvsExecutionResults = await this.deploy(components);
-    deployEnvsExecutionResults.throwErrorsIfExist();
-    const allTasksResults = [...envsExecutionResults.tasksResults, ...deployEnvsExecutionResults.tasksResults];
+    const allTasksResults = [...envsExecutionResults.tasksResults];
+    if (!options.disableDeployPipeline) {
+      const deployEnvsExecutionResults = await this.deploy(components);
+      deployEnvsExecutionResults.throwErrorsIfExist();
+      allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
+    }
     await this.storeArtifacts(allTasksResults);
     const aspectList = this.pipelineResultsToAspectList(components, allTasksResults);
     return aspectList;
