@@ -118,7 +118,11 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
           results.components.forEach((component) => {
             // eslint-disable-next-line @typescript-eslint/no-floating-promises
             this.pubsub.publish(OnTestsChanged, {
-              testsChanged: { id: component.componentId.toString(), testsResults: component.results },
+              testsChanged: {
+                id: component.componentId.toString(),
+                testsResults: component.results,
+                loading: component.loading,
+              },
             });
           });
         });

@@ -74,10 +74,11 @@ export function TestsPage({ className }: TestsPageProps) {
     variables: { id: component.id._legacy.name },
   });
 
+  const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;
+
   // TODO: change loading EmptyBox
-  if (data?.getHost?.getTests?.loading) return 'Loading...';
-  const testResults =
-    onTestsChanged.data?.testsChanged?.testsResults?.testFiles || data?.getHost?.getTests?.testsResults?.testFiles;
+  if (testData?.loading) return 'Loading...';
+  const testResults = testData?.testsResults?.testFiles;
   if (testResults === null) {
     return (
       <EmptyBox
