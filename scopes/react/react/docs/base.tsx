@@ -1,13 +1,14 @@
 import 'reset-css';
 
+import React, { HTMLAttributes } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { ComponentModel } from '@teambit/component';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { docsFile } from '@teambit/documenter.types.docs-file';
+import { docsFields } from '@teambit/ui.queries.get-docs';
 import { gql } from 'apollo-boost';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
-import React, { HTMLAttributes } from 'react';
 
 import styles from './base.module.scss';
 import { ComponentOverview } from './component-overview';
@@ -37,22 +38,13 @@ const GET_COMPONENT = gql`
         }
       }
       getDocs(id: $id) {
-        abstract
-        properties {
-          name
-          description
-          required
-          type
-          default: defaultValue {
-            value
-          }
-        }
+        ...docsFields
       }
     }
   }
+  ${docsFields}
 `;
 
-// TODO - update docs type to have these as optional
 const defaultDocs = {
   examples: [],
   labels: [],

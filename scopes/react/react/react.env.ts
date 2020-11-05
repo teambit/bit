@@ -197,7 +197,7 @@ export class ReactEnv implements Environment {
    * returns the component build pipeline.
    */
   getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
-    return [this.getCompilerTask(tsconfig), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+    return [this.getCompilerTask(tsconfig), this.tester.task];
   }
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {
