@@ -14,6 +14,7 @@ const wcComponent = gql`
     compositions {
       identifier
     }
+    description
     issuesCount
     status {
       isNew

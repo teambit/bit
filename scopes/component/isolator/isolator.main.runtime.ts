@@ -95,12 +95,7 @@ export class IsolatorMain {
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string); // TODO: move this logic elsewhere
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
-    const capsuleList = new CapsuleList(
-      ...capsules.map((c) => {
-        const id = c.component.id;
-        return { id, capsule: c };
-      })
-    );
+    const capsuleList = CapsuleList.fromArray(capsules);
     if (opts.getExistingAsIs) {
       return capsuleList;
     }

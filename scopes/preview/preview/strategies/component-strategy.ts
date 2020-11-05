@@ -9,7 +9,7 @@ export class ComponentBundlingStrategy implements BundlingStrategy {
 
   computeTargets(context: BuildContext, previewDefs: PreviewDefinition[], previewTask: PreviewTask): Promise<Target[]> {
     return Promise.all(
-      context.capsuleGraph.capsules.map(async ({ capsule }) => {
+      context.capsuleGraph.capsules.map(async (capsule) => {
         return {
           entries: await previewTask.computePaths(capsule, previewDefs, context),
           components: [capsule.component],

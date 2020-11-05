@@ -14,6 +14,7 @@ const SCOPE = gql`
           version
           scope
         }
+        description
         compositions {
           identifier
         }

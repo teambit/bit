@@ -260,9 +260,11 @@ export default class NodeModuleLinker {
    * node_modules. The path doesn't have the scope-name as it doesn't exist yet. (e.g. @bit/foo).
    * Later on, when the component is exported and has a scope-name, the path is complete.
    * (e.g. @bit/scope.foo). At this stage, this function deletes the old-partial paths.
+   *
+   * This is not needed in Harmony because in Harmony the node-module has already the default-scope.
    */
   _deleteOldLinksOfIdWithoutScope(component: Component) {
-    if (component.id.scope) {
+    if (this.consumer?.isLegacy && component.id.scope) {
       const previousDest = getNodeModulesPathOfComponent({
         bindingPrefix: component.bindingPrefix,
         id: component.id.changeScope(null),
