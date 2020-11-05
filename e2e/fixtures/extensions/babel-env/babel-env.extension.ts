@@ -1,4 +1,4 @@
-import { EnvsMain, EnvsAspect } from '@teambit/environments';
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { BabelAspect, BabelMain } from '@teambit/babel';
 
@@ -11,17 +11,9 @@ export class BabelEnv {
 
   static async provider([envs, react, babel]: [EnvsMain, ReactMain, BabelMain]) {
     const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
-    const compilerOverride = envs.override({
-      getCompiler: () => {
-        return babelCompiler;
-      },
-    });
-    const babelTask = babelCompiler.createTask?.();
-    const tasks = babelTask ? [babelTask] : []
-    const compilerTaskOverride = react.overrideCompilerTasks(tasks);
     const harmonyReactEnv = react.compose([
-      compilerOverride,
-      compilerTaskOverride
+      react.overrideCompiler(babelCompiler),
+      react.overrideCompilerTasks([babelCompiler.createTask!()])
     ]);
 
     envs.registerEnv(harmonyReactEnv);

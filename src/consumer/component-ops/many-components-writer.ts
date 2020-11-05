@@ -23,7 +23,7 @@ import ComponentWriter, { ComponentWriterProps } from './component-writer';
 import { moveExistingComponent } from './move-components';
 
 interface ExternalPackageInstaller {
-  install: Function;
+  install: () => Promise<any>;
 }
 
 export interface ManyComponentsWriterParams {
@@ -365,7 +365,7 @@ to move all component files to a different directory, run bit remove and then bi
         installProdPackagesOnly: this.installProdPackagesOnly,
       });
     } else {
-      ManyComponentsWriter.externalInstaller?.install();
+      await ManyComponentsWriter.externalInstaller?.install();
     }
   }
   async _getAllLinks(): Promise<DataToPersist> {

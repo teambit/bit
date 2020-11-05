@@ -146,7 +146,7 @@ export default class ConsumerOverrides {
     return indexOfFirstWildcard(a) - indexOfFirstWildcard(b);
   }
 
-  async updateOverridesIfChanged(component: Component, areEnvsChanged: boolean): Promise<boolean> {
+  updateOverridesIfChanged(component: Component, areEnvsChanged: boolean): boolean {
     const overrides: ConsumerOverridesOfComponent = component.overrides.componentOverridesData;
     const id: BitId = component.id;
     const existingOverrides = this.getOverrideComponentData(id);

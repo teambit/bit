@@ -37,7 +37,7 @@ describe('publish functionality', function () {
       const remoteScopeParts = helper.scopes.remote.split('.');
       scopeWithoutOwner = remoteScopeParts[1];
       appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
-      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.reInitRemoteScope();
       npmCiRegistry.setCiScopeInBitJson();
@@ -135,7 +135,6 @@ describe('publish functionality', function () {
         const output = helper.command.runCmd('node app.js');
         expect(output.trim()).to.be.equal('hello button');
       });
-      // @todo: make sure it gets also the scope-name
       describe('requiring the package from another component', () => {
         before(() => {
           helper.fs.outputFile('bar/foo.js', `const pkg = require('${pkgName}'); console.log(pkg);`);
@@ -144,7 +143,7 @@ describe('publish functionality', function () {
         it('should recognize that the package is a component', () => {
           const show = helper.command.showComponentParsed('bar');
           expect(show.dependencies).to.have.lengthOf(1);
-          expect(show.dependencies[0].id).equal('ui/button@0.0.1');
+          expect(show.dependencies[0].id).equal('my-scope/ui/button@0.0.1');
         });
       });
     });
@@ -154,7 +153,7 @@ describe('publish functionality', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.fixtures.populateComponentsTS(1);
-      helper.extensions.addExtensionToVariant('*', 'teambit.bit/react', {});
+      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
 
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
     });

@@ -75,7 +75,7 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
-export const DEFAULT_HARMONY_PACKAGE_MANAGER = 'teambit.bit/pnpm';
+export const DEFAULT_HARMONY_PACKAGE_MANAGER = 'teambit.dependencies/pnpm';
 
 export const DEFAULT_EXTENSIONS = {};
 
@@ -449,9 +449,9 @@ export const IMPORT_PENDING_MSG =
   'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
 
 export enum Extensions {
-  dependencyResolver = 'teambit.bit/dependency-resolver',
-  pkg = 'teambit.bit/pkg',
-  compiler = 'teambit.bit/compiler',
-  envs = 'teambit.bit/envs',
-  builder = 'teambit.bit/builder',
+  dependencyResolver = 'teambit.dependencies/dependency-resolver',
+  pkg = 'teambit.pkg/pkg',
+  compiler = 'teambit.compilation/compiler',
+  envs = 'teambit.envs/envs',
+  builder = 'teambit.pipelines/builder',
 }

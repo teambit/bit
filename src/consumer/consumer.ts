@@ -67,6 +67,7 @@ import DirStructure from './dir-structure/dir-structure';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
+import { BasicTagParams } from '../api/consumer/lib/tag';
 
 type ConsumerProps = {
   projectPath: string;
@@ -252,11 +253,18 @@ export default class Consumer {
     return bitId;
   }
 
-  getParsedIdIfExist(id: BitIdStr, searchWithoutScopeInProvidedId = false): BitId | undefined {
+  getParsedIdIfExist(
+    id: BitIdStr,
+    useVersionFromBitmap = false,
+    searchWithoutScopeInProvidedId = false
+  ): BitId | undefined {
     const bitId: BitId | undefined = this.bitMap.getExistingBitId(id, false, searchWithoutScopeInProvidedId);
     if (!bitId) return undefined;
-    const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version);
+    if (!useVersionFromBitmap) {
+      const version = BitId.getVersionOnlyFromString(id);
+      return bitId.changeVersion(version || LATEST);
+    }
+    return bitId;
   }
 
   /**
@@ -489,19 +497,14 @@ export default class Consumer {
     return this.componentStatusLoader.getComponentStatusById(id);
   }
 
-  async tag(tagParams: {
-    ids: BitIds;
-    message: string;
-    exactVersion: string | undefined;
-    releaseType: semver.ReleaseType;
-    force: boolean | undefined;
-    verbose: boolean | undefined;
-    ignoreUnresolvedDependencies: boolean | undefined;
-    ignoreNewestVersion: boolean;
-    skipTests: boolean;
-    skipAutoTag: boolean;
-    persist: boolean;
-  }): Promise<{
+  async tag(
+    tagParams: {
+      ids: BitIds;
+      exactVersion: string | undefined;
+      releaseType: semver.ReleaseType;
+      ignoreUnresolvedDependencies: boolean | undefined;
+    } & BasicTagParams
+  ): Promise<{
     taggedComponents: Component[];
     autoTaggedResults: AutoTagResult[];
     isSoftTag: boolean;
@@ -539,10 +542,10 @@ export default class Consumer {
     }
 
     const { taggedComponents, autoTaggedResults, publishedPackages } = await tagModelComponent({
+      ...tagParams,
       consumerComponents: components,
       scope: this.scope,
       consumer: this,
-      ...tagParams,
     });
 
     return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
@@ -617,17 +620,18 @@ export default class Consumer {
 
     const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
+      ignoreNewestVersion: false,
       scope: this.scope,
       message,
       force,
       consumer: this,
       skipTests,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       verbose,
       skipAutoTag: skipAutoSnap,
       persist: true,
       resolveUnmerged,
       isSnap: true,
+      disableDeployPipeline: false,
     });
 
     return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };

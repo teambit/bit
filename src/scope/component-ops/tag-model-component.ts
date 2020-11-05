@@ -24,6 +24,7 @@ import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
 import { OnTagResult } from '../scope';
 import { Log } from '../models/version';
+import { BasicTagParams } from '../../api/consumer/lib/tag';
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
@@ -170,22 +171,20 @@ export default async function tagModelComponent({
   persist,
   resolveUnmerged,
   isSnap = false,
+  disableDeployPipeline,
 }: {
   consumerComponents: Component[];
   scope: Scope;
-  message: string;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
-  force: boolean | null | undefined;
   consumer: Consumer;
-  ignoreNewestVersion?: boolean;
-  skipTests: boolean;
-  verbose?: boolean;
-  skipAutoTag: boolean;
-  persist: boolean;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
-}): Promise<{ taggedComponents: Component[]; autoTaggedResults: AutoTagResult[]; publishedPackages: string[] }> {
+} & BasicTagParams): Promise<{
+  taggedComponents: Component[];
+  autoTaggedResults: AutoTagResult[];
+  publishedPackages: string[];
+}> {
   if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
@@ -281,10 +280,13 @@ export default async function tagModelComponent({
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && persist) {
     const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
-    const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) => func(ids));
+
+    const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) =>
+      func(ids, { disableDeployPipeline })
+    );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     allComponentsToTag.forEach((comp) => {
-      const pkgExt = comp.extensions.findCoreExtension('teambit.bit/pkg');
+      const pkgExt = comp.extensions.findCoreExtension('teambit.pkg/pkg');
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });
