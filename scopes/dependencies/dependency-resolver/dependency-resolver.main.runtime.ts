@@ -18,7 +18,7 @@ import fs from 'fs-extra';
 import R, { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
-import { Registries } from './registry';
+import { Registries, Registry } from './registry';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
 import { DependencyGraph } from './dependency-graph';
 import { BitLinkType, DependencyInstaller } from './dependency-installer';
@@ -37,6 +37,9 @@ import {
   PolicyDep,
   WorkspaceDependenciesPolicy,
 } from './types';
+
+export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
+export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
@@ -227,15 +230,34 @@ export class DependencyResolverMain {
 
   async getRegistries(): Promise<Registries> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    let registries;
     // eslint-disable-next-line global-require, import/no-dynamic-require
     // TODO: support getting from default package manager
     if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
-      return packageManager?.getRegistries();
+      registries = await packageManager?.getRegistries();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getRegistries) throw new Error('system package manager must implement `getRegistries()`');
+      registries = await systemPm.getRegistries();
     }
 
-    const systemPm = this.getSystemPackageManager();
-    if (!systemPm.getRegistries) throw new Error('system package manager must implement `getRegistries()`');
-    return systemPm.getRegistries();
+    // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
+    // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
+    if (
+      !registries.defaultRegistry.uri ||
+      registries.defaultRegistry.uri === NPM_REGISTRY ||
+      NPM_REGISTRY.startsWith(registries.defaultRegistry.uri)
+    ) {
+      const bitToken = registries.scopes.bit?.authHeaderValue;
+      const bitRegistry = registries.scopes.bit?.uri || BIT_DEV_REGISTRY;
+      // TODO: this will not handle cases where you have token for private npm registries stored on npmjs
+      // it should be handled by somehow in such case (default is npmjs and there is token for default) by sending the token of npmjs to the registry
+      // (for example by setting some special header in the request)
+      // then in the registry server it should be use it when proxies
+      const bitDefaultRegistry = new Registry(bitRegistry, true, bitToken);
+      registries = registries.setDefaultRegistry(bitDefaultRegistry);
+    }
+    return registries;
   }
 
   get packageManagerName(): string {
