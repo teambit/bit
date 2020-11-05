@@ -71,6 +71,7 @@ export type ComponentPkgExtensionData = {
 type ComponentPackageManifest = {
   name: string;
   distTags: Record<string, string>;
+  externalRegistry: boolean;
   versions: VersionPackageManifest[];
 };
 
@@ -285,11 +286,25 @@ export class PkgMain {
     });
     const versions = await Promise.all(versionsP);
     const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
+    const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
       name,
       distTags,
+      externalRegistry,
       versions: versionsWithoutEmpty,
     };
+  }
+
+  /**
+   * Check if the component should be fetched from bit registry or from another registry
+   * This will usually determined by the latest version of the component
+   * @param component
+   */
+  isPublishedToExternalRegistry(component: Component): boolean {
+    const pkgExt = component.state.aspects.get(PkgAspect.id);
+    // By default publish to bit registry
+    if (!pkgExt) return false;
+    return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
   async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
