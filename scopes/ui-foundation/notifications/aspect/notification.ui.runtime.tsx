@@ -4,14 +4,14 @@ import { v1 } from 'uuid';
 
 import { NotificationContext } from '@teambit/ui.notifications.notification-context';
 import { NotificationCenter, NotificationCenterProps } from '@teambit/ui.notifications.notification-center';
-import { MessageLevel, NotificationApi } from '@teambit/ui.notifications.api';
+import { MessageLevel, NotificationsStore } from '@teambit/ui.notifications.store';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 import { NotificationsAspect } from './notifications.aspect';
 
 /**
  * extension
  */
-export default class NotificationUI implements NotificationApi {
+export default class NotificationUI implements NotificationsStore {
   static dependencies = [UIAspect];
 
   static runtime = UIRuntime;
