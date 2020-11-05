@@ -1299,11 +1299,6 @@
                 "name": "use-compositions.tsx",
                 "relativePath": "ui/use-compositions.tsx",
                 "test": false
-            },
-            {
-                "name": "use-properties.ts",
-                "relativePath": "use-properties.ts",
-                "test": false
             }
         ],
         "mainFile": "index.ts",
