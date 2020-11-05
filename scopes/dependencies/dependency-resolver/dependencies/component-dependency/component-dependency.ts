@@ -18,10 +18,10 @@ export class ComponentDependency extends BaseDependency {
     return this._componentId;
   }
 
-  serialize(): SerializedComponentDependency {
-    const serialized: SerializedComponentDependency = Object.assign({}, super.serialize(), {
+  serialize<SerializedComponentDependency>(): SerializedComponentDependency {
+    const serialized = (Object.assign({}, super.serialize(), {
       componentId: this.componentId.toObject(),
-    });
+    }) as unknown) as SerializedComponentDependency;
     return serialized;
   }
 }

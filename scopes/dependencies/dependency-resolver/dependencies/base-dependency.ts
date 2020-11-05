@@ -21,12 +21,12 @@ export abstract class BaseDependency implements Dependency {
     return this._lifecycle;
   }
 
-  serialize(): SerializedDependency {
-    return {
+  serialize<SerializedDependency>(): SerializedDependency {
+    return ({
       id: this.id,
       version: this.version,
       __type: this.type,
       lifecycle: this.lifecycle.toString(),
-    };
+    } as unknown) as SerializedDependency;
   }
 }

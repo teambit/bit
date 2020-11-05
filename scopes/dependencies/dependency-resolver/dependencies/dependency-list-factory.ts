@@ -12,7 +12,7 @@ export class DependencyListFactory {
 
   fromSerializedDependencies(serializedDependencies: SerializedDependency[]): DependencyList {
     const dependencies = serializedDependencies.map((serializedDependency) => {
-      const type = serializedDependency.type;
+      const type = serializedDependency.__type;
       const factory = this.factories[type];
       if (!factory) {
         throw new UnknownDepType(type);
@@ -62,7 +62,7 @@ function transformLegacyComponentDepToSerializedDependency(
     id: legacyDep.id.toString(),
     componentId: legacyDep.id.serialize(),
     version: legacyDep.id.getVersion().toString(),
-    type: 'component',
+    __type: 'component',
     lifecycle,
   };
 }
@@ -75,7 +75,7 @@ function transformLegacyComponentPackageDepsToSerializedDependency(
     return {
       id: packageName,
       version,
-      type: 'package',
+      __type: 'package',
       lifecycle,
     };
   });

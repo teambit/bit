@@ -13,5 +13,5 @@ export interface Dependency {
   type: string;
   lifecycle: DependencyLifecycleType;
 
-  serialize: () => SerializedDependency;
+  serialize: <T extends SerializedDependency>() => T;
 }
