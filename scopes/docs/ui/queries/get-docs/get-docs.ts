@@ -17,7 +17,7 @@ export const docsFields = gql`
   }
 `;
 
-const GET_PROPERTIES = gql`
+const getProperties = gql`
   query($id: String!) {
     getHost {
       getDocs(id: $id) {
@@ -54,7 +54,7 @@ export type DefaultValue = {
 export function useDocs(componentId: ComponentID) {
   const id = componentId._legacy.name;
 
-  const { data } = useQuery<PropertiesResult>(GET_PROPERTIES, {
+  const { data } = useQuery<PropertiesResult>(getProperties, {
     variables: { id },
   });
 
