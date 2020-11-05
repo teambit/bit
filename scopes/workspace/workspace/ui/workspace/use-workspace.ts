@@ -4,8 +4,8 @@ import gql from 'graphql-tag';
 
 import { Workspace } from './workspace-model';
 
-const wcComponent = gql`
-  fragment wcComponent on Component {
+const wcComponentFields = gql`
+  fragment wcComponentFields on Component {
     id {
       name
       version
@@ -47,33 +47,33 @@ const WORKSPACE = gql`
       path
       icon
       components {
-        ...wcComponent
+        ...wcComponentFields
       }
     }
   }
-  ${wcComponent}
+  ${wcComponentFields}
 `;
 
 const COMPONENT_SUBSCRIPTION_ADDED = gql`
   subscription OnComponentAdded {
     componentAdded {
       component {
-        ...wcComponent
+        ...wcComponentFields
       }
     }
   }
-  ${wcComponent}
+  ${wcComponentFields}
 `;
 
 const COMPONENT_SUBSCRIPTION_CHANGED = gql`
   subscription OnComponentChanged {
     componentChanged {
       component {
-        ...wcComponent
+        ...wcComponentFields
       }
     }
   }
-  ${wcComponent}
+  ${wcComponentFields}
 `;
 
 export function useWorkspace() {
