@@ -24,7 +24,7 @@ import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList } from './build-pipeline-result-list';
 
-export type TaskSlot = SlotRegistry<BuildTask>;
+export type TaskSlot = SlotRegistry<BuildTask[]>;
 
 export type StorageResolverSlot = SlotRegistry<StorageResolver>;
 
@@ -183,8 +183,8 @@ export class BuilderMain {
    * register a build task to apply on all component build pipelines.
    * build happens on `bit build` and as part of `bit tag --persist`.
    */
-  registerBuildTask(task: BuildTask) {
-    this.buildTaskSlot.register(task);
+  registerBuildTasks(tasks: BuildTask[]) {
+    this.buildTaskSlot.register(tasks);
     return this;
   }
 
@@ -192,8 +192,8 @@ export class BuilderMain {
    * deploy task that doesn't get executed on `bit build`, only on `bit tag --persist'.
    * the deploy-pipeline is running once the build-pipeline has completed.
    */
-  registerDeployTask(task: BuildTask) {
-    this.deployTaskSlot.register(task);
+  registerDeployTasks(tasks: BuildTask[]) {
+    this.deployTaskSlot.register(tasks);
   }
 
   static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>(), Slot.withType<BuildTask>()];

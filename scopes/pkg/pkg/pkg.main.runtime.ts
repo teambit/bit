@@ -125,10 +125,10 @@ export class PkgMain {
 
     const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
     const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
+    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
     dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
-    builder.registerBuildTask(preparePackagesTask);
-    builder.registerBuildTask(dryRunTask);
-    builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, packer, logPublisher));
+    builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
+    builder.registerDeployTasks([publishTask]);
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
