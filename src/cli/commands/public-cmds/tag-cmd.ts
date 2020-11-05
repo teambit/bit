@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { ReleaseType } from 'semver';
 import { LegacyCommand, CommandOptions } from '../../legacy-command';
 import { tagAction } from '../../../api/consumer';
-import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG } from '../../../api/consumer/lib/tag';
+import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG, BasicTagParams } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
@@ -32,6 +32,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
     ['', 'skip-tests', 'skip running component tests during tag process'],
     ['', 'skip-auto-tag', 'EXPERIMENTAL. skip auto tagging dependents'],
     ['', 'persist', 'Harmony only. persist the changes. (same as "bit tag" in the legacy workspace)'],
+    ['', 'disable-deploy-pipeline', 'Harmony only. skip the deploy pipeline to avoid publishing the components'],
   ] as CommandOptions;
   migration = true;
   remoteOp = true; // In case a compiler / tester is not installed
@@ -45,7 +46,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       minor,
       major,
       force = false,
-      verbose,
+      verbose = false,
       ignoreMissingDependencies = false,
       ignoreUnresolvedDependencies = false,
       ignoreNewestVersion = false,
@@ -53,22 +54,16 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       skipAutoTag = false,
       scope,
       persist = false,
+      disableDeployPipeline = false,
     }: {
-      message?: string;
       all?: boolean;
       patch?: boolean;
       minor?: boolean;
       major?: boolean;
-      force?: boolean;
-      verbose?: boolean;
       ignoreMissingDependencies?: boolean;
       ignoreUnresolvedDependencies?: boolean;
-      ignoreNewestVersion?: boolean;
-      skipTests?: boolean;
-      skipAutoTag?: boolean;
       scope?: string;
-      persist?: boolean;
-    }
+    } & Partial<BasicTagParams>
   ): Promise<any> {
     function getVersion(): string | undefined {
       if (scope) return scope;
@@ -114,6 +109,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       persist,
       scope,
       includeImported,
+      disableDeployPipeline,
     };
 
     return tagAction(params);
