@@ -304,7 +304,7 @@ export class PkgMain {
     const pkgExt = component.state.aspects.get(PkgAspect.id);
     // By default publish to bit registry
     if (!pkgExt) return false;
-    return pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig;
+    return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
   async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
