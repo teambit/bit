@@ -33,7 +33,7 @@ export class AspectMain {
     const aspectEnv = envs.merge<AspectEnv>(new AspectEnv(react.reactEnv, babel, compiler), react.reactEnv);
     const coreExporterTask = new CoreExporterTask(aspectEnv, aspectLoader);
     if (!__dirname.includes('@teambit/bit')) {
-      builder.registerBuildTask(coreExporterTask);
+      builder.registerBuildTasks([coreExporterTask]);
     }
 
     envs.registerEnv(aspectEnv);

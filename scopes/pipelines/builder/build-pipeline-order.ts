@@ -165,7 +165,7 @@ which is invalid. the dependency must be located earlier or in the same location
 
 function getPipelineForEnv(taskSlot: TaskSlot, env: Environment, pipeNameOnEnv: string): BuildTask[] {
   const buildTasks: BuildTask[] = env[pipeNameOnEnv] ? env[pipeNameOnEnv]() : [];
-  const slotsTasks = taskSlot.values();
+  const slotsTasks = R.flatten(taskSlot.values());
   const tasksAtStart: BuildTask[] = [];
   const tasksAtEnd: BuildTask[] = [];
   slotsTasks.forEach((task) => {
