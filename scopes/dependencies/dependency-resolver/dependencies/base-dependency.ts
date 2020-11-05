@@ -1,12 +1,9 @@
 import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
 
 export abstract class BaseDependency implements Dependency {
-  constructor(
-    private _id: string,
-    private _version: string,
-    private _type: string,
-    private _lifecycle: DependencyLifecycleType
-  ) {}
+  _type: string;
+
+  constructor(private _id: string, private _version: string, private _lifecycle: DependencyLifecycleType) {}
 
   get id() {
     return this._id;

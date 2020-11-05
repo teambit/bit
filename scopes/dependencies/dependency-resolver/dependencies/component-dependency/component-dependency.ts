@@ -9,14 +9,9 @@ export interface SerializedComponentDependency extends SerializedDependency {
 
 // TODO: think about where is the right place to put this
 export class ComponentDependency extends BaseDependency {
-  constructor(
-    private _componentId: ComponentID,
-    id: string,
-    version: string,
-    type: string,
-    lifecycle: DependencyLifecycleType
-  ) {
-    super(id, version, type, lifecycle);
+  constructor(private _componentId: ComponentID, id: string, version: string, lifecycle: DependencyLifecycleType) {
+    super(id, version, lifecycle);
+    this._type = 'component';
   }
 
   get componentId() {
