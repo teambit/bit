@@ -5604,6 +5604,11 @@
                 "test": false
             },
             {
+                "name": "webpack-compilation-started-event.ts",
+                "relativePath": "events/webpack-compilation-started-event.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
@@ -5611,6 +5616,11 @@
             {
                 "name": "webpack-compiler-done-plugin.ts",
                 "relativePath": "plugins/webpack-compiler-done-plugin.ts",
+                "test": false
+            },
+            {
+                "name": "webpack-compiler-started-plugin.ts",
+                "relativePath": "plugins/webpack-compiler-started-plugin.ts",
                 "test": false
             },
             {
@@ -5953,5 +5963,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.117"
+    "version": "14.8.9-dev.119"
 }
