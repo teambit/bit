@@ -1,4 +1,3 @@
-import execa from 'execa';
 import * as semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import {
@@ -272,6 +271,7 @@ export class YarnPackageManager implements PackageManager {
       throw new Error('npm resolvers for yarn API not found');
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [_NpmRemapResolver, NpmSemverResolver, NpmTagResolver] = npmPlugin.resolvers;
     let resolver = new NpmSemverResolver();
     const ident = structUtils.parseIdent(parsedPackage.name);
@@ -288,7 +288,7 @@ export class YarnPackageManager implements PackageManager {
       resolver = new NpmTagResolver();
       range = `npm:${parsedPackage.version}`;
     }
-    let descriptor = structUtils.makeDescriptor(ident, range);
+    const descriptor = structUtils.makeDescriptor(ident, range);
 
     // @ts-ignore
     project.setupResolutions();
@@ -303,7 +303,7 @@ export class YarnPackageManager implements PackageManager {
     const version = parsedRange.selector;
     return {
       packageName: parsedPackage.name,
-      version: version,
+      version,
       isSemver: true,
     };
   }
