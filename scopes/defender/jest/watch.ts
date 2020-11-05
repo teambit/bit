@@ -1,9 +1,3 @@
-global.console.log = () => true;
-global.console.error = () => true;
-global.console.warn = () => true;
-global.console.debug = () => true;
-
-import { clearLine } from 'jest-util';
 import { Prompt, WatchPlugin, JestHookSubscriber, UsageData } from 'jest-watcher';
 import { SpecFiles } from '@teambit/tester';
 

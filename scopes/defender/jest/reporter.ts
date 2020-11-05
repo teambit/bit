@@ -1,7 +1,6 @@
 class Reporter {
-  constructor(globalConfig, options) {}
-
-  onRunComplete(contexts, results) {}
+  constructor() {}
+  onRunComplete() {}
 }
 
 module.exports = Reporter;
