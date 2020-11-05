@@ -13,7 +13,7 @@ export const Starting = ({ componentServers }: props) =>
         <Text color="green">
           <Spinner type="dots" />
         </Text>{' '}
-        Starting the development servers...
+        Starting the main UI server...
       </Text>
     </Box>
   );
