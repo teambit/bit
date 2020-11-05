@@ -3,6 +3,7 @@ import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { EmptyBox } from '@teambit/ui.empty-box';
+import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
 import { gql } from 'apollo-boost';
 import React, { HTMLAttributes, useContext } from 'react';
@@ -77,7 +78,8 @@ export function TestsPage({ className }: TestsPageProps) {
   const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;
 
   // TODO: change loading EmptyBox
-  if (testData?.loading) return 'Loading...';
+  if (testData?.loading) return <TestLoader />;
+
   const testResults = testData?.testsResults?.testFiles;
   if (testResults === null) {
     return (
