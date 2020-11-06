@@ -13,7 +13,6 @@
  */
 
 import { CFG_FEATURE_TOGGLE } from '../../../constants';
-import GeneralError from '../../../error/general-error';
 import { getSync } from './global-config';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
