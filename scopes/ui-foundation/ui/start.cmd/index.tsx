@@ -8,6 +8,7 @@ import { render } from 'ink';
 import type { UiMain } from '../ui.main.runtime';
 import { CliOutput } from './cli-output';
 import { report } from './report';
+import execa from 'execa';
 
 export class StartCmd implements Command {
   startingtimestamp;
@@ -76,30 +77,18 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    this.ui
-      .createRuntime({
-        uiRootName,
-        pattern,
-        dev,
-        port: port ? parseInt(port) : undefined,
-        rebuild,
-      })
-      .then((uiServer) => {
-        setTimeout(() => {
-          this.clearConsole();
+    const boot =
+      '/Users/uritalyosef/Desktop/BIT/HarminyBit/bit/scopes/ui-foundation/ui/start.cmd/ran-in-process-runtime/bootstrap.script.ts';
+    // TODO: 1.  run(engin, file-path, funktion ,[alpectsids]), pubsub suport for multy
 
-          const startingTimestamp = Date.now();
-          const pubsub = this.pubsub;
-          const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch };
+    const subprocess = execa('ts-node', [boot]);
+    // subprocess!.stdout!.pipe(process.stdout);
+    // subprocess!.stderr!.pipe(process.stderr);
 
-          setTimeout(() => {
-            this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
-          }, 200);
-        }, 0);
-      })
-      .catch((e) => {
-        throw e;
-      });
+    (async () => {
+      const { stdout } = await subprocess;
+      // console.log('child output:', stdout);
+    })();
 
     return (
       <>
