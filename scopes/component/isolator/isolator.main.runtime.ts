@@ -111,7 +111,6 @@ export class IsolatorMain {
         capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
       );
 
-      // TODO ASAP: make sure to build all capsule which doesn't exists.
       if (existingCapsules.length === capsuleList.length) return existingCapsules;
     }
 
