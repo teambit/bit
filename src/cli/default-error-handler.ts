@@ -59,6 +59,7 @@ import {
   NewerVersionFound,
   NothingToImport,
 } from '../consumer/exceptions';
+import { LanesIsDisabled } from '../consumer/lanes/exceptions/lanes-is-disabled';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 import { BitError } from '../error/bit-error';
 import GeneralError from '../error/general-error';
@@ -145,6 +146,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, (err) => `file or directory "${err.path}" was not found`],
+  [LanesIsDisabled, () => `lanes/snaps features are disabled. upgrade your workspace to Harmony to enable them`],
   [
     OutsideRootDir,
     (err) => `unable to add file ${err.filePath} because it's located outside the component root dir ${err.rootDir}`,
