@@ -4040,6 +4040,21 @@
                 "test": false
             },
             {
+                "name": "bootstrap.script.ts",
+                "relativePath": "start.cmd/ran-in-process-runtime/bootstrap.script.ts",
+                "test": false
+            },
+            {
+                "name": "create-runtime-for-start.ts",
+                "relativePath": "start.cmd/ran-in-process-runtime/create-runtime-for-start.ts",
+                "test": false
+            },
+            {
+                "name": "full-harmony-bootstrap.ts",
+                "relativePath": "start.cmd/ran-in-process-runtime/full-harmony-bootstrap.ts",
+                "test": false
+            },
+            {
                 "name": "report.ts",
                 "relativePath": "start.cmd/report.ts",
                 "test": false
@@ -5646,6 +5661,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/webpack",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "worker": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "worker.aspect.ts",
+                "relativePath": "worker.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "worker.main.runtime.ts",
+                "relativePath": "worker.main.runtime.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/worker",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

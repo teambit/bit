@@ -47,6 +47,7 @@ import { CommandBarAspect } from '@teambit/command-bar';
 import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { ESLintAspect } from '@teambit/eslint';
+import { WorkerAspect } from '@teambit/worker';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -98,6 +99,7 @@ export const manifestsMap = {
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
+  [WorkerAspect.id]: WorkerAspect,
 };
 
 export function isCoreAspect(id: string) {
