@@ -315,7 +315,11 @@ export default class Consumer {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
 
-    const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
+    const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
+      modelComponent,
+      id,
+      true
+    )) as VersionDependencies;
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       [versionDependencies],
