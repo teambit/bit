@@ -33,9 +33,7 @@ init()
   .then((harmony) => {
     return {
       ui: harmony!.get<UiMain>('teambit.ui-foundation/ui'),
-      // ui: harmony!.get('teambit.ui-foundation/ui'),
       pubsub: harmony!.get<PubsubMain>('teambit.harmony/pubsub'),
-      // pubsub: harmony!.get('teambit.harmony/pubsub'),
     };
   })
   .then((aspects) => {
