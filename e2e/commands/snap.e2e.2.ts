@@ -83,8 +83,8 @@ describe('bit snap command', function () {
   describe('components with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.snapAllComponents();
     });
     it('should save the dependencies successfully with their snaps as versions', () => {
@@ -629,7 +629,6 @@ describe('bit snap command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.snapAllComponents();
 
       helper.fs.outputFile('comp3/index.js', fixtures.comp3V2);
