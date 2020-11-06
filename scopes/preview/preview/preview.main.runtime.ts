@@ -242,7 +242,7 @@ export class PreviewMain {
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTask(new PreviewTask(bundler, preview));
+    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
 
     if (workspace) {
       workspace.registerOnComponentAdd((c) =>
