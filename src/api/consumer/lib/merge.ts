@@ -3,6 +3,7 @@ import R from 'ramda';
 import { BitId } from '../../../bit-id';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import { mergeLanes } from '../../../consumer/lanes/merge-lanes';
 import { ApplyVersionResults, MergeStrategy, mergeVersion } from '../../../consumer/versions-ops/merge-version';
 import {
@@ -24,6 +25,9 @@ export default async function merge(
   existingOnWorkspaceOnly: boolean
 ): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
+  if (consumer.isLegacy && (idIsLane || existingOnWorkspaceOnly || noSnap || message || abort || resolve)) {
+    throw new LanesIsDisabled();
+  }
   let mergeResults;
   const firstValue = R.head(values);
   if (resolve) {

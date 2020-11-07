@@ -10,6 +10,7 @@ import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ImportComponents, { ImportOptions } from '../../../consumer/component-ops/import-components';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import GeneralError from '../../../error/general-error';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
 import FlagHarmonyOnly from './exceptions/flag-harmony-only';
@@ -55,6 +56,7 @@ export default async function importAction(
   }
 
   const consumer: Consumer = await loadConsumer();
+  if (importOptions.skipLane && consumer.isLegacy) throw new LanesIsDisabled();
   consumer.packageManagerArgs = packageManagerArgs;
   if (environmentOptions.tester || environmentOptions.compiler) {
     return importEnvironment(consumer);
