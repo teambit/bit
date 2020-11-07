@@ -559,7 +559,7 @@ describe('bit snap command', function () {
       let secondSnap: string;
       let localScope;
       before(() => {
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
@@ -571,7 +571,7 @@ describe('bit snap command', function () {
       });
       it('bit diff should show the differences', () => {
         const diff = helper.command.diff(` bar/foo ${firstSnap}`);
-        const barFooFile = path.join('bar', 'foo.js');
+        const barFooFile = 'foo.js';
         expect(diff).to.have.string(`--- ${barFooFile} (${firstSnap})`);
         expect(diff).to.have.string(`+++ ${barFooFile} (${secondSnap})`);
 
@@ -667,7 +667,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.command.exportAllComponents();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1');
       });
