@@ -2,7 +2,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-
+import { flatten } from 'lodash';
 import { BitIds } from '../../bit-id';
 import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TESTER_ENV_TYPE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -221,8 +221,8 @@ export default class ComponentWriter {
       return;
     }
     const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
-    const artifactsFiles = extensionsNamesForArtifacts.map((extName) =>
-      getArtifactFilesByExtension(this.component.extensions, extName)
+    const artifactsFiles = flatten(
+      extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(this.component.extensions, extName))
     );
     const scope = this.scope;
     const artifactsVinylFlattened: ArtifactVinyl[] = [];
