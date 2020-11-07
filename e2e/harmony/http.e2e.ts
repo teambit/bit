@@ -26,7 +26,6 @@ describe('http protocol', function () {
       await httpHelper.start();
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.tagAllComponents();
       exportOutput = helper.command.exportAllComponents();
     });

@@ -6,12 +6,13 @@ import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
 import { Consumer, loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import removeComponents from '../../../consumer/component-ops/remove-components';
 import ComponentsList from '../../../consumer/component/components-list';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import removeLanes from '../../../consumer/lanes/remove-lanes';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 import { getRemoteBitIdsByWildcards } from './list-scope';
 
-export default (async function remove({
+export default async function remove({
   ids,
   force,
   remote,
@@ -30,6 +31,7 @@ export default (async function remove({
   const consumer: Consumer | undefined = remote ? await loadConsumerIfExist() : await loadConsumer();
   let removeResults;
   if (lane) {
+    if (consumer?.isLegacy) throw new LanesIsDisabled();
     removeResults = await removeLanes(consumer, ids, remote, force);
   } else {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -45,7 +47,7 @@ export default (async function remove({
   }
   if (consumer) await consumer.onDestroy();
   return removeResults;
-});
+}
 
 async function getLocalBitIdsToRemove(consumer: Consumer, ids: string[]): Promise<BitId[]> {
   if (hasWildcard(ids)) {
