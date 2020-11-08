@@ -18,7 +18,9 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
     return (
       <Text key={descriptor?.id}>
         <Text color="cyan">configured compiler: </Text>
-        <Text>{descriptor?.id}</Text>
+        <Text>
+          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
+        </Text>
         <Newline />
         <Text color="cyan">compiler config:</Text>
         <Newline />
@@ -35,6 +37,8 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
       id: compiler.id,
       icon: compiler.icon,
       config: compiler.displayConfig ? compiler.displayConfig() : undefined,
+      version: compiler.version ? compiler.version() : '?',
+      displayName: compiler.displayName ? compiler.displayName : '?',
     };
   }
 }

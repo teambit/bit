@@ -21,8 +21,9 @@ import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { DependenciesPolicy } from '@teambit/dependency-resolver';
-import { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile } from 'typescript';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
+import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -76,12 +77,12 @@ export class ReactMain {
   /**
    * override the TS config of the React environment.
    */
-  overrideTsConfig(tsconfig: TsConfigSourceFile) {
+  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule = ts) {
     this.tsConfigOverride = tsconfig;
 
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig);
+        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
       },
     });
   }
@@ -126,9 +127,9 @@ export class ReactMain {
    * override the jest configuration.
    * @param jestConfigPath absolute path to jest.config.json.
    */
-  overrideJestConfig(jestConfigPath: string) {
+  overrideJestConfig(jestConfigPath: string, jestModule = jest) {
     return this.envs.override({
-      getTester: () => this.reactEnv.getTester(jestConfigPath),
+      getTester: () => this.reactEnv.getTester(jestConfigPath, jestModule),
     });
   }
 
