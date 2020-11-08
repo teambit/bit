@@ -28,7 +28,6 @@ import {
   WebpackWarnings,
   CompilingOrUIServersAreReady,
 } from './output-templates';
-// import type { MainUIServerDetails } from './output-templates/ui-servers-are-ready';
 
 export type MainUIServerDetails = {
   uiRootName: string;
@@ -76,7 +75,6 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
       webpackErrors: [],
       webpackWarnings: [],
       totalComponents: null,
-      // isScope: props.mainUIServer?.isScope | null,
       compiling: false,
     };
 
@@ -140,16 +138,12 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   private onUiServerStarted(event: UiServerStartedEvent) {
     const devServers: DevServer[] = event.data.devServers;
 
-    // if (event.data.uiRoot.scope) {
     if (event.data.isScope) {
       this.setState({
         devServers: devServers,
         mainUIServer: event.data.mainUIServer,
-        // isScope: true,
       });
     } else {
-      // const totalComponents = await event.data.uiRoot.workspace.list();
-      // const totalComponents = await this.state.mainUIServer.uiRoot.workspace.list()
       const totalComponents = event.data.componentList;
       this.setState({
         devServers: devServers,

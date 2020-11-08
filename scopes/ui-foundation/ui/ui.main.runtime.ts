@@ -368,7 +368,6 @@ export class UiMain {
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
-    // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerMain.createLogger(UIAspect.id);
 
     const ui = new UiMain(pubsub, config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);

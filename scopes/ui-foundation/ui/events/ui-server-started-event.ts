@@ -4,15 +4,7 @@ import { BitBaseEvent } from '@teambit/pubsub';
 import type ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { DevServer, MainUIServerDetails } from '../start-cmd/cli-output';
 
-// export type DevServer = {
-//   targetHost: string;
-//   targetPort: number;
-//   status: string | null;
-//   id: string | null;
-// };
-
 class UiServerStartedEventData {
-  // constructor(readonly targetHost, readonly targetPort, readonly uiRoot) {}
   constructor(
     readonly mainUIServer: MainUIServerDetails,
     readonly devServers: Array<DevServer>,
