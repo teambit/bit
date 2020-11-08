@@ -55,12 +55,21 @@ export class ComponentUI {
    */
   private activeComponent?: ComponentModel;
 
+  private copyNpmId = () => {
+    const packageName = this.activeComponent?.packageName;
+    if (packageName) {
+      const version = this.activeComponent?.id.version;
+      const versionString = version ? `@${version}` : '';
+      copy(`${packageName}${versionString}`);
+    }
+  };
+
   /**
    * key bindings used by component aspect
    */
   private keyBindings: CommandEntry[] = [
     {
-      id: 'copyBitId', // extract to constant!
+      id: 'copyBitId', // TODO - extract to a component!
       handler: () => {
         copy(this.activeComponent?.id.toString() || '');
       },
@@ -68,15 +77,8 @@ export class ComponentUI {
       keybinding: '.',
     },
     {
-      id: 'copyNpmId', // extract to constant!
-      handler: () => {
-        const packageName = this.activeComponent?.packageName;
-        if (packageName) {
-          const version = this.activeComponent?.id.version;
-          const versionString = version ? `@${version}` : '';
-          copy(`${packageName}${versionString}`);
-        }
-      },
+      id: 'copyNpmId', // TODO - extract to a component!
+      handler: this.copyNpmId,
       displayName: 'Copy component package name',
       keybinding: ',',
     },
@@ -86,14 +88,14 @@ export class ComponentUI {
     {
       category: 'general',
       title: 'Open command bar',
-      keyChar: 'mod + k',
+      keyChar: 'mod+k',
       handler: () => this.commandBarUI?.run('command-bar.open'),
     },
     {
       category: 'general',
       title: 'Toggle component list',
       keyChar: 's',
-      handler: () => this.commandBarUI?.run('sidebar'),
+      handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
     {
       category: 'workflow',

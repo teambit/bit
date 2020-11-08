@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import React, { ReactNode } from 'react';
 import { isEmpty } from 'lodash';
 import { SlotRegistry } from '@teambit/harmony';
-import { KeyCombo } from '@teambit/ui.keycap';
+import { KeySequence } from '@teambit/ui.keycap';
 import styles from './main-dropdown.module.scss';
 
 export type MenuItem = {
@@ -48,7 +48,7 @@ export function MainDropdown({ menuItems }: MainDropdownProps) {
                   return (
                     item && (
                       <Line
-                        key={`${item.title}${item.keyChar}`}
+                        key={item.keyChar}
                         lineTitle={item.title}
                         keyChar={item.keyChar}
                         onClick={item.handler}
@@ -76,7 +76,7 @@ function Line({ lineTitle, keyChar, onClick, ...rest }: LineProps) {
       <div>{lineTitle}</div>
       {keyChar && (
         <pre>
-          <KeyCombo>{keyChar}</KeyCombo>
+          <KeySequence>{keyChar}</KeySequence>
         </pre>
       )}
     </div>

@@ -76,7 +76,7 @@ export class WorkspaceUI {
     this.sidebar.registerDrawer(new WorkspaceComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
-      id: 'sidebar', // extract to constant!
+      id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
       displayName: 'Toggle component list',
       keybinding: 's',
@@ -105,14 +105,14 @@ export class WorkspaceUI {
     {
       category: 'general',
       title: 'Open command bar',
-      keyChar: 'mod + k',
+      keyChar: 'mod+k',
       handler: () => this.commandBarUI?.run('command-bar.open'),
     },
     {
       category: 'general',
       title: 'Toggle component list',
       keyChar: 's',
-      handler: () => this.commandBarUI?.run('sidebar'),
+      handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
   ];
 

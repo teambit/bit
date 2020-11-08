@@ -61,7 +61,7 @@ export class ScopeUI {
     private menuItemSlot: MenuItemSlot
   ) {}
 
-  private setKeyBindHandler: (updated: CommandHandler) => void = () => {};
+  private setSidebarToggle: (updated: CommandHandler) => void = () => {};
 
   /**
    * register a new badge into the scope overview.
@@ -152,12 +152,12 @@ export class ScopeUI {
     this.commandBarUI.addSearcher(this.componentSearcher);
 
     const [setKeyBindHandler] = this.commandBarUI.addCommand({
-      id: 'sidebar', // extract to constant!
+      id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
       displayName: 'Toggle component list',
       keybinding: 's',
     });
-    this.setKeyBindHandler = setKeyBindHandler;
+    this.setSidebarToggle = setKeyBindHandler;
 
     return {
       routes: [
@@ -171,7 +171,7 @@ export class ScopeUI {
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
               context={this.getContext()}
-              onSidebarTogglerChange={this.setKeyBindHandler}
+              onSidebarTogglerChange={this.setSidebarToggle}
             />
           ),
         },
@@ -188,14 +188,14 @@ export class ScopeUI {
     {
       category: 'general',
       title: 'Open command bar',
-      keyChar: 'mod + k',
+      keyChar: 'mod+k',
       handler: () => this.commandBarUI?.run('command-bar.open'),
     },
     {
       category: 'general',
       title: 'Toggle component list',
       keyChar: 's',
-      handler: () => this.commandBarUI?.run('sidebar'),
+      handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
   ];
 

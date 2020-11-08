@@ -27,8 +27,6 @@ const macKeySymbols = {
   del: '⌦',
   ins: 'insert',
   plus: '+',
-  dot: '.',
-  comma: ',',
 };
 
 const winKeySymbols = {
@@ -60,8 +58,6 @@ const winKeySymbols = {
   del: 'del',
   ins: 'insert',
   plus: '+',
-  dot: '.',
-  comma: ',',
 };
 
 const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);

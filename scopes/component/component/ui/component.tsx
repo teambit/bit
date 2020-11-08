@@ -9,7 +9,7 @@ import { ComponentModel } from './component-model';
 export type ComponentProps = {
   routeSlot: RouteSlot;
   host: string;
-  onComponentChange: (activeComponent?: ComponentModel) => void;
+  onComponentChange?: (activeComponent?: ComponentModel) => void;
 };
 
 /**
@@ -19,9 +19,9 @@ export function Component({ routeSlot, host, onComponentChange }: ComponentProps
   const { component, error } = useComponent(host);
   // cleanup when unmounting component
   useEffect(() => {
-    return () => onComponentChange(undefined);
+    return () => onComponentChange?.(undefined);
   }, []);
-  useEffect(() => onComponentChange(component), [component]);
+  useEffect(() => onComponentChange?.(component), [component]);
   if (error) return error.renderError();
   if (!component) return <div></div>;
 
