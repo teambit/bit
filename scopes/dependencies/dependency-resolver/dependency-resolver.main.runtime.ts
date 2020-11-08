@@ -464,9 +464,6 @@ export class DependencyResolverMain {
     }, {});
     const listFactory = new DependencyListFactory(factoriesMap);
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
-    if (component.id.toString().includes('ui-primitives/tag-list')) {
-      console.log(dependencyList.serialize());
-    }
     return dependencyList.serialize();
   }
 
