@@ -26,6 +26,15 @@ export class DependencyList {
     return serialized;
   }
 
+  static merge(lists: DependencyList[]): DependencyList {
+    let res: Dependency[] = [];
+    const deps = lists.reduce((acc, curr) => {
+      acc = acc.concat(curr.dependencies);
+      return acc;
+    }, res);
+    return new DependencyList(deps);
+  }
+
   static fromArray(dependencies: Array<Dependency>) {
     return new DependencyList(dependencies);
   }

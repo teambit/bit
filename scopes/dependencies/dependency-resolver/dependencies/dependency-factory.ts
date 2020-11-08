@@ -1,4 +1,6 @@
+import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { Dependency, SerializedDependency } from './dependency';
+import { DependencyList } from './dependency-list';
 
 // export interface DependencyFactory<T extends Dependency, U extends SerializedDependency> {
 //   parse(serializedDependency: U): T;
@@ -11,4 +13,5 @@ import { Dependency, SerializedDependency } from './dependency';
 export interface DependencyFactory {
   type: string;
   parse: <T extends Dependency, U extends SerializedDependency>(serializedDependency: U) => T;
+  fromLegacyComponent?: (legacyComponent: LegacyComponent) => DependencyList;
 }

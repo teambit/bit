@@ -42,7 +42,6 @@ import {
   DependencyLifecycleType,
   DependencyFactory,
   ComponentDependencyFactory,
-  PackageDependencyFactory,
 } from './dependencies';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
@@ -139,7 +138,7 @@ export class DependencyResolverMain {
     this.packageManagerSlot.register(packageManager);
   }
 
-  registerDependencyFactory(factories: DependencyFactory[]) {
+  registerDependencyFactories(factories: DependencyFactory[]) {
     this.dependencyFactorySlot.register(factories);
   }
 
@@ -465,10 +464,9 @@ export class DependencyResolverMain {
       dependencyFactorySlot
     );
 
-    // TODO: move to pkg
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
-    dependencyResolver.registerDependencyFactory([new PackageDependencyFactory(), new ComponentDependencyFactory()]);
+    dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory()]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
     LegacyComponent.registerOnComponentOverridesLoading(

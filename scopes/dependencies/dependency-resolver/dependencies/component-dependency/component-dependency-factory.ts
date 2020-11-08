@@ -2,6 +2,9 @@ import { ComponentID } from '@teambit/component';
 import { DependencyLifecycleType } from '../dependency';
 import { ComponentDependency, SerializedComponentDependency } from './component-dependency';
 import { DependencyFactory } from '../dependency-factory';
+import { DependencyList } from '../dependency-list';
+import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
+import LegacyComponent from 'bit-bin/dist/consumer/component';
 
 // TODO: think about where is the right place to put this
 // export class ComponentDependencyFactory implements DependencyFactory<ComponentDependency, SerializedComponentDependency> {
@@ -11,11 +14,13 @@ import { DependencyFactory } from '../dependency-factory';
 //   }
 // }
 
+const TYPE = 'component';
+
 export class ComponentDependencyFactory implements DependencyFactory {
   type: string;
 
   constructor() {
-    this.type = 'component';
+    this.type = TYPE;
   }
 
   // TODO: solve this generics issue and remove the ts-ignore
@@ -29,4 +34,30 @@ export class ComponentDependencyFactory implements DependencyFactory {
       serialized.lifecycle as DependencyLifecycleType
     ) as unknown) as ComponentDependency;
   }
+
+  fromLegacyComponent(legacyComponent: LegacyComponent): DependencyList {
+    const runtimeDeps = legacyComponent.dependencies
+      .get()
+      .map((dep) => transformLegacyComponentDepToSerializedDependency(dep, 'runtime'));
+    const devDeps = legacyComponent.devDependencies
+      .get()
+      .map((dep) => transformLegacyComponentDepToSerializedDependency(dep, 'dev'));
+    const serializedComponentDeps = runtimeDeps.concat(devDeps);
+    const componentDeps: ComponentDependency[] = serializedComponentDeps.map((dep) => this.parse(dep));
+    const dependencyList = new DependencyList(componentDeps);
+    return dependencyList;
+  }
+}
+
+function transformLegacyComponentDepToSerializedDependency(
+  legacyDep: LegacyDependency,
+  lifecycle: DependencyLifecycleType
+): SerializedComponentDependency {
+  return {
+    id: legacyDep.id.toString(),
+    componentId: legacyDep.id.serialize(),
+    version: legacyDep.id.getVersion().toString(),
+    __type: TYPE,
+    lifecycle,
+  };
 }

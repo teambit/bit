@@ -24,4 +24,10 @@ export {
 export type { DependencyResolverMain, LinkingOptions } from './dependency-resolver.main.runtime';
 export { BIT_DEV_REGISTRY, NPM_REGISTRY } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
-export { DependencyLifecycleType } from './dependencies';
+export {
+  DependencyLifecycleType,
+  DependencyList,
+  DependencyFactory,
+  SerializedDependency,
+  BaseDependency,
+} from './dependencies';
