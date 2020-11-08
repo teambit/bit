@@ -163,7 +163,11 @@ export class ScopeMain implements ComponentFactory {
 
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true },
+      this.legacyScope
+    );
 
     return capsules.map((capsule) => {
       // return RequireableComponent.fromCapsule(capsule);
@@ -235,7 +239,11 @@ export class ScopeMain implements ComponentFactory {
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => !this.localAspects.includes(aspectId));
     const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
     const components = await this.getMany(componentIds);
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true },
+      this.legacyScope
+    );
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);

@@ -3,6 +3,7 @@ import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { DEFAULT_LANE } from '../../../constants';
 import { Consumer, loadConsumer } from '../../../consumer';
 import createLane from '../../../consumer/lanes/create-lane';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import switchLanes, { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
@@ -16,6 +17,7 @@ export default async function switchAction(
 ): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);
   const consumer: Consumer = await loadConsumer();
+  if (consumer.isLegacy) throw new LanesIsDisabled();
   let results;
   if (switchProps.create) {
     await createLane(consumer, switchProps.laneName);

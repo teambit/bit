@@ -132,7 +132,7 @@ describe('dependency-resolver extension', function () {
     let randomStr;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
 
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
@@ -146,8 +146,6 @@ describe('dependency-resolver extension', function () {
         },
       };
       helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
-      helper.bitJsonc.addDefaultScope();
-      helper.command.linkAndRewire();
 
       await npmCiRegistry.init();
 

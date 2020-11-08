@@ -225,7 +225,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.121",
+        "bit-bin": "14.8.9-dev.125",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -255,7 +255,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.121",
+            "bit-bin": "14.8.9-dev.125",
             "react-dom": "^16.13.1"
           }
         }
@@ -360,7 +360,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.121",
+            "bit-bin": "14.8.9-dev.125",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import R from 'ramda';
 
 import { fetch } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { ImportDetails } from '../../../consumer/component-ops/import-components';
 import { ComponentWithDependencies } from '../../../scope';
 import { formatPlainComponentItemWithVersions } from '../../chalk-box';
@@ -32,7 +31,6 @@ export default class Fetch implements LegacyCommand {
       json?: boolean;
     }
   ): Promise<{}> {
-    if (lanes) throwForUsingLaneIfDisabled();
     return fetch(ids, lanes, components).then((results) => ({ ...results, json }));
   }
 

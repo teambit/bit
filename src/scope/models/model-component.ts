@@ -1,8 +1,6 @@
 import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
 import { v4 } from 'uuid';
-
-import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import BitId from '../../bit-id/bit-id';
 import {
   COMPILER_ENV_TYPE,
@@ -136,7 +134,6 @@ export default class Component extends BitObject {
   }
 
   setHead(head: Ref | undefined) {
-    if (!isLaneEnabled()) return;
     this.head = head;
   }
 
@@ -405,7 +402,7 @@ export default class Component extends BitObject {
       // @todo: fix it in a more elegant way
       version.addAsOnlyParent(head);
     }
-    this.setHead(version.hash());
+    if (!version.isLegacy) this.setHead(version.hash());
     if (isTag(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();
     }

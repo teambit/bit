@@ -112,12 +112,9 @@ export function getRefsFromExtensions(extensions: ExtensionDataList): Ref[] {
   return R.flatten(refs).filter((ref) => ref);
 }
 
-export function getArtifactFilesByExtension(
-  extensions: ExtensionDataList,
-  extensionName: string
-): ArtifactFiles | undefined {
+export function getArtifactFilesByExtension(extensions: ExtensionDataList, extensionName: string): ArtifactFiles[] {
   const buildArtifacts = getBuildArtifacts(extensions);
-  return buildArtifacts.find((artifact) => artifact.task.id === extensionName)?.files;
+  return buildArtifacts.filter((artifact) => artifact.task.id === extensionName).map((artifact) => artifact.files);
 }
 
 export function convertBuildArtifactsToModelObject(extensions: ExtensionDataList) {
