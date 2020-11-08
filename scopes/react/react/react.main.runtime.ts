@@ -229,10 +229,10 @@ export class ReactMain {
   ];
 
   static async provider(
-    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
+    [envs, jestAspect, tsAspect, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
