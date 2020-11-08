@@ -74,6 +74,10 @@ export default class BitJsoncHelper {
   disablePreview() {
     this.addKeyVal(undefined, 'teambit.preview/preview', { disabled: true });
   }
+  setupDefault() {
+    this.disablePreview();
+    this.addDefaultScope();
+  }
 }
 
 function composePath(dir: string): string {

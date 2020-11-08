@@ -3,6 +3,7 @@ import { BitId } from 'bit-bin/dist/bit-id';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { Dependencies, DependenciesFilterFunction } from 'bit-bin/dist/consumer/component/dependencies';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { DependencyResolverAspect } from './dependency-resolver.aspect';
 
 import { DependenciesObjectDefinition, SemverVersion } from './types';
 
@@ -32,6 +33,7 @@ export class DependencyGraph {
       filterFunc,
       depVersionModifierFunc
     );
+
     const json = {
       dependencies: {
         ...runtimeCompDeps,
@@ -76,6 +78,15 @@ export class DependencyGraph {
     }
 
     return result;
+  }
+
+  private computeDepsFromEntry(component: Component) {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const deps = entry?.data.dependencies || [];
+
+    return {
+      dependencies: deps.filter((dep) => dep.type === 'prod'),
+    };
   }
 }
 

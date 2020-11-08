@@ -28,6 +28,7 @@ export class AspectEnv implements Environment {
     return {
       dependencies: {
         'core-js': '^3.6.5',
+        '@babel/runtime': '^7.8.4',
       },
     };
   }

@@ -48,7 +48,7 @@
 }
 
 .menuBlock {
-  padding: 16px 8px 10px 8px;
+  padding: 16px 0 10px 0;
   border-bottom: 1px solid var(--border-color);
   &:last-child {
     border-bottom: none;
@@ -73,11 +73,7 @@
   align-items: center;
   height: 36px;
   padding: 0 16px;
-  > div {
-    text-transform: capitalize;
-  }
-  .key {
-    font-size: 15px;
-    color: #6c707c;
+  &:hover {
+    background-color: var(--muted-color);
   }
 }

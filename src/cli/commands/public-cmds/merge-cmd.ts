@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 
 import { merge } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { WILDCARD_HELP } from '../../../constants';
 import {
   ApplyVersionResult,
@@ -82,7 +81,6 @@ export default class Merge implements LegacyCommand {
       message: string;
     }
   ): Promise<ApplyVersionResults> {
-    if (lane || existing || noSnap || message || abort || resolve) throwForUsingLaneIfDisabled();
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new GeneralError('unable to use "noSnap" and "message" flags together');
