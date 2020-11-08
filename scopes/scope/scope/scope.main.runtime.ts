@@ -487,7 +487,7 @@ export class ScopeMain implements ComponentFactory {
     express.register([new PutRoute(scope, postPutSlot), new FetchRoute(scope)]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
-    graphql.register(scopeSchema(scope));
+    graphql.register(scopeSchema(scope, graphql));
     componentExt.registerHost(scope);
 
     return scope;
