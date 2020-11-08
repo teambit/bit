@@ -138,8 +138,25 @@ export default function validateVersionInstance(version: Version): void {
     });
   };
 
+  const validateNoDuplicateExtensionEntry = (extensions: ExtensionDataList) => {
+    const existingMap = new Map();
+    const duplications: string[] = [];
+    extensions.forEach((ext) => {
+      const stringId = ext.stringId;
+      if (existingMap.has(stringId)) {
+        duplications.push(stringId);
+      } else {
+        existingMap.set(stringId, true);
+      }
+    });
+    if (duplications.length) {
+      throw new VersionInvalid(`${message} the following extensions entries are duplicated ${duplications.join(', ')}`);
+    }
+  };
+
   const _validateExtensions = (extensions: ExtensionDataList) => {
     if (extensions) {
+      validateNoDuplicateExtensionEntry(extensions);
       extensions.map(_validateExtension);
       validateArtifacts(extensions);
     }
