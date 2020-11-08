@@ -76,8 +76,9 @@ export class ReactMain {
 
   /**
    * override the TS config of the React environment.
+   * @param tsModule typeof `ts` module instance.
    */
-  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule = ts) {
+  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
     this.tsConfigOverride = tsconfig;
 
     return this.envs.override({
@@ -125,9 +126,9 @@ export class ReactMain {
 
   /**
    * override the jest configuration.
-   * @param jestConfigPath absolute path to jest.config.json.
+   * @param jestConfigPath {typeof jest} absolute path to jest.config.json.
    */
-  overrideJestConfig(jestConfigPath: string, jestModule = jest) {
+  overrideJestConfig(jestConfigPath: string, jestModule: any = jest) {
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModule),
     });
