@@ -3990,87 +3990,92 @@
             },
             {
                 "name": "cli-output.tsx",
-                "relativePath": "start.cmd/cli-output.tsx",
-                "test": false
-            },
-            {
-                "name": "index.tsx",
-                "relativePath": "start.cmd/index.tsx",
-                "test": false
-            },
-            {
-                "name": "clear-console.tsx",
-                "relativePath": "start.cmd/output-templates/clear-console.tsx",
-                "test": false
-            },
-            {
-                "name": "component-change.tsx",
-                "relativePath": "start.cmd/output-templates/component-change.tsx",
-                "test": false
-            },
-            {
-                "name": "component-preview-server-started-headers.tsx",
-                "relativePath": "start.cmd/output-templates/component-preview-server-started-headers.tsx",
-                "test": false
-            },
-            {
-                "name": "component-preview-server-started.tsx",
-                "relativePath": "start.cmd/output-templates/component-preview-server-started.tsx",
+                "relativePath": "start-cmd/cli-output.tsx",
                 "test": false
             },
             {
                 "name": "index.ts",
-                "relativePath": "start.cmd/output-templates/index.ts",
+                "relativePath": "start-cmd/index.ts",
+                "test": false
+            },
+            {
+                "name": "clear-console.tsx",
+                "relativePath": "start-cmd/output-templates/clear-console.tsx",
+                "test": false
+            },
+            {
+                "name": "component-change.tsx",
+                "relativePath": "start-cmd/output-templates/component-change.tsx",
+                "test": false
+            },
+            {
+                "name": "component-preview-server-started-headers.tsx",
+                "relativePath": "start-cmd/output-templates/component-preview-server-started-headers.tsx",
+                "test": false
+            },
+            {
+                "name": "component-preview-server-started.tsx",
+                "relativePath": "start-cmd/output-templates/component-preview-server-started.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "start-cmd/output-templates/index.ts",
                 "test": false
             },
             {
                 "name": "ink-spinner.tsx",
-                "relativePath": "start.cmd/output-templates/ink-spinner.tsx",
+                "relativePath": "start-cmd/output-templates/ink-spinner.tsx",
                 "test": false
             },
             {
                 "name": "standalone-new-line.tsx",
-                "relativePath": "start.cmd/output-templates/standalone-new-line.tsx",
+                "relativePath": "start-cmd/output-templates/standalone-new-line.tsx",
                 "test": false
             },
             {
                 "name": "starting-main-ui-server.tsx",
-                "relativePath": "start.cmd/output-templates/starting-main-ui-server.tsx",
+                "relativePath": "start-cmd/output-templates/starting-main-ui-server.tsx",
                 "test": false
             },
             {
                 "name": "starting.tsx",
-                "relativePath": "start.cmd/output-templates/starting.tsx",
+                "relativePath": "start-cmd/output-templates/starting.tsx",
                 "test": false
             },
             {
                 "name": "ts-errors.tsx",
-                "relativePath": "start.cmd/output-templates/ts-errors.tsx",
+                "relativePath": "start-cmd/output-templates/ts-errors.tsx",
                 "test": false
             },
             {
                 "name": "ui-servers-are-ready.tsx",
-                "relativePath": "start.cmd/output-templates/ui-servers-are-ready.tsx",
+                "relativePath": "start-cmd/output-templates/ui-servers-are-ready.tsx",
                 "test": false
             },
             {
                 "name": "ui-servers-is-ready-in-scope.tsx",
-                "relativePath": "start.cmd/output-templates/ui-servers-is-ready-in-scope.tsx",
+                "relativePath": "start-cmd/output-templates/ui-servers-is-ready-in-scope.tsx",
                 "test": false
             },
             {
                 "name": "webpack-errors.tsx",
-                "relativePath": "start.cmd/output-templates/webpack-errors.tsx",
+                "relativePath": "start-cmd/output-templates/webpack-errors.tsx",
                 "test": false
             },
             {
                 "name": "webpack-warnings.tsx",
-                "relativePath": "start.cmd/output-templates/webpack-warnings.tsx",
+                "relativePath": "start-cmd/output-templates/webpack-warnings.tsx",
                 "test": false
             },
             {
                 "name": "report.ts",
-                "relativePath": "start.cmd/report.ts",
+                "relativePath": "start-cmd/report.ts",
+                "test": false
+            },
+            {
+                "name": "start.cmd.tsx",
+                "relativePath": "start-cmd/start.cmd.tsx",
                 "test": false
             },
             {
