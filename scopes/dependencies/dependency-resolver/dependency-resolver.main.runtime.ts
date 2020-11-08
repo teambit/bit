@@ -25,7 +25,6 @@ import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import { BitId } from 'bit-bin/dist/bit-id';
-import { ComponentID } from '@teambit/component';
 import R, { forEachObjIndexed, flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -431,7 +430,7 @@ export class DependencyResolverMain {
     return component;
   }
 
-  updateDepsOnLegacyExport(version: VersionModel, idTransformer: onExportIdTransformer): VersionModel {
+  updateDepsOnLegacyExport(version: VersionModel, idTransformer: OnExportIdTransformer): VersionModel {
     const entry = version.extensions.findCoreExtension(DependencyResolverAspect.id);
     if (!entry) {
       return version;

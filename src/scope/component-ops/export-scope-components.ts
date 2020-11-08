@@ -2,7 +2,7 @@ import { mapSeries } from 'bluebird';
 import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
-import { DEFAULT_LANE, Extensions } from '../../constants';
+import { DEFAULT_LANE } from '../../constants';
 import GeneralError from '../../error/general-error';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import { RemoteLaneId } from '../../lane-id/lane-id';

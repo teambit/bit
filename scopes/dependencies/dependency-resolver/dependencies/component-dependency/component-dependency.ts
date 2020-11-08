@@ -6,7 +6,7 @@ import { BaseDependency } from '../base-dependency';
 export const TYPE = 'component';
 
 export interface SerializedComponentDependency extends SerializedDependency {
-  componentId: Object;
+  componentId: Record<string, string>;
   isExtension: boolean;
 }
 

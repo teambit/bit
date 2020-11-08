@@ -4,8 +4,8 @@ import {
   DependencyFactory,
   DependencyList,
 } from '@teambit/dependency-resolver';
-import { PackageDependency, SerializedPackageDependency } from './package-dependency';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
+import { PackageDependency, SerializedPackageDependency } from './package-dependency';
 
 const TYPE = 'package';
 // TODO: think about where is the right place to put this

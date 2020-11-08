@@ -1,9 +1,9 @@
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'ramda-adjunct';
-import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';
 import { DependencyList } from '../dependency-list';
@@ -45,7 +45,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     const devDeps = legacyComponent.devDependencies
       .get()
       .map((dep) => transformLegacyComponentDepToSerializedDependency(dep, 'dev'));
-    let extensionDeps = legacyComponent.extensions.map((extension) =>
+    const extensionDeps = legacyComponent.extensions.map((extension) =>
       transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
     );
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);

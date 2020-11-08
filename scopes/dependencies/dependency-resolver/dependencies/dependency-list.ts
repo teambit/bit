@@ -1,5 +1,4 @@
 import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
 
 export class DependencyList {
   constructor(private _dependencies: Array<Dependency>) {}
@@ -27,7 +26,7 @@ export class DependencyList {
   }
 
   static merge(lists: DependencyList[]): DependencyList {
-    let res: Dependency[] = [];
+    const res: Dependency[] = [];
     const deps = lists.reduce((acc, curr) => {
       acc = acc.concat(curr.dependencies);
       return acc;
