@@ -1,11 +1,15 @@
 import { ComponentID } from '@teambit/component';
+import { GraphqlMain } from '@teambit/graphql';
 import gql from 'graphql-tag';
 import { latestVersions } from 'bit-bin/dist/api/scope';
 import log from 'bit-bin/dist/api/scope/lib/log';
 import list from 'bit-bin/dist/api/scope/lib/scope-list';
 import { ScopeMain } from './scope.main.runtime';
 
-export function scopeSchema(scopeMain: ScopeMain) {
+export const ComponentAdded = 'componentAdded';
+export const ComponentChanged = 'componentChanged';
+
+export function scopeSchema(scopeMain: ScopeMain, graphql: GraphqlMain) {
   return {
     typeDefs: gql`
       type Scope {
@@ -57,8 +61,29 @@ export function scopeSchema(scopeMain: ScopeMain) {
       type Query {
         scope: Scope
       }
+
+      type Subscription {
+        componentAdded: ComponentAdded
+        componentChanged: ComponentChanged
+      }
+
+      type ComponentAdded {
+        component: Component
+      }
+
+      type ComponentChanged {
+        component: Component
+      }
     `,
     resolvers: {
+      Subscriptions: {
+        componentAdded: {
+          subscribe: () => graphql.pubsub.asyncIterator(ComponentAdded),
+        },
+        componentChanged: {
+          subscribe: () => graphql.pubsub.asyncIterator(ComponentChanged),
+        },
+      },
       Scope: {
         name: (scope: ScopeMain) => {
           return scope.name;
