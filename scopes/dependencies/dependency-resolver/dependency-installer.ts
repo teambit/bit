@@ -97,7 +97,8 @@ export class DependencyInstaller {
       );
     }
 
-    await this.linkHarmony(path.join(finalRootDir, 'node_modules'));
+    // TODO: gilad we should create the link inside each capsule `node_modules` directory instead of the in the root dir
+    this.linkHarmony(path.join(finalRootDir, 'node_modules'));
 
     return componentDirectoryMap;
   }
