@@ -1,6 +1,10 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
+import { MainDevServerAspect } from '@teambit/main-dev-server';
+
+import type { WorkerMain } from '@teambit/worker';
+import type { MainDevServerMain } from '@teambit/main-dev-server';
 
 import React from 'react';
 import { render } from 'ink';
@@ -27,6 +31,16 @@ export class StartCmd implements Command {
 
   constructor(
     /**
+     * main dev server
+     */
+    private mainDevServer: MainDevServerMain,
+
+    /**
+     * worker, run in different process.
+     */
+    private worker: WorkerMain,
+
+    /**
      * access to the extension instance.
      */
     private ui: UiMain,
@@ -47,20 +61,20 @@ export class StartCmd implements Command {
     return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
-  private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
-    render(
-      <CliOutput
-        startingTimestamp={startingTimestamp}
-        pubsub={pubsub}
-        commandFlags={commandFlags}
-        uiServer={uiServer}
-      />
-    );
-  }
+  // private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
+  //   render(
+  //     <CliOutput
+  //       startingTimestamp={startingTimestamp}
+  //       pubsub={pubsub}
+  //       commandFlags={commandFlags}
+  //       uiServer={uiServer}
+  //     />
+  //   );
+  // }
 
-  private clearConsole() {
-    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
-  }
+  // private clearConsole() {
+  //   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+  // }
 
   async render(
     [uiRootName, userPattern]: [string, string],
@@ -77,26 +91,21 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    const boot =
-      '/Users/uritalyosef/Desktop/BIT/HarminyBit/bit/scopes/ui-foundation/ui/start.cmd/ran-in-process-runtime/bootstrap.script.ts';
-    // TODO: 1.  run(engin, file-path, funktion ,[alpectsids]), pubsub suport for multy
-
-    const subprocess = execa('ts-node', [boot]);
-    // subprocess!.stdout!.pipe(process.stdout);
-    // subprocess!.stderr!.pipe(process.stderr);
-
-    (async () => {
-      const { stdout } = await subprocess;
-      // console.log('child output:', stdout);
-    })();
+    const spawnOptions = {
+      aspectId: MainDevServerAspect.id,
+      execMethodName: 'run',
+      params: [uiRootName, pattern, dev, port, rebuild],
+    };
+    this.worker.spawn(spawnOptions);
 
     return (
+      // render(
       <>
         <CliOutput
           startingTimestamp={Date.now()}
           pubsub={this.pubsub}
           commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
-          uiServer={null} // Didn't start yet
+          mainUIServer={null} // Didn't start yet
         />
       </>
     );

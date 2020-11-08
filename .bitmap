@@ -2636,6 +2636,35 @@
         "exported": false,
         "lanes": []
     },
+    "main-dev-server": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "main-dev-server.aspect.ts",
+                "relativePath": "main-dev-server.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "main-dev-server.main.runtime.ts",
+                "relativePath": "main-dev-server.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "start-main-ui-server.ts",
+                "relativePath": "start-main-ui-server.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/main-dev-server",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "modules/requireable-component": {
         "files": [
             {
@@ -4037,21 +4066,6 @@
             {
                 "name": "webpack-warnings.tsx",
                 "relativePath": "start.cmd/output-templates/webpack-warnings.tsx",
-                "test": false
-            },
-            {
-                "name": "bootstrap.script.ts",
-                "relativePath": "start.cmd/ran-in-process-runtime/bootstrap.script.ts",
-                "test": false
-            },
-            {
-                "name": "create-runtime-for-start.ts",
-                "relativePath": "start.cmd/ran-in-process-runtime/create-runtime-for-start.ts",
-                "test": false
-            },
-            {
-                "name": "full-harmony-bootstrap.ts",
-                "relativePath": "start.cmd/ran-in-process-runtime/full-harmony-bootstrap.ts",
                 "test": false
             },
             {
@@ -5670,6 +5684,21 @@
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "bootstrap.script.ts",
+                "relativePath": "run-inside-the-worker/bootstrap.script.ts",
+                "test": false
+            },
+            {
+                "name": "full-harmony-bootstrap.ts",
+                "relativePath": "run-inside-the-worker/full-harmony-bootstrap.ts",
+                "test": false
+            },
+            {
+                "name": "manifests.ts",
+                "relativePath": "run-inside-the-worker/manifests.ts",
                 "test": false
             },
             {

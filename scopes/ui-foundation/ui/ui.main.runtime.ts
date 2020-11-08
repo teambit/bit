@@ -1,6 +1,7 @@
 import type { AspectMain } from '@teambit/aspect';
 import { AspectDefinition } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
+import type { ComponentServer } from '@teambit/bundler';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
@@ -10,7 +11,12 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
+import WorkerAspect, { WorkerMain } from '@teambit/worker';
+import MainDevServerAspect, { MainDevServerMain } from '@teambit/main-dev-server';
+
 import { sha1 } from 'bit-bin/dist/utils';
+import type ConsumerComponent from 'bit-bin/dist/consumer/component';
+
 import fs from 'fs-extra';
 import getPort from 'get-port';
 import { join, resolve } from 'path';
@@ -26,8 +32,20 @@ import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.config';
+import { DevServer } from './start.cmd/cli-output';
 
-export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
+export type UIDeps = [
+  MainDevServerMain,
+  WorkerMain,
+  PubsubMain,
+  CLIMain,
+  GraphqlMain,
+  ExpressMain,
+  ComponentMain,
+  CacheMain,
+  LoggerMain,
+  AspectMain
+];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
@@ -166,7 +184,14 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
-    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
+    const componentList = (uiRoot as any)?.workspace.list() || []; // TODO: fixe types
+    const event: UiServerStartedEvent = await this.createUiServerStartedEvent(
+      this.config.host,
+      targetPort,
+      componentList,
+      uiRoot
+    );
+    this.pubsub.pub(UIAspect.id, event);
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });
     await this.invokeOnStart();
@@ -182,8 +207,31 @@ export class UiMain {
   /**
    * Events
    */
-  private createUiServerStartedEvent = (targetHost, targetPort, uiRoot) => {
-    return new UiServerStartedEvent(Date.now(), targetHost, targetPort, uiRoot);
+  private createUiServerStartedEvent = async (
+    targetHost: string,
+    targetPort: number,
+    componentList: Array<ConsumerComponent>,
+    uiRoot: UIRoot
+  ) => {
+    const componentServer: ComponentServer[] = await uiRoot.devServers;
+    const devServers: DevServer[] = componentServer.map((server) => {
+      return {
+        name: server.context.env.id,
+        targetHost: server.hostname,
+        targetPort: server.port,
+        status: null,
+        id: server.context.id,
+      };
+    });
+    return new UiServerStartedEvent(
+      Date.now().toString(),
+      uiRoot.name,
+      targetHost,
+      targetPort,
+      componentList,
+      devServers,
+      !!(uiRoot as any).scope || false // TODO: fixe this
+    );
   };
 
   /**
@@ -296,7 +344,10 @@ export class UiMain {
   };
 
   static runtime = MainRuntime;
+
   static dependencies = [
+    MainDevServerAspect,
+    WorkerAspect,
     PubsubAspect,
     CLIAspect,
     GraphqlAspect,
@@ -309,7 +360,7 @@ export class UiMain {
   static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
 
   static async provider(
-    [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
+    [mainDevServer, worker, pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
     [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
   ) {
@@ -317,7 +368,9 @@ export class UiMain {
     const logger = loggerMain.createLogger(UIAspect.id);
 
     const ui = new UiMain(pubsub, config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
-    cli.register(new StartCmd(ui, logger, pubsub));
+    const server = mainDevServer.createServer(ui);
+
+    cli.register(new StartCmd(server, worker, ui, logger, pubsub));
     cli.register(new UIBuildCmd(ui));
     return ui;
   }

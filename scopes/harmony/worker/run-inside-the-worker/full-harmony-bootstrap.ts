@@ -18,10 +18,17 @@ import {
 import { bootstrap } from 'bit-bin/dist/bootstrap';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
-import { registerCoreExtensions } from '@teambit/bit/bit.main.runtime';
+// import { registerCoreExtensions } from '@teambit/bit/bit.main.runtime';
 import { BitAspect } from '@teambit/bit';
-import { manifestsMap } from '@teambit/bit/manifests';
+// import { manifestsMap } from '@teambit/bit/manifests';
+import { manifestsMap } from './manifests';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+
+function registerCoreExtensions() {
+  const allCoreExtensionsNames = Object.keys(manifestsMap);
+  ExtensionDataList.registerManyCoreExtensionNames(allCoreExtensionsNames);
+}
 
 async function getConfig() {
   const cwd = process.cwd();
@@ -110,7 +117,7 @@ async function runCLI() {
   aspectLoader.setMainAspect(getMainAspect());
   registerCoreAspectsToLegacyDepResolver(aspectLoader);
   const cli = harmony.get<CLIMain>('teambit.harmony/cli');
-  await cli.run();
+  // await cli.run();
   return harmony;
 }
 

@@ -2,21 +2,16 @@ import React from 'react';
 import { Text } from 'ink';
 import moment from 'moment';
 
-export type compilingOrUIServersAreReadyProps = {
-  mainUIServer: any;
-  totalComponentsSum: number | null;
-  compiledComponentsSum: number;
+export type UIServersAreReadyInScopeProps = {
+  uiRootName: string;
+  port: number;
 };
 
-export type props = {
-  mainUIServer: any;
-};
-
-export const UIServersAreReadyInScope = ({ mainUIServer }: props) => (
+export const UIServersAreReadyInScope = ({ uiRootName, port }: UIServersAreReadyInScopeProps) => (
   <>
-    <Text>You can now view {mainUIServer.uiRoot.name} components in the browser</Text>
+    <Text>You can now view {uiRootName} components in the browser</Text>
     <Text>
-      UI server is running on port {mainUIServer.port} ({moment().format('HH:mm:ss')})
+      UI server is running on port {port} ({moment().format('HH:mm:ss')})
     </Text>
   </>
 );

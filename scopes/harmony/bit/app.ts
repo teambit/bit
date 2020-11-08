@@ -32,7 +32,8 @@ import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
-import { BitAspect } from './bit.aspect';
+// import { BitAspect } from './bit.aspect';
+import { BitAspect } from '@teambit/bit';
 import { registerCoreExtensions } from './bit.main.runtime';
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises

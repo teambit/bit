@@ -1,27 +1,28 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { ComponentPreviewServerStartedHeaders } from '.';
+import { DevServer } from '../cli-output';
 
-export type props = {
-  items: Array<any>;
+export type ComponentPreviewServerStartedProps = {
+  devServers: Array<DevServer>;
 };
 
-export const ComponentPreviewServerStarted = ({ items }: props) =>
-  !items.length ? null : (
+export const ComponentPreviewServerStarted = ({ devServers }: ComponentPreviewServerStartedProps) =>
+  !devServers.length ? null : (
     <>
       <ComponentPreviewServerStartedHeaders />
-      {items
+      {devServers
         .sort((serverA, serverB) => (serverA.id > serverB.id ? 1 : -1))
-        .map((item, index) => (
+        .map((server, index) => (
           <Box key={index}>
             <Box width="40%">
-              <Text color="rgb(45, 164, 157)">{item.id}</Text>
+              <Text color="rgb(45, 164, 157)">{server.id}</Text>
             </Box>
             <Box width="40%">
-              <Text>{`http://${item.server.host || 'localhost'}:${item.server.port}`}</Text>
+              <Text>{`http://${server.targetHost || 'localhost'}:${server.targetPort}`}</Text>
             </Box>
             <Box width="20%">
-              <Text color="yellow">{item.status}</Text>
+              <Text color="yellow">{server.status}</Text>
             </Box>
           </Box>
         ))}

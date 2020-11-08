@@ -1,8 +1,7 @@
 import { UiMain } from '@teambit/ui';
 import { PubsubMain } from '@teambit/pubsub';
-// import { ipc } from 'node-ipc';
 
-export const createRuntimeForStart = (
+export const startMainUiServer = (
   ui: UiMain,
   pubsub: PubsubMain,
   uiRootName: string | undefined,
@@ -11,9 +10,6 @@ export const createRuntimeForStart = (
   port: string | undefined,
   rebuild: boolean | undefined
 ) => {
-  // pubsub.sub('topicUUID', () => {
-  //   // TODO send messge out
-
   return ui
     .createRuntime({
       uiRootName,

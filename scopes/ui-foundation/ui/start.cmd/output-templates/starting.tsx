@@ -2,12 +2,12 @@ import React from 'react';
 import { Text, Box } from 'ink';
 import Spinner from 'ink-spinner';
 
-export type props = {
-  componentServers: Array<any>;
+export type StartingProps = {
+  sumOfComponentServers: number;
 };
 
-export const Starting = ({ componentServers }: props) =>
-  !componentServers.length ? null : (
+export const Starting = ({ sumOfComponentServers }: StartingProps) =>
+  !sumOfComponentServers ? null : (
     <Box paddingTop={1}>
       <Text>
         <Text color="green">

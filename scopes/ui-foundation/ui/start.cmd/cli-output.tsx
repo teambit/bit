@@ -28,40 +28,55 @@ import {
   WebpackWarnings,
   CompilingOrUIServersAreReady,
 } from './output-templates';
+// import type { MainUIServerDetails } from './output-templates/ui-servers-are-ready';
 
-type state = {
+export type MainUIServerDetails = {
+  uiRootName: string;
+  isScope: boolean;
+  targetHost: string;
+  targetPort: number;
+};
+
+export type DevServer = {
+  name: string | null;
+  targetHost: string | undefined;
+  targetPort: number;
+  status: string | null;
+  id: string;
+};
+
+type CliOutputState = {
   compiledComponents: Array<any>;
   commandFlags: any;
-  mainUIServer: any;
-  componentServers: Array<any>;
+  mainUIServer: MainUIServerDetails | null;
+  devServers: Array<DevServer>;
   webpackErrors: Array<any>;
   webpackWarnings: Array<any>;
   totalComponents: Array<any> | null;
-  isScope: boolean;
   compiling: boolean;
 };
 
-export type props = {
+export type CliOutputProps = {
   startingTimestamp: number;
   pubsub: PubsubMain;
   commandFlags: any;
-  uiServer: any;
+  mainUIServer: MainUIServerDetails | null;
 };
 
-export class CliOutput extends React.Component<props, state> {
+export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   private isBrowserOpen = false;
 
-  constructor(props: props) {
+  constructor(props: CliOutputProps) {
     super(props);
     this.state = {
       compiledComponents: [],
       commandFlags: props.commandFlags,
-      mainUIServer: props.uiServer,
-      componentServers: [],
+      mainUIServer: props.mainUIServer,
+      devServers: [],
       webpackErrors: [],
       webpackWarnings: [],
       totalComponents: null,
-      isScope: !!props.uiServer?.uiRoot.scope,
+      // isScope: props.mainUIServer?.isScope | null,
       compiling: false,
     };
 
@@ -77,10 +92,12 @@ export class CliOutput extends React.Component<props, state> {
   }
 
   private eventsListener = (event: BitBaseEvent<any>) => {
+    // console.log('--->event: ', JSON.stringify(event));
+    // console.log('--->event: ', event.type);
+
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
-        this.updateOrAddComponentServer(event.data.context.id, 'Starting...', event.data);
-        this.safeOpenBrowser();
+        this.onComponentsServerStarted(event as ComponentsServerStartedEvent);
         break;
       case WebpackCompilationStartedEvent.TYPE:
         this.onWebpackCompilationStarted(event as WebpackCompilationStartedEvent);
@@ -107,18 +124,36 @@ export class CliOutput extends React.Component<props, state> {
     }
   };
 
-  private async onUiServerStarted(event: UiServerStartedEvent) {
-    const devServers = await event.data.uiRoot.devServers;
+  private onComponentsServerStarted(event: ComponentsServerStartedEvent) {
+    const devServer: DevServer = {
+      name: null,
+      targetHost: event.data.hostname,
+      targetPort: event.data.port,
+      status: 'Starting...',
+      id: event.data.id,
+    };
+    this.updateOrAddComponentServer(event.data.id, devServer);
+    this.safeOpenBrowser();
+  }
 
-    if (event.data.uiRoot.scope) {
+  private onUiServerStarted(event: UiServerStartedEvent) {
+    // const devServers: DevServer[] = await event.data.uiRoot.devServers;
+    const devServers: DevServer[] = event.data.devServers;
+
+    // if (event.data.uiRoot.scope) {
+    if (event.data.isScope) {
       this.setState({
-        mainUIServer: event.data,
-        isScope: true,
+        devServers: devServers,
+        mainUIServer: event.data.mainUIServer,
+        // isScope: true,
       });
     } else {
-      const totalComponents = await event.data.uiRoot.workspace.list();
+      // const totalComponents = await event.data.uiRoot.workspace.list();
+      // const totalComponents = await this.state.mainUIServer.uiRoot.workspace.list()
+      const totalComponents = event.data.componentList;
       this.setState({
-        mainUIServer: event.data,
+        devServers: devServers,
+        mainUIServer: event.data.mainUIServer,
         totalComponents,
       });
     }
@@ -149,7 +184,8 @@ export class CliOutput extends React.Component<props, state> {
       compiledComponents: [...this.state.compiledComponents, ...successfullyCompiledComponents],
       compiling: false,
     });
-    this.updateOrAddComponentServer(event.data.devServerID, 'Running');
+    // this.updateOrAddComponentServer(event.data.devServerID, 'Running');
+    this.updateOrAddComponentServer(event.data.devServerID, { status: 'Running' });
     this.safeOpenBrowser();
   };
 
@@ -166,11 +202,11 @@ export class CliOutput extends React.Component<props, state> {
 
   // Helpers
   private isOnRunningMode() {
-    return this.state.mainUIServer && this.state.componentServers.every((cs) => cs.status === 'Running');
+    return this.state.mainUIServer && this.state.devServers.every((cs) => cs.status === 'Running');
   }
 
   private clearConsole() {
-    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+    // process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
   private async safeOpenBrowser() {
@@ -179,7 +215,7 @@ export class CliOutput extends React.Component<props, state> {
 
     if (mainUIServer && !suppressBrowserLaunch && !!this.state.compiledComponents.length) {
       // TODO(uri): Bug two events for each server
-      if (this.state.compiledComponents.length / 2 >= this.state.componentServers.length) {
+      if (this.state.compiledComponents.length / 2 >= this.state.devServers.length) {
         this.unsafeOpenBrowser(mainUIServer);
       }
     }
@@ -194,42 +230,38 @@ export class CliOutput extends React.Component<props, state> {
     }
   }
 
-  private updateOrAddComponentServer(id, status, server?) {
-    if (server) {
-      this.addOrUpdateComponentServer(id, status, server);
+  private updateOrAddComponentServer(id: string, updates: Partial<DevServer>) {
+    const _server = this.state.devServers.find((server) => server.id === id);
+    if (_server) {
+      const updatedServer: DevServer = Object.assign({}, _server, updates);
+
+      this.setState({
+        devServers: [...this.state.devServers.filter((server) => server.id !== id), updatedServer],
+      });
     } else {
-      this.updateComponentServerStatus(id, status);
-    }
-  }
+      const emptyServerDetails: DevServer = {
+        name: null,
+        targetHost: '',
+        targetPort: 0,
+        status: null,
+        id: '',
+      };
 
-  private updateComponentServerStatus(id, status) {
-    const server = this.state.componentServers.find((cs) => cs.id === id)?.server;
-    if (server) {
-      this.addOrUpdateComponentServer(id, status, server);
-    }
-  }
+      const updatedServer: DevServer = Object.assign({}, emptyServerDetails, updates);
 
-  private addOrUpdateComponentServer(id, status, server) {
-    this.setState({
-      componentServers: [...this.state.componentServers.filter((cs) => cs.id !== id), { server, id, status }],
-    });
+      this.setState({
+        devServers: [...this.state.devServers, updatedServer],
+      });
+    }
   }
 
   render() {
-    const {
-      componentServers,
-      mainUIServer,
-      webpackErrors,
-      webpackWarnings,
-      compiledComponents,
-      isScope,
-      compiling,
-    } = this.state;
+    const { mainUIServer, devServers, webpackErrors, webpackWarnings, compiledComponents, compiling } = this.state;
     const { verbose } = this.state.commandFlags;
 
     // run in scope
-    if (isScope) {
-      render(<UIServersAreReadyInScope mainUIServer={mainUIServer} />);
+    if (mainUIServer?.isScope) {
+      render(<UIServersAreReadyInScope uiRootName={mainUIServer.uiRootName} port={mainUIServer.targetPort} />);
       return null;
     }
 
@@ -247,15 +279,15 @@ export class CliOutput extends React.Component<props, state> {
 
     return (
       <>
-        <ComponentPreviewServerStarted items={componentServers} />
+        <ComponentPreviewServerStarted devServers={devServers} />
         <Newline />
 
-        {mainUIServer ? null : <Starting componentServers={componentServers} />}
+        {mainUIServer ? null : <Starting sumOfComponentServers={devServers.length} />}
 
         <CompilingOrUIServersAreReady
-          totalComponentsSum={this.state.componentServers.length}
+          totalComponentsSum={this.state.devServers.length}
           compiledComponentsSum={compiledComponents.length}
-          mainUIServer={mainUIServer}
+          mainUIServerDetails={mainUIServer}
         />
       </>
     );

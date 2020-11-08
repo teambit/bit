@@ -3,14 +3,16 @@ import moment from 'moment';
 import { Text, Newline, Box } from 'ink';
 import Spinner from 'ink-spinner';
 
-export type compilingOrUIServersAreReadyProps = {
-  mainUIServer: any;
+import { MainUIServerDetails } from '../cli-output';
+
+export type CompilingOrUIServersAreReadyProps = {
+  mainUIServerDetails: MainUIServerDetails | null;
   totalComponentsSum: number | null;
   compiledComponentsSum: number;
 };
 
-export type uIServersAreReadyProps = {
-  mainUIServer: any;
+export type UIServersAreReadyProps = {
+  mainUIServerDetails: MainUIServerDetails;
 };
 
 const DevelopmentServersAreStarting = () => (
@@ -24,35 +26,35 @@ const DevelopmentServersAreStarting = () => (
   </Box>
 );
 
-const UIServersAreReady = ({ mainUIServer }: uIServersAreReadyProps) => (
+const UIServersAreReady = ({ mainUIServerDetails }: UIServersAreReadyProps) => (
   <>
-    <Text>You can now view {mainUIServer.uiRoot.name} components in the browser</Text>
+    <Text>You can now view {mainUIServerDetails.uiRootName} components in the browser</Text>
     <Text>
-      Main UI server is running on http://{mainUIServer.targetHost}:{mainUIServer.targetPort}
+      Main UI server is running on http://{mainUIServerDetails.targetHost}:{mainUIServerDetails.targetPort}
     </Text>
     <Newline />
-    {mainUIServer.uiRoot.workspace ? (
+    {!mainUIServerDetails.isScope ? (
       <Text color="yellow">Waiting for component changes... ({moment().format('HH:mm:ss')})</Text>
     ) : null}
   </>
 );
 
 export const CompilingOrUIServersAreReady = ({
+  mainUIServerDetails,
   totalComponentsSum,
   compiledComponentsSum,
-  mainUIServer,
-}: compilingOrUIServersAreReadyProps) => {
-  if (!mainUIServer) {
+}: CompilingOrUIServersAreReadyProps) => {
+  if (!mainUIServerDetails) {
     return null;
   }
 
   // For 0 componnets
-  if (totalComponentsSum === 0 && !!mainUIServer) {
-    return <UIServersAreReady mainUIServer={mainUIServer} />;
+  if (totalComponentsSum === 0 && !!mainUIServerDetails) {
+    return <UIServersAreReady mainUIServerDetails={mainUIServerDetails} />;
   }
 
-  if (!!totalComponentsSum && totalComponentsSum <= compiledComponentsSum && !!mainUIServer) {
-    return <UIServersAreReady mainUIServer={mainUIServer} />;
+  if (!!totalComponentsSum && totalComponentsSum <= compiledComponentsSum && !!mainUIServerDetails) {
+    return <UIServersAreReady mainUIServerDetails={mainUIServerDetails} />;
   }
 
   return <DevelopmentServersAreStarting />;
