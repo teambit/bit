@@ -51,7 +51,8 @@ export class ComponentServer {
 
     this.pubsub.pub(
       BundlerAspect.id,
-      this.createComponentsServerStartedEvent(server, this.context, hostname, this.port)
+      //TODO: this.context.id?
+      this.createComponentsServerStartedEvent(this.context.id, this.context.env.id, hostname, this.port)
     );
   }
 
@@ -67,14 +68,9 @@ export class ComponentServer {
     return hostname;
   }
 
-  private createComponentsServerStartedEvent: (
-    DevServer,
-    ExecutionContext,
-    string,
-    number
-  ) => ComponentsServerStartedEvent = (componentsServer, context, hostname, port) => {
-    return new ComponentsServerStartedEvent(Date.now(), componentsServer, context, hostname, port);
-  };
+  private createComponentsServerStartedEvent(id: string, name: string, targetHost: string, targetPort: number) {
+    return new ComponentsServerStartedEvent(Date.now().toString(), id, name, targetHost, targetPort);
+  }
 
   /**
    * get the url of the component server.

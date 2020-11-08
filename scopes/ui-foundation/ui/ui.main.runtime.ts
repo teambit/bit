@@ -25,14 +25,14 @@ import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
-import { StartCmd } from './start.cmd';
+import { StartCmd } from './start-cmd/start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.config';
-import { DevServer } from './start.cmd/cli-output';
+import { DevServer } from './start-cmd/cli-output';
 
 export type UIDeps = [
   MainDevServerMain,
@@ -184,13 +184,17 @@ export class UiMain {
       await uiServer.start({ port: targetPort });
     }
 
-    const componentList = (uiRoot as any)?.workspace.list() || []; // TODO: fixe types
+    const serializedComponentList = await (uiRoot as any)?.workspace.list().then((componentList) => {
+      return componentList.map((component) => component.stringify());
+    });
+
     const event: UiServerStartedEvent = await this.createUiServerStartedEvent(
       this.config.host,
       targetPort,
-      componentList,
+      serializedComponentList,
       uiRoot
     );
+
     this.pubsub.pub(UIAspect.id, event);
 
     if (uiRoot.postStart) await uiRoot.postStart({ pattern });

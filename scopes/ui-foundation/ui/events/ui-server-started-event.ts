@@ -2,7 +2,7 @@
 import { BitBaseEvent } from '@teambit/pubsub';
 
 import type ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { DevServer, MainUIServerDetails } from '../start.cmd/cli-output';
+import { DevServer, MainUIServerDetails } from '../start-cmd/cli-output';
 
 // export type DevServer = {
 //   targetHost: string;

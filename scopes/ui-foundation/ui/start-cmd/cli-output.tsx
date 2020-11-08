@@ -93,7 +93,8 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
 
   private eventsListener = (event: BitBaseEvent<any>) => {
     // console.log('--->event: ', JSON.stringify(event));
-    // console.log('--->event: ', event.type);
+    // console.log('');
+    console.log('--->event: ', event.type);
 
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
@@ -126,9 +127,9 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
 
   private onComponentsServerStarted(event: ComponentsServerStartedEvent) {
     const devServer: DevServer = {
-      name: null,
-      targetHost: event.data.hostname,
-      targetPort: event.data.port,
+      name: event.data.name,
+      targetHost: event.data.targetHost,
+      targetPort: event.data.targetPort,
       status: 'Starting...',
       id: event.data.id,
     };

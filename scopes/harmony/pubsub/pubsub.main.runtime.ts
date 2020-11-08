@@ -62,8 +62,29 @@ export class PubsubMain {
 
   private tryToSendAsSubprocess(topicUUID: string, event: BitBaseEvent<any>) {
     if (process.send) {
-      const limitedSerializedEvent = JSON.stringify(event, this.censor(event));
+      // if(event.type=='ui-server-started'){
+      //   console.log('->')
+      //   console.dir(event)
+      // }
+
+      // const limitedSerializedEvent = JSON.stringify(event, this.censor(event));
+      const limitedSerializedEvent = this.serializeEvent(event);
+
+      // if(event.type=='ui-server-started'){
+      //   console.log('->>')
+      //   console.dir(JSON.parse(limitedSerializedEvent))
+      //   // throw new Error()
+      // }
+
       process.send({ headder: 'bit-inter-processes-events', bitEvent: { topicUUID, event: limitedSerializedEvent } });
+    }
+  }
+
+  private serializeEvent(event: BitBaseEvent<any>) {
+    try {
+      return JSON.stringify(event, this.censor(event));
+    } catch (err) {
+      throw new Error(`Could not serialize event: ${event.type}, err.message`);
     }
   }
 
@@ -71,7 +92,7 @@ export class PubsubMain {
     let i = 0;
     return (key, value) => {
       if (i !== 0 && typeof censor === 'object' && typeof value == 'object' && censor == value) return '[Circular]';
-      if (i >= 29)
+      if (i >= 300)
         // seems to be a harded maximum of 30 serialized objects?
         return '[Unknown]';
       ++i; // so we know we aren't using the original object anymore
