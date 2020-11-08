@@ -425,7 +425,10 @@ export class Workspace implements ComponentFactory {
 
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     const existingExtension = component.state.config.extensions.findExtension(extension);
-    if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
+    if (existingExtension) {
+      existingExtension.data = merge(existingExtension.data, data);
+      return;
+    }
     component.state.config.extensions.push(await this.getDataEntry(extension, data));
   }
 
