@@ -1,5 +1,4 @@
 class Reporter {
-  constructor() {}
   onRunComplete() {}
 }
 
