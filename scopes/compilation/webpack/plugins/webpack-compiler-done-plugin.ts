@@ -11,7 +11,13 @@ class WebpackCompilerDonePlugin {
   }
 
   private createEvent = (stats) => {
-    return new WebpackCompilationDoneEvent(Date.now(), stats, this.devServerID);
+    return new WebpackCompilationDoneEvent(
+      Date.now().toString(),
+      this.devServerID,
+      stats.compilation.errors,
+      stats.compilation.warnings,
+      stats.hash
+    );
   };
 
   apply(compiler) {

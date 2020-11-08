@@ -94,7 +94,7 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   private eventsListener = (event: BitBaseEvent<any>) => {
     // console.log('--->event: ', JSON.stringify(event));
     // console.log('');
-    console.log('--->event: ', event.type);
+    // console.log('--->event: ', event.type);
 
     switch (event.type) {
       case ComponentsServerStartedEvent.TYPE:
@@ -138,7 +138,6 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   }
 
   private onUiServerStarted(event: UiServerStartedEvent) {
-    // const devServers: DevServer[] = await event.data.uiRoot.devServers;
     const devServers: DevServer[] = event.data.devServers;
 
     // if (event.data.uiRoot.scope) {
@@ -178,14 +177,13 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   };
 
   private onWebpackCompilationDone = (event: WebpackCompilationDoneEvent) => {
-    const successfullyCompiledComponents = event.data.stats.compilation.errors.length ? [] : [event.data.stats.hash];
+    const successfullyCompiledComponents = event.data.webpackCompilationErrors.length ? [] : [event.data.webpackHash];
     this.setState({
-      webpackErrors: [...event.data.stats.compilation.errors],
-      webpackWarnings: [...event.data.stats.compilation.warnings],
+      webpackErrors: [...event.data.webpackCompilationErrors],
+      webpackWarnings: [...event.data.webpackCompilationWarnings],
       compiledComponents: [...this.state.compiledComponents, ...successfullyCompiledComponents],
       compiling: false,
     });
-    // this.updateOrAddComponentServer(event.data.devServerID, 'Running');
     this.updateOrAddComponentServer(event.data.devServerID, { status: 'Running' });
     this.safeOpenBrowser();
   };

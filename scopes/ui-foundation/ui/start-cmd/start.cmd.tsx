@@ -61,21 +61,6 @@ export class StartCmd implements Command {
     return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
   }
 
-  // private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
-  //   render(
-  //     <CliOutput
-  //       startingTimestamp={startingTimestamp}
-  //       pubsub={pubsub}
-  //       commandFlags={commandFlags}
-  //       uiServer={uiServer}
-  //     />
-  //   );
-  // }
-
-  // private clearConsole() {
-  //   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
-  // }
-
   async render(
     [uiRootName, userPattern]: [string, string],
     {
@@ -99,7 +84,6 @@ export class StartCmd implements Command {
     this.worker.spawn(spawnOptions);
 
     return (
-      // render(
       <>
         <CliOutput
           startingTimestamp={Date.now()}
