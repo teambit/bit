@@ -10,6 +10,7 @@ import {
   ResolvedPackageVersion,
   Registries,
   Registry,
+  BIT_DEV_REGISTRY,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { omit } from 'lodash';
@@ -18,7 +19,6 @@ import { join } from 'path';
 import userHome from 'user-home';
 
 const defaultStoreDir = join(userHome, '.pnpm-store');
-const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 
 export class PnpmPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
@@ -62,7 +62,7 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
     this.logger.setStatusLine('installing dependencies');
-    const registries = await this.getRegistries();
+    const registries = await this.depResolver.getRegistries();
     await install(rootManifest, componentsManifests, storeDir, registries, this.logger);
     this.logger.consoleSuccess('installing dependencies');
   }
@@ -89,7 +89,8 @@ export class PnpmPackageManager implements PackageManager {
     // eslint-disable-next-line global-require, import/no-dynamic-require
     const { resolveRemoteVersion } = require('./lynx');
     const storeDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
-    return resolveRemoteVersion(packageName, options.rootDir, storeDir);
+    const registries = await this.depResolver.getRegistries();
+    return resolveRemoteVersion(packageName, options.rootDir, storeDir, registries);
   }
 
   async getRegistries(): Promise<Registries> {

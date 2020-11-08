@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
-import { HARMONY_FEATURE, LANES_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { HASH_SIZE } from '../../src/constants';
@@ -17,7 +17,7 @@ describe('bit snap command', function () {
   let helper: Helper;
   before(() => {
     helper = new Helper();
-    helper.command.setFeatures([LANES_FEATURE, HARMONY_FEATURE]);
+    helper.command.setFeatures([HARMONY_FEATURE]);
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -83,8 +83,8 @@ describe('bit snap command', function () {
   describe('components with dependencies', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.snapAllComponents();
     });
     it('should save the dependencies successfully with their snaps as versions', () => {
@@ -559,8 +559,7 @@ describe('bit snap command', function () {
       let secondSnap: string;
       let localScope;
       before(() => {
-        helper.command.setFeatures([LANES_FEATURE]);
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.fixtures.createComponentBarFoo();
         helper.fixtures.addComponentBarFooAsDir();
         helper.command.snapAllComponents();
@@ -572,7 +571,7 @@ describe('bit snap command', function () {
       });
       it('bit diff should show the differences', () => {
         const diff = helper.command.diff(` bar/foo ${firstSnap}`);
-        const barFooFile = path.join('bar', 'foo.js');
+        const barFooFile = 'foo.js';
         expect(diff).to.have.string(`--- ${barFooFile} (${firstSnap})`);
         expect(diff).to.have.string(`+++ ${barFooFile} (${secondSnap})`);
 
@@ -625,11 +624,9 @@ describe('bit snap command', function () {
     let snapOutput;
     let isTypeHead;
     before(() => {
-      helper.command.setFeatures([LANES_FEATURE]);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.snapAllComponents();
 
       helper.fs.outputFile('comp3/index.js', fixtures.comp3V2);
@@ -670,7 +667,7 @@ describe('bit snap command', function () {
       before(() => {
         helper.command.exportAllComponents();
 
-        helper.scopeHelper.reInitLocalScope();
+        helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1');
       });

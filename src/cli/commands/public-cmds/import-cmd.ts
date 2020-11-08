@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import R from 'ramda';
 
 import { importAction } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import Component from '../../../consumer/component';
@@ -104,7 +103,6 @@ export default class Import implements LegacyCommand {
     },
     packageManagerArgs: string[]
   ): Promise<any> {
-    if (skipLane) throwForUsingLaneIfDisabled();
     if (tester && compiler) {
       throw new GeneralError('you cant use tester and compiler flags combined');
     }

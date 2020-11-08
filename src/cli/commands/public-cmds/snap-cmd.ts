@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 
 import { snapAction } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { SnapResults } from '../../../api/consumer/lib/snap';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
@@ -49,7 +48,6 @@ export default class Snap implements LegacyCommand {
       skipAutoSnap?: boolean;
     }
   ): Promise<any> {
-    throwForUsingLaneIfDisabled();
     if (!id && !all) {
       throw new GeneralError('missing [id]. to snap all components, please use --all flag');
     }

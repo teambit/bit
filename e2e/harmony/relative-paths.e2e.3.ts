@@ -20,7 +20,7 @@ describe('relative paths flow (components requiring each other by relative paths
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope(helper.scopes.remote);
-      appOutput = helper.fixtures.populateComponents(2);
+      appOutput = helper.fixtures.populateComponents(2, false);
     });
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();

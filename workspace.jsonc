@@ -94,6 +94,7 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
+        "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
         "@types/lodash.head": "^4.0.6",
@@ -113,6 +114,7 @@
         "@yarnpkg/cli": "2.3.2",
         "@yarnpkg/core": "2.3.1",
         "@yarnpkg/fslib": "2.3.0",
+        "@yarnpkg/plugin-npm": "2.3.0",
         "ansi-to-html": "^0.6.14",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
@@ -217,14 +219,13 @@
         "webpack-hot-middleware": "^2.25.0",
         "webpack-manifest-plugin": "^2.2.0",
         "webpack-merge": "^4.2.2",
-        "workbox-webpack-plugin": "^5.1.3",
-        "@types/find-cache-dir": "3.2.0"
+        "workbox-webpack-plugin": "^5.1.3"
       },
       "peerDependencies": {
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.119",
+        "bit-bin": "14.8.9-dev.125",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -254,7 +255,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.119",
+            "bit-bin": "14.8.9-dev.125",
             "react-dom": "^16.13.1"
           }
         }
@@ -359,7 +360,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.119",
+            "bit-bin": "14.8.9-dev.125",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

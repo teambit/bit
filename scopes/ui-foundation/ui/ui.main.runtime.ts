@@ -7,6 +7,7 @@ import { ComponentAspect } from '@teambit/component';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
+import chalk from 'chalk';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
@@ -266,8 +267,10 @@ export class UiMain {
     const hashed = await this.cache.get(uiRoot.path);
     if (hash === hashed && !force) return;
     if (hash !== hashed)
-      this.logger.console(`${uiRoot.configFile} has been changed. Rebuilding UI assets for ${uiRoot.name}`);
-    this.logger.console(`Building UI assets for ${uiRoot.name}`);
+      this.logger.console(
+        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}'`
+      );
+    this.logger.console(`Building UI assets for '${chalk.cyan(uiRoot.name)}'`);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }
