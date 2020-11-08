@@ -665,6 +665,16 @@
                 "test": false
             },
             {
+                "name": "command-bar-context.tsx",
+                "relativePath": "ui/command-bar-context/command-bar-context.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "ui/command-bar-context/index.ts",
+                "test": false
+            },
+            {
                 "name": "command-bar-item.module.scss",
                 "relativePath": "ui/command-bar-item/command-bar-item.module.scss",
                 "test": false
@@ -4384,6 +4394,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/main-dropdown",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/menu": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "menu.module.scss",
+                "relativePath": "menu.module.scss",
+                "test": false
+            },
+            {
+                "name": "menu.tsx",
+                "relativePath": "menu.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/menu",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
