@@ -24,6 +24,10 @@ const componentFields = gql`
       version
       snap {
         hash
+        author {
+          displayName
+          email
+        }
         timestamp
         message
       }
