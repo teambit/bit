@@ -1,5 +1,5 @@
-import { DependencyFactory } from './dependency-factory';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
+import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';
 import { UnknownDepType } from './exceptions';

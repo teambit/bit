@@ -4,7 +4,6 @@ import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';
