@@ -1,15 +1,31 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { TooltipDrawer } from '@teambit/evangelist.surfaces.tooltip';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import React, { ReactNode } from 'react';
-
+import { isEmpty } from 'lodash';
+import { SlotRegistry } from '@teambit/harmony';
+import { KeySequence } from '@teambit/ui.keycap';
 import styles from './main-dropdown.module.scss';
 
-// type MainDropdownProps = {
-// } & React.HTMLAttributes<HTMLDivElement>;
+export type MenuItem = {
+  category?: string;
+  title: ReactNode;
+  keyChar?: string;
+  handler: () => void;
+};
 
-export function MainDropdown() {
+export type MenuItemSlot = SlotRegistry<MenuItem[]>;
+
+type MainDropdownProps = {
+  menuItems: ItemsByCategory;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+type ItemsByCategory = {
+  [key: string]: MenuItem[];
+};
+
+export function MainDropdown({ menuItems }: MainDropdownProps) {
+  if (!menuItems || isEmpty(menuItems)) return null;
   return (
     <div className={styles.mainDropdown}>
       <TooltipDrawer
@@ -25,42 +41,44 @@ export function MainDropdown() {
         )}
       >
         <div>
-          <MenuBlock title="General">
-            <div>
-              <Line title="search" of="thin-arrow-up"></Line>
-              <Line title="Command search" of="thin-arrow-up"></Line>
-              <Line title="shortcuts" of="thin-arrow-up"></Line>
-            </div>
-          </MenuBlock>
-          <MenuBlock title="component bar">
-            <div>
-              <Line title="Show component bar" of="thin-arrow-up"></Line>
-              <Line title="Next component" of="thin-arrow-up"></Line>
-              <Line title="Previous component" of="thin-arrow-up"></Line>
-            </div>
-          </MenuBlock>
-          <MenuBlock title="tab navigation">
-            <div>
-              <Line title="Next tab" of="thin-arrow-up"></Line>
-              <Line title="Previous tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Overview tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Compositions tab" of="thin-arrow-up"></Line>
-              <Line title="Go to History tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Tests tab" of="thin-arrow-up"></Line>
-              <Line title="Go to Version menu" of="thin-arrow-up"></Line>
-            </div>
-          </MenuBlock>
+          {Object.keys(menuItems).map((category, index) => {
+            return (
+              <MenuBlock key={index} title={category}>
+                {menuItems[category].map((item) => {
+                  return (
+                    item && (
+                      <Line
+                        key={item.keyChar}
+                        lineTitle={item.title}
+                        keyChar={item.keyChar}
+                        onClick={item.handler}
+                      ></Line>
+                    )
+                  );
+                })}
+              </MenuBlock>
+            );
+          })}
         </div>
       </TooltipDrawer>
     </div>
   );
 }
 
-function Line({ title, of }: { title: string; of: string }) {
+type LineProps = {
+  lineTitle: ReactNode;
+  keyChar?: string;
+} & React.HTMLAttributes<HTMLDivElement>;
+
+function Line({ lineTitle, keyChar, onClick, ...rest }: LineProps) {
   return (
-    <div className={classNames(hoverable, styles.line)}>
-      <div>{title}</div>
-      <Icon of={of} className={styles.key} />
+    <div {...rest} className={classNames(styles.line)} onClick={onClick}>
+      <div>{lineTitle}</div>
+      {keyChar && (
+        <pre>
+          <KeySequence>{keyChar}</KeySequence>
+        </pre>
+      )}
     </div>
   );
 }
