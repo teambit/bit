@@ -4666,25 +4666,6 @@
         "exported": false,
         "lanes": []
     },
-    "ui/notifications/api": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "notification-api.tsx",
-                "relativePath": "notification-api.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/notifications/ui/api",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
     "ui/notifications/notification": {
         "files": [
             {
@@ -4778,6 +4759,25 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-context",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/notifications/store": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "notification-store.tsx",
+                "relativePath": "notification-store.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/notifications/ui/notification-store",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
