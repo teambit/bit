@@ -466,6 +466,8 @@ export class DependencyResolverMain {
     );
 
     // TODO: move to pkg
+    // TODO: solve this generics issue and remove the ts-ignore
+    // @ts-ignore
     dependencyResolver.registerDependencyFactory([new PackageDependencyFactory(), new ComponentDependencyFactory()]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;

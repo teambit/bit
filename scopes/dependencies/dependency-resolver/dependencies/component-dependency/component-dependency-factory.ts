@@ -18,6 +18,8 @@ export class ComponentDependencyFactory implements DependencyFactory {
     this.type = 'component';
   }
 
+  // TODO: solve this generics issue and remove the ts-ignore
+  // @ts-ignore
   parse<ComponentDependency, S extends SerializedComponentDependency>(serialized: S): ComponentDependency {
     const id = ComponentID.fromObject(serialized.componentId);
     return (new ComponentDependency(
