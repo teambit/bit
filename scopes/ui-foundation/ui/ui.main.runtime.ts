@@ -218,13 +218,21 @@ export class UiMain {
     const uis = this.uiRootSlot.toArray();
     if (uis.length === 1) return uis[0];
     const uiRoot = uis.find(([, root]) => root.priority);
-    if (!uiRoot) throw new UnknownUI('default');
+    if (!uiRoot)
+      throw new UnknownUI(
+        'default',
+        this.uiRootSlot.toArray().map(([id]) => id)
+      );
     return uiRoot;
   }
 
   getUiRootOrThrow(uiRootName: string): UIRoot {
     const uiSlot = this.uiRootSlot.get(uiRootName);
-    if (!uiSlot) throw new UnknownUI(uiRootName);
+    if (!uiSlot)
+      throw new UnknownUI(
+        uiRootName,
+        this.uiRootSlot.toArray().map(([id]) => id)
+      );
     return uiSlot;
   }
 

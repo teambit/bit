@@ -51,7 +51,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       <Text key={descriptor?.id}>
         <Text color="cyan">configured tester: </Text>
         <Text>
-          {descriptor?.id} ({descriptor?.displayName})
+          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
         </Text>
         <Newline />
         <Text underline color="cyan">
@@ -76,6 +76,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       displayName: tester.displayName || '',
       icon: tester.icon || '',
       config: tester.displayConfig ? tester.displayConfig() : '',
+      version: tester.version ? tester.version() : '?',
     };
   }
 

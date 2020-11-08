@@ -1,15 +1,18 @@
 import PubsubAspect, { PubsubUI, BitBaseEvent } from '@teambit/pubsub';
 import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
+import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { Slot } from '@teambit/harmony';
 import { NavigationSlot, NavLinkProps, RouteSlot } from '@teambit/react-router';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-
+import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
+import copy from 'copy-to-clipboard';
 import { ComponentAspect } from './component.aspect';
 import { Component } from './ui/component';
 import { Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
 import { AspectSection } from './aspect.section';
+import { ComponentModel } from './ui';
 
 export type Server = {
   env: string;
@@ -18,10 +21,6 @@ export type Server = {
 
 export type ComponentMeta = {
   id: string;
-};
-
-export type MenuItem = {
-  label: JSX.Element | string | null;
 };
 
 export const componentIdUrlRegex = '[\\w\\/-]*[\\w-]';
@@ -42,10 +41,75 @@ export class ComponentUI {
     /**
      * slot for registering a new widget to the menu.
      */
-    private widgetSlot: OrderedNavigationSlot
+    private widgetSlot: OrderedNavigationSlot,
+
+    private menuItemSlot: MenuItemSlot,
+
+    private commandBarUI: CommandBarUI
   ) {
     this.registerPubSub();
   }
+
+  /**
+   * the current visible component
+   */
+  private activeComponent?: ComponentModel;
+
+  private copyNpmId = () => {
+    const packageName = this.activeComponent?.packageName;
+    if (packageName) {
+      const version = this.activeComponent?.id.version;
+      const versionString = version ? `@${version}` : '';
+      copy(`${packageName}${versionString}`);
+    }
+  };
+
+  /**
+   * key bindings used by component aspect
+   */
+  private keyBindings: CommandEntry[] = [
+    {
+      id: 'component.copyBitId', // TODO - extract to a component!
+      handler: () => {
+        copy(this.activeComponent?.id.toString() || '');
+      },
+      displayName: 'Copy component ID',
+      keybinding: '.',
+    },
+    {
+      id: 'component.copyNpmId', // TODO - extract to a component!
+      handler: this.copyNpmId,
+      displayName: 'Copy component package name',
+      keybinding: ',',
+    },
+  ];
+
+  private menuItems: MenuItem[] = [
+    {
+      category: 'general',
+      title: 'Open command bar',
+      keyChar: 'mod+k',
+      handler: () => this.commandBarUI?.run('command-bar.open'),
+    },
+    {
+      category: 'general',
+      title: 'Toggle component list',
+      keyChar: 's',
+      handler: () => this.commandBarUI?.run('sidebar.toggle'),
+    },
+    {
+      category: 'workflow',
+      title: 'Copy component ID',
+      keyChar: '.',
+      handler: () => this.commandBarUI?.run('component.copyBitId'),
+    },
+    {
+      category: 'workflow',
+      title: 'Copy component package name',
+      keyChar: ',',
+      handler: () => this.commandBarUI?.run('component.copyNpmId'),
+    },
+  ];
 
   registerPubSub() {
     this.pubsub.sub(PreviewAspect.id, (be: BitBaseEvent<any>) => {
@@ -62,23 +126,19 @@ export class ComponentUI {
     });
   }
 
+  handleComponentChange = (activeComponent?: ComponentModel) => {
+    this.activeComponent = activeComponent;
+  };
+
   getComponentUI(host: string) {
-    return <Component routeSlot={this.routeSlot} host={host} />;
+    return <Component routeSlot={this.routeSlot} onComponentChange={this.handleComponentChange} host={host} />;
   }
 
   getMenu(host: string) {
-    return <Menu navigationSlot={this.navSlot} widgetSlot={this.widgetSlot} host={host} />;
+    return (
+      <Menu navigationSlot={this.navSlot} widgetSlot={this.widgetSlot} host={host} menuItemSlot={this.menuItemSlot} />
+    );
   }
-  // getTopBarUI() {
-  //   return (
-  //     <TopBar
-  //       // className={styles.topbar}
-  //       navigationSlot={this.navSlot}
-  //       version={'new'} // TODO - get component data here
-  //       widgetSlot={this.widgetSlot}
-  //     />
-  //   );
-  // }
 
   registerRoute(route: RouteProps) {
     this.routeSlot.register(route);
@@ -96,22 +156,38 @@ export class ComponentUI {
     this.widgetSlot.register({ props: widget, order });
   }
 
-  static dependencies = [PubsubAspect];
+  registerMenuItem = (menuItems: MenuItem[]) => {
+    this.menuItemSlot.register(menuItems);
+  };
+
+  static dependencies = [PubsubAspect, CommandBarAspect];
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<RouteProps>(), Slot.withType<NavPlugin>(), Slot.withType<NavigationSlot>()];
+  static slots = [
+    Slot.withType<RouteProps>(),
+    Slot.withType<NavPlugin>(),
+    Slot.withType<NavigationSlot>(),
+    Slot.withType<MenuItemSlot>(),
+  ];
 
   static async provider(
-    [pubsub]: [PubsubUI],
+    [pubsub, commandBarUI]: [PubsubUI, CommandBarUI],
     config,
-    [routeSlot, navSlot, widgetSlot]: [RouteSlot, OrderedNavigationSlot, OrderedNavigationSlot]
+    [routeSlot, navSlot, widgetSlot, menuItemSlot]: [
+      RouteSlot,
+      OrderedNavigationSlot,
+      OrderedNavigationSlot,
+      MenuItemSlot
+    ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
-    const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot);
+    const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot, menuItemSlot, commandBarUI);
     const section = new AspectSection();
 
+    componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
+    componentUI.registerMenuItem(componentUI.menuItems);
     componentUI.registerRoute(section.route);
     componentUI.registerWidget(section.navigationLink, section.order);
     return componentUI;

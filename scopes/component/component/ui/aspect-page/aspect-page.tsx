@@ -43,7 +43,7 @@ export function AspectPage() {
   return (
     <div className={styles.aspectPage}>
       <div>
-        <H1 className={styles.title}>Aspects</H1>
+        <H1 className={styles.title}>Configuration</H1>
         <Separator className={styles.separator} />
         {aspectList &&
           aspectList.map((aspect, index) => {

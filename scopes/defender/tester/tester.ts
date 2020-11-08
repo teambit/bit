@@ -83,4 +83,9 @@ export interface Tester {
    * execute tests on all components in the given execution context.
    */
   test(context: TesterContext): Promise<Tests>;
+
+  /**
+   * return the tester version.
+   */
+  version(): string;
 }

@@ -1,4 +1,4 @@
-import { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile } from 'typescript';
 import { MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -14,8 +14,8 @@ export class TypescriptMain {
   /**
    * create a new compiler.
    */
-  createCompiler(options: TypeScriptCompilerOptions): Compiler {
-    return new TypescriptCompiler(TypescriptAspect.id, this.logger, options);
+  createCompiler(options: TypeScriptCompilerOptions, tsModule = ts): Compiler {
+    return new TypescriptCompiler(TypescriptAspect.id, this.logger, options, tsModule);
   }
 
   /**
