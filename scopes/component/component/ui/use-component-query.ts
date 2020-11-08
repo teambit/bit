@@ -11,6 +11,7 @@ const componentFields = gql`
       version
       scope
     }
+    packageName
     displayName
     server {
       env
