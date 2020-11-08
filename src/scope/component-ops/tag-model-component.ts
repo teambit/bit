@@ -26,35 +26,38 @@ import { OnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
 
+export type onTagIdTransformer = (id: BitId) => BitId | null;
+type UpdateDependenciesOnTagFunc = (component: Component, idTransformer: onTagIdTransformer) => Component;
+
+let updateDependenciesOnTag: UpdateDependenciesOnTagFunc;
+export function registerUpdateDependenciesOnTag(func: UpdateDependenciesOnTagFunc) {
+  updateDependenciesOnTag = func;
+}
+
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const getNewDependencyVersion = (id: BitId): BitId | null => {
     const foundDependency = componentsToTag.find((component) => component.id.isEqualWithoutVersion(id));
     return foundDependency ? id.changeVersion(foundDependency.version) : null;
   };
+  const changeExtensionsVersion = (component: Component): void => {
+    component.extensions.forEach((ext) => {
+      if (ext.extensionId) {
+        const newDepId = getNewDependencyVersion(ext.extensionId);
+        if (newDepId) ext.extensionId = newDepId;
+      }
+    });
+  };
+
   componentsToTag.forEach((oneComponentToTag) => {
     oneComponentToTag.getAllDependencies().forEach((dependency) => {
       const newDepId = getNewDependencyVersion(dependency.id);
       if (newDepId) dependency.id = newDepId;
     });
-    // TODO: in case there are core extensions they should be excluded here
-    oneComponentToTag.extensions.forEach((extension) => {
-      if (extension.name === Extensions.dependencyResolver && extension.data && extension.data.dependencies) {
-        extension.data.dependencies.forEach((dep) => {
-          const depId = dep.componentId instanceof BitId ? dep.componentId : new BitId(dep.componentId);
-          const newDepId = getNewDependencyVersion(depId);
-          dep.componentId = newDepId || depId;
-        });
-      }
-      // For core extensions there won't be an extensionId but name
-      // We only want to add version to external extensions not core extensions
-      if (!extension.extensionId) return;
-      const newDepId = getNewDependencyVersion(extension.extensionId);
-      if (newDepId) extension.extensionId = newDepId;
-      else if (!extension.extensionId.hasScope() && !extension.extensionId.hasVersion()) {
-        throw new GeneralError(`fatal: "${oneComponentToTag.id.toString()}" has an extension "${extension.extensionId.toString()}".
-this extension was not included in the tag command.`);
-      }
-    });
+    changeExtensionsVersion(oneComponentToTag);
+    if (updateDependenciesOnTag && typeof updateDependenciesOnTag === 'function') {
+      // @ts-ignore
+      oneComponentToTag = updateDependenciesOnTag(oneComponentToTag, getNewDependencyVersion.bind(this));
+    }
   });
 }
 

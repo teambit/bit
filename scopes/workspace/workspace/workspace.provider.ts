@@ -162,12 +162,6 @@ export default async function provideWorkspace(
     return defaultScope;
   });
 
-  onComponentLoadSlot.register(async (component: Component) => {
-    await workspace.getEnvSystemDescriptor.bind(workspace);
-    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
-    return dependencyResolver.extractDepsFromLegacy(component);
-  });
-
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);

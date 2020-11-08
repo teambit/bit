@@ -12,6 +12,15 @@ import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import {
+  registerUpdateDependenciesOnTag,
+  onTagIdTransformer,
+} from 'bit-bin/dist/scope/component-ops/tag-model-component';
+import {
+  registerUpdateDependenciesOnExport,
+  OnExportIdTransformer,
+} from 'bit-bin/dist/scope/component-ops/export-scope-components';
+import { Version as VersionModel } from 'bit-bin/dist/scope/models';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
@@ -44,6 +53,7 @@ import {
   DependencyLifecycleType,
   DependencyFactory,
   ComponentDependencyFactory,
+  COMPONENT_DEP_TYPE,
 } from './dependencies';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
@@ -405,6 +415,38 @@ export class DependencyResolverMain {
     return result;
   }
 
+  updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
+    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (!entry) {
+      return component;
+    }
+    entry.data.dependencies.forEach((dep) => {
+      if (dep.type === COMPONENT_DEP_TYPE) {
+        const depId = BitId.parse(dep.componentId);
+        const newDepId = idTransformer(depId);
+        dep.componentId = (newDepId || depId).serialize();
+        dep.id = (newDepId || depId).toString();
+      }
+    });
+    return component;
+  }
+
+  updateDepsOnLegacyExport(version: VersionModel, idTransformer: onExportIdTransformer): VersionModel {
+    const entry = version.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (!entry) {
+      return version;
+    }
+    entry.data.dependencies.forEach((dep) => {
+      if (dep.type === COMPONENT_DEP_TYPE) {
+        const depId = BitId.parse(dep.componentId);
+        const newDepId = idTransformer(depId);
+        dep.componentId = (newDepId || depId).serialize();
+        dep.id = (newDepId || depId).toString();
+      }
+    });
+    return version;
+  }
+
   /**
    * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
    * and write them to the dependencyResolver data.
@@ -486,6 +528,8 @@ export class DependencyResolverMain {
       }
     );
     DependencyResolver.registerWorkspacePolicyGetter(dependencyResolver.getWorkspacePolicy.bind(dependencyResolver));
+    registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
+    registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
 
     return dependencyResolver;
   }

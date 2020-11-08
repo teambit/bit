@@ -1,5 +1,5 @@
 import { ComponentMain } from '@teambit/component';
-import { ComponentDependency, SerializedComponentDependency } from './component-dependency';
+import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { DependencyLifecycleType } from '../dependency';
@@ -13,8 +13,6 @@ import { DependencyList } from '../dependency-list';
 //     return new ComponentDependency(id, serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType);
 //   }
 // }
-
-const TYPE = 'component';
 
 export class ComponentDependencyFactory implements DependencyFactory {
   type: string;

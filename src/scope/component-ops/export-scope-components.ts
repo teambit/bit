@@ -23,6 +23,14 @@ import { ObjectItem, ObjectList } from '../objects/object-list';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
+export type OnExportIdTransformer = (id: BitId) => BitId;
+type UpdateDependenciesOnExportFunc = (version: Version, idTransformer: OnExportIdTransformer) => Version;
+
+let updateDependenciesOnExport: UpdateDependenciesOnExportFunc;
+export function registerUpdateDependenciesOnExport(func: UpdateDependenciesOnExportFunc) {
+  updateDependenciesOnExport = func;
+}
+
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
  * saves a component into the objects directory of the remote scope, then, resolves its
@@ -402,6 +410,10 @@ async function convertToCorrectScope(
       const didCodeMod = await _replaceSrcOfVersionIfNeeded(objectVersion);
       const didDependencyChange = changeDependencyScope(objectVersion);
       changeExtensionsScope(objectVersion);
+      if (updateDependenciesOnExport && typeof updateDependenciesOnExport === 'function') {
+        // @ts-ignore
+        objectVersion = updateDependenciesOnExport(objectVersion, getIdWithUpdatedScope.bind(this));
+      }
       // @todo: after v15 is deployed, remove the following code until the next "// END" comment.
       // this is currently needed because remote-servers with older code still saving Version
       // objects into the calculated hash path and not into the originally created hash.
@@ -477,20 +489,6 @@ async function convertToCorrectScope(
           hasChanged = true;
           ext.extensionId = updatedScope;
         }
-      }
-      if (ext.name === Extensions.dependencyResolver && ext.data && ext.data.dependencies) {
-        ext.data.dependencies.forEach((dep) => {
-          const id = new BitId(dep.componentId);
-          const oldScope = id.scope;
-          const updatedScope = getIdWithUpdatedScope(id);
-          if (!updatedScope.isEqual(id)) {
-            hasChanged = true;
-            dep.componentId = updatedScope;
-          }
-          if (oldScope && dep.packageName.includes(oldScope)) {
-            dep.packageName = dep.packageName.replace(oldScope, updatedScope.scope);
-          }
-        });
       }
     });
     return hasChanged;

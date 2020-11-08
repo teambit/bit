@@ -21,8 +21,9 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   PolicyDep,
+  DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvServiceList, EnvsAspect } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -422,14 +423,30 @@ export class Workspace implements ComponentFactory {
     return {};
   }
 
+  private async upsertExtensionData(component: Component, extension: string, data: any) {
+    const existingExtension = component.state.config.extensions.findExtension(extension);
+    if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
+    component.state.config.extensions.push(await this.getDataEntry(extension, data));
+  }
+
   private async executeLoadSlot(component: Component) {
     const entries = this.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component);
-      const existingExtension = component.state.config.extensions.findExtension(extension);
-      if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(await this.getDataEntry(extension, data));
+      return this.upsertExtensionData(component, extension, data);
     });
+
+    // Special load events which runs from the workspace but should run from the correct aspect
+    // TODO: remove this once those extensions dependent on workspace
+    const envsData = await this.getEnvSystemDescriptor(component);
+    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const dependenciesData = {
+      dependencies,
+    };
+
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
+    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
 
     await Promise.all(promises);
 
