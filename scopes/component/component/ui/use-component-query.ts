@@ -4,6 +4,10 @@ import { gql } from 'apollo-boost';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
+export type UseComponentOptions = {
+  autoUpdate?: boolean;
+};
+
 const componentFields = gql`
   fragment componentFields on Component {
     id {
@@ -53,12 +57,14 @@ const SUB_COMPONENT = gql`
 `;
 
 /** provides data to component ui page, making sure both variables and return value are safely typed and memoized */
-export function useComponentQuery(componentId: string, host: string) {
+export function useComponentQuery(componentId: string, host: string, { autoUpdate = false }: UseComponentOptions = {}) {
   const { data, error, loading, subscribeToMore } = useDataQuery(GET_COMPONENT, {
     variables: { id: componentId, extensionId: host },
   });
 
   useEffect(() => {
+    if (!autoUpdate) return () => {};
+
     const unsub = subscribeToMore({
       document: SUB_COMPONENT,
       updateQuery: (prev, { subscriptionData }) => {

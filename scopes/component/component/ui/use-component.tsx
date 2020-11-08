@@ -3,14 +3,14 @@ import { useQuery } from './use-query';
 import { ComponentID } from '../id';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
-import { useComponentQuery } from './use-component-query';
+import { useComponentQuery, UseComponentOptions } from './use-component-query';
 
 export type Component = {
   component?: ComponentModel;
   error?: ComponentError;
 };
 
-export function useComponent(host: string, id?: ComponentID): Component {
+export function useComponent(host: string, id?: ComponentID, options?: UseComponentOptions): Component {
   const {
     params: { componentId },
   } = useRouteMatch();
@@ -19,7 +19,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
 
   const targetId = id || componentId;
 
-  return useComponentQuery(withVersion(targetId, version), host);
+  return useComponentQuery(withVersion(targetId, version), host, options);
 }
 
 function withVersion(id: string, version?: string) {

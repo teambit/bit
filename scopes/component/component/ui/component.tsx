@@ -14,7 +14,7 @@ export type ComponentProps = {
  * main UI component of the Component extension.
  */
 export function Component({ routeSlot, host }: ComponentProps) {
-  const { component, error } = useComponent(host);
+  const { component, error } = useComponent(host, undefined, { autoUpdate: true });
   if (error) return error.renderError();
   if (!component) return <div></div>;
 
