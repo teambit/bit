@@ -979,12 +979,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!packageName) return;
     // aims to handle legacy workspaces when there is no default scope so the package name is wrong
     if (!dependency.id.hasScope() && !this.consumer.config.defaultScope) return;
-    const depData = {
-      componentId: dependency.id,
-      packageName,
-      type: fileType.isTestFile ? 'dev' : 'prod',
-    };
-    this.pushToDependencyResolverExtension('dependencies', depData);
   }
 
   pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {
