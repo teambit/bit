@@ -12,6 +12,6 @@ import { DependencyList } from './dependency-list';
 
 export interface DependencyFactory {
   type: string;
-  parse: <T extends Dependency, U extends SerializedDependency>(serializedDependency: U) => T;
-  fromLegacyComponent?: (legacyComponent: LegacyComponent) => DependencyList;
+  parse: <T extends Dependency, U extends SerializedDependency>(serializedDependency: U) => Promise<T>;
+  fromLegacyComponent?: (legacyComponent: LegacyComponent) => Promise<DependencyList>;
 }

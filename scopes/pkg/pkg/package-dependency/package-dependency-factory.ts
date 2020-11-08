@@ -19,7 +19,7 @@ export class PackageDependencyFactory implements DependencyFactory {
     this.type = TYPE;
   }
 
-  parse<PackageDependency, S extends SerializedDependency>(serialized: S): PackageDependency {
+  async parse<PackageDependency, S extends SerializedDependency>(serialized: S): Promise<PackageDependency> {
     // return new PackageDependency(serialized.id, serialized.version, serialized.type, serialized.lifecycle as DependencyLifecycleType) as unknown as PackageDependency;
     return (new PackageDependency(
       serialized.id,
@@ -28,7 +28,7 @@ export class PackageDependencyFactory implements DependencyFactory {
     ) as unknown) as PackageDependency;
   }
 
-  fromLegacyComponent(legacyComponent: LegacyComponent): DependencyList {
+  async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
     const runtimePackageDeps = transformLegacyComponentPackageDepsToSerializedDependency(
       legacyComponent.packageDependencies,
       'runtime'
@@ -42,7 +42,8 @@ export class PackageDependencyFactory implements DependencyFactory {
       'peer'
     );
     const serializedPackageDeps = runtimePackageDeps.concat(devPackageDeps).concat(peerPackageDeps);
-    const packageDeps: PackageDependency[] = serializedPackageDeps.map((dep) => this.parse(dep));
+    const packageDepsP: Promise<PackageDependency>[] = serializedPackageDeps.map((dep) => this.parse(dep));
+    const packageDeps: PackageDependency[] = await Promise.all(packageDepsP);
     const dependencyList = new DependencyList(packageDeps);
     return dependencyList;
   }

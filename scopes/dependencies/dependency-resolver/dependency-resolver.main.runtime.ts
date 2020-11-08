@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -15,6 +15,8 @@ import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
+import { BitId } from 'bit-bin/dist/bit-id';
+import { ComponentID } from '@teambit/component';
 import R, { forEachObjIndexed, flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -409,6 +411,7 @@ export class DependencyResolverMain {
    * Do not use this function for other purpose.
    * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
    * TODO: once we switch deps resolver <> workspace relation we should make it private
+   * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
    * @param component
    */
   async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
@@ -419,12 +422,12 @@ export class DependencyResolverMain {
       return acc;
     }, {});
     const listFactory = new DependencyListFactory(factoriesMap);
-    const dependencyList = listFactory.fromLegacyComponent(legacyComponent);
+    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
     return dependencyList.serialize();
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
 
   static slots = [
     Slot.withType<DependenciesPolicy>(),
@@ -443,7 +446,13 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader]: [EnvsMain, LoggerMain, Config, AspectLoaderMain],
+    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+      EnvsMain,
+      LoggerMain,
+      Config,
+      AspectLoaderMain,
+      ComponentMain
+    ],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot, dependencyFactorySlot]: [
       PoliciesRegistry,
@@ -466,7 +475,7 @@ export class DependencyResolverMain {
 
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
-    dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory()]);
+    dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
     LegacyComponent.registerOnComponentOverridesLoading(

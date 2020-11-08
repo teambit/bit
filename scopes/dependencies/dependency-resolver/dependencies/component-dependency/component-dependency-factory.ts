@@ -1,10 +1,10 @@
-import { ComponentID } from '@teambit/component';
-import { DependencyLifecycleType } from '../dependency';
+import { ComponentMain } from '@teambit/component';
 import { ComponentDependency, SerializedComponentDependency } from './component-dependency';
-import { DependencyFactory } from '../dependency-factory';
-import { DependencyList } from '../dependency-list';
 import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
+import { DependencyLifecycleType } from '../dependency';
+import { DependencyFactory } from '../dependency-factory';
+import { DependencyList } from '../dependency-list';
 
 // TODO: think about where is the right place to put this
 // export class ComponentDependencyFactory implements DependencyFactory<ComponentDependency, SerializedComponentDependency> {
@@ -19,14 +19,16 @@ const TYPE = 'component';
 export class ComponentDependencyFactory implements DependencyFactory {
   type: string;
 
-  constructor() {
+  constructor(private componentAspect: ComponentMain) {
     this.type = TYPE;
   }
 
   // TODO: solve this generics issue and remove the ts-ignore
   // @ts-ignore
-  parse<ComponentDependency, S extends SerializedComponentDependency>(serialized: S): ComponentDependency {
-    const id = ComponentID.fromObject(serialized.componentId);
+  async parse<ComponentDependency, S extends SerializedComponentDependency>(
+    serialized: S
+  ): Promise<ComponentDependency> {
+    const id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
     return (new ComponentDependency(
       id,
       serialized.id,
@@ -35,7 +37,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     ) as unknown) as ComponentDependency;
   }
 
-  fromLegacyComponent(legacyComponent: LegacyComponent): DependencyList {
+  async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
     const runtimeDeps = legacyComponent.dependencies
       .get()
       .map((dep) => transformLegacyComponentDepToSerializedDependency(dep, 'runtime'));
@@ -43,7 +45,8 @@ export class ComponentDependencyFactory implements DependencyFactory {
       .get()
       .map((dep) => transformLegacyComponentDepToSerializedDependency(dep, 'dev'));
     const serializedComponentDeps = runtimeDeps.concat(devDeps);
-    const componentDeps: ComponentDependency[] = serializedComponentDeps.map((dep) => this.parse(dep));
+    const componentDepsP: Promise<ComponentDependency>[] = serializedComponentDeps.map((dep) => this.parse(dep));
+    const componentDeps: ComponentDependency[] = await Promise.all(componentDepsP);
     const dependencyList = new DependencyList(componentDeps);
     return dependencyList;
   }
