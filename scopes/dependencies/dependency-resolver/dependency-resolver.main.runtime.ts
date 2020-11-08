@@ -420,8 +420,8 @@ export class DependencyResolverMain {
       return component;
     }
     entry.data.dependencies.forEach((dep) => {
-      if (dep.type === COMPONENT_DEP_TYPE) {
-        const depId = BitId.parse(dep.componentId);
+      if (dep.__type === COMPONENT_DEP_TYPE) {
+        const depId = new BitId(dep.componentId);
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
@@ -436,8 +436,8 @@ export class DependencyResolverMain {
       return version;
     }
     entry.data.dependencies.forEach((dep) => {
-      if (dep.type === COMPONENT_DEP_TYPE) {
-        const depId = BitId.parse(dep.componentId);
+      if (dep.__type === COMPONENT_DEP_TYPE) {
+        const depId = new BitId(dep.componentId);
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
@@ -464,6 +464,9 @@ export class DependencyResolverMain {
     }, {});
     const listFactory = new DependencyListFactory(factoriesMap);
     const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    if (component.id.toString().includes('ui-primitives/tag-list')) {
+      console.log(dependencyList.serialize());
+    }
     return dependencyList.serialize();
   }
 
