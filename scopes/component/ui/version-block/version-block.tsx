@@ -1,6 +1,7 @@
 import { Author, Snap } from '@teambit/component';
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/ui.contributors';
+import { NavLink } from '@teambit/react-router';
 import { Labels } from '@teambit/ui.version-label';
 import classNames from 'classnames';
 import React, { HTMLAttributes } from 'react';
@@ -8,6 +9,7 @@ import React, { HTMLAttributes } from 'react';
 import styles from './version-block.module.scss';
 
 export type VersionBlockProps = {
+  componentId: string;
   version: string;
   hash: string;
   timestamp: string;
@@ -20,22 +22,33 @@ export type VersionBlockProps = {
  * change log section
  * @name VersionBlock
  */
-export function VersionBlock({ version, isLatest, className, timestamp, author, message, ...rest }: VersionBlockProps) {
+export function VersionBlock({
+  version,
+  isLatest,
+  className,
+  timestamp,
+  author,
+  message,
+  componentId,
+  ...rest
+}: VersionBlockProps) {
   return (
     <div className={styles.versionWrapper}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={false} />
-        {/* <NavLink className={styles.link} href="~tests">
+        <NavLink className={styles.link} href={`~tests?version=${version}`}>
           Tests
-          <StatusDot status="new" />
-        </NavLink> */}
-        {/* <NavLink className={styles.link} href="~compositions">
+          {/* <StatusDot status="new" /> */}
+        </NavLink>
+        <NavLink className={styles.link} href={`~compositions?version=${version}`}>
           Compositions
-        </NavLink> */}
+        </NavLink>
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
-        <H3 className={styles.versionTitle}>v{version}</H3>
+        <NavLink className={styles.titleLink} href={`/${componentId}?version=${version}`}>
+          <H3 className={styles.versionTitle}>v{version}</H3>
+        </NavLink>
         <Contributors contributors={[author || {}]} timestamp={timestamp} />
         {commitMessage(message)}
       </div>

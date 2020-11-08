@@ -31,6 +31,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
         return (
           <VersionBlock
             key={index}
+            componentId={component.id.fullName}
             isLatest={latestVersion === tag.version.toString()}
             {...tag.snap}
             timestamp={tag.snap.timestamp.toString()}
@@ -38,7 +39,6 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
           />
         );
       })}
-      {/* </div> */}
     </div>
   );
 }
