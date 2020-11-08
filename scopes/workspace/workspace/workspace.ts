@@ -446,7 +446,8 @@ export class Workspace implements ComponentFactory {
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
-    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
+    // TODO: change to EnvsAspect.id
+    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
 
     await Promise.all(promises);
 
