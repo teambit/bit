@@ -8,7 +8,7 @@
     border-right: 1px solid var(--border-color);
     padding-right: 22px;
     padding-left: 10px;
-    padding-top: 35px;
+    padding-top: 24px;
     text-align: right;
     @media screen and (max-width: 768px) {
       display: none;
@@ -35,7 +35,6 @@
   max-width: 700px;
   .versionTitle {
     color: var(--base-color);
-    font-size: var(--h-sm);
     font-weight: unset;
     margin-bottom: 10px;
   }

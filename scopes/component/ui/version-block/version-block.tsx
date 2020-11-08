@@ -47,7 +47,9 @@ export function VersionBlock({
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
         <NavLink className={styles.titleLink} href={`/${componentId}?version=${version}`}>
-          <H3 className={styles.versionTitle}>v{version}</H3>
+          <H3 size="xs" className={styles.versionTitle}>
+            v{version}
+          </H3>
         </NavLink>
         <Contributors contributors={[author || {}]} timestamp={timestamp} />
         {commitMessage(message)}
