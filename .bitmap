@@ -5359,7 +5359,7 @@
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/test-loader",
+        "rootDir": "scopes/ui-foundation/ui/test-loader",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
