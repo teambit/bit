@@ -746,7 +746,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           return;
         }
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
-        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, bitDep.name);
+        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);
       }
@@ -965,7 +965,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     });
   }
 
-  private _pushToDependenciesIfNotExist(dependency: Dependency, fileType: FileType, packageName?: string) {
+  private _pushToDependenciesIfNotExist(dependency: Dependency, fileType: FileType) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependency.id);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependency.id);
     // no need to enter dev dependency to devDependencies if it exists already in dependencies
