@@ -23,7 +23,7 @@ import {
   PolicyDep,
   DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList, EnvsAspect } from '@teambit/envs';
+import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
