@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import { ComponentMain } from '@teambit/component';
 import { compact } from 'ramda-adjunct';
 import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
@@ -41,22 +42,20 @@ export class ComponentDependencyFactory implements DependencyFactory {
   }
 
   async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const runtimeDepsP = legacyComponent.dependencies
-      .get()
-      .map((dep) => this.transformLegacyComponentDepToSerializedDependency(dep, 'runtime'));
-    const devDepsP = legacyComponent.devDependencies
-      .get()
-      .map((dep) => this.transformLegacyComponentDepToSerializedDependency(dep, 'dev'));
-    const extensionDepsP = legacyComponent.extensions.map((extension) =>
+    const runtimeDeps = await Bluebird.mapSeries(legacyComponent.dependencies.get(), (dep) =>
+      this.transformLegacyComponentDepToSerializedDependency(dep, 'runtime')
+    );
+    const devDeps = await Bluebird.mapSeries(legacyComponent.devDependencies.get(), (dep) =>
+      this.transformLegacyComponentDepToSerializedDependency(dep, 'dev')
+    );
+    const extensionDeps = await Bluebird.mapSeries(legacyComponent.extensions, (extension) =>
       this.transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
     );
-    const runtimeDeps = await Promise.all(runtimeDepsP);
-    const devDeps = await Promise.all(devDepsP);
-    const extensionDeps = await Promise.all(extensionDepsP);
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);
     const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...filteredExtensionDeps];
-    const componentDepsP: Promise<ComponentDependency>[] = serializedComponentDeps.map((dep) => this.parse(dep));
-    const componentDeps: ComponentDependency[] = await Promise.all(componentDepsP);
+    const componentDeps: ComponentDependency[] = await Bluebird.mapSeries(serializedComponentDeps, (dep) =>
+      this.parse(dep)
+    );
     const dependencyList = new DependencyList(componentDeps);
     return dependencyList;
   }
