@@ -52,6 +52,7 @@ export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 
 export type ScopeConfig = {
   description: string;
+  icon: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -92,6 +93,10 @@ export class ScopeMain implements ComponentFactory {
    */
   get name(): string {
     return this.legacyScope.name;
+  }
+
+  get icon(): string {
+    return this.config.icon;
   }
 
   get description(): string {
