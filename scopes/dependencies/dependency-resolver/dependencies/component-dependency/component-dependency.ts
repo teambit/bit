@@ -7,11 +7,18 @@ export const TYPE = 'component';
 
 export interface SerializedComponentDependency extends SerializedDependency {
   componentId: Object;
+  isExtension: boolean;
 }
 
 // TODO: think about where is the right place to put this
 export class ComponentDependency extends BaseDependency {
-  constructor(private _componentId: ComponentID, id: string, version: string, lifecycle: DependencyLifecycleType) {
+  constructor(
+    private _componentId: ComponentID,
+    private _isExtension: boolean,
+    id: string,
+    version: string,
+    lifecycle: DependencyLifecycleType
+  ) {
     super(id, version, lifecycle);
     this._type = TYPE;
   }
@@ -20,9 +27,14 @@ export class ComponentDependency extends BaseDependency {
     return this._componentId;
   }
 
+  get isExtension() {
+    return this._isExtension;
+  }
+
   serialize<SerializedComponentDependency>(): SerializedComponentDependency {
     const serialized = (Object.assign({}, super.serialize(), {
       componentId: this.componentId._legacy.serialize(),
+      isExtension: this.isExtension,
     }) as unknown) as SerializedComponentDependency;
     return serialized;
   }
