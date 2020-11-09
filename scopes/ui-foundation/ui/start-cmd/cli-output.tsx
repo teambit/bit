@@ -161,7 +161,7 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
 
   private onWebpackCompilationStarted = (_event: WebpackCompilationStartedEvent) => {
     if (this.isOnRunningMode()) {
-      this.clearConsole();
+      // this.clearConsole();
       this.setState({
         webpackErrors: [],
         webpackWarnings: [],
@@ -171,6 +171,13 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   };
 
   private onWebpackCompilationDone = (event: WebpackCompilationDoneEvent) => {
+    // if (event.data.webpackCompilationErrors.length) {
+    //   console.log('--->event.webpackCompilationErrors: ');
+    //   console.log(event.data.webpackCompilationErrors[0]);
+    //   console.log('');
+    //   throw new Error(event.data.webpackCompilationErrors[0].toString());
+    // }
+
     const successfullyCompiledComponents = event.data.webpackCompilationErrors.length ? [] : [event.data.webpackHash];
     this.setState({
       webpackErrors: [...event.data.webpackCompilationErrors],
@@ -183,7 +190,9 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
   };
 
   // TODO: What to do here?
-  private onComponentChange(_event: OnComponentChangeEvent) {}
+  private onComponentChange(_event: OnComponentChangeEvent) {
+    // console.log('--->event: ', _event);
+  }
 
   private onComponentRemoved = (_event: OnComponentRemovedEvent) => {
     // this.onComponentChange(event);
@@ -198,9 +207,9 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
     return this.state.mainUIServer && this.state.devServers.every((cs) => cs.status === 'Running');
   }
 
-  private clearConsole() {
-    // process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
-  }
+  // private clearConsole() {
+  //   process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+  // }
 
   private async safeOpenBrowser() {
     const { suppressBrowserLaunch } = this.state.commandFlags;
@@ -268,6 +277,10 @@ export class CliOutput extends React.Component<CliOutputProps, CliOutputState> {
 
     if (compiling) {
       return <Text>Compiling...</Text>;
+    }
+
+    if (!mainUIServer) {
+      return <Text>Loading...</Text>;
     }
 
     return (

@@ -6,10 +6,11 @@ export type props = {
   verbose: boolean;
 };
 
+// TODO: Do not work with more the 3K charts???
 export const WebpackErrors = ({ errs, verbose }) => {
   return errs.map((err, index) => (
     <Text key={index} color="red">
-      {verbose ? err.stack : err.message}
+      {verbose ? err.stack.substring(0, 2500) : err.message.substring(0, 2500)}
       <Newline />
     </Text>
   ));

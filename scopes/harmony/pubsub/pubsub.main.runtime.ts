@@ -71,6 +71,7 @@ export class PubsubMain {
     try {
       return JSON.stringify(event, this.censor(event));
     } catch (err) {
+      console.log(`Could not serialize event: ${event.type}, err.message`); // TODO: move to the log
       throw new Error(`Could not serialize event: ${event.type}, err.message`);
     }
   }
