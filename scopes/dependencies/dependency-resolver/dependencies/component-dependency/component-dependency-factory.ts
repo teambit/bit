@@ -64,7 +64,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
     legacyDep: LegacyDependency,
     lifecycle: DependencyLifecycleType
   ): Promise<SerializedComponentDependency> {
-    let packageName = legacyDep.packageName;
+    let packageName = legacyDep.packageName || '';
     if (!packageName) {
       const host = this.componentAspect.getHost();
       const id = await host.resolveComponentId(legacyDep.id);
