@@ -1,9 +1,14 @@
 import React from 'react';
-import { NoComponents } from '@teambit/ui.no-components';
+import { NoComponents, NoComponentsProps } from '@teambit/ui.no-components';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 import styles from './empty-scope.module.scss';
 
-export function EmptyScope({ name }: { name: string }) {
+export type EmptyScopeProps = { name: string } & NoComponentsProps;
+
+/**
+ * A component to show when the scope is empty
+ */
+export function EmptyScope({ name }: EmptyScopeProps) {
   return (
     <NoComponents name={name}>
       <div className={styles.text}>

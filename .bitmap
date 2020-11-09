@@ -4434,6 +4434,11 @@
     "ui/empty-scope": {
         "files": [
             {
+                "name": "empty-scope.composition.tsx",
+                "relativePath": "empty-scope.composition.tsx",
+                "test": false
+            },
+            {
                 "name": "empty-scope.module.scss",
                 "relativePath": "empty-scope.module.scss",
                 "test": false
@@ -4457,6 +4462,11 @@
     },
     "ui/empty-workspace": {
         "files": [
+            {
+                "name": "empty-workspace.composition.tsx",
+                "relativePath": "empty-workspace.composition.tsx",
+                "test": false
+            },
             {
                 "name": "empty-workspace.module.scss",
                 "relativePath": "empty-workspace.module.scss",
@@ -4719,6 +4729,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "no-components.composition.tsx",
+                "relativePath": "no-components.composition.tsx",
                 "test": false
             },
             {

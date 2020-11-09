@@ -33,10 +33,6 @@ export function NoComponents({ name, children }: NoComponentsProps) {
   );
 }
 
-NoComponents.defaultProps = {
-  name: 'workspace',
-};
-
 function IconLine() {
   return (
     <div className={styles.iconLine}>

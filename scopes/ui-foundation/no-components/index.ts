@@ -1,1 +1,1 @@
-export { NoComponents } from './no-components';
+export { NoComponents, NoComponentsProps } from './no-components';

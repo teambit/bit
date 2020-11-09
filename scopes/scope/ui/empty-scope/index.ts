@@ -1,1 +1,1 @@
-export { EmptyScope } from './empty-scope';
+export { EmptyScope, EmptyScopeProps } from './empty-scope';
