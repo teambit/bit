@@ -60,9 +60,7 @@ async function createStoreController(storeDir: string, registries: Registries): 
   //   storeDir,
   //   verifyStoreIntegrity: true,
   // });
-  const pnpmConfig = await readConfig();
-  console.log(pnpmConfig.config.rawConfig);
-
+  // const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
   const opts: CreateNewStoreControllerOptions = {
     storeDir,
