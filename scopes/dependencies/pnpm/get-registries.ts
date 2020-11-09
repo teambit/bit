@@ -3,23 +3,100 @@ import { RegistriesMap } from '@teambit/dependency-resolver';
 import { stripTrailingChar } from 'bit-bin/dist/utils';
 import { isEmpty } from 'ramda';
 import { readConfig } from './read-config';
+import toNerfDart from 'nerf-dart';
+
+type OriginalAuthConfig = {
+  originalAuthType: string;
+  originalAuthValue: string;
+};
 
 export async function getRegistries(): Promise<RegistriesMap> {
   const config = await readConfig();
   const registriesMap: RegistriesMap = {};
+
   Object.keys(config.config.registries).forEach((regName) => {
     const uri = config.config.registries[regName];
     let credentials = getCredentialsByURI(config.config.rawConfig, uri);
+    let originalAuthConfig = getOriginalAuthConfigByUri(config.config.rawConfig, uri);
     if (isEmpty(credentials)) {
       credentials = getCredentialsByURI(config.config.rawConfig, switchTrailingSlash(uri));
+      originalAuthConfig = getOriginalAuthConfigByUri(config.config.rawConfig, switchTrailingSlash(uri));
     }
     registriesMap[regName] = {
       uri,
       alwaysAuth: !!credentials.alwaysAuth,
       authHeaderValue: credentials.authHeaderValue,
+      ...originalAuthConfig,
     };
   });
   return registriesMap;
+}
+
+// based on https://github.com/pnpm/credentials-by-uri/blob/master/index.js
+function getOriginalAuthConfigByUri(config: Record<string, any>, uri: string): OriginalAuthConfig {
+  const nerfed = toNerfDart(uri);
+  const defnerf = toNerfDart(config.registry);
+
+  const creds = getScopedCredentials(nerfed, `${nerfed}:`, config);
+  if (nerfed !== defnerf) return creds;
+
+  return {
+    ...getScopedCredentials(nerfed, '', config),
+    ...creds,
+  };
+}
+
+function getScopedCredentials(nerfed: string, scope: string, config: Record<string, any>): OriginalAuthConfig {
+  // hidden class micro-optimization
+  const c = {};
+
+  // used to override scope matching for tokens as well as legacy auth
+  if (config[`${scope}always-auth`] !== undefined) {
+  }
+
+  const token = config[`${scope}_authToken`];
+  // Check for bearer token
+  if (token) {
+    return {
+      originalAuthType: `authToken`,
+      originalAuthValue: token,
+    };
+  }
+
+  const auth = config[`${scope}_auth`];
+
+  // Check for basic auth token
+  if (auth) {
+    return {
+      originalAuthType: `auth`,
+      originalAuthValue: auth,
+    };
+  }
+
+  // Check for username/password auth
+  let username, password;
+  if (config[`${scope}username`]) {
+    username = config[`${scope}username`];
+  }
+  if (config[`${scope}_password`]) {
+    if (scope === '') {
+      password = config[`${scope}_password`];
+    } else {
+      password = Buffer.from(config[`${scope}_password`], 'base64').toString('utf8');
+    }
+  }
+
+  if (username && password) {
+    return {
+      originalAuthType: `user-pass`,
+      originalAuthValue: `${username}:${password}`,
+    };
+  }
+
+  return {
+    originalAuthType: '',
+    originalAuthValue: '',
+  };
 }
 
 function switchTrailingSlash(uri: string): string {

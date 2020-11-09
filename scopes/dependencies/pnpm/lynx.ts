@@ -13,7 +13,7 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-import { ResolvedPackageVersion, Registries, NPM_REGISTRY } from '@teambit/dependency-resolver';
+import { ResolvedPackageVersion, Registries, NPM_REGISTRY, Registry } from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
@@ -24,6 +24,7 @@ import { MutatedProject, mutateModules } from 'supi';
 import createResolverAndFetcher from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
+import toNerfDart from 'nerf-dart';
 import { readConfig } from './read-config';
 
 type RegistriesMap = {
@@ -39,7 +40,7 @@ type RegistriesMap = {
 //   });
 // }
 
-async function createStoreController(storeDir: string): Promise<StoreController> {
+async function createStoreController(storeDir: string, registries: Registries): Promise<StoreController> {
   // const fetchFromRegistry = createFetchFromRegistry({});
   // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
   // const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
@@ -60,20 +61,23 @@ async function createStoreController(storeDir: string): Promise<StoreController>
   //   verifyStoreIntegrity: true,
   // });
   const pnpmConfig = await readConfig();
+  console.log(pnpmConfig.config.rawConfig);
+
+  const authConfig = getAuthConfig(registries);
   const opts: CreateNewStoreControllerOptions = {
     storeDir,
-    rawConfig: pnpmConfig.config.rawConfig,
+    rawConfig: authConfig,
     verifyStoreIntegrity: true,
   };
   const { ctrl } = await createNewStoreController(opts);
   return ctrl;
 }
 
-async function generateResolverAndFetcher(storeDir: string) {
+async function generateResolverAndFetcher(storeDir: string, registries: Registries) {
   const pnpmConfig = await readConfig();
-
+  const authConfig = getAuthConfig(registries);
   const opts = {
-    authConfig: pnpmConfig.config.rawConfig,
+    authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
     storeDir,
   };
   const result = createResolverAndFetcher(opts);
@@ -109,14 +113,17 @@ export async function install(
     mutation: 'install',
     rootDir: rootPathToManifest.rootDir,
   });
-  const registriesMap = await getRegistriesMap(registries);
+  const registriesMap = getRegistriesMap(registries);
+  const authConfig = getAuthConfig(registries);
+  const storeController = await createStoreController(storeDir, registries);
   const opts = {
     storeDir,
     dir: rootPathToManifest.rootDir,
-    storeController: await createStoreController(storeDir),
+    storeController,
     update: true,
     workspacePackages,
     registries: registriesMap,
+    rawConfig: authConfig,
     // TODO: uncomment when this is solved https://github.com/pnpm/pnpm/issues/2910
     // reporter: logger ? getReporter(logger) : undefined,
   };
@@ -142,14 +149,14 @@ export async function resolveRemoteVersion(
   storeDir: string,
   registries: Registries
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher(storeDir);
+  const { resolve } = await generateResolverAndFetcher(storeDir, registries);
   const resolveOpts = {
     projectDir: rootDir,
     registry: '',
   };
   try {
     const parsedPackage = parsePackageName(packageName);
-    const registriesMap = await getRegistriesMap(registries);
+    const registriesMap = getRegistriesMap(registries);
     const registry = pickRegistryForPackage(registriesMap, parsedPackage);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
@@ -186,7 +193,7 @@ export async function resolveRemoteVersion(
   }
 }
 
-async function getRegistriesMap(registries: Registries): Promise<RegistriesMap> {
+function getRegistriesMap(registries: Registries): RegistriesMap {
   const registriesMap = {
     default: registries.defaultRegistry.uri || NPM_REGISTRY,
   };
@@ -195,4 +202,62 @@ async function getRegistriesMap(registries: Registries): Promise<RegistriesMap> 
     registriesMap[`@${registryName}`] = registry.uri;
   });
   return registriesMap;
+}
+
+function getAuthConfig(registries: Registries): Record<string, any> {
+  let res: any = {};
+  res.registry = registries.defaultRegistry.uri;
+  if (registries.defaultRegistry.alwaysAuth) {
+    res['always-auth'] = true;
+  }
+  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry);
+  defaultAuthTokens.forEach(({ keyName, val }) => {
+    res[keyName] = val;
+  });
+
+  Object.entries(registries.scopes).forEach(([_registryName, registry]) => {
+    const authTokens = getAuthTokenForRegistry(registry);
+    authTokens.forEach(({ keyName, val }) => {
+      res[keyName] = val;
+    });
+    if (registry.alwaysAuth) {
+      const nerfed = toNerfDart(registry.uri);
+      const alwaysAuthKeyName = `${nerfed}:always-auth`;
+      res[alwaysAuthKeyName] = true;
+    }
+  });
+  return res;
+}
+
+function getAuthTokenForRegistry(registry: Registry, isDefault = false): { keyName: string; val: string }[] {
+  const nerfed = toNerfDart(registry.uri);
+  if (registry.originalAuthType === 'authToken') {
+    return [
+      {
+        keyName: `${nerfed}:_authToken`,
+        val: registry.originalAuthValue || '',
+      },
+    ];
+  }
+  if (registry.originalAuthType === 'auth') {
+    return [
+      {
+        keyName: isDefault ? '_auth' : `${nerfed}:_auth`,
+        val: registry.originalAuthValue || '',
+      },
+    ];
+  }
+  if (registry.originalAuthType === 'user-pass') {
+    return [
+      {
+        keyName: `${nerfed}:username`,
+        val: registry.originalAuthValue?.split(':')[0] || '',
+      },
+      {
+        keyName: `${nerfed}:_password`,
+        val: registry.originalAuthValue?.split(':')[1] || '',
+      },
+    ];
+  }
+  return [];
 }

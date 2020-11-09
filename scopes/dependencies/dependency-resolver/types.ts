@@ -14,7 +14,8 @@ export type Registry = {
   uri: string;
   alwaysAuth: boolean;
   authHeaderValue?: string;
-  // TODO: consider add plain token here?
+  originalAuthType: string;
+  originalAuthValue: string;
 };
 
 export type RegistriesMap = Record<RegistryName, Registry>;
