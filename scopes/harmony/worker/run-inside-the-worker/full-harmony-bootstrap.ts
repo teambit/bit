@@ -116,7 +116,7 @@ async function runCLI() {
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
   registerCoreAspectsToLegacyDepResolver(aspectLoader);
-  const cli = harmony.get<CLIMain>('teambit.harmony/cli');
+  // const cli = harmony.get<CLIMain>('teambit.harmony/cli');
   // await cli.run();
   return harmony;
 }
