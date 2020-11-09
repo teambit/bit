@@ -21,7 +21,7 @@ export class BabelMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, CompilerAspect];
+  static dependencies = [LoggerAspect, CompilerAspect];
 
   static async provider([loggerExt, compiler]: [LoggerMain, CompilerMain]) {
     const logger = loggerExt.createLogger(BabelAspect.id);

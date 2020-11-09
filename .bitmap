@@ -117,11 +117,6 @@
                 "test": false
             },
             {
-                "name": "babel.parser.ts",
-                "relativePath": "babel.parser.ts",
-                "test": false
-            },
-            {
                 "name": "compiler-options.ts",
                 "relativePath": "compiler-options.ts",
                 "test": false
