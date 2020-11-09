@@ -159,7 +159,7 @@ export default function validateVersionInstance(version: Version): void {
 
   const _validateExtensions = (extensions: ExtensionDataList) => {
     if (extensions) {
-      validateNoDuplicateExtensionEntry(extensions);
+      // validateNoDuplicateExtensionEntry(extensions);
       extensions.map(_validateExtension);
       validateArtifacts(extensions);
     }
