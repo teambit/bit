@@ -745,7 +745,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           // no need to enter anything to the dependencies
           return;
         }
-        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
+        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);

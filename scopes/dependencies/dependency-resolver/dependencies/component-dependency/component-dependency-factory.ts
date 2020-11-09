@@ -64,12 +64,14 @@ export class ComponentDependencyFactory implements DependencyFactory {
     legacyDep: LegacyDependency,
     lifecycle: DependencyLifecycleType
   ): Promise<SerializedComponentDependency> {
-    const host = this.componentAspect.getHost();
-    const id = await host.resolveComponentId(legacyDep.id);
-    const depComponent = await host.get(id);
-    let packageName = '';
-    if (depComponent) {
-      packageName = componentIdToPackageName(depComponent.state._consumer);
+    let packageName = legacyDep.packageName;
+    if (!packageName) {
+      const host = this.componentAspect.getHost();
+      const id = await host.resolveComponentId(legacyDep.id);
+      const depComponent = await host.get(id);
+      if (depComponent) {
+        packageName = componentIdToPackageName(depComponent.state._consumer);
+      }
     }
     return {
       id: legacyDep.id.toString(),
