@@ -72,9 +72,7 @@ export class WatchCommand implements Command {
      * watcher extension.
      */
     private watcher: Watcher
-  ) {
-    this.registerToEvents();
-  }
+  ) {}
 
   private registerToEvents() {
     this.pubsub.sub(CompilerAspect.id, this.eventsListener);
@@ -90,6 +88,7 @@ export class WatchCommand implements Command {
   };
 
   async report(cliArgs: [], { verbose = false }: { verbose?: boolean }) {
+    this.registerToEvents();
     await this.watcher.watch({ msgs: this.msgs, verbose });
     return 'watcher terminated';
   }
