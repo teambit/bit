@@ -1,6 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
+import { get } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -9,13 +10,23 @@ import { Logger, LoggerAspect } from '@teambit/logger';
 import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
 import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import {
+  registerUpdateDependenciesOnTag,
+  onTagIdTransformer,
+} from 'bit-bin/dist/scope/component-ops/tag-model-component';
+import {
+  registerUpdateDependenciesOnExport,
+  OnExportIdTransformer,
+} from 'bit-bin/dist/scope/component-ops/export-scope-components';
+import { Version as VersionModel } from 'bit-bin/dist/scope/models';
+import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
-import R, { forEachObjIndexed } from 'ramda';
+import { BitId } from 'bit-bin/dist/bit-id';
+import R, { forEachObjIndexed, flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries, Registry } from './registry';
@@ -30,19 +41,27 @@ import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,
   DependenciesPolicy,
-  DependencyLifecycleType,
   DependencyResolverVariantConfig,
   DependencyResolverWorkspaceConfig,
   DepObjectKeyName,
   PolicyDep,
   WorkspaceDependenciesPolicy,
 } from './types';
+import {
+  SerializedDependency,
+  DependencyListFactory,
+  DependencyLifecycleType,
+  DependencyFactory,
+  ComponentDependencyFactory,
+  COMPONENT_DEP_TYPE,
+} from './dependencies';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
 export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
+export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
 
@@ -119,7 +138,9 @@ export class DependencyResolverMain {
 
     private aspectLoader: AspectLoaderMain,
 
-    private packageManagerSlot: PackageManagerSlot
+    private packageManagerSlot: PackageManagerSlot,
+
+    private dependencyFactorySlot: DependencyFactorySlot
   ) {}
 
   /**
@@ -127,6 +148,10 @@ export class DependencyResolverMain {
    */
   registerPackageManager(packageManager: PackageManager) {
     this.packageManagerSlot.register(packageManager);
+  }
+
+  registerDependencyFactories(factories: DependencyFactory[]) {
+    this.dependencyFactorySlot.register(factories);
   }
 
   getDependencies(component: Component): DependencyGraph {
@@ -390,10 +415,69 @@ export class DependencyResolverMain {
     return result;
   }
 
-  static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect];
+  updateDepsOnLegacyTag(component: LegacyComponent, idTransformer: onTagIdTransformer): LegacyComponent {
+    const entry = component.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (!entry) {
+      return component;
+    }
+    const dependencies = get(entry, ['data', 'dependencies'], []);
+    dependencies.forEach((dep) => {
+      if (dep.__type === COMPONENT_DEP_TYPE) {
+        const depId = new BitId(dep.componentId);
+        const newDepId = idTransformer(depId);
+        dep.componentId = (newDepId || depId).serialize();
+        dep.id = (newDepId || depId).toString();
+      }
+    });
+    return component;
+  }
 
-  static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
+  updateDepsOnLegacyExport(version: VersionModel, idTransformer: OnExportIdTransformer): VersionModel {
+    const entry = version.extensions.findCoreExtension(DependencyResolverAspect.id);
+    if (!entry) {
+      return version;
+    }
+    const dependencies = get(entry, ['data', 'dependencies'], []);
+    dependencies.forEach((dep) => {
+      if (dep.__type === COMPONENT_DEP_TYPE) {
+        const depId = new BitId(dep.componentId);
+        const newDepId = idTransformer(depId);
+        dep.componentId = (newDepId || depId).serialize();
+        dep.id = (newDepId || depId).toString();
+      }
+    });
+    return version;
+  }
+
+  /**
+   * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
+   * and write them to the dependencyResolver data.
+   * Do not use this function for other purpose.
+   * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
+   * TODO: once we switch deps resolver <> workspace relation we should make it private
+   * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
+   * @param component
+   */
+  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
+    const legacyComponent: LegacyComponent = component.state._consumer;
+    const factories = flatten(this.dependencyFactorySlot.values());
+    const factoriesMap = factories.reduce((acc, factory) => {
+      acc[factory.type] = factory;
+      return acc;
+    }, {});
+    const listFactory = new DependencyListFactory(factoriesMap);
+    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    return dependencyList.serialize();
+  }
+
+  static runtime = MainRuntime;
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
+
+  static slots = [
+    Slot.withType<DependenciesPolicy>(),
+    Slot.withType<PackageManager>(),
+    Slot.withType<DependencyFactory>(),
+  ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
     /**
@@ -406,9 +490,19 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader]: [EnvsMain, LoggerMain, Config, AspectLoaderMain],
+    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+      EnvsMain,
+      LoggerMain,
+      Config,
+      AspectLoaderMain,
+      ComponentMain
+    ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
+    [policiesRegistry, packageManagerSlot, dependencyFactorySlot]: [
+      PoliciesRegistry,
+      PackageManagerSlot,
+      DependencyFactorySlot
+    ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
     const logger = loggerExt.createLogger(DependencyResolverAspect.id);
@@ -419,10 +513,16 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
-      packageManagerSlot
+      packageManagerSlot,
+      dependencyFactorySlot
     );
+
+    // TODO: solve this generics issue and remove the ts-ignore
+    // @ts-ignore
+    dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
+
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
-    ConsumerComponent.registerOnComponentOverridesLoading(
+    LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {
         const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
@@ -430,6 +530,8 @@ export class DependencyResolverMain {
       }
     );
     DependencyResolver.registerWorkspacePolicyGetter(dependencyResolver.getWorkspacePolicy.bind(dependencyResolver));
+    registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
+    registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
 
     return dependencyResolver;
   }
