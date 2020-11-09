@@ -48,8 +48,15 @@ function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList, isDepe
     const dependencyResolverExt = extensions.findExtension(Extensions.dependencyResolver);
     if (!dependencyResolverExt || !dependencyResolverExt.data.dependencies) return null;
     const dep = dependencyResolverExt.data.dependencies.find((d) => {
+      if (d.__type !== 'component') {
+        return false;
+      }
       if (!d.componentId.isEqual) {
-        d.componentId = new BitId(d.componentId);
+        if (typeof d.componentId === 'string') {
+          d.componentId = BitId.parse(d.componentId);
+        } else {
+          d.componentId = new BitId(d.componentId);
+        }
       }
       return d.componentId.isEqual(id);
     });

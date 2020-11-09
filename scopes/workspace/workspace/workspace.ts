@@ -21,6 +21,7 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   PolicyDep,
+  DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -422,14 +423,34 @@ export class Workspace implements ComponentFactory {
     return {};
   }
 
+  private async upsertExtensionData(component: Component, extension: string, data: any) {
+    const existingExtension = component.state.config.extensions.findExtension(extension);
+    if (existingExtension) {
+      existingExtension.data = merge(existingExtension.data, data);
+      return;
+    }
+    component.state.config.extensions.push(await this.getDataEntry(extension, data));
+  }
+
   private async executeLoadSlot(component: Component) {
     const entries = this.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component);
-      const existingExtension = component.state.config.extensions.findExtension(extension);
-      if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(await this.getDataEntry(extension, data));
+      return this.upsertExtensionData(component, extension, data);
     });
+
+    // Special load events which runs from the workspace but should run from the correct aspect
+    // TODO: remove this once those extensions dependent on workspace
+    const envsData = await this.getEnvSystemDescriptor(component);
+    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const dependenciesData = {
+      dependencies,
+    };
+
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
+    // TODO: change to EnvsAspect.id
+    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
 
     await Promise.all(promises);
 

@@ -124,7 +124,7 @@ describe('isMatchPattern', () => {
     });
   });
   describe('match one dir item', () => {
-    it.only('should return match true with the correct maxSpecificity', () => {
+    it('should return match true with the correct maxSpecificity', () => {
       const res = isMatchPattern('bar/foo/baz', 'name', 'foo, bar/foo , baz');
       expect(res.match).to.be.true;
       expect(res.maxSpecificity).to.equal(2);
