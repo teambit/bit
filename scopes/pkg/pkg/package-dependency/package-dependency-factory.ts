@@ -41,6 +41,7 @@ export class PackageDependencyFactory implements DependencyFactory {
       legacyComponent.peerPackageDependencies,
       'peer'
     );
+
     const serializedPackageDeps = runtimePackageDeps.concat(devPackageDeps).concat(peerPackageDeps);
     const packageDepsP: Promise<PackageDependency>[] = serializedPackageDeps.map((dep) => this.parse(dep));
     const packageDeps: PackageDependency[] = await Promise.all(packageDepsP);

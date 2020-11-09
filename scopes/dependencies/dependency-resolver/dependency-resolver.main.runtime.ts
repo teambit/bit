@@ -1,6 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
+import { get } from 'lodash';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
@@ -419,7 +420,8 @@ export class DependencyResolverMain {
     if (!entry) {
       return component;
     }
-    entry.data.dependencies.forEach((dep) => {
+    const dependencies = get(entry, ['data', 'dependencies'], []);
+    dependencies.forEach((dep) => {
       if (dep.__type === COMPONENT_DEP_TYPE) {
         const depId = new BitId(dep.componentId);
         const newDepId = idTransformer(depId);
@@ -435,7 +437,8 @@ export class DependencyResolverMain {
     if (!entry) {
       return version;
     }
-    entry.data.dependencies.forEach((dep) => {
+    const dependencies = get(entry, ['data', 'dependencies'], []);
+    dependencies.forEach((dep) => {
       if (dep.__type === COMPONENT_DEP_TYPE) {
         const depId = new BitId(dep.componentId);
         const newDepId = idTransformer(depId);
