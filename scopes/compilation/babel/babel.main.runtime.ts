@@ -1,7 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { SchemaAspect } from '@teambit/schema';
 import * as babel from '@babel/core';
 import { BabelCompilerOptions } from './compiler-options';
 import { BabelAspect } from './babel.aspect';
