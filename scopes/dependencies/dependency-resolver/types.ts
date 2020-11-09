@@ -74,6 +74,11 @@ export interface DependencyResolverWorkspaceConfig {
    * of dependencies.
    */
   packageManagerArgs: string[];
+
+  /**
+   * regex to determine whether a file is a file meant for development purposes.
+   */
+  devFilePatterns: RegExp[];
 }
 
 export interface DependencyResolverVariantConfig {

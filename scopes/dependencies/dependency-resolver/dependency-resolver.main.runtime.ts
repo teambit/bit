@@ -1,5 +1,6 @@
+import { flatten } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain } from '@teambit/component';
 import type { Config } from '@teambit/config';
 import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -47,6 +48,11 @@ export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
 
 export type BitExtendedLinkType = 'none' | BitLinkType;
+
+/**
+ * slot for dev file patterns.
+ */
+export type DevPatternSlot = SlotRegistry<RegExp>;
 
 export type LinkingOptions = {
   /**
@@ -119,8 +125,60 @@ export class DependencyResolverMain {
 
     private aspectLoader: AspectLoaderMain,
 
-    private packageManagerSlot: PackageManagerSlot
+    private packageManagerSlot: PackageManagerSlot,
+
+    private devPatternSlot: DevPatternSlot
   ) {}
+
+  /**
+   * get all dev patterns defined on a component.
+   */
+  getDevPatterns(component: Component) {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const configuredPatterns = entry?.config.devFilePatterns;
+    const envDef = this.envs.getEnv(component);
+    const envPatterns: RegExp[] = envDef.env?.getDevPatterns() || [];
+    const fromSlot = this.devPatternSlot.values();
+
+    return fromSlot.concat(configuredPatterns).concat(envPatterns);
+  }
+
+  /**
+   * determine whether a file of a component is a dev file.
+   */
+  isDevFile(component: Component, filePath: string): boolean {
+    const devFiles = this.getDevFiles(component);
+    return devFiles.includes(filePath);
+  }
+
+  /**
+   * register a new dev pattern.
+   * @param regex dev pattern
+   */
+  registerDevPattern(regex: RegExp) {
+    return this.devPatternSlot.register(regex);
+  }
+
+  /**
+   * get all dev patterns registered.
+   */
+  getDevFiles(component: Component): string[] {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const devFiles = entry?.data.devFiles || [];
+    return devFiles;
+  }
+
+  /**
+   * compute all dev files of a component.
+   */
+  computeDevFiles(component: Component) {
+    const devPatterns = this.getDevPatterns(component);
+    const devFiles = devPatterns.map((devPattern) => {
+      return component.state.filesystem.byRegex(devPattern);
+    });
+
+    return flatten(devFiles);
+  }
 
   /**
    * register a new package manager to the dependency resolver.
@@ -391,7 +449,7 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
 
   static slots = [Slot.withType<DependenciesPolicy>(), Slot.withType<PackageManager>()];
 
@@ -402,13 +460,20 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
+    devFilePatterns: [/.spec.tsx/],
     strictPeerDependencies: true,
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader]: [EnvsMain, LoggerMain, Config, AspectLoaderMain],
+    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+      EnvsMain,
+      LoggerMain,
+      Config,
+      AspectLoaderMain,
+      ComponentMain
+    ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot]: [PoliciesRegistry, PackageManagerSlot]
+    [policiesRegistry, packageManagerSlot, devPatternSlot]: [PoliciesRegistry, PackageManagerSlot, DevPatternSlot]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
     const logger = loggerExt.createLogger(DependencyResolverAspect.id);
@@ -419,9 +484,16 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
-      packageManagerSlot
+      packageManagerSlot,
+      devPatternSlot
     );
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
+    DependencyResolver.isDevFile = async (consumerComponent: ConsumerComponent, file: string) => {
+      const host = componentAspect.getHost();
+      const component = await host.get(await host.resolveComponentId(consumerComponent.id));
+      if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
+      return dependencyResolver.isDevFile(component, file);
+    };
     ConsumerComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {

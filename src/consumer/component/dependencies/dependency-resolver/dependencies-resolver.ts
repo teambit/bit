@@ -109,6 +109,13 @@ export default class DependencyResolver {
   static getDepResolverAspectName: () => string;
   static getCoreAspectsPackagesAndIds: () => Record<string, string>;
 
+  static isDevFile: (component: Component, file: string) => Promise<boolean>;
+
+  isDevFile = (component: Component, file: string, testsFiles: string[]) => {
+    if (this.consumer.isLegacy) return R.contains(file, testsFiles);
+    return DependencyResolver.isDevFile(component, file);
+  };
+
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -253,6 +260,8 @@ export default class DependencyResolver {
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
   }
+
+  registerDevFileRegex() {}
 
   addCustomResolvedIssues() {
     if (this.consumer.isLegacy) return;
