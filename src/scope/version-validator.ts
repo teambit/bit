@@ -138,6 +138,7 @@ export default function validateVersionInstance(version: Version): void {
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const validateNoDuplicateExtensionEntry = (extensions: ExtensionDataList) => {
     const existingMap = new Map();
     const duplications: string[] = [];
