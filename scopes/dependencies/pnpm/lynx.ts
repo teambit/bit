@@ -203,7 +203,7 @@ function getRegistriesMap(registries: Registries): RegistriesMap {
 }
 
 function getAuthConfig(registries: Registries): Record<string, any> {
-  let res: any = {};
+  const res: any = {};
   res.registry = registries.defaultRegistry.uri;
   if (registries.defaultRegistry.alwaysAuth) {
     res['always-auth'] = true;
@@ -213,7 +213,7 @@ function getAuthConfig(registries: Registries): Record<string, any> {
     res[keyName] = val;
   });
 
-  Object.entries(registries.scopes).forEach(([_registryName, registry]) => {
+  Object.entries(registries.scopes).forEach(([, registry]) => {
     const authTokens = getAuthTokenForRegistry(registry);
     authTokens.forEach(({ keyName, val }) => {
       res[keyName] = val;

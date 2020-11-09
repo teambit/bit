@@ -2,8 +2,8 @@ import getCredentialsByURI from 'credentials-by-uri';
 import { RegistriesMap } from '@teambit/dependency-resolver';
 import { stripTrailingChar } from 'bit-bin/dist/utils';
 import { isEmpty } from 'ramda';
-import { readConfig } from './read-config';
 import toNerfDart from 'nerf-dart';
+import { readConfig } from './read-config';
 
 type OriginalAuthConfig = {
   originalAuthType: string;
@@ -47,13 +47,6 @@ function getOriginalAuthConfigByUri(config: Record<string, any>, uri: string): O
 }
 
 function getScopedCredentials(nerfed: string, scope: string, config: Record<string, any>): OriginalAuthConfig {
-  // hidden class micro-optimization
-  const c = {};
-
-  // used to override scope matching for tokens as well as legacy auth
-  if (config[`${scope}always-auth`] !== undefined) {
-  }
-
   const token = config[`${scope}_authToken`];
   // Check for bearer token
   if (token) {
@@ -74,7 +67,8 @@ function getScopedCredentials(nerfed: string, scope: string, config: Record<stri
   }
 
   // Check for username/password auth
-  let username, password;
+  let username;
+  let password;
   if (config[`${scope}username`]) {
     username = config[`${scope}username`];
   }
