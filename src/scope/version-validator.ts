@@ -143,6 +143,9 @@ export default function validateVersionInstance(version: Version): void {
     const duplications: string[] = [];
     extensions.forEach((ext) => {
       const stringId = ext.stringId;
+      if (!stringId) {
+        return;
+      }
       if (existingMap.has(stringId)) {
         duplications.push(stringId);
       } else {
