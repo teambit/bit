@@ -961,10 +961,8 @@ describe('bit tag command', function () {
   describe('tag on Harmony', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.command.tagScope('0.0.2');
@@ -995,9 +993,8 @@ describe('bit tag command', function () {
   describe('soft tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.softTag('--all');
     });
     it('should add a property of nextVersion in .bitmap file', () => {

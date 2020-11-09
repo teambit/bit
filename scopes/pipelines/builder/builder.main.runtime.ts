@@ -10,6 +10,7 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
+import { OnTagOpts } from 'bit-bin/dist/scope/scope';
 import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
@@ -24,7 +25,7 @@ import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
 import { BuildPipelineResultList } from './build-pipeline-result-list';
 
-export type TaskSlot = SlotRegistry<BuildTask>;
+export type TaskSlot = SlotRegistry<BuildTask[]>;
 
 export type StorageResolverSlot = SlotRegistry<StorageResolver>;
 
@@ -87,12 +88,15 @@ export class BuilderMain {
     });
   }
 
-  async tagListener(components: Component[]): Promise<ComponentMap<AspectList>> {
+  async tagListener(components: Component[], options: OnTagOpts = {}): Promise<ComponentMap<AspectList>> {
     const envsExecutionResults = await this.build(components, { emptyExisting: true });
     envsExecutionResults.throwErrorsIfExist();
-    const deployEnvsExecutionResults = await this.deploy(components);
-    deployEnvsExecutionResults.throwErrorsIfExist();
-    const allTasksResults = [...envsExecutionResults.tasksResults, ...deployEnvsExecutionResults.tasksResults];
+    const allTasksResults = [...envsExecutionResults.tasksResults];
+    if (!options.disableDeployPipeline) {
+      const deployEnvsExecutionResults = await this.deploy(components);
+      deployEnvsExecutionResults.throwErrorsIfExist();
+      allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
+    }
     await this.storeArtifacts(allTasksResults);
     const aspectList = this.pipelineResultsToAspectList(components, allTasksResults);
     return aspectList;
@@ -183,8 +187,8 @@ export class BuilderMain {
    * register a build task to apply on all component build pipelines.
    * build happens on `bit build` and as part of `bit tag --persist`.
    */
-  registerBuildTask(task: BuildTask) {
-    this.buildTaskSlot.register(task);
+  registerBuildTasks(tasks: BuildTask[]) {
+    this.buildTaskSlot.register(tasks);
     return this;
   }
 
@@ -192,8 +196,8 @@ export class BuilderMain {
    * deploy task that doesn't get executed on `bit build`, only on `bit tag --persist'.
    * the deploy-pipeline is running once the build-pipeline has completed.
    */
-  registerDeployTask(task: BuildTask) {
-    this.deployTaskSlot.register(task);
+  registerDeployTasks(tasks: BuildTask[]) {
+    this.deployTaskSlot.register(tasks);
   }
 
   static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>(), Slot.withType<BuildTask>()];

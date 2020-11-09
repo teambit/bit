@@ -94,8 +94,8 @@ export class CompileCmd implements Command {
 
     const icon = this.getSummaryIcon(componentsStatus);
     const summaryLine = numberOfFailingComponents
-      ? `${icon} ${numberOfFailingComponents}\\${numberOfComponents} components failed to compile.`
-      : `${icon} ${numberOfSuccessfulComponents}\\${numberOfComponents} components compiled sucssefuly.`;
+      ? `${icon} ${numberOfFailingComponents}/${numberOfComponents} components failed to compile.`
+      : `${icon} ${numberOfSuccessfulComponents}/${numberOfComponents} components compiled successfully.`;
 
     return `${summaryLine}\nFinished. (${prettyTime(compileTimeLength)})`;
   }

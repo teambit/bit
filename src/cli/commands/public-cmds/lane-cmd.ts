@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 
 import { lane } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { LaneResults } from '../../../api/consumer/lib/lane';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { LaneData } from '../../../scope/lanes/lanes';
@@ -41,7 +40,6 @@ export default class Lane implements LegacyCommand {
       json: boolean;
     }
   ): Promise<any> {
-    throwForUsingLaneIfDisabled();
     return lane({
       name,
       remote,

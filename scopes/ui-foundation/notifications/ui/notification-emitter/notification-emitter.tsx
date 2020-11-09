@@ -1,6 +1,6 @@
 export type MessageId = string;
 
-export type NotificationApi = {
+export type NotificationEmitter = {
   add: (message: string, level: MessageLevel) => MessageId;
   log: (message: string) => MessageId;
   error: (message: string) => MessageId;

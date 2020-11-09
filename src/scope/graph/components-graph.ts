@@ -12,6 +12,7 @@ import GeneralError from '../../error/general-error';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
+import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
@@ -79,8 +80,21 @@ export async function buildOneGraphForComponents(
     if (loadComponentsFunc) {
       return loadComponentsFunc(ids);
     }
-    const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-    return components;
+
+    try {
+      const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
+      return components;
+    } catch (err) {
+      if (err instanceof MissingBitMapComponent) {
+        const componentsP = ids.map((id) => {
+          return consumer.loadComponentFromModel(id);
+        });
+
+        return Promise.all(componentsP);
+      }
+
+      throw err;
+    }
   };
   const components = await getComponents();
   const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);

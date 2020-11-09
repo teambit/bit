@@ -33,7 +33,7 @@ export class CacheMain {
   async set(key: string, data: string): Promise<boolean> {
     this.logger.debug(`put cache to ${key} with data ${data}`);
     return cacache
-      .put(this.config.cacheDirectory, key, data)
+      .put(this.globalCacheFolder, key, data)
       .then(() => true)
       .catch(() => false);
   }
@@ -41,11 +41,15 @@ export class CacheMain {
   async get(key: string): Promise<string | null> {
     this.logger.debug(`get cache for ${key}`);
     return cacache
-      .get(this.config.cacheDirectory, key)
+      .get(this.globalCacheFolder, key)
       .then((cacheObject) => {
         return cacheObject.data.toString();
       })
       .catch(() => null);
+  }
+
+  private get globalCacheFolder() {
+    return this.config.cacheDirectory;
   }
 
   static async provider([loggerFactory]: [LoggerMain], config: CacheConfig) {

@@ -3,7 +3,7 @@ import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import type { SchemaMain } from '@teambit/schema';
 import { SchemaAspect } from '@teambit/schema';
-
+import * as babel from '@babel/core';
 import { BabelCompilerOptions } from './compiler-options';
 import { BabelAspect } from './babel.aspect';
 import { BabelCompiler } from './babel.compiler';
@@ -12,8 +12,8 @@ import { BabelParser } from './babel.parser';
 export class BabelMain {
   constructor(private logger: Logger, private compiler: CompilerMain) {}
 
-  createCompiler(options: BabelCompilerOptions): Compiler {
-    return new BabelCompiler(BabelAspect.id, this.logger, this.compiler, options);
+  createCompiler(options: BabelCompilerOptions, babelModule = babel): Compiler {
+    return new BabelCompiler(BabelAspect.id, this.logger, this.compiler, options, babelModule);
   }
 
   getPackageJsonProps() {

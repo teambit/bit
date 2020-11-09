@@ -9,6 +9,7 @@ const path = require('path');
 const html = require('./html');
 
 const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
+const WebpackCompilerStartedPlugin = require('../plugins/webpack-compiler-started-plugin');
 
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default: '/sockjs-node'
@@ -133,6 +134,10 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       new HtmlWebpackPlugin({
         templateContent: html('Component preview'),
         filename: 'index.html',
+      }),
+
+      new WebpackCompilerStartedPlugin({
+        options: { pubsub, devServerID },
       }),
 
       new WebpackCompilerDonePlugin({
