@@ -4415,9 +4415,19 @@
     "ui/empty-box": {
         "files": [
             {
+                "name": "empty-box.composition.tsx",
+                "relativePath": "empty-box.composition.tsx",
+                "test": false
+            },
+            {
                 "name": "empty-box.module.scss",
                 "relativePath": "empty-box.module.scss",
                 "test": false
+            },
+            {
+                "name": "empty-box.spec.tsx",
+                "relativePath": "empty-box.spec.tsx",
+                "test": true
             },
             {
                 "name": "empty-box.tsx",
