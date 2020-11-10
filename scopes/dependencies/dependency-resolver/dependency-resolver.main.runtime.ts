@@ -266,6 +266,19 @@ export class DependencyResolverMain {
       registries = await systemPm.getRegistries();
     }
 
+    const bitScope = registries.scopes.bit;
+    const bitAuthHeaderValue = bitScope?.authHeaderValue;
+    const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
+    const bitOriginalAuthType = bitScope?.originalAuthType;
+    const bitOriginalAuthValue = bitScope?.originalAuthValue;
+    const bitDefaultRegistry = new Registry(
+      bitRegistry,
+      true,
+      bitAuthHeaderValue,
+      bitOriginalAuthType,
+      bitOriginalAuthValue
+    );
+
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
     if (
@@ -273,15 +286,17 @@ export class DependencyResolverMain {
       registries.defaultRegistry.uri === NPM_REGISTRY ||
       NPM_REGISTRY.startsWith(registries.defaultRegistry.uri)
     ) {
-      const bitToken = registries.scopes.bit?.authHeaderValue;
-      const bitRegistry = registries.scopes.bit?.uri || BIT_DEV_REGISTRY;
       // TODO: this will not handle cases where you have token for private npm registries stored on npmjs
       // it should be handled by somehow in such case (default is npmjs and there is token for default) by sending the token of npmjs to the registry
       // (for example by setting some special header in the request)
       // then in the registry server it should be use it when proxies
-      const bitDefaultRegistry = new Registry(bitRegistry, true, bitToken);
       registries = registries.setDefaultRegistry(bitDefaultRegistry);
     }
+    // Make sure @bit scope is register with alwaysAuth
+    if (!bitScope || (bitScope && !bitScope.alwaysAuth)) {
+      registries = registries.updateScopedRegistry('bit', bitDefaultRegistry);
+    }
+
     return registries;
   }
 
