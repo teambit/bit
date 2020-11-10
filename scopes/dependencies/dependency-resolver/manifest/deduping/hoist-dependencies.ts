@@ -8,7 +8,8 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../constants';
-import { DependenciesObjectDefinition, DependencyLifecycleType, PackageName, SemverVersion } from '../../types';
+import { DependenciesObjectDefinition, PackageName, SemverVersion } from '../../types';
+import { DependencyLifecycleType } from '../../dependencies';
 import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
 

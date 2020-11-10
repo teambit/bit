@@ -26,9 +26,12 @@ export type RelativePath = {
 export default class Dependency {
   id: BitId;
   relativePaths: RelativePath[];
-  constructor(id: BitId, relativePaths: RelativePath[]) {
+  packageName?: string;
+
+  constructor(id: BitId, relativePaths: RelativePath[], packageName?: string) {
     this.id = id;
     this.relativePaths = relativePaths;
+    this.packageName = packageName;
   }
 
   static stripOriginallySharedDir(
@@ -82,6 +85,7 @@ export default class Dependency {
     return {
       id: dependency.id,
       relativePaths: R.clone(dependency.relativePaths),
+      packageName: dependency.packageName,
     };
   }
 }

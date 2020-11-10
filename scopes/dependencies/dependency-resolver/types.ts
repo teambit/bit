@@ -2,6 +2,7 @@ import { ComponentConfig, ComponentFS } from '@teambit/component';
 import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
+import { DependencyLifecycleType } from './dependencies';
 /**
  * Allowed values are valid semver values and the "-" sign.
  */
@@ -14,7 +15,8 @@ export type Registry = {
   uri: string;
   alwaysAuth: boolean;
   authHeaderValue?: string;
-  // TODO: consider add plain token here?
+  originalAuthType: string;
+  originalAuthValue: string;
 };
 
 export type RegistriesMap = Record<RegistryName, Registry>;
@@ -86,7 +88,6 @@ export interface RawComponentState {
   config: ComponentConfig;
 }
 
-export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 export type DependencyType = 'package' | 'component';
 
 /**
