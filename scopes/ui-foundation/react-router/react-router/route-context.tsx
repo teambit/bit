@@ -1,18 +1,13 @@
-import React, { useEffect, ComponentType } from 'react';
-import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
-port { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
+import React, { useEffect, ComponentType, ReactNode } from 'react';
+import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory, useLocation } from 'react-router-dom';
+import { RoutingProvider } from '@teambit/base-ui.routing.provider';
+import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { Link } from '@teambit/ui.react-router.link';
 import { NavLink } from '@teambit/ui.react-router.nav-link';
-import { RouteSlot, SlotRouter } from './slot-router';
 import { ReactRouterUI } from './react-router.ui.runtime';
+import { Routing } from './routing-method';
 
 export type History = ReturnType<typeof useHistory>;
-
-export enum Routing {
-  url,
-  hash,
-  inMemory,
-}
 
 type RouterContextProps = {
   rootRoutes: RouteProps[];
