@@ -46,7 +46,7 @@ export class Packer {
       throw new ScopeNotFound(scopePath);
     }
     // Or the scope we are operate on is legacy, or the host (workspace) is legacy
-    const isLegacyScope = legacyScope.isLegacy || (!scopePath && this.host.isLegacy);
+    const isLegacyScope = (scopePath && legacyScope.isLegacy) || this.host.isLegacy;
 
     // Handle legacy
     if (isLegacyScope) {
