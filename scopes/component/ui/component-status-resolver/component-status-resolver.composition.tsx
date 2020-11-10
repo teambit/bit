@@ -5,11 +5,11 @@ import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import { ComponentStatusResolver } from './component-status-resolver';
 import { Center } from './component-status-resolver.docs';
 
-let _id = 0;
+let id = 0;
 const getCompId = () => {
-  _id += 1;
+  id += 1;
   // @ts-ignore
-  return new ComponentID({ name: `ui/component-status-resolver-${_id}` }, 'teambit.component');
+  return new ComponentID({ name: `ui/component-status-resolver-${id}` }, 'teambit.component');
 };
 
 let modifyInfo = { hasModifiedFiles: false, hasModifiedDependencies: false };
