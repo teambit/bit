@@ -54,6 +54,7 @@ import {
   DependencyFactory,
   ComponentDependencyFactory,
   COMPONENT_DEP_TYPE,
+  DependencyList,
 } from './dependencies';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
@@ -154,9 +155,43 @@ export class DependencyResolverMain {
     this.dependencyFactorySlot.register(factories);
   }
 
-  getDependencies(component: Component): DependencyGraph {
-    // we should support multiple components here as an entry
-    return new DependencyGraph(component);
+  /**
+   * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
+   * and write them to the dependencyResolver data.
+   * Do not use this function for other purpose.
+   * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
+   * TODO: once we switch deps resolver <> workspace relation we should make it private
+   * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
+   * @param component
+   */
+  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
+    const legacyComponent: LegacyComponent = component.state._consumer;
+    const listFactory = this.getDependencyListFactory();
+    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    return dependencyList.serialize();
+  }
+
+  private getDependencyListFactory(): DependencyListFactory {
+    const factories = flatten(this.dependencyFactorySlot.values());
+    const factoriesMap = factories.reduce((acc, factory) => {
+      acc[factory.type] = factory;
+      return acc;
+    }, {});
+    const listFactory = new DependencyListFactory(factoriesMap);
+    return listFactory;
+  }
+
+  async getDependencies(component: Component): Promise<DependencyList> {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    if (!entry) {
+      return DependencyList.fromArray([]);
+    }
+    const dependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    if (!dependencies.length) {
+      return DependencyList.fromArray([]);
+    }
+    const listFactory = this.getDependencyListFactory();
+    return listFactory.fromSerializedDependencies(dependencies);
   }
 
   getWorkspacePolicy(): WorkspaceDependenciesPolicy {
@@ -462,27 +497,6 @@ export class DependencyResolverMain {
       }
     });
     return version;
-  }
-
-  /**
-   * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
-   * and write them to the dependencyResolver data.
-   * Do not use this function for other purpose.
-   * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
-   * TODO: once we switch deps resolver <> workspace relation we should make it private
-   * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
-   * @param component
-   */
-  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
-    const legacyComponent: LegacyComponent = component.state._consumer;
-    const factories = flatten(this.dependencyFactorySlot.values());
-    const factoriesMap = factories.reduce((acc, factory) => {
-      acc[factory.type] = factory;
-      return acc;
-    }, {});
-    const listFactory = new DependencyListFactory(factoriesMap);
-    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
-    return dependencyList.serialize();
   }
 
   static runtime = MainRuntime;
