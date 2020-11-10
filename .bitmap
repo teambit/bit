@@ -1652,6 +1652,16 @@
                 "test": false
             },
             {
+                "name": "dev-files.spec.ts",
+                "relativePath": "dev-files.spec.ts",
+                "test": false
+            },
+            {
+                "name": "dev-files.ts",
+                "relativePath": "dev-files.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false

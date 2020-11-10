@@ -4,20 +4,21 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { merge } from 'lodash';
-
 import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
 import { TesterTask } from './tester.task';
+import { detectTestFiles } from './utils';
 import { testerSchema } from './tester.graphql';
 
 export type TesterExtensionConfig = {
   /**
    * regex of the text environment.
    */
-  testRegex: string;
+  patterns: string[];
 };
 
 export type TesterOptions = {
@@ -39,7 +40,7 @@ export type TesterOptions = {
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect];
+  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect, DevFilesAspect];
 
   constructor(
     /**
@@ -60,7 +61,9 @@ export class TesterMain {
     /**
      * build task.
      */
-    readonly task: TesterTask
+    readonly task: TesterTask,
+
+    private devFiles: DevFilesMain
   ) {}
 
   async test(components: Component[], opts?: TesterOptions) {
@@ -85,6 +88,13 @@ export class TesterMain {
     return entry?.data.tests;
   }
 
+  /**
+   * get all test files of a component.
+   */
+  getTestFiles(component: Component) {
+    return detectTestFiles(component, this.devFiles);
+  }
+
   private getOptions(options?: TesterOptions): TesterOptions {
     const defaults = {
       watch: false,
@@ -98,18 +108,25 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
+    patterns: ['*.spec.*', '*.test.*'],
   };
 
   static async provider(
-    [cli, envs, workspace, loggerAspect, graphql]: [CLIMain, EnvsMain, Workspace, LoggerMain, GraphqlMain],
+    [cli, envs, workspace, loggerAspect, graphql, devFiles]: [
+      CLIMain,
+      EnvsMain,
+      Workspace,
+      LoggerMain,
+      GraphqlMain,
+      DevFilesMain
+    ],
     config: TesterExtensionConfig
   ) {
     const logger = loggerAspect.createLogger(TesterAspect.id);
-    const testerService = new TesterService(workspace, config.testRegex, logger);
+    const testerService = new TesterService(workspace, config.patterns, logger, devFiles);
     envs.registerService(testerService);
-
-    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id));
+    devFiles.registerDevPattern(config.patterns);
+    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id), devFiles);
 
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');

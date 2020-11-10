@@ -7,6 +7,7 @@ import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { Component } from '@teambit/component';
 import { DevFilesAspect } from './dev-files.aspect';
+import { DevFiles } from './dev-files';
 
 /**
  * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
@@ -44,22 +45,32 @@ export class DevFilesMain {
     const configuredPatterns = entry?.config.devFilePatterns || [];
     const envDef = this.envs.getEnv(component);
     const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
-    const fromSlot = flatten(this.devPatternSlot.values());
-    // const configuredOnComponent = fromSlot.filter(([id]) => {
-    //   return component.state.aspects.get(id);
-    // });
-    // const slotPatternsOnComponent = configuredOnComponent.map(([, pattern]) => pattern);
 
-    return fromSlot.concat(configuredPatterns).concat(envPatterns);
+    const patternSlot = this.devPatternSlot.toArray();
+    const fromSlot: { [id: string]: any } = patternSlot.reduce((acc, current) => {
+      const [aspectId, patterns] = current;
+      if (!acc[aspectId]) acc[aspectId] = [];
+      // if (component.state.aspects.get(aspectId)) acc[aspectId] = acc[aspectId].concat(patterns);
+      acc[aspectId] = acc[aspectId].concat(patterns);
+      return acc;
+    }, {});
+
+    return Object.assign(
+      {
+        [envDef.id]: envPatterns,
+        config: configuredPatterns,
+      },
+      fromSlot
+    );
   }
 
   /**
    * get all dev files configured on a component.
    */
-  getDevPatterns(component: Component) {
+  getDevPatterns(component: Component, aspectId?: string) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
-    const devPatterns = entry?.data.devPatterns || [];
-    return devPatterns;
+    const devPatterns = entry?.data.devPatterns || {};
+    return aspectId ? devPatterns[aspectId] : flatten(Object.values(devPatterns));
   }
 
   /**
@@ -81,10 +92,10 @@ export class DevFilesMain {
   /**
    * get all dev patterns registered.
    */
-  getDevFiles(component: Component): string[] {
+  getDevFiles(component: Component): DevFiles {
     const entry = component.state.aspects.get(DevFilesAspect.id);
-    const devFiles = entry?.data.devFiles || [];
-    return devFiles;
+    const rawDevFiles = entry?.data.devFiles || {};
+    return new DevFiles(rawDevFiles);
   }
 
   /**
@@ -92,9 +103,14 @@ export class DevFilesMain {
    */
   computeDevFiles(component: Component) {
     const devPatterns = this.computeDevPatterns(component);
-    const devFiles = component.state.filesystem.byGlob(devPatterns).map((file) => file.relative);
+    const rawDevFiles = Object.keys(devPatterns).reduce((acc, aspectId) => {
+      if (!acc[aspectId]) acc[aspectId] = [];
+      const patterns = devPatterns[aspectId];
+      acc[aspectId] = component.state.filesystem.byGlob(patterns).map((file) => file.relative);
+      return acc;
+    }, {});
 
-    return devFiles;
+    return new DevFiles(rawDevFiles);
   }
 
   static slots = [Slot.withType<DevPatterns>()];
@@ -117,7 +133,7 @@ export class DevFilesMain {
       workspace.onComponentLoad(async (component) => {
         return {
           devPatterns: devFiles.computeDevPatterns(component),
-          devFiles: devFiles.computeDevFiles(component),
+          devFiles: devFiles.computeDevFiles(component).toObject(),
         };
       });
 
