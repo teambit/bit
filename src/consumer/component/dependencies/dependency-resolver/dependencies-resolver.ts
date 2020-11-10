@@ -111,7 +111,7 @@ export default class DependencyResolver {
 
   static isDevFile: (component: Component, file: string) => Promise<boolean>;
 
-  isDevFile(component: Component, file: string, testsFiles: string[]) {
+  async isDevFile(component: Component, file: string, testsFiles: string[]) {
     if (this.consumer.isLegacy) return R.contains(file, testsFiles);
     return DependencyResolver.isDevFile(component, file);
   }
@@ -232,9 +232,9 @@ export default class DependencyResolver {
    * and marked as ignored in the consumer or component config file.
    */
   populateDependencies(files: string[], testsFiles: string[]) {
-    files.forEach((file: string) => {
+    files.forEach(async (file: string) => {
       const fileType: FileType = {
-        isTestFile: this.isDevFile(this.component, file, testsFiles),
+        isTestFile: await this.isDevFile(this.component, file, testsFiles),
       };
       this.throwForNonExistFile(file);
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {

@@ -79,7 +79,7 @@ export interface DependencyResolverWorkspaceConfig {
   /**
    * regex to determine whether a file is a file meant for development purposes.
    */
-  devFilePatterns: RegExp[];
+  devFilePatterns: string[];
 }
 
 export interface DependencyResolverVariantConfig {

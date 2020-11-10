@@ -68,9 +68,14 @@ export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) =>
 export type BitExtendedLinkType = 'none' | BitLinkType;
 
 /**
+ * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
+ */
+export type DevPattern = string;
+
+/**
  * slot for dev file patterns.
  */
-export type DevPatternSlot = SlotRegistry<RegExp>;
+export type DevPatternSlot = SlotRegistry<DevPattern>;
 
 export type LinkingOptions = {
   /**
@@ -153,14 +158,24 @@ export class DependencyResolverMain {
   /**
    * get all dev patterns defined on a component.
    */
-  getDevPatterns(component: Component) {
+  computeDevPatterns(component: Component) {
     const entry = component.state.aspects.get(DependencyResolverAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns;
     const envDef = this.envs.getEnv(component);
-    const envPatterns: RegExp[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
-    const fromSlot = this.devPatternSlot.values();
+    const envPatterns: DevPattern[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
+    const fromSlot = this.devPatternSlot.toArray();
+    const configuredOnComponent = fromSlot.filter(([id]) => {
+      return component.state.aspects.get(id);
+    });
+    const slotPatternsOnComponent = configuredOnComponent.map(([, pattern]) => pattern);
 
-    return fromSlot.concat(configuredPatterns).concat(envPatterns);
+    return slotPatternsOnComponent.concat(configuredPatterns).concat(envPatterns);
+  }
+
+  getDevPatterns(component: Component) {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const devPatterns = entry?.config.devPatterns || [];
+    return devPatterns;
   }
 
   /**
@@ -175,8 +190,8 @@ export class DependencyResolverMain {
    * register a new dev pattern.
    * @param regex dev pattern
    */
-  registerDevPattern(regex: RegExp) {
-    return this.devPatternSlot.register(regex);
+  registerDevPattern(pattern: DevPattern) {
+    return this.devPatternSlot.register(pattern);
   }
 
   /**
@@ -193,9 +208,7 @@ export class DependencyResolverMain {
    */
   computeDevFiles(component: Component) {
     const devPatterns = this.getDevPatterns(component);
-    const devFiles = devPatterns.map((devPattern) => {
-      return component.state.filesystem.byRegex(devPattern);
-    });
+    const devFiles = component.state.filesystem.byGlob(devPatterns);
 
     return flatten(devFiles);
   }
@@ -544,7 +557,7 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
-    devFilePatterns: [/.spec.tsx/],
+    devFilePatterns: ['*.spec.ts'],
     strictPeerDependencies: true,
   };
 

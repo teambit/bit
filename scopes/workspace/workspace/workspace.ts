@@ -445,9 +445,11 @@ export class Workspace implements ComponentFactory {
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
     const devFiles = await this.dependencyResolver.computeDevFiles(component);
+    const devPatterns = await this.dependencyResolver.computeDevPatterns(component);
     const dependenciesData = {
       dependencies,
       devFiles,
+      devPatterns,
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
