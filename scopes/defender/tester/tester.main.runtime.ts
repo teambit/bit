@@ -126,7 +126,7 @@ export class TesterMain {
     const testerService = new TesterService(workspace, config.patterns, logger, devFiles);
     envs.registerService(testerService);
     devFiles.registerDevPattern(config.patterns);
-    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id), devFiles);
+    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id, devFiles), devFiles);
 
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
