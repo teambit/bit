@@ -56,6 +56,7 @@ import {
   COMPONENT_DEP_TYPE,
   DependencyList,
 } from './dependencies';
+import { WorkspaceManifestFactory } from './manifest';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -228,14 +229,14 @@ export class DependencyResolverMain {
     }
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
-    const res = await WorkspaceManifest.createFromComponents(
+    const workspaceManifestFactory = new WorkspaceManifestFactory(this);
+    const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
       rootDependencies,
       rootDir,
       components,
-      options,
-      this.mergeDependencies.bind(this)
+      options
     );
     this.logger.consoleSuccess();
     return res;

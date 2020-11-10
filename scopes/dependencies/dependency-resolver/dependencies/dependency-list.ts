@@ -8,9 +8,23 @@ export class DependencyList {
     return this._dependencies;
   }
 
-  byTypeName<T extends Dependency>(typeName: string): T[] {
+  forEach(predicate: (dep: Dependency, index?: number) => boolean): void {
+    this.dependencies.forEach(predicate);
+  }
+
+  filter(predicate: (dep: Dependency, index?: number) => boolean): DependencyList {
+    const filtered = this.dependencies.filter(predicate);
+    return DependencyList.fromArray(filtered);
+  }
+
+  toTypeArray<T extends Dependency>(typeName: string): T[] {
     const list: T[] = (this.dependencies.filter((dep) => dep.type === typeName) as any) as T[];
     return list;
+  }
+
+  byTypeName(typeName: string): DependencyList {
+    const filtered = this.dependencies.filter((dep) => dep.type === typeName);
+    return DependencyList.fromArray(filtered);
   }
 
   byLifecycle(lifecycle: DependencyLifecycleType): DependencyList {
