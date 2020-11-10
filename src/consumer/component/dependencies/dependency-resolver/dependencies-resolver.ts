@@ -111,10 +111,10 @@ export default class DependencyResolver {
 
   static isDevFile: (component: Component, file: string) => Promise<boolean>;
 
-  isDevFile = (component: Component, file: string, testsFiles: string[]) => {
+  isDevFile(component: Component, file: string, testsFiles: string[]) {
     if (this.consumer.isLegacy) return R.contains(file, testsFiles);
     return DependencyResolver.isDevFile(component, file);
-  };
+  }
 
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
@@ -234,7 +234,7 @@ export default class DependencyResolver {
   populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file: string) => {
       const fileType: FileType = {
-        isTestFile: R.contains(file, testsFiles),
+        isTestFile: this.isDevFile(this.component, file, testsFiles),
       };
       this.throwForNonExistFile(file);
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
@@ -260,8 +260,6 @@ export default class DependencyResolver {
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
   }
-
-  registerDevFileRegex() {}
 
   addCustomResolvedIssues() {
     if (this.consumer.isLegacy) return;

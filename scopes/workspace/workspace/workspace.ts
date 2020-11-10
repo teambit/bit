@@ -444,8 +444,10 @@ export class Workspace implements ComponentFactory {
     const envsData = await this.getEnvSystemDescriptor(component);
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const devFiles = await this.dependencyResolver.computeDevFiles(component);
     const dependenciesData = {
       dependencies,
+      devFiles,
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
