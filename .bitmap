@@ -1399,6 +1399,61 @@
                 "test": false
             },
             {
+                "name": "base-dependency.ts",
+                "relativePath": "dependencies/base-dependency.ts",
+                "test": false
+            },
+            {
+                "name": "component-dependency-factory.ts",
+                "relativePath": "dependencies/component-dependency/component-dependency-factory.ts",
+                "test": false
+            },
+            {
+                "name": "component-dependency.ts",
+                "relativePath": "dependencies/component-dependency/component-dependency.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "dependencies/component-dependency/index.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-factory.ts",
+                "relativePath": "dependencies/dependency-factory.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-list-factory.ts",
+                "relativePath": "dependencies/dependency-list-factory.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-list.ts",
+                "relativePath": "dependencies/dependency-list.ts",
+                "test": false
+            },
+            {
+                "name": "dependency.ts",
+                "relativePath": "dependencies/dependency.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "dependencies/exceptions/index.ts",
+                "test": false
+            },
+            {
+                "name": "unknown-dep-type.ts",
+                "relativePath": "dependencies/exceptions/unknown-dep-type.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "dependencies/index.ts",
+                "test": false
+            },
+            {
                 "name": "dependency-graph.ts",
                 "relativePath": "dependency-graph.ts",
                 "test": false
@@ -2815,6 +2870,21 @@
             {
                 "name": "pack.cmd.tsx",
                 "relativePath": "pack.cmd.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "package-dependency/index.ts",
+                "test": false
+            },
+            {
+                "name": "package-dependency-factory.ts",
+                "relativePath": "package-dependency/package-dependency-factory.ts",
+                "test": false
+            },
+            {
+                "name": "package-dependency.ts",
+                "relativePath": "package-dependency/package-dependency.ts",
                 "test": false
             },
             {
