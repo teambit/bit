@@ -1,5 +1,5 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { NavLink } from '@teambit/react-router';
+import { NavLink } from '@teambit/ui.react-router.nav-link';
 import { EnvIcon } from '@teambit/ui.env-icon';
 import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
