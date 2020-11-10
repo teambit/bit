@@ -1394,11 +1394,6 @@
     "dependency-resolver": {
         "files": [
             {
-                "name": "constants.ts",
-                "relativePath": "constants.ts",
-                "test": false
-            },
-            {
                 "name": "base-dependency.ts",
                 "relativePath": "dependencies/base-dependency.ts",
                 "test": false
@@ -1416,6 +1411,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "dependencies/component-dependency/index.ts",
+                "test": false
+            },
+            {
+                "name": "constants.ts",
+                "relativePath": "dependencies/constants.ts",
                 "test": false
             },
             {
@@ -1451,11 +1451,6 @@
             {
                 "name": "index.ts",
                 "relativePath": "dependencies/index.ts",
-                "test": false
-            },
-            {
-                "name": "dependency-graph.ts",
-                "relativePath": "dependency-graph.ts",
                 "test": false
             },
             {
@@ -1561,6 +1556,11 @@
             {
                 "name": "manifest.ts",
                 "relativePath": "manifest/manifest.ts",
+                "test": false
+            },
+            {
+                "name": "workspace-manifest-factory.ts",
+                "relativePath": "manifest/workspace-manifest-factory.ts",
                 "test": false
             },
             {
@@ -6110,5 +6110,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.126"
+    "version": "14.8.9-dev.130"
 }

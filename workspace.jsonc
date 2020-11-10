@@ -173,6 +173,7 @@
         "mini-css-extract-plugin": "^0.9.0",
         "mousetrap": "^1.6.5",
         "mutation-observer": "1.0.3",
+        "nerf-dart": "1.0.0",
         "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
@@ -225,7 +226,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.126",
+        "bit-bin": "14.8.9-dev.130",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -255,7 +256,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.126",
+            "bit-bin": "14.8.9-dev.130",
             "react-dom": "^16.13.1"
           }
         }
@@ -360,7 +361,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.126",
+            "bit-bin": "14.8.9-dev.130",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

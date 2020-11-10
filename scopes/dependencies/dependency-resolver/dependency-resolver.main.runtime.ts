@@ -30,13 +30,12 @@ import R, { forEachObjIndexed, flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries, Registry } from './registry';
-import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './constants';
-import { DependencyGraph } from './dependency-graph';
+import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './dependencies/constants';
 import { BitLinkType, DependencyInstaller } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
-import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest/workspace-manifest';
+import { CreateFromComponentsOptions, WorkspaceManifest, WorkspaceManifestFactory } from './manifest';
 import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,
@@ -54,6 +53,7 @@ import {
   DependencyFactory,
   ComponentDependencyFactory,
   COMPONENT_DEP_TYPE,
+  DependencyList,
 } from './dependencies';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
@@ -154,9 +154,43 @@ export class DependencyResolverMain {
     this.dependencyFactorySlot.register(factories);
   }
 
-  getDependencies(component: Component): DependencyGraph {
-    // we should support multiple components here as an entry
-    return new DependencyGraph(component);
+  /**
+   * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
+   * and write them to the dependencyResolver data.
+   * Do not use this function for other purpose.
+   * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
+   * TODO: once we switch deps resolver <> workspace relation we should make it private
+   * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
+   * @param component
+   */
+  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
+    const legacyComponent: LegacyComponent = component.state._consumer;
+    const listFactory = this.getDependencyListFactory();
+    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
+    return dependencyList.serialize();
+  }
+
+  private getDependencyListFactory(): DependencyListFactory {
+    const factories = flatten(this.dependencyFactorySlot.values());
+    const factoriesMap = factories.reduce((acc, factory) => {
+      acc[factory.type] = factory;
+      return acc;
+    }, {});
+    const listFactory = new DependencyListFactory(factoriesMap);
+    return listFactory;
+  }
+
+  async getDependencies(component: Component): Promise<DependencyList> {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    if (!entry) {
+      return DependencyList.fromArray([]);
+    }
+    const dependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    if (!dependencies.length) {
+      return DependencyList.fromArray([]);
+    }
+    const listFactory = this.getDependencyListFactory();
+    return listFactory.fromSerializedDependencies(dependencies);
   }
 
   getWorkspacePolicy(): WorkspaceDependenciesPolicy {
@@ -193,14 +227,14 @@ export class DependencyResolverMain {
     }
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
-    const res = await WorkspaceManifest.createFromComponents(
+    const workspaceManifestFactory = new WorkspaceManifestFactory(this);
+    const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
       rootDependencies,
       rootDir,
       components,
-      options,
-      this.mergeDependencies.bind(this)
+      options
     );
     this.logger.consoleSuccess();
     return res;
@@ -266,6 +300,19 @@ export class DependencyResolverMain {
       registries = await systemPm.getRegistries();
     }
 
+    const bitScope = registries.scopes.bit;
+    const bitAuthHeaderValue = bitScope?.authHeaderValue;
+    const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
+    const bitOriginalAuthType = bitScope?.originalAuthType;
+    const bitOriginalAuthValue = bitScope?.originalAuthValue;
+    const bitDefaultRegistry = new Registry(
+      bitRegistry,
+      true,
+      bitAuthHeaderValue,
+      bitOriginalAuthType,
+      bitOriginalAuthValue
+    );
+
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
     if (
@@ -273,15 +320,17 @@ export class DependencyResolverMain {
       registries.defaultRegistry.uri === NPM_REGISTRY ||
       NPM_REGISTRY.startsWith(registries.defaultRegistry.uri)
     ) {
-      const bitToken = registries.scopes.bit?.authHeaderValue;
-      const bitRegistry = registries.scopes.bit?.uri || BIT_DEV_REGISTRY;
       // TODO: this will not handle cases where you have token for private npm registries stored on npmjs
       // it should be handled by somehow in such case (default is npmjs and there is token for default) by sending the token of npmjs to the registry
       // (for example by setting some special header in the request)
       // then in the registry server it should be use it when proxies
-      const bitDefaultRegistry = new Registry(bitRegistry, true, bitToken);
       registries = registries.setDefaultRegistry(bitDefaultRegistry);
     }
+    // Make sure @bit scope is register with alwaysAuth
+    if (!bitScope || (bitScope && !bitScope.alwaysAuth)) {
+      registries = registries.updateScopedRegistry('bit', bitDefaultRegistry);
+    }
+
     return registries;
   }
 
@@ -427,6 +476,7 @@ export class DependencyResolverMain {
         const newDepId = idTransformer(depId);
         dep.componentId = (newDepId || depId).serialize();
         dep.id = (newDepId || depId).toString();
+        dep.version = (newDepId || depId).version;
       }
     });
     return component;
@@ -447,27 +497,6 @@ export class DependencyResolverMain {
       }
     });
     return version;
-  }
-
-  /**
-   * This function called on component load in order to calculate the dependencies based on the legacy (consumer) component
-   * and write them to the dependencyResolver data.
-   * Do not use this function for other purpose.
-   * If you want to get the component dependencies call getDependencies (which will give you the dependencies from the data itself)
-   * TODO: once we switch deps resolver <> workspace relation we should make it private
-   * TODO: once we switch deps resolver <> workspace relation we should remove the resolveId func here
-   * @param component
-   */
-  async extractDepsFromLegacy(component: Component): Promise<SerializedDependency[]> {
-    const legacyComponent: LegacyComponent = component.state._consumer;
-    const factories = flatten(this.dependencyFactorySlot.values());
-    const factoriesMap = factories.reduce((acc, factory) => {
-      acc[factory.type] = factory;
-      return acc;
-    }, {});
-    const listFactory = new DependencyListFactory(factoriesMap);
-    const dependencyList = await listFactory.fromLegacyComponent(legacyComponent);
-    return dependencyList.serialize();
   }
 
   static runtime = MainRuntime;
