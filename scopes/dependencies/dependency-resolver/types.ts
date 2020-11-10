@@ -2,12 +2,7 @@ import { ComponentConfig, ComponentFS } from '@teambit/component';
 import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
-import { DependencyLifecycleType } from './dependencies';
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersion = string;
-export type PackageName = string;
+import { DependencyLifecycleType, PackageName, SemverVersion } from './dependencies';
 
 export type RegistryName = string;
 
