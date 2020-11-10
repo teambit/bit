@@ -1639,6 +1639,30 @@
         "exported": false,
         "lanes": []
     },
+    "dev-files": {
+        "files": [
+            {
+                "name": "dev-files.aspect.ts",
+                "relativePath": "dev-files.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "dev-files.main.runtime.ts",
+                "relativePath": "dev-files.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/dev-files",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "docs": {
         "files": [
             {

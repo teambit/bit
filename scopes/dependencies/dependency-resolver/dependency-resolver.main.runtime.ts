@@ -67,16 +67,6 @@ export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) =>
 
 export type BitExtendedLinkType = 'none' | BitLinkType;
 
-/**
- * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
- */
-export type DevPattern = string;
-
-/**
- * slot for dev file patterns.
- */
-export type DevPatternSlot = SlotRegistry<DevPattern>;
-
 export type LinkingOptions = {
   /**
    * How to create the link from the root dir node modules to @teambit/bit -
@@ -150,68 +140,8 @@ export class DependencyResolverMain {
 
     private packageManagerSlot: PackageManagerSlot,
 
-    private devPatternSlot: DevPatternSlot,
-
     private dependencyFactorySlot: DependencyFactorySlot
   ) {}
-
-  /**
-   * get all dev patterns defined on a component.
-   */
-  computeDevPatterns(component: Component) {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
-    const configuredPatterns = entry?.config.devFilePatterns;
-    const envDef = this.envs.getEnv(component);
-    const envPatterns: DevPattern[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
-    const fromSlot = this.devPatternSlot.toArray();
-    const configuredOnComponent = fromSlot.filter(([id]) => {
-      return component.state.aspects.get(id);
-    });
-    const slotPatternsOnComponent = configuredOnComponent.map(([, pattern]) => pattern);
-
-    return slotPatternsOnComponent.concat(configuredPatterns).concat(envPatterns);
-  }
-
-  getDevPatterns(component: Component) {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
-    const devPatterns = entry?.config.devPatterns || [];
-    return devPatterns;
-  }
-
-  /**
-   * determine whether a file of a component is a dev file.
-   */
-  isDevFile(component: Component, filePath: string): boolean {
-    const devFiles = this.getDevFiles(component);
-    return devFiles.includes(filePath);
-  }
-
-  /**
-   * register a new dev pattern.
-   * @param regex dev pattern
-   */
-  registerDevPattern(pattern: DevPattern) {
-    return this.devPatternSlot.register(pattern);
-  }
-
-  /**
-   * get all dev patterns registered.
-   */
-  getDevFiles(component: Component): string[] {
-    const entry = component.state.aspects.get(DependencyResolverAspect.id);
-    const devFiles = entry?.data.devFiles || [];
-    return devFiles;
-  }
-
-  /**
-   * compute all dev files of a component.
-   */
-  computeDevFiles(component: Component) {
-    const devPatterns = this.getDevPatterns(component);
-    const devFiles = component.state.filesystem.byGlob(devPatterns);
-
-    return flatten(devFiles);
-  }
 
   /**
    * register a new package manager to the dependency resolver.
@@ -570,10 +500,9 @@ export class DependencyResolverMain {
       ComponentMain
     ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot, devPatternSlot, dependencyFactorySlot]: [
+    [policiesRegistry, packageManagerSlot, dependencyFactorySlot]: [
       PoliciesRegistry,
       PackageManagerSlot,
-      DevPatternSlot,
       DependencyFactorySlot
     ]
   ) {
@@ -587,7 +516,6 @@ export class DependencyResolverMain {
       configMain,
       aspectLoader,
       packageManagerSlot,
-      devPatternSlot,
       dependencyFactorySlot
     );
 
@@ -596,12 +524,6 @@ export class DependencyResolverMain {
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
-    DependencyResolver.isDevFile = async (consumerComponent: LegacyComponent, file: string) => {
-      const host = componentAspect.getHost();
-      const component = await host.get(await host.resolveComponentId(consumerComponent.id));
-      if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
-      return dependencyResolver.isDevFile(component, file);
-    };
 
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,

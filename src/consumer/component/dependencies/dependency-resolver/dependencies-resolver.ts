@@ -197,7 +197,7 @@ export default class DependencyResolver {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    this.populateDependencies(allFiles, testsFiles);
+    await this.populateDependencies(allFiles, testsFiles);
     this.component.setDependencies(this.allDependencies.dependencies);
     this.component.setDevDependencies(this.allDependencies.devDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
@@ -231,23 +231,26 @@ export default class DependencyResolver {
    * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
    * and marked as ignored in the consumer or component config file.
    */
-  populateDependencies(files: string[], testsFiles: string[]) {
-    files.forEach(async (file: string) => {
-      const fileType: FileType = {
-        isTestFile: await this.isDevFile(this.component, file, testsFiles),
-      };
-      this.throwForNonExistFile(file);
-      if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
-        return;
-      }
-      this.processCoreAspects(file);
-      this.processMissing(file, fileType);
-      this.processErrors(file);
-      this.processPackages(file, fileType);
-      this.processBits(file, fileType);
-      this.processDepFiles(file, fileType);
-      this.processUnidentifiedPackages(file, fileType);
-    });
+  async populateDependencies(files: string[], testsFiles: string[]) {
+    await Promise.all(
+      files.map(async (file: string) => {
+        const fileType: FileType = {
+          isTestFile: await this.isDevFile(this.component, file, testsFiles),
+        };
+        this.throwForNonExistFile(file);
+        if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
+          return;
+        }
+        this.processCoreAspects(file);
+        this.processMissing(file, fileType);
+        this.processErrors(file);
+        this.processPackages(file, fileType);
+        this.processBits(file, fileType);
+        this.processDepFiles(file, fileType);
+        this.processUnidentifiedPackages(file, fileType);
+      })
+    );
+
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
     this.addCustomResolvedIssues();

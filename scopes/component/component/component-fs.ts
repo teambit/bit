@@ -35,7 +35,10 @@ export default class ComponentFS extends MemoryFS {
    */
   byGlob(patterns: string[]) {
     return this.files.filter((file) => {
-      return patterns.find((pattern) => minimatch(file.relative, pattern));
+      return patterns.find((pattern) => {
+        const match = minimatch(file.relative, pattern);
+        return match;
+      });
     });
   }
 
