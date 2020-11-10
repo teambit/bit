@@ -1,7 +1,7 @@
 import React, { useState, useContext, useCallback } from 'react';
 import classnames from 'classnames';
 
-import { Message } from '@teambit/ui.notifications.api';
+import { Message } from '@teambit/ui.notifications.store';
 import { Notification } from '@teambit/ui.notifications.notification';
 import { NotificationContext } from '@teambit/ui.notifications.notification-context';
 import { darkMode } from '@teambit/base-ui.theme.dark-theme';
@@ -15,12 +15,12 @@ export type NotificationCenterProps = {
 
 export function NotificationCenter({ notifications, ...rest }: NotificationCenterProps) {
   const [isDismissing, setDismissing] = useState(false);
-  const notificationApi = useContext(NotificationContext);
+  const notificationsStore = useContext(NotificationContext);
 
   const handleDismiss = useCallback(() => {
     setDismissing(true);
     setTimeout(() => {
-      notificationApi.clear();
+      notificationsStore.clear();
       setDismissing(false);
     }, +styles.animationTime);
   }, []);

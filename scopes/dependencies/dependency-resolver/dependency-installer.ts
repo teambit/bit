@@ -97,8 +97,7 @@ export class DependencyInstaller {
       );
     }
 
-    await this.linkHarmony(path.join(finalRootDir, 'node_modules'));
-
+    this.linkHarmony(componentDirectoryMap, finalRootDir);
     return componentDirectoryMap;
   }
 
@@ -204,42 +203,44 @@ export class DependencyInstaller {
     }
   }
 
-  private linkHarmony(dir: string) {
+  private linkHarmony(dirMap: ComponentMap<string>, rootDir: string) {
     const name = 'harmony';
     const packageName = '@teambit/harmony';
 
     if (!this.aspectLoader.mainAspect.packageName) {
       throw new MainAspectNotLinkable();
     }
+    const mainAspectPath = path.join(rootDir, this.aspectLoader.mainAspect.packageName);
+    const harmonyDir = path.join(mainAspectPath, 'dist', name);
 
-    const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
-    let harmonyDir = path.join(mainAspectPath, 'dist', name);
-    const target = path.join(dir, packageName);
-    const isTargetExists = fs.pathExistsSync(target);
-    // Do not override links created by other means
-    if (isTargetExists) {
-      return;
-    }
-    const isHarmonyDirExist = fs.pathExistsSync(harmonyDir);
-    if (!isHarmonyDirExist) {
-      harmonyDir = getHarmonyDirForDevEnv();
-      createSymlinkOrCopy(harmonyDir, target);
-      return;
-    }
-
-    try {
-      // eslint-disable-next-line global-require, import/no-dynamic-require
-      const module = require(harmonyDir);
-      const harmonyPath = path.resolve(path.join(module.path, '..', '..'));
-      // in this case we want the symlinks to be relative links
-      // Using the fs module to make sure it is relative to the target
-      if (fs.existsSync(target)) {
+    dirMap.toArray().forEach(([, componentPath]) => {
+      const target = path.join(componentPath, 'node_modules', packageName);
+      const isTargetExists = fs.pathExistsSync(target);
+      // Do not override links created by other means
+      if (isTargetExists) {
         return;
       }
-      fs.symlinkSync(harmonyPath, target);
-    } catch (err) {
-      throw new HarmonyLinkError(err);
-    }
+      const isHarmonyDirExist = fs.pathExistsSync(harmonyDir);
+      if (!isHarmonyDirExist) {
+        const newDir = getHarmonyDirForDevEnv();
+        createSymlinkOrCopy(newDir, target);
+        return;
+      }
+
+      try {
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        const module = require(harmonyDir);
+        const harmonyPath = path.resolve(path.join(module.path, '..', '..'));
+        // in this case we want the symlinks to be relative links
+        // Using the fs module to make sure it is relative to the target
+        if (fs.existsSync(target)) {
+          return;
+        }
+        fs.symlinkSync(harmonyPath, target);
+      } catch (err) {
+        throw new HarmonyLinkError(err);
+      }
+    });
   }
 }
 

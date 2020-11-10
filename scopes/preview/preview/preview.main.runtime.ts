@@ -1,13 +1,13 @@
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from 'bit-bin/dist/constants';
 import objectHash from 'object-hash';
-import { writeFileSync } from 'fs-extra';
+import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
@@ -77,12 +77,7 @@ export class PreviewMain {
    * @param moduleMap map of components to module paths to require.
    * @param defaultModule
    */
-  writeLink(
-    prefix: string,
-    moduleMap: ComponentMap<string[]>,
-    defaultModule?: string,
-    dirName: string = this.tempFolder
-  ) {
+  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
     const hash = objectHash(contents);
     const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
@@ -96,12 +91,16 @@ export class PreviewMain {
     return targetPath;
   }
 
-  private runtimeComponents?: RuntimeComponents;
-  private execContext?: ExecutionContext;
+  private execContexts = new Map<string, ExecutionContext>();
+  private componentsByAspect = new Map<string, RuntimeComponents>();
 
-  private async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
-    this.execContext = context;
-    this.runtimeComponents = new RuntimeComponents(context.components);
+  private async getPreviewTarget(
+    /** execution context (of the specific env) */
+    context: ExecutionContext
+  ): Promise<string[]> {
+    // store context for later link file updates
+    this.execContexts.set(context.id, context);
+    this.componentsByAspect.set(context.id, new RuntimeComponents(context.components));
 
     const previewRuntime = await this.writePreviewRuntime();
     const linkFiles = await this.updateLinkFiles(context.components, context);
@@ -109,23 +108,20 @@ export class PreviewMain {
     return [...linkFiles, previewRuntime];
   }
 
-  private updateLinkFiles(components: Component[] = [], context: ExecutionContext | undefined = this.execContext) {
-    if (!context) return []; // might happen if components change before initial bundle.
-
+  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
     const previews = this.previewSlot.values();
     const paths = previews.map(async (previewDef) => {
-      const map = await previewDef.getModuleMap(components);
+      const templatePath = await previewDef.renderTemplatePath?.(context);
 
+      const map = await previewDef.getModuleMap(components);
       const withPaths = map.map<string[]>((files) => {
         return files.map((file) => file.path);
       });
 
-      const link = this.writeLink(
-        previewDef.prefix,
-        withPaths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
-      );
+      const dirPath = join(this.tempFolder, context.id);
+      if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
+      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
       return link;
     });
 
@@ -146,6 +142,35 @@ export class PreviewMain {
   private getDefaultStrategies() {
     return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
   }
+
+  // TODO - executionContext should be responsible for updating components list, and emit 'update' events
+  // instead we keep track of changes
+  private handleComponentChange = async (c: Component, updater: (currentComponents: RuntimeComponents) => void) => {
+    const env = this.envs.getEnv(c);
+    const envId = env.id.toString();
+
+    const executionContext = this.execContexts.get(envId);
+    const components = this.componentsByAspect.get(envId);
+    if (!components || !executionContext) return noopResult;
+
+    // add / remove / etc
+    updater(components);
+
+    await this.updateLinkFiles(components.components, executionContext);
+
+    return noopResult;
+  };
+
+  private handleComponentRemoval = (cId: ComponentID) => {
+    let component: Component | undefined;
+    this.componentsByAspect.forEach((components) => {
+      const found = components.get(cId);
+      if (found) component = found;
+    });
+    if (!component) return Promise.resolve(noopResult);
+
+    return this.handleComponentChange(component, (currentComponents) => currentComponents.remove(cId));
+  };
 
   /**
    * return the configured bundling strategy.
@@ -217,29 +242,16 @@ export class PreviewMain {
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTask(new PreviewTask(bundler, preview));
+    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
 
     if (workspace) {
-      workspace.registerOnComponentAdd(async (x) => {
-        // TODO - use workspace.list() instead of this
-        preview.runtimeComponents?.add(x);
-        await preview.updateLinkFiles(preview.runtimeComponents?.components);
-        return noopResult;
-      });
-
-      workspace.registerOnComponentChange(async (x) => {
-        // TODO - use workspace.list() instead of this
-        preview.runtimeComponents?.update(x);
-        await preview.updateLinkFiles(preview.runtimeComponents?.components);
-        return noopResult;
-      });
-
-      workspace.registerOnComponentRemove(async (x) => {
-        // TODO - use workspace.list() instead of this
-        preview.runtimeComponents?.remove(x);
-        await preview.updateLinkFiles(preview.runtimeComponents?.components);
-        return noopResult;
-      });
+      workspace.registerOnComponentAdd((c) =>
+        preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
+      );
+      workspace.registerOnComponentChange((c) =>
+        preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
+      );
+      workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
     }
 
     return preview;

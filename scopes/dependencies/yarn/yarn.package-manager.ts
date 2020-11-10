@@ -1,4 +1,3 @@
-import execa from 'execa';
 import * as semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import {
@@ -10,7 +9,7 @@ import {
   CreateFromComponentsOptions,
   Registries,
   Registry,
-  // PackageManagerResolveRemoteVersionOptions,
+  PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
@@ -25,9 +24,12 @@ import {
   Descriptor,
   Cache,
   StreamReport,
+  ResolveOptions,
+  LightReport,
 } from '@yarnpkg/core';
 import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath, PortablePath } from '@yarnpkg/fslib';
+import npmPlugin from '@yarnpkg/plugin-npm';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 
@@ -56,7 +58,8 @@ export class YarnPackageManager implements PackageManager {
     );
 
     const rootDirPath = npath.toPortablePath(rootDir);
-    const config = await this.computeConfiguration(rootDirPath, installOptions);
+    const cacheDir = this.getCacheFolder(installOptions.cacheRootDir);
+    const config = await this.computeConfiguration(rootDirPath, cacheDir);
 
     const project = new Project(rootDirPath, { configuration: config });
     // @ts-ignore
@@ -189,19 +192,18 @@ export class YarnPackageManager implements PackageManager {
     return undefined;
   }
 
-  private getCacheFolder(options: PackageManagerInstallOptions) {
-    return options.cacheRootDir ? `${options.cacheRootDir}/.yarn/cache` : `${userHome}/.yarn/cache`;
+  private getCacheFolder(baseDir: string = userHome) {
+    return `${baseDir}/.yarn/cache`;
   }
 
   // TODO: implement this to automate configuration.
-  private async computeConfiguration(rootDirPath: PortablePath, installOptions: PackageManagerInstallOptions) {
+  private async computeConfiguration(rootDirPath: PortablePath, cacheFolder: string): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries(registries);
     const defaultRegistry = registries.defaultRegistry;
     const defaultAuthProp = this.getAuthProp(defaultRegistry);
-    const cacheFolder = this.getCacheFolder(installOptions);
 
     const data = {
       nodeLinker: 'node-modules',
@@ -252,10 +254,9 @@ export class YarnPackageManager implements PackageManager {
     return map;
   }
 
-  // TODO: implement this with either the yarn API or add a default resolver in the dep resolver.
   async resolveRemoteVersion(
-    packageName: string
-    // options: PackageManagerResolveRemoteVersionOptions
+    packageName: string,
+    options: PackageManagerResolveRemoteVersionOptions
   ): Promise<ResolvedPackageVersion> {
     const parsedPackage = parsePackageName(packageName);
     const parsedVersion = parsedPackage.version;
@@ -266,11 +267,43 @@ export class YarnPackageManager implements PackageManager {
         isSemver: true,
       };
     }
-    const { stdout } = await execa('npm', ['view', packageName, 'version'], {});
+    if (!npmPlugin.resolvers) {
+      throw new Error('npm resolvers for yarn API not found');
+    }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [_NpmRemapResolver, NpmSemverResolver, NpmTagResolver] = npmPlugin.resolvers;
+    let resolver = new NpmSemverResolver();
+    const ident = structUtils.parseIdent(parsedPackage.name);
+    let range = 'npm:*';
+    const rootDirPath = npath.toPortablePath(options.rootDir);
+    const cacheDir = this.getCacheFolder(options.cacheRootDir);
+    const config = await this.computeConfiguration(rootDirPath, cacheDir);
+
+    const project = new Project(rootDirPath, { configuration: config });
+    const report = new LightReport({ configuration: config, stdout: process.stdout });
+
+    // Handle cases when the version is a dist tag like dev / latest for example bit install lodash@latest
+    if (parsedPackage.version) {
+      resolver = new NpmTagResolver();
+      range = `npm:${parsedPackage.version}`;
+    }
+    const descriptor = structUtils.makeDescriptor(ident, range);
+
+    // @ts-ignore
+    project.setupResolutions();
+    const resolveOptions: ResolveOptions = {
+      project,
+      resolver,
+      report,
+    };
+    // const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
+    const candidates = await resolver.getCandidates(descriptor, new Map(), resolveOptions);
+    const parsedRange = structUtils.parseRange(candidates[0].reference);
+    const version = parsedRange.selector;
     return {
       packageName: parsedPackage.name,
-      version: stdout,
+      version,
       isSemver: true,
     };
   }

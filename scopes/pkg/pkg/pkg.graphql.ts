@@ -33,6 +33,7 @@ export function pkgSchema(pkg: PkgMain): Schema {
       type PackageManifest {
         name: String
         distTags: JSONObject
+        externalRegistry: Boolean
         versions(version: String): [VersionsPackageManifest]
       }
     `,

@@ -12,4 +12,8 @@ export class RuntimeComponents {
   update(next: Component) {
     this.components = this.components.map((c) => (c.equals(next) ? next : c));
   }
+
+  get(id: ComponentID) {
+    return this.components.find((x) => x.id.isEqual(id));
+  }
 }

@@ -1,7 +1,8 @@
 import { forEachObjIndexed } from 'ramda';
 
 import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../constants';
-import { DependencyLifecycleType, DepObjectKeyName, DepObjectValue, PackageName, SemverVersion } from '../../types';
+import { DepObjectKeyName, DepObjectValue, PackageName, SemverVersion } from '../../types';
+import { DependencyLifecycleType } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest';
 
 export type PackageNameIndexItem = {

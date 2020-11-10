@@ -1,4 +1,5 @@
 import { Logger } from '@teambit/logger';
+import ts from 'typescript';
 import { expect } from 'chai';
 import path from 'path';
 import { TypescriptAspect } from './typescript.aspect';
@@ -39,8 +40,13 @@ describe('TypescriptCompiler', () => {
 });
 
 function getTsCompiler() {
-  return new TypescriptCompiler(TypescriptAspect.id, new Logger('test'), {
-    tsconfig: {},
-    types: [],
-  });
+  return new TypescriptCompiler(
+    TypescriptAspect.id,
+    new Logger('test'),
+    {
+      tsconfig: {},
+      types: [],
+    },
+    ts
+  );
 }

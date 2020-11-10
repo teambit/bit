@@ -27,38 +27,38 @@ export type TagResults = {
 export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 export const AUTO_TAGGED_MSG = 'auto-tagged dependents';
 
-type TagParams = {
+export type BasicTagParams = {
   message: string;
-  exactVersion: string | undefined;
-  releaseType: semver.ReleaseType;
   force: boolean;
-  verbose?: boolean;
-  ignoreUnresolvedDependencies: boolean;
   ignoreNewestVersion: boolean;
   skipTests: boolean;
+  verbose: boolean;
   skipAutoTag: boolean;
   persist: boolean;
+  disableDeployPipeline: boolean;
+};
+
+type TagParams = {
+  exactVersion: string | undefined;
+  releaseType: semver.ReleaseType;
+  ignoreUnresolvedDependencies: boolean;
+  ignoreNewestVersion: boolean;
   id: string;
   all: boolean;
   scope?: string;
   includeImported: boolean;
-};
+} & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams) {
   const {
     id,
     all,
-    message,
     exactVersion,
     releaseType,
     force,
-    verbose,
     ignoreUnresolvedDependencies,
-    ignoreNewestVersion,
-    skipTests,
     scope,
     includeImported,
-    skipAutoTag,
     persist,
   } = tagParams;
 
@@ -86,17 +86,11 @@ export async function tagAction(tagParams: TagParams) {
   if (R.isEmpty(bitIds)) return null;
 
   const consumerTagParams = {
+    ...tagParams,
     ids: BitIds.fromArray(bitIds),
-    message,
     exactVersion: validExactVersion,
     releaseType,
-    force,
-    verbose,
     ignoreUnresolvedDependencies,
-    ignoreNewestVersion,
-    skipTests,
-    skipAutoTag,
-    persist,
   };
   const tagResults = await consumer.tag(consumerTagParams);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

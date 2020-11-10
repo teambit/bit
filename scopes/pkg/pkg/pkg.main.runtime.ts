@@ -15,6 +15,7 @@ import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -27,7 +28,7 @@ import { PublishTask } from './publish.task';
 import { PackageTarFiletNotFound, PkgArtifactNotFound } from './exceptions';
 import { PkgArtifact } from './pkg-artifact';
 import { PackageRoute, routePath } from './package.route';
-
+import { PackageDependencyFactory } from './package-dependency';
 import { pkgSchema } from './pkg.graphql';
 
 export interface PackageJsonProps {
@@ -71,6 +72,7 @@ export type ComponentPkgExtensionData = {
 type ComponentPackageManifest = {
   name: string;
   distTags: Record<string, string>;
+  externalRegistry: boolean;
   versions: VersionPackageManifest[];
 };
 
@@ -92,6 +94,7 @@ export class PkgMain {
     LoggerAspect,
     WorkspaceAspect,
     BuilderAspect,
+    DependencyResolverAspect,
     ComponentAspect,
     GraphqlAspect,
   ];
@@ -99,7 +102,7 @@ export class PkgMain {
   static defaultConfig = {};
 
   static async provider(
-    [cli, scope, envs, isolator, logger, workspace, builder, componentAspect, graphql]: [
+    [cli, scope, envs, isolator, logger, workspace, builder, dependencyResolver, componentAspect, graphql]: [
       CLIMain,
       ScopeMain,
       EnvsMain,
@@ -107,6 +110,7 @@ export class PkgMain {
       LoggerMain,
       Workspace,
       BuilderMain,
+      DependencyResolverMain,
       ComponentMain,
       GraphqlMain
     ],
@@ -117,27 +121,20 @@ export class PkgMain {
     const host = componentAspect.getHost();
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
-    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
-    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
-    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
-    const pkg = new PkgMain(
-      config,
-      packageJsonPropsRegistry,
-      workspace,
-      scope,
-      builder,
-      packer,
-      envs,
-      dryRunTask,
-      preparePackagesTask,
-      componentAspect
-    );
+    const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
+
+    dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
     graphql.register(pkgSchema(pkg));
 
     componentAspect.registerRoute([new PackageRoute(pkg)]);
 
-    builder.registerDeployTask(new PublishTask(PkgAspect.id, publisher, packer, logPublisher));
+    const dryRunTask = new PublishDryRunTask(PkgAspect.id, publisher, packer, logPublisher);
+    const preparePackagesTask = new PreparePackagesTask(PkgAspect.id, logPublisher);
+    const publishTask = new PublishTask(PkgAspect.id, publisher, packer, logPublisher);
+    dryRunTask.dependencies = [BuildTaskHelper.serializeId(preparePackagesTask)];
+    builder.registerBuildTasks([preparePackagesTask, dryRunTask]);
+    builder.registerDeployTasks([publishTask]);
     if (workspace) {
       // workspace.onComponentLoad(pkg.mergePackageJsonProps.bind(pkg));
       workspace.onComponentLoad(async (component) => {
@@ -194,10 +191,6 @@ export class PkgMain {
      * envs extension.
      */
     private envs: EnvsMain,
-
-    readonly dryRunTask: PublishDryRunTask,
-
-    readonly preparePackagesTask: PreparePackagesTask,
 
     private componentAspect: ComponentMain
   ) {}
@@ -285,11 +278,25 @@ export class PkgMain {
     });
     const versions = await Promise.all(versionsP);
     const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
+    const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
       name,
       distTags,
+      externalRegistry,
       versions: versionsWithoutEmpty,
     };
+  }
+
+  /**
+   * Check if the component should be fetched from bit registry or from another registry
+   * This will usually determined by the latest version of the component
+   * @param component
+   */
+  isPublishedToExternalRegistry(component: Component): boolean {
+    const pkgExt = component.state.aspects.get(PkgAspect.id);
+    // By default publish to bit registry
+    if (!pkgExt) return false;
+    return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
   async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {

@@ -19,7 +19,7 @@ describe('migrating legacy workspace to Harmony', function () {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
-      helper.fixtures.populateComponents();
+      helper.fixtures.populateComponents(3, false);
       output = helper.command.runCmd('bit migrate --harmony');
     });
     it('should keep .bitmap file', () => {

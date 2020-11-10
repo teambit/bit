@@ -28,7 +28,7 @@ import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
-import LegacyScope, { OnTagResult, OnTagFunc } from 'bit-bin/dist/scope/scope';
+import LegacyScope, { OnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
 import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
@@ -44,7 +44,7 @@ import { PutRoute, FetchRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
-export type OnTag = (components: Component[]) => Promise<ComponentMap<AspectList>>;
+export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<ComponentMap<AspectList>>;
 
 export type OnPostPut = (ids: ComponentID[]) => void;
 
@@ -52,6 +52,7 @@ export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 
 export type ScopeConfig = {
   description: string;
+  icon: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -94,6 +95,10 @@ export class ScopeMain implements ComponentFactory {
     return this.legacyScope.name;
   }
 
+  get icon(): string {
+    return this.config.icon;
+  }
+
   get description(): string {
     return this.config.description;
   }
@@ -110,12 +115,12 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
-    const legacyOnTagFunc: OnTagFunc = async (legacyIds: BitId[]): Promise<OnTagResult[]> => {
+    const legacyOnTagFunc: OnTagFunc = async (legacyIds: BitId[], options?: OnTagOpts): Promise<OnTagResult[]> => {
       const host = this.componentExtension.getHost();
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
       const components = await host.getMany(ids);
       // TODO: fix what legacy tag accepts to just extension name and files.
-      const aspectListComponentMap = await tagFn(components);
+      const aspectListComponentMap = await tagFn(components, options);
       const extensionsToLegacy = (aspectList: AspectList) => {
         const extensionsDataList = aspectList.toLegacy();
         extensionsDataList.forEach((extension) => {
@@ -163,9 +168,13 @@ export class ScopeMain implements ComponentFactory {
 
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true },
+      this.legacyScope
+    );
 
-    return capsules.map(({ capsule }) => {
+    return capsules.map((capsule) => {
       // return RequireableComponent.fromCapsule(capsule);
       return new RequireableComponent(capsule.component, () => {
         const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
@@ -235,7 +244,11 @@ export class ScopeMain implements ComponentFactory {
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => !this.localAspects.includes(aspectId));
     const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
     const components = await this.getMany(componentIds);
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true },
+      this.legacyScope
+    );
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);

@@ -4,6 +4,7 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
+import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.side-bar';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import head from 'lodash.head';
@@ -13,7 +14,6 @@ import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import { useProperties } from './use-properties';
 
 export function Compositions() {
   const component = useContext(ComponentContext);
@@ -21,7 +21,7 @@ export function Compositions() {
   const selectedRef = useRef(selected);
   selectedRef.current = selected;
 
-  const properties = useProperties(component.id);
+  const properties = useDocs(component.id);
 
   // reset selected composition when component changes.
   // this does trigger renderer, but perf seems to be ok

@@ -17,13 +17,20 @@ export class BabelCompiler implements Compiler {
     readonly id: string,
     private logger: Logger,
     private compiler: CompilerMain,
-    private options: BabelCompilerOptions
+    private options: BabelCompilerOptions,
+    private babelModule = babel
   ) {
     this.distDir = options.distDir || 'dist';
     this.distGlobPatterns = options.distGlobPatterns || [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
     this.shouldCopyNonSupportedFiles =
       typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
     this.artifactName = options.artifactName || 'dist';
+  }
+
+  displayName = 'Babel';
+
+  version() {
+    return this.babelModule.version;
   }
 
   /**
@@ -42,7 +49,7 @@ export class BabelCompiler implements Compiler {
     transformOptions.sourceFileName = options.filePath;
     transformOptions.filename = options.filePath;
     this.setConfigFileFalse();
-    const result = babel.transformSync(fileContent, this.options.babelTransformOptions);
+    const result = this.babelModule.transformSync(fileContent, this.options.babelTransformOptions);
     if (!result) {
       this.logger.debug(
         `getting an empty response from Babel for the file ${options.filePath}. it might be configured to be ignored`
@@ -103,7 +110,7 @@ export class BabelCompiler implements Compiler {
         let result;
         const absoluteFile = path.join(capsule.path, filePath);
         try {
-          result = await babel.transformFileAsync(absoluteFile, this.options.babelTransformOptions);
+          result = await this.babelModule.transformFileAsync(absoluteFile, this.options.babelTransformOptions);
         } catch (err) {
           componentResult.errors?.push(err);
         }

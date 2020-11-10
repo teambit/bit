@@ -1,8 +1,6 @@
 import chalk from 'chalk';
 import yn from 'yn';
-
 import { remove } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { removePrompt } from '../../../prompts';
@@ -49,7 +47,6 @@ export default class Remove implements LegacyCommand {
       lane = false,
     }: { force: boolean; remote: boolean; track: boolean; deleteFiles: boolean; silent: boolean; lane: boolean }
   ): Promise<any> {
-    if (lane) throwForUsingLaneIfDisabled();
     if (!silent) {
       const removePromptResult = await removePrompt();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

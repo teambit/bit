@@ -1,6 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { exportAction } from 'bit-bin/dist/api/consumer';
-import { throwForUsingLaneIfDisabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
 import { BitId } from 'bit-bin/dist/bit-id';
 import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
 import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
@@ -69,7 +68,6 @@ export class ExportCmd implements Command {
       lanes = false,
     }: any
   ): Promise<string> {
-    if (lanes) throwForUsingLaneIfDisabled();
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
     if (currentScope && remote) {
       remote = '';
