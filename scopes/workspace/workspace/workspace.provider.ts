@@ -14,6 +14,8 @@ import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
+import { BitId } from 'bit-bin/dist/bit-id';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
@@ -151,7 +153,14 @@ export default async function provideWorkspace(
     };
   });
 
-  onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
+  /**
+   * Add default scope from harmony during export.
+   */
+  registerDefaultScopeGetter(async (id: BitId) => {
+    const componentId = await workspace.resolveComponentId(id);
+    const defaultScope = await workspace.componentDefaultScope(componentId);
+    return defaultScope;
+  });
 
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));

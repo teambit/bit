@@ -104,7 +104,7 @@ export class Publisher {
     const componentIds = await this.workspace.resolveMultipleComponentIds(idsToPublish);
     const components = await this.workspace.scope.getMany(componentIds);
     const capsules = await this.isolator.isolateComponents(components, { baseDir: this.workspace.scope.path });
-    return capsules.getAllCapsules();
+    return capsules;
   }
 
   /**
@@ -121,6 +121,7 @@ export class Publisher {
       .map((c) => c.component.toBitId().changeVersion(c.versionStr).toString());
   }
 
+  // TODO: consider using isPublishedToExternalRegistry from pkg.main.runtime (need to send it a component not extensions)
   public shouldPublish(extensions: ExtensionDataList): boolean {
     const pkgExt = extensions.findExtension(PkgAspect.id);
     if (!pkgExt) return false;

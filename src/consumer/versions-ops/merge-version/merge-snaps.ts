@@ -358,7 +358,7 @@ export async function applyVersion({
   } else {
     // this is master
     const modelComponent = await consumer.scope.getModelComponent(id);
-    modelComponent.setHead(remoteHead);
+    if (!consumer.isLegacy) modelComponent.setHead(remoteHead);
     consumer.scope.objects.add(modelComponent);
   }
 

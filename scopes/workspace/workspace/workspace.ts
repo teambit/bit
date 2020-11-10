@@ -21,6 +21,7 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   PolicyDep,
+  DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -49,6 +50,7 @@ import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
+import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { merge, slice } from 'lodash';
 import path, { join } from 'path';
@@ -337,12 +339,12 @@ export class Workspace implements ComponentFactory {
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
-    const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
-      accum[curr.id.toString()] = curr.capsule;
-      return accum;
-    }, {});
-    const ret = components.map((component) => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
-    return ret;
+    const resolvedComponents = components.map((component) => {
+      const capsule = isolatedEnvironment.capsules.getCapsule(component.id);
+      if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
+      return new ResolvedComponent(component, capsule);
+    });
+    return resolvedComponents;
   }
 
   private async getConsumerComponent(id: ComponentID, forCapsule = false) {
@@ -421,14 +423,34 @@ export class Workspace implements ComponentFactory {
     return {};
   }
 
+  private async upsertExtensionData(component: Component, extension: string, data: any) {
+    const existingExtension = component.state.config.extensions.findExtension(extension);
+    if (existingExtension) {
+      existingExtension.data = merge(existingExtension.data, data);
+      return;
+    }
+    component.state.config.extensions.push(await this.getDataEntry(extension, data));
+  }
+
   private async executeLoadSlot(component: Component) {
     const entries = this.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component);
-      const existingExtension = component.state.config.extensions.findExtension(extension);
-      if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(await this.getDataEntry(extension, data));
+      return this.upsertExtensionData(component, extension, data);
     });
+
+    // Special load events which runs from the workspace but should run from the correct aspect
+    // TODO: remove this once those extensions dependent on workspace
+    const envsData = await this.getEnvSystemDescriptor(component);
+    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const dependenciesData = {
+      dependencies,
+    };
+
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
+    // TODO: change to EnvsAspect.id
+    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
 
     await Promise.all(promises);
 
@@ -628,21 +650,21 @@ export class Workspace implements ComponentFactory {
 
   async componentDefaultScope(componentId: ComponentID): Promise<string | undefined> {
     const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.componentDefaultScopeFromComponentDir(relativeComponentDir, componentId.fullName);
+    return this.componentDefaultScopeFromComponentDirAndName(relativeComponentDir, componentId.fullName);
   }
 
-  async componentDefaultScopeFromComponentDir(
+  async componentDefaultScopeFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
-    const componentConfigFile = await this.componentConfigFileFromComponentDir(relativeComponentDir, name);
+    const componentConfigFile = await this.componentConfigFileFromComponentDirAndName(relativeComponentDir, name);
     if (componentConfigFile && componentConfigFile.defaultScope) {
       return componentConfigFile.defaultScope;
     }
-    return this.componentDefaultScopeFromComponentDirWithoutConfigFile(relativeComponentDir, name);
+    return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 
-  private async componentDefaultScopeFromComponentDirWithoutConfigFile(
+  private async componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<string | undefined> {
@@ -786,17 +808,17 @@ export class Workspace implements ComponentFactory {
    */
   private async componentConfigFile(id: ComponentID): Promise<ComponentConfigFile | undefined> {
     const relativeComponentDir = this.componentDir(id, { ignoreVersion: true }, { relative: true });
-    return this.componentConfigFileFromComponentDir(relativeComponentDir, id.fullName);
+    return this.componentConfigFileFromComponentDirAndName(relativeComponentDir, id.fullName);
   }
 
-  private async componentConfigFileFromComponentDir(
+  private async componentConfigFileFromComponentDirAndName(
     relativeComponentDir: PathOsBasedRelative,
     name: string
   ): Promise<ComponentConfigFile | undefined> {
     let componentConfigFile;
     if (relativeComponentDir) {
       const absComponentDir = this.componentDirToAbsolute(relativeComponentDir);
-      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirWithoutConfigFile(
+      const defaultScopeFromVariantsOrWs = await this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
         relativeComponentDir,
         name
       );
@@ -889,8 +911,14 @@ export class Workspace implements ComponentFactory {
     });
 
     // no need to filter core aspects as they are not included in the graph
-    const requireableExtensions: any = await this.requireComponents(aspects);
-    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
+    // here we are trying to load extensions from the workspace.
+    try {
+      const requireableExtensions: any = await this.requireComponents(aspects);
+      await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
+    } catch (err) {
+      // if extensions does not exist on workspace, try and load them from the local scope.
+      await this.scope.loadAspects(aspects.map((aspect) => aspect.id.toString()));
+    }
   }
 
   async resolveAspects(runtimeName: string) {
@@ -973,6 +1001,22 @@ export class Workspace implements ComponentFactory {
     const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
     return join(modulePath, dist);
+  }
+
+  /**
+   * Provides a cache folder, unique per key.
+   * Return value may be undefined, if workspace folder is unconventional (bare-scope, no node_modules, etc)
+   */
+  getTempDir(
+    /*
+     * unique key, i.e. aspect or component id
+     */
+    id: string
+  ) {
+    const PREFIX = 'bit';
+    const cacheDir = findCacheDir({ name: join(PREFIX, id), create: true });
+
+    return cacheDir;
   }
 
   async requireComponents(components: Component[]): Promise<RequireableComponent[]> {
@@ -1148,26 +1192,71 @@ export class Workspace implements ComponentFactory {
    * @memberof Workspace
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    let legacyId: BitId;
-    try {
-      legacyId = this.consumer.getParsedId(id.toString(), true, true);
-    } catch (err) {
-      if (err.name === 'MissingBitMapComponent') {
-        try {
-          // handle component versions in the scope that doesn't exists on the workspace.
-          const [idWithoutVersion, version] = id.toString().split('@');
-          const _id = this.consumer.getParsedId(idWithoutVersion, false, true);
-          const withVersion = _id.changeVersion(version);
-          return this.scope.resolveComponentId(withVersion);
-        } catch (error) {
-          legacyId = BitId.parse(id.toString(), true);
-          return ComponentID.fromLegacy(legacyId);
+    let legacyId = this.consumer.getParsedIdIfExist(id.toString(), true, true);
+    if (!legacyId) {
+      try {
+        const idWithVersion = id.toString();
+        const [idWithoutVersion, version] = id.toString().split('@');
+        const _bitMapId = this.consumer.getParsedIdIfExist(idWithoutVersion, false, true);
+        // This logic is very specific, and very sensitive for changes please do not touch this without consulting with @ran or @gilad
+        // example (partial list) cases which should be handled are:
+        // use case 1 - ws component provided with the local scope name:
+        // source id        : my-scope1/my-name1
+        // bitmap res (_id) : my-name1 (comp is tagged but not exported)
+        // local scope name : my-scope1
+        // scope content    : my-name1
+        // expected result  : my-name1
+        // use case 2 - component with same name exist in ws and scope (but with different scope name)
+        // source id        : my-scope2/my-name1
+        // bitmap res (_id) : my-name1 (comp exist in ws but it's actually different component)
+        // local scope name : my-scope1
+        // scope content    : my-scope2/my-name1
+        // expected result  : my-scope2/my-name1
+        // use case 3 - component with same name exist in ws and scope (but with different scope name) - source provided without scope name
+        // source id        : my-name1
+        // bitmap res (_id) : my-name1 (comp exist in ws but it's actually different component)
+        // local scope name : my-scope1
+        // scope content    : my-scope1/my-name1 and my-scope2/my-name1
+        // expected result  : my-name1 (get the name from the bitmap)
+        // use case 4 - component with the same name and different scope are imported into the ws
+        // source id        : my-name1
+        // bitmap res (_id) : my-scope2/my-name1 (comp exist in ws from different scope (imported))
+        // local scope name : my-scope1
+        // scope content    : my-scope2/my-name1
+        // expected result  : my-scope2/my-name1 (get the name from the bitmap)
+
+        // No entry in bitmap at all, search for the original input id
+        if (!_bitMapId) {
+          return this.scope.resolveComponentId(id.toString());
         }
+        const _bitMapIdWithoutVersion = _bitMapId.toStringWithoutVersion();
+        const _bitMapIdWithVersion = _bitMapId.changeVersion(version).toString();
+        // The id in the bitmap has prefix which is not in the source id - the bitmap entry has scope name
+        // Handle use case 4
+        if (_bitMapIdWithoutVersion.endsWith(idWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
+          return this.scope.resolveComponentId(_bitMapIdWithVersion);
+        }
+        // The id in the bitmap doesn't have scope, the source id has scope
+        // Handle use case 2 and use case 1
+        if (idWithoutVersion.endsWith(_bitMapIdWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
+          if (id.toString().startsWith(this.scope.name)) {
+            // Handle use case 1 - the provided id has scope name same as the local scope name
+            // we want to send it as it appear in the bitmap
+            return this.scope.resolveComponentId(_bitMapIdWithVersion);
+          }
+          // Handle use case 2 - the provided id has scope which is not the local scope
+          // we want to search by the source id
+          return this.scope.resolveComponentId(idWithVersion);
+        }
+        // Handle use case 3
+        return this.scope.resolveComponentId(idWithVersion);
+      } catch (error) {
+        legacyId = BitId.parse(id.toString(), true);
+        return ComponentID.fromLegacy(legacyId);
       }
-      throw err;
     }
     const relativeComponentDir = this.componentDirFromLegacyId(legacyId, undefined, { relative: true });
-    const defaultScope = await this.componentDefaultScopeFromComponentDir(
+    const defaultScope = await this.componentDefaultScopeFromComponentDirAndName(
       relativeComponentDir,
       legacyId.toStringWithoutScopeAndVersion()
     );

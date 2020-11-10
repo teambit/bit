@@ -1,11 +1,12 @@
+/* eslint-disable global-require */
 const { transform } = require('@babel/core');
 
 const presets = [
-  require.resolve('@babel/preset-react'),
-  require.resolve('@babel/preset-typescript'),
-  require.resolve('babel-preset-jest'),
+  require('@babel/preset-react'),
+  require('@babel/preset-typescript'),
+  require('babel-preset-jest'),
   [
-    require.resolve('@babel/preset-env'),
+    require('@babel/preset-env'),
     {
       targets: {
         node: 8,
@@ -16,12 +17,12 @@ const presets = [
   ],
 ];
 const plugins = [
-  [require.resolve('@babel/plugin-transform-modules-commonjs')],
-  [require.resolve('babel-plugin-transform-typescript-metadata')],
-  [require.resolve('@babel/plugin-proposal-decorators'), { legacy: true }],
-  [require.resolve('@babel/plugin-transform-runtime')],
-  [require.resolve('@babel/plugin-proposal-object-rest-spread')],
-  [require.resolve('@babel/plugin-proposal-class-properties')],
+  [require('@babel/plugin-transform-modules-commonjs')],
+  [require('babel-plugin-transform-typescript-metadata')],
+  [require('@babel/plugin-proposal-decorators'), { legacy: true }],
+  [require('@babel/plugin-transform-runtime')],
+  [require('@babel/plugin-proposal-object-rest-spread')],
+  [require('@babel/plugin-proposal-class-properties')],
 ];
 
 module.exports = {

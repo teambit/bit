@@ -43,7 +43,9 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClient.request(SCOPE_QUERY);
+    const data = await this.graphClient.request(SCOPE_QUERY, {
+      headers: this.getHeaders(),
+    });
 
     return {
       name: data.scope.name,

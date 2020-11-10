@@ -57,6 +57,11 @@ export type IsolateComponentsOptions = {
   emptyExisting?: boolean;
 
   /**
+   * skip the reproduction of the capsule in case it exists.
+   */
+  skipIfExists?: boolean;
+
+  /**
    * get existing capsule without doing any changes, no writes, no installations.
    */
   getExistingAsIs?: boolean;
@@ -94,16 +99,21 @@ export class IsolatorMain {
   ): Promise<CapsuleList> {
     const config = { installPackages: true, ...opts };
     const capsulesDir = this.getCapsulesRootDir(opts.baseDir as string); // TODO: move this logic elsewhere
+
     const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
-    const capsuleList = new CapsuleList(
-      ...capsules.map((c) => {
-        const id = c.component.id;
-        return { id, capsule: c };
-      })
-    );
+    const capsuleList = CapsuleList.fromArray(capsules);
     if (opts.getExistingAsIs) {
       return capsuleList;
     }
+
+    if (opts.skipIfExists) {
+      const existingCapsules = CapsuleList.fromArray(
+        capsuleList.filter((capsule) => capsule.fs.existsSync('package.json'))
+      );
+
+      if (existingCapsules.length === capsuleList.length) return existingCapsules;
+    }
+
     if (opts.emptyExisting) {
       await Promise.all(capsuleList.getAllCapsuleDirs().map((dir) => fs.emptyDir(dir)));
     }

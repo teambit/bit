@@ -22,7 +22,6 @@ describe('import component on Harmony', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.fixtures.populateComponents();
-      helper.command.linkAndRewire();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
       helper.scopeHelper.reInitLocalScopeHarmony();

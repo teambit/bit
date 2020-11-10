@@ -1,23 +1,32 @@
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentMap } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { writeFileSync } from 'fs-extra';
-import { flatten } from 'lodash';
-import { join, resolve } from 'path';
+import { CACHE_ROOT } from 'bit-bin/dist/constants';
+import objectHash from 'object-hash';
+import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
+import { join } from 'path';
+import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
 import { PreviewArtifact } from './preview-artifact';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { PreviewRoute } from './preview.route';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { PreviewTask } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
+import { RuntimeComponents } from './runtime-components';
+
+const noopResult = {
+  results: [],
+  toString: () => `updating link file`,
+};
+
+const DEFAULT_TEMP_DIR = join(CACHE_ROOT, PreviewAspect.id);
 
 export type PreviewDefinitionRegistry = SlotRegistry<PreviewDefinition>;
 
@@ -43,7 +52,9 @@ export class PreviewMain {
 
     private bundlingStrategySlot: BundlingStrategySlot,
 
-    private builder: BuilderMain
+    private builder: BuilderMain,
+
+    private tempFolder: string
   ) {}
 
   async getPreview(component: Component): Promise<PreviewArtifact> {
@@ -57,49 +68,64 @@ export class PreviewMain {
     return this.previewSlot.values();
   }
 
+  private writeHash = new Map<string, string>();
+  private timestamp = Date.now();
+
   /**
    * write a link for a loading custom modules dynamically.
    * @param prefix write
    * @param moduleMap map of components to module paths to require.
    * @param defaultModule
    */
-  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule?: string, dirName?: string) {
+  writeLink(prefix: string, moduleMap: ComponentMap<string[]>, defaultModule: string | undefined, dirName: string) {
     const contents = generateLink(prefix, moduleMap, defaultModule);
-    // :TODO @uri please generate a random file in a temporary directory
-    const targetPath = resolve(join(dirName || __dirname, `/__${prefix}-${Date.now()}.js`));
-    writeFileSync(targetPath, contents);
+    const hash = objectHash(contents);
+    const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+
+    // write only if link has changed (prevents triggering fs watches)
+    if (this.writeHash.get(targetPath) !== hash) {
+      writeFileSync(targetPath, contents);
+      this.writeHash.set(targetPath, hash);
+    }
 
     return targetPath;
   }
 
-  async getPreviewTarget(context: ExecutionContext): Promise<string[]> {
-    const previews = this.previewSlot.values();
+  private execContexts = new Map<string, ExecutionContext>();
+  private componentsByAspect = new Map<string, RuntimeComponents>();
+
+  private async getPreviewTarget(
+    /** execution context (of the specific env) */
+    context: ExecutionContext
+  ): Promise<string[]> {
+    // store context for later link file updates
+    this.execContexts.set(context.id, context);
+    this.componentsByAspect.set(context.id, new RuntimeComponents(context.components));
+
     const previewRuntime = await this.writePreviewRuntime();
+    const linkFiles = await this.updateLinkFiles(context.components, context);
 
+    return [...linkFiles, previewRuntime];
+  }
+
+  private updateLinkFiles(components: Component[] = [], context: ExecutionContext) {
+    const previews = this.previewSlot.values();
     const paths = previews.map(async (previewDef) => {
-      const map = await previewDef.getModuleMap(context.components);
+      const templatePath = await previewDef.renderTemplatePath?.(context);
 
+      const map = await previewDef.getModuleMap(components);
       const withPaths = map.map<string[]>((files) => {
         return files.map((file) => file.path);
       });
 
-      const link = this.writeLink(
-        previewDef.prefix,
-        withPaths,
-        previewDef.renderTemplatePath ? await previewDef.renderTemplatePath(context) : undefined
-      );
+      const dirPath = join(this.tempFolder, context.id);
+      if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
-      const outputFiles = flatten(
-        map.toArray().map(([, files]) => {
-          return files.map((file) => file.path);
-        })
-      ).concat([link]);
-
-      return outputFiles;
+      const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
+      return link;
     });
 
-    const resolved = await Promise.all(paths);
-    return flatten(resolved).concat([previewRuntime]);
+    return Promise.all(paths);
   }
 
   async writePreviewRuntime() {
@@ -113,9 +139,38 @@ export class PreviewMain {
     return filePath;
   }
 
-  getDefaultStrategies() {
+  private getDefaultStrategies() {
     return [new EnvBundlingStrategy(this), new ComponentBundlingStrategy()];
   }
+
+  // TODO - executionContext should be responsible for updating components list, and emit 'update' events
+  // instead we keep track of changes
+  private handleComponentChange = async (c: Component, updater: (currentComponents: RuntimeComponents) => void) => {
+    const env = this.envs.getEnv(c);
+    const envId = env.id.toString();
+
+    const executionContext = this.execContexts.get(envId);
+    const components = this.componentsByAspect.get(envId);
+    if (!components || !executionContext) return noopResult;
+
+    // add / remove / etc
+    updater(components);
+
+    await this.updateLinkFiles(components.components, executionContext);
+
+    return noopResult;
+  };
+
+  private handleComponentRemoval = (cId: ComponentID) => {
+    let component: Component | undefined;
+    this.componentsByAspect.forEach((components) => {
+      const found = components.get(cId);
+      if (found) component = found;
+    });
+    if (!component) return Promise.resolve(noopResult);
+
+    return this.handleComponentChange(component, (currentComponents) => currentComponents.remove(cId));
+  };
 
   /**
    * return the configured bundling strategy.
@@ -151,7 +206,7 @@ export class PreviewMain {
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
   static runtime = MainRuntime;
-  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect];
+  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect, WorkspaceAspect];
 
   static defaultConfig = {
     bundlingStrategy: 'env',
@@ -159,12 +214,27 @@ export class PreviewMain {
   };
 
   static async provider(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    [bundler, builder, componentExtension, uiMain, envs]: [BundlerMain, BuilderMain, ComponentMain, UiMain, EnvsMain],
+    [bundler, builder, componentExtension, uiMain, envs, workspace]: [
+      BundlerMain,
+      BuilderMain,
+      ComponentMain,
+      UiMain,
+      EnvsMain,
+      Workspace | undefined
+    ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
   ) {
-    const preview = new PreviewMain(previewSlot, uiMain, envs, config, bundlingStrategySlot, builder);
+    const preview = new PreviewMain(
+      previewSlot,
+      uiMain,
+      envs,
+      config,
+      bundlingStrategySlot,
+      builder,
+      workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR
+    );
+
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([
       {
@@ -172,7 +242,17 @@ export class PreviewMain {
       },
     ]);
 
-    if (!config.disabled) builder.registerBuildTask(new PreviewTask(bundler, preview));
+    if (!config.disabled) builder.registerBuildTasks([new PreviewTask(bundler, preview)]);
+
+    if (workspace) {
+      workspace.registerOnComponentAdd((c) =>
+        preview.handleComponentChange(c, (currentComponents) => currentComponents.add(c))
+      );
+      workspace.registerOnComponentChange((c) =>
+        preview.handleComponentChange(c, (currentComponents) => currentComponents.update(c))
+      );
+      workspace.registerOnComponentRemove((cId) => preview.handleComponentRemoval(cId));
+    }
 
     return preview;
   }

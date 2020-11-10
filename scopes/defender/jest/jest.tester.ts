@@ -1,6 +1,5 @@
 import { readFileSync } from 'fs';
 import { compact } from 'lodash';
-import { runCLI } from 'jest';
 import { Tester, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
@@ -8,8 +7,10 @@ import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { JestError } from './error';
 
+const jest = require('jest');
+
 export class JestTester implements Tester {
-  constructor(readonly id: string, readonly jestConfig: any, readonly icon = '') {}
+  constructor(readonly id: string, readonly jestConfig: any, private jestModule: typeof jest) {}
 
   configPath = this.jestConfig;
 
@@ -17,6 +18,10 @@ export class JestTester implements Tester {
 
   displayConfig() {
     return readFileSync(this.jestConfig, 'utf8');
+  }
+
+  version() {
+    return this.jestModule.getVersion();
   }
 
   private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
@@ -112,7 +117,7 @@ export class JestTester implements Tester {
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
-    const testsOutPut = await runCLI(withEnv, [this.jestConfig]);
+    const testsOutPut = await this.jestModule.runCLI(withEnv, [this.jestConfig]);
     const testResults = testsOutPut.results.testResults;
     const componentsWithTests = this.attachTestsToComponent(context, testResults);
     const componentTestResults = this.buildTestsObj(

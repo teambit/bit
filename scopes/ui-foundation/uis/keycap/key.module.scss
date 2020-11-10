@@ -19,10 +19,16 @@
 }
 
 .keycap {
-  display: inline-block;
-
-  text-align: center;
   text-transform: uppercase;
+  background-color: var(--bg-dent);
+  color: var(--text-muted);
+  border-radius: 3px;
+  width: 1.7em;
+  height: 1.7em;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .thenSep {

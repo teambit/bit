@@ -30,6 +30,7 @@ export class ESLintLinter implements Linter {
   async lint(context: LinterContext) {
     const resultsP = context.components.map(async (component) => {
       const eslint = this.createEslint(this.options, context, this.ESLint);
+      0;
       const filesP = component.filesystem.files.map(async (file) => {
         const sourceCode = file.contents.toString('utf8');
         const lintResults = await eslint.lintText(sourceCode, {
@@ -72,7 +73,7 @@ export class ESLintLinter implements Linter {
     });
   }
 
-  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any) {
+  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any): ESLint {
     // eslint-disable-next-line no-new
     if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context));
     return new ESLint(this.getOptions(options, context));

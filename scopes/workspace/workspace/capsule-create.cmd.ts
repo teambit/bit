@@ -46,7 +46,7 @@ export class CapsuleCreateCmd implements Command {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
     const capsuleOutput = capsules
-      .map((capsule) => `${chalk.bold(capsule.id.toString())} - ${capsule.capsule.path}`)
+      .map((capsule) => `${chalk.bold(capsule.component.id.toString())} - ${capsule.path}`)
       .join('\n');
     const title = `${capsules.length} capsule(s) were created successfully`;
     return `${chalk.green(title)}\n${capsuleOutput}`;
@@ -56,8 +56,8 @@ export class CapsuleCreateCmd implements Command {
     // @ts-ignore
     const capsules = await this.create(componentIds, opts);
     return capsules.map((c) => ({
-      id: c.id.toString(),
-      path: c.capsule.path,
+      id: c.component.id.toString(),
+      path: c.path,
     }));
   }
 }

@@ -6,7 +6,7 @@ import classNames from 'classnames';
 import React, { useCallback, useContext, useState } from 'react';
 
 import { NotificationContext } from '@teambit/ui.notifications.notification-context';
-import { Message } from '@teambit/ui.notifications.api';
+import { Message } from '@teambit/ui.notifications.store';
 import styles from './notification.module.scss';
 import { LevelIcon } from './level-icon';
 
@@ -14,13 +14,13 @@ const DISMISS_TIME = +styles.dismissTime;
 
 export function Notification({ entry }: { entry: Message }) {
   const [isDismissing, setDismissing] = useState(false);
-  const notificationApi = useContext(NotificationContext);
+  const notificationsStore = useContext(NotificationContext);
   const { level, time, message, id } = entry;
 
   const handleDismiss = useCallback(() => {
     setDismissing(true);
     setTimeout(() => {
-      notificationApi.dismiss(id);
+      notificationsStore.dismiss(id);
     }, DISMISS_TIME);
   }, [id]);
 

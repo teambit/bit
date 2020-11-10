@@ -1,7 +1,7 @@
 import { createContext } from 'react';
-import { NotificationApi } from '@teambit/ui.notifications.api';
+import { NotificationsStore } from '@teambit/ui.notifications.store';
 
-const defaultLoaderApi: NotificationApi = {
+const DefaultNotificationApi: NotificationsStore = {
   add: () => '',
   log: () => '',
   error: () => '',
@@ -9,4 +9,4 @@ const defaultLoaderApi: NotificationApi = {
   clear: () => {},
 };
 
-export const NotificationContext = createContext<NotificationApi>(defaultLoaderApi);
+export const NotificationContext = createContext<NotificationsStore>(DefaultNotificationApi);

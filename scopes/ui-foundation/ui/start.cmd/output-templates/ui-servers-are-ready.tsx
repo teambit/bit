@@ -1,6 +1,7 @@
 import React from 'react';
-import { Text, Newline } from 'ink';
 import moment from 'moment';
+import { Text, Newline, Box } from 'ink';
+import Spinner from 'ink-spinner';
 
 export type compilingOrUIServersAreReadyProps = {
   mainUIServer: any;
@@ -11,6 +12,17 @@ export type compilingOrUIServersAreReadyProps = {
 export type uIServersAreReadyProps = {
   mainUIServer: any;
 };
+
+const DevelopmentServersAreStarting = () => (
+  <Box paddingTop={1}>
+    <Text>
+      <Text color="green">
+        <Spinner type="dots" />
+      </Text>{' '}
+      Development servers are starting...
+    </Text>
+  </Box>
+);
 
 const UIServersAreReady = ({ mainUIServer }: uIServersAreReadyProps) => (
   <>
@@ -42,5 +54,6 @@ export const CompilingOrUIServersAreReady = ({
   if (!!totalComponentsSum && totalComponentsSum <= compiledComponentsSum && !!mainUIServer) {
     return <UIServersAreReady mainUIServer={mainUIServer} />;
   }
-  return null;
+
+  return <DevelopmentServersAreStarting />;
 };

@@ -30,8 +30,16 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 
 const HooksManagerInstance = HooksManager.getInstance();
+
+type DefaultScopeGetter = (id: BitId) => Promise<string | undefined>;
+
+let getDefaultScope: DefaultScopeGetter;
+export function registerDefaultScopeGetter(func: DefaultScopeGetter) {
+  getDefaultScope = func;
+}
 
 export default (async function exportAction(params: {
   ids: string[];
@@ -89,6 +97,7 @@ async function exportComponents({
   newIdsOnRemote: BitId[];
 }> {
   const consumer: Consumer = await loadConsumer();
+  if (consumer.isLegacy && lanes) throw new LanesIsDisabled();
   const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,
@@ -157,10 +166,10 @@ async function getComponentsToExport(
 ): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds; lanesObjects?: Lane[] }> {
   const componentsList = new ComponentsList(consumer);
   const idsHaveWildcard = hasWildcard(ids);
-  const filterNonScopeIfNeeded = (
+  const filterNonScopeIfNeeded = async (
     bitIds: BitIds
-  ): { idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds } => {
-    const idsWithFutureScope = getIdsWithFutureScope(bitIds, consumer, remote);
+  ): Promise<{ idsToExport: BitIds; missingScope: BitId[]; idsWithFutureScope: BitIds }> => {
+    const idsWithFutureScope = await getIdsWithFutureScope(bitIds, consumer, remote);
     if (remote) return { idsToExport: bitIds, missingScope: [], idsWithFutureScope };
     const [idsToExport, missingScope] = R.partition((id) => {
       const idWithFutureScope = idsWithFutureScope.searchWithoutScopeAndVersion(id);
@@ -184,7 +193,8 @@ async function getComponentsToExport(
     await promptForFork(componentsToExport);
     const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);
-    return { ...filterNonScopeIfNeeded(componentsToExport), lanesObjects: lanesObjects.filter((l) => l) };
+    const filtered = await filterNonScopeIfNeeded(componentsToExport);
+    return { ...filtered, lanesObjects: lanesObjects.filter((l) => l) };
   }
   if (!ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
@@ -217,7 +227,7 @@ async function getComponentsToExport(
   return filterNonScopeIfNeeded(BitIds.fromArray(parsedIds));
 }
 
-function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): BitIds {
+async function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string | null): Promise<BitIds> {
   const workspaceDefaultScope = consumer.config.defaultScope;
   let workspaceDefaultOwner = consumer.config.defaultOwner;
   // For backward computability don't treat the default binding prefix as real owner
@@ -225,19 +235,30 @@ function getIdsWithFutureScope(ids: BitIds, consumer: Consumer, remote?: string 
     workspaceDefaultOwner = undefined;
   }
 
-  const idsArray = ids.map((id) => {
+  const idsArrayP = ids.map(async (id) => {
     if (remote) return id.changeScope(remote);
     if (id.hasScope()) return id;
-    const overrides = consumer.config.getComponentConfig(id);
-    const componentDefaultScope = overrides ? overrides.defaultScope : null;
-    // TODO: handle separation of owner from default scope on component
-    // TODO: handle owner of component
-    let finalScope = componentDefaultScope || workspaceDefaultScope;
-    if (workspaceDefaultScope && workspaceDefaultOwner && !componentDefaultScope) {
-      finalScope = `${workspaceDefaultOwner}.${workspaceDefaultScope}`;
+    let finalScope = workspaceDefaultScope;
+    if (consumer.isLegacy) {
+      const overrides = consumer.config.getComponentConfig(id);
+      const componentDefaultScope = overrides ? overrides.defaultScope : null;
+      // TODO: handle separation of owner from default scope on component
+      // TODO: handle owner of component
+      finalScope = componentDefaultScope || finalScope;
+      if (workspaceDefaultScope && workspaceDefaultOwner && !componentDefaultScope) {
+        finalScope = `${workspaceDefaultOwner}.${workspaceDefaultScope}`;
+      }
+      return id.changeScope(finalScope);
     }
-    return id.changeScope(finalScope);
+    if (getDefaultScope && typeof getDefaultScope === 'function') {
+      finalScope = await getDefaultScope(id);
+      if (finalScope) {
+        return id.changeScope(finalScope);
+      }
+    }
+    return id;
   });
+  const idsArray = await Promise.all(idsArrayP);
   return BitIds.fromArray(idsArray);
 }
 

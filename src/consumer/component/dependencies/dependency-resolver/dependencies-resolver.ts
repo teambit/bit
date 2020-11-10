@@ -745,8 +745,8 @@ either, use the ignore file syntax or change the require statement to have a mod
           // no need to enter anything to the dependencies
           return;
         }
-        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
-        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, bitDep.name);
+        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
+        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);
       }
@@ -965,7 +965,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     });
   }
 
-  private _pushToDependenciesIfNotExist(dependency: Dependency, fileType: FileType, packageName?: string) {
+  private _pushToDependenciesIfNotExist(dependency: Dependency, fileType: FileType) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependency.id);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependency.id);
     // no need to enter dev dependency to devDependencies if it exists already in dependencies
@@ -976,15 +976,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     // or it exists in devDependencies but now it comes from non-dev file, which should be entered
     // as non-dev.
     this.pushToDependenciesArray(dependency, fileType);
-    if (!packageName) return;
-    // aims to handle legacy workspaces when there is no default scope so the package name is wrong
-    if (!dependency.id.hasScope() && !this.consumer.config.defaultScope) return;
-    const depData = {
-      componentId: dependency.id,
-      packageName,
-      type: fileType.isTestFile ? 'dev' : 'prod',
-    };
-    this.pushToDependencyResolverExtension('dependencies', depData);
   }
 
   pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {

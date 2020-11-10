@@ -132,7 +132,7 @@ describe('dependency-resolver extension', function () {
     let randomStr;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
 
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
@@ -146,8 +146,6 @@ describe('dependency-resolver extension', function () {
         },
       };
       helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
-      helper.bitJsonc.addDefaultScope();
-      helper.command.linkAndRewire();
 
       await npmCiRegistry.init();
 
@@ -161,7 +159,8 @@ describe('dependency-resolver extension', function () {
       const depResolverExt = comp2.extensions.find((e) => e.name === Extensions.dependencyResolver);
       expect(depResolverExt).to.be.ok;
       expect(depResolverExt.data).to.have.property('dependencies');
-      expect(depResolverExt.data.dependencies).to.have.lengthOf(1);
+      // One of the entries is @types/jest coming from the node env
+      expect(depResolverExt.data.dependencies).to.have.lengthOf(2);
       expect(depResolverExt.data.dependencies[0].componentId.name).to.equal('comp3');
       expect(depResolverExt.data.dependencies[0].componentId.version).to.equal('0.0.1');
       expect(depResolverExt.data.dependencies[0].packageName).to.equal(`react.${randomStr}.comp3`);
