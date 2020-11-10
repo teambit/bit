@@ -1170,16 +1170,6 @@
                 "name": "use-component.tsx",
                 "relativePath": "ui/use-component.tsx",
                 "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "ui/use-query/index.ts",
-                "test": false
-            },
-            {
-                "name": "use-query.ts",
-                "relativePath": "ui/use-query/use-query.ts",
-                "test": false
             }
         ],
         "mainFile": "index.ts",
@@ -3204,43 +3194,8 @@
     "react-router@0.0.118": {
         "files": [
             {
-                "name": "extend-path.spec.ts",
-                "relativePath": "extend-path/extend-path.spec.ts",
-                "test": false
-            },
-            {
-                "name": "extend-path.tsx",
-                "relativePath": "extend-path/extend-path.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "extend-path/index.ts",
-                "test": false
-            },
-            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "link/index.ts",
-                "test": false
-            },
-            {
-                "name": "link.tsx",
-                "relativePath": "link/link.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "nav-link/index.ts",
-                "test": false
-            },
-            {
-                "name": "nav-link.tsx",
-                "relativePath": "nav-link/nav-link.tsx",
                 "test": false
             },
             {
@@ -3259,18 +3214,13 @@
                 "test": false
             },
             {
-                "name": "route.ts",
-                "relativePath": "route.ts",
-                "test": false
-            },
-            {
-                "name": "slot-router.tsx",
-                "relativePath": "slot-router.tsx",
+                "name": "routing-method.tsx",
+                "relativePath": "routing-method.tsx",
                 "test": false
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router",
+        "rootDir": "scopes/ui-foundation/react-router/react-router",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4733,6 +4683,106 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/extend-path": {
+        "files": [
+            {
+                "name": "extend-path.spec.ts",
+                "relativePath": "extend-path.spec.ts",
+                "test": false
+            },
+            {
+                "name": "extend-path.tsx",
+                "relativePath": "extend-path.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/extend-path",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "link.tsx",
+                "relativePath": "link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/nav-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "nav-link.tsx",
+                "relativePath": "nav-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/nav-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/slot-router": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "slot-router.tsx",
+                "relativePath": "slot-router.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/slot-router",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/use-query": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "use-query.ts",
+                "relativePath": "use-query.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/use-query",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
