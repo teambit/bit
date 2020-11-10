@@ -1,8 +1,9 @@
-import { DependencyLifecycleType } from './dependencies';
+import { DependencyLifecycleType } from '.';
 
 export const RUNTIME_DEP_LIFECYCLE_TYPE: DependencyLifecycleType = 'runtime';
 export const DEV_DEP_LIFECYCLE_TYPE: DependencyLifecycleType = 'dev';
 export const PEER_DEP_LIFECYCLE_TYPE: DependencyLifecycleType = 'peer';
+
 export const ROOT_NAME = 'workspace';
 
 export const LIFECYCLE_TYPE_BY_KEY_NAME = {

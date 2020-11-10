@@ -3,11 +3,6 @@ import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
 import { DependencyLifecycleType } from './dependencies';
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersion = string;
-export type PackageName = string;
 
 export type RegistryName = string;
 

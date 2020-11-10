@@ -1,15 +1,16 @@
 import { Component } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
-import { DependenciesFilterFunction, Dependency } from 'bit-bin/dist/consumer/component/dependencies';
+import { DependenciesFilterFunction } from 'bit-bin/dist/consumer/component/dependencies';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
-import { ComponentDependency, DependencyList } from '../dependencies';
+import { ComponentDependency, DependencyList, Dependency } from '../dependencies';
 
 import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
 import { DependencyResolverMain, MergeDependenciesFunc } from '../dependency-resolver.main.runtime';
 import {
   ComponentsManifestsMap,
   DependenciesObjectDefinition,
+  DependenciesPolicy,
   DepObjectValue,
   PackageName,
   SemverVersion,
@@ -88,36 +89,36 @@ export class WorkspaceManifestFactory {
     rootDependencies: DependenciesObjectDefinition
   ): Promise<ComponentDependenciesMap> {
     const result = new Map<PackageName, DependenciesObjectDefinition>();
-    let filterFn;
 
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
-      if (component.id.toString().includes('tag-list')) {
-        console.log('depList111', component.id.toString(), depList);
-      }
-
       if (filterComponentsFromManifests) {
         depList = filterComponents(depList, components);
       }
-      if (component.id.toString().includes('tag-list')) {
-        console.log('depList222', component.id.toString(), depList);
-      }
-      const depGraph = new DependencyGraph(component);
-      const versionModifierFunc = generateVersionModifier(component, rootDependencies);
-      const depObject = await depGraph.toJson(filterFn(components), versionModifierFunc);
+      // Remove bit bin from dep list
+      depList = depList.filter((dep) => dep.id !== 'bit-bin');
 
-      if (depObject.dependencies) delete depObject.dependencies['bit-bin'];
-      if (depObject.devDependencies) delete depObject.devDependencies['bit-bin'];
-      if (depObject.peerDependencies) delete depObject.peerDependencies['bit-bin'];
-
-      result.set(packageName, depObject);
+      await this.updateDependenciesVersions(component, rootDependencies, depList);
+      const depManifest = await depList.toDependenciesManifest();
+      result.set(packageName, depManifest);
       return Promise.resolve();
     });
     if (buildResultsP.length) {
       await Promise.all(buildResultsP);
     }
     return result;
+  }
+
+  private async updateDependenciesVersions(
+    component: Component,
+    rootDependencies: DependenciesObjectDefinition,
+    dependencyList: DependencyList
+  ): Promise<void> {
+    const mergedPolicies = await this.dependencyResolver.mergeDependencies(component.config.extensions);
+    dependencyList.forEach((dep) => {
+      updateDependencyVersion(dep, rootDependencies, mergedPolicies);
+    });
   }
 }
 
@@ -164,20 +165,16 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
  * @param {MergeDependenciesFunc} mergeDependenciesFunc
  * @returns {DepVersionModifierFunc}
  */
-function generateVersionModifier(
-  component: Component,
-  rootDependencies: DependenciesObjectDefinition,
-  mergeDependenciesFunc: MergeDependenciesFunc
-): DepVersionModifierFunc {
-  return async (_depId: BitId, depPackageName: string, currentVersion?: SemverVersion): Promise<SemverVersion> => {
-    const mergedPolicies = await mergeDependenciesFunc(component.config.extensions);
-    return (
-      getPackageVersionFromDepsObject(mergedPolicies, depPackageName) ||
-      getPackageVersionFromDepsObject(rootDependencies, depPackageName) ||
-      currentVersion ||
-      '0.0.1-new'
-    );
-  };
+function updateDependencyVersion(dependency: Dependency, rootDependencies, policy: DependenciesPolicy): void {
+  if (dependency.getPackageName) {
+    const packageName = dependency.getPackageName();
+    const version =
+      getPackageVersionFromDepsObject(policy, packageName) ||
+      getPackageVersionFromDepsObject(rootDependencies, packageName) ||
+      dependency.version ||
+      '0.0.1-new';
+    dependency.setVersion(version);
+  }
 }
 
 /**

@@ -1,5 +1,13 @@
-import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
+import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
+import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 
+export type LifecycleDependenciesManifest = Record<PackageName, SemverVersion>;
+
+export interface DependenciesManifest {
+  dependencies?: LifecycleDependenciesManifest;
+  devDependencies?: LifecycleDependenciesManifest;
+  peerDependencies?: LifecycleDependenciesManifest;
+}
 export class DependencyList {
   constructor(private _dependencies: Array<Dependency>) {}
   // constructor(private _dependencies: Dependency[]){}
@@ -8,7 +16,7 @@ export class DependencyList {
     return this._dependencies;
   }
 
-  forEach(predicate: (dep: Dependency, index?: number) => boolean): void {
+  forEach(predicate: (dep: Dependency, index?: number) => void): void {
     this.dependencies.forEach(predicate);
   }
 
@@ -37,6 +45,22 @@ export class DependencyList {
       return dep.serialize();
     });
     return serialized;
+  }
+
+  toDependenciesManifest(): DependenciesManifest {
+    const manifest: DependenciesManifest = {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    };
+    this.forEach((dep) => {
+      const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
+      const entry = dep.toManifest();
+      if (entry) {
+        manifest[keyName][entry.packageName] = entry.version;
+      }
+    });
+    return manifest;
   }
 
   static merge(lists: DependencyList[]): DependencyList {
