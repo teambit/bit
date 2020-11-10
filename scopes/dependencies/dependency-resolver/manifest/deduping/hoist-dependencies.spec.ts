@@ -6,8 +6,7 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { SemverVersion } from '../../dependencies';
-import { DependencyLifecycleType } from '../../dependencies';
+import { DependencyLifecycleType, SemverVersion } from '../../dependencies';
 import { DedupedDependencies } from './dedupe-dependencies';
 import { hoistDependencies } from './hoist-dependencies';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';

@@ -35,7 +35,7 @@ import { BitLinkType, DependencyInstaller } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
-import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest';
+import { CreateFromComponentsOptions, WorkspaceManifest, WorkspaceManifestFactory } from './manifest';
 import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,
@@ -55,7 +55,6 @@ import {
   COMPONENT_DEP_TYPE,
   DependencyList,
 } from './dependencies';
-import { WorkspaceManifestFactory } from './manifest';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
