@@ -157,7 +157,7 @@ export class DependencyResolverMain {
     const entry = component.state.aspects.get(DependencyResolverAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns;
     const envDef = this.envs.getEnv(component);
-    const envPatterns: RegExp[] = envDef.env?.getDevPatterns() || [];
+    const envPatterns: RegExp[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
     const fromSlot = this.devPatternSlot.values();
 
     return fromSlot.concat(configuredPatterns).concat(envPatterns);
