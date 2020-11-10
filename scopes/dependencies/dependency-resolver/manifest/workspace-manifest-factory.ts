@@ -1,23 +1,13 @@
 import { Component } from '@teambit/component';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { DependenciesFilterFunction } from 'bit-bin/dist/consumer/component/dependencies';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
-import { ComponentDependency, DependencyList, Dependency } from '../dependencies';
+import { ComponentDependency, DependencyList, Dependency, SemverVersion, PackageName } from '../dependencies';
 
-import { DependencyGraph, DepVersionModifierFunc } from '../dependency-graph';
-import { DependencyResolverMain, MergeDependenciesFunc } from '../dependency-resolver.main.runtime';
-import {
-  ComponentsManifestsMap,
-  DependenciesObjectDefinition,
-  DependenciesPolicy,
-  DepObjectValue,
-  PackageName,
-  SemverVersion,
-} from '../types';
+import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
+import { ComponentsManifestsMap, DependenciesObjectDefinition, DependenciesPolicy, DepObjectValue } from '../types';
 import { ComponentManifest } from './component-manifest';
 import { DedupedDependencies, dedupeDependencies, getEmptyDedupedDependencies } from './deduping';
-import { Manifest, ManifestToJsonOptions } from './manifest';
+import { ManifestToJsonOptions } from './manifest';
 import { WorkspaceManifest } from './workspace-manifest';
 
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;

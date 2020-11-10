@@ -31,12 +31,11 @@ import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries, Registry } from './registry';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './dependencies/constants';
-import { DependencyGraph } from './dependency-graph';
 import { BitLinkType, DependencyInstaller } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { PackageManagerNotFound } from './exceptions';
-import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest/workspace-manifest';
+import { CreateFromComponentsOptions, WorkspaceManifest } from './manifest';
 import { PackageManager } from './package-manager';
 import {
   DependenciesObjectDefinition,

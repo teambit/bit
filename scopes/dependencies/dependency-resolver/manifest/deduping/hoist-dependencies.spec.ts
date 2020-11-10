@@ -5,8 +5,8 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
-} from '../../constants';
-import { SemverVersion } from '../../types';
+} from '../../dependencies/constants';
+import { SemverVersion } from '../../dependencies';
 import { DependencyLifecycleType } from '../../dependencies';
 import { DedupedDependencies } from './dedupe-dependencies';
 import { hoistDependencies } from './hoist-dependencies';
