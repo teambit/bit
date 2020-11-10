@@ -114,6 +114,13 @@ export class DevFilesMain {
   ) {
     const devFiles = new DevFilesMain(envs, devPatternSlot, config);
     if (workspace) {
+      workspace.onComponentLoad(async (component) => {
+        return {
+          devPatterns: devFiles.computeDevPatterns(component),
+          devFiles: devFiles.computeDevFiles(component),
+        };
+      });
+
       DependencyResolver.isDevFile = async (consumerComponent: LegacyComponent, file: string) => {
         const component = await workspace.get(
           await workspace.resolveComponentId(consumerComponent.id),
