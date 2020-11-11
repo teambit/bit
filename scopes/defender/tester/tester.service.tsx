@@ -108,6 +108,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       rootPath: this.workspace.path,
       workspace: this.workspace,
       debug: options.debug,
+      ui: options.ui,
     });
 
     if (options.watch && tester.watch) {

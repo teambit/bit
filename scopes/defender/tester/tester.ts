@@ -4,12 +4,14 @@ import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { TestsResult } from './tests-results';
 
 export type Tests = {
-  components: {
-    componentId: ComponentID;
-    results?: TestsResult;
-    loading?: boolean;
-  }[];
+  components: ComponentsResults[];
   errors?: Error[];
+};
+
+export type ComponentsResults = {
+  componentId: ComponentID;
+  results?: TestsResult;
+  loading?: boolean;
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
@@ -44,6 +46,12 @@ export interface TesterContext extends ExecutionContext {
    * determines whether tester is expected to run in debug mode.
    */
   debug?: boolean;
+
+  /**
+   * is start from ui
+   */
+
+  ui?: boolean;
 }
 
 /**

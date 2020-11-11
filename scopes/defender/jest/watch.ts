@@ -1,5 +1,7 @@
+import { clearLine } from 'jest-util';
 import { Prompt, WatchPlugin, JestHookSubscriber, UsageData } from 'jest-watcher';
 import { SpecFiles } from '@teambit/tester';
+const { Writable } = require('stream');
 
 export type PluginConfig = {
   onComplete: (testSuite: any) => void;
@@ -53,8 +55,19 @@ class Watch implements WatchPlugin {
     });
 
     jestHooks.onTestRunComplete((results) => {
+      if (this._stdout) this._stdout.write('a');
       this._onComplete(results);
     });
+  }
+
+  getUsageInfo() {
+    if (this._stdout) this._stdout.write('\x1b[999D\x1b[K');
+    clearLine(this._stdout);
+    return null;
+  }
+
+  async run() {
+    if (this._stdout) this._stdout.write('\x1b[999D\x1b[K');
   }
 }
 

@@ -2522,11 +2522,6 @@
                 "test": false
             },
             {
-                "name": "jest.config.ts",
-                "relativePath": "jest.config.ts",
-                "test": false
-            },
-            {
                 "name": "jest.main.runtime.ts",
                 "relativePath": "jest.main.runtime.ts",
                 "test": false
@@ -2539,6 +2534,11 @@
             {
                 "name": "reporter.ts",
                 "relativePath": "reporter.ts",
+                "test": false
+            },
+            {
+                "name": "run-cli.ts",
+                "relativePath": "run-cli.ts",
                 "test": false
             },
             {

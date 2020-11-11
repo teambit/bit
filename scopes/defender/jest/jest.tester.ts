@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync, createWriteStream } from 'fs';
 import { compact } from 'lodash';
 import { runCLI } from 'jest';
 import { Tester, CallbackFn, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
@@ -7,6 +7,7 @@ import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { JestError } from './error';
+import { runJestCli } from './run-cli';
 
 export class JestTester implements Tester {
   constructor(readonly id: string, readonly jestConfig: any, readonly icon = '') {}
@@ -143,13 +144,12 @@ export class JestTester implements Tester {
         testMatch: testFiles,
       });
       const config: any = {
-        // json:true,
+        //useStderr: true,
         silent: true,
+        //json: createWriteStream('/tmp/file.txt'),
         rootDir: context.rootPath,
-        cache: false,
         watch: true,
-        // watchAll: true,
-        reporters: [`${__dirname}/reporter.js`],
+        watchAll: true,
         watchPlugins: [
           [
             `${__dirname}/watch.js`,
@@ -172,18 +172,20 @@ export class JestTester implements Tester {
                   components: componentTestResults,
                 };
                 this._callback(watchTestResults);
-                resolve();
               },
             },
           ],
         ],
       };
 
+      if (context.ui) config.reporters = [`${__dirname}/reporter.js`];
       const loadingComponents = context.components.map((c) => ({ componentId: c.id, loading: true }));
       if (this._callback) this._callback({ components: loadingComponents });
 
       const withEnv = Object.assign(jestConfigWithSpecs, config);
-      return runCLI(withEnv, [this.jestConfig]);
+      runJestCli(withEnv, [this.jestConfig]);
+      // runCLI(withEnv, [this.jestConfig]);
+      resolve();
     });
   }
 }

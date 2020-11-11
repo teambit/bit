@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
+import { Component, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -7,7 +7,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 
-import { Tests, CallbackFn } from './tester';
+import { ComponentsResults, CallbackFn } from './tester';
 import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
@@ -37,6 +37,11 @@ export type TesterOptions = {
    * start the tester in debug mode.
    */
   debug: boolean;
+
+  /**
+   * start the tester in debug mode.
+   */
+  ui: boolean;
 
   /**
    * initiate the tester on given env.
@@ -77,7 +82,7 @@ export class TesterMain {
     readonly task: TesterTask
   ) {}
 
-  _testsResults: Tests | undefined;
+  _testsResults: { [componentId: string]: ComponentsResults } | never[] = [];
 
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
@@ -98,15 +103,18 @@ export class TesterMain {
     if (opts?.env) {
       return envsRuntime.runEnv(opts.env, this.service, options);
     }
+
     this.service.onTestRunComplete((results) => {
-      this._testsResults = results;
+      results.components.forEach((component) => {
+        this._testsResults[component.componentId.toString()] = component;
+      });
     });
     return envsRuntime.run(this.service, options);
   }
 
   async uiWatch() {
     const components = await this.workspace.list();
-    return this.watch(components, { watch: true, debug: false });
+    return this.watch(components, { watch: true, debug: false, ui: true });
   }
 
   getTestsResults(component: Component): { testsResults?: TestsResult; loading: boolean } | undefined {
@@ -116,7 +124,7 @@ export class TesterMain {
   }
 
   private getTestsResultsFromState(component: Component) {
-    const tests = this._testsResults?.components.find((c) => c.componentId.isEqual(component.id));
+    const tests = this._testsResults[component.id.toString()];
     return { testsResults: tests?.results, loading: tests?.loading || false };
   }
 
@@ -135,7 +143,7 @@ export class TesterMain {
      */
     testRegex: '*.{spec,test}.{js,jsx,ts,tsx}',
 
-    watchOnStart: false,
+    watchOnStart: true,
   };
 
   static async provider(
