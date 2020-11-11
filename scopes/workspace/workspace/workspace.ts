@@ -95,8 +95,8 @@ export interface EjectConfOptions {
 }
 
 export type WorkspaceInstallOptions = {
-  variants: string;
-  lifecycleType: DependencyLifecycleType;
+  variants?: string;
+  lifecycleType?: DependencyLifecycleType;
   dedupe: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
@@ -259,11 +259,9 @@ export class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
-    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    const idsP = consumerComponents.map((component) => {
-      return this.resolveComponentId(component.id);
-    });
-    const ids = await Promise.all(idsP);
+    const legacyIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+
+    const ids = await this.resolveMultipleComponentIds(legacyIds);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
