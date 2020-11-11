@@ -306,9 +306,10 @@ export class DependencyResolverMain {
     const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
     const bitOriginalAuthType = bitScope?.originalAuthType;
     const bitOriginalAuthValue = bitScope?.originalAuthValue;
+    const alwaysAuth = bitAuthHeaderValue !== undefined;
     const bitDefaultRegistry = new Registry(
       bitRegistry,
-      true,
+      alwaysAuth,
       bitAuthHeaderValue,
       bitOriginalAuthType,
       bitOriginalAuthValue
