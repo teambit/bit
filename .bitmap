@@ -4450,9 +4450,24 @@
     "ui/component-status": {
         "files": [
             {
+                "name": "component-status.composition.tsx",
+                "relativePath": "component-status.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-status.docs.tsx",
+                "relativePath": "component-status.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "component-status.module.scss",
                 "relativePath": "component-status.module.scss",
                 "test": false
+            },
+            {
+                "name": "component-status.spec.tsx",
+                "relativePath": "component-status.spec.tsx",
+                "test": true
             },
             {
                 "name": "component-status.tsx",
