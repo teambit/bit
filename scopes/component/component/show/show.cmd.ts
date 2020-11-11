@@ -77,8 +77,7 @@ export class ShowCmd implements Command {
     return table.render();
   }
 
-  // @ts-ignore
-  async json([idStr]: [string], { remote, legacy }) {
+  async json([idStr]: [string], { remote, legacy }: { remote: boolean; legacy: boolean }) {
     if (legacy) return JSON.parse(await this.useLegacy(idStr, true, remote));
     const component = await this.getComponent(idStr);
     const fragments = this.component.getShowFragments();

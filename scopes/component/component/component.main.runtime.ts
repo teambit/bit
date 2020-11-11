@@ -138,7 +138,6 @@ export class ComponentMain {
 
     if ((configAspect.workspaceConfig && !configAspect.workspaceConfig.isLegacy) || configAspect.type === 'scope') {
       cli.unregister('show');
-      // @ts-ignore
       cli.register(new ShowCmd(componentExtension));
     }
 
