@@ -4637,7 +4637,7 @@
         "exported": false,
         "lanes": []
     },
-    "ui/notifications/notification-center": {
+    "ui/notifications/notification-center@0.0.120": {
         "files": [
             {
                 "name": "dismiss-button.module.scss",
