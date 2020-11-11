@@ -1,34 +1,46 @@
-import React, { useEffect, ComponentType } from 'react';
-import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory, useLocation } from 'react-router-dom';
+import React, { useEffect, ComponentType, ReactNode } from 'react';
+import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RoutingProvider } from '@teambit/ui.routing.provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
-import { Link } from '@teambit/ui.react-router.link';
-import { NavLink } from '@teambit/ui.react-router.nav-link';
 import { ReactRouterUI } from './react-router.ui.runtime';
+import { reactRouterRouting } from './react-router-routing';
 import { Routing } from './routing-method';
 
 export type History = ReturnType<typeof useHistory>;
 
 type RouterContextProps = {
-  rootRoutes: RouteProps[];
-  routeSlot: RouteSlot;
   reactRouterUi: ReactRouterUI;
   routing?: Routing;
+  children: ReactNode;
 };
 
-const reactRouterRouting = { Link, NavLink, useLocation };
+type RootRouteProps = {
+  rootRoutes: RouteProps[];
+  routeSlot: RouteSlot;
+};
 
-export function RouteContext({ rootRoutes, routeSlot, reactRouterUi, routing = Routing.url }: RouterContextProps) {
+/**
+ * Setup context needed for routing.
+ */
+export function RouteContext({ reactRouterUi, routing = Routing.url, children }: RouterContextProps) {
   const Router = getRouter(routing);
 
   return (
+    // {/* set up the virtual router (browser, inMemory, etc) */}
     <Router>
+      {/* injects History object back to reactRouterUi */}
+      <RouterGetter onRouter={reactRouterUi.setRouter} />
+      {/* injects react-router Link into context  */}
       <RoutingProvider value={reactRouterRouting}>
-        <RouterGetter onRouter={reactRouterUi.setRouter} />
-        <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />
+        {/* route tree root: */}
+        {children}
       </RoutingProvider>
     </Router>
   );
+}
+
+export function RootRoute({ rootRoutes, routeSlot }: RootRouteProps) {
+  return <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />;
 }
 
 function getRouter(type: Routing): ComponentType {
@@ -43,7 +55,11 @@ function getRouter(type: Routing): ComponentType {
   }
 }
 
-// needs to be rendered inside of <BrowserRouter/>
+/**
+ * Calls onRouter when routing History object changes.
+ * Used to inject history back into reactRouterUi
+ * (needs to be rendered inside of <BrowserRouter/>)
+ */
 function RouterGetter({ onRouter: onHistory }: { onRouter: (routerHistory: History) => void }) {
   const history = useHistory();
   useEffect(() => onHistory(history), [history]);

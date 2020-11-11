@@ -6,7 +6,7 @@ import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui.react-router.slot-router';
 
 import { ReactRouterAspect } from './react-router.aspect';
-import { RouteContext } from './route-context';
+import { RouteContext, RootRoute } from './route-context';
 import { Routing } from './routing-method';
 
 type RouteChangeSlot = SlotRegistry<LocationListener>;
@@ -31,7 +31,9 @@ export class ReactRouterUI {
    */
   renderRoutes(routes: RouteProps[]): JSX.Element {
     return (
-      <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} routing={this.routingMode} />
+      <RouteContext reactRouterUi={this} routing={this.routingMode}>
+        <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>
+      </RouteContext>
     );
   }
 

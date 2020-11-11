@@ -24,10 +24,17 @@ const defaultRouting: Routing = {
 
 const RoutingContext = createContext<Routing>(defaultRouting);
 
+/**
+ * Injects routing components into context
+ */
 export function RoutingProvider({ value, children }: { value: Routing; children: ReactNode }) {
   return <RoutingContext.Provider value={value}>{children}</RoutingContext.Provider>;
 }
 
+/**
+ * Gets routing components from context.
+ * (defaults to native components)
+ */
 export function useRouting() {
   return useContext(RoutingContext);
 }
