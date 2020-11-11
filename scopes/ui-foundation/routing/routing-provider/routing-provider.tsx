@@ -38,3 +38,10 @@ export function RoutingProvider({ value, children }: { value: Routing; children:
 export function useRouting() {
   return useContext(RoutingContext);
 }
+
+/**
+ * equivalent to window.location
+ */
+export function useLocation() {
+  return useRouting().useLocation();
+}
