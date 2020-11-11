@@ -1,6 +1,6 @@
-import React, { useEffect, ComponentType, ReactNode } from 'react';
+import React, { useEffect, ComponentType } from 'react';
 import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory, useLocation } from 'react-router-dom';
-import { RoutingProvider } from '@teambit/base-ui.routing.provider';
+import { RoutingProvider } from '@teambit/ui.routing.provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { Link } from '@teambit/ui.react-router.link';
 import { NavLink } from '@teambit/ui.react-router.nav-link';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link as ReactRouterLink } from 'react-router-dom';
-import { NativeLink, LinkProps } from '@teambit/base-ui.routing.native-link';
+import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
 
 export { LinkProps };
 

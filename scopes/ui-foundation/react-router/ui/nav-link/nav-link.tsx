@@ -1,7 +1,6 @@
-import { LocationState } from 'history';
 import React from 'react';
 import { NavLink as ReactRouterNavLink } from 'react-router-dom';
-import { NativeNavLink, NavLinkProps } from '@teambit/base-ui.routing.native-nav-link';
+import { NativeNavLink, NavLinkProps } from '@teambit/ui.routing.native-nav-link';
 
 export { NavLinkProps };
 
