@@ -44,3 +44,55 @@ export const ComponentTooltipWithNewStatus = () => {
     </ThemeContext>
   );
 };
+
+export const ComponentTooltipWithStagedStatus = () => {
+  resetValues();
+  isStaged = true;
+  const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
+  const compName = getCompId();
+  return (
+    <ThemeContext>
+      <Center>
+        <div data-tip="" data-for={compName}>
+          S
+          <StatusTooltip status={compStatus} name={compName} />
+        </div>
+      </Center>
+    </ThemeContext>
+  );
+};
+
+export const ComponentTooltipWithModifiedFilesAndDependenciesStatus = () => {
+  resetValues();
+  modifyInfo.hasModifiedDependencies = true;
+  modifyInfo.hasModifiedFiles = true;
+  const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
+  const compName = getCompId();
+  return (
+    <ThemeContext>
+      <Center>
+        <div data-tip="" data-for={compName}>
+          M
+          <StatusTooltip status={compStatus} name={compName} />
+        </div>
+      </Center>
+    </ThemeContext>
+  );
+};
+
+export const ComponentTooltipWithModifiedFilesStatusAndIssues = () => {
+  resetValues();
+  modifyInfo.hasModifiedFiles = true;
+  const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
+  const compName = getCompId();
+  return (
+    <ThemeContext>
+      <Center>
+        <div data-tip="" data-for={compName}>
+          M
+          <StatusTooltip status={compStatus} name={compName} issuesCount={2} />
+        </div>
+      </Center>
+    </ThemeContext>
+  );
+};
