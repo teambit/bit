@@ -4503,9 +4503,24 @@
     "ui/component-tooltip": {
         "files": [
             {
+                "name": "component-tooltip.composition.tsx",
+                "relativePath": "component-tooltip.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-tooltip.docs.tsx",
+                "relativePath": "component-tooltip.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "component-tooltip.module.scss",
                 "relativePath": "component-tooltip.module.scss",
                 "test": false
+            },
+            {
+                "name": "component-tooltip.spec.tsx",
+                "relativePath": "component-tooltip.spec.tsx",
+                "test": true
             },
             {
                 "name": "component-tooltip.tsx",
