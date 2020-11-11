@@ -383,6 +383,10 @@ export class Workspace implements ComponentFactory {
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
     extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
 
+    // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
+    // TODO: remove this once we remove all direct access from legacy code to extensions data
+    consumerComponent.extensions = extensionDataList;
+
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
       await this.createAspectList(extensionDataList),

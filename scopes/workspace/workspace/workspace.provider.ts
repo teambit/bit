@@ -17,6 +17,7 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
 import { BitId } from 'bit-bin/dist/bit-id';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
+import LegacyComponentLoader from 'bit-bin/dist/consumer/component/component-loader';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
@@ -124,6 +125,14 @@ export default async function provideWorkspace(
   ManyComponentsWriter.registerExternalInstaller({
     install: workspace.install.bind(workspace),
   });
+
+  if (!workspace.isLegacy) {
+    LegacyComponentLoader.registerOnComponentLoadSubscriber(async (legacyComponent: ConsumerComponent) => {
+      const id = await workspace.resolveComponentId(legacyComponent.id);
+      const newComponent = await workspace.get(id, false, legacyComponent);
+      return newComponent.state._consumer;
+    });
+  }
 
   ConsumerComponent.registerOnComponentConfigLoading(EXT_NAME, async (id) => {
     const componentId = await workspace.resolveComponentId(id);
