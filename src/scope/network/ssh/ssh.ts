@@ -30,6 +30,7 @@ import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list'
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
+import { PushOptions } from '../../../api/scope/lib/put';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -343,7 +344,7 @@ export default class SSH implements Network {
     }
   }
 
-  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
+  async pushMany(objectList: ObjectList, pushOptions: PushOptions, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
     const data = await this.exec('_put', objectList.toJsonString(), context);

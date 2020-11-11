@@ -1,4 +1,5 @@
 import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
+import { PushOptions } from '../api/scope/lib/put';
 import { BitId } from '../bit-id';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
@@ -97,10 +98,10 @@ export default class Remote {
     return connect(this.host).then((network) => network.push(componentObjects));
   }
 
-  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
+  async pushMany(objectList: ObjectList, pushOptions: PushOptions, context?: Record<string, any>): Promise<string[]> {
     const network = await connect(this.host);
-    logger.debug(`[-] Running pushMany on a remote`);
-    const results = await network.pushMany(objectList, context);
+    logger.debug(`[-] Running pushMany on a remote, pushOptions: ${JSON.stringify(pushOptions)}`);
+    const results = await network.pushMany(objectList, pushOptions, context);
     logger.debug('[-] Returning from a remote');
     return results;
   }
@@ -124,6 +125,13 @@ export default class Remote {
   }
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {
     return connect(this.host).then((network) => network.listLanes(name, mergeData));
+  }
+  async action<Options, Result>(name: string, options: Options): Promise<Result> {
+    const network = await connect(this.host);
+    logger.debug(`[-] Running action ${name} on a remote ${this.name}, options: ${JSON.stringify(options)}`);
+    const results: Result = await network.action(name, options);
+    logger.debug(`[-] Returning from running action ${name} on a remote ${this.name}`);
+    return results;
   }
 
   static load(name: string, host: string): Remote {

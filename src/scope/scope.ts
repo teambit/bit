@@ -23,6 +23,7 @@ import {
   NODE_PATH_SEPARATOR,
   OBJECTS_DIR,
   SCOPE_JSON,
+  PENDING_OBJECTS_DIR,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
@@ -56,6 +57,7 @@ import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
+import ClientIdInUse from './exceptions/client-id-in-use';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -844,6 +846,25 @@ export default class Scope {
     const bitId: BitId = component.toBitId();
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version || LATEST);
+  }
+
+  async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
+    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    if (fs.pathExistsSync(pendingDir)) {
+      throw new ClientIdInUse(clientId);
+    }
+    await this.objects.writeObjectsToPendingDir(objectList, pendingDir);
+  }
+
+  async readObjectsFromPendingDir(clientId: string): Promise<ObjectList> {
+    // @todo: implement the wait() mechanism.
+    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    return this.objects.readObjectsFromPendingDir(pendingDir);
+  }
+
+  async removePendingDir(clientId: string) {
+    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    return fs.remove(pendingDir); // no error is thrown if not exists
   }
 
   static ensure(

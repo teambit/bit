@@ -20,6 +20,7 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
+import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -32,6 +33,8 @@ export function registerUpdateDependenciesOnExport(func: UpdateDependenciesOnExp
 }
 
 /**
+ * ** Legacy Only **
+ *
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
  * saves a component into the objects directory of the remote scope, then, resolves its
  * dependencies, saves them as well. Finally runs the build process if needed on an isolated
@@ -42,8 +45,14 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   const mergedIds: BitIds = await mergeObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
-  logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
+  try {
+    await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
+    logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
+  } catch (err) {
+    logger.error('exportManyBareScope, failed importMany', err);
+    // do not throw an error, the remote-scope of a dependency can be down for a while
+    // next time a component is exported, the client will fetch the dependency from the original remote
+  }
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
   return mergedIds;
@@ -82,7 +91,7 @@ export async function exportMany({
     ids.push(...dependenciesIds);
     ids = BitIds.uniqFromArray(ids);
   }
-  const remotes: Remotes = await getScopeRemotes(scope);
+  const scopeRemotes: Remotes = await getScopeRemotes(scope);
   const idsGroupedByScope = ids.toGroupByScopeName(idsWithFutureScope);
   const groupedByScopeString = Object.keys(idsGroupedByScope)
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
@@ -96,7 +105,11 @@ export async function exportMany({
       addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
     );
   });
-  await pushToRemotes();
+  const remotes = manyObjectsPerRemote.map((o) => o.remote);
+  const clientId = Date.now().toString();
+  await pushRemotesPendingDir();
+  await validateRemotes();
+  await persistRemotes();
   const results = await updateLocalObjects(lanesObjects);
   return {
     newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
@@ -120,7 +133,7 @@ export async function exportMany({
     lanes: Lane[] = []
   ): Promise<ObjectsPerRemote> {
     bitIds.throwForDuplicationIgnoreVersion();
-    const remote: Remote = await remotes.resolve(remoteNameStr, scope);
+    const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
     const componentObjects = await mapSeries(bitIds, (id) => scope.sources.getObjects(id));
     const idsToChangeLocally = BitIds.fromArray(
       bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
@@ -231,25 +244,57 @@ export async function exportMany({
     });
   }
 
-  async function pushToRemotes(): Promise<void> {
+  async function pushRemotesPendingDir(): Promise<void> {
+    const pushOptions = { clientId };
+    const pushedRemotes: Remote[] = [];
     await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote, objectList } = objectsPerRemote;
-      let exportedIds: string[];
-      const succeededRemotes: Remote[] = [];
       try {
-        exportedIds = await remote.pushMany(objectList, context);
+        await remote.pushMany(objectList, pushOptions, context);
         logger.debugAndAddBreadCrumb(
           'exportMany',
           'successfully pushed all ids to the bare-scope, going to save them back to local scope'
         );
-        succeededRemotes.push(remote);
-        objectsPerRemote.exportedIds = exportedIds;
+        pushedRemotes.push(remote);
       } catch (err) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
-        // TODO: roll back all succeededRemotes.
+        await removePendingDirs(pushedRemotes);
         throw err;
       }
     });
+  }
+
+  async function validateRemotes() {
+    try {
+      await Promise.all(remotes.map((remote) => remote.action(ExportValidate.name, { clientId })));
+    } catch (err) {
+      logger.warnAndAddBreadCrumb('validateRemotes', 'failed validating remotes');
+      await removePendingDirs(remotes);
+      throw err;
+    }
+  }
+
+  async function persistRemotes() {
+    await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
+      const { remote } = objectsPerRemote;
+      let exportedIds: string[];
+      try {
+        exportedIds = await remote.action(ExportPersist.name, { clientId });
+        logger.debugAndAddBreadCrumb(
+          'exportMany',
+          'successfully pushed all ids to the bare-scope, going to save them back to local scope'
+        );
+        objectsPerRemote.exportedIds = exportedIds;
+      } catch (err) {
+        logger.warnAndAddBreadCrumb('persistRemotes', 'failed persisting remotes');
+        await removePendingDirs(remotes);
+        throw err;
+      }
+    });
+  }
+
+  async function removePendingDirs(pushedRemotes: Remote[]) {
+    await Promise.all(pushedRemotes.map((remote) => remote.action(RemovePendingDir.name, { clientId })));
   }
 
   async function updateLocalObjects(
@@ -321,7 +366,7 @@ export async function exportMany({
  * the BitIds returned here includes the versions that were merged. so it could contain multiple
  * ids of the same component with different versions
  */
-async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+export async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitIds> {
   const bitObjectList = await objectList.toBitObjects();
   const components = bitObjectList.getComponents();
   const lanesObjects = bitObjectList.getLanes();

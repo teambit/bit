@@ -1,4 +1,5 @@
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
+import { PushOptions } from '../../api/scope/lib/put';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../../consumer/component';
 import { ListScopeResult } from '../../consumer/component/components-list';
@@ -16,7 +17,8 @@ export interface Network {
   describeScope(): Promise<ScopeDescriptor>;
   deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean);
   fetch(ids: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectList>;
-  pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]>;
+  pushMany(objectList: ObjectList, pushOptions: PushOptions, context?: Record<string, any>): Promise<string[]>;
+  action<Options, Result>(name: string, options: Options): Promise<Result>;
   list(namespacesUsingWildcards?: string, strategiesNames?: SSHConnectionStrategyName[]): Promise<ListScopeResult[]>;
   show(bitId: BitId): Promise<Component | null | undefined>;
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;

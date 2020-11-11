@@ -1,5 +1,7 @@
 import { deprecate, fetch, put, remove, undeprecate } from '../../../api/scope';
+import { action } from '../../../api/scope/lib/action';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
+import { PushOptions } from '../../../api/scope/lib/put';
 import { BitId } from '../../../bit-id';
 import ComponentsList, { ListScopeResult } from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component/consumer-component';
@@ -35,8 +37,12 @@ export default class Fs implements Network {
     return Promise.resolve(this.getScope().describe());
   }
 
-  pushMany(objectList: ObjectList): Promise<string[]> {
-    return put({ path: this.scopePath, objectList });
+  pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
+    return put({ path: this.scopePath, objectList }, pushOptions);
+  }
+
+  action<Options, Result>(name: string, options: Options): Promise<Result> {
+    return action(this.scopePath, name, options);
   }
 
   deleteMany(
