@@ -33,7 +33,7 @@ export class PublishTask implements BuildTask {
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
     this.logger.info(`going to run pack dry-run on ${capsules.length} out of ${capsules.length}`);
 
-    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, false);
+    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, false, true);
     const packArtifactsDefs = this.packer.getArtifactDefInCapsule();
 
     return {

@@ -34,7 +34,7 @@ export class PublishDryRunTask implements BuildTask {
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
 
     this.logger.info(`going to run pack dry-run on ${capsules.length} out of ${capsules.length}`);
-    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, true);
+    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, true, true);
 
     return {
       componentsResults: publishResults.concat(packResults),

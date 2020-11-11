@@ -46,7 +46,7 @@ export class Packer {
       throw new ScopeNotFound(scopePath);
     }
     // Or the scope we are operate on is legacy, or the host (workspace) is legacy
-    const isLegacyScope = legacyScope.isLegacy || (!scopePath && this.host.isLegacy);
+    const isLegacyScope = (scopePath && legacyScope.isLegacy) || this.host.isLegacy;
 
     // Handle legacy
     if (isLegacyScope) {
@@ -56,21 +56,22 @@ export class Packer {
     }
 
     const capsule = await this.getCapsule(componentId, legacyScope);
-    const res = await this.packCapsule(capsule, options.writeOptions, options.dryRun, options.writeOptions.override);
-    return Object.assign({}, res, { id: componentId });
+    const res = await this.packCapsule(capsule, options.writeOptions, options.dryRun);
+
+    return Object.assign({}, _.omit(res, ['component']), { id: componentId });
   }
 
   async packMultipleCapsules(
     capsules: Capsule[],
-    writeOptions: PackWriteOptions,
+    writeOptions: PackWriteOptions = { override: true },
     dryRun = false,
-    override = true
+    omitFullTarPath = false
   ): Promise<ComponentResult[]> {
     const description = `packing components${dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
     const results = Bluebird.mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
-      return this.packCapsule(capsule, writeOptions, dryRun, override);
+      return this.packCapsule(capsule, writeOptions, dryRun, omitFullTarPath);
     });
     longProcessLogger.end();
     return results;
@@ -78,9 +79,9 @@ export class Packer {
 
   async packCapsule(
     capsule: Capsule,
-    writeOptions: PackWriteOptions,
+    writeOptions: PackWriteOptions = { override: true },
     dryRun = false,
-    override = true
+    omitFullTarPath = false
   ): Promise<ComponentResult> {
     const concreteWriteOpts = writeOptions;
     // Set the package-tar as out dir to easily read the tar later
@@ -88,11 +89,15 @@ export class Packer {
     const packResult = await this.legacyPacker.npmPack(
       capsule.path,
       concreteWriteOpts.outDir || capsule.path,
-      override,
+      concreteWriteOpts.override,
       dryRun
     );
     const component = capsule.component;
-    const metadata = _(packResult.metadata).omitBy(_.isUndefined).omit(['tarPath']).value();
+    const fieldsToRemove: string[] = [];
+    if (omitFullTarPath) {
+      fieldsToRemove.push('tarPath');
+    }
+    const metadata = _(packResult.metadata).omitBy(_.isUndefined).omit(fieldsToRemove).value();
 
     return {
       component,
