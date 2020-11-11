@@ -13,6 +13,8 @@ import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
 
+type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
+
 export default class ComponentLoader {
   _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components
   _componentsCacheForCapsule: Record<string, any> = {}; // cache loaded components for capsule, must not use the cache for the workspace
@@ -22,6 +24,11 @@ export default class ComponentLoader {
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
+  }
+
+  static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
+  static registerOnComponentLoadSubscriber(func: OnComponentLoadSubscriber) {
+    this.onComponentLoadSubscribers.push(func);
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
@@ -131,8 +138,15 @@ export default class ComponentLoader {
       );
       updateDependenciesVersions(this.consumer, component);
     };
+
+    const runOnComponentLoadEvent = async () => {
+      BluebirdPromise.mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
+        component = await subscriber(component);
+      });
+    };
     try {
       await loadDependencies();
+      await runOnComponentLoadEvent();
     } catch (err) {
       return handleError(err);
     }
