@@ -4590,6 +4590,21 @@
     "ui/deprecation-icon": {
         "files": [
             {
+                "name": "deprecation-icon.composition.tsx",
+                "relativePath": "deprecation-icon.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "deprecation-icon.docs.tsx",
+                "relativePath": "deprecation-icon.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "deprecation-icon.spec.tsx",
+                "relativePath": "deprecation-icon.spec.tsx",
+                "test": true
+            },
+            {
                 "name": "deprecation-icon.tsx",
                 "relativePath": "deprecation-icon.tsx",
                 "test": false
