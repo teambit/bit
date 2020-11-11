@@ -3,6 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 // import chalk from 'chalk';
 import Table from 'tty-table';
 import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
+import LegacyShow from 'bit-bin/dist/cli/commands/public-cmds/show-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
 export class ShowCmd implements Command {
@@ -10,7 +11,16 @@ export class ShowCmd implements Command {
   description = 'show a component';
   alias = '';
   group = 'component';
-  options = [['j', 'json', 'return the component data in json format']] as CommandOptions;
+  options = [
+    ['j', 'json', 'return the component data in json format'],
+    ['l', 'legacy', 'use the legacy bit show.'],
+    ['r', 'remote', 'show a remote component'],
+    [
+      'c',
+      'compare [boolean]',
+      'compare current file system component to latest tagged component [default=latest]. only works in legacy.',
+    ],
+  ] as CommandOptions;
 
   constructor(private component: ComponentMain) {}
 
@@ -22,7 +32,20 @@ export class ShowCmd implements Command {
     return component;
   }
 
-  async report([idStr]: [string]) {
+  async useLegacy(id: string, json = false, remote = false, compare = false) {
+    const legacyShow = new LegacyShow();
+    const showData = await legacyShow.action([id], {
+      json,
+      versions: undefined,
+      remote,
+      compare,
+    });
+
+    return legacyShow.report(showData);
+  }
+
+  async report([idStr]: [string], { legacy, remote, compare }: { legacy: boolean; remote: boolean; compare: boolean }) {
+    if (legacy) return this.useLegacy(idStr, false, remote, compare);
     const component = await this.getComponent(idStr);
     const fragments = this.component.getShowFragments();
     const rows = await Promise.all(
@@ -54,7 +77,9 @@ export class ShowCmd implements Command {
     return table.render();
   }
 
-  async json([idStr]: [string]) {
+  // @ts-ignore
+  async json([idStr]: [string], { remote, legacy }) {
+    if (legacy) return JSON.parse(await this.useLegacy(idStr, true, remote));
     const component = await this.getComponent(idStr);
     const fragments = this.component.getShowFragments();
     const rows = await Promise.all(
