@@ -4615,6 +4615,93 @@
         "exported": false,
         "lanes": []
     },
+    "ui/empty-component-gallery": {
+        "files": [
+            {
+                "name": "empty-component-gallery.composition.tsx",
+                "relativePath": "empty-component-gallery.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "empty-component-gallery.module.scss",
+                "relativePath": "empty-component-gallery.module.scss",
+                "test": false
+            },
+            {
+                "name": "empty-component-gallery.tsx",
+                "relativePath": "empty-component-gallery.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/empty-component-gallery",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/empty-scope": {
+        "files": [
+            {
+                "name": "empty-scope.composition.tsx",
+                "relativePath": "empty-scope.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "empty-scope.module.scss",
+                "relativePath": "empty-scope.module.scss",
+                "test": false
+            },
+            {
+                "name": "empty-scope.tsx",
+                "relativePath": "empty-scope.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/ui/empty-scope",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/empty-workspace": {
+        "files": [
+            {
+                "name": "empty-workspace.composition.tsx",
+                "relativePath": "empty-workspace.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "empty-workspace.module.scss",
+                "relativePath": "empty-workspace.module.scss",
+                "test": false
+            },
+            {
+                "name": "empty-workspace.tsx",
+                "relativePath": "empty-workspace.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/ui/empty-workspace",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "ui/env-icon": {
         "files": [
             {
