@@ -10,6 +10,14 @@ export class DevFiles {
     return this.raw[aspectId] || [];
   }
 
+  toTupleArray() {
+    return flatten(
+      Object.entries(this.raw).map(([aspectId, files]) => {
+        return files.map((file) => [file, aspectId]);
+      })
+    );
+  }
+
   /**
    * list all dev files.
    */

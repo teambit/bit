@@ -57,6 +57,7 @@ import path, { join } from 'path';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -374,7 +375,7 @@ export class Workspace implements ComponentFactory {
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     const component = await this.scope.get(id);
     if (!consumerComponent) {
-      if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
+      if (!component) throw new MissingBitMapComponent(id.toString());
       return component;
     }
 
