@@ -1,12 +1,14 @@
-.noComponents {
+.emptyComponentGallery {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   height: 100%;
   margin: auto;
   text-align: center;
   padding: 0 20px;
+
   > img {
     margin-bottom: 40px;
   }
@@ -15,6 +17,7 @@
 .title {
   font-size: var(--p-xxl);
   margin-bottom: 32px;
+
   > span:last-child {
     font-weight: bold;
   }
@@ -23,6 +26,7 @@
 .bottomText {
   margin-bottom: 16px;
   font-size: var(--p-xs);
+
   .purpleLink {
     color: var(--base-highlight);
     text-decoration: underline;
@@ -32,6 +36,7 @@
 
 .iconLine {
   display: flex;
+
   .logo {
     width: 24px;
     height: 24px;

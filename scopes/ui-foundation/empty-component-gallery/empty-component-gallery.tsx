@@ -1,17 +1,17 @@
 import React from 'react';
 import { ExternalLink } from '@teambit/ui.external-link';
-import styles from './no-components.module.scss';
+import styles from './empty-component-gallery.module.scss';
 
-export type NoComponentsProps = {
+export type EmptyComponentGalleryProps = {
   name: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * page to be shown when workspace/scope has no components
  */
-export function NoComponents({ name, children }: NoComponentsProps) {
+export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryProps) {
   return (
-    <div className={styles.noComponents}>
+    <div className={styles.emptyComponentGallery}>
       <div className={styles.title}>
         <span>No components in</span>&nbsp;
         <span>{name}</span>
