@@ -136,7 +136,7 @@ export class ComponentMain {
   ) {
     const componentExtension = new ComponentMain(hostSlot, express, showFragmentSlot);
 
-    if (configAspect.workspaceConfig && !configAspect.workspaceConfig.isLegacy) {
+    if ((configAspect.workspaceConfig && !configAspect.workspaceConfig.isLegacy) || configAspect.type === 'scope') {
       cli.unregister('show');
       cli.register(new ShowCmd(componentExtension));
     }
