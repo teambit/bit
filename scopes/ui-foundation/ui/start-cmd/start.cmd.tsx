@@ -5,6 +5,7 @@ import { MainDevServerAspect } from '@teambit/main-dev-server';
 
 import type { WorkerMain } from '@teambit/worker';
 import type { MainDevServerMain } from '@teambit/main-dev-server';
+import type { SpawnOptions } from '@teambit/worker/worker.main.runtime';
 
 import React from 'react';
 import { render } from 'ink';
@@ -76,10 +77,12 @@ export class StartCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    const spawnOptions = {
+    const spawnOptions: SpawnOptions = {
       aspectId: MainDevServerAspect.id,
       execMethodName: 'run',
       params: [uiRootName, pattern, dev, port, rebuild],
+      // silent: true,
+      silent: false,
     };
     this.worker.spawn(spawnOptions);
 

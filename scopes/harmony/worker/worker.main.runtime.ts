@@ -11,6 +11,7 @@ export type SpawnOptions = {
   aspectId: string;
   execMethodName: string;
   params: Array<any>;
+  silent?: boolean;
 };
 
 export class WorkerMain {
@@ -18,8 +19,7 @@ export class WorkerMain {
 
   public spawn(options: SpawnOptions) {
     const boot = path.join(__dirname, './run-inside-the-worker/bootstrap.script');
-    const forked = fork(boot, [JSON.stringify(options)], { silent: true });
-    // const forked = fork(boot, [JSON.stringify(options)], { silent: false });
+    const forked = fork(boot, [JSON.stringify(options)], { silent: options.silent || true });
     this.pubsub.addProcess(forked);
   }
 
