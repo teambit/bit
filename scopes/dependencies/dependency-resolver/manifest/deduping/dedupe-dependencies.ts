@@ -1,5 +1,6 @@
-import { DependenciesObjectDefinition, PackageName, SemverVersion } from '../../types';
-import { ComponentDependenciesMap } from '../workspace-manifest';
+import { DependenciesObjectDefinition } from '../../types';
+import { PackageName, SemverVersion } from '../../dependencies';
+import { ComponentDependenciesMap } from '../workspace-manifest-factory';
 import { hoistDependencies } from './hoist-dependencies';
 import { indexByDepId } from './index-by-dep-id';
 import { mergeWithRootDeps } from './merge-with-root';

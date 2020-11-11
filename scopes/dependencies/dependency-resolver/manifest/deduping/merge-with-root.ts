@@ -1,7 +1,8 @@
 import { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
 
-import { DependenciesObjectDefinition, DepObjectKeyName, DepObjectValue, PackageName } from '../../types';
+import { PackageName } from '../../dependencies';
+import { DependenciesObjectDefinition, DepObjectKeyName, DepObjectValue } from '../../types';
 import { DedupedDependencies } from './dedupe-dependencies';
 
 /**
