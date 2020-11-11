@@ -4293,6 +4293,98 @@
         "exported": false,
         "lanes": []
     },
+    "ui/gallery/base-component-card": {
+        "files": [
+            {
+                "name": "base-component-card.composition.tsx",
+                "relativePath": "base-component-card.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "base-component-card.docs.tsx",
+                "relativePath": "base-component-card.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "base-component-card.module.scss",
+                "relativePath": "base-component-card.module.scss",
+                "test": false
+            },
+            {
+                "name": "base-component-card.tsx",
+                "relativePath": "base-component-card.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/base-component-card",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/gallery/component-card": {
+        "files": [
+            {
+                "name": "component-card.composition.tsx",
+                "relativePath": "component-card.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-card.docs.tsx",
+                "relativePath": "component-card.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "component-card.module.scss",
+                "relativePath": "component-card.module.scss",
+                "test": false
+            },
+            {
+                "name": "component-card.tsx",
+                "relativePath": "component-card.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/component-card",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/gallery/component-grid": {
+        "files": [
+            {
+                "name": "component-grid.module.scss",
+                "relativePath": "component-grid.module.scss",
+                "test": false
+            },
+            {
+                "name": "component-grid.tsx",
+                "relativePath": "component-grid.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/component-grid",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "ui/hooks/use-bind-key@0.0.118": {
         "files": [
             {

@@ -1,0 +1,6 @@
+.componentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(197px, 1fr));
+  column-gap: 10px;
+  grid-gap: 32px;
+}

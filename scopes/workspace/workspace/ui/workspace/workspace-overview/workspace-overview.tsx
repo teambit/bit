@@ -1,4 +1,4 @@
-import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
+import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
 
 import React, { useContext } from 'react';
 
