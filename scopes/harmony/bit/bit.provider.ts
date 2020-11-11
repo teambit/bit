@@ -7,13 +7,6 @@ export type BitDeps = [];
 export type BitConfig = {};
 
 export async function provideBit() {
-  const allCoreAspectsIds = getAllCoreAspectsIds();
-  const coreAspectsPackagesAndIds = {};
-  allCoreAspectsIds.forEach((id) => {
-    const packageName = getCoreAspectPackageName(id);
-    coreAspectsPackagesAndIds[packageName] = id;
-  });
-  DependencyResolver.getCoreAspectsPackagesAndIds = () => coreAspectsPackagesAndIds;
   return {
     manifestsMap,
   };
