@@ -305,9 +305,10 @@ export class DependencyResolverMain {
     const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
     const bitOriginalAuthType = bitScope?.originalAuthType;
     const bitOriginalAuthValue = bitScope?.originalAuthValue;
+    const alwaysAuth = bitAuthHeaderValue !== undefined;
     const bitDefaultRegistry = new Registry(
       bitRegistry,
-      true,
+      alwaysAuth,
       bitAuthHeaderValue,
       bitOriginalAuthType,
       bitOriginalAuthValue
@@ -505,6 +506,7 @@ export class DependencyResolverMain {
   static slots = [
     Slot.withType<DependenciesPolicy>(),
     Slot.withType<PackageManager>(),
+    Slot.withType<RegExp>(),
     Slot.withType<DependencyFactory>(),
   ];
 
@@ -515,6 +517,7 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
+    devFilePatterns: ['*.spec.ts'],
     strictPeerDependencies: true,
   };
 
@@ -551,6 +554,7 @@ export class DependencyResolverMain {
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
+
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {

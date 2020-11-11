@@ -67,6 +67,7 @@
         "@teambit/documenter.types.docs-file": "^0.2.1",
         "@teambit/documenter.ui.consumable-link": "^0.2.1",
         "@teambit/documenter.ui.heading": "^0.2.1",
+        "@teambit/documenter.ui.highlighted-text": "0.2.1",
         "@teambit/documenter.ui.import-action": "^0.2.1",
         "@teambit/documenter.ui.label-list": "^0.2.1",
         "@teambit/documenter.ui.linked-heading": "^0.2.1",
@@ -226,7 +227,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.130",
+        "bit-bin": "14.8.9-dev.132",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -256,7 +257,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.130",
+            "bit-bin": "14.8.9-dev.132",
             "react-dom": "^16.13.1"
           }
         }
@@ -361,7 +362,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.130",
+            "bit-bin": "14.8.9-dev.132",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
