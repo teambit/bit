@@ -11,10 +11,10 @@ export function PreviewPlaceholder({
   component: ComponentModel;
   shouldShowPreview: boolean;
 }) {
-  const selectedPreview = useMemo(() => (shouldShowPreview ? selectDefaultComposition(component) : undefined), [
-    component,
-    shouldShowPreview,
-  ]);
+  const selectedPreview = useMemo(() => {
+    if (!shouldShowPreview) return undefined;
+    return selectDefaultComposition(component);
+  }, [component, shouldShowPreview]);
 
   if (shouldShowPreview) {
     return <ComponentComposition component={component} hotReload={false} composition={selectedPreview} />;
