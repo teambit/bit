@@ -8,4 +8,6 @@ export class MainFileFragment implements ShowFragment {
       content: component.state._consumer.mainFile,
     };
   }
+
+  weight = 4;
 }

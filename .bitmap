@@ -1717,6 +1717,11 @@
                 "test": false
             },
             {
+                "name": "dev-files.fragment.ts",
+                "relativePath": "dev-files.fragment.ts",
+                "test": false
+            },
+            {
                 "name": "dev-files.main.runtime.ts",
                 "relativePath": "dev-files.main.runtime.ts",
                 "test": false
@@ -2994,6 +2999,11 @@
             {
                 "name": "package-dependency.ts",
                 "relativePath": "package-dependency/package-dependency.ts",
+                "test": false
+            },
+            {
+                "name": "package.fragment.ts",
+                "relativePath": "package.fragment.ts",
                 "test": false
             },
             {

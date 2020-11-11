@@ -8,4 +8,6 @@ export class NameFragment implements ShowFragment {
       content: component.id.fullName,
     };
   }
+
+  weight = 2;
 }

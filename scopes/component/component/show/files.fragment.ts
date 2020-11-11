@@ -19,4 +19,6 @@ export class FilesFragment implements ShowFragment {
   private getRelativePaths(component: Component) {
     return component.state.filesystem.files.map((file) => file.relative);
   }
+
+  weight = 4;
 }

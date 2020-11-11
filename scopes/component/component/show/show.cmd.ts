@@ -42,7 +42,7 @@ export class ShowCmd implements Command {
 
     const headers = [
       {
-        width: 60,
+        width: 65,
         color: 'cyan',
       },
       {
