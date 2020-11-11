@@ -1,4 +1,4 @@
-import { readFileSync, createWriteStream } from 'fs';
+import { createWriteStream } from 'fs';
 import watch from '@jest/core/build/watch';
 import { createDirectory, preRunMessage } from 'jest-util';
 import { CustomConsole } from '@jest/console';
@@ -36,7 +36,7 @@ export async function runJestCli(argv: any, projects: Array<any>) {
   const { globalConfig, configs, hasDeprecationWarnings } = await readConfigs(argv, projects);
 
   //@ts-ignore
-  const { contexts, hasteMapInstances } = await this.buildContextsAndHasteMaps(globalConfig, configs, stream);
+  const { contexts, hasteMapInstances } = await buildContextsAndHasteMaps(globalConfig, configs, stream);
   watch(
     globalConfig,
     contexts,
