@@ -1,6 +1,8 @@
 import CustomError from '../../error/custom-error';
 import { ComponentNotFound, MergeConflictOnRemote } from '../exceptions';
 import ActionNotFound from '../exceptions/action-not-found';
+import ClientIdInUse from '../exceptions/client-id-in-use';
+import ServerIsBusy from '../exceptions/server-is-busy';
 import { OldClientVersion, PermissionDenied, RemoteScopeNotFound, UnexpectedNetworkError } from './exceptions';
 import ExportAnotherOwnerPrivate from './exceptions/export-another-owner-private';
 
@@ -36,7 +38,10 @@ export function remoteErrorHandler(code: number, parsedError: Record<string, any
       return new ActionNotFound((parsedError && parsedError.name) || err);
     }
     case 136: {
-      return new ActionNotFound((parsedError && parsedError.clientId) || err);
+      return new ClientIdInUse((parsedError && parsedError.clientId) || err);
+    }
+    case 137: {
+      return new ServerIsBusy(parsedError.queueSize, parsedError.nextClientStale);
     }
   }
 }
