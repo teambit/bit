@@ -140,7 +140,7 @@ export default class ComponentLoader {
     };
 
     const runOnComponentLoadEvent = async () => {
-      BluebirdPromise.mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
+      return BluebirdPromise.mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
         component = await subscriber(component);
       });
     };

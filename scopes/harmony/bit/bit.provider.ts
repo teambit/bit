@@ -1,6 +1,4 @@
-import { getCoreAspectPackageName } from '@teambit/aspect-loader';
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { manifestsMap, getAllCoreAspectsIds } from './manifests';
+import { manifestsMap } from './manifests';
 
 export type BitDeps = [];
 
