@@ -1,8 +1,9 @@
 import zlib from 'zlib';
+import { PackData } from './pack-command';
 
 import fromBase64 from './string/from-base64';
 
-module.exports = function unpackCmd(str, base64 = true) {
+export function unpackCommand(str: string, base64 = true): PackData {
   let parsed;
   if (base64) {
     parsed = JSON.parse(fromBase64(str));
@@ -19,4 +20,4 @@ module.exports = function unpackCmd(str, base64 = true) {
     }
   }
   return parsed;
-};
+}

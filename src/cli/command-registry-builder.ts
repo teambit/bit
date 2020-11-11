@@ -4,6 +4,7 @@ import CommandRegistry from './command-registry';
 import Delete from './commands/private-cmds/_delete-cmd';
 import DeprecatePrivate from './commands/private-cmds/_deprecate-cmd';
 import _Fetch from './commands/private-cmds/_fetch-cmd';
+import Action from './commands/private-cmds/_action-cmd';
 import ScopeGraph from './commands/private-cmds/_graph-cmd';
 import ScopeLanesList from './commands/private-cmds/_lanes-cmd';
 import Latest from './commands/private-cmds/_latest-cmd';
@@ -100,6 +101,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new ScopeGraph(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new _Fetch(),
+      new Action(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Build(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
