@@ -19,7 +19,9 @@ export class WorkerMain {
 
   public spawn(options: SpawnOptions) {
     const boot = path.join(__dirname, './run-inside-the-worker/bootstrap.script');
-    const forked = fork(boot, [JSON.stringify(options)], { silent: options.silent || true });
+    const silent = typeof options.silent == 'undefined' ? true : options.silent;
+
+    const forked = fork(boot, [JSON.stringify(options)], { silent });
     this.pubsub.addProcess(forked);
   }
 
