@@ -98,5 +98,9 @@ export interface Tester {
    * watch tests on all components
    */
   watch?(context: TesterContext): Promise<Tests>;
+  /**
+   * return the tester version.
+   */
+  version(): string;
 }
 export type CallbackFn = (testSuite: Tests) => void;

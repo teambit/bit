@@ -7,6 +7,7 @@ import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import syntaxHighlighter from 'consolehighlighter';
 import { PubSub } from 'graphql-subscriptions';
+import { DevFilesMain } from '@teambit/dev-files';
 
 import { NoTestFilesFound } from './exceptions';
 import { Tester, Tests, CallbackFn } from './tester';
@@ -43,11 +44,13 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     /**
      * regex used to identify which files to test.
      */
-    readonly testsRegex: string,
+    readonly patterns: string[],
 
     private logger: Logger,
 
-    private pubsub: PubSub
+    private pubsub: PubSub,
+
+    private devFiles: DevFilesMain
   ) {}
 
   _callback: CallbackFn | undefined;
@@ -58,7 +61,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       <Text key={descriptor?.id}>
         <Text color="cyan">configured tester: </Text>
         <Text>
-          {descriptor?.id} ({descriptor?.displayName})
+          {descriptor?.id} ({descriptor?.displayName} @ {descriptor?.version})
         </Text>
         <Newline />
         <Text underline color="cyan">
@@ -83,6 +86,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       displayName: tester.displayName || '',
       icon: tester.icon || '',
       config: tester.displayConfig ? tester.displayConfig() : '',
+      version: tester.version ? tester.version() : '?',
     };
   }
 
@@ -92,13 +96,15 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
   async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
     const tester: Tester = context.env.getTester();
-    const specFiles = ComponentMap.as(context.components, detectTestFiles);
+    const specFiles = ComponentMap.as(context.components, (component) => {
+      return detectTestFiles(component, this.devFiles);
+    });
     const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
     const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
       if (specs.length > 0) acc += 1;
       return acc;
     }, 0);
-    if (testCount === 0) throw new NoTestFilesFound(this.testsRegex);
+    if (testCount === 0) throw new NoTestFilesFound(this.patterns.join(','));
 
     this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 

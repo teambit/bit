@@ -2,7 +2,6 @@ import chalk from 'chalk';
 import R from 'ramda';
 
 import { switchAction } from '../../../api/consumer';
-import { throwForUsingLaneIfDisabled } from '../../../api/consumer/lib/feature-toggle';
 import { SwitchProps } from '../../../consumer/lanes/switch-lanes';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { ApplyVersionResults, MergeOptions, MergeStrategy } from '../../../consumer/versions-ops/merge-version';
@@ -64,7 +63,6 @@ export default class Switch implements LegacyCommand {
       ignoreDist?: boolean;
     }
   ): Promise<ApplyVersionResults> {
-    throwForUsingLaneIfDisabled();
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);

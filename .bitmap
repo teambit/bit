@@ -117,11 +117,6 @@
                 "test": false
             },
             {
-                "name": "babel.parser.ts",
-                "relativePath": "babel.parser.ts",
-                "test": false
-            },
-            {
                 "name": "compiler-options.ts",
                 "relativePath": "compiler-options.ts",
                 "test": false
@@ -662,6 +657,16 @@
             {
                 "name": "index.ts",
                 "relativePath": "ui/autocomplete-input/index.ts",
+                "test": false
+            },
+            {
+                "name": "command-bar-context.tsx",
+                "relativePath": "ui/command-bar-context/command-bar-context.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "ui/command-bar-context/index.ts",
                 "test": false
             },
             {
@@ -1299,11 +1304,6 @@
                 "name": "use-compositions.tsx",
                 "relativePath": "ui/use-compositions.tsx",
                 "test": false
-            },
-            {
-                "name": "use-properties.ts",
-                "relativePath": "use-properties.ts",
-                "test": false
             }
         ],
         "mainFile": "index.ts",
@@ -1394,13 +1394,63 @@
     "dependency-resolver": {
         "files": [
             {
-                "name": "constants.ts",
-                "relativePath": "constants.ts",
+                "name": "base-dependency.ts",
+                "relativePath": "dependencies/base-dependency.ts",
                 "test": false
             },
             {
-                "name": "dependency-graph.ts",
-                "relativePath": "dependency-graph.ts",
+                "name": "component-dependency-factory.ts",
+                "relativePath": "dependencies/component-dependency/component-dependency-factory.ts",
+                "test": false
+            },
+            {
+                "name": "component-dependency.ts",
+                "relativePath": "dependencies/component-dependency/component-dependency.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "dependencies/component-dependency/index.ts",
+                "test": false
+            },
+            {
+                "name": "constants.ts",
+                "relativePath": "dependencies/constants.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-factory.ts",
+                "relativePath": "dependencies/dependency-factory.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-list-factory.ts",
+                "relativePath": "dependencies/dependency-list-factory.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-list.ts",
+                "relativePath": "dependencies/dependency-list.ts",
+                "test": false
+            },
+            {
+                "name": "dependency.ts",
+                "relativePath": "dependencies/dependency.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "dependencies/exceptions/index.ts",
+                "test": false
+            },
+            {
+                "name": "unknown-dep-type.ts",
+                "relativePath": "dependencies/exceptions/unknown-dep-type.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "dependencies/index.ts",
                 "test": false
             },
             {
@@ -1509,6 +1559,11 @@
                 "test": false
             },
             {
+                "name": "workspace-manifest-factory.ts",
+                "relativePath": "manifest/workspace-manifest-factory.ts",
+                "test": false
+            },
+            {
                 "name": "workspace-manifest.ts",
                 "relativePath": "manifest/workspace-manifest.ts",
                 "test": false
@@ -1580,6 +1635,40 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "dev-files": {
+        "files": [
+            {
+                "name": "dev-files.aspect.ts",
+                "relativePath": "dev-files.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "dev-files.main.runtime.ts",
+                "relativePath": "dev-files.main.runtime.ts",
+                "test": false
+            },
+            {
+                "name": "dev-files.spec.ts",
+                "relativePath": "dev-files.spec.ts",
+                "test": false
+            },
+            {
+                "name": "dev-files.ts",
+                "relativePath": "dev-files.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/dev-files",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -2828,6 +2917,21 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "package-dependency/index.ts",
+                "test": false
+            },
+            {
+                "name": "package-dependency-factory.ts",
+                "relativePath": "package-dependency/package-dependency-factory.ts",
+                "test": false
+            },
+            {
+                "name": "package-dependency.ts",
+                "relativePath": "package-dependency/package-dependency.ts",
+                "test": false
+            },
+            {
                 "name": "package.route.ts",
                 "relativePath": "package.route.ts",
                 "test": false
@@ -4055,6 +4159,31 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "test-loader/index.ts",
+                "test": false
+            },
+            {
+                "name": "test-loader.composition.tsx",
+                "relativePath": "test-loader/test-loader.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "test-loader.docs.tsx",
+                "relativePath": "test-loader/test-loader.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "test-loader.module.scss",
+                "relativePath": "test-loader/test-loader.module.scss",
+                "test": false
+            },
+            {
+                "name": "test-loader.tsx",
+                "relativePath": "test-loader/test-loader.tsx",
+                "test": false
+            },
+            {
                 "name": "ui-build.cmd.tsx",
                 "relativePath": "ui-build.cmd.tsx",
                 "test": false
@@ -4657,7 +4786,7 @@
         "exported": false,
         "lanes": []
     },
-    "ui/notifications/api": {
+    "ui/menu": {
         "files": [
             {
                 "name": "index.ts",
@@ -4665,13 +4794,18 @@
                 "test": false
             },
             {
-                "name": "notification-api.tsx",
-                "relativePath": "notification-api.tsx",
+                "name": "menu.module.scss",
+                "relativePath": "menu.module.scss",
+                "test": false
+            },
+            {
+                "name": "menu.tsx",
+                "relativePath": "menu.tsx",
                 "test": false
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/notifications/ui/api",
+        "rootDir": "scopes/ui-foundation/menu",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4769,6 +4903,25 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-context",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/notifications/store": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "notification-store.tsx",
+                "relativePath": "notification-store.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/notifications/ui/notification-store",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -4888,36 +5041,21 @@
         "exported": false,
         "lanes": []
     },
-    "ui/round-loader": {
+    "ui/queries/get-docs": {
         "files": [
+            {
+                "name": "get-docs.ts",
+                "relativePath": "get-docs.ts",
+                "test": false
+            },
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
-            },
-            {
-                "name": "round-loader.composition.tsx",
-                "relativePath": "round-loader.composition.tsx",
-                "test": false
-            },
-            {
-                "name": "round-loader.docs.tsx",
-                "relativePath": "round-loader.docs.tsx",
-                "test": false
-            },
-            {
-                "name": "round-loader.module.scss",
-                "relativePath": "round-loader.module.scss",
-                "test": false
-            },
-            {
-                "name": "round-loader.tsx",
-                "relativePath": "round-loader.tsx",
-                "test": false
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/round-loader",
+        "rootDir": "scopes/docs/ui/queries/get-docs",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
@@ -5340,40 +5478,6 @@
         "exported": false,
         "lanes": []
     },
-    "ui/test-loader": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "test-loader.composition.tsx",
-                "relativePath": "test-loader.composition.tsx",
-                "test": false
-            },
-            {
-                "name": "test-loader.docs.tsx",
-                "relativePath": "test-loader.docs.tsx",
-                "test": false
-            },
-            {
-                "name": "test-loader.module.scss",
-                "relativePath": "test-loader.module.scss",
-                "test": false
-            },
-            {
-                "name": "test-loader.tsx",
-                "relativePath": "test-loader.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/ui/test-loader",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
     "ui/test-row": {
         "files": [
             {
@@ -5692,6 +5796,11 @@
                 "test": false
             },
             {
+                "name": "webpack-compilation-started-event.ts",
+                "relativePath": "events/webpack-compilation-started-event.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
@@ -5699,6 +5808,11 @@
             {
                 "name": "webpack-compiler-done-plugin.ts",
                 "relativePath": "plugins/webpack-compiler-done-plugin.ts",
+                "test": false
+            },
+            {
+                "name": "webpack-compiler-started-plugin.ts",
+                "relativePath": "plugins/webpack-compiler-started-plugin.ts",
                 "test": false
             },
             {
@@ -6041,5 +6155,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.119"
+    "version": "14.8.9-dev.132"
 }

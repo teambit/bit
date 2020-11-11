@@ -30,6 +30,7 @@ import { exportMany } from '../../../scope/component-ops/export-scope-components
 import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -96,6 +97,7 @@ async function exportComponents({
   newIdsOnRemote: BitId[];
 }> {
   const consumer: Consumer = await loadConsumer();
+  if (consumer.isLegacy && lanes) throw new LanesIsDisabled();
   const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,

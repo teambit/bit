@@ -1,6 +1,7 @@
 import { BuildContext, BuiltTaskResult, BuildTask } from '@teambit/builder';
 import { join } from 'path';
 import { Compiler, CompilerAspect } from '@teambit/compiler';
+import { DevFilesMain } from '@teambit/dev-files';
 import { ComponentMap } from '@teambit/component';
 import { Tester } from './tester';
 import { detectTestFiles } from './utils';
@@ -11,11 +12,13 @@ import { detectTestFiles } from './utils';
 export class TesterTask implements BuildTask {
   readonly name = 'TestComponents';
   readonly dependencies = [CompilerAspect.id];
-  constructor(readonly aspectId: string) {}
+  constructor(readonly aspectId: string, private devFiles: DevFilesMain) {}
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const tester: Tester = context.env.getTester();
-    const componentsSpecFiles = ComponentMap.as(context.components, detectTestFiles);
+    const componentsSpecFiles = ComponentMap.as(context.components, (component) => {
+      return detectTestFiles(component, this.devFiles);
+    });
 
     const testCount = componentsSpecFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
     if (testCount === 0)

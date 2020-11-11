@@ -13,7 +13,6 @@
  */
 
 import { CFG_FEATURE_TOGGLE } from '../../../constants';
-import GeneralError from '../../../error/general-error';
 import { getSync } from './global-config';
 
 export const ENV_VAR_FEATURE_TOGGLE = 'BIT_FEATURES';
@@ -53,19 +52,6 @@ export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
 
 export const HARMONY_FEATURE = 'harmony';
 
-export const LANES_FEATURE = 'lanes';
-
-export function isLaneEnabled() {
-  return isFeatureEnabled(LANES_FEATURE);
-}
-
 export function isHarmonyEnabled() {
   return isFeatureEnabled(HARMONY_FEATURE);
-}
-
-export function throwForUsingLaneIfDisabled() {
-  if (isLaneEnabled()) return;
-  throw new GeneralError(`lanes/snaps features are disabled.
-keep in mind that enabling these features could damage your components objects with no option to roll back.
-do not enable them unless you're testing them. `);
 }

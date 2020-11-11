@@ -1,6 +1,4 @@
 import R from 'ramda';
-
-import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import { BitId, BitIds } from '../../bit-id';
 import { DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, DEPENDENCIES_FIELDS } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -673,7 +671,7 @@ export default class Version extends BitObject {
   }
 
   addParent(ref: Ref) {
-    if (!isLaneEnabled()) return;
+    if (this.isLegacy) return;
     if (this.hasParent(ref)) {
       return; // make sure to not add twice
     }
@@ -681,7 +679,7 @@ export default class Version extends BitObject {
   }
 
   addAsOnlyParent(ref: Ref) {
-    if (!isLaneEnabled()) return;
+    if (this.isLegacy) return;
     this.parents = [ref];
   }
 

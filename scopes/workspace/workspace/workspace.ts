@@ -21,6 +21,7 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   PolicyDep,
+  DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -55,7 +56,7 @@ import { merge, slice } from 'lodash';
 import path, { join } from 'path';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
-
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -338,12 +339,12 @@ export class Workspace implements ComponentFactory {
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
-    const capsulesMap = isolatedEnvironment.capsules.reduce((accum, curr) => {
-      accum[curr.id.toString()] = curr.capsule;
-      return accum;
-    }, {});
-    const ret = components.map((component) => new ResolvedComponent(component, capsulesMap[component.id.toString()]));
-    return ret;
+    const resolvedComponents = components.map((component) => {
+      const capsule = isolatedEnvironment.capsules.getCapsule(component.id);
+      if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
+      return new ResolvedComponent(component, capsule);
+    });
+    return resolvedComponents;
   }
 
   private async getConsumerComponent(id: ComponentID, forCapsule = false) {
@@ -369,8 +370,8 @@ export class Workspace implements ComponentFactory {
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: ComponentID, forCapsule = false): Promise<Component> {
-    const consumerComponent = await this.getConsumerComponent(id, forCapsule);
+  async get(id: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
+    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     const component = await this.scope.get(id);
     if (!consumerComponent) {
       if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
@@ -422,14 +423,38 @@ export class Workspace implements ComponentFactory {
     return {};
   }
 
+  private async upsertExtensionData(component: Component, extension: string, data: any) {
+    const existingExtension = component.state.config.extensions.findExtension(extension);
+    if (existingExtension) {
+      existingExtension.data = merge(existingExtension.data, data);
+      return;
+    }
+    component.state.config.extensions.push(await this.getDataEntry(extension, data));
+  }
+
   private async executeLoadSlot(component: Component) {
     const entries = this.onComponentLoadSlot.toArray();
     const promises = entries.map(async ([extension, onLoad]) => {
       const data = await onLoad(component);
-      const existingExtension = component.state.config.extensions.findExtension(extension);
-      if (existingExtension) existingExtension.data = merge(existingExtension.data, data);
-      component.state.config.extensions.push(await this.getDataEntry(extension, data));
+      return this.upsertExtensionData(component, extension, data);
     });
+
+    // Special load events which runs from the workspace but should run from the correct aspect
+    // TODO: remove this once those extensions dependent on workspace
+    const envsData = await this.getEnvSystemDescriptor(component);
+    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
+    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    // const devFiles = await this.dependencyResolver.computeDevFiles(component);
+    // const devPatterns = await this.dependencyResolver.computeDevPatterns(component);
+    const dependenciesData = {
+      dependencies,
+      // devFiles,
+      // devPatterns,
+    };
+
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
+    // TODO: change to EnvsAspect.id
+    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
 
     await Promise.all(promises);
 
@@ -538,7 +563,9 @@ export class Workspace implements ComponentFactory {
     // @todo: this is a naive implementation, replace it with a real one.
     const all = await this.list();
     if (!pattern) return this.list();
-    return all.filter((c) => c.id.toString({ ignoreVersion: true }) === pattern);
+    return all.filter((c) => {
+      return c.id.toString({ ignoreVersion: true }) === pattern || c.id.fullName === pattern;
+    });
   }
 
   /**
@@ -890,8 +917,14 @@ export class Workspace implements ComponentFactory {
     });
 
     // no need to filter core aspects as they are not included in the graph
-    const requireableExtensions: any = await this.requireComponents(aspects);
-    await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
+    // here we are trying to load extensions from the workspace.
+    try {
+      const requireableExtensions: any = await this.requireComponents(aspects);
+      await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
+    } catch (err) {
+      // if extensions does not exist on workspace, try and load them from the local scope.
+      await this.scope.loadAspects(aspects.map((aspect) => aspect.id.toString()));
+    }
   }
 
   async resolveAspects(runtimeName: string) {

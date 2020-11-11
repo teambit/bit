@@ -94,7 +94,8 @@ export type OnTagResult = {
   id: BitId;
   extensions: ExtensionDataList;
 };
-export type OnTagFunc = (ids: BitId[]) => Promise<OnTagResult[]>;
+export type OnTagOpts = { disableDeployPipeline?: boolean };
+export type OnTagFunc = (ids: BitId[], options?: OnTagOpts) => Promise<OnTagResult[]>;
 
 export default class Scope {
   created = false;

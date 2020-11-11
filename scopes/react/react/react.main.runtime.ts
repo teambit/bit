@@ -21,8 +21,9 @@ import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { DependenciesPolicy } from '@teambit/dependency-resolver';
-import { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile } from 'typescript';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
+import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
@@ -75,13 +76,14 @@ export class ReactMain {
 
   /**
    * override the TS config of the React environment.
+   * @param tsModule typeof `ts` module instance.
    */
-  overrideTsConfig(tsconfig: TsConfigSourceFile) {
+  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
     this.tsConfigOverride = tsconfig;
 
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig);
+        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
       },
     });
   }
@@ -124,11 +126,11 @@ export class ReactMain {
 
   /**
    * override the jest configuration.
-   * @param jestConfigPath absolute path to jest.config.json.
+   * @param jestConfigPath {typeof jest} absolute path to jest.config.json.
    */
-  overrideJestConfig(jestConfigPath: string) {
+  overrideJestConfig(jestConfigPath: string, jestModule: any = jest) {
     return this.envs.override({
-      getTester: () => this.reactEnv.getTester(jestConfigPath),
+      getTester: () => this.reactEnv.getTester(jestConfigPath, jestModule),
     });
   }
 
@@ -228,10 +230,10 @@ export class ReactMain {
   ];
 
   static async provider(
-    [envs, jest, ts, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
+    [envs, jestAspect, tsAspect, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jest, ts, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

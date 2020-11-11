@@ -7,6 +7,7 @@ import { ComponentAspect } from '@teambit/component';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
+import chalk from 'chalk';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
@@ -217,13 +218,21 @@ export class UiMain {
     const uis = this.uiRootSlot.toArray();
     if (uis.length === 1) return uis[0];
     const uiRoot = uis.find(([, root]) => root.priority);
-    if (!uiRoot) throw new UnknownUI('default');
+    if (!uiRoot)
+      throw new UnknownUI(
+        'default',
+        this.uiRootSlot.toArray().map(([id]) => id)
+      );
     return uiRoot;
   }
 
   getUiRootOrThrow(uiRootName: string): UIRoot {
     const uiSlot = this.uiRootSlot.get(uiRootName);
-    if (!uiSlot) throw new UnknownUI(uiRootName);
+    if (!uiSlot)
+      throw new UnknownUI(
+        uiRootName,
+        this.uiRootSlot.toArray().map(([id]) => id)
+      );
     return uiSlot;
   }
 
@@ -266,8 +275,10 @@ export class UiMain {
     const hashed = await this.cache.get(uiRoot.path);
     if (hash === hashed && !force) return;
     if (hash !== hashed)
-      this.logger.console(`${uiRoot.configFile} has been changed. Rebuilding UI assets for ${uiRoot.name}`);
-    this.logger.console(`Building UI assets for ${uiRoot.name}`);
+      this.logger.console(
+        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}'`
+      );
+    this.logger.console(`Building UI assets for '${chalk.cyan(uiRoot.name)}'`);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
   }

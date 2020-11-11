@@ -162,8 +162,6 @@ export default async function provideWorkspace(
     return defaultScope;
   });
 
-  onComponentLoadSlot.register(workspace.getEnvSystemDescriptor.bind(workspace));
-
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);

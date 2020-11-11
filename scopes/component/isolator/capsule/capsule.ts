@@ -114,13 +114,21 @@ export default class Capsule extends CapsuleTemplate<Exec, NodeFS> {
     return files.map((file) => path.join(dir, file));
   }
 
+  static getCapsuleDirName(component: Component, config: { alwaysNew?: boolean; name?: string } = {}) {
+    return config.name || filenamify(component.id.toString(), { replacement: '_' });
+  }
+
+  static getCapsuleRootDir(component: Component, baseDir: string, config: { alwaysNew?: boolean; name?: string } = {}) {
+    return path.join(baseDir, Capsule.getCapsuleDirName(component, config));
+  }
+
   static async createFromComponent(
     component: Component,
     baseDir: string,
     config: { alwaysNew?: boolean; name?: string } = {}
   ): Promise<Capsule> {
     // TODO: make this a static method and combine with ComponentCapsule
-    const capsuleDirName = config.name || filenamify(component.id.toString(), { replacement: '_' });
+    const capsuleDirName = Capsule.getCapsuleDirName(component, config);
     const wrkDir = path.join(baseDir, config.alwaysNew ? `${capsuleDirName}_${v4()}` : capsuleDirName);
     const container = new FsContainer(wrkDir);
     const capsule = new Capsule(container, container.fs, new Console(), new State(), component);

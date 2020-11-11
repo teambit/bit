@@ -2,6 +2,7 @@ import { TranspileOptions, transpileSync } from '@stencil/core/compiler';
 import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { Compiler, TranspileOpts, TranspileOutput } from '@teambit/compiler';
 
+// @ts-ignore
 export class StencilCompiler implements Compiler {
   constructor(readonly id: string, private transpileOpts: TranspileOptions) {}
   distDir = 'dist';

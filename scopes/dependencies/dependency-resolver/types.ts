@@ -2,11 +2,7 @@ import { ComponentConfig, ComponentFS } from '@teambit/component';
 import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersion = string;
-export type PackageName = string;
+import { DependencyLifecycleType, PackageName, SemverVersion } from './dependencies';
 
 export type RegistryName = string;
 
@@ -14,7 +10,8 @@ export type Registry = {
   uri: string;
   alwaysAuth: boolean;
   authHeaderValue?: string;
-  // TODO: consider add plain token here?
+  originalAuthType: string;
+  originalAuthValue: string;
 };
 
 export type RegistriesMap = Record<RegistryName, Registry>;
@@ -74,6 +71,11 @@ export interface DependencyResolverWorkspaceConfig {
    * of dependencies.
    */
   packageManagerArgs: string[];
+
+  /**
+   * regex to determine whether a file is a file meant for development purposes.
+   */
+  devFilePatterns: string[];
 }
 
 export interface DependencyResolverVariantConfig {
@@ -86,7 +88,6 @@ export interface RawComponentState {
   config: ComponentConfig;
 }
 
-export type DependencyLifecycleType = 'runtime' | 'dev' | 'peer';
 export type DependencyType = 'package' | 'component';
 
 /**

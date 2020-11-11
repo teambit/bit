@@ -4,6 +4,7 @@ import { BitIds } from '../../../bit-id';
 import { Consumer, loadConsumer } from '../../../consumer';
 import Component from '../../../consumer/component';
 import ComponentsList from '../../../consumer/component/components-list';
+import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
 import { AutoTagResult } from '../../../scope/component-ops/auto-tag';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
@@ -25,6 +26,7 @@ export async function snapAction(args: {
 }): Promise<SnapResults | null> {
   const { id, message, force, verbose, ignoreUnresolvedDependencies, skipTests, skipAutoSnap } = args;
   const consumer: Consumer = await loadConsumer();
+  if (consumer.isLegacy) throw new LanesIsDisabled();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   const ids = await getIdsToSnap();

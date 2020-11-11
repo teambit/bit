@@ -22,21 +22,18 @@ export class PublishTask implements BuildTask {
     const capsules = context.capsuleGraph.seedersCapsules;
     // const capsulesToPublish = capsules.filter((c) => this.publisher.shouldPublish(c.component.config.extensions));
     const capsulesToPublish: Capsule[] = [];
-    const capsulesToPack: Capsule[] = [];
     capsules.forEach((c) => {
       const shouldPublish = this.publisher.shouldPublish(c.component.config.extensions);
       if (shouldPublish) {
         capsulesToPublish.push(c);
-      } else {
-        capsulesToPack.push(c);
       }
     });
     this.logger.info(`going to run publish on ${capsulesToPublish.length} out of ${capsules.length}`);
 
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
-    this.logger.info(`going to run pack dry-run on ${capsulesToPack.length} out of ${capsules.length}`);
+    this.logger.info(`going to run pack dry-run on ${capsules.length} out of ${capsules.length}`);
 
-    const packResults = await this.packer.packMultipleCapsules(capsulesToPack, { override: true }, false);
+    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, false);
     const packArtifactsDefs = this.packer.getArtifactDefInCapsule();
 
     return {
