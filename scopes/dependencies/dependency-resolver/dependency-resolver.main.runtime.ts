@@ -55,6 +55,7 @@ import {
   COMPONENT_DEP_TYPE,
   DependencyList,
 } from './dependencies';
+import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -549,6 +550,11 @@ export class DependencyResolverMain {
       dependencyFactorySlot
     );
 
+    componentAspect.registerShowFragments([
+      new DependenciesFragment(dependencyResolver),
+      new DevDependenciesFragment(dependencyResolver),
+      new PeerDependenciesFragment(dependencyResolver),
+    ]);
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
