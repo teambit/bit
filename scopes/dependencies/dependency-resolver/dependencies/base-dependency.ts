@@ -1,4 +1,4 @@
-import { Dependency, DependencyLifecycleType, SerializedDependency } from './dependency';
+import { Dependency, DependencyLifecycleType, SerializedDependency, DependencyManifest } from './dependency';
 
 export abstract class BaseDependency implements Dependency {
   _type: string;
@@ -7,6 +7,10 @@ export abstract class BaseDependency implements Dependency {
 
   get id() {
     return this._id;
+  }
+
+  set id(newId: string) {
+    this._id = newId;
   }
 
   get version() {
@@ -28,5 +32,22 @@ export abstract class BaseDependency implements Dependency {
       __type: this.type,
       lifecycle: this.lifecycle.toString(),
     } as unknown) as SerializedDependency;
+  }
+
+  setVersion(newVersion: string) {
+    this._version = newVersion;
+  }
+
+  getPackageName() {
+    return this.id;
+  }
+
+  toManifest(): DependencyManifest {
+    const packageName = this.getPackageName?.();
+    const version = this.version;
+    return {
+      packageName,
+      version,
+    };
   }
 }

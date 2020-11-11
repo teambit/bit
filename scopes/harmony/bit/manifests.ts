@@ -46,12 +46,14 @@ import { ChangelogAspect } from '@teambit/changelog';
 import { CommandBarAspect } from '@teambit/command-bar';
 import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
+import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
   [CLIAspect.id]: CLIAspect,
+  [DevFilesAspect.id]: DevFilesAspect,
   [WorkspaceAspect.id]: WorkspaceAspect,
   [ESLintAspect.id]: ESLintAspect,
   [CompilerAspect.id]: CompilerAspect,

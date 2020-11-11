@@ -8,4 +8,8 @@ export class PackageDependency extends BaseDependency {
     super(id, version, lifecycle);
     this._type = 'package';
   }
+
+  getPackageName() {
+    return this.id;
+  }
 }

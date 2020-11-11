@@ -1,3 +1,4 @@
+import Bluebird from 'bluebird';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
@@ -8,7 +9,7 @@ export class DependencyListFactory {
   constructor(private factories: Record<string, DependencyFactory>) {}
 
   async fromSerializedDependencies(serializedDependencies: SerializedDependency[]): Promise<DependencyList> {
-    const dependenciesP = serializedDependencies.map(async (serializedDependency) => {
+    const dependencies = await Bluebird.mapSeries(serializedDependencies, async (serializedDependency) => {
       const type = serializedDependency.__type;
       const factory = this.factories[type];
       if (!factory) {
@@ -17,18 +18,16 @@ export class DependencyListFactory {
       const dependency = await factory.parse(serializedDependency);
       return dependency;
     });
-    const dependencies = await Promise.all(dependenciesP);
     return new DependencyList(dependencies);
   }
 
   async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const listsP = Object.values(this.factories).map(async (factory) => {
+    const lists = await Bluebird.mapSeries(Object.values(this.factories), async (factory) => {
       if (factory.fromLegacyComponent && typeof factory.fromLegacyComponent === 'function') {
         return factory.fromLegacyComponent(legacyComponent);
       }
       return new DependencyList([]);
     });
-    const lists = await Promise.all(listsP);
     return DependencyList.merge(lists);
   }
 }

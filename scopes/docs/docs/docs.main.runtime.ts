@@ -7,6 +7,7 @@ import { PkgAspect, PkgMain } from '@teambit/pkg';
 import { ExecutionContext } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
+import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -22,9 +23,9 @@ export type ComponentDocs = {
 
 export type DocsConfig = {
   /**
-   * regex for detection of documentation files
+   * glob patterns to identify doc files.
    */
-  extension: string;
+  patterns: string[];
 };
 
 /**
@@ -43,7 +44,9 @@ export class DocsMain {
 
     private workspace: Workspace,
 
-    private logger: Logger
+    private logger: Logger,
+
+    private devFiles: DevFilesMain
   ) {}
 
   /**
@@ -51,12 +54,14 @@ export class DocsMain {
    */
   getDocsMap(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      return component.state.filesystem.byRegex(/\.docs\.[tj]sx?$/);
+      return this.getDocsFiles(component);
     });
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    return component.state.filesystem.byRegex(/\.docs\.[tj]sx?$/);
+    const devFiles = this.devFiles.getDevFiles(component);
+    const docFiles = devFiles.get(DocsAspect.id);
+    return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
 
   /**
@@ -120,19 +125,29 @@ export class DocsMain {
     PkgAspect,
     CompilerAspect,
     LoggerAspect,
+    DevFilesAspect,
     ComponentAspect,
   ];
 
-  static async provider([preview, graphql, workspace, pkg, compiler, loggerAspect]: [
-    PreviewMain,
-    GraphqlMain,
-    Workspace,
-    PkgMain,
-    CompilerMain,
-    LoggerMain
-  ]) {
+  static defaultConfig = {
+    patterns: ['*.docs.*'],
+  };
+
+  static async provider(
+    [preview, graphql, workspace, pkg, compiler, loggerAspect, devFiles]: [
+      PreviewMain,
+      GraphqlMain,
+      Workspace,
+      PkgMain,
+      CompilerMain,
+      LoggerMain,
+      DevFilesMain
+    ],
+    config: DocsConfig
+  ) {
     const logger = loggerAspect.createLogger(DocsAspect.id);
-    const docs = new DocsMain(preview, pkg, compiler, workspace, logger);
+    const docs = new DocsMain(preview, pkg, compiler, workspace, logger, devFiles);
+    devFiles.registerDevPattern(config.patterns);
 
     if (workspace) {
       workspace.onComponentLoad(async (component) => {

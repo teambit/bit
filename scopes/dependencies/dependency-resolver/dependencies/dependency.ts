@@ -7,6 +7,17 @@ export interface SerializedDependency {
   lifecycle: string;
 }
 
+/**
+ * Allowed values are valid semver values and the "-" sign.
+ */
+export type SemverVersion = string;
+export type PackageName = string;
+
+export type DependencyManifest = {
+  packageName: PackageName;
+  version: SemverVersion;
+};
+
 export interface Dependency {
   id: string;
   version: string;
@@ -14,4 +25,7 @@ export interface Dependency {
   lifecycle: DependencyLifecycleType;
 
   serialize: <T extends SerializedDependency>() => T;
+  setVersion: (newVersion: string) => void;
+  toManifest: () => DependencyManifest;
+  getPackageName?: () => string;
 }
