@@ -12,6 +12,7 @@ import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
+import { EnvFragment } from './env.fragment';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -287,6 +288,7 @@ export class EnvsMain {
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
+    component.registerShowFragments([new EnvFragment(envs)]);
     cli.register(new EnvsCmd(envs, component));
     graphql.register(environmentsSchema(envs));
     return envs;

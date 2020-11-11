@@ -2,6 +2,7 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { ConfigAspect, Config } from '@teambit/config';
 import { flatten, orderBy } from 'lodash';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
 import { ComponentFactory } from './component-factory';
@@ -12,11 +13,20 @@ import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
 import { AspectEntry } from './aspect-entry';
 import { ComponentID } from './id';
-import { ShowCmd, ShowFragment, ShowFragmentFactory } from './show';
+import {
+  ShowCmd,
+  ShowFragment,
+  NameFragment,
+  MainFileFragment,
+  IDFragment,
+  ScopeFragment,
+  FilesFragment,
+  ExtensionsFragment,
+} from './show';
 
 export type ComponentHostSlot = SlotRegistry<ComponentFactory>;
 
-export type ShowFragmentSlot = SlotRegistry<ShowFragmentFactory>;
+export type ShowFragmentSlot = SlotRegistry<ShowFragment[]>;
 
 export class ComponentMain {
   constructor(
@@ -100,15 +110,15 @@ export class ComponentMain {
   }
 
   getShowFragments() {
-    const fragments = orderBy(this.showFragmentSlot.values(), ['weight', ['asc']]);
+    const fragments = orderBy(flatten(this.showFragmentSlot.values()), ['weight', ['asc']]);
     return fragments;
   }
 
   /**
    * register a show fragment to display further information in the `bit show` command.
    */
-  registerShowFragment(showFragment: ShowFragment[]) {
-    this.showFragmentSlot.register(showFragment);
+  registerShowFragments(showFragments: ShowFragment[]) {
+    this.showFragmentSlot.register(showFragments);
     return this;
   }
 
@@ -117,15 +127,28 @@ export class ComponentMain {
   static slots = [Slot.withType<ComponentFactory>(), Slot.withType<Route[]>(), Slot.withType<ShowFragment[]>()];
 
   static runtime = MainRuntime;
-  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect];
+  static dependencies = [GraphqlAspect, ExpressAspect, CLIAspect, ConfigAspect];
 
   static async provider(
-    [graphql, express, cli]: [GraphqlMain, ExpressMain, CLIMain],
+    [graphql, express, cli, configAspect]: [GraphqlMain, ExpressMain, CLIMain, Config],
     config,
     [hostSlot, showFragmentSlot]: [ComponentHostSlot, ShowFragmentSlot]
   ) {
     const componentExtension = new ComponentMain(hostSlot, express, showFragmentSlot);
-    cli.register(new ShowCmd(componentExtension));
+
+    if (configAspect.workspaceConfig || configAspect.type === 'scope') {
+      cli.unregister('show');
+      cli.register(new ShowCmd(componentExtension));
+    }
+
+    componentExtension.registerShowFragments([
+      new NameFragment(),
+      new MainFileFragment(),
+      new IDFragment(),
+      new ScopeFragment(),
+      new FilesFragment(),
+      new ExtensionsFragment(),
+    ]);
     graphql.register(componentSchema(componentExtension));
 
     return componentExtension;

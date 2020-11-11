@@ -973,8 +973,38 @@
                 "test": false
             },
             {
+                "name": "extensions.fragment.ts",
+                "relativePath": "show/extensions.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "files.fragment.ts",
+                "relativePath": "show/files.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "id.fragment.ts",
+                "relativePath": "show/id.fragment.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "show/index.ts",
+                "test": false
+            },
+            {
+                "name": "main-file.fragment.ts",
+                "relativePath": "show/main-file.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "name.fragment.ts",
+                "relativePath": "show/name.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "scope.fragment.ts",
+                "relativePath": "show/scope.fragment.ts",
                 "test": false
             },
             {
@@ -1614,6 +1644,31 @@
                 "test": false
             },
             {
+                "name": "dependencies.fragment.ts",
+                "relativePath": "show-fragments/dependencies.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "dev-dependencies.fragment.ts",
+                "relativePath": "show-fragments/dev-dependencies.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "show-fragments/index.ts",
+                "test": false
+            },
+            {
+                "name": "peer-dependencies.fragment.ts",
+                "relativePath": "show-fragments/peer-dependencies.fragment.ts",
+                "test": false
+            },
+            {
+                "name": "serialize-by-lifecycle.ts",
+                "relativePath": "show-fragments/serialize-by-lifecycle.ts",
+                "test": false
+            },
+            {
                 "name": "types.ts",
                 "relativePath": "types.ts",
                 "test": false
@@ -1832,6 +1887,11 @@
             {
                 "name": "env-service-list.ts",
                 "relativePath": "env-service-list.ts",
+                "test": false
+            },
+            {
+                "name": "env.fragment.ts",
+                "relativePath": "env.fragment.ts",
                 "test": false
             },
             {
