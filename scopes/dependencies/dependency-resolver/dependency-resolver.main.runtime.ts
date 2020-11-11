@@ -505,6 +505,7 @@ export class DependencyResolverMain {
   static slots = [
     Slot.withType<DependenciesPolicy>(),
     Slot.withType<PackageManager>(),
+    Slot.withType<RegExp>(),
     Slot.withType<DependencyFactory>(),
   ];
 
@@ -515,6 +516,7 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
+    devFilePatterns: ['*.spec.ts'],
     strictPeerDependencies: true,
   };
 
@@ -551,6 +553,7 @@ export class DependencyResolverMain {
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
+
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {
