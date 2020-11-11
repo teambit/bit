@@ -61,6 +61,7 @@ const hubResolver = async (scopeName) => {
 };
 
 const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> => {
+  const token = getSync(CFG_USER_TOKEN_KEY);
   const resolverPath = R.path(['scopeJson', 'resolverPath'], thisScope);
   let resolverFunction;
   if (!resolverPath) {
@@ -71,7 +72,7 @@ const remoteResolver = (scopeName: string, thisScope?: Scope): Promise<string> =
     resolverFunction = require(resolverPath);
   } // use the resolver described in the scopeJson
 
-  return resolverFunction(scopeName, thisScope ? thisScope.name : undefined); // should return promise<string>
+  return resolverFunction(scopeName, thisScope ? thisScope.name : undefined, token); // should return promise<string>
 };
 
 export default remoteResolver;
