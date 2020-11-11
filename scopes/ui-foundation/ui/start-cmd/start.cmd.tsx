@@ -81,8 +81,8 @@ export class StartCmd implements Command {
       aspectId: MainDevServerAspect.id,
       execMethodName: 'run',
       params: [uiRootName, pattern, dev, port, rebuild],
-      // silent: true,
-      silent: false,
+      silent: true,
+      // silent: false,
     };
     this.worker.spawn(spawnOptions);
 

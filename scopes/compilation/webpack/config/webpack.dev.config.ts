@@ -66,8 +66,8 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     },
 
     devServer: {
-      quiet: true,
-      stats: 'none',
+      // quiet: true,
+      stats: 'errors-warnings',
 
       // Serve index.html as the base
       contentBase: resolveWorkspacePath(publicDirectory),
