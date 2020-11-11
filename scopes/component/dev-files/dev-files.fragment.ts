@@ -23,5 +23,12 @@ export class DevFilesFragment implements ShowFragment {
     };
   }
 
+  async json(component: Component) {
+    return {
+      title: this.title,
+      json: this.devFiles.getDevFiles(component).toObject(),
+    };
+  }
+
   weight = 7;
 }
