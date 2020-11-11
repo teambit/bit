@@ -23,7 +23,7 @@ import {
   PolicyDep,
   DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -458,8 +458,7 @@ export class Workspace implements ComponentFactory {
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
-    // TODO: change to EnvsAspect.id
-    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
+    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
 
     await Promise.all(promises);
 

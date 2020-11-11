@@ -207,8 +207,11 @@ export class EnvsMain {
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {
-    // TODO: fix after resolving dep issue between envs -> dep resolver -> workspace -> scope.
-    const envsData = component.state.aspects.get('teambit.workspace/workspace');
+    let envsData = component.state.aspects.get(EnvsAspect.id);
+    if (!envsData) {
+      // TODO: remove this once we re-export old components used to store the data here
+      envsData = component.state.aspects.get('teambit.workspace/workspace');
+    }
     if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
 
     return {
