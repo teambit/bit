@@ -973,6 +973,21 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "show/index.ts",
+                "test": false
+            },
+            {
+                "name": "show-fragment.ts",
+                "relativePath": "show/show-fragment.ts",
+                "test": false
+            },
+            {
+                "name": "show.cmd.ts",
+                "relativePath": "show/show.cmd.ts",
+                "test": false
+            },
+            {
                 "name": "author.ts",
                 "relativePath": "snap/author.ts",
                 "test": false
