@@ -4286,6 +4286,35 @@
         "exported": false,
         "lanes": []
     },
+    "ui/empty-component-gallery": {
+        "files": [
+            {
+                "name": "empty-component-gallery.composition.tsx",
+                "relativePath": "empty-component-gallery.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "empty-component-gallery.module.scss",
+                "relativePath": "empty-component-gallery.module.scss",
+                "test": false
+            },
+            {
+                "name": "empty-component-gallery.tsx",
+                "relativePath": "empty-component-gallery.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/empty-component-gallery",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "ui/empty-scope": {
         "files": [
             {
