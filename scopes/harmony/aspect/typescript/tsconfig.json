@@ -20,10 +20,6 @@
     "moduleResolution": "node",
     "noImplicitAny": false,
     "rootDir": ".",
-    "baseUrl": ".",
-    "paths": {
-      "@teambit/harmony": ["node_modules/@teambit/harmony"]
-    },
     "removeComments": true,
     "preserveConstEnums": true,
     "resolveJsonModule": true

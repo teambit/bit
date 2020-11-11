@@ -13,7 +13,21 @@ export class Registry {
     /**
      * authentication header.
      */
-    readonly authHeaderValue?: string
+    readonly authHeaderValue?: string,
+
+    /**
+     * Type of auth as it appears in the npmrc file
+     * authToken
+     * auth
+     * user-pass
+     */
+    readonly originalAuthType?: string,
+
+    /**
+     * original auth value as it appears in npmrc file
+     * for user/pass it will appear as user:pass
+     */
+    readonly originalAuthValue?: string
   ) {}
 
   get token(): string | undefined {

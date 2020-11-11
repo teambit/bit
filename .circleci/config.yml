@@ -453,6 +453,7 @@ jobs:
           path: ~/Library/Caches/Bit/logs
 
   bit_build:
+    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo

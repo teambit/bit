@@ -197,7 +197,7 @@ export default class Dependencies {
       if (sameIds.length > 1) {
         throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
       }
-      const permittedProperties = ['id', 'relativePaths'];
+      const permittedProperties = ['id', 'relativePaths', 'packageName'];
       const currentProperties = Object.keys(dependency);
       currentProperties.forEach((currentProp) => {
         if (!permittedProperties.includes(currentProp)) {
