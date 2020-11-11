@@ -24,7 +24,8 @@ export const Center = ({ children }: React.HTMLAttributes<HTMLDivElement>) => {
   return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</div>;
 };
 
-Overview.abstract = 'A UI component that wraps the component-status and the component-tooltip together.';
+Overview.abstract =
+  'A UI component that handles the presentation  of the component status and allows to present multiple status options.';
 
 Overview.labels = ['react', 'typescript', 'status', 'tooltip'];
 
