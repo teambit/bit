@@ -4494,9 +4494,24 @@
                 "test": false
             },
             {
+                "name": "component-status-resolver.composition.tsx",
+                "relativePath": "component-status-resolver.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-status-resolver.docs.tsx",
+                "relativePath": "component-status-resolver.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "component-status-resolver.module.scss",
                 "relativePath": "component-status-resolver.module.scss",
                 "test": false
+            },
+            {
+                "name": "component-status-resolver.spec.tsx",
+                "relativePath": "component-status-resolver.spec.tsx",
+                "test": true
             },
             {
                 "name": "component-status-resolver.tsx",
