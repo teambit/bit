@@ -546,6 +546,7 @@ jobs:
           path: ~/Library/Caches/Bit/logs
 
   e2e_test:
+    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
