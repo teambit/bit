@@ -4371,6 +4371,11 @@
     "ui/composition-card": {
         "files": [
             {
+                "name": "composition-card.composition.tsx",
+                "relativePath": "composition-card.composition.tsx",
+                "test": false
+            },
+            {
                 "name": "composition-card.module.scss",
                 "relativePath": "composition-card.module.scss",
                 "test": false
