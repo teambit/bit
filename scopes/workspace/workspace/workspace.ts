@@ -73,7 +73,6 @@ import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
-import { WorkspaceAspect } from './workspace.aspect';
 import {
   OnComponentAddSlot,
   OnComponentChangeSlot,
