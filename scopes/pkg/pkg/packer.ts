@@ -97,7 +97,8 @@ export class Packer {
     if (omitFullTarPath) {
       fieldsToRemove.push('tarPath');
     }
-    const metadata = _(packResult.metadata).omitBy(_.isUndefined).omit(fieldsToRemove).value();
+    // TODO: @gilad please make sure to fix this type error now that I added lodash types
+    const metadata = _(packResult.metadata).omitBy(_.isUndefined).omit(fieldsToRemove).value() as any;
 
     return {
       component,

@@ -24,6 +24,7 @@ export type { ComponentUI } from './component.ui.runtime';
 export { Section } from './section';
 export { ComponentContext } from './ui/context/component-context';
 export { ComponentModel, ComponentModelProps } from './ui/component-model';
+export type { ShowFragment, ShowRow } from './show';
 export { default as Config } from './config';
 // export { AspectList } from './aspect-list';
 // export { AspectEntry } from './aspect-entry';

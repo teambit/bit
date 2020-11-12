@@ -3,7 +3,7 @@ import { readFileSync } from 'fs';
 import ts, { isFunctionDeclaration, isVariableStatement, SourceFile, VariableStatement } from 'typescript';
 
 export class TypeScriptParser implements Parser {
-  public extension = /.ts/;
+  public extension = /^.*\.(js|jsx|ts|tsx)$/;
 
   getExports(sourceFile: SourceFile): Export[] {
     const exports = sourceFile.statements.filter((statement) => {

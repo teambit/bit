@@ -12,6 +12,7 @@ import { EnvRuntime, Runtime } from './runtime';
 import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
+import { EnvFragment } from './env.fragment';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -206,8 +207,11 @@ export class EnvsMain {
    * get an environment Descriptor.
    */
   getDescriptor(component: Component): Descriptor | null {
-    // TODO: fix after resolving dep issue between envs -> dep resolver -> workspace -> scope.
-    const envsData = component.state.aspects.get('teambit.workspace/workspace');
+    let envsData = component.state.aspects.get(EnvsAspect.id);
+    if (!envsData) {
+      // TODO: remove this once we re-export old components used to store the data here
+      envsData = component.state.aspects.get('teambit.workspace/workspace');
+    }
     if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
 
     return {
@@ -287,6 +291,7 @@ export class EnvsMain {
   ) {
     const logger = loggerAspect.createLogger(EnvsAspect.id);
     const envs = new EnvsMain(config, context, envSlot, logger, serviceSlot, component);
+    component.registerShowFragments([new EnvFragment(envs)]);
     cli.register(new EnvsCmd(envs, component));
     graphql.register(environmentsSchema(envs));
     return envs;

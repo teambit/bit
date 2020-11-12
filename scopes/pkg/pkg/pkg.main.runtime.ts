@@ -30,6 +30,7 @@ import { PkgArtifact } from './pkg-artifact';
 import { PackageRoute, routePath } from './package.route';
 import { PackageDependencyFactory } from './package-dependency';
 import { pkgSchema } from './pkg.graphql';
+import { PackageFragment } from './package.fragment';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -123,6 +124,7 @@ export class PkgMain {
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
 
+    componentAspect.registerShowFragments([new PackageFragment(pkg)]);
     dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
     graphql.register(pkgSchema(pkg));
