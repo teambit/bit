@@ -6,6 +6,10 @@ import { Action } from './action';
 
 type Options = { clientId: string };
 
+/**
+ * load objects from pending-dir by a client-id and persist them to the object directory.
+ * once done, remove the pending-dir to free the resource.
+ */
 export class ExportPersist implements Action<Options, string[]> {
   async execute(scope: Scope, options: Options): Promise<string[]> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);

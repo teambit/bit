@@ -16,6 +16,7 @@ const WAIT_BEFORE_RETRY_IN_MS = 1000;
 /**
  * do not save anything. just make sure the objects can be merged and there are no conflicts.
  * once done, clear the objects from the memory so then they won't be used by mistake later on.
+ * this also makes sure that non-external dependencies are not missing.
  */
 export class ExportValidate implements Action<Options, void> {
   scope: Scope;
@@ -30,7 +31,6 @@ export class ExportValidate implements Action<Options, void> {
   }
 
   private async waitIfNeeded() {
-    await this.clearClientsIfStale();
     let clientQueue = this.getClientsQueue();
     if (clientQueue[0] === this.clientId) return; // it's your turn
     logger.debug(`export-validate, waitIfNeeded - ${clientQueue.length} clients in queue (including current)`);
@@ -38,6 +38,7 @@ export class ExportValidate implements Action<Options, void> {
       logger.debug(`export-validate, waitIfNeeded - ${i} out of ${NUM_OF_RETRIES}`);
       // eslint-disable-next-line no-await-in-loop
       await this.sleep(WAIT_BEFORE_RETRY_IN_MS);
+      await this.clearClientsIfStale();
       clientQueue = this.getClientsQueue();
       if (clientQueue[0] === this.clientId) {
         break;

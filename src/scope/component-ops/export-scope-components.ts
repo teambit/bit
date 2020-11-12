@@ -54,6 +54,9 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   return mergedIds;
 }
 
+/**
+ * the export process uses four steps. read more about it here: https://github.com/teambit/bit/pull/3371
+ */
 export async function exportMany({
   scope,
   ids,
