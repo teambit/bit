@@ -28,7 +28,7 @@ export default async function put(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, objectList }, headers);
   const scope = await loadScope(path);
-  if (pushOptions.clientId) {
+  if (pushOptions && pushOptions.clientId) {
     // harmony
     await scope.writeObjectsToPendingDir(objectList, pushOptions.clientId);
     return [];
