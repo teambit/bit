@@ -70,7 +70,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id.toString());
         const buildContext = Object.assign(executionContext, {
-          capsuleGraph: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
+          capsuleNetwork: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
         });
         envsBuildContext[executionContext.id] = buildContext;
       })

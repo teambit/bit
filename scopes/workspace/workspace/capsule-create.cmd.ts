@@ -38,7 +38,7 @@ export class CapsuleCreateCmd implements Command {
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
     const capsuleOptions = { baseDir, installPackages, alwaysNew, name: id, packageManager };
     const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
-    const capsules = isolatedEnvironment.capsules;
+    const capsules = isolatedEnvironment.graphCapsules;
     return capsules;
   }
 
