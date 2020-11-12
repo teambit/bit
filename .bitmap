@@ -4450,9 +4450,24 @@
     "ui/component-status": {
         "files": [
             {
+                "name": "component-status.composition.tsx",
+                "relativePath": "component-status.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-status.docs.tsx",
+                "relativePath": "component-status.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "component-status.module.scss",
                 "relativePath": "component-status.module.scss",
                 "test": false
+            },
+            {
+                "name": "component-status.spec.tsx",
+                "relativePath": "component-status.spec.tsx",
+                "test": true
             },
             {
                 "name": "component-status.tsx",
@@ -4479,9 +4494,24 @@
                 "test": false
             },
             {
+                "name": "component-status-resolver.composition.tsx",
+                "relativePath": "component-status-resolver.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-status-resolver.docs.tsx",
+                "relativePath": "component-status-resolver.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "component-status-resolver.module.scss",
                 "relativePath": "component-status-resolver.module.scss",
                 "test": false
+            },
+            {
+                "name": "component-status-resolver.spec.tsx",
+                "relativePath": "component-status-resolver.spec.tsx",
+                "test": true
             },
             {
                 "name": "component-status-resolver.tsx",
@@ -4589,6 +4619,21 @@
     },
     "ui/deprecation-icon": {
         "files": [
+            {
+                "name": "deprecation-icon.composition.tsx",
+                "relativePath": "deprecation-icon.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "deprecation-icon.docs.tsx",
+                "relativePath": "deprecation-icon.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "deprecation-icon.spec.tsx",
+                "relativePath": "deprecation-icon.spec.tsx",
+                "test": true
+            },
             {
                 "name": "deprecation-icon.tsx",
                 "relativePath": "deprecation-icon.tsx",
