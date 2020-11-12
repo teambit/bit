@@ -40,7 +40,7 @@ import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
-import { PutRoute, FetchRoute } from './routes';
+import { PutRoute, FetchRoute, ActionRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -489,7 +489,7 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    express.register([new PutRoute(scope, postPutSlot), new FetchRoute(scope)]);
+    express.register([new PutRoute(scope, postPutSlot), new FetchRoute(scope), new ActionRoute(scope)]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));

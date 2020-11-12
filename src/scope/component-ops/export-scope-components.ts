@@ -252,12 +252,12 @@ export async function exportMany({
       try {
         await remote.pushMany(objectList, pushOptions, context);
         logger.debugAndAddBreadCrumb(
-          'exportMany',
-          'successfully pushed all ids to the bare-scope, going to save them back to local scope'
+          'export-scope-components.pushRemotesPendingDir',
+          'successfully pushed all objects to the pending-dir directory on the remote'
         );
         pushedRemotes.push(remote);
       } catch (err) {
-        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
+        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
         await removePendingDirs(pushedRemotes);
         throw err;
       }
@@ -268,7 +268,7 @@ export async function exportMany({
     try {
       await Promise.all(remotes.map((remote) => remote.action(ExportValidate.name, { clientId })));
     } catch (err) {
-      logger.warnAndAddBreadCrumb('validateRemotes', 'failed validating remotes');
+      logger.errorAndAddBreadCrumb('validateRemotes', 'failed validating remotes', {}, err);
       await removePendingDirs(remotes);
       throw err;
     }

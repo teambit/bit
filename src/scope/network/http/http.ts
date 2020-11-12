@@ -15,6 +15,8 @@ import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
+import { PushOptions } from '../../../api/scope/lib/put';
+import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 
 export class Http implements Network {
   constructor(private graphClient: GraphQLClient, private _token: string | undefined | null, private url: string) {}
@@ -68,7 +70,7 @@ export class Http implements Network {
     return res.removeComponents;
   }
 
-  async pushMany(objectList: ObjectList): Promise<string[]> {
+  async pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
     const route = 'api/scope/put';
     logger.debug(`Http.pushMany, url: ${this.url}/${route}  total objects ${objectList.count()}`);
 
@@ -77,10 +79,10 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'POST',
       body: pack,
-      headers: this.getHeaders(),
+      headers: this.getHeaders({ 'push-options': JSON.stringify(pushOptions) }),
     });
     await this.throwForNonOkStatus(res);
-    const ids = await res.json();
+    const ids = await this.getJsonResponse(res);
     return ids;
   }
 
@@ -97,7 +99,7 @@ export class Http implements Network {
       headers: this.getHeaders({ 'Content-Type': 'application/json' }),
     });
     await this.throwForNonOkStatus(res);
-    const results = await res.json();
+    const results = await this.getJsonResponse(res);
     return results;
   }
 
@@ -118,14 +120,32 @@ export class Http implements Network {
     return objectList;
   }
 
-  private async throwForNonOkStatus(res: Response) {
-    if (!res.ok) {
-      const response = await res.json();
-      logger.error(`parsed error from HTTP, url: ${res.url}`, response);
-      const error = response.error?.code ? response.error : response;
-      const err = remoteErrorHandler(error.code, error, res.url, `status: ${res.status}. text: ${res.statusText}`);
-      throw err;
+  private async getJsonResponse(res: Response) {
+    try {
+      return await res.json();
+    } catch (err) {
+      logger.error('failed response', res);
+      throw new HttpInvalidJsonResponse(res.url);
     }
+  }
+
+  private async throwForNonOkStatus(res: Response) {
+    if (res.ok) return;
+    let jsonResponse;
+    try {
+      jsonResponse = await res.json();
+    } catch (e) {
+      // the response is not json, ignore the body.
+    }
+    logger.error(`parsed error from HTTP, url: ${res.url}`, jsonResponse);
+    const error = jsonResponse?.error?.code ? jsonResponse?.error : jsonResponse;
+    const err = remoteErrorHandler(
+      error?.code,
+      error,
+      res.url,
+      `url: ${res.url}. status: ${res.status}. text: ${res.statusText}`
+    );
+    throw err;
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
