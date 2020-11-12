@@ -30,9 +30,8 @@ export class PubsubMain {
   }
 
   public pub(topicUUID: string, event: BitBaseEvent<any>) {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].forEach((callback) => callback(event));
-    this.tryToSendAsSubprocess(topicUUID, event);
+    this.pubToLocalProcessOnly(topicUUID, event);
+    this.tryToSendAsChildProcess(topicUUID, event);
     this.tryToSendToChildProcesses(topicUUID, event);
   }
 
@@ -63,7 +62,7 @@ export class PubsubMain {
     });
   }
 
-  private tryToSendAsSubprocess(topicUUID: string, event: BitBaseEvent<any>) {
+  private tryToSendAsChildProcess(topicUUID: string, event: BitBaseEvent<any>) {
     if (process.send) {
       const limitedSerializedEvent = this.serializeEvent(event);
       process.send({ headder: 'bit-inter-processes-events', bitEvent: { topicUUID, event: limitedSerializedEvent } });
