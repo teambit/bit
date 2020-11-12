@@ -10,16 +10,16 @@ describe('Version Dropdown', () => {
     // @ts-ignore
     expect(textVersion).toBeInTheDocument();
   });
-  it('should return null', () => {
-    const { getByText } = render(<VersionDropdownWithMultipleVerions />);
+  it('should return multiple versions', () => {
+    const { getByText, getAllByText } = render(<VersionDropdownWithMultipleVerions />);
     const textVersionOne = getByText(/^0.1$/);
     const textVersionTwo = getByText(/^0.2$/);
-    const textVersionThree = getByText(/^0.3$/);
+    const textVersionThree = getAllByText(/^0.3$/);
     // @ts-ignore
     expect(textVersionOne).toBeInTheDocument();
     // @ts-ignore
     expect(textVersionTwo).toBeInTheDocument();
     // @ts-ignore
-    expect(textVersionThree).toBeInTheDocument();
+    expect(textVersionThree).toHaveLength(2);
   });
 });
