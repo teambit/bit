@@ -1,10 +1,11 @@
 import React from 'react';
+import { CompositionCard } from '@teambit/ui.composition-card.composition-card';
+import { CompositionsModule } from '@teambit/model.composition-type';
 
 import styles from './compositions-overview.module.scss';
-import { CompositionCard } from './composition-card';
 
 export type CompositionsOverviewProps = {
-  compositions?: Record<string, CompositionType>;
+  compositions?: CompositionsModule;
 };
 
 export function CompositionsOverview({ compositions }: CompositionsOverviewProps) {
