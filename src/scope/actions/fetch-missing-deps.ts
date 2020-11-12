@@ -10,7 +10,6 @@ export class FetchMissingDeps implements Action<Options, void> {
   async execute(scope: Scope, options: Options): Promise<void> {
     logger.debugAndAddBreadCrumb('FetchMissingDeps', 'trying to importMany in case there are missing dependencies');
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-    logger.debug('got ids ' + options.ids, options.ids);
     const bitIds: BitIds = BitIds.deserialize(options.ids);
     await scopeComponentsImporter.importMany(bitIds, true); // resolve dependencies
     logger.debugAndAddBreadCrumb('FetchMissingDeps', 'successfully ran importMany');

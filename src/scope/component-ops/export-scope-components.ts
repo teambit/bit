@@ -459,14 +459,14 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
 async function throwForMissingLocalDependencies(scope: Scope, versions: Version[]) {
   await Promise.all(
     versions.map(async (version) => {
-      const flattenedIds = version.getAllFlattenedDependencies();
+      const depsIds = version.getAllFlattenedDependencies();
       await Promise.all(
-        flattenedIds.map(async (depId) => {
+        depsIds.map(async (depId) => {
           if (depId.scope !== scope.name) return;
           const existingModelComponent = await scope.getModelComponent(depId);
           const versionRef = existingModelComponent.getRef(depId.version as string);
           if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
-          const objectExist = await scope.objects.has(versionRef);
+          const objectExist = scope.objects.getCache(versionRef) || (await scope.objects.has(versionRef));
           if (!objectExist) throw new ComponentNotFound(depId.toString());
         })
       );
