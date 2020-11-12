@@ -23,7 +23,7 @@ import {
   PolicyDep,
   DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -73,7 +73,6 @@ import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
-import { WorkspaceAspect } from './workspace.aspect';
 import {
   OnComponentAddSlot,
   OnComponentChangeSlot,
@@ -456,8 +455,7 @@ export class Workspace implements ComponentFactory {
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
-    // TODO: change to EnvsAspect.id
-    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
+    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
 
     await Promise.all(promises);
 
@@ -907,7 +905,11 @@ export class Workspace implements ComponentFactory {
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
-      const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
+      let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
+      if (!data) {
+        // TODO: remove this once we re-export old components used to store the data here
+        data = component.state.aspects.get('teambit.workspace/workspace');
+      }
 
       if (!data) return false;
       if (data.type !== 'aspect')
