@@ -5574,9 +5574,24 @@
                 "test": false
             },
             {
+                "name": "version-dropdown.composition.tsx",
+                "relativePath": "version-dropdown.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "version-dropdown.docs.tsx",
+                "relativePath": "version-dropdown.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "version-dropdown.module.scss",
                 "relativePath": "version-dropdown.module.scss",
                 "test": false
+            },
+            {
+                "name": "version-dropdown.spec.tsx",
+                "relativePath": "version-dropdown.spec.tsx",
+                "test": true
             },
             {
                 "name": "version-dropdown.tsx",
