@@ -1,23 +1,19 @@
-import classNames from 'classnames';
 import React from 'react';
 
 import styles from './compositions-overview.module.scss';
+import { CompositionCard } from './composition-card';
 
 export type CompositionsOverviewProps = {
-  compositions: {};
+  compositions?: Record<string, CompositionType>;
 };
 
 export function CompositionsOverview({ compositions }: CompositionsOverviewProps) {
   return (
     <div className={styles.background}>
       {compositions &&
-        Object.keys(compositions).map((key) => {
-          return (
-            <div key={key} style={compositions[key].canvas} className={classNames(styles.singleCompositionBox)}>
-              {compositions[key]()}
-            </div>
-          );
-        })}
+        Object.entries(compositions).map(([key, composition]) => (
+          <CompositionCard key={key} Composition={composition} name={key} />
+        ))}
     </div>
   );
 }
