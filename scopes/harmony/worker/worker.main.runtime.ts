@@ -7,7 +7,7 @@ import { fork } from 'child_process';
 
 import { WorkerAspect } from './worker.aspect';
 
-export type SpawnOptions = {
+export type CreateWorkerOptions = {
   aspectId: string;
   execMethodName: string;
   params: Array<any>;
@@ -17,7 +17,7 @@ export type SpawnOptions = {
 export class WorkerMain {
   constructor(private pubsub: PubsubMain) {}
 
-  public spawn(options: SpawnOptions) {
+  public createWorker(options: CreateWorkerOptions) {
     const boot = path.join(__dirname, './run-inside-the-worker/bootstrap.script');
     const silent = typeof options.silent == 'undefined' ? true : options.silent;
 
