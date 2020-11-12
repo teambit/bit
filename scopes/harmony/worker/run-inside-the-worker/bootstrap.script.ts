@@ -1,12 +1,12 @@
 import { init } from './full-harmony-bootstrap';
 
-import type { SpawnOptions } from '../worker.main.runtime';
+import type { CreateWorkerOptions } from '../worker.main.runtime';
 const serializedParams = process.argv.slice(2).pop();
 if (!serializedParams) {
   throw new Error('No parameters found');
 }
 
-const options: SpawnOptions = JSON.parse(serializedParams);
+const options: CreateWorkerOptions = JSON.parse(serializedParams);
 
 init()
   .then((harmony) => {

@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 
 import path from 'path';
-import execa from 'execa';
+// import execa from 'execa';
 import { fork } from 'child_process';
 
 import { WorkerAspect } from './worker.aspect';
