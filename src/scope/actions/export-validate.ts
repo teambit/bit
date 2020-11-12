@@ -38,6 +38,7 @@ export class ExportValidate implements Action<Options, void> {
       logger.debug(`export-validate, waitIfNeeded - ${i} out of ${NUM_OF_RETRIES}`);
       // eslint-disable-next-line no-await-in-loop
       await this.sleep(WAIT_BEFORE_RETRY_IN_MS);
+      // eslint-disable-next-line no-await-in-loop
       await this.clearClientsIfStale();
       clientQueue = this.getClientsQueue();
       if (clientQueue[0] === this.clientId) {
