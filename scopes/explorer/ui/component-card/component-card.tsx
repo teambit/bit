@@ -52,7 +52,7 @@ export function ComponentCard({
   version,
   description,
   // ciStatus,
-  size,
+  // size,
   envIcon,
   isDeprecated,
 }: // isIntetnal,
@@ -78,6 +78,6 @@ ComponentCard.defaultProps = {
   isDeprecated: false,
 };
 
-function CiStatus() {
-  return <span className={styles.dot}></span>;
-}
+// function CiStatus() {
+//   return <span className={styles.dot}></span>;
+// }
