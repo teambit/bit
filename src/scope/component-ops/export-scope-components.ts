@@ -21,6 +21,8 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
+import { FetchMissingDeps } from '../actions/fetch-missing-deps';
+import loader from '../../cli/loader';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -45,14 +47,8 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   const mergedIds: BitIds = await mergeObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  try {
-    await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
-    logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
-  } catch (err) {
-    logger.error('exportManyBareScope, failed importMany', err);
-    // do not throw an error, the remote-scope of a dependency can be down for a while
-    // next time a component is exported, the client will fetch the dependency from the original remote
-  }
+  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
+  logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
   return mergedIds;
@@ -112,6 +108,8 @@ export async function exportMany({
   await pushRemotesPendingDir();
   await validateRemotes();
   await persistRemotes();
+  await fetchMissingDependenciesOnRemotes();
+  loader.start('updating data locally...');
   const results = await updateLocalObjects(lanesObjects);
   return {
     newIdsOnRemote: R.flatten(results.map((r) => r.newIdsOnRemote)),
@@ -251,6 +249,7 @@ export async function exportMany({
     const pushedRemotes: Remote[] = [];
     await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote, objectList } = objectsPerRemote;
+      loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       try {
         await remote.pushMany(objectList, pushOptions, context);
         logger.debugAndAddBreadCrumb(
@@ -267,6 +266,7 @@ export async function exportMany({
   }
 
   async function validateRemotes() {
+    loader.start('verifying that objects can be merged on the remotes...');
     try {
       await Promise.all(remotes.map((remote) => remote.action(ExportValidate.name, { clientId })));
     } catch (err) {
@@ -279,6 +279,7 @@ export async function exportMany({
   async function persistRemotes() {
     await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote } = objectsPerRemote;
+      loader.start(`persisting data on the remote "${remote.name}"...`);
       let exportedIds: string[];
       try {
         exportedIds = await remote.action(ExportPersist.name, { clientId });
@@ -293,6 +294,31 @@ export async function exportMany({
         throw err;
       }
     });
+  }
+
+  async function fetchMissingDependenciesOnRemotes() {
+    loader.start('fetching missing dependencies (if any) on the remotes...');
+    await Promise.all(
+      manyObjectsPerRemote.map(async (objectsPerRemote: ObjectsPerRemote) => {
+        const { remote } = objectsPerRemote;
+        try {
+          await remote.action(FetchMissingDeps.name, { ids: objectsPerRemote.exportedIds });
+          logger.debugAndAddBreadCrumb(
+            'fetchMissingDependenciesOnRemotes',
+            `successfully fetched dependencies from a remote ${remote.name}`
+          );
+        } catch (err) {
+          // do not throw an error, the remote-scope of a dependency can be down for a while
+          // next time a component is exported, the client will fetch the dependency from the original remote
+          logger.warnAndAddBreadCrumb(
+            'fetchMissingDependenciesOnRemotes',
+            `failed fetching dependencies on ${remote.name}`,
+            {},
+            err
+          );
+        }
+      })
+    );
   }
 
   async function removePendingDirs(pushedRemotes: Remote[]) {
