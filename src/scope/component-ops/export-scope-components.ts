@@ -11,7 +11,7 @@ import { Remote, Remotes } from '../../remotes';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
 import ComponentObjects from '../component-objects';
-import { MergeConflict, MergeConflictOnRemote } from '../exceptions';
+import { ComponentNotFound, MergeConflict, MergeConflictOnRemote } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { Lane, ModelComponent, Symlink, Version } from '../models';
 import Source from '../models/source';
@@ -394,7 +394,7 @@ export async function exportMany({
  * the BitIds returned here includes the versions that were merged. so it could contain multiple
  * ids of the same component with different versions
  */
-export async function mergeObjects(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+export async function mergeObjects(scope: Scope, objectList: ObjectList, throwForMissingDeps = false): Promise<BitIds> {
   const bitObjectList = await objectList.toBitObjects();
   const components = bitObjectList.getComponents();
   const lanesObjects = bitObjectList.getLanes();
@@ -439,6 +439,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList): Promis
     scope.objects.clearCache(); // just in case this error is caught. we don't want to persist anything by mistake.
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
+  if (throwForMissingDeps) await throwForMissingLocalDependencies(scope, versions);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
   const mergedLanesComponents = mergeLaneResults.filter(({ mergedVersions }) => mergedVersions.length);
@@ -446,6 +447,31 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList): Promis
     mergedVersions.map((version) => mergedComponent.toBitId().changeVersion(version));
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return BitIds.fromArray(R.flatten([...mergedComponents, ...mergedLanesComponents].map(getMergedIds)));
+}
+
+/**
+ * make sure that all local objects were actually transferred into the remote.
+ * this gets called as part of the export-validate step. it doesn't check for dependencies from
+ * other scopes, as they'll be retrieved later by the fetch-missing-deps step.
+ * we can't wait for that step to validate local dependencies because it happens after persisting,
+ * and we don't want to persist when local dependencies were not exported.
+ */
+async function throwForMissingLocalDependencies(scope: Scope, versions: Version[]) {
+  await Promise.all(
+    versions.map(async (version) => {
+      const flattenedIds = version.getAllFlattenedDependencies();
+      await Promise.all(
+        flattenedIds.map(async (depId) => {
+          if (depId.scope !== scope.name) return;
+          const existingModelComponent = await scope.getModelComponent(depId);
+          const versionRef = existingModelComponent.getRef(depId.version as string);
+          if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
+          const objectExist = await scope.objects.has(versionRef);
+          if (!objectExist) throw new ComponentNotFound(depId.toString());
+        })
+      );
+    })
+  );
 }
 
 /**

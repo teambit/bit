@@ -25,7 +25,7 @@ export class ExportValidate implements Action<Options, void> {
     this.clientId = options.clientId;
     await this.waitIfNeeded();
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
-    await mergeObjects(scope, objectList); // if fails, it throws merge-conflict
+    await mergeObjects(scope, objectList, true); // if fails, it throws merge-conflict/component-not-found
     scope.objects.clearCache();
   }
 
