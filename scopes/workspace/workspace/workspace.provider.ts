@@ -28,7 +28,7 @@ import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove }
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
 import { Watcher } from './watch/watcher';
-import { Workspace } from './workspace';
+import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
 import { WorkspaceUIRoot } from './workspace.ui-root';
 
@@ -123,7 +123,14 @@ export default async function provideWorkspace(
   );
 
   ManyComponentsWriter.registerExternalInstaller({
-    install: workspace.install.bind(workspace),
+    install: async () => {
+      // TODO: think how we should pass this options
+      const installOpts: WorkspaceInstallOptions = {
+        dedupe: true,
+        updateExisting: false,
+      };
+      return workspace.install(undefined, installOpts);
+    },
   });
 
   if (!workspace.isLegacy) {
