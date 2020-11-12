@@ -180,11 +180,11 @@ export class ReactEnv implements Environment {
   async getDependencies() {
     return {
       dependencies: {
-        'core-js': '^3.6.5',
         react: '-',
       },
       // TODO: add this only if using ts
       devDependencies: {
+        'core-js': '^3.6.5',
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
