@@ -45,6 +45,9 @@ export class PubsubMain {
       }
       this.childProcesses.push(childProcess);
     });
+    childProcess.on('exit', (code) => {
+      this.childProcesses = this.childProcesses.filter((process) => process !== childProcess);
+    });
   }
 
   // Helpers
