@@ -906,7 +906,11 @@ export class Workspace implements ComponentFactory {
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
-      const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
+      let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
+      if (!data) {
+        // TODO: remove this once we re-export old components used to store the data here
+        data = component.state.aspects.get('teambit.workspace/workspace');
+      }
 
       if (!data) return false;
       if (data.type !== 'aspect')
