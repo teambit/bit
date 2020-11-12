@@ -84,6 +84,23 @@ export class Http implements Network {
     return ids;
   }
 
+  async action<Options, Result>(name: string, options: Options): Promise<Result> {
+    const route = 'api/scope/action';
+    logger.debug(`Http.action, url: ${this.url}/${route}`);
+    const body = JSON.stringify({
+      name,
+      options,
+    });
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'post',
+      body,
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+    });
+    await this.throwForNonOkStatus(res);
+    const results = await res.json();
+    return results;
+  }
+
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
     const route = 'api/scope/fetch';
     logger.debug(`Http.fetch, url: ${this.url}/${route}`);
