@@ -11,11 +11,17 @@ export class PutRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
+      const pushOptionsStr = req.headers['push-options'];
+      if (!pushOptionsStr) throw new Error('http is missing the push-options header');
+      const pushOptions = JSON.parse(pushOptionsStr as string);
       const objectList = await ObjectList.fromTar(req);
-      const ids = await put({
-        path: this.scope.path,
-        objectList,
-      });
+      const ids = await put(
+        {
+          path: this.scope.path,
+          objectList,
+        },
+        pushOptions
+      );
       const componentIds = await Promise.all(
         ids.map((id) => {
           return this.scope.resolveComponentId(id);
