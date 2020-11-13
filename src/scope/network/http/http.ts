@@ -155,7 +155,7 @@ export class Http implements Network {
   private async graphClientRequest(query: string, variables?: Record<string, any>) {
     try {
       return await this.graphClient.request(query, variables);
-    } catch (err: unknown) {
+    } catch (err) {
       if (err instanceof ClientError) {
         throw new GraphQLClientError(err);
       }
