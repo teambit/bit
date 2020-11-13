@@ -317,7 +317,6 @@ export class Workspace implements ComponentFactory {
     this.logger.consoleSuccess();
     return new Network(
       capsuleList,
-      graph,
       await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
@@ -338,7 +337,7 @@ export class Workspace implements ComponentFactory {
     const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
     const resolvedComponents = components.map((component) => {
-      const capsule = isolatedEnvironment.capsules.getCapsule(component.id);
+      const capsule = isolatedEnvironment.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
       return new ResolvedComponent(component, capsule);
     });
