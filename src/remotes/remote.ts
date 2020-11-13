@@ -7,7 +7,7 @@ import logger from '../logger/logger';
 import ComponentObjects from '../scope/component-objects';
 import DependencyGraph from '../scope/graph/scope-graph';
 import { LaneData } from '../scope/lanes/lanes';
-import { ComponentLogs } from '../scope/models/model-component';
+import { ComponentLog } from '../scope/models/model-component';
 import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
@@ -120,7 +120,7 @@ export default class Remote {
   undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]> {
     return connect(this.host).then((network) => network.undeprecateMany(ids, context));
   }
-  log(id: BitId): Promise<ComponentLogs> {
+  log(id: BitId): Promise<ComponentLog[]> {
     return connect(this.host).then((network) => network.log(id));
   }
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]> {

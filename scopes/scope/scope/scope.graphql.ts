@@ -48,8 +48,11 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
       type Log {
         message: String
+        username: String
+        email: String
         date: String
-        hash: String
+        hash: String!
+        tag: String
       }
 
       type LegacyMeta {
@@ -102,7 +105,7 @@ export function scopeSchema(scopeMain: ScopeMain) {
 
         getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
           const logs = await log(scope.path, id);
-          return logs;
+          return JSON.parse(logs);
         },
 
         getMany: async (scope: ScopeMain, { idStrings }: { idStrings: string[] }) => {

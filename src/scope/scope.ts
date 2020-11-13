@@ -48,7 +48,7 @@ import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import migratonManifest from './migrations/scope-migrator-manifest';
 import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
-import { ComponentLogs } from './models/model-component';
+import { ComponentLog } from './models/model-component';
 import { BitObject, BitRawObject, Ref, Repository } from './objects';
 import { ComponentItem, IndexType } from './objects/components-index';
 import RemovedObjects from './removed-components';
@@ -593,12 +593,10 @@ export default class Scope {
     return removeNils(components);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  loadComponentLogs(id: BitId): Promise<ComponentLogs> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.getModelComponent(id).then((componentModel) => {
-      return componentModel.collectLogs(this.objects);
-    });
+  async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
+    const componentModel = await this.getModelComponent(id);
+    const logs = await componentModel.collectLogs(this.objects);
+    return logs;
   }
 
   loadAllVersions(id: BitId): Promise<Component[]> {

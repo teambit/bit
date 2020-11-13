@@ -9,7 +9,7 @@ import ComponentObjects from '../../component-objects';
 import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
-import { ComponentLogs } from '../../models/model-component';
+import { ComponentLog } from '../../models/model-component';
 import { ObjectList } from '../../objects/object-list';
 import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
@@ -84,7 +84,7 @@ export default class Fs implements Network {
     return scopeComponentsImporter.loadComponent(bitId);
   }
 
-  log(bitId: BitId): Promise<ComponentLogs> {
+  log(bitId: BitId): Promise<ComponentLog[]> {
     return this.getScope().loadComponentLogs(bitId);
   }
 

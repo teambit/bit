@@ -5,7 +5,7 @@ import Component from '../../consumer/component';
 import { ListScopeResult } from '../../consumer/component/components-list';
 import DependencyGraph from '../graph/scope-graph';
 import { LaneData } from '../lanes/lanes';
-import { ComponentLogs } from '../models/model-component';
+import { ComponentLog } from '../models/model-component';
 import { ObjectList } from '../objects/object-list';
 import { ScopeDescriptor } from '../scope';
 import { SSHConnectionStrategyName } from './ssh/ssh';
@@ -23,7 +23,7 @@ export interface Network {
   show(bitId: BitId): Promise<Component | null | undefined>;
   deprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
   undeprecateMany(ids: string[], context: Record<string, any> | null | undefined): Promise<Record<string, any>[]>;
-  log(id: BitId): Promise<ComponentLogs>;
+  log(id: BitId): Promise<ComponentLog[]>;
   latestVersions(bitIds: BitIds): Promise<string[]>;
   graph(bitId?: BitId): Promise<DependencyGraph>;
   listLanes(name?: string, mergeData?: boolean): Promise<LaneData[]>;

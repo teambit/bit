@@ -6,7 +6,7 @@ import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
-import { ComponentLogs } from '../../models/model-component';
+import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
@@ -219,15 +219,17 @@ export class Http implements Network {
     return res;
   }
 
-  // TODO: @david please fix this.
-  async log(id: BitId): Promise<ComponentLogs> {
+  async log(id: BitId): Promise<ComponentLog[]> {
     const GET_LOG_QUERY = gql`
       query getLogs($id: String!) {
         scope {
           getLogs(id: $id) {
             message
-            hash
+            username
+            email
             date
+            hash
+            tag
           }
         }
       }
