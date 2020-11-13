@@ -290,7 +290,6 @@ export class UiMain {
       uiRoot.name
     );
     if (fs.pathExistsSync(config.output.path)) return;
-    if (fs.readdirSync(config.output.path).length > 0) return;
     const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
