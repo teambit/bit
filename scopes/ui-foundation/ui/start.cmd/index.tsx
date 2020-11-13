@@ -10,7 +10,7 @@ import { CliOutput } from './cli-output';
 import { report } from './report';
 
 export class StartCmd implements Command {
-  startingtimestamp;
+  startingTimestamp: number;
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
@@ -71,42 +71,41 @@ export class StartCmd implements Command {
       suppressBrowserLaunch,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
-    this.startingtimestamp = Date.now();
+    this.startingTimestamp = Date.now();
 
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    this.ui
-      .createRuntime({
-        uiRootName,
-        pattern,
-        dev,
-        port: port ? parseInt(port) : undefined,
-        rebuild,
-      })
-      .then((uiServer) => {
-        setTimeout(() => {
-          this.clearConsole();
+    const uiServer = await this.ui.createRuntime({
+      uiRootName,
+      pattern,
+      dev,
+      port: port ? parseInt(port) : undefined,
+      rebuild,
+    });
+    const commandFlags = {
+      dev: Boolean(dev),
+      port,
+      verbose: Boolean(verbose),
+      suppressBrowserLaunch: Boolean(suppressBrowserLaunch),
+    };
+    setTimeout(() => {
+      this.clearConsole();
 
-          const startingTimestamp = Date.now();
-          const pubsub = this.pubsub;
-          const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch };
+      const startingTimestamp = Date.now();
+      const pubsub = this.pubsub;
 
-          setTimeout(() => {
-            this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
-          }, 200);
-        }, 0);
-      })
-      .catch((e) => {
-        throw e;
-      });
+      setTimeout(() => {
+        this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
+      }, 200);
+    }, 0);
 
     return (
       <>
         <CliOutput
           startingTimestamp={Date.now()}
           pubsub={this.pubsub}
-          commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
+          commandFlags={commandFlags}
           uiServer={null} // Didn't start yet
         />
       </>
