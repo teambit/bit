@@ -1,4 +1,4 @@
-import { request, gql, GraphQLClient } from 'graphql-request';
+import { gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
@@ -17,6 +17,7 @@ import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
+import RemovedObjects from '../../removed-components';
 
 export class Http implements Network {
   constructor(private graphClient: GraphQLClient, private _token: string | undefined | null, private url: string) {}
@@ -55,19 +56,21 @@ export class Http implements Network {
   }
 
   async deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean) {
-    const REMOVE_COMPONENTS = gql`
-      query removeComponents($ids: [String], $force: Boolean, $lanes: Boolean) {
-        remove(ids: $ids, force: $force, isLanes: $lanes)
-      }
-    `;
-
-    const res = await request(this.url, REMOVE_COMPONENTS, {
+    const route = 'api/scope/delete';
+    logger.debug(`Http.delete, url: ${this.url}/${route}`);
+    const body = JSON.stringify({
       ids,
       force,
-      idsAreLanes,
+      lanes: idsAreLanes,
     });
-
-    return res.removeComponents;
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'post',
+      body,
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+    });
+    await this.throwForNonOkStatus(res);
+    const results = await this.getJsonResponse(res);
+    return RemovedObjects.fromObjects(results);
   }
 
   async pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
