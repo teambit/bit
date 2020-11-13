@@ -29,7 +29,7 @@ import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
 import LegacyScope, { OnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
+import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
@@ -365,7 +365,7 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLogs> {
+  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy);
   }
 
