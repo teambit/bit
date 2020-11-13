@@ -1,5 +1,3 @@
-import R from 'ramda';
-
 import { getComponentLogs } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { ComponentLog } from '../../../scope/models/model-component';

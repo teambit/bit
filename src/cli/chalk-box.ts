@@ -9,7 +9,6 @@ import SpecsResults, {
 } from '../consumer/specs-results/specs-results';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 import { ComponentLog } from '../scope/models/model-component';
-import { isHash } from '../version/version-parser';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 

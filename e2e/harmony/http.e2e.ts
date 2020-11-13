@@ -35,6 +35,17 @@ describe('http protocol', function () {
     it('should export successfully', () => {
       expect(exportOutput).to.have.string('exported 3 components');
     });
+    describe('bit log', () => {
+      let logOutput: string;
+      before(() => {
+        logOutput = helper.command.log(`${helper.scopes.remote}/comp1 --remote`);
+      });
+      it('should show the log correctly', () => {
+        expect(logOutput).to.have.string('tag 0.0.1');
+        expect(logOutput).to.have.string('author');
+        expect(logOutput).to.have.string('date');
+      });
+    });
     describe('bit import', () => {
       let importOutput;
       before(() => {
