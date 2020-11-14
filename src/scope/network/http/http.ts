@@ -1,4 +1,4 @@
-import { request, gql, GraphQLClient } from 'graphql-request';
+import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
@@ -6,7 +6,7 @@ import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
-import { ComponentLogs } from '../../models/model-component';
+import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
@@ -17,6 +17,8 @@ import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
+import RemovedObjects from '../../removed-components';
+import { GraphQLClientError } from '../exceptions/graphql-client-error';
 
 export class Http implements Network {
   constructor(private graphClient: GraphQLClient, private _token: string | undefined | null, private url: string) {}
@@ -45,7 +47,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClient.request(SCOPE_QUERY, {
+    const data = await this.graphClientRequest(SCOPE_QUERY, {
       headers: this.getHeaders(),
     });
 
@@ -55,19 +57,21 @@ export class Http implements Network {
   }
 
   async deleteMany(ids: string[], force: boolean, context: Record<string, any>, idsAreLanes: boolean) {
-    const REMOVE_COMPONENTS = gql`
-      query removeComponents($ids: [String], $force: Boolean, $lanes: Boolean) {
-        remove(ids: $ids, force: $force, isLanes: $lanes)
-      }
-    `;
-
-    const res = await request(this.url, REMOVE_COMPONENTS, {
+    const route = 'api/scope/delete';
+    logger.debug(`Http.delete, url: ${this.url}/${route}`);
+    const body = JSON.stringify({
       ids,
       force,
-      idsAreLanes,
+      lanes: idsAreLanes,
     });
-
-    return res.removeComponents;
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'post',
+      body,
+      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+    });
+    await this.throwForNonOkStatus(res);
+    const results = await this.getJsonResponse(res);
+    return RemovedObjects.fromObjects(results);
   }
 
   async pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
@@ -148,6 +152,18 @@ export class Http implements Network {
     throw err;
   }
 
+  private async graphClientRequest(query: string, variables?: Record<string, any>) {
+    try {
+      return await this.graphClient.request(query, variables);
+    } catch (err) {
+      if (err instanceof ClientError) {
+        throw new GraphQLClientError(err);
+      }
+      // should not be here. it's just in case
+      throw err;
+    }
+  }
+
   private getHeaders(headers: { [key: string]: string } = {}) {
     return Object.assign(headers, {
       Authorization: `Bearer ${this.token}`,
@@ -166,7 +182,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClient.request(LIST_LEGACY, {
+    const data = await this.graphClientRequest(LIST_LEGACY, {
       namespaces: namespacesUsingWildcards,
     });
 
@@ -185,8 +201,7 @@ export class Http implements Network {
         }
       }
     `;
-
-    const data = await this.graphClient.request(SHOW_COMPONENT, {
+    const data = await this.graphClientRequest(SHOW_COMPONENT, {
       id: bitId.toString(),
     });
 
@@ -199,7 +214,7 @@ export class Http implements Network {
         deprecate(bitIds: $bitIds)
       }
     `;
-    const res = await this.graphClient.request(DEPRECATE_COMPONENTS, {
+    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, {
       ids,
     });
 
@@ -212,28 +227,30 @@ export class Http implements Network {
         undeprecate(bitIds: $bitIds)
       }
     `;
-    const res = await this.graphClient.request(UNDEPRECATE_COMPONENTS, {
+    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, {
       ids,
     });
 
     return res;
   }
 
-  // TODO: @david please fix this.
-  async log(id: BitId): Promise<ComponentLogs> {
+  async log(id: BitId): Promise<ComponentLog[]> {
     const GET_LOG_QUERY = gql`
       query getLogs($id: String!) {
         scope {
           getLogs(id: $id) {
             message
-            hash
+            username
+            email
             date
+            hash
+            tag
           }
         }
       }
     `;
 
-    const data = await this.graphClient.request(GET_LOG_QUERY, {
+    const data = await this.graphClientRequest(GET_LOG_QUERY, {
       id: id.toString(),
     });
 
@@ -249,7 +266,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClient.request(GET_LATEST_VERSIONS, {
+    const data = await this.graphClientRequest(GET_LATEST_VERSIONS, {
       ids: bitIds.map((id) => id.toString()),
     });
 
@@ -270,7 +287,7 @@ export class Http implements Network {
     }
     `;
 
-    const res = await this.graphClient.request(LIST_LANES, {
+    const res = await this.graphClientRequest(LIST_LANES, {
       mergeData,
     });
 

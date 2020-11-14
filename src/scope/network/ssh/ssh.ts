@@ -19,7 +19,7 @@ import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../..
 import ComponentObjects from '../../component-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
-import { ComponentLogs } from '../../models/model-component';
+import { ComponentLog } from '../../models/model-component';
 import RemovedObjects from '../../removed-components';
 import { ScopeDescriptor } from '../../scope';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
@@ -460,7 +460,7 @@ export default class SSH implements Network {
     });
   }
 
-  log(id: BitId): Promise<ComponentLogs> {
+  log(id: BitId): Promise<ComponentLog[]> {
     return this.exec('_log', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
