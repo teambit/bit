@@ -6,7 +6,13 @@
   display: flex;
   overflow-x: auto;
 
-  padding: 16px;
+  padding: 12px;
+
+  // css trick - enforce padding at the end of a overflow: auto list
+  &::after {
+    content: '';
+    padding: 6px;
+  }
 
   > * {
     margin-right: 16px;
