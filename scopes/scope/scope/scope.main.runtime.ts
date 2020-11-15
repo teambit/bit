@@ -170,7 +170,7 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const capsules = await this.isolator.isolateComponents(
       components,
-      { baseDir: this.path, skipIfExists: true },
+      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
       this.legacyScope
     );
 
@@ -181,11 +181,17 @@ export class ScopeMain implements ComponentFactory {
           file.relative.includes('.scope.runtime.')
         );
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, scopeRuntime.relative));
+        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
         // eslint-disable-next-line global-require, import/no-dynamic-require
         return require(capsule.path);
       });
     });
+  }
+
+  // TODO: temporary compiler workaround - discuss this with david.
+  private toJs(str: string) {
+    if (str.endsWith('.ts')) return str.replace('.ts', '.js');
+    return str;
   }
 
   private parseLocalAspect(localAspects: string[]) {
@@ -277,7 +283,7 @@ export class ScopeMain implements ComponentFactory {
     });
 
     const withoutOwnScope = legacyIds.filter((id) => {
-      return id.scope === this.name;
+      return id.scope !== this.name;
     });
 
     await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
@@ -485,7 +491,8 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       config
     );
-    cli.registerOnStart(async () => {
+    cli.registerOnStart(async (hasWorkspace: boolean) => {
+      if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 

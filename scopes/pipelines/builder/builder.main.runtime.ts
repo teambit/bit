@@ -198,6 +198,7 @@ export class BuilderMain {
    */
   registerDeployTasks(tasks: BuildTask[]) {
     this.deployTaskSlot.register(tasks);
+    return this;
   }
 
   static slots = [Slot.withType<BuildTask>(), Slot.withType<StorageResolver>(), Slot.withType<BuildTask>()];

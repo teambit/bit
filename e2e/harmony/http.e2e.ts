@@ -13,6 +13,7 @@ describe('http protocol', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
+
   let httpHelper: HttpHelper;
   describe('export', () => {
     let exportOutput: string;
