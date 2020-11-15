@@ -7,7 +7,7 @@ import { SchemaAspect, SchemaMain } from '@teambit/schema';
 import { ExtensionData, Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { flatten } from 'bit-bin/dist/utils';
-
+import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
@@ -17,7 +17,7 @@ export type CompositionsConfig = {
   /**
    * regex for detection of composition files
    */
-  regex: string;
+  compositionFilePattern: string[];
 };
 
 /**
@@ -38,7 +38,9 @@ export class CompositionsMain {
     /**
      * schema extension.
      */
-    private schema: SchemaMain
+    private schema: SchemaMain,
+
+    private devFiles: DevFilesMain
   ) {}
 
   /**
@@ -46,7 +48,9 @@ export class CompositionsMain {
    */
   getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      return component.state.filesystem.byRegex(/\.composition\.[tj]sx?$/);
+      const compositionFiles = this.devFiles.computeDevFiles(component).get(CompositionsAspect.id);
+      const files = component.state.filesystem.files.filter((file) => compositionFiles.includes(file.relative));
+      return files;
     });
   }
 
@@ -54,7 +58,7 @@ export class CompositionsMain {
    * get component compositions.
    */
   getCompositions(component: Component): Composition[] {
-    const entry = component.state.config.extensions.findExtension(CompositionsAspect.id);
+    const entry = component.state.aspects.get(CompositionsAspect.id);
     if (!entry) return [];
     const compositions = entry.data.compositions;
     if (!compositions) return [];
@@ -96,14 +100,18 @@ export class CompositionsMain {
   }
 
   static defaultConfig = {
-    regex: '/.composition.[tj]sx?$/',
+    compositionFilePattern: ['*.composition.*', '*.compositions.*'],
   };
 
   static runtime = MainRuntime;
-  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, ComponentAspect];
+  static dependencies = [PreviewAspect, GraphqlAspect, WorkspaceAspect, SchemaAspect, DevFilesAspect, ComponentAspect];
 
-  static async provider([preview, graphql, workspace, schema]: [PreviewMain, GraphqlMain, Workspace, SchemaMain]) {
-    const compositions = new CompositionsMain(preview, workspace, schema);
+  static async provider(
+    [preview, graphql, workspace, schema, devFiles]: [PreviewMain, GraphqlMain, Workspace, SchemaMain, DevFilesMain],
+    config: CompositionsConfig
+  ) {
+    const compositions = new CompositionsMain(preview, workspace, schema, devFiles);
+    devFiles.registerDevPattern(config.compositionFilePattern);
 
     graphql.register(compositionsSchema(compositions));
     preview.registerDefinition(new CompositionPreviewDefinition(compositions));

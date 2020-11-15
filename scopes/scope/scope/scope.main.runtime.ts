@@ -29,7 +29,7 @@ import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
 import LegacyScope, { OnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
+import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
@@ -40,7 +40,7 @@ import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
-import { PutRoute, FetchRoute } from './routes';
+import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -52,6 +52,7 @@ export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 
 export type ScopeConfig = {
   description: string;
+  icon: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -92,6 +93,10 @@ export class ScopeMain implements ComponentFactory {
    */
   get name(): string {
     return this.legacyScope.name;
+  }
+
+  get icon(): string {
+    return this.config.icon;
   }
 
   get description(): string {
@@ -163,7 +168,11 @@ export class ScopeMain implements ComponentFactory {
 
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true },
+      this.legacyScope
+    );
 
     return capsules.map((capsule) => {
       // return RequireableComponent.fromCapsule(capsule);
@@ -235,7 +244,11 @@ export class ScopeMain implements ComponentFactory {
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => !this.localAspects.includes(aspectId));
     const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
     const components = await this.getMany(componentIds);
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.path }, this.legacyScope);
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true },
+      this.legacyScope
+    );
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
@@ -352,7 +365,7 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLogs> {
+  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy);
   }
 
@@ -476,7 +489,12 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    express.register([new PutRoute(scope, postPutSlot), new FetchRoute(scope)]);
+    express.register([
+      new PutRoute(scope, postPutSlot),
+      new FetchRoute(scope),
+      new ActionRoute(scope),
+      new DeleteRoute(scope),
+    ]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));

@@ -1,4 +1,4 @@
-import { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile } from 'typescript';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -21,6 +21,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
+const jest = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 
@@ -32,12 +33,12 @@ export class ReactEnv implements Environment {
     /**
      * jest extension
      */
-    private jest: JestMain,
+    private jestAspect: JestMain,
 
     /**
      * typescript extension.
      */
-    private ts: TypescriptMain,
+    private tsAspect: TypescriptMain,
 
     /**
      * compiler extension.
@@ -80,22 +81,25 @@ export class ReactEnv implements Environment {
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string): Tester {
+  getTester(jestConfigPath: string, jestModule = jest): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jest.createTester(config);
+    return this.jestAspect.createTester(config, jestModule);
   }
 
   /**
    * returns a component compiler.
    */
-  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}): Compiler {
+  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts): Compiler {
     const tsconfig = this.getTsConfig(targetConfig);
-    return this.ts.createCompiler({
-      tsconfig,
-      // TODO: @david please remove this line and refactor to be something that makes sense.
-      types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
-      ...compilerOptions,
-    });
+    return this.tsAspect.createCompiler(
+      {
+        tsconfig,
+        // TODO: @david please remove this line and refactor to be something that makes sense.
+        types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
+        ...compilerOptions,
+      },
+      tsModule
+    );
   }
 
   /**
@@ -125,7 +129,7 @@ export class ReactEnv implements Environment {
    * get a schema generator instance configured with the correct tsconfig.
    */
   getSchemaExtractor(tsconfig: TsConfigSourceFile) {
-    return this.ts.createSchemaExtractor(this.getTsConfig(tsconfig));
+    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
   }
 
   /**
@@ -167,7 +171,7 @@ export class ReactEnv implements Environment {
    * define the package json properties to add to each component.
    */
   getPackageJsonProps() {
-    return this.ts.getPackageJsonProps();
+    return this.tsAspect.getPackageJsonProps();
   }
 
   /**
@@ -180,6 +184,7 @@ export class ReactEnv implements Environment {
       },
       // TODO: add this only if using ts
       devDependencies: {
+        'core-js': '^3.6.5',
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
@@ -197,7 +202,7 @@ export class ReactEnv implements Environment {
    * returns the component build pipeline.
    */
   getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
-    return [this.getCompilerTask(tsconfig), this.tester.task, this.pkg.preparePackagesTask, this.pkg.dryRunTask];
+    return [this.getCompilerTask(tsconfig), this.tester.task];
   }
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {

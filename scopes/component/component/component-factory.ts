@@ -1,4 +1,5 @@
 import { BitId } from 'bit-bin/dist/bit-id';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 
 import { Component } from './component';
 import { ComponentID } from './id';
@@ -25,7 +26,11 @@ export interface ComponentFactory {
   /**
    * returns a component by ID.
    */
-  get(id: ComponentID | string, withState?: boolean): Promise<Component | undefined>;
+  get(
+    id: ComponentID | string,
+    withState?: boolean,
+    consumerComponent?: ConsumerComponent
+  ): Promise<Component | undefined>;
 
   /**
    * returns many components with a group of ids.

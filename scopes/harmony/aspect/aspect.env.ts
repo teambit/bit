@@ -28,6 +28,7 @@ export class AspectEnv implements Environment {
     return {
       dependencies: {
         'core-js': '^3.6.5',
+        '@babel/runtime': '^7.8.4',
       },
     };
   }
@@ -41,8 +42,8 @@ export class AspectEnv implements Environment {
     return this.babel.createCompiler({ babelTransformOptions: babelConfig });
   }
 
-  createTsCompiler(tsConfig: TsConfigSourceFile){
-    return this.reactEnv.getCompiler(this.getTsConfig(tsConfig))
+  createTsCompiler(tsConfig: TsConfigSourceFile) {
+    return this.reactEnv.getCompiler(this.getTsConfig(tsConfig));
   }
 
   getBuildPipe() {

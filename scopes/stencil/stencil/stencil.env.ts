@@ -34,6 +34,7 @@ export class StencilEnv implements Environment {
    * returns a component tester.
    */
   getTester(): Tester {
+    // @ts-ignore
     return this.stencil.createTester();
   }
 
@@ -41,6 +42,7 @@ export class StencilEnv implements Environment {
    * returns a component compiler.
    */
   getCompiler(): Compiler {
+    // @ts-ignore
     return this.stencil.createCompiler({
       module: 'esm',
     });

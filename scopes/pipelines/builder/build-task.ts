@@ -19,9 +19,9 @@ export interface BuildContext extends ExecutionContext {
   components: Component[];
 
   /**
-   * graph of capsules ready to be built.
+   * network of capsules ready to be built.
    */
-  capsuleGraph: Network;
+  capsuleNetwork: Network;
 }
 
 export interface BuildTask {

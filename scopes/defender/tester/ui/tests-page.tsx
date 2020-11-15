@@ -52,7 +52,7 @@ export function TestsPage({ className }: TestsPageProps) {
   if (data?.getHost?.getTests === null) {
     return (
       <EmptyBox
-        title="This component doesn’t have any test."
+        title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
         link="https://bit-new-docs.netlify.app/docs/testing/test-components"
       />

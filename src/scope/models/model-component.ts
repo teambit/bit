@@ -1,8 +1,6 @@
 import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
 import { v4 } from 'uuid';
-
-import { isLaneEnabled } from '../../api/consumer/lib/feature-toggle';
 import BitId from '../../bit-id/bit-id';
 import {
   COMPILER_ENV_TYPE,
@@ -54,7 +52,14 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type ComponentLogs = { [key: number]: { message: string; date: string; hash: string } | null | undefined };
+export type ComponentLog = {
+  message: string;
+  username?: string;
+  email?: string;
+  date?: string;
+  hash: string;
+  tag?: string;
+};
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -136,7 +141,6 @@ export default class Component extends BitObject {
   }
 
   setHead(head: Ref | undefined) {
-    if (!isLaneEnabled()) return;
     this.head = head;
   }
 
@@ -329,13 +333,16 @@ export default class Component extends BitObject {
     return versionStr || VERSION_ZERO;
   }
 
-  async collectLogs(repo: Repository): Promise<ComponentLogs> {
+  async collectLogs(repo: Repository): Promise<ComponentLog[]> {
     const versionsInfo = await getAllVersionsInfo({ modelComponent: this, repo, throws: false });
-    return versionsInfo.reduce((acc, current) => {
-      const log = current.version ? current.version.log : { message: '<no-data-available>' };
-      acc[current.tag || current.ref.toString()] = log;
-      return acc;
-    }, {});
+    return versionsInfo.map((versionInfo) => {
+      const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
+      return {
+        ...log,
+        tag: versionInfo.tag,
+        hash: versionInfo.ref.toString(),
+      };
+    });
   }
 
   collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
@@ -405,7 +412,7 @@ export default class Component extends BitObject {
       // @todo: fix it in a more elegant way
       version.addAsOnlyParent(head);
     }
-    this.setHead(version.hash());
+    if (!version.isLegacy) this.setHead(version.hash());
     if (isTag(versionToAdd)) {
       this.versions[versionToAdd] = version.hash();
     }

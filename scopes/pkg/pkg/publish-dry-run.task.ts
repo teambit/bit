@@ -20,24 +20,21 @@ export class PublishDryRunTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     this.publisher.options.dryRun = true;
-    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsules = context.capsuleNetwork.seedersCapsules;
     // const capsulesToPublish = capsules.filter((c) => this.publisher.shouldPublish(c.component.config.extensions));
     const capsulesToPublish: Capsule[] = [];
-    const capsulesToPack: Capsule[] = [];
     capsules.forEach((c) => {
       const shouldPublish = this.publisher.shouldPublish(c.component.config.extensions);
       if (shouldPublish) {
         capsulesToPublish.push(c);
-      } else {
-        capsulesToPack.push(c);
       }
     });
     this.logger.info(`going to run publish dry-run on ${capsulesToPublish.length} out of ${capsules.length}`);
 
     const publishResults = await this.publisher.publishMultipleCapsules(capsulesToPublish);
 
-    this.logger.info(`going to run pack dry-run on ${capsulesToPack.length} out of ${capsules.length}`);
-    const packResults = await this.packer.packMultipleCapsules(capsulesToPack, { override: true }, true);
+    this.logger.info(`going to run pack dry-run on ${capsules.length} out of ${capsules.length}`);
+    const packResults = await this.packer.packMultipleCapsules(capsules, { override: true }, true, true);
 
     return {
       componentsResults: publishResults.concat(packResults),

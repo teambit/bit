@@ -45,7 +45,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
     // const { tooltipId } = this.state;
 
     const { profileImage = '', name = '', displayName = '' } = account;
-    const firstLetter = name[0];
+    const firstLetter = name[0] || displayName[0];
     const profileImageWithParams = addQueryParams(profileImage, imageSize);
     // if(!account) return
     return (
@@ -58,12 +58,11 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
         {profileImageWithParams && (
           <img src={profileImageWithParams} className={classNames(styles.avatarImg, imgClassName)} />
         )}
-        {displayName ||
-          (name && (
-            <span className={styles.letter} style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}>
-              {getInitials(displayName || name)}
-            </span>
-          ))}
+        {(displayName || name) && (
+          <span className={styles.letter} style={{ fontSize: `${fontSize}px`, lineHeight: `${size}px` }}>
+            {getInitials(displayName || name)}
+          </span>
+        )}
         {!displayName && !name && !profileImageWithParams && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}

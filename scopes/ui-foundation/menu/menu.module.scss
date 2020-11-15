@@ -1,0 +1,24 @@
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+.leftSide {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.rightSide {
+  display: flex;
+  align-items: center;
+  > * {
+    margin-right: 12px;
+    &:last-child {
+      margin-right: 16px;
+    }
+  }
+}

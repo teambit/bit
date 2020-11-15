@@ -18,7 +18,7 @@ export default class Put implements LegacyCommand {
 
   action([path, args]: [string, string]): Promise<any> {
     let data = '';
-    const { headers } = unpackCommand(args);
+    const { payload, headers } = unpackCommand(args);
     compressResponse = clientSupportCompressedCommand(headers.version);
     checkVersionCompatibilityOnTheServer(headers.version);
     return new Promise((resolve, reject) => {
@@ -32,7 +32,7 @@ export default class Put implements LegacyCommand {
           const objectList = ObjectList.fromJsonString(data);
           return migrate(scopePath, false)
             .then(() => {
-              return put({ objectList, path: fromBase64(path) }, headers);
+              return put({ objectList, path: fromBase64(path) }, payload, headers);
             })
             .then(resolve)
             .catch(reject);
