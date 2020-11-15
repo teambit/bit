@@ -286,7 +286,7 @@ export class ScopeMain implements ComponentFactory {
       return id.scope !== this.name;
     });
 
-    const res = await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
 
     // TODO: return a much better output based on legacy version-dependencies
     return this.getMany(ids);
