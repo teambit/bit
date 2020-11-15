@@ -171,7 +171,7 @@ export class BuilderMain {
   async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const idsStr = components.map((c) => c.id.toString());
     const network = await this.workspace.createNetwork(idsStr, isolateOptions);
-    const envs = await this.envs.createEnvironment(network.capsules.getAllComponents());
+    const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const buildResult = await envs.runOnce(this.buildService);
     return buildResult;
   }

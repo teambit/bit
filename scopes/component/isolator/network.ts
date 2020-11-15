@@ -1,30 +1,35 @@
 import { ComponentID } from '@teambit/component';
-import Graph from 'bit-bin/dist/scope/graph/graph';
-import { Capsule } from './capsule';
+import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import CapsuleList from './capsule-list';
 
-/**
- * todo: this class is confusing.
- * it has the entire graph including the dependencies of the seeder components.
- * the `capsules` should be maybe `capsuleListOfEntireGraph`, and `seederCapsules` should be `capsules`.
- * Also, the CapsuleList should be refactored to be just Array<Capsule>.
- */
 export class Network {
   constructor(
-    /**
-     * all capsules, including the dependencies of the seeders.
-     */
-    public capsules: CapsuleList,
-    public components: Graph,
-    public seedersIds: ComponentID[],
-    public capsulesRootDir: string
+    private _graphCapsules: CapsuleList,
+    private seedersIds: ComponentID[],
+    private _capsulesRootDir: string
   ) {}
 
-  get seedersCapsules(): Capsule[] {
-    return this.seedersIds.map((seederId) => {
-      const capsule = this.capsules.getCapsule(seederId);
+  /**
+   * seeders capsules only without the entire graph. normally, this includes the capsules of one
+   * env.
+   */
+  get seedersCapsules(): CapsuleList {
+    const capsules = this.seedersIds.map((seederId) => {
+      const capsule = this.graphCapsules.getCapsule(seederId);
       if (!capsule) throw new Error(`unable to find ${seederId.toString()} in the capsule list`);
       return capsule;
     });
+    return CapsuleList.fromArray(capsules);
+  }
+
+  /**
+   * all capsules, including the dependencies of the seeders. (even when they belong to another env)
+   */
+  get graphCapsules(): CapsuleList {
+    return this._graphCapsules;
+  }
+
+  get capsulesRootDir(): PathOsBasedAbsolute {
+    return this._capsulesRootDir;
   }
 }

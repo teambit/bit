@@ -8,7 +8,7 @@ const HooksManagerInstance = HooksManager.getInstance();
 
 export default async function remove(
   { path, ids, force, lanes }: { path: string; ids: string[]; force: boolean; lanes: boolean },
-  headers: Record<string, any> | null | undefined
+  headers?: Record<string, any>
 ): Promise<RemovedObjectSerialized> {
   const scope = await loadScope(path);
   if (lanes) {
