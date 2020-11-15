@@ -1,12 +1,11 @@
 .background {
   background: var(--bg-dent);
-  // padding: 24px 14px;
+  padding: 12px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   display: flex;
   overflow-x: auto;
 
-  padding: 12px;
 
   // css trick - enforce padding at the end of a overflow: auto list
   &::after {
