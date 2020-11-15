@@ -13,11 +13,10 @@
 
 .compositionContainer {
   display: flex;
-  flex: 1 0;
+  flex-grow: 1;
   justify-content: center;
   align-items: center;
 
-  height: 100%;
   padding: 16px;
   box-sizing: border-box;
 
