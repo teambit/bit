@@ -3695,6 +3695,16 @@
                 "test": false
             },
             {
+                "name": "action.route.ts",
+                "relativePath": "routes/action.route.ts",
+                "test": false
+            },
+            {
+                "name": "delete.route.ts",
+                "relativePath": "routes/delete.route.ts",
+                "test": false
+            },
+            {
                 "name": "fetch.route.ts",
                 "relativePath": "routes/fetch.route.ts",
                 "test": false
@@ -6342,5 +6352,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.136"
+    "version": "14.8.9-dev.140"
 }

@@ -19,7 +19,7 @@ export class PublishTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     this.publisher.options.dryRun = false;
-    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsules = context.capsuleNetwork.seedersCapsules;
     // const capsulesToPublish = capsules.filter((c) => this.publisher.shouldPublish(c.component.config.extensions));
     const capsulesToPublish: Capsule[] = [];
     capsules.forEach((c) => {

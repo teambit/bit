@@ -15,7 +15,7 @@ export class CoreExporterTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const mainAspect = this.aspectLoader.mainAspect;
-    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsules = context.capsuleNetwork.seedersCapsules;
     const mainAspectCapsule = capsules.find((capsule) => capsule.component.id.name === mainAspect.name);
     if (mainAspectCapsule) {
       const distDir = this.env.getCompiler().distDir;

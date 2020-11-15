@@ -7,6 +7,7 @@ import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
+import { PathOsBasedAbsolute } from '../../utils/path';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -14,7 +15,7 @@ import ScopeMeta from '../models/scopeMeta';
 import { ScopeJson } from '../scope-json';
 import ScopeIndex, { IndexType } from './components-index';
 import BitObject from './object';
-import { ObjectItem } from './object-list';
+import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
@@ -91,8 +92,7 @@ export default class Repository {
   }
 
   objectPath(ref: Ref): string {
-    const hash = ref.toString();
-    return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
+    return path.join(this.getPath(), this.hashPath(ref));
   }
 
   async has(ref: Ref): Promise<boolean> {
@@ -133,8 +133,8 @@ export default class Repository {
     const refs = await this.listRefs();
     return Promise.all(refs.map((ref) => this.load(ref)));
   }
-  async listRefs(): Promise<Array<Ref>> {
-    const matches = await glob(path.join('*', '*'), { cwd: this.getPath() });
+  async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
+    const matches = await glob(path.join('*', '*'), { cwd });
     const refs = matches.map((str) => {
       const hash = str.replace(path.sep, '');
       return new Ref(hash);
@@ -379,5 +379,30 @@ export default class Repository {
     const transformedContent = this.onPersist(contents);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return writeFile(objectPath, transformedContent, options);
+  }
+
+  async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
+    await Promise.all(
+      objectList.objects.map(async (object) => {
+        const objPath = path.join(pendingDir, this.hashPath(object.ref));
+        await fs.outputFile(objPath, object.buffer);
+      })
+    );
+  }
+
+  async readObjectsFromPendingDir(pendingDir: PathOsBasedAbsolute) {
+    const refs = await this.listRefs(pendingDir);
+    const objects = await Promise.all(
+      refs.map(async (ref) => {
+        const buffer = await fs.readFile(path.join(pendingDir, this.hashPath(ref)));
+        return { ref, buffer };
+      })
+    );
+    return new ObjectList(objects);
+  }
+
+  private hashPath(ref: Ref) {
+    const hash = ref.toString();
+    return path.join(hash.slice(0, 2), hash.slice(2));
   }
 }

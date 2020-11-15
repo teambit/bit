@@ -7,7 +7,7 @@ export class DependenciesFragment implements ShowFragment {
 
   async renderDependencies(component: Component) {
     const deps = await this.depResolver.getDependencies(component);
-    return serializeByLifecycle(deps, 'dev');
+    return serializeByLifecycle(deps, 'runtime');
   }
 
   async json(component: Component) {
