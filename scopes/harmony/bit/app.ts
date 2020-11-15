@@ -125,7 +125,12 @@ async function runCLI() {
   aspectLoader.setMainAspect(getMainAspect());
   registerCoreAspectsToLegacyDepResolver(aspectLoader);
   const cli = harmony.get<CLIMain>('teambit.harmony/cli');
-  await cli.run();
+  try {
+    harmony.get('teambit.workspace/workspace');
+    await cli.run(true);
+  } catch (err) {
+    await cli.run(false);
+  }
 }
 
 function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) {

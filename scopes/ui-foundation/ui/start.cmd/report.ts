@@ -28,7 +28,7 @@ export const report = async (
       if (event.type === UiServerStartedEvent.TYPE) {
         logger.console(`
   ${moment().format('HH:mm:ss')} - You can now view the components in the browser
-  Main UI server is running on http://${event.data.targetHost}:${event.data.targetPort}
+  Bit server is running on http://${event.data.targetHost}:${event.data.targetPort}
           `);
       }
     });

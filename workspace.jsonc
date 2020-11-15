@@ -69,6 +69,7 @@
         "@teambit/documenter.types.docs-file": "^0.2.1",
         "@teambit/documenter.ui.consumable-link": "^0.2.1",
         "@teambit/documenter.ui.heading": "^0.2.1",
+        "@teambit/documenter.ui.highlighted-text": "0.2.1",
         "@teambit/documenter.ui.import-action": "^0.2.1",
         "@teambit/documenter.ui.label-list": "^0.2.1",
         "@teambit/documenter.ui.linked-heading": "^0.2.1",
@@ -99,6 +100,7 @@
         "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
+        "@types/lodash": "4.14.165",
         "@types/lodash.head": "^4.0.6",
         "@types/mocha": "-",
         "@types/mousetrap": "^1.6.3",
@@ -110,7 +112,6 @@
         "@types/react-tabs": "^2.3.2",
         "@types/react-transition-group": "^4.4.0",
         "@types/socket.io-client": "^1.4.33",
-        "@types/webpack": "^4.41.13",
         "@types/webpack-dev-server": "^3.10.1",
         "@types/webpack-merge": "^4.1.5",
         "@yarnpkg/cli": "2.3.2",
@@ -232,7 +233,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.132",
+        "bit-bin": "14.8.9-dev.140",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -262,7 +263,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.132",
+            "bit-bin": "14.8.9-dev.140",
             "react-dom": "^16.13.1"
           }
         }
@@ -367,7 +368,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.132",
+            "bit-bin": "14.8.9-dev.140",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

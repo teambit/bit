@@ -23,7 +23,7 @@ import {
   PolicyDep,
   DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -57,6 +57,7 @@ import path, { join } from 'path';
 import { difference } from 'ramda';
 import { compact } from 'ramda-adjunct';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -72,7 +73,6 @@ import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
 import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
-import { WorkspaceAspect } from './workspace.aspect';
 import {
   OnComponentAddSlot,
   OnComponentChangeSlot,
@@ -94,8 +94,8 @@ export interface EjectConfOptions {
 }
 
 export type WorkspaceInstallOptions = {
-  variants: string;
-  lifecycleType: DependencyLifecycleType;
+  variants?: string;
+  lifecycleType?: DependencyLifecycleType;
   dedupe: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
@@ -258,11 +258,9 @@ export class Workspace implements ComponentFactory {
    * list all workspace components.
    */
   async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
-    const consumerComponents = await this.componentList.getAuthoredAndImportedFromFS();
-    const idsP = consumerComponents.map((component) => {
-      return this.resolveComponentId(component.id);
-    });
-    const ids = await Promise.all(idsP);
+    const legacyIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
+
+    const ids = await this.resolveMultipleComponentIds(legacyIds);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
 
@@ -319,7 +317,6 @@ export class Workspace implements ComponentFactory {
     this.logger.consoleSuccess();
     return new Network(
       capsuleList,
-      graph,
       await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
@@ -340,7 +337,7 @@ export class Workspace implements ComponentFactory {
     const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
     const resolvedComponents = components.map((component) => {
-      const capsule = isolatedEnvironment.capsules.getCapsule(component.id);
+      const capsule = isolatedEnvironment.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
       return new ResolvedComponent(component, capsule);
     });
@@ -374,7 +371,7 @@ export class Workspace implements ComponentFactory {
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     const component = await this.scope.get(id);
     if (!consumerComponent) {
-      if (!component) throw new Error(`component ${id.toString()} does not exist on either workspace or scope.`);
+      if (!component) throw new MissingBitMapComponent(id.toString());
       return component;
     }
 
@@ -382,6 +379,10 @@ export class Workspace implements ComponentFactory {
     const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
     extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
+
+    // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
+    // TODO: remove this once we remove all direct access from legacy code to extensions data
+    consumerComponent.extensions = extensionDataList;
 
     const state = new State(
       new Config(consumerComponent.mainFile, extensionDataList),
@@ -444,17 +445,13 @@ export class Workspace implements ComponentFactory {
     const envsData = await this.getEnvSystemDescriptor(component);
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
-    // const devFiles = await this.dependencyResolver.computeDevFiles(component);
-    // const devPatterns = await this.dependencyResolver.computeDevPatterns(component);
+
     const dependenciesData = {
       dependencies,
-      // devFiles,
-      // devPatterns,
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
-    // TODO: change to EnvsAspect.id
-    promises.push(this.upsertExtensionData(component, WorkspaceAspect.id, envsData));
+    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
 
     await Promise.all(promises);
 
@@ -904,7 +901,11 @@ export class Workspace implements ComponentFactory {
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
-      const data = component.config.extensions.findExtension(WorkspaceAspect.id)?.data;
+      let data = component.config.extensions.findExtension(EnvsAspect.id)?.data;
+      if (!data) {
+        // TODO: remove this once we re-export old components used to store the data here
+        data = component.state.aspects.get('teambit.workspace/workspace');
+      }
 
       if (!data) return false;
       if (data.type !== 'aspect')

@@ -5,9 +5,10 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { Component } from '@teambit/component';
+import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
 import { DevFilesAspect } from './dev-files.aspect';
 import { DevFiles } from './dev-files';
+import { DevFilesFragment } from './dev-files.fragment';
 
 /**
  * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
@@ -121,14 +122,16 @@ export class DevFilesMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect];
+  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect];
 
   static async provider(
-    [envs, workspace]: [EnvsMain, Workspace],
+    [envs, workspace, componentAspect]: [EnvsMain, Workspace, ComponentMain],
     config: DevFilesConfig,
     [devPatternSlot]: [DevPatternSlot]
   ) {
     const devFiles = new DevFilesMain(envs, devPatternSlot, config);
+    componentAspect.registerShowFragments([new DevFilesFragment(devFiles)]);
+
     if (workspace) {
       workspace.onComponentLoad(async (component) => {
         return {

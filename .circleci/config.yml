@@ -435,6 +435,9 @@ jobs:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
       - run:
+          name: 'status harmony'
+          command: 'cd bit && npm run status-harmony'
+      - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
       - run:
@@ -546,6 +549,7 @@ jobs:
           path: ~/Library/Caches/Bit/logs
 
   e2e_test:
+    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
