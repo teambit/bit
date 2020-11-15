@@ -4,15 +4,14 @@
 
   height: 100vh;
   overflow: hidden;
-}
-
-.topbar {
-  flex: none;
-  background-color: var(--bg-color, #ffffff);
-  border-bottom: 1px solid var(--border-color, #ededed);
-  .whiteCorner {
+  .topbar {
+    flex: none;
     background-color: var(--bg-color, #ffffff);
     border-bottom: 1px solid var(--border-color, #ededed);
+    .whiteCorner {
+      background-color: var(--bg-color, #ffffff);
+      border-bottom: 1px solid var(--border-color, #ededed);
+    }
   }
 }
 
