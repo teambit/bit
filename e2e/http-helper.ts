@@ -23,7 +23,7 @@ export class HttpHelper {
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes(HTTP_SERVER_READY_MSG)) {
-          if (this.helper.debugMode) console.log('http server is up and running');
+          if (this.helper.debugMode) console.log('Bit server is up and running');
           resolve();
         }
       });
