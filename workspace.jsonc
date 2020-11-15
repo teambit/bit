@@ -39,7 +39,6 @@
         "@pnpm/tarball-resolver": "4.0.3",
         "@stencil/core": "^1.15.0",
         "@stencil/webpack": "0.0.6",
-        "@types/webpack": "^4.41.13",
         "@svgr/webpack": "^5.4.0",
         "@teambit/any-fs": "0.0.5",
         "@teambit/base-ui.constants.storage": "^0.5.2",
