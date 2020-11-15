@@ -170,7 +170,7 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const capsules = await this.isolator.isolateComponents(
       components,
-      { baseDir: this.path, skipIfExists: true },
+      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
       this.legacyScope
     );
 
