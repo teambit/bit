@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import classNames from 'classnames';
 import { humanizeCompositionId } from '@teambit/model.composition-id';
-import { CompositionType } from '@teambit/model.composition-type.composition-type';
+import { CompositionType } from '@teambit/model.composition-type';
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { colorPalette } from '@teambit/base-ui.theme.color-palette';
 import { themedText } from '@teambit/base-ui.text.themed-text';
