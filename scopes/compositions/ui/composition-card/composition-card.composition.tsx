@@ -15,11 +15,13 @@ export function Preview() {
 export function LargeComposition() {
   const CompositionWithLotsOfText = () => (
     <div>
-      coding is the best.
+      Lorem ipsum dolor sit amet,
       <br />
-      don't let it make you feel dumb.
+      consectetur adipiscing elit.
       <br />
-      keep calm, debug on!
+      Etiam sed neque congue,
+      <br />
+      bibendum neque a, faucibus nibh.
     </div>
   );
 
