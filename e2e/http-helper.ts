@@ -7,7 +7,7 @@ import Helper from '../src/e2e-helper/e2e-helper';
 
 const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
 
-const HTTP_SERVER_READY_MSG = 'Main UI server is running on';
+const HTTP_SERVER_READY_MSG = 'Bit server is running on';
 
 export class HttpHelper {
   httpProcess: ChildProcess;
