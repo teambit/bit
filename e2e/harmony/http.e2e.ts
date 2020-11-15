@@ -15,7 +15,7 @@ describe('http protocol', function () {
   });
 
   let httpHelper: HttpHelper;
-  describe.only('export', () => {
+  describe('export', () => {
     let exportOutput: string;
     let scopeAfterExport: string;
     before(async () => {
