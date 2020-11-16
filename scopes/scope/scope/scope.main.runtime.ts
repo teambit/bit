@@ -201,7 +201,7 @@ export class ScopeMain implements ComponentFactory {
 
   private findRuntime(dirPath: string, runtime: string) {
     const files = readdirSync(join(dirPath, 'dist'));
-    return files.find((path) => path.includes(`${runtime}.runtime.`));
+    return files.find((path) => path.includes(`${runtime}.runtime.js`));
   }
 
   private async loadAspectFromPath(localAspects: string[]) {
