@@ -22,19 +22,19 @@ import { ComponentGraphContext } from './graph-context';
 
 import styles from './dependencies-graph.module.scss';
 
-const NodeTypes: NodeTypesType = {
-  ComponentNode: function ComponentNodeContainer(props: NodeProps) {
-    const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
+function ComponentNodeContainer(props: NodeProps) {
+  const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
 
-    return (
-      <div key={id}>
-        <Handle type="target" position={targetPosition} isConnectable={false} />
-        <Handle type="source" position={sourcePosition} isConnectable={false} />
-        <ComponentNode node={data.node} type={data.type} />
-      </div>
-    );
-  },
-};
+  return (
+    <div key={id}>
+      <Handle type="target" position={targetPosition} isConnectable={false} />
+      <Handle type="source" position={sourcePosition} isConnectable={false} />
+      <ComponentNode node={data.node} type={data.type} />
+    </div>
+  );
+}
+
+const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
 
 export type DependenciesGraphProps = {
   rootNode: ComponentID;
