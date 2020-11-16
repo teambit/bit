@@ -10,6 +10,7 @@ import ReactFlow, {
   Position,
   NodeProps,
 } from 'react-flow-renderer';
+import { ComponentID } from '@teambit/component';
 
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import { ComponentNode } from '../component-node';
@@ -37,7 +38,7 @@ const NodeTypes: NodeTypesType = {
 // temporary type, until react-flow-renderer will export ReactFlowProps
 type ReactFlowProps = Omit<HTMLAttributes<HTMLDivElement>, 'onLoad'>;
 export type DependenciesGraphProps = {
-  rootNode: string;
+  rootNode: ComponentID;
   graph: GraphModel;
   componentWidgets: ComponentWidgetSlot;
   onLoad?: (instance: OnLoadParams) => void;

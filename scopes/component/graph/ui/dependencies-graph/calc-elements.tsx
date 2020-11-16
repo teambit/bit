@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Node, Edge, ArrowHeadType } from 'react-flow-renderer';
+import { ComponentID } from '@teambit/component';
 import { calcLayout } from './calc-layout';
 import { GraphModel } from '../query';
 
 import { depTypeToClass, depTypeToLabel } from './dep-edge';
 
 type ElementsOptions = {
-  rootNode?: string;
+  rootNode?: ComponentID;
 };
 
 /**
@@ -22,7 +23,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
         type: 'ComponentNode',
         data: {
           node: x,
-          type: x.component.id.fullName === rootNode ? 'root' : undefined,
+          type: rootNode && x.component.id.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
         },
         position: { x: 0, y: 0 },
       };
