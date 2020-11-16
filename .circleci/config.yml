@@ -1054,7 +1054,8 @@ workflows:
   # TODO: check if we can combine it with the regular nightly somehow
   manual_nightly:
     jobs:
-      - nightly_approval_job
+      - nightly_approval_job:
+          type: approval
       - checkout_code:
           requires:
             - nightly_approval_job
