@@ -163,6 +163,7 @@
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",
         "humanize-duration": "3.23.1",
+        "humanize-string": "2.1.0",
         "is-primitive": "3.0.1",
         "jest": "^26.0.1",
         "jest-message-util": "26.3.0",
@@ -228,7 +229,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.140",
+        "bit-bin": "14.8.9-dev.142",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -258,7 +259,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.140",
+            "bit-bin": "14.8.9-dev.142",
             "react-dom": "^16.13.1"
           }
         }
@@ -363,7 +364,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.140",
+            "bit-bin": "14.8.9-dev.142",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
