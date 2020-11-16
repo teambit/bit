@@ -184,6 +184,7 @@ export class Http implements Network {
 
     const data = await this.graphClientRequest(LIST_LEGACY, {
       namespaces: namespacesUsingWildcards,
+      headers: this.getHeaders(),
     });
 
     data.scope._legacyList.forEach((comp) => {
@@ -203,6 +204,7 @@ export class Http implements Network {
     `;
     const data = await this.graphClientRequest(SHOW_COMPONENT, {
       id: bitId.toString(),
+      headers: this.getHeaders(),
     });
 
     return Component.fromString(data.scope._getLegacy);
@@ -216,6 +218,7 @@ export class Http implements Network {
     `;
     const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, {
       ids,
+      headers: this.getHeaders(),
     });
 
     return res;
@@ -229,6 +232,7 @@ export class Http implements Network {
     `;
     const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, {
       ids,
+      headers: this.getHeaders(),
     });
 
     return res;
@@ -252,6 +256,7 @@ export class Http implements Network {
 
     const data = await this.graphClientRequest(GET_LOG_QUERY, {
       id: id.toString(),
+      headers: this.getHeaders(),
     });
 
     return data.scope.getLogs;
@@ -268,6 +273,7 @@ export class Http implements Network {
 
     const data = await this.graphClientRequest(GET_LATEST_VERSIONS, {
       ids: bitIds.map((id) => id.toString()),
+      headers: this.getHeaders(),
     });
 
     return data.scope._legacyLatestVersions;
@@ -289,6 +295,7 @@ export class Http implements Network {
 
     const res = await this.graphClientRequest(LIST_LANES, {
       mergeData,
+      headers: this.getHeaders(),
     });
 
     return res.lanes.list;
