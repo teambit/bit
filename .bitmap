@@ -2805,6 +2805,49 @@
         "exported": false,
         "lanes": []
     },
+    "model/composition-id": {
+        "files": [
+            {
+                "name": "humanize.spec.ts",
+                "relativePath": "humanize.spec.ts",
+                "test": true
+            },
+            {
+                "name": "humanize.tsx",
+                "relativePath": "humanize.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/model/composition-id",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "model/composition-type": {
+        "files": [
+            {
+                "name": "composition-type.ts",
+                "relativePath": "composition-type.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/model/composition-type",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "modules/requireable-component@0.0.129": {
         "files": [
             {
@@ -4331,6 +4374,35 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-tooltip",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/composition-card": {
+        "files": [
+            {
+                "name": "composition-card.composition.tsx",
+                "relativePath": "composition-card.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "composition-card.module.scss",
+                "relativePath": "composition-card.module.scss",
+                "test": false
+            },
+            {
+                "name": "composition-card.tsx",
+                "relativePath": "composition-card.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/composition-card",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
