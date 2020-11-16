@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, HTMLAttributes } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import ReactFlow, {
   Controls,
@@ -51,16 +51,25 @@ export function DependenciesGraph({
   onLoad,
   ...rest
 }: DependenciesGraphProps) {
+  const graphRef = useRef<OnLoadParams>();
   const elements = calcElements(graph, { rootNode });
   const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
 
   const handleLoad = useCallback(
     (instance: OnLoadParams) => {
+      graphRef.current = instance;
       instance.fitView();
       onLoad?.(instance);
     },
     [onLoad]
   );
+
+  // clear ref on unmount
+  useEffect(() => (graphRef.current = undefined), []);
+
+  useEffect(() => {
+    graphRef.current?.fitView();
+  }, [graph]);
 
   return (
     <ComponentGraphContext.Provider value={context}>
