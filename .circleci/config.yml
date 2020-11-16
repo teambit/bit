@@ -548,10 +548,10 @@ jobs:
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
 
-  nightly_approval_job:
+  harmony_deploy_approval_job:
     <<: *defaults
     steps:
-      - run: 'echo "starting manual nightly"'
+      - run: 'echo "starting harmony deploy"'
 
   e2e_test:
     resource_class: large
@@ -1052,29 +1052,29 @@ workflows:
           requires:
             - tag_and_publish
   # TODO: check if we can combine it with the regular nightly somehow
-  manual_nightly:
+  harmony_deploy:
     jobs:
-      - nightly_approval_job:
+      - harmony_deploy_approval_job:
           type: approval
       - checkout_code:
           requires:
-            - nightly_approval_job
+            - harmony_deploy_approval_job
       - set_ssh_key:
           requires:
-            - nightly_approval_job
+            - harmony_deploy_approval_job
       - set_npm_registries:
           requires:
-            - nightly_approval_job
+            - harmony_deploy_approval_job
       - setup_harmony:
           requires:
-            - nightly_approval_job
+            - harmony_deploy_approval_job
             - set_npm_registries
             - checkout_code
       - tag_and_publish:
           requires:
-            - nightly_approval_job
+            - harmony_deploy_approval_job
             - setup_harmony
       - docker_build:
           requires:
-            - nightly_approval_job
+            - harmony_deploy_approval_job
             - tag_and_publish
