@@ -83,7 +83,7 @@ export class TypescriptCompiler implements Compiler {
   }
 
   async preBuild(context: BuildContext) {
-    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsules = context.capsuleNetwork.seedersCapsules;
     const capsuleDirs = capsules.map((capsule) => capsule.path);
     await this.writeTsConfig(capsuleDirs);
     await this.writeTypes(capsuleDirs);
@@ -94,7 +94,7 @@ export class TypescriptCompiler implements Compiler {
    * compile multiple components on the capsules
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const componentsResults = await this.runTscBuild(context.capsuleGraph);
+    const componentsResults = await this.runTscBuild(context.capsuleNetwork);
 
     return {
       artifacts: this.getArtifactDefinition(),
@@ -104,7 +104,7 @@ export class TypescriptCompiler implements Compiler {
 
   async postBuild(context: BuildContext) {
     await Promise.all(
-      context.capsuleGraph.seedersCapsules.map(async (capsule) => {
+      context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
         const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
         // the types['index.ts'] is needed only during the build to avoid errors when tsc finds the
         // same type once in the d.ts and once in the ts file.
@@ -149,9 +149,9 @@ export class TypescriptCompiler implements Compiler {
    * we went with option #2 because it'll be easier for users to go to the capsule-root and run
    * `tsc --build` to debug issues.
    */
-  private async runTscBuild(capsuleGraph: Network): Promise<ComponentResult[]> {
-    const rootDir = capsuleGraph.capsulesRootDir;
-    const capsules = capsuleGraph.capsules;
+  private async runTscBuild(network: Network): Promise<ComponentResult[]> {
+    const rootDir = network.capsulesRootDir;
+    const capsules = network.graphCapsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
     const formatHost = {
       getCanonicalFileName: (p) => p,

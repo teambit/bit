@@ -65,6 +65,9 @@ describe('compile extension', function () {
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/index.js')).to.be.a.file();
       });
+      it('should delete previous capsules before the tag (this test is not related to compile)', () => {
+        expect(() => helper.command.getCapsuleOfComponent('comp1')).to.throw();
+      });
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
         expect(catComp2).to.have.property('extensions');

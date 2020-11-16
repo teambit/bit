@@ -3,7 +3,6 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HttpHelper } from '../http-helper';
 
-// @todo: for some reason it fails on the CI. Maybe due to the browser opening.
 describe('http protocol', function () {
   this.timeout(0);
   let helper: Helper;
@@ -14,9 +13,11 @@ describe('http protocol', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
+
   let httpHelper: HttpHelper;
   describe('export', () => {
-    let exportOutput;
+    let exportOutput: string;
+    let scopeAfterExport: string;
     before(async () => {
       httpHelper = new HttpHelper(helper);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -28,12 +29,24 @@ describe('http protocol', function () {
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       exportOutput = helper.command.exportAllComponents();
+      scopeAfterExport = helper.scopeHelper.cloneLocalScope();
     });
     after(() => {
       httpHelper.killHttp();
     });
     it('should export successfully', () => {
       expect(exportOutput).to.have.string('exported 3 components');
+    });
+    describe('bit log', () => {
+      let logOutput: string;
+      before(() => {
+        logOutput = helper.command.log(`${helper.scopes.remote}/comp1 --remote`);
+      });
+      it('should show the log correctly', () => {
+        expect(logOutput).to.have.string('tag 0.0.1');
+        expect(logOutput).to.have.string('author');
+        expect(logOutput).to.have.string('date');
+      });
     });
     describe('bit import', () => {
       let importOutput;
@@ -44,6 +57,21 @@ describe('http protocol', function () {
       });
       it('should import successfully', () => {
         expect(importOutput).to.have.string('successfully imported one component');
+      });
+    });
+    describe('bit remove --remote', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
+      });
+      it('should show descriptive error when removing component that has dependents', () => {
+        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp2`, '--remote --silent');
+        expect(output).to.have.string(`error: unable to delete ${helper.scopes.remote}/comp2`);
+        expect(output).to.have.string(`${helper.scopes.remote}/comp1`);
+      });
+      it('should remove successfully components that has no dependents', () => {
+        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp1`, '--remote --silent');
+        expect(output).to.have.string('successfully removed components');
+        expect(output).to.have.string('comp1');
       });
     });
   });

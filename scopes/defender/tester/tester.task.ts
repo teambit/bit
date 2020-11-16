@@ -32,7 +32,7 @@ export class TesterTask implements BuildTask {
       if (!componentSpecFiles) throw new Error('capsule not found');
       const [, specs] = componentSpecFiles;
       return specs.map((specFile) => {
-        const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
+        const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
         if (!capsule) throw new Error('capsule not found');
         const compiler: Compiler = context.env.getCompiler();
         const distPath = compiler.getDistPathBySrcPath(specFile.relative);
@@ -45,7 +45,7 @@ export class TesterTask implements BuildTask {
     const testerContext = Object.assign(context, {
       release: true,
       specFiles: specFilesWithCapsule,
-      rootPath: context.capsuleGraph.capsulesRootDir,
+      rootPath: context.capsuleNetwork.capsulesRootDir,
     });
 
     // TODO: remove after fix AbstractVinyl on capsule
@@ -54,7 +54,7 @@ export class TesterTask implements BuildTask {
     return {
       artifacts: [], // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => ({
-        component: context.capsuleGraph.capsules.getCapsule(componentTests.componentId)?.component,
+        component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
         metadata: { tests: componentTests.results },
         errors: testsResults.errors ? testsResults.errors : [],
       })),

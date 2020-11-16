@@ -23,6 +23,7 @@ import {
   NODE_PATH_SEPARATOR,
   OBJECTS_DIR,
   SCOPE_JSON,
+  PENDING_OBJECTS_DIR,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
@@ -47,7 +48,7 @@ import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
 import migratonManifest from './migrations/scope-migrator-manifest';
 import { ModelComponent, Symlink, Version } from './models';
 import Lane from './models/lane';
-import { ComponentLogs } from './models/model-component';
+import { ComponentLog } from './models/model-component';
 import { BitObject, BitRawObject, Ref, Repository } from './objects';
 import { ComponentItem, IndexType } from './objects/components-index';
 import RemovedObjects from './removed-components';
@@ -56,6 +57,7 @@ import SourcesRepository from './repositories/sources';
 import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-json';
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
+import ClientIdInUse from './exceptions/client-id-in-use';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -591,12 +593,10 @@ export default class Scope {
     return removeNils(components);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  loadComponentLogs(id: BitId): Promise<ComponentLogs> {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return this.getModelComponent(id).then((componentModel) => {
-      return componentModel.collectLogs(this.objects);
-    });
+  async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
+    const componentModel = await this.getModelComponent(id);
+    const logs = await componentModel.collectLogs(this.objects);
+    return logs;
   }
 
   loadAllVersions(id: BitId): Promise<Component[]> {
@@ -844,6 +844,25 @@ export default class Scope {
     const bitId: BitId = component.toBitId();
     const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version || LATEST);
+  }
+
+  async writeObjectsToPendingDir(objectList: ObjectList, clientId: string): Promise<void> {
+    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    if (fs.pathExistsSync(pendingDir)) {
+      throw new ClientIdInUse(clientId);
+    }
+    await this.objects.writeObjectsToPendingDir(objectList, pendingDir);
+  }
+
+  async readObjectsFromPendingDir(clientId: string): Promise<ObjectList> {
+    // @todo: implement the wait() mechanism.
+    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    return this.objects.readObjectsFromPendingDir(pendingDir);
+  }
+
+  async removePendingDir(clientId: string) {
+    const pendingDir = pathLib.join(this.path, PENDING_OBJECTS_DIR, clientId);
+    return fs.remove(pendingDir); // no error is thrown if not exists
   }
 
   static ensure(

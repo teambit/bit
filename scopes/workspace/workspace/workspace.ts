@@ -97,6 +97,7 @@ export type WorkspaceInstallOptions = {
   variants?: string;
   lifecycleType?: DependencyLifecycleType;
   dedupe: boolean;
+  import: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
@@ -317,7 +318,6 @@ export class Workspace implements ComponentFactory {
     this.logger.consoleSuccess();
     return new Network(
       capsuleList,
-      graph,
       await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
       this.isolateEnv.getCapsulesRootDir(this.path)
     );
@@ -338,7 +338,7 @@ export class Workspace implements ComponentFactory {
     const components = await this.getMany(componentIds);
     const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
     const resolvedComponents = components.map((component) => {
-      const capsule = isolatedEnvironment.capsules.getCapsule(component.id);
+      const capsule = isolatedEnvironment.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
       return new ResolvedComponent(component, capsule);
     });
@@ -446,12 +446,9 @@ export class Workspace implements ComponentFactory {
     const envsData = await this.getEnvSystemDescriptor(component);
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
-    // const devFiles = await this.dependencyResolver.computeDevFiles(component);
-    // const devPatterns = await this.dependencyResolver.computeDevPatterns(component);
+
     const dependenciesData = {
       dependencies,
-      // devFiles,
-      // devPatterns,
     };
 
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
@@ -1141,7 +1138,9 @@ export class Workspace implements ComponentFactory {
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
     this.logger.setStatusLine('importing missing objects');
-    await this.importObjects();
+    if (options?.import) {
+      await this.importObjects();
+    }
     this.logger.consoleSuccess();
     return installationMap;
   }

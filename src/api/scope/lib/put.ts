@@ -14,8 +14,11 @@ export type ComponentObjectsInput = {
   objectList: string | ObjectList;
 };
 
+export type PushOptions = { clientId: string }; // timestamp in ms when the client started the request.
+
 export default async function put(
   { path, objectList }: ComponentObjectsInput,
+  pushOptions: PushOptions,
   headers?: Record<string, any>
 ): Promise<string[]> {
   if (typeof objectList === 'string') {
@@ -25,6 +28,12 @@ export default async function put(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, objectList }, headers);
   const scope = await loadScope(path);
+  if (pushOptions && pushOptions.clientId) {
+    // harmony
+    await scope.writeObjectsToPendingDir(objectList, pushOptions.clientId);
+    return [];
+  }
+  // legacy client (non-harmony)
   const componentsBitIds: BitIds = await exportManyBareScope(scope, objectList);
   const componentsIds: string[] = componentsBitIds.map((id) => id.toString());
   let uniqComponentsIds = componentsIds;
