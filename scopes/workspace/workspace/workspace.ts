@@ -97,6 +97,7 @@ export type WorkspaceInstallOptions = {
   variants?: string;
   lifecycleType?: DependencyLifecycleType;
   dedupe: boolean;
+  import: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
@@ -1140,7 +1141,9 @@ export class Workspace implements ComponentFactory {
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
     this.logger.setStatusLine('importing missing objects');
-    await this.importObjects();
+    if (options?.import) {
+      await this.importObjects();
+    }
     this.logger.consoleSuccess();
     return installationMap;
   }
