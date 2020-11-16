@@ -89,7 +89,7 @@ export class BuilderMain {
   }
 
   async tagListener(components: Component[], options: OnTagOpts = {}): Promise<ComponentMap<AspectList>> {
-    const envsExecutionResults = await this.build(components, { emptyExisting: true });
+    const envsExecutionResults = await this.build(components, { emptyRootDir: true });
     envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
     if (!options.disableDeployPipeline) {
