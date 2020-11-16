@@ -1,5 +1,5 @@
 import React from 'react';
-import { Router } from 'react-router';
+import { Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { VersionDropdown } from './version-dropdown';
