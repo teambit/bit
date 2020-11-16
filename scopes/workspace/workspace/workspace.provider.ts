@@ -128,6 +128,7 @@ export default async function provideWorkspace(
       const installOpts: WorkspaceInstallOptions = {
         dedupe: true,
         updateExisting: false,
+        import: false,
       };
       return workspace.install(undefined, installOpts);
     },
