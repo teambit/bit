@@ -47,9 +47,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(SCOPE_QUERY, {
-      headers: this.getHeaders(),
-    });
+    const data = await this.graphClientRequest(SCOPE_QUERY);
 
     return {
       name: data.scope.name,
@@ -165,9 +163,8 @@ export class Http implements Network {
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
-    return Object.assign(headers, {
-      Authorization: `Bearer ${this.token}`,
-    });
+    const authHeader = this.token ? getAuthHeader(this.token) : {};
+    return Object.assign(headers, authHeader);
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
@@ -184,7 +181,6 @@ export class Http implements Network {
 
     const data = await this.graphClientRequest(LIST_LEGACY, {
       namespaces: namespacesUsingWildcards,
-      headers: this.getHeaders(),
     });
 
     data.scope._legacyList.forEach((comp) => {
@@ -204,7 +200,6 @@ export class Http implements Network {
     `;
     const data = await this.graphClientRequest(SHOW_COMPONENT, {
       id: bitId.toString(),
-      headers: this.getHeaders(),
     });
 
     return Component.fromString(data.scope._getLegacy);
@@ -218,7 +213,6 @@ export class Http implements Network {
     `;
     const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, {
       ids,
-      headers: this.getHeaders(),
     });
 
     return res;
@@ -232,7 +226,6 @@ export class Http implements Network {
     `;
     const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, {
       ids,
-      headers: this.getHeaders(),
     });
 
     return res;
@@ -256,7 +249,6 @@ export class Http implements Network {
 
     const data = await this.graphClientRequest(GET_LOG_QUERY, {
       id: id.toString(),
-      headers: this.getHeaders(),
     });
 
     return data.scope.getLogs;
@@ -273,7 +265,6 @@ export class Http implements Network {
 
     const data = await this.graphClientRequest(GET_LATEST_VERSIONS, {
       ids: bitIds.map((id) => id.toString()),
-      headers: this.getHeaders(),
     });
 
     return data.scope._legacyLatestVersions;
@@ -295,7 +286,6 @@ export class Http implements Network {
 
     const res = await this.graphClientRequest(LIST_LANES, {
       mergeData,
-      headers: this.getHeaders(),
     });
 
     return res.lanes.list;
@@ -303,7 +293,14 @@ export class Http implements Network {
 
   static async connect(host: string) {
     const token = Http.getToken();
-    const graphClient = new GraphQLClient(`${host}/graphql`);
+    const headers = token ? getAuthHeader(token) : {};
+    const graphClient = new GraphQLClient(`${host}/graphql`, { headers });
     return new Http(graphClient, token, host);
   }
+}
+
+function getAuthHeader(token: string) {
+  return {
+    Authorization: `Bearer ${token}`,
+  };
 }
