@@ -3,7 +3,7 @@ import { Node, Edge, ArrowHeadType } from 'react-flow-renderer';
 import { calcLayout } from './calc-layout';
 import { GraphModel } from '../query';
 
-import { depTypeToClass } from './dep-edge';
+import { depTypeToClass, depTypeToLabel } from './dep-edge';
 
 type ElementsOptions = {
   rootNode?: string;
@@ -32,7 +32,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       id: `_${e.sourceId}__${e.targetId}`,
       source: e.sourceId,
       target: e.targetId,
-      label: e.dependencyLifecycleType?.toLowerCase(),
+      label: depTypeToLabel(e.dependencyLifecycleType),
       labelBgPadding: [4, 4],
       type: 'smoothstep',
       className: depTypeToClass(e.dependencyLifecycleType),
