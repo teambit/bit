@@ -12,7 +12,7 @@ export class FetchRoute implements Route {
     async (req: Request, res: Response) => {
       const objectList = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions);
       const pack = objectList.toTar();
-      pack.pipe(res);
+      pack.pipe(res as any);
     },
   ];
 }
