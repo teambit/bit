@@ -558,7 +558,6 @@ jobs:
       - run: 'echo "starting harmony deploy"'
 
   e2e_test:
-    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
