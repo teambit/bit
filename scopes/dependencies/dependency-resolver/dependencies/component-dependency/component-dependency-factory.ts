@@ -1,5 +1,5 @@
 import Bluebird from 'bluebird';
-import { ComponentMain } from '@teambit/component';
+import { ComponentMain, ComponentID } from '@teambit/component';
 import { compact } from 'ramda-adjunct';
 import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
@@ -30,7 +30,14 @@ export class ComponentDependencyFactory implements DependencyFactory {
   async parse<ComponentDependency, S extends SerializedComponentDependency>(
     serialized: S
   ): Promise<ComponentDependency> {
-    const id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
+    let id;
+
+    if (serialized.componentId.scope) {
+      id = ComponentID.fromObject(serialized.componentId);
+    } else {
+      id = await this.componentAspect.getHost().resolveComponentId(serialized.id);
+    }
+
     return (new ComponentDependency(
       id,
       serialized.isExtension,
