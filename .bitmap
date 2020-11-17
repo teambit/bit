@@ -2380,6 +2380,21 @@
                 "test": false
             },
             {
+                "name": "filter-graph.tsx",
+                "relativePath": "ui/dependencies-graph/filter-graph/filter-graph.tsx",
+                "test": false
+            },
+            {
+                "name": "filters.tsx",
+                "relativePath": "ui/dependencies-graph/filter-graph/filters.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "ui/dependencies-graph/filter-graph/index.ts",
+                "test": false
+            },
+            {
                 "name": "graph-context.ts",
                 "relativePath": "ui/dependencies-graph/graph-context.ts",
                 "test": false
