@@ -8,7 +8,6 @@ import { SchemaAspect } from './schema.aspect';
 import { Module } from './schemas';
 import { SemanticSchema } from './semantic-schema';
 import { SchemaExtractor } from './schema-extractor';
-import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 
 export type ParserSlot = SlotRegistry<Parser>;
 
@@ -83,7 +82,7 @@ export class SchemaMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect];
+  static dependencies = [EnvsAspect];
 
   static defaultConfig = {
     defaultParser: 'teambit.typescript/typescript',
@@ -91,7 +90,7 @@ export class SchemaMain {
 
   static slots = [Slot.withType<Parser>()];
 
-  static async provider([envs, workspace]: [EnvsMain, Workspace], config: SchemaConfig, [parserSlot]: [ParserSlot]) {
+  static async provider([envs]: [EnvsMain], config: SchemaConfig, [parserSlot]: [ParserSlot]) {
     const schema = new SchemaMain(parserSlot, envs, config);
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);
