@@ -34,6 +34,8 @@ import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
 import { ExportPersist } from 'bit-bin/dist/scope/actions';
+import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
+import { Remotes } from 'bit-bin/dist/remotes';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
@@ -445,6 +447,11 @@ export class ScopeMain implements ComponentFactory {
   async resolveId(id: string): Promise<ComponentID> {
     const legacyId = await this.legacyScope.getParsedId(id);
     return ComponentID.fromLegacy(legacyId);
+  }
+
+  // TODO: add new API for this
+  async _legacyRemotes(): Promise<Remotes> {
+    return getScopeRemotes(this.legacyScope);
   }
 
   /**

@@ -10,6 +10,8 @@ import { DedupedDependencies, dedupeDependencies, getEmptyDedupedDependencies } 
 import { ManifestToJsonOptions } from './manifest';
 import { WorkspaceManifest } from './workspace-manifest';
 
+export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
+
 export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   includeDir?: boolean;
@@ -19,6 +21,7 @@ export type CreateFromComponentsOptions = {
   filterComponentsFromManifests: boolean;
   createManifestForComponentsWithoutDependencies: boolean;
   dedupe?: boolean;
+  dependencyFilterFn?: DepsFilterFn;
 };
 
 const DEFAULT_CREATE_OPTIONS: CreateFromComponentsOptions = {
@@ -42,7 +45,8 @@ export class WorkspaceManifestFactory {
     const componentDependenciesMap: ComponentDependenciesMap = await this.buildComponentDependenciesMap(
       components,
       optsWithDefaults.filterComponentsFromManifests,
-      rootDependencies
+      rootDependencies,
+      optsWithDefaults.dependencyFilterFn
     );
     let dedupedDependencies = getEmptyDedupedDependencies();
     if (options.dedupe) {
@@ -76,10 +80,10 @@ export class WorkspaceManifestFactory {
   private async buildComponentDependenciesMap(
     components: Component[],
     filterComponentsFromManifests = true,
-    rootDependencies: DependenciesObjectDefinition
+    rootDependencies: DependenciesObjectDefinition,
+    dependencyFilterFn?: DepsFilterFn
   ): Promise<ComponentDependenciesMap> {
     const result = new Map<PackageName, DependenciesObjectDefinition>();
-
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
@@ -88,6 +92,9 @@ export class WorkspaceManifestFactory {
       }
       // Remove bit bin from dep list
       depList = depList.filter((dep) => dep.id !== 'bit-bin');
+      if (dependencyFilterFn) {
+        depList = dependencyFilterFn(depList);
+      }
 
       await this.updateDependenciesVersions(component, rootDependencies, depList);
       const depManifest = await depList.toDependenciesManifest();
