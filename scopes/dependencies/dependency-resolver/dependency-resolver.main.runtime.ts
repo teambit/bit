@@ -116,6 +116,11 @@ const defaultLinkingOptions: LinkingOptions = {
   linkCoreAspects: true,
 };
 
+const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
+  filterComponentsFromManifests: true,
+  createManifestForComponentsWithoutDependencies: true,
+};
+
 export class DependencyResolverMain {
   constructor(
     /**
@@ -233,12 +238,10 @@ export class DependencyResolverMain {
     rootDependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
-    options: CreateFromComponentsOptions = {
-      filterComponentsFromManifests: true,
-      createManifestForComponentsWithoutDependencies: true,
-    }
+    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
+    const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
       name,
@@ -246,7 +249,7 @@ export class DependencyResolverMain {
       rootDependencies,
       rootDir,
       components,
-      options
+      concreteOpts
     );
     this.logger.consoleSuccess();
     return res;
