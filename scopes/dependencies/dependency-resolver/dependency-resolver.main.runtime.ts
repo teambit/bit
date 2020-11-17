@@ -181,17 +181,28 @@ export class DependencyResolverMain {
     return listFactory;
   }
 
+  /**
+   * Main function to get the dependency list of a given component
+   * @param component
+   */
   async getDependencies(component: Component): Promise<DependencyList> {
     const entry = component.state.aspects.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
-    const dependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    const serializedDependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    return this.getDependenciesFromSerializedDependencies(serializedDependencies);
+  }
+
+  private async getDependenciesFromSerializedDependencies(
+    dependencies: SerializedDependency[]
+  ): Promise<DependencyList> {
     if (!dependencies.length) {
       return DependencyList.fromArray([]);
     }
     const listFactory = this.getDependencyListFactory();
-    return listFactory.fromSerializedDependencies(dependencies);
+    const deps = await listFactory.fromSerializedDependencies(dependencies);
+    return deps;
   }
 
   getWorkspacePolicy(): WorkspaceDependenciesPolicy {
