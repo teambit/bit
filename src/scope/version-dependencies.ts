@@ -1,3 +1,4 @@
+import { mapSeries } from 'bluebird';
 import R from 'ramda';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ComponentWithDependencies from './component-dependencies';
@@ -57,9 +58,8 @@ export default class VersionDependencies {
     collectParents: boolean,
     collectArtifacts: boolean
   ): Promise<ObjectItem[]> {
-    const depsP = Promise.all(
-      this.allDependencies.map((dep) => dep.toObjects(repo, clientVersion, collectParents, collectArtifacts))
-    );
+    // for the dependencies, don't collect parents they might not exist
+    const depsP = mapSeries(this.allDependencies, (dep) => dep.toObjects(repo, clientVersion, false, collectArtifacts));
     const compP = this.component.toObjects(repo, clientVersion, collectParents, collectArtifacts);
     const [component, dependencies] = await Promise.all([compP, depsP]);
     return [...component, ...R.flatten(dependencies)];
