@@ -1,5 +1,4 @@
 import { ComponentMap } from '@teambit/component';
-import { DependencyList } from './dependencies';
 import { Registries } from './registry';
 import { DependenciesObjectDefinition } from './types';
 import { DepsFilterFn } from './manifest';
