@@ -78,7 +78,7 @@ Please upgrade your bit client to version >= v14.1.0`);
       const scopeMeta = await repo.getScopeMetaObject();
       return [componentData, ...objects, versionData, scopeMeta];
     } catch (err) {
-      logger.error('component-version.toObjects got an error', err);
+      logger.error(`component-version.toObjects ${this.id.toString()} got an error`, err);
       // @ts-ignore
       const originalVersionHash = this.component.getRef(this.version).toString();
       const currentVersionHash = version.hash().toString();
