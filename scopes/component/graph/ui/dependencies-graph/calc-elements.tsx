@@ -20,7 +20,9 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
   ]);
 
   return useMemo(() => {
-    if (!graph) return [];
+    if (!filteredGraph) return [];
+
+    const positions = calcLayout(filteredGraph);
 
     const nodes: Node[] = Array.from(filteredGraph.nodes.values()).map((x) => {
       return {
@@ -30,7 +32,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
           node: x,
           type: rootNode && x.component.id.isEqual(rootNode) ? 'root' : undefined,
         },
-        position: { x: 0, y: 0 },
+        position: positions.get(x.id) || { x: 0, y: 0 },
       };
     });
 
@@ -44,9 +46,6 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       className: depTypeToClass(e.dependencyLifecycleType),
       arrowHeadType: ArrowHeadType.Arrow,
     }));
-
-    const positions = calcLayout(nodes, edges);
-    nodes.forEach((x) => (x.position = positions.get(x.id) || { x: 0, y: 0 }));
 
     return [...nodes, ...edges];
   }, [filteredGraph]);
