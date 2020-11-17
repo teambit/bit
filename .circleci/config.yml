@@ -68,11 +68,15 @@ commands: # reusable commands
         default: 'hub-stg'
         # default: 'hub'
         type: string
+      token:
+        default: $BIT_DEV_PROD_TOKEN
+        type: string
     steps:
       - run: 'bit config set analytics_reporting false'
       - run: 'bit config set error_reporting false'
       - run: 'bit config set user.name tester'
       - run: 'bit config set user.email ci@bit.dev'
+      - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
 
@@ -109,8 +113,10 @@ jobs:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit && docker build -f ./scripts/docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:latest .
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit:latest
 
   set_ssh_key:
     <<: *defaults
@@ -541,8 +547,8 @@ jobs:
           name: tag persist
           command: cd bit && bit tag --persist
           no_output_timeout: '25m'
+      - run: cd bit && bit export
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
-      # - run: cd bit && bit export
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
@@ -554,7 +560,6 @@ jobs:
       - run: 'echo "starting harmony deploy"'
 
   e2e_test:
-    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
