@@ -2901,6 +2901,30 @@
         "exported": false,
         "lanes": []
     },
+    "modules/ts-server": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "ts-server.spec.ts",
+                "relativePath": "ts-server.spec.ts",
+                "test": false
+            },
+            {
+                "name": "ts-server.ts",
+                "relativePath": "ts-server.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/typescript/ts-server",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "node": {
         "files": [
             {
