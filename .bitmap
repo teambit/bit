@@ -5954,9 +5954,24 @@
                 "test": false
             },
             {
+                "name": "version-label.composition.tsx",
+                "relativePath": "version-label.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "version-label.docs.tsx",
+                "relativePath": "version-label.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "version-label.module.scss",
                 "relativePath": "version-label.module.scss",
                 "test": false
+            },
+            {
+                "name": "version-label.spec.tsx",
+                "relativePath": "version-label.spec.tsx",
+                "test": true
             },
             {
                 "name": "version-label.tsx",
