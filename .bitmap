@@ -1333,35 +1333,6 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/version-tag@0.0.131": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "version-tag.module.scss",
-                "relativePath": "version-tag.module.scss",
-                "test": false
-            },
-            {
-                "name": "version-tag.simulations.tsx",
-                "relativePath": "version-tag.simulations.tsx",
-                "test": false
-            },
-            {
-                "name": "version-tag.tsx",
-                "relativePath": "version-tag.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/version-tag",
-        "origin": "AUTHORED",
-        "exported": true,
-        "lanes": []
-    },
     "teambit.compositions/compositions@0.0.131": {
         "files": [
             {
