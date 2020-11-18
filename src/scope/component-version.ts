@@ -7,6 +7,7 @@ import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import CustomError from '../error/custom-error';
 import ShowDoctorError from '../error/show-doctor-error';
 import logger from '../logger/logger';
+import { getAllVersionHashes } from './component-ops/traverse-versions';
 import { HashMismatch } from './exceptions';
 import ModelComponent from './models/model-component';
 import Version from './models/version';
@@ -70,15 +71,29 @@ export default class ComponentVersion {
       throw new CustomError(`Your components were created with a newer version and use the "overrides" feature.
 Please upgrade your bit client to version >= v14.1.0`);
     }
+    const collectVersionObjects = async (ver: Version): Promise<ObjectItem[]> => {
+      const versionRefs = ver.refsWithOptions(collectParents, collectArtifacts);
+      const versionObjects = await ver.collectManyObjects(repo, versionRefs);
+      const versionData = { ref: ver.hash(), buffer: await ver.asRaw(repo) };
+      return [...versionObjects, versionData];
+    };
     try {
       const componentData = { ref: this.component.hash(), buffer: await this.component.asRaw(repo) };
-      const versionRefs = version.refsWithOptions(collectParents, collectArtifacts);
-      const objects = await version.collectManyObjects(repo, versionRefs);
-      const versionData = { ref: version.hash(), buffer: await version.asRaw(repo) };
+      const parentsObjects: ObjectItem[] = [];
+      if (collectParents) {
+        const allParentsHashes = await getAllVersionHashes(this.component, repo, true, version.hash());
+        const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
+        missingParentsHashes.map(async (parentHash) => {
+          const parentVersion = (await parentHash.load(repo)) as Version;
+          const parentsObj = await collectVersionObjects(parentVersion);
+          parentsObjects.push(...parentsObj);
+        });
+      }
+      const versionObjects = await collectVersionObjects(version);
       const scopeMeta = await repo.getScopeMetaObject();
-      return [componentData, ...objects, versionData, scopeMeta];
+      return [componentData, ...versionObjects, ...parentsObjects, scopeMeta];
     } catch (err) {
-      logger.error('component-version.toObjects got an error', err);
+      logger.error(`component-version.toObjects ${this.id.toString()} got an error`, err);
       // @ts-ignore
       const originalVersionHash = this.component.getRef(this.version).toString();
       const currentVersionHash = version.hash().toString();

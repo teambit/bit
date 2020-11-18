@@ -11,7 +11,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('pkg extension', function () {
   this.timeout(0);
   let helper: Helper;
@@ -64,7 +63,7 @@ describe('pkg extension', function () {
       it('should have the updated config in the package.json of the configured component in capsule', () => {
         helper.command.createCapsuleHarmony('bar/foo');
         // We do this because the create capsule dir with json is not working because of pnpm output
-        barFooCapsuleDir = helper.command.getCapsuleOfComponent('bar/foo');
+        barFooCapsuleDir = helper.command.getCapsuleOfComponent('bar/foo@0.0.1');
         const packageJson = helper.packageJson.read(barFooCapsuleDir);
         expect(packageJson).to.have.property('some-key', 'some-val');
       });

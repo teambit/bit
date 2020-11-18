@@ -20,8 +20,10 @@ import {
   DependencyLifecycleType,
   DependencyResolverMain,
   PackageManagerInstallOptions,
+  ComponentDependency,
   PolicyDep,
   DependencyResolverAspect,
+  DependencyList,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -97,6 +99,7 @@ export type WorkspaceInstallOptions = {
   variants?: string;
   lifecycleType?: DependencyLifecycleType;
   dedupe: boolean;
+  import: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
@@ -1127,19 +1130,47 @@ export class Workspace implements ComponentFactory {
       },
     };
 
+    const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
+
     const installOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
+      dependencyFilterFn: depsFilterFn,
     };
     await installer.install(this.path, rootDepsObject, installationMap, installOptions);
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
     this.logger.setStatusLine('importing missing objects');
-    await this.importObjects();
+    if (options?.import) {
+      await this.importObjects();
+    }
     this.logger.consoleSuccess();
     return installationMap;
+  }
+
+  /**
+   * Generate a filter to pass to the installer
+   * This will filter deps which are come from remotes which defined in scope.json
+   * those components comes from local remotes, usually doesn't have a package in a registry
+   * so no reason to try to install them (it will fail)
+   */
+  private async generateFilterFnForDepsFromLocalRemote() {
+    // TODO: once scope create a new API for this, replace it with the new one
+    const remotes = await this.scope._legacyRemotes();
+    return (dependencyList: DependencyList): DependencyList => {
+      const filtered = dependencyList.filter((dep) => {
+        if (!(dep instanceof ComponentDependency)) {
+          return true;
+        }
+        if (remotes.isHub(dep.componentId.scope)) {
+          return true;
+        }
+        return false;
+      });
+      return filtered;
+    };
   }
 
   // TODO: replace with a proper import API on the workspace
