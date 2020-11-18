@@ -16,4 +16,10 @@ export class Registries {
   setDefaultRegistry(registry: Registry): Registries {
     return new Registries(registry, this.scopes);
   }
+
+  updateScopedRegistry(name: string, registry: Registry) {
+    const scopes = this.scopes;
+    scopes[name] = registry;
+    return new Registries(this.defaultRegistry, scopes);
+  }
 }

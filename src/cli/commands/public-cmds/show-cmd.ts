@@ -19,6 +19,7 @@ export default class Show implements LegacyCommand {
     ['d', 'detailed', 'show more details'],
     ['', 'dependents', 'EXPERIMENTAL. show all dependents recursively'],
     ['', 'dependencies', 'EXPERIMENTAL. show all dependencies recursively'],
+    ['', 'legacy', ''],
   ] as CommandOptions;
   loader = true;
   migration = true;

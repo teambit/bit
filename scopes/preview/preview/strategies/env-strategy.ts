@@ -69,7 +69,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getOutputPath(context: BuildContext) {
-    return resolve(`${context.capsuleGraph.capsulesRootDir}/${this.getDirName(context)}`);
+    return resolve(`${context.capsuleNetwork.capsulesRootDir}/${this.getDirName(context)}`);
   }
 
   private getPaths(context: BuildContext, files: AbstractVinyl[], capsule: Capsule) {
@@ -83,7 +83,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
       const moduleMap = await previewDef.getModuleMap(context.components);
 
       const paths = ComponentMap.as(context.components, (component) => {
-        const capsule = context.capsuleGraph.capsules.getCapsule(component.id);
+        const capsule = context.capsuleNetwork.graphCapsules.getCapsule(component.id);
         const maybeFiles = moduleMap.byComponent(component);
         if (!maybeFiles || !capsule) return [];
         const [, files] = maybeFiles;

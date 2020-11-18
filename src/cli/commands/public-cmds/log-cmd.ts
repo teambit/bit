@@ -1,7 +1,6 @@
-import R from 'ramda';
-
 import { getComponentLogs } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { ComponentLog } from '../../../scope/models/model-component';
 import { paintLog } from '../../chalk-box';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
@@ -14,26 +13,15 @@ export default class Log implements LegacyCommand {
   remoteOp = true; // should support log against remote
   skipWorkspace = true;
 
-  action([id]: [string], { remote = false }: { remote: boolean }): Promise<any> {
-    return getComponentLogs(id, remote).then((logs) => {
-      Object.keys(logs).forEach((key) => (logs[key].tag = key));
-      return R.reverse(R.values(logs)).map(
-        R.evolve({
-          date: (n) => new Date(parseInt(n)).toLocaleString(),
-        })
-      );
+  async action([id]: [string], { remote = false }: { remote: boolean }): Promise<any> {
+    const logs = await getComponentLogs(id, remote);
+    logs.forEach((log) => {
+      log.date = log.date ? new Date(parseInt(log.date)).toLocaleString() : undefined;
     });
+    return logs.reverse();
   }
 
-  report(
-    logs: Array<{
-      message: string;
-      tag: string;
-      date: string;
-      username: string | null | undefined;
-      email: string | null | undefined;
-    }>
-  ): string {
+  report(logs: ComponentLog[]): string {
     return logs.map(paintLog).join('\n');
   }
 }

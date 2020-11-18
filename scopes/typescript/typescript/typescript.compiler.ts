@@ -14,13 +14,20 @@ export class TypescriptCompiler implements Compiler {
   distGlobPatterns: string[];
   shouldCopyNonSupportedFiles: boolean;
   artifactName: string;
-  constructor(readonly id: string, private logger: Logger, private options: TypeScriptCompilerOptions) {
+  constructor(
+    readonly id: string,
+    private logger: Logger,
+    private options: TypeScriptCompilerOptions,
+    private tsModule: typeof ts
+  ) {
     this.distDir = options.distDir || 'dist';
     this.distGlobPatterns = options.distGlobPatterns || [`${this.distDir}/**`, `!${this.distDir}/tsconfig.tsbuildinfo`];
     this.shouldCopyNonSupportedFiles =
       typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
     this.artifactName = options.artifactName || 'dist';
   }
+
+  displayName = 'TypeScript';
 
   displayConfig() {
     return this.stringifyTsconfig(this.options.tsconfig);
@@ -35,10 +42,13 @@ export class TypescriptCompiler implements Compiler {
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
-    const compilerOptionsFromTsconfig = ts.convertCompilerOptionsFromJson(this.options.tsconfig.compilerOptions, '.');
+    const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
+      this.options.tsconfig.compilerOptions,
+      '.'
+    );
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
-      const formattedErrors = ts.formatDiagnosticsWithColorAndContext(
+      const formattedErrors = this.tsModule.formatDiagnosticsWithColorAndContext(
         compilerOptionsFromTsconfig.errors,
         this.getFormatDiagnosticsHost()
       );
@@ -47,7 +57,7 @@ export class TypescriptCompiler implements Compiler {
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
     compilerOptions.sourceRoot = options.componentDir;
-    const result = ts.transpileModule(fileContent, {
+    const result = this.tsModule.transpileModule(fileContent, {
       compilerOptions,
       fileName: options.filePath,
       reportDiagnostics: true,
@@ -55,7 +65,7 @@ export class TypescriptCompiler implements Compiler {
 
     if (result.diagnostics && result.diagnostics.length) {
       const formatHost = this.getFormatDiagnosticsHost();
-      const error = ts.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
+      const error = this.tsModule.formatDiagnosticsWithColorAndContext(result.diagnostics, formatHost);
 
       // :TODO @david please replace to a more concrete error type and put in 'exceptions' directory here.
       throw new Error(error);
@@ -73,7 +83,7 @@ export class TypescriptCompiler implements Compiler {
   }
 
   async preBuild(context: BuildContext) {
-    const capsules = context.capsuleGraph.seedersCapsules;
+    const capsules = context.capsuleNetwork.seedersCapsules;
     const capsuleDirs = capsules.map((capsule) => capsule.path);
     await this.writeTsConfig(capsuleDirs);
     await this.writeTypes(capsuleDirs);
@@ -84,7 +94,7 @@ export class TypescriptCompiler implements Compiler {
    * compile multiple components on the capsules
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const componentsResults = await this.runTscBuild(context.capsuleGraph);
+    const componentsResults = await this.runTscBuild(context.capsuleNetwork);
 
     return {
       artifacts: this.getArtifactDefinition(),
@@ -94,7 +104,7 @@ export class TypescriptCompiler implements Compiler {
 
   async postBuild(context: BuildContext) {
     await Promise.all(
-      context.capsuleGraph.seedersCapsules.map(async (capsule) => {
+      context.capsuleNetwork.seedersCapsules.map(async (capsule) => {
         const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
         // the types['index.ts'] is needed only during the build to avoid errors when tsc finds the
         // same type once in the d.ts and once in the ts file.
@@ -139,21 +149,21 @@ export class TypescriptCompiler implements Compiler {
    * we went with option #2 because it'll be easier for users to go to the capsule-root and run
    * `tsc --build` to debug issues.
    */
-  private async runTscBuild(capsuleGraph: Network): Promise<ComponentResult[]> {
-    const rootDir = capsuleGraph.capsulesRootDir;
-    const capsules = capsuleGraph.capsules;
+  private async runTscBuild(network: Network): Promise<ComponentResult[]> {
+    const rootDir = network.capsulesRootDir;
+    const capsules = network.graphCapsules;
     const capsuleDirs = capsules.getAllCapsuleDirs();
     const formatHost = {
       getCanonicalFileName: (p) => p,
       getCurrentDirectory: () => '', // it helps to get the files with absolute paths
-      getNewLine: () => ts.sys.newLine,
+      getNewLine: () => this.tsModule.sys.newLine,
     };
     const componentsResults: ComponentResult[] = [];
     let currentComponentResult: Partial<ComponentResult> = { errors: [] };
     const reportDiagnostic = (diagnostic: ts.Diagnostic) => {
       const errorStr = process.stdout.isTTY
-        ? ts.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
-        : ts.formatDiagnostic(diagnostic, formatHost);
+        ? this.tsModule.formatDiagnosticsWithColorAndContext([diagnostic], formatHost)
+        : this.tsModule.formatDiagnostic(diagnostic, formatHost);
       if (!diagnostic.file) {
         // the error is general and not related to a specific file. e.g. tsconfig is missing.
         throw new BitError(errorStr);
@@ -172,7 +182,7 @@ export class TypescriptCompiler implements Compiler {
     const errorCounter = (errorCount: number) => {
       this.logger.info(`total error found: ${errorCount}`);
     };
-    const host = ts.createSolutionBuilderHost(
+    const host = this.tsModule.createSolutionBuilderHost(
       undefined,
       undefined,
       reportDiagnostic,
@@ -180,7 +190,7 @@ export class TypescriptCompiler implements Compiler {
       errorCounter
     );
     await this.writeProjectReferencesTsConfig(rootDir, capsuleDirs);
-    const solutionBuilder = ts.createSolutionBuilder(host, [rootDir], { verbose: true });
+    const solutionBuilder = this.tsModule.createSolutionBuilder(host, [rootDir], { verbose: true });
     let nextProject;
     const longProcessLogger = this.logger.createLongProcessLogger('compile typescript components', capsules.length);
     // eslint-disable-next-line no-cond-assign
@@ -208,8 +218,8 @@ export class TypescriptCompiler implements Compiler {
   private getFormatDiagnosticsHost(): ts.FormatDiagnosticsHost {
     return {
       getCanonicalFileName: (p) => p,
-      getCurrentDirectory: ts.sys.getCurrentDirectory,
-      getNewLine: () => ts.sys.newLine,
+      getCurrentDirectory: this.tsModule.sys.getCurrentDirectory,
+      getNewLine: () => this.tsModule.sys.newLine,
     };
   }
 
@@ -267,5 +277,9 @@ export class TypescriptCompiler implements Compiler {
     if (!this.isFileSupported(filePath)) return filePath;
     const fileExtension = path.extname(filePath);
     return filePath.replace(new RegExp(`${fileExtension}$`), '.js'); // makes sure it's the last occurrence
+  }
+
+  version() {
+    return this.tsModule.version;
   }
 }

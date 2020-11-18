@@ -46,6 +46,7 @@ export class YarnPackageManager implements PackageManager {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
       dedupe: true,
+      dependencyFilterFn: installOptions.dependencyFilterFn,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(

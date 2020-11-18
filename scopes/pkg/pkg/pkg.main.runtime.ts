@@ -15,6 +15,7 @@ import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
+import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -27,8 +28,9 @@ import { PublishTask } from './publish.task';
 import { PackageTarFiletNotFound, PkgArtifactNotFound } from './exceptions';
 import { PkgArtifact } from './pkg-artifact';
 import { PackageRoute, routePath } from './package.route';
-
+import { PackageDependencyFactory } from './package-dependency';
 import { pkgSchema } from './pkg.graphql';
+import { PackageFragment } from './package.fragment';
 
 export interface PackageJsonProps {
   [key: string]: any;
@@ -93,6 +95,7 @@ export class PkgMain {
     LoggerAspect,
     WorkspaceAspect,
     BuilderAspect,
+    DependencyResolverAspect,
     ComponentAspect,
     GraphqlAspect,
   ];
@@ -100,7 +103,7 @@ export class PkgMain {
   static defaultConfig = {};
 
   static async provider(
-    [cli, scope, envs, isolator, logger, workspace, builder, componentAspect, graphql]: [
+    [cli, scope, envs, isolator, logger, workspace, builder, dependencyResolver, componentAspect, graphql]: [
       CLIMain,
       ScopeMain,
       EnvsMain,
@@ -108,6 +111,7 @@ export class PkgMain {
       LoggerMain,
       Workspace,
       BuilderMain,
+      DependencyResolverMain,
       ComponentMain,
       GraphqlMain
     ],
@@ -119,6 +123,9 @@ export class PkgMain {
     const packer = new Packer(isolator, logPublisher, host, scope);
     const publisher = new Publisher(isolator, logPublisher, scope?.legacyScope, workspace);
     const pkg = new PkgMain(config, packageJsonPropsRegistry, workspace, scope, builder, packer, envs, componentAspect);
+
+    componentAspect.registerShowFragments([new PackageFragment(pkg)]);
+    dependencyResolver.registerDependencyFactories([new PackageDependencyFactory()]);
 
     graphql.register(pkgSchema(pkg));
 

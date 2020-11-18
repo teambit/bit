@@ -98,7 +98,7 @@ export class FlattenedDependencyLoader {
 
   async loadFlattenedFromModel(deps: Component[]): Promise<Component[]> {
     const dependenciesFromModel = deps.filter((d) => !d.loadedFromFileSystem);
-    const flattenedIdsFromModel = dependenciesFromModel.map((d) => d.flattenedDependencies);
+    const flattenedIdsFromModel = dependenciesFromModel.map((d) => d.getAllFlattenedDependencies());
     const flattenedFromModel = await this.loadManyDependencies(R.flatten(flattenedIdsFromModel));
     return flattenedFromModel;
   }

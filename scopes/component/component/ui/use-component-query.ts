@@ -15,6 +15,7 @@ const componentFields = gql`
       version
       scope
     }
+    packageName
     displayName
     server {
       env
@@ -27,6 +28,10 @@ const componentFields = gql`
       version
       snap {
         hash
+        author {
+          displayName
+          email
+        }
         timestamp
         message
       }

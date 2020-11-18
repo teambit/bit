@@ -1,3 +1,4 @@
+import 'reset-css';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/react-router';
 import { Corner } from '@teambit/ui.corner';
@@ -20,12 +21,21 @@ export type ScopeProps = {
   scopeUi: ScopeUI;
   badgeSlot: ScopeBadgeSlot;
   context?: ScopeContextType;
+  onSidebarTogglerChange: (callback: () => void) => void;
 };
 
 /**
  * root component of the scope
  */
-export function Scope({ routeSlot, menuSlot, sidebar, scopeUi, badgeSlot, context }: ScopeProps) {
+export function Scope({
+  routeSlot,
+  menuSlot,
+  sidebar,
+  scopeUi,
+  badgeSlot,
+  context,
+  onSidebarTogglerChange,
+}: ScopeProps) {
   const { scope } = useScope();
   const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
@@ -36,6 +46,8 @@ export function Scope({ routeSlot, menuSlot, sidebar, scopeUi, badgeSlot, contex
   scopeUi.setComponents(scope.components);
   const defaultContext = ({ children }) => <div>{children}</div>;
   const Context = context || defaultContext;
+
+  onSidebarTogglerChange(handleSidebarToggle);
 
   return (
     <ScopeProvider scope={scope}>

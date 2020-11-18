@@ -92,4 +92,14 @@ export interface Compiler extends CompilerOptions {
    * run after the build pipeline completed for all envs. useful for some cleanups
    */
   postBuild?(context: BuildContext, tasksResults: TaskResultsList): Promise<void>;
+
+  /**
+   * returns the version of the current compiler instance (e.g. '4.0.1').
+   */
+  version(): string;
+
+  /**
+   * returns the display name of the current compiler instance (e.g. 'TypeScript')
+   */
+  displayName: string;
 }

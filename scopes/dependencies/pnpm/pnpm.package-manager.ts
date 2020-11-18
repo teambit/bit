@@ -39,6 +39,7 @@ export class PnpmPackageManager implements PackageManager {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
       dedupe: installOptions.dedupe,
+      dependencyFilterFn: installOptions.dependencyFilterFn,
     };
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
@@ -100,14 +101,22 @@ export class PnpmPackageManager implements PackageManager {
     const defaultRegistry = new Registry(
       pnpmRegistry.default.uri,
       pnpmRegistry.default.alwaysAuth,
-      pnpmRegistry.default.authHeaderValue
+      pnpmRegistry.default.authHeaderValue,
+      pnpmRegistry.default.originalAuthType,
+      pnpmRegistry.default.originalAuthValue
     );
 
     const pnpmScoped = omit(pnpmRegistry, ['default']);
     const scopesRegistries: Record<string, Registry> = Object.keys(pnpmScoped).reduce((acc, scopedRegName) => {
       const scopedReg = pnpmScoped[scopedRegName];
       const name = scopedRegName.replace('@', '');
-      acc[name] = new Registry(scopedReg.uri, scopedReg.alwaysAuth, scopedReg.authHeaderValue);
+      acc[name] = new Registry(
+        scopedReg.uri,
+        scopedReg.alwaysAuth,
+        scopedReg.authHeaderValue,
+        scopedReg.originalAuthType,
+        scopedReg.originalAuthValue
+      );
       return acc;
     }, {});
 

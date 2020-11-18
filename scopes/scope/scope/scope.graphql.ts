@@ -19,11 +19,11 @@ export function scopeSchema(scopeMain: ScopeMain, graphql: GraphqlMain) {
         # description of the scope.
         description: String
 
+        # icon of the scope.
+        icon: String
+
         # path of the scope.
         path: String
-
-        # remove components from the scope.
-        # remove(ids: [String], force: Boolean, isLanes: Boolean)
 
         # list of components contained in the scope.
         components(offset: Int, limit: Int, includeCache: Boolean): [Component]
@@ -49,8 +49,11 @@ export function scopeSchema(scopeMain: ScopeMain, graphql: GraphqlMain) {
 
       type Log {
         message: String
+        username: String
+        email: String
         date: String
-        hash: String
+        hash: String!
+        tag: String
       }
 
       type LegacyMeta {
@@ -91,6 +94,9 @@ export function scopeSchema(scopeMain: ScopeMain, graphql: GraphqlMain) {
         description: (scope: ScopeMain) => {
           return scope.description;
         },
+        icon: (scope: ScopeMain) => {
+          return scope.icon;
+        },
         components: (scope: ScopeMain, props?: { offset: number; limit: number; includeCache?: boolean }) => {
           if (!props) return scope.list();
           return scope.list({ offset: props.offset, limit: props.limit }, props.includeCache);
@@ -121,7 +127,7 @@ export function scopeSchema(scopeMain: ScopeMain, graphql: GraphqlMain) {
 
         getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
           const logs = await log(scope.path, id);
-          return logs;
+          return JSON.parse(logs);
         },
 
         getMany: async (scope: ScopeMain, { idStrings }: { idStrings: string[] }) => {

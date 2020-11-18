@@ -71,9 +71,9 @@ describe('harmony extension config', function () {
       });
       describe('extension is new component on the workspace', () => {
         it('should not allow tagging the component without tagging the extensions', () => {
-          output = helper.general.runWithTryCatch('bit tag bar/foo');
-          expect(output).to.have.string('has an extension "dummy-extension"');
-          expect(output).to.have.string('this extension was not included in the tag command');
+          output = helper.general.runWithTryCatch('bit tag bar/foo --persist');
+          expect(output).to.have.string('has a dependency "dummy-extension"');
+          expect(output).to.have.string('this dependency was not included in the tag command');
         });
         describe('tagging extension and component together', () => {
           let componentModel;
@@ -164,6 +164,7 @@ describe('harmony extension config', function () {
           });
         });
       });
+
       describe('imported component', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
