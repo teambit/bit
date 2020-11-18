@@ -14,6 +14,7 @@ export class TypeScriptExtractor implements SchemaExtractor {
     const paths = component.state.filesystem.files.map((file) => file.path).filter((path) => path.endsWith('index.ts'));
     // const paths = ['/Users/ranmizrahi/Bit/bit/scopes/workspace/workspace/index.ts'];
     const typedocApp = new Application();
+
     typedocApp.options.setValues({
       inputFiles: paths,
       allowJs: true,

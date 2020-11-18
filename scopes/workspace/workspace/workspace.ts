@@ -120,6 +120,7 @@ export class Workspace implements ComponentFactory {
     private pubsub: PubsubMain,
 
     private config: WorkspaceExtConfig,
+
     /**
      * private access to the legacy consumer instance.
      */

@@ -17,6 +17,7 @@ import {
   getCoreAspectPackageName,
   getCoreAspectName,
 } from '@teambit/aspect-loader';
+
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';

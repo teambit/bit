@@ -495,6 +495,7 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       config
     );
+
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
