@@ -42,6 +42,10 @@ semver_tags_only_filters: &semver_tags_only_filters
     tags:
       only: /^v[0-9]+(\.[0-9]+)*$/
 
+master_only_filter: &master_only_filter
+  filters:
+    branches:
+      only: master
 
 nightly_tag_only_filters: &nightly_tag_only_filters
   filters:
@@ -68,11 +72,15 @@ commands: # reusable commands
         default: 'hub-stg'
         # default: 'hub'
         type: string
+      token:
+        default: $BIT_DEV_PROD_TOKEN
+        type: string
     steps:
       - run: 'bit config set analytics_reporting false'
       - run: 'bit config set error_reporting false'
       - run: 'bit config set user.name tester'
       - run: 'bit config set user.email ci@bit.dev'
+      - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
 
@@ -109,8 +117,10 @@ jobs:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit && docker build -f ./scripts/docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:latest .
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit:latest
 
   set_ssh_key:
     <<: *defaults
@@ -435,6 +445,9 @@ jobs:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
       - run:
+          name: 'status harmony'
+          command: 'cd bit && npm run status-harmony'
+      - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
       - run:
@@ -538,12 +551,17 @@ jobs:
           name: tag persist
           command: cd bit && bit tag --persist
           no_output_timeout: '25m'
-      - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # - run: cd bit && bit export
+      - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+
+  harmony_deploy_approval_job:
+    <<: *defaults
+    steps:
+      - run: 'echo "starting harmony deploy"'
 
   e2e_test:
     <<: *defaults
@@ -1043,24 +1061,36 @@ workflows:
           requires:
             - tag_and_publish
   # TODO: check if we can combine it with the regular nightly somehow
-  manual_nightly:
+  harmony_deploy:
     jobs:
+      - harmony_deploy_approval_job:
+          <<: *master_only_filter
+          type: approval
       - checkout_code:
-          <<: *nightly_tag_only_filters
-      - set_ssh_key:
-          <<: *nightly_tag_only_filters
-      - set_npm_registries:
-          <<: *nightly_tag_only_filters
-      - setup_harmony:
-          <<: *nightly_tag_only_filters
+          <<: *master_only_filter
           requires:
+            - harmony_deploy_approval_job
+      - set_ssh_key:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+      - set_npm_registries:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+      - setup_harmony:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
             - set_npm_registries
             - checkout_code
       - tag_and_publish:
-          <<: *nightly_tag_only_filters
+          <<: *master_only_filter
           requires:
+            - harmony_deploy_approval_job
             - setup_harmony
       - docker_build:
-          <<: *nightly_tag_only_filters
+          <<: *master_only_filter
           requires:
+            - harmony_deploy_approval_job
             - tag_and_publish

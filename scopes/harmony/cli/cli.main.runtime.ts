@@ -14,7 +14,7 @@ import { CommandNotFound } from './exceptions/command-not-found';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import CommandRegistry from './registry';
 
-export type OnStart = () => void;
+export type OnStart = (hasWorkspace: boolean) => void;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 
@@ -86,17 +86,17 @@ export class CLIMain {
     return this.registry.commands;
   }
 
-  private async invokeOnStart() {
+  private async invokeOnStart(hasWorkspace: boolean) {
     const onStartFns = this.onStartSlot.values();
-    const promises = onStartFns.map(async (onStart) => onStart());
+    const promises = onStartFns.map(async (onStart) => onStart(hasWorkspace));
     return Promise.all(promises);
   }
 
   /**
    * execute commands registered to `Paper` and the legacy bit cli.
    */
-  async run() {
-    await this.invokeOnStart();
+  async run(hasWorkspace: boolean) {
+    await this.invokeOnStart(hasWorkspace);
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {
       Help()(this.commands, this.groups);

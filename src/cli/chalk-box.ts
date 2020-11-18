@@ -8,7 +8,7 @@ import SpecsResults, {
   SpecsResultsWithMetaData,
 } from '../consumer/specs-results/specs-results';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
-import { isHash } from '../version/version-parser';
+import { ComponentLog } from '../scope/models/model-component';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
@@ -66,22 +66,11 @@ const paintAuthor = (email: string | null | undefined, username: string | null |
   return '';
 };
 
-export const paintLog = ({
-  message,
-  date,
-  tag,
-  username,
-  email,
-}: {
-  message: string;
-  tag: string;
-  date: string;
-  username: string | null | undefined;
-  email: string | null | undefined;
-}): string => {
-  const type = isHash(tag) ? 'snap' : 'tag';
+export const paintLog = (log: ComponentLog): string => {
+  const { message, date, tag, hash, username, email } = log;
+  const title = tag ? `tag ${tag} (${hash})\n` : `snap ${hash}\n`;
   return (
-    c.yellow(`${type} ${tag}\n`) +
+    c.yellow(title) +
     paintAuthor(email, username) +
     (date ? c.white(`date: ${date}\n`) : '') +
     (message ? c.white(`\n      ${message}\n`) : '')

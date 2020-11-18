@@ -7,7 +7,7 @@ import Helper from '../src/e2e-helper/e2e-helper';
 
 const HTTP_TIMEOUT_FOR_MSG = 120000; // 2 min
 
-const HTTP_SERVER_READY_MSG = 'Main UI server is running on';
+const HTTP_SERVER_READY_MSG = 'Bit server is running on';
 
 export class HttpHelper {
   httpProcess: ChildProcess;
@@ -23,7 +23,7 @@ export class HttpHelper {
       this.httpProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
         if (data.includes(HTTP_SERVER_READY_MSG)) {
-          if (this.helper.debugMode) console.log('http server is up and running');
+          if (this.helper.debugMode) console.log('Bit server is up and running');
           resolve();
         }
       });

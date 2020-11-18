@@ -95,7 +95,7 @@ export class FlattenedDependenciesGetter {
     const id = componentId.toString();
     const edges = getEdges(graph, id);
     if (!edges) return new BitIds();
-    const dependencies = getEdgesWithProdGraph(prodGraph, edges);
+    const dependencies = getEdgesWithProdGraph(prodGraph, edges, graph, id);
     if (!dependencies.length) return new BitIds();
     const flattenDependency = async (dependency) => {
       if (this.cache[dependency]) return this.cache[dependency];
@@ -141,17 +141,32 @@ function getEdges(graph: Graph, id: BitIdStr): BitIdStr[] | null {
 }
 
 /**
+ * ** dev-dep that requires prod-dep indirectly **
  * for non-prod files, such as test files, we're interested also with its prod dependency.
  * for example, a test file foo.spec.js of component 'foo', requires bar.js from component
  * 'bar'. 'bar.js' requires 'baz.js' from component 'baz'.
  * when calculating the edges of foo.spec.js by devGraph only, we'll get bar.js but not
  * baz.js because the relationship between bar and baz are set on prodGraph only.
+ * this part is fetched by `prodDependencies` var.
  * @see dev-dependencies.e2e, 'dev-dependency that requires prod-dependency' case.
+ *
+ * ** dev-dep that requires prod-dep indirectly **
+ * imagine that foo requires bar that has baz as a devDependency. investigating only the devGraph
+ * misses this relationship between bar and baz. so we need to fetch also the prod edges and then
+ * check their devDependencies.
+ * this part is done by `devDependencies` var.
  */
-function getEdgesWithProdGraph(prodGraph: Graph | null | undefined, dependencies: BitIdStr[]): BitIdStr[] {
+function getEdgesWithProdGraph(
+  prodGraph: Graph | null | undefined,
+  dependencies: BitIdStr[],
+  graph: Graph,
+  id: string
+): BitIdStr[] {
   if (!prodGraph) return dependencies;
   const prodDependencies = R.flatten(dependencies.map((dependency) => getEdges(prodGraph, dependency))).filter(
     (x) => x
   );
-  return R.uniq([...dependencies, ...prodDependencies]);
+  const prodEdges = getEdges(prodGraph, id) || [];
+  const devDependencies = R.flatten(prodEdges.map((dependency) => getEdges(graph, dependency))).filter((x) => x);
+  return R.uniq([...dependencies, ...prodDependencies, ...devDependencies]);
 }

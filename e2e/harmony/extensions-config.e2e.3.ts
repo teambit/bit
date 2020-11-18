@@ -164,6 +164,7 @@ describe('harmony extension config', function () {
           });
         });
       });
+
       describe('imported component', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);

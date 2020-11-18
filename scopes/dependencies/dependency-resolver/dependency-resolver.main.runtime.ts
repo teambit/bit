@@ -55,6 +55,7 @@ import {
   COMPONENT_DEP_TYPE,
   DependencyList,
 } from './dependencies';
+import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -113,6 +114,11 @@ export type UpdatePolicyResult = {
 const defaultLinkingOptions: LinkingOptions = {
   bitLinkType: 'link',
   linkCoreAspects: true,
+};
+
+const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
+  filterComponentsFromManifests: true,
+  createManifestForComponentsWithoutDependencies: true,
 };
 
 export class DependencyResolverMain {
@@ -180,17 +186,28 @@ export class DependencyResolverMain {
     return listFactory;
   }
 
+  /**
+   * Main function to get the dependency list of a given component
+   * @param component
+   */
   async getDependencies(component: Component): Promise<DependencyList> {
     const entry = component.state.aspects.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
-    const dependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    const serializedDependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    return this.getDependenciesFromSerializedDependencies(serializedDependencies);
+  }
+
+  private async getDependenciesFromSerializedDependencies(
+    dependencies: SerializedDependency[]
+  ): Promise<DependencyList> {
     if (!dependencies.length) {
       return DependencyList.fromArray([]);
     }
     const listFactory = this.getDependencyListFactory();
-    return listFactory.fromSerializedDependencies(dependencies);
+    const deps = await listFactory.fromSerializedDependencies(dependencies);
+    return deps;
   }
 
   getWorkspacePolicy(): WorkspaceDependenciesPolicy {
@@ -221,12 +238,10 @@ export class DependencyResolverMain {
     rootDependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
-    options: CreateFromComponentsOptions = {
-      filterComponentsFromManifests: true,
-      createManifestForComponentsWithoutDependencies: true,
-    }
+    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
+    const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
       name,
@@ -234,7 +249,7 @@ export class DependencyResolverMain {
       rootDependencies,
       rootDir,
       components,
-      options
+      concreteOpts
     );
     this.logger.consoleSuccess();
     return res;
@@ -305,9 +320,10 @@ export class DependencyResolverMain {
     const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
     const bitOriginalAuthType = bitScope?.originalAuthType;
     const bitOriginalAuthValue = bitScope?.originalAuthValue;
+    const alwaysAuth = bitAuthHeaderValue !== undefined;
     const bitDefaultRegistry = new Registry(
       bitRegistry,
-      true,
+      alwaysAuth,
       bitAuthHeaderValue,
       bitOriginalAuthType,
       bitOriginalAuthValue
@@ -491,6 +507,7 @@ export class DependencyResolverMain {
   static slots = [
     Slot.withType<DependenciesPolicy>(),
     Slot.withType<PackageManager>(),
+    Slot.withType<RegExp>(),
     Slot.withType<DependencyFactory>(),
   ];
 
@@ -501,6 +518,7 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
+    devFilePatterns: ['*.spec.ts'],
     strictPeerDependencies: true,
   };
 
@@ -532,11 +550,17 @@ export class DependencyResolverMain {
       dependencyFactorySlot
     );
 
+    componentAspect.registerShowFragments([
+      new DependenciesFragment(dependencyResolver),
+      new DevDependenciesFragment(dependencyResolver),
+      new PeerDependenciesFragment(dependencyResolver),
+    ]);
     // TODO: solve this generics issue and remove the ts-ignore
     // @ts-ignore
     dependencyResolver.registerDependencyFactories([new ComponentDependencyFactory(componentAspect)]);
 
     DependencyResolver.getDepResolverAspectName = () => DependencyResolverAspect.id;
+
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {

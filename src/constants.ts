@@ -109,6 +109,8 @@ export const LATEST_BIT_VERSION = 'latest';
 
 export const OBJECTS_DIR = 'objects';
 
+export const PENDING_OBJECTS_DIR = 'pending-objects';
+
 export const REMOTE_REFS_DIR = path.join('refs', 'remotes');
 
 export const WORKSPACE_LANES_DIR = path.join('workspace', 'lanes');
