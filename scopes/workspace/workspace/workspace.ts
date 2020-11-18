@@ -7,12 +7,8 @@ import {
   ComponentMain,
   Component,
   ComponentFactory,
-  ComponentFS,
   ComponentID,
   ComponentMap,
-  Config,
-  State,
-  TagMap,
   AspectList,
 } from '@teambit/component';
 import { ComponentScopeDirMap } from '@teambit/config';
@@ -21,7 +17,6 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   PolicyDep,
-  DependencyResolverAspect,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
@@ -43,7 +38,7 @@ import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-compon
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
 import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import legacyLogger from 'bit-bin/dist/logger/logger';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
 import { pathIsInside } from 'bit-bin/dist/utils';
@@ -52,12 +47,10 @@ import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/d
 import BluebirdPromise from 'bluebird';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { merge, slice } from 'lodash';
+import { slice } from 'lodash';
 import path, { join } from 'path';
 import { difference } from 'ramda';
-import { compact } from 'ramda-adjunct';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -71,7 +64,6 @@ import {
 } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { Watcher } from './watch/watcher';
-import { WorkspaceComponent } from './workspace-component';
 import { ComponentStatus } from './workspace-component/component-status';
 import {
   OnComponentAddSlot,
@@ -80,6 +72,7 @@ import {
   OnComponentRemoveSlot,
 } from './workspace.provider';
 import { Issues } from './workspace-component/issues';
+import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 
 export type EjectConfResult = {
   configPath: string;
@@ -112,7 +105,7 @@ export class Workspace implements ComponentFactory {
   priority = true;
   owner?: string;
   componentsScopeDirsMap: ComponentScopeDirMap;
-
+  componentLoader: WorkspaceComponentLoader;
   constructor(
     /**
      * private pubsub.
@@ -155,7 +148,7 @@ export class Workspace implements ComponentFactory {
     /**
      * on component load slot.
      */
-    private onComponentLoadSlot: OnComponentLoadSlot,
+    public onComponentLoadSlot: OnComponentLoadSlot,
 
     /**
      * on component change slot.
@@ -175,6 +168,7 @@ export class Workspace implements ComponentFactory {
   ) {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
+    this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver);
   }
 
   /**
@@ -345,17 +339,7 @@ export class Workspace implements ComponentFactory {
     return resolvedComponents;
   }
 
-  private async getConsumerComponent(id: ComponentID, forCapsule = false) {
-    try {
-      return forCapsule
-        ? await this.consumer.loadComponentForCapsule(id._legacy)
-        : await this.consumer.loadComponent(id._legacy);
-    } catch (err) {
-      return undefined;
-    }
-  }
-
-  private async createAspectList(extensionDataList: ExtensionDataList) {
+  public async createAspectList(extensionDataList: ExtensionDataList) {
     const entiresP = extensionDataList.map(async (entry) => {
       return new AspectEntry(await this.resolveComponentId(entry.id), entry);
     });
@@ -368,38 +352,8 @@ export class Workspace implements ComponentFactory {
    * get a component from workspace
    * @param id component ID
    */
-  async get(id: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
-    const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
-    const component = await this.scope.get(id);
-    if (!consumerComponent) {
-      if (!component) throw new MissingBitMapComponent(id.toString());
-      return component;
-    }
-
-    let extensionDataList = await this.componentExtensions(id, component);
-    const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
-    // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
-
-    // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
-    // TODO: remove this once we remove all direct access from legacy code to extensions data
-    consumerComponent.extensions = extensionDataList;
-
-    const state = new State(
-      new Config(consumerComponent.mainFile, extensionDataList),
-      await this.createAspectList(extensionDataList),
-      ComponentFS.fromVinyls(consumerComponent.files),
-      consumerComponent.dependencies,
-      consumerComponent
-    );
-
-    if (!component) {
-      return this.executeLoadSlot(this.newComponentFromState(id, state));
-    }
-
-    component.state = state;
-    const workspaceComponent = WorkspaceComponent.fromComponent(component, this);
-    return this.executeLoadSlot(workspaceComponent);
+  async get(componentId: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
+    return this.componentLoader.get(componentId, forCapsule, legacyComponent);
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
@@ -425,45 +379,13 @@ export class Workspace implements ComponentFactory {
     return {};
   }
 
-  private async upsertExtensionData(component: Component, extension: string, data: any) {
-    const existingExtension = component.state.config.extensions.findExtension(extension);
-    if (existingExtension) {
-      existingExtension.data = merge(existingExtension.data, data);
-      return;
-    }
-    component.state.config.extensions.push(await this.getDataEntry(extension, data));
-  }
-
-  private async executeLoadSlot(component: Component) {
-    const entries = this.onComponentLoadSlot.toArray();
-    const promises = entries.map(async ([extension, onLoad]) => {
-      const data = await onLoad(component);
-      return this.upsertExtensionData(component, extension, data);
-    });
-
-    // Special load events which runs from the workspace but should run from the correct aspect
-    // TODO: remove this once those extensions dependent on workspace
-    const envsData = await this.getEnvSystemDescriptor(component);
-    // Move to deps resolver main runtime once we switch ws<> deps resolver direction
-    const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
-
-    const dependenciesData = {
-      dependencies,
-    };
-
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
-    promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
-
-    await Promise.all(promises);
-
-    // Update the aspect list to have changes happened during the on load slot (new data added above)
-    const updatedAspectList = await this.createAspectList(component.state.config.extensions);
-    component.state.aspects = updatedAspectList;
-    return component;
+  clearCache() {
+    this.componentLoader.clearCache();
+    this.componentList = new ComponentsList(this.consumer);
   }
 
   async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
-    this.componentList = new ComponentsList(this.consumer);
+    this.clearCache();
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -482,8 +404,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
-    // TODO: put it on an other function
-    this.componentList = new ComponentsList(this.consumer);
+    this.clearCache();
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
@@ -497,8 +418,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
-    // TODO: put it on an other function
-    this.componentList = new ComponentsList(this.consumer);
+    this.clearCache();
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
@@ -506,15 +426,6 @@ export class Workspace implements ComponentFactory {
       results.push({ extensionId: extension, results: onRemoveResult });
     });
     return results;
-  }
-
-  private async getDataEntry(extension: string, data: { [key: string]: any }): Promise<ExtensionDataEntry> {
-    // TODO: @gilad we need to refactor the extension data entry api.
-    return new ExtensionDataEntry(undefined, undefined, extension, undefined, data);
-  }
-
-  private newComponentFromState(id: ComponentID, state: State): Component {
-    return new WorkspaceComponent(id, null, state, new TagMap(), this);
   }
 
   getState(id: ComponentID, hash: string) {
@@ -566,34 +477,8 @@ export class Workspace implements ComponentFactory {
     });
   }
 
-  /**
-   * @todo: remove the string option, use only BitId
-   */
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
-    const idsWithoutEmpty = compact(ids);
-    const errors: { id: ComponentID; err: Error }[] = [];
-    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
-    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
-      longProcessLogger.logProgress(id.toString());
-      return this.get(id, forCapsule).catch((err) => {
-        errors.push({
-          id,
-          err,
-        });
-        return undefined;
-      });
-    });
-    const components = await componentsP;
-    errors.forEach((err) => {
-      if (!this.consumer.isLegacy) {
-        this.logger.console(`failed loading component ${err.id.toString()}, see full error in debug.log file`);
-      }
-      this.logger.warn(`failed loading component ${err.id.toString()}`, err.err);
-    });
-    // remove errored components
-    const filteredComponents: Component[] = compact(components);
-    longProcessLogger.end();
-    return filteredComponents;
+    return this.componentLoader.getMany(ids, forCapsule);
   }
 
   /**
@@ -782,19 +667,6 @@ export class Workspace implements ComponentFactory {
     });
     await Promise.all(promises);
     return extensionList;
-  }
-
-  /**
-   * Check if a component is vendor component in the workspace
-   *
-   * @private
-   * @param {BitId} componentId
-   * @returns {boolean}
-   * @memberof Workspace
-   */
-  private isVendorComponent(componentId: ComponentID): boolean {
-    const relativeComponentDir = this.componentDir(componentId, { ignoreVersion: true }, { relative: true });
-    return this.isVendorComponentByComponentDir(relativeComponentDir);
   }
 
   private isVendorComponentByComponentDir(relativeComponentDir: PathOsBasedRelative): boolean {

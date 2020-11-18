@@ -24,6 +24,7 @@ import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
+import { mapSeries } from 'bluebird';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -232,24 +233,22 @@ export default class DependencyResolver {
    * and marked as ignored in the consumer or component config file.
    */
   async populateDependencies(files: string[], testsFiles: string[]) {
-    await Promise.all(
-      files.map(async (file: string) => {
-        const fileType: FileType = {
-          isTestFile: await this.isDevFile(this.component, file, testsFiles),
-        };
-        this.throwForNonExistFile(file);
-        if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
-          return;
-        }
-        this.processCoreAspects(file);
-        this.processMissing(file, fileType);
-        this.processErrors(file);
-        this.processPackages(file, fileType);
-        this.processBits(file, fileType);
-        this.processDepFiles(file, fileType);
-        this.processUnidentifiedPackages(file, fileType);
-      })
-    );
+    await mapSeries(files, async (file: string) => {
+      const fileType: FileType = {
+        isTestFile: await this.isDevFile(this.component, file, testsFiles),
+      };
+      this.throwForNonExistFile(file);
+      if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
+        return;
+      }
+      this.processCoreAspects(file);
+      this.processMissing(file, fileType);
+      this.processErrors(file);
+      this.processPackages(file, fileType);
+      this.processBits(file, fileType);
+      this.processDepFiles(file, fileType);
+      this.processUnidentifiedPackages(file, fileType);
+    });
 
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();
