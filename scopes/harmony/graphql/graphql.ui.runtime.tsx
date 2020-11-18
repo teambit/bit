@@ -4,7 +4,7 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
 import { ApolloLink } from 'apollo-link';
 import { onError } from 'apollo-link-error';
-import { HttpLink } from 'apollo-link-http';
+import { HttpLink, createHttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import React from 'react';
 import { createLink } from './create-link';
@@ -80,6 +80,7 @@ export class GraphqlUI {
 
   private createHttpLink(host: string) {
     return new HttpLink({
+      credentials: 'include',
       uri: `${(window.location.protocol === 'https:' ? 'https://' : 'http://') + host}/graphql`,
     });
   }
