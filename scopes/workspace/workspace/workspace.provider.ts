@@ -134,6 +134,8 @@ export default async function provideWorkspace(
     },
   });
 
+  consumer.onCacheClear.push(() => workspace.clearCache());
+
   if (!workspace.isLegacy) {
     LegacyComponentLoader.registerOnComponentLoadSubscriber(async (legacyComponent: ConsumerComponent) => {
       const id = await workspace.resolveComponentId(legacyComponent.id);
