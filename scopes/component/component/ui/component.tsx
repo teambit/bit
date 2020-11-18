@@ -16,7 +16,7 @@ export type ComponentProps = {
  * main UI component of the Component extension.
  */
 export function Component({ routeSlot, host, onComponentChange }: ComponentProps) {
-const { component, error } = useComponent(host, undefined, { autoUpdate: true });
+  const { component, error } = useComponent(host, undefined, { autoUpdate: true });
   // cleanup when unmounting component
   useEffect(() => {
     return () => onComponentChange?.(undefined);
