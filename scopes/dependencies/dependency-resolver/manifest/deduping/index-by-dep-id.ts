@@ -1,7 +1,7 @@
 import { forEachObjIndexed } from 'ramda';
 
 import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies/constants';
-import { DepObjectKeyName, DepObjectValue } from '../../types';
+import { ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest-factory';
 
@@ -36,7 +36,7 @@ export function indexByDepId(componentDependenciesMap: ComponentDependenciesMap)
  * @returns
  */
 function addSpecificLifeCycleDepsToIndex(index: PackageNameIndex, origin: PackageName) {
-  return (deps: DepObjectValue, depKeyName: DepObjectKeyName) => {
+  return (deps: DepObjectValue, depKeyName: ManifestDependenciesKeysNames) => {
     const lifecycleType = LIFECYCLE_TYPE_BY_KEY_NAME[depKeyName] as DependencyLifecycleType;
     forEachObjIndexed(addDepToDepIdIndex(index, origin, lifecycleType), deps);
   };

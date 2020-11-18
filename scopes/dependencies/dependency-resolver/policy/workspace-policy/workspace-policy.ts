@@ -10,15 +10,15 @@ export type WorkspacePolicyConfigKeysNames = keyof WorkspacePolicyConfigKeys;
 export type WorkspacePolicyConfigObject = Partial<
   Record<WorkspacePolicyConfigKeysNames, WorkspacePolicyLifecycleConfigObject>
 >;
-export type WorkspacePolicyLegacyConfig = Partial<
-  Record<WorkspacePolicyConfigKeysNames, WorkspacePolicyLifecycleLegacyConfigObject>
+export type WorkspacePolicyManifest = Partial<
+  Record<WorkspacePolicyConfigKeysNames, WorkspacePolicyLifecycleManifestObject>
 >;
 
 type WorkspacePolicyLifecycleConfigObject = {
   [dependencyId: string]: WorkspacePolicyConfigEntryValue;
 };
 
-type WorkspacePolicyLifecycleLegacyConfigObject = {
+type WorkspacePolicyLifecycleManifestObject = {
   [dependencyId: string]: WorkspacePolicyEntryVersion;
 };
 
@@ -81,6 +81,14 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return new WorkspacePolicy(entries);
   }
 
+  getDepVersion(depId: string): WorkspacePolicyEntryVersion | undefined {
+    const entry = this.find(depId);
+    if (!entry) {
+      return undefined;
+    }
+    return entry.value.version;
+  }
+
   toConfigObject(): WorkspacePolicyConfigObject {
     const res: WorkspacePolicyConfigObject = {
       dependencies: {},
@@ -92,14 +100,21 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
       acc[keyName][entry.dependencyId] = value;
       return acc;
     }, res);
-    res.dependencies = sortObject(res.dependencies);
-    res.peerDependencies = sortObject(res.peerDependencies);
+    if (res.dependencies) {
+      res.dependencies = sortObject(res.dependencies);
+    }
+    if (res.peerDependencies) {
+      res.peerDependencies = sortObject(res.peerDependencies);
+    }
     return res;
   }
 
-  // Legacy doesn't support the preserve key
-  toLegacyConfig(): WorkspacePolicyLegacyConfig {
-    const res: WorkspacePolicyLegacyConfig = {
+  /**
+   * Create an object ready for package manager installation
+   * this is similar to "toConfigObject" but it will make the value of a specific dep always a string (the version / url)
+   */
+  toManifest(): WorkspacePolicyManifest {
+    const res: WorkspacePolicyManifest = {
       dependencies: {},
       peerDependencies: {},
     };
@@ -114,6 +129,16 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
   byLifecycleType(lifecycleType: DependencyLifecycleType): WorkspacePolicy {
     const filtered = this._policiesEntries.filter((entry) => entry.lifecycleType === lifecycleType);
     return new WorkspacePolicy(filtered);
+  }
+
+  static mergePolices(policies: WorkspacePolicy[]): WorkspacePolicy {
+    let allEntries: WorkspacePolicyEntry[] = [];
+    allEntries = policies.reduce((acc, curr) => {
+      return acc.concat(curr.entries);
+    }, allEntries);
+    // We reverse it to make sure the latest policy will be stronger in case of conflict
+    allEntries = allEntries.reverse();
+    return new WorkspacePolicy(allEntries);
   }
 }
 

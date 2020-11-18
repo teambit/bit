@@ -8,7 +8,7 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { DependenciesObjectDefinition } from '../../types';
+import { ManifestDependenciesObject } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
@@ -446,7 +446,7 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
       devDependencies: {},
       peerDependencies: {},
     },
-    componentDependenciesMap: new Map<PackageName, DependenciesObjectDefinition>(),
+    componentDependenciesMap: new Map<PackageName, ManifestDependenciesObject>(),
     issus: {
       peerConflicts: [],
     },

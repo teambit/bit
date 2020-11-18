@@ -236,6 +236,15 @@ export class DependencyResolverMain {
     return factory.fromConfigObject(this.config.policy);
   }
 
+  getWorkspacePolicyFromPackageJson(packageJson: Record<string, any>): WorkspacePolicy {
+    const factory = new WorkspacePolicyFactory();
+    return factory.fromPackageJson(packageJson);
+  }
+
+  mergeWorkspacePolices(polices: WorkspacePolicy[]): WorkspacePolicy {
+    return WorkspacePolicy.mergePolices(polices);
+  }
+
   /**
    * Create a workspace manifest
    * The term workspace here is not the same as "bit workspace" but a workspace that represent a shared root
@@ -257,7 +266,7 @@ export class DependencyResolverMain {
   async getWorkspaceManifest(
     name: string = ROOT_NAME,
     version: SemVer = new SemVer('1.0.0'),
-    rootDependencies: ManifestDependenciesObject,
+    rootPolicy: WorkspacePolicy,
     rootDir: string,
     components: Component[],
     options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
@@ -268,7 +277,7 @@ export class DependencyResolverMain {
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
-      rootDependencies,
+      rootPolicy,
       rootDir,
       components,
       concreteOpts
@@ -548,7 +557,7 @@ export class DependencyResolverMain {
     );
     DependencyResolver.registerWorkspacePolicyGetter(() => {
       const workspacePolicy = dependencyResolver.getWorkspacePolicy();
-      return workspacePolicy.toLegacyConfig();
+      return workspacePolicy.toManifest();
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));

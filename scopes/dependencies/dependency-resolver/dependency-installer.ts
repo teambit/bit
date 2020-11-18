@@ -20,7 +20,7 @@ import {
   HarmonyLinkError,
 } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
-import { DependenciesObjectDefinition } from './types';
+import { WorkspacePolicy } from './policy';
 
 const DEFAULT_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
@@ -53,7 +53,7 @@ export class DependencyInstaller {
 
   async install(
     rootDir: string | undefined,
-    rootDepsObject: DependenciesObjectDefinition,
+    rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     options: PackageManagerInstallOptions = DEFAULT_INSTALL_OPTIONS
   ) {
@@ -70,14 +70,17 @@ export class DependencyInstaller {
         throw new MainAspectNotInstallable();
       }
       const version = mainAspect.version;
-      const name = mainAspect.packageName;
-      rootDepsObject = rootDepsObject || {};
-      rootDepsObject.dependencies = rootDepsObject.dependencies || {};
-      rootDepsObject.dependencies[name] = version;
+      rootPolicy.add({
+        dependencyId: mainAspect.packageName,
+        lifecycleType: 'runtime',
+        value: {
+          version,
+        },
+      });
     }
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
-    await this.packageManager.install(finalRootDir, rootDepsObject, componentDirectoryMap, calculatedOpts);
+    await this.packageManager.install(finalRootDir, rootPolicy, componentDirectoryMap, calculatedOpts);
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
     componentDirectoryMap.map((_dir, comp) => {

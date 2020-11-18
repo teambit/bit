@@ -146,17 +146,13 @@ export class IsolatorMain {
       // we only want to instal deps from components and the peer from the workspace
 
       const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
-      const rootDepsObject = {
-        peerDependencies: {
-          ...workspacePolicy.peerDependencies,
-        },
-      };
+      const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
       const packageManagerInstallOptions = {
         dedupe: installOptions.dedupe,
         copyPeerToRuntimeOnComponents: installOptions.copyPeerToRuntimeOnComponents,
         copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
       };
-      await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
+      await installer.install(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsules), packageManagerInstallOptions);
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension

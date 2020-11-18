@@ -33,6 +33,21 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return this._policiesEntries;
   }
 
+  find(depId: string): VariantPolicyEntry | undefined {
+    const entry = this.entries.find((entry) => {
+      return entry.dependencyId === depId;
+    });
+    return entry;
+  }
+
+  getDepVersion(depId: string): VariantPolicyEntryVersion | undefined {
+    const entry = this.find(depId);
+    if (!entry) {
+      return undefined;
+    }
+    return entry.value.version;
+  }
+
   toConfigObject(): VariantPolicyConfigObject {
     const res: VariantPolicyConfigObject = {
       dependencies: {},

@@ -29,4 +29,4 @@ export {
   SemverVersion,
   ComponentDependency,
 } from './dependencies';
-export { WorkspacePolicyEntry } from './policy';
+export { WorkspacePolicyEntry, WorkspacePolicy } from './policy';

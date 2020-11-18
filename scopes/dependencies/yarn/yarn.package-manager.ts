@@ -1,7 +1,7 @@
 import * as semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import {
-  ManifestDependenciesObject,
+  WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -38,7 +38,7 @@ export class YarnPackageManager implements PackageManager {
 
   async install(
     rootDir: string,
-    rootDepsObject: ManifestDependenciesObject,
+    rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
@@ -52,7 +52,7 @@ export class YarnPackageManager implements PackageManager {
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
-      rootDepsObject,
+      rootPolicy,
       rootDir,
       components,
       options

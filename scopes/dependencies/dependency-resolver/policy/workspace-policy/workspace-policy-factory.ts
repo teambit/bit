@@ -1,3 +1,4 @@
+import R from 'ramda';
 import {
   WorkspacePolicy,
   WorkspacePolicyConfigObject,
@@ -14,6 +15,19 @@ export class WorkspacePolicyFactory {
     const peerEntries = entriesFromKey(configObject, 'peerDependencies');
     const entries = runtimeEntries.concat(peerEntries);
     return new WorkspacePolicy(entries);
+  }
+
+  fromPackageJson(packageJson: Record<string, any>) {
+    const obj = {
+      dependencies: {
+        ...(packageJson.devDependencies || {}),
+        ...(packageJson.dependencies || {}),
+      },
+      peerDependencies: {
+        ...(packageJson.peerDependencies || {}),
+      },
+    };
+    return this.fromConfigObject(obj);
   }
 }
 
