@@ -14,7 +14,7 @@ export class WorkerMain {
 
   static slots = [Slot.withType<HarmonyWorker>()];
 
-  static async provider(deps: any, config: any, [workerSlot]: [WorkerSlot]) {
+  static async provider(deps, config, [workerSlot]: [WorkerSlot]) {
     return new WorkerMain(workerSlot);
   }
 }

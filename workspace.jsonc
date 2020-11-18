@@ -207,6 +207,7 @@
         "rxjs": "^6.5.4",
         "semver": "7.3.2",
         "semver-intersect": "^1.4.0",
+        "singleton-tsserver": "1.0.1",
         "socket.io": "^2.3.0",
         "socket.io-client": "^2.3.0",
         "string-to-color": "^2.1.3",
@@ -215,7 +216,11 @@
         "supi": "0.42.0",
         "terser-webpack-plugin": "^4.1.0",
         "typedoc": "0.18.0",
+        "typescript-language-server": "0.4.0",
         "url-loader": "^4.1.0",
+        "vscode-languageclient": "6.1.3",
+        "vscode-languageserver": "6.1.1",
+        "vscode-ws-jsonrpc": "0.2.0",
         "webpack": "4.42.0",
         "webpack-dev-middleware": "^3.7.2",
         "webpack-dev-server": "^3.11.0",
@@ -228,7 +233,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.144",
+        "bit-bin": "14.8.9-dev.148",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -258,7 +263,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.144",
+            "bit-bin": "14.8.9-dev.148",
             "react-dom": "^16.13.1"
           }
         }
@@ -363,7 +368,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.144",
+            "bit-bin": "14.8.9-dev.148",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
