@@ -22,7 +22,6 @@ export class TypeScriptExtractor implements SchemaExtractor {
       noEmit: true,
       exclude: ['node_modules', '*.scss'],
       esModuleInterop: true,
-      types: ['/Users/ranmizrahi/Bit/harmony-review/types/scss'],
     });
     const docs = typedocApp.convert(paths);
     if (!docs) throw new Error();

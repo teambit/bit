@@ -39,6 +39,7 @@ export class PnpmPackageManager implements PackageManager {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
       dedupe: installOptions.dedupe,
+      dependencyFilterFn: installOptions.dependencyFilterFn,
     };
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
