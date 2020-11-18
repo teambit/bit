@@ -21,7 +21,12 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 
 export class Http implements Network {
-  constructor(private graphClient: GraphQLClient, private _token: string | undefined | null, private url: string) {}
+  constructor(
+    private graphClient: GraphQLClient,
+    private _token: string | undefined | null,
+    private url: string,
+    private scopeName: string
+  ) {}
 
   static getToken() {
     const processToken = globalFlags.token;
@@ -151,11 +156,12 @@ export class Http implements Network {
   }
 
   private async graphClientRequest(query: string, variables?: Record<string, any>) {
+    logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
       return await this.graphClient.request(query, variables);
     } catch (err) {
       if (err instanceof ClientError) {
-        throw new GraphQLClientError(err);
+        throw new GraphQLClientError(err, this.url, this.scopeName);
       }
       // should not be here. it's just in case
       throw err;
@@ -291,11 +297,11 @@ export class Http implements Network {
     return res.lanes.list;
   }
 
-  static async connect(host: string) {
+  static async connect(host: string, scopeName: string) {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
     const graphClient = new GraphQLClient(`${host}/graphql`, { headers });
-    return new Http(graphClient, token, host);
+    return new Http(graphClient, token, host, scopeName);
   }
 }
 

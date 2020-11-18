@@ -42,6 +42,10 @@ semver_tags_only_filters: &semver_tags_only_filters
     tags:
       only: /^v[0-9]+(\.[0-9]+)*$/
 
+master_only_filter: &master_only_filter
+  filters:
+    branches:
+      only: master
 
 nightly_tag_only_filters: &nightly_tag_only_filters
   filters:
@@ -547,7 +551,7 @@ jobs:
           name: tag persist
           command: cd bit && bit tag --persist
           no_output_timeout: '25m'
-      - run: cd bit && bit export
+      # - run: cd bit && bit export
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
@@ -1060,26 +1064,33 @@ workflows:
   harmony_deploy:
     jobs:
       - harmony_deploy_approval_job:
+          <<: *master_only_filter
           type: approval
       - checkout_code:
+          <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
       - set_ssh_key:
+          <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
       - set_npm_registries:
+          <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
       - setup_harmony:
+          <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - set_npm_registries
             - checkout_code
       - tag_and_publish:
+          <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
       - docker_build:
+          <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - tag_and_publish

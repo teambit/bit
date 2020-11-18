@@ -116,6 +116,11 @@ const defaultLinkingOptions: LinkingOptions = {
   linkCoreAspects: true,
 };
 
+const defaultCreateFromComponentsOptions: CreateFromComponentsOptions = {
+  filterComponentsFromManifests: true,
+  createManifestForComponentsWithoutDependencies: true,
+};
+
 export class DependencyResolverMain {
   constructor(
     /**
@@ -181,17 +186,28 @@ export class DependencyResolverMain {
     return listFactory;
   }
 
+  /**
+   * Main function to get the dependency list of a given component
+   * @param component
+   */
   async getDependencies(component: Component): Promise<DependencyList> {
     const entry = component.state.aspects.get(DependencyResolverAspect.id);
     if (!entry) {
       return DependencyList.fromArray([]);
     }
-    const dependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    const serializedDependencies: SerializedDependency[] = get(entry, ['data', 'dependencies'], []);
+    return this.getDependenciesFromSerializedDependencies(serializedDependencies);
+  }
+
+  private async getDependenciesFromSerializedDependencies(
+    dependencies: SerializedDependency[]
+  ): Promise<DependencyList> {
     if (!dependencies.length) {
       return DependencyList.fromArray([]);
     }
     const listFactory = this.getDependencyListFactory();
-    return listFactory.fromSerializedDependencies(dependencies);
+    const deps = await listFactory.fromSerializedDependencies(dependencies);
+    return deps;
   }
 
   getWorkspacePolicy(): WorkspaceDependenciesPolicy {
@@ -222,12 +238,10 @@ export class DependencyResolverMain {
     rootDependencies: DependenciesObjectDefinition,
     rootDir: string,
     components: Component[],
-    options: CreateFromComponentsOptions = {
-      filterComponentsFromManifests: true,
-      createManifestForComponentsWithoutDependencies: true,
-    }
+    options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
   ): Promise<WorkspaceManifest> {
     this.logger.setStatusLine('deduping dependencies for installation');
+    const concreteOpts = { ...defaultCreateFromComponentsOptions, ...options };
     const workspaceManifestFactory = new WorkspaceManifestFactory(this);
     const res = await workspaceManifestFactory.createFromComponents(
       name,
@@ -235,7 +249,7 @@ export class DependencyResolverMain {
       rootDependencies,
       rootDir,
       components,
-      options
+      concreteOpts
     );
     this.logger.consoleSuccess();
     return res;
