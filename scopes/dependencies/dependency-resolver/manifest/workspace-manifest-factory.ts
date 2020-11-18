@@ -2,17 +2,18 @@ import { Component } from '@teambit/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
 import { ComponentDependency, DependencyList, Dependency, SemverVersion, PackageName } from '../dependencies';
+import { VariantPolicyConfigObject } from '../policy';
 
 import { DependencyResolverMain } from '../dependency-resolver.main.runtime';
-import { ComponentsManifestsMap, DependenciesObjectDefinition, DependenciesPolicy, DepObjectValue } from '../types';
+import { ComponentsManifestsMap, DepObjectValue } from '../types';
 import { ComponentManifest } from './component-manifest';
 import { DedupedDependencies, dedupeDependencies, getEmptyDedupedDependencies } from './deduping';
-import { ManifestToJsonOptions } from './manifest';
+import { ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
 import { WorkspaceManifest } from './workspace-manifest';
 
 export type DepsFilterFn = (dependencies: DependencyList) => DependencyList;
 
-export type ComponentDependenciesMap = Map<PackageName, DependenciesObjectDefinition>;
+export type ComponentDependenciesMap = Map<PackageName, ManifestDependenciesObject>;
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   includeDir?: boolean;
 }
@@ -35,7 +36,7 @@ export class WorkspaceManifestFactory {
   async createFromComponents(
     name: string,
     version: SemVer,
-    rootDependencies: DependenciesObjectDefinition,
+    rootDependencies: ManifestDependenciesObject,
     rootDir: string,
     components: Component[],
     options: CreateFromComponentsOptions = DEFAULT_CREATE_OPTIONS
@@ -80,10 +81,10 @@ export class WorkspaceManifestFactory {
   private async buildComponentDependenciesMap(
     components: Component[],
     filterComponentsFromManifests = true,
-    rootDependencies: DependenciesObjectDefinition,
+    rootDependencies: ManifestDependenciesObject,
     dependencyFilterFn?: DepsFilterFn
   ): Promise<ComponentDependenciesMap> {
-    const result = new Map<PackageName, DependenciesObjectDefinition>();
+    const result = new Map<PackageName, ManifestDependenciesObject>();
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
@@ -109,12 +110,12 @@ export class WorkspaceManifestFactory {
 
   private async updateDependenciesVersions(
     component: Component,
-    rootDependencies: DependenciesObjectDefinition,
+    rootDependencies: ManifestDependenciesObject,
     dependencyList: DependencyList
   ): Promise<void> {
-    const mergedPolicies = await this.dependencyResolver.mergeDependencies(component.config.extensions);
+    const mergedPolicies = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
     dependencyList.forEach((dep) => {
-      updateDependencyVersion(dep, rootDependencies, mergedPolicies);
+      updateDependencyVersion(dep, rootDependencies, mergedPolicies.toConfigObject());
     });
   }
 }
@@ -158,11 +159,11 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
  * then on the next calculation for tagging it will have the installed version
  *
  * @param {Component} component
- * @param {DependenciesObjectDefinition} rootDependencies
+ * @param {ManifestDependenciesObject} rootDependencies
  * @param {MergeDependenciesFunc} mergeDependenciesFunc
  * @returns {DepVersionModifierFunc}
  */
-function updateDependencyVersion(dependency: Dependency, rootDependencies, policy: DependenciesPolicy): void {
+function updateDependencyVersion(dependency: Dependency, rootDependencies, policy: VariantPolicyConfigObject): void {
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
     const version =
@@ -177,12 +178,12 @@ function updateDependencyVersion(dependency: Dependency, rootDependencies, polic
 /**
  * This will search for a version of a package in all types of deps (runtime, dev, peer) (it will ignore versions with "-")
  *
- * @param {DependenciesObjectDefinition} depsObject
+ * @param {ManifestDependenciesObject} depsObject
  * @param {string} depPackageName
  * @returns {(SemverVersion | undefined)}
  */
 function getPackageVersionFromDepsObject(
-  depsObject: DependenciesObjectDefinition,
+  depsObject: ManifestDependenciesObject,
   depPackageName: string
 ): SemverVersion | undefined {
   return (
@@ -227,14 +228,14 @@ function getComponentsManifests(
       dedupedDependencies.componentDependenciesMap.has(packageName) ||
       createManifestForComponentsWithoutDependencies
     ) {
-      const blankDependencies: DependenciesObjectDefinition = {
+      const blankDependencies: ManifestDependenciesObject = {
         dependencies: {},
         devDependencies: {},
         peerDependencies: {},
       };
       let dependencies = blankDependencies;
       if (dedupedDependencies.componentDependenciesMap.has(packageName)) {
-        dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as DependenciesObjectDefinition;
+        dependencies = dedupedDependencies.componentDependenciesMap.get(packageName) as ManifestDependenciesObject;
       }
 
       const getVersion = (): string => {

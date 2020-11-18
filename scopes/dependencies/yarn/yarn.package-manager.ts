@@ -1,7 +1,7 @@
 import * as semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import {
-  DependenciesObjectDefinition,
+  ManifestDependenciesObject,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -38,7 +38,7 @@ export class YarnPackageManager implements PackageManager {
 
   async install(
     rootDir: string,
-    rootDepsObject: DependenciesObjectDefinition,
+    rootDepsObject: ManifestDependenciesObject,
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {

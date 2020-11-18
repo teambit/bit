@@ -21,7 +21,7 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   ComponentDependency,
-  PolicyDep,
+  WorkspacePolicyEntry,
   DependencyResolverAspect,
   DependencyList,
 } from '@teambit/dependency-resolver';
@@ -1084,18 +1084,20 @@ export class Workspace implements ComponentFactory {
         })
       );
       const resolvedPackages = await Promise.all(resolvedPackagesP);
-      const resolvedPackagesWithType: PolicyDep[] = [];
+      const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
       resolvedPackages.forEach((resolvedPackage) => {
         if (resolvedPackage.version) {
-          resolvedPackagesWithType.push({
-            version: resolvedPackage.version,
-            packageName: resolvedPackage.packageName,
+          newWorkspacePolicyEntries.push({
+            dependencyId: resolvedPackage.packageName,
+            value: {
+              version: resolvedPackage.version,
+            },
             lifecycleType: options?.lifecycleType || 'runtime',
           });
         }
       });
       if (!options?.variants) {
-        this.dependencyResolver.updateRootPolicy(resolvedPackagesWithType, {
+        this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
           updateExisting: options?.updateExisting ?? false,
         });
       } else {
@@ -1115,7 +1117,7 @@ export class Workspace implements ComponentFactory {
     const depsFromPJson = packageJson.dependencies || {};
     const devDepsFromPJson = packageJson.devDependencies || {};
     const peerDepsFromPJson = packageJson.peerDependencies || {};
-    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy().toConfigObject() || {};
     const rootDepsObject = {
       dependencies: {
         ...depsFromPJson,

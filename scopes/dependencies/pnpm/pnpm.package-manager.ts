@@ -2,7 +2,7 @@ import { ComponentMap } from '@teambit/component';
 import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
-  DependenciesObjectDefinition,
+  ManifestDependenciesObject,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -25,7 +25,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async install(
     rootDir: string,
-    rootDepsObject: DependenciesObjectDefinition,
+    rootDepsObject: ManifestDependenciesObject,
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
