@@ -2,7 +2,7 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import semver from 'semver';
-
+import { mapSeries } from 'bluebird';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
 import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
@@ -24,7 +24,6 @@ import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
-import { mapSeries } from 'bluebird';
 
 export type AllDependencies = {
   dependencies: Dependency[];
