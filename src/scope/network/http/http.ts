@@ -21,7 +21,12 @@ import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 
 export class Http implements Network {
-  constructor(private graphClient: GraphQLClient, private _token: string | undefined | null, private url: string) {}
+  constructor(
+    private graphClient: GraphQLClient,
+    private _token: string | undefined | null,
+    private url: string,
+    private scopeName: string
+  ) {}
 
   static getToken() {
     const processToken = globalFlags.token;
@@ -47,9 +52,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(SCOPE_QUERY, {
-      headers: this.getHeaders(),
-    });
+    const data = await this.graphClientRequest(SCOPE_QUERY);
 
     return {
       name: data.scope.name,
@@ -153,11 +156,12 @@ export class Http implements Network {
   }
 
   private async graphClientRequest(query: string, variables?: Record<string, any>) {
+    logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
       return await this.graphClient.request(query, variables);
     } catch (err) {
       if (err instanceof ClientError) {
-        throw new GraphQLClientError(err);
+        throw new GraphQLClientError(err, this.url, this.scopeName);
       }
       // should not be here. it's just in case
       throw err;
@@ -165,9 +169,8 @@ export class Http implements Network {
   }
 
   private getHeaders(headers: { [key: string]: string } = {}) {
-    return Object.assign(headers, {
-      Authorization: `Bearer ${this.token}`,
-    });
+    const authHeader = this.token ? getAuthHeader(this.token) : {};
+    return Object.assign(headers, authHeader);
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
@@ -294,9 +297,16 @@ export class Http implements Network {
     return res.lanes.list;
   }
 
-  static async connect(host: string) {
+  static async connect(host: string, scopeName: string) {
     const token = Http.getToken();
-    const graphClient = new GraphQLClient(`${host}/graphql`);
-    return new Http(graphClient, token, host);
+    const headers = token ? getAuthHeader(token) : {};
+    const graphClient = new GraphQLClient(`${host}/graphql`, { headers });
+    return new Http(graphClient, token, host, scopeName);
   }
+}
+
+function getAuthHeader(token: string) {
+  return {
+    Authorization: `Bearer ${token}`,
+  };
 }

@@ -21,6 +21,9 @@ export class ExportPersist implements Action<Options, string[]> {
 
     const componentsIds: string[] = bitIds.map((id) => id.toString());
     await scope.removePendingDir(options.clientId);
+    if (ExportPersist.onPutHook) ExportPersist.onPutHook(componentsIds);
     return componentsIds;
   }
+
+  static onPutHook: (ids: string[]) => void;
 }
