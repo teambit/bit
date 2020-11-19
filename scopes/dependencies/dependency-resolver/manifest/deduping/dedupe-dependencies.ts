@@ -42,7 +42,7 @@ export function dedupeDependencies(
   rootPolicy: WorkspacePolicy,
   componentDependenciesMap: ComponentDependenciesMap
 ): DedupedDependencies {
-  const indexedByDepId = indexByDepId(componentDependenciesMap);
+  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap);
   const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
   const result = mergeWithRootDeps(rootPolicy.toManifest(), dedupedDependenciesWithoutRootOriginal);
   return result;

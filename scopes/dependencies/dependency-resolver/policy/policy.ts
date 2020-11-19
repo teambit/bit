@@ -38,7 +38,7 @@ export interface Policy<T> {
 
 export type PolicyEntry = {
   dependencyId: string;
-  // TODO: try to add this as generic?
-  //value: any,
   lifecycleType: DependencyLifecycleType;
+  // TODO: try to add this as generic?
+  // value: any,
 };

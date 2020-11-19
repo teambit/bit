@@ -46,7 +46,7 @@ export function indexByDepId(
 
 function addPreservedFromRoot(index: PackageNameIndex, depId: PackageName, rootPolicy: WorkspacePolicy): void {
   const entryFromPolicy = rootPolicy.find(depId);
-  let metadata: PackageNameIndexItemMetadata = {
+  const metadata: PackageNameIndexItemMetadata = {
     preservedVersion: undefined,
   };
   if (entryFromPolicy && entryFromPolicy.value.preserve) {

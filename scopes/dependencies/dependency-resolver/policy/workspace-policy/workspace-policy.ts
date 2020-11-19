@@ -1,8 +1,8 @@
 import R from 'ramda';
-import { Policy, PolicyEntry, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
-import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, DependencyLifecycleType } from '../../dependencies';
-import { EntryAlreadyExist } from './exceptions';
 import { sortObject } from 'bit-bin/dist/utils';
+import { Policy, PolicyEntry, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
+import { KEY_NAME_BY_LIFECYCLE_TYPE, DependencyLifecycleType } from '../../dependencies';
+import { EntryAlreadyExist } from './exceptions';
 
 export type WorkspacePolicyConfigKeys = Omit<PolicyConfigKeys, 'devDependencies'>;
 export type WorkspacePolicyConfigKeysNames = keyof WorkspacePolicyConfigKeys;
@@ -68,10 +68,10 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
   }
 
   find(depId: string): WorkspacePolicyEntry | undefined {
-    const entry = this.entries.find((entry) => {
+    const matchedEntry = this.entries.find((entry) => {
       return entry.dependencyId === depId;
     });
-    return entry;
+    return matchedEntry;
   }
 
   remove(depId: string): WorkspacePolicy {

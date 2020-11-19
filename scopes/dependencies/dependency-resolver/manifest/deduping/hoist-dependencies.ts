@@ -11,12 +11,7 @@ import {
 import { ManifestDependenciesObject } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
-import {
-  PackageNameIndex,
-  PackageNameIndexItem,
-  PackageNameIndexComponentItem,
-  PackageNameIndexItemMetadata,
-} from './index-by-dep-id';
+import { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
 
 type ItemsGroupedByRangeOrVersion = {
   ranges: PackageNameIndexComponentItem[];

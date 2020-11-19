@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
-import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, DependencyLifecycleType } from '../../dependencies';
+import { KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
 
 export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
 
@@ -34,10 +34,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   }
 
   find(depId: string): VariantPolicyEntry | undefined {
-    const entry = this.entries.find((entry) => {
+    const matchedEntry = this.entries.find((entry) => {
       return entry.dependencyId === depId;
     });
-    return entry;
+    return matchedEntry;
   }
 
   getDepVersion(depId: string): VariantPolicyEntryVersion | undefined {

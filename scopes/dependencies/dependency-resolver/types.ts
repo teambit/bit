@@ -2,7 +2,7 @@ import { ComponentConfig, ComponentFS } from '@teambit/component';
 import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
-import { DependencyLifecycleType, PackageName, SemverVersion } from './dependencies';
+import { PackageName } from './dependencies';
 
 export type RegistryName = string;
 
