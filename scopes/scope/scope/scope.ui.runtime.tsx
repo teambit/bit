@@ -15,9 +15,10 @@ import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
 import { ComponentsDrawer } from './components.drawer';
-import { ScopeBadge } from './scope-badge';
 
-export type ScopeBadgeSlot = SlotRegistry<ScopeBadge>;
+export type ScopeBadge = ComponentType;
+
+export type ScopeBadgeSlot = SlotRegistry<ScopeBadge[]>;
 
 export type ScopeContextType = ComponentType<{ scope: ScopeModel; children: ReactNode }>;
 
@@ -66,8 +67,8 @@ export class ScopeUI {
   /**
    * register a new badge into the scope overview.
    */
-  registerBadge(badge: ScopeBadge) {
-    this.scopeBadgeSlot.register(badge);
+  registerBadge(...badges: ScopeBadge[]) {
+    this.scopeBadgeSlot.register(badges);
     return this;
   }
 
