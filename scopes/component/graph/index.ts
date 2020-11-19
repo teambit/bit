@@ -5,6 +5,6 @@ export { DuplicateDependency, VersionSubgraph } from './duplicate-dependency';
 export type { ComponentGraph } from './component-graph';
 export type { GraphBuilder } from './graph-builder';
 export type { GraphMain } from './graph.main.runtime';
-export type { EdgeType } from './edge-type';
+export { EdgeType } from './edge-type';
 export type { GraphUI, ComponentWidget, ComponentWidgetSlot, ComponentWidgetProps } from './graph.ui.runtime';
 export { useGraph, useGraphQuery, GraphModel, EdgeModel, NodeModel } from './ui/query';
