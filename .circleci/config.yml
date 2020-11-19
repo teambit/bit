@@ -448,11 +448,11 @@ jobs:
           name: 'import objects'
           command: 'cd bit && npm run import-harmony'
       - run:
-          name: 'status harmony'
-          command: 'cd bit && npm run status-harmony'
-      - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
+      - run:
+          name: 'status harmony'
+          command: 'cd bit && npm run status-harmony'
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -462,8 +462,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - bit/dist
-            - bit/node_modules
+            - bit
             - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
