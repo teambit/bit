@@ -445,11 +445,14 @@ jobs:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
       - run:
-          name: 'status harmony'
-          command: 'cd bit && npm run status-harmony'
+          name: 'import objects'
+          command: 'cd bit && npm run import-harmony'
       - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
+      - run:
+          name: 'status harmony'
+          command: 'cd bit && npm run status-harmony'
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -459,8 +462,7 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - bit/dist
-            - bit/node_modules
+            - bit
             - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
@@ -551,7 +553,7 @@ jobs:
           name: tag persist
           command: cd bit && bit tag --persist
           no_output_timeout: '25m'
-      # - run: cd bit && bit export
+      - run: cd bit && bit export
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master

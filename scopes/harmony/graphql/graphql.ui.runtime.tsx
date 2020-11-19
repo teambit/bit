@@ -80,6 +80,7 @@ export class GraphqlUI {
 
   private createHttpLink(host: string) {
     return new HttpLink({
+      credentials: 'include',
       uri: `${(window.location.protocol === 'https:' ? 'https://' : 'http://') + host}/graphql`,
     });
   }
