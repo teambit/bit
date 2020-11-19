@@ -246,7 +246,7 @@ export async function exportMany({
     const componentsAndObjects: ModelComponentAndObjects[] = [];
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
-    const processModelComp = async (modelComponent: ModelComponent) => {
+    const processModelComponent = async (modelComponent: ModelComponent) => {
       // @todo: for lanes, it won't work, find the local version by the remotes.
       const localVersions = modelComponent.getLocalVersions();
       modelComponent.clearStateData();
@@ -280,8 +280,10 @@ export async function exportMany({
     };
 
     const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
+    // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
+    scope.objects.clearCache();
     // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
-    await mapSeries(modelComponents, processModelComp);
+    await mapSeries(modelComponents, processModelComponent);
     const lanesData = await Promise.all(
       lanes.map(async (lane) => {
         lane.components.forEach((c) => {
