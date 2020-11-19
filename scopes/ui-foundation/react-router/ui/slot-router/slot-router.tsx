@@ -2,8 +2,8 @@ import { SlotRegistry } from '@teambit/harmony';
 import React from 'react';
 import { Route, RouteProps, Switch, useRouteMatch } from 'react-router-dom';
 import { flatten } from 'lodash';
-import { extendPath } from './extend-path';
-import { NavLinkProps } from './nav-link';
+import { extendPath } from '@teambit/ui.react-router.extend-path';
+import { NavLinkProps } from '@teambit/ui.react-router.nav-link';
 
 export type RouteSlot = SlotRegistry<RouteProps | RouteProps[]>;
 export type NavigationSlot = SlotRegistry<NavLinkProps>;

@@ -741,16 +741,6 @@
                 "name": "use-component.tsx",
                 "relativePath": "ui/use-component.tsx",
                 "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "ui/use-query/index.ts",
-                "test": false
-            },
-            {
-                "name": "use-query.ts",
-                "relativePath": "ui/use-query/use-query.ts",
-                "test": false
             }
         ],
         "mainFile": "index.ts",
@@ -5069,43 +5059,18 @@
     "teambit.ui-foundation/react-router@0.0.131": {
         "files": [
             {
-                "name": "extend-path.spec.ts",
-                "relativePath": "extend-path/extend-path.spec.ts",
-                "test": false
-            },
-            {
-                "name": "extend-path.tsx",
-                "relativePath": "extend-path/extend-path.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "extend-path/index.ts",
-                "test": false
-            },
-            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
             },
             {
                 "name": "index.ts",
-                "relativePath": "link/index.ts",
+                "relativePath": "react-router-routing/index.ts",
                 "test": false
             },
             {
-                "name": "link.tsx",
-                "relativePath": "link/link.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "nav-link/index.ts",
-                "test": false
-            },
-            {
-                "name": "nav-link.tsx",
-                "relativePath": "nav-link/nav-link.tsx",
+                "name": "react-router-routing.tsx",
+                "relativePath": "react-router-routing/react-router-routing.tsx",
                 "test": false
             },
             {
@@ -5124,18 +5089,13 @@
                 "test": false
             },
             {
-                "name": "route.ts",
-                "relativePath": "route.ts",
-                "test": false
-            },
-            {
-                "name": "slot-router.tsx",
-                "relativePath": "slot-router.tsx",
+                "name": "routing-method.tsx",
+                "relativePath": "routing-method.tsx",
                 "test": false
             }
         ],
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router",
+        "rootDir": "scopes/ui-foundation/react-router/react-router",
         "origin": "AUTHORED",
         "exported": true,
         "lanes": []
@@ -6438,6 +6398,337 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "ui/gallery/base-component-card": {
+        "files": [
+            {
+                "name": "base-component-card.composition.tsx",
+                "relativePath": "base-component-card.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "base-component-card.docs.tsx",
+                "relativePath": "base-component-card.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "base-component-card.module.scss",
+                "relativePath": "base-component-card.module.scss",
+                "test": false
+            },
+            {
+                "name": "base-component-card.tsx",
+                "relativePath": "base-component-card.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/base-component-card",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/gallery/component-card": {
+        "files": [
+            {
+                "name": "component-card.composition.tsx",
+                "relativePath": "component-card.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "component-card.docs.tsx",
+                "relativePath": "component-card.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "component-card.module.scss",
+                "relativePath": "component-card.module.scss",
+                "test": false
+            },
+            {
+                "name": "component-card.tsx",
+                "relativePath": "component-card.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/component-card",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/gallery/component-grid": {
+        "files": [
+            {
+                "name": "component-grid.module.scss",
+                "relativePath": "component-grid.module.scss",
+                "test": false
+            },
+            {
+                "name": "component-grid.tsx",
+                "relativePath": "component-grid.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/explorer/ui/component-grid",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/extend-path": {
+        "files": [
+            {
+                "name": "extend-path.spec.ts",
+                "relativePath": "extend-path.spec.ts",
+                "test": false
+            },
+            {
+                "name": "extend-path.tsx",
+                "relativePath": "extend-path.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/extend-path",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "link.tsx",
+                "relativePath": "link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/nav-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "nav-link.tsx",
+                "relativePath": "nav-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/nav-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/slot-router": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "slot-router.tsx",
+                "relativePath": "slot-router.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/slot-router",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/react-router/use-query": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "use-query.ts",
+                "relativePath": "use-query.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/use-query",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/routing/compare-url": {
+        "files": [
+            {
+                "name": "compare-url.spec.ts",
+                "relativePath": "compare-url.spec.ts",
+                "test": false
+            },
+            {
+                "name": "compare-url.tsx",
+                "relativePath": "compare-url.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/routing/compare-url",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/routing/link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "link.tsx",
+                "relativePath": "link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/routing/link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/routing/native-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "native-link.composition.tsx",
+                "relativePath": "native-link.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "native-link.spec.tsx",
+                "relativePath": "native-link.spec.tsx",
+                "test": false
+            },
+            {
+                "name": "native-link.tsx",
+                "relativePath": "native-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/routing/native-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/routing/native-nav-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "native-nav-link.composition.tsx",
+                "relativePath": "native-nav-link.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "native-nav-link.tsx",
+                "relativePath": "native-nav-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/routing/native-nav-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/routing/nav-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "nav-link.tsx",
+                "relativePath": "nav-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/routing/nav-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/routing/provider": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "routing-provider.composition.tsx",
+                "relativePath": "routing-provider.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "routing-provider.tsx",
+                "relativePath": "routing-provider.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/routing/routing-provider",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.151"

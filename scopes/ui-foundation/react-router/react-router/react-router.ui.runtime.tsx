@@ -1,12 +1,13 @@
 import React from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime } from '@teambit/ui';
 import { RouteProps } from 'react-router-dom';
 import { History, UnregisterCallback, LocationListener } from 'history';
+import { Slot, SlotRegistry } from '@teambit/harmony';
+import { UIRuntime } from '@teambit/ui';
+import { RouteSlot } from '@teambit/ui.react-router.slot-router';
 
 import { ReactRouterAspect } from './react-router.aspect';
-import { RouteSlot } from './slot-router';
-import { RouteContext, Routing } from './route-context';
+import { RouteContext, RootRoute } from './route-context';
+import { Routing } from './routing-method';
 
 type RouteChangeSlot = SlotRegistry<LocationListener>;
 
@@ -30,7 +31,9 @@ export class ReactRouterUI {
    */
   renderRoutes(routes: RouteProps[]): JSX.Element {
     return (
-      <RouteContext routeSlot={this.routeSlot} rootRoutes={routes} reactRouterUi={this} routing={this.routingMode} />
+      <RouteContext reactRouterUi={this} routing={this.routingMode}>
+        <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>
+      </RouteContext>
     );
   }
 
