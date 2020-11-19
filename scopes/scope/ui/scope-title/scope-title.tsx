@@ -4,15 +4,18 @@ import classNames from 'classnames';
 import React from 'react';
 
 import styles from './scope-title.module.scss';
+import { UserAvatar } from '@teambit/ui.avatar';
 
 type ScopeTitleProps = {
   scopeName: string;
+  icon?: string;
 } & React.HTMLAttributes<HTMLHeadingElement>;
 
-export function ScopeTitle({ scopeName, className }: ScopeTitleProps) {
+export function ScopeTitle({ scopeName, icon, className }: ScopeTitleProps) {
   return (
     <H1 className={styles.title} size="sm">
-      <span className={classNames(mutedText, styles.orgName, className)}>{scopeName}</span>
+      <UserAvatar size={32} account={{ name: scopeName, profileImage: icon }} />
+      <span className={classNames(mutedText, styles.orgName, className)}>{scopeName.replace('.', '/')}</span>
     </H1>
   );
 }

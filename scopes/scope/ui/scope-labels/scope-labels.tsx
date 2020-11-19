@@ -4,12 +4,14 @@ import classNames from 'classnames';
 import React from 'react';
 
 import styles from './scope-labels.module.scss';
+import { PillLabel } from '@teambit/ui.pill-label';
 
 type ScopeLabelsProps = {
   badgeSlot: ScopeBadgeSlot;
+  componentCount?: number;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function ScopeLabels({ badgeSlot, className }: ScopeLabelsProps) {
+export function ScopeLabels({ badgeSlot, componentCount, className }: ScopeLabelsProps) {
   const badges = flatten(badgeSlot.values());
 
   return (
@@ -18,6 +20,12 @@ export function ScopeLabels({ badgeSlot, className }: ScopeLabelsProps) {
         const UserBadge = badge;
         return <UserBadge key={key} />;
       })}
+      {componentCount && (
+        <PillLabel>
+          <span className={styles.componentCount}>{componentCount}</span>
+          <span>Components</span>
+        </PillLabel>
+      )}
     </div>
   );
 }
