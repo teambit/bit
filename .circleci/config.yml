@@ -445,6 +445,9 @@ jobs:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
       - run:
+          name: 'import objects'
+          command: 'cd bit && npm run import-harmony'
+      - run:
           name: 'status harmony'
           command: 'cd bit && npm run status-harmony'
       - run:
