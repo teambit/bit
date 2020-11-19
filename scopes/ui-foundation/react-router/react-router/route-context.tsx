@@ -29,7 +29,7 @@ export function RouteContext({ reactRouterUi, routing = Routing.url, children }:
     // {/* set up the virtual router (browser, inMemory, etc) */}
     <Router>
       {/* injects History object back to reactRouterUi */}
-      <RouterGetter onRouter={reactRouterUi.setRouter} />
+      <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
       {/* injects react-router Link into context  */}
       <RoutingProvider value={reactRouterRouting}>
         {/* route tree root: */}
@@ -56,13 +56,13 @@ function getRouter(type: Routing): ComponentType {
 }
 
 /**
- * Calls onRouter when routing History object changes.
+ * Calls onRouterChange when routing History object changes.
  * Used to inject history back into reactRouterUi
  * (needs to be rendered inside of <BrowserRouter/>)
  */
-function RouterGetter({ onRouter: onHistory }: { onRouter: (routerHistory: History) => void }) {
+function HistoryGetter({ onRouterChange }: { onRouterChange: (routerHistory: History) => void }) {
   const history = useHistory();
-  useEffect(() => onHistory(history), [history]);
+  useEffect(() => onRouterChange(history), [history]);
 
   return null;
 }

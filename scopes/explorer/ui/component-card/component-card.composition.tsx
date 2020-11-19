@@ -11,8 +11,8 @@ export const ComponentCardExample = () => {
 export const ComponentCardExample2 = () => {
   return (
     <ComponentCard
-      id="ui/concrete/component-card-bla2"
-      preview={<div style={{ backgroundColor: 'red' }}>hellow world2</div>}
+      id="ui/concrete/component-card"
+      preview={<div>hello world</div>}
     />
   );
 };

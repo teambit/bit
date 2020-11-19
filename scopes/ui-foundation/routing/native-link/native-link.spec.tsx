@@ -39,6 +39,6 @@ describe('native html link', () => {
 
 		// if this fails, add `await waitFor(() => window.location.hash == '#hash')`
 		expect(window.location.hash).to.equals('#target');
-		expect(window.history.length).to.equal(1, 'length after navigation');
+		expect(window.history.length).to.equal(1, 'history length after navigation');
 	});
 });
