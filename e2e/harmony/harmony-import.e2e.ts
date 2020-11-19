@@ -20,7 +20,7 @@ describe('import component on Harmony', function () {
   describe('workspace with standard components', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.addDefaultScope();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();

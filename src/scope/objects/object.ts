@@ -32,13 +32,17 @@ export default class BitObject {
     return [];
   }
 
+  getType(): string {
+    return this.constructor.name;
+  }
+
   getHeader(buffer: Buffer): string {
-    return `${this.constructor.name} ${this.hash().toString()} ${buffer.toString().length}${NULL_BYTE}`;
+    return `${this.getType()} ${this.hash().toString()} ${buffer.toString().length}${NULL_BYTE}`;
   }
 
   async collectRefs(repo: Repository): Promise<Ref[]> {
     const refsCollection = [];
-    const objectType = this.constructor.name;
+    const objectType = this.getType();
     const objectId = objectType === 'Component' ? `Component ${this.id()}` : objectType;
 
     async function addRefs(object: BitObject) {

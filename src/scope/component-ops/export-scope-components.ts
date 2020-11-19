@@ -267,7 +267,13 @@ export async function exportMany({
       componentsAndObjects.push(componentAndObject);
       const componentBuffer = await componentAndObject.component.compress();
       const componentData = { ref: componentAndObject.component.hash(), buffer: componentBuffer };
-      const objectsBuffer = objectItems.filter((o) => o.type !== ModelComponent.name);
+      const objectsBuffer = await Promise.all(
+        componentAndObject.objects.map(async (obj) => ({
+          ref: obj.hash(),
+          buffer: await obj.compress(),
+          type: obj.getType(),
+        }))
+      );
       const allObjectsData = [componentData, ...objectsBuffer];
       objectListPerName[componentAndObject.component.name] = new ObjectList(allObjectsData);
       objectList.addIfNotExist(allObjectsData);
