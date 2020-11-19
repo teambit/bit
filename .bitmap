@@ -5985,35 +5985,6 @@
         "exported": false,
         "lanes": []
     },
-    "ui/version-tag": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "version-tag.module.scss",
-                "relativePath": "version-tag.module.scss",
-                "test": false
-            },
-            {
-                "name": "version-tag.simulations.tsx",
-                "relativePath": "version-tag.simulations.tsx",
-                "test": false
-            },
-            {
-                "name": "version-tag.tsx",
-                "relativePath": "version-tag.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/ui/version-tag",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
     "url/query-string": {
         "files": [
             {
@@ -6469,5 +6440,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.150"
+    "version": "14.8.9-dev.151"
 }
