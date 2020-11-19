@@ -10,6 +10,9 @@ import { LIFECYCLE_TYPE_BY_KEY_NAME, DependencyLifecycleType } from '../../depen
 
 export class WorkspacePolicyFactory {
   fromConfigObject(configObject: WorkspacePolicyConfigObject): WorkspacePolicy {
+    if (!configObject) {
+      return new WorkspacePolicy([]);
+    }
     const runtimeEntries = entriesFromKey(configObject, 'dependencies');
     const peerEntries = entriesFromKey(configObject, 'peerDependencies');
     const entries = runtimeEntries.concat(peerEntries);
