@@ -391,7 +391,7 @@ export default class CommandHelper {
   }
 
   showComponentParsed(id = 'bar/foo') {
-    const output = this.runCmd(`bit show ${id} --json`);
+    const output = this.runCmd(`bit show ${id} --json --legacy`);
     return JSON.parse(output);
   }
 

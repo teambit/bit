@@ -36,7 +36,7 @@ export class PreparePackagesTask implements BuildTask {
     const distDir = compilerInstance.distDir;
 
     await Promise.all(
-      context.capsuleGraph.capsules.map(async (capsule) => {
+      context.capsuleNetwork.graphCapsules.map(async (capsule) => {
         await this.removeSourceFiles(capsule, distDir);
         await this.moveDistToRoot(capsule, distDir);
         await this.updatePackageJson(capsule, compilerInstance, distDir);

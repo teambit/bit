@@ -279,7 +279,10 @@ export class UiMain {
         `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}'`
       );
     this.logger.console(`Building UI assets for '${chalk.cyan(uiRoot.name)}'`);
-    await this.build(name);
+    const res = await this.build(name);
+    // TODO: replace this with logger and learn why it is not working here.
+    // eslint-disable-next-line no-console
+    if (res.hasErrors()) res.compilation.errors.forEach((err) => console.error(err));
     await this.cache.set(uiRoot.path, hash);
   }
 
@@ -290,7 +293,6 @@ export class UiMain {
       uiRoot.name
     );
     if (fs.pathExistsSync(config.output.path)) return;
-    if (fs.readdirSync(config.output.path).length > 0) return;
     const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);

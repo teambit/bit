@@ -33,12 +33,12 @@ export class ArtifactFactory {
   private getArtifactContextPath(context: BuildContext, component: Component, def: ArtifactDefinition) {
     const artifactContext = this.getArtifactContext(def);
     if (artifactContext === 'component') {
-      const capsulePath = context.capsuleGraph.capsules.getCapsule(component.id)?.path;
+      const capsulePath = context.capsuleNetwork.graphCapsules.getCapsule(component.id)?.path;
       if (!capsulePath) throw new CapsuleNotFound(component.id);
       return capsulePath;
     }
 
-    return context.capsuleGraph.capsulesRootDir;
+    return context.capsuleNetwork.capsulesRootDir;
   }
 
   private getArtifactContext(def: ArtifactDefinition) {
@@ -88,7 +88,7 @@ export class ArtifactFactory {
     defs.forEach((def) => {
       const artifactContext = this.getArtifactContext(def);
       if (artifactContext === 'env') {
-        const capsuleDir = context.capsuleGraph.capsulesRootDir;
+        const capsuleDir = context.capsuleNetwork.capsulesRootDir;
         const rootDir = this.getRootDir(capsuleDir, def);
         const paths = this.resolvePaths(rootDir, def);
         if (paths && paths.length) {

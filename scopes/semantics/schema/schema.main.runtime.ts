@@ -3,7 +3,6 @@ import { Component } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 // import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { ParserNotFound } from './exceptions';
 import { Parser } from './parser';
 import { SchemaAspect } from './schema.aspect';
 import { Module } from './schemas';
@@ -11,6 +10,13 @@ import { SemanticSchema } from './semantic-schema';
 import { SchemaExtractor } from './schema-extractor';
 
 export type ParserSlot = SlotRegistry<Parser>;
+
+export type SchemaConfig = {
+  /**
+   * default parser
+   */
+  defaultParser: string;
+};
 
 /**
  * extension for extracting component schemas.
@@ -22,18 +28,30 @@ export class SchemaMain {
      */
     private parserSlot: ParserSlot,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private config: SchemaConfig
   ) {}
+
+  /**
+   * get the default parser.
+   */
+  getDefaultParser(): Parser {
+    return this.parserSlot.get(this.config.defaultParser) as Parser;
+  }
 
   /**
    * parse a module into a component schema.
    */
   parseModule(path: string): Module {
     const parsers = this.parserSlot.toArray();
-    const maybeParser = parsers.find(([, parser]) => path.match(parser.extension));
+    let maybeParser = parsers.find(([, parser]) => {
+      const match = path.match(parser.extension);
+      return match;
+    });
 
     if (!maybeParser) {
-      throw new ParserNotFound(path);
+      maybeParser = [this.config.defaultParser, this.getDefaultParser()];
     }
 
     const [, parser] = maybeParser;
@@ -66,10 +84,14 @@ export class SchemaMain {
 
   static dependencies = [EnvsAspect];
 
+  static defaultConfig = {
+    defaultParser: 'teambit.typescript/typescript',
+  };
+
   static slots = [Slot.withType<Parser>()];
 
-  static async provider([envs]: [EnvsMain], config, [parserSlot]: [ParserSlot]) {
-    const schema = new SchemaMain(parserSlot, envs);
+  static async provider([envs]: [EnvsMain], config: SchemaConfig, [parserSlot]: [ParserSlot]) {
+    const schema = new SchemaMain(parserSlot, envs, config);
     // workspace.onComponentLoad(async (component) => {
     //   const apiSchema = await schema.getSchema(component);
     //   return {};

@@ -13,7 +13,7 @@ export class BabelEnv {
     const babelCompiler = babel.createCompiler({ babelTransformOptions: babelConfig });
     const harmonyReactEnv = react.compose([
       react.overrideCompiler(babelCompiler),
-      react.overrideCompilerTasks([babelCompiler.createTask!()])
+      react.overrideCompilerTasks([babelCompiler.createTask()])
     ]);
 
     envs.registerEnv(harmonyReactEnv);

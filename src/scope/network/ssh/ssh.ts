@@ -19,7 +19,7 @@ import { buildCommandMessage, packCommand, toBase64, unpackCommand } from '../..
 import ComponentObjects from '../../component-objects';
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
-import { ComponentLogs } from '../../models/model-component';
+import { ComponentLog } from '../../models/model-component';
 import RemovedObjects from '../../removed-components';
 import { ScopeDescriptor } from '../../scope';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
@@ -30,6 +30,7 @@ import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list'
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
+import { PushOptions } from '../../../api/scope/lib/put';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
@@ -255,7 +256,7 @@ export default class SSH implements Network {
     )}`;
   }
 
-  exec(commandName: string, payload?: any, context?: Record<string, any>): Promise<any> {
+  exec(commandName: string, payload?: any, context?: Record<string, any>, dataToStream?: string): Promise<any> {
     logger.debug(`ssh: going to run a remote command ${commandName}, path: ${this.path}`);
     // Add the entered username to context
     if (this._sshUsername) {
@@ -266,15 +267,7 @@ export default class SSH implements Network {
     return new Promise((resolve, reject) => {
       let res = '';
       let err;
-      // No need to use packCommand on the payload in case of put command
-      // because we handle all the base64 stuff in a better way inside the ComponentObjects.manyToString
-      // inside pushMany function here
-      const cmd = this.buildCmd(
-        commandName,
-        absolutePath(this.path || ''),
-        commandName === '_put' ? null : payload,
-        context
-      );
+      const cmd = this.buildCmd(commandName, absolutePath(this.path || ''), payload, context);
       if (!this.connection) {
         err = 'ssh connection is not defined';
         logger.error('ssh', err);
@@ -286,8 +279,8 @@ export default class SSH implements Network {
           logger.error('ssh, exec returns an error: ', error);
           return reject(error);
         }
-        if (commandName === '_put') {
-          stream.stdin.write(payload);
+        if (dataToStream) {
+          stream.stdin.write(dataToStream);
           stream.stdin.end();
         }
         stream
@@ -306,7 +299,9 @@ export default class SSH implements Network {
             setTimeout(promiseExit, 2000);
           })
           .on('close', (code, signal) => {
-            if (commandName === '_put') res = res.replace(payload, '');
+            // @todo: not sure why the next line was needed. if commenting it doesn't create any bug, please remove.
+            // otherwise, replace payload with dataToStream
+            // if (commandName === '_put') res = res.replace(payload, '');
             logger.debug(`ssh: returned with code: ${code}, signal: ${signal}.`);
             // DO NOT CLOSE THE CONNECTION (using this.connection.end()), it causes bugs when there are several open
             // connections. Same bugs occur when running "this.connection.end()" on "end" or "exit" events.
@@ -343,13 +338,21 @@ export default class SSH implements Network {
     }
   }
 
-  async pushMany(objectList: ObjectList, context?: Record<string, any>): Promise<string[]> {
+  async pushMany(objectList: ObjectList, pushOptions: PushOptions, context?: Record<string, any>): Promise<string[]> {
     // This ComponentObjects.manyToString will handle all the base64 stuff so we won't send this payload
     // to the pack command (to prevent duplicate base64)
-    const data = await this.exec('_put', objectList.toJsonString(), context);
+    const data = await this.exec('_put', pushOptions, context, objectList.toJsonString());
     const { payload, headers } = this._unpack(data);
     checkVersionCompatibility(headers.version);
     return payload.ids;
+  }
+
+  async action<Options, Result>(name: string, options: Options): Promise<Result> {
+    const args = { name, options };
+    const result = await this.exec(`_action`, args);
+    const { payload, headers } = this._unpack(result);
+    checkVersionCompatibility(headers.version);
+    return payload;
   }
 
   deleteMany(
@@ -457,7 +460,7 @@ export default class SSH implements Network {
     });
   }
 
-  log(id: BitId): Promise<ComponentLogs> {
+  log(id: BitId): Promise<ComponentLog[]> {
     return this.exec('_log', id.toString()).then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);

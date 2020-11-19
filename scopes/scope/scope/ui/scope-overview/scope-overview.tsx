@@ -4,6 +4,7 @@ import { ComponentCard } from '@teambit/ui.gallery.component-card';
 import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
 import { ScopeDetails } from '@teambit/ui.scope-details';
 import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
+import { EmptyScope } from '@teambit/ui.empty-scope';
 import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '../scope-context';
 import styles from './scope-overview.module.scss';
@@ -16,7 +17,7 @@ export type ScopeOverviewProps = {
 export function ScopeOverview({ badgeSlot }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
   const { components } = scope;
-
+  if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
   return (
     <div className={styles.container}>
       <ScopeDetails

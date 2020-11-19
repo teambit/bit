@@ -1,6 +1,6 @@
 import { ComponentID } from '@teambit/component';
 
-import { SerializedDependency, DependencyLifecycleType } from '../dependency';
+import { SerializedDependency, DependencyLifecycleType, DependencyManifest } from '../dependency';
 import { BaseDependency } from '../base-dependency';
 
 export const TYPE = 'component';
@@ -37,6 +37,21 @@ export class ComponentDependency extends BaseDependency {
     return this._packageName;
   }
 
+  getPackageName() {
+    return this.packageName;
+  }
+
+  setVersion(newVersion: string) {
+    super.setVersion(newVersion);
+    const newComponentId = this.componentId.changeVersion(newVersion);
+    this._componentId = newComponentId;
+    const splittedId = this.id.split('@');
+    if (splittedId.length === 2) {
+      const newId = `${splittedId[0]}@${newVersion}`;
+      this.id = newId;
+    }
+  }
+
   serialize<SerializedComponentDependency>(): SerializedComponentDependency {
     const serialized = (Object.assign({}, super.serialize(), {
       componentId: this.componentId._legacy.serialize(),
@@ -44,5 +59,14 @@ export class ComponentDependency extends BaseDependency {
       packageName: this.packageName,
     }) as unknown) as SerializedComponentDependency;
     return serialized;
+  }
+
+  toManifest(): DependencyManifest {
+    const packageName = this.getPackageName?.();
+    const version = this.version;
+    return {
+      packageName,
+      version,
+    };
   }
 }

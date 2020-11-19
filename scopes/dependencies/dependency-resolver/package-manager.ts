@@ -1,6 +1,7 @@
 import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
 import { DependenciesObjectDefinition } from './types';
+import { DepsFilterFn } from './manifest';
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
@@ -12,6 +13,8 @@ export type PackageManagerInstallOptions = {
   copyPeerToRuntimeOnRoot?: boolean;
 
   copyPeerToRuntimeOnComponents?: boolean;
+
+  dependencyFilterFn?: DepsFilterFn;
 };
 
 export type ResolvedPackageVersion = {
