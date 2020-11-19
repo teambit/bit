@@ -145,7 +145,7 @@ export class IsolatorMain {
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace
 
-      const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
+      const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
       const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
       const packageManagerInstallOptions = {
         dedupe: installOptions.dedupe,
