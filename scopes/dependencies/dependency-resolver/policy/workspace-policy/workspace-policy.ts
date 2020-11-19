@@ -143,6 +143,8 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
 }
 
 function uniqEntries(entries: Array<WorkspacePolicyEntry>): Array<WorkspacePolicyEntry> {
-  const uniq = R.uniqBy(R.prop('dependencyId'), entries);
+  const uniq = R.uniqWith((entry1: WorkspacePolicyEntry, entry2: WorkspacePolicyEntry) => {
+    return entry1.dependencyId === entry2.dependencyId && entry1.lifecycleType === entry2.lifecycleType;
+  }, entries);
   return uniq;
 }
