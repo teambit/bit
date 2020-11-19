@@ -1,0 +1,33 @@
+.compositionCard {
+  padding: 0px;
+  min-height: 122px;
+  min-width: 199px;
+
+  background-color: var(--bg-base);
+
+  box-shadow: var(--shadow-raised-low);
+
+  display: flex;
+  flex-direction: column;
+}
+
+.compositionContainer {
+  display: flex;
+  flex: 1 0;
+  justify-content: center;
+  align-items: center;
+
+  height: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+
+  overflow: hidden;
+}
+
+.title {
+  border-top: 1px solid var(--border-color);
+  padding: 8px 16px;
+  font-size: 0.875em;
+
+  flex: none;
+}

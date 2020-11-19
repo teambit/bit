@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 
@@ -9,7 +10,9 @@ export interface DependenciesManifest {
   peerDependencies?: LifecycleDependenciesManifest;
 }
 export class DependencyList {
-  constructor(private _dependencies: Array<Dependency>) {}
+  constructor(private _dependencies: Array<Dependency>) {
+    this._dependencies = uniqDeps(_dependencies);
+  }
   // constructor(private _dependencies: Dependency[]){}
 
   get dependencies(): Dependency[] {
@@ -75,4 +78,9 @@ export class DependencyList {
   static fromArray(dependencies: Array<Dependency>) {
     return new DependencyList(dependencies);
   }
+}
+
+function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
+  const uniq = R.uniqBy(R.prop('id'), dependencies);
+  return uniq;
 }

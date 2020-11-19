@@ -33,6 +33,9 @@ import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
+import { ExportPersist } from 'bit-bin/dist/scope/actions';
+import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
+import { Remotes } from 'bit-bin/dist/remotes';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
@@ -201,7 +204,7 @@ export class ScopeMain implements ComponentFactory {
 
   private findRuntime(dirPath: string, runtime: string) {
     const files = readdirSync(join(dirPath, 'dist'));
-    return files.find((path) => path.includes(`${runtime}.runtime.`));
+    return files.find((path) => path.includes(`${runtime}.runtime.js`));
   }
 
   private async loadAspectFromPath(localAspects: string[]) {
@@ -247,7 +250,10 @@ export class ScopeMain implements ComponentFactory {
 
   async resolveAspects(runtimeName: string) {
     const userAspectsIds = this.aspectLoader.getUserAspects();
-    const withoutLocalAspects = userAspectsIds.filter((aspectId) => !this.localAspects.includes(aspectId));
+    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
+      const id = ComponentID.fromString(aspectId);
+      return this.localAspects.includes(id.fullName.replace('/', '.'));
+    });
     const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
     const components = await this.getMany(componentIds);
     const capsules = await this.isolator.isolateComponents(
@@ -443,6 +449,11 @@ export class ScopeMain implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId);
   }
 
+  // TODO: add new API for this
+  async _legacyRemotes(): Promise<Remotes> {
+    return getScopeRemotes(this.legacyScope);
+  }
+
   /**
    * declare the slots of scope extension.
    */
@@ -495,6 +506,13 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
+
+    ExportPersist.onPutHook = (ids: string[]) => {
+      const fns = postPutSlot.values();
+      fns.map(async (fn) => {
+        return fn(await Promise.all(ids.map((id) => scope.resolveComponentId(id))));
+      });
+    };
 
     express.register([
       new PutRoute(scope, postPutSlot),

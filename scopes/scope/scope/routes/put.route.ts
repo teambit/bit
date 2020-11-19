@@ -22,14 +22,12 @@ export class PutRoute implements Route {
         },
         pushOptions
       );
-      const componentIds = await Promise.all(
+
+      await Promise.all(
         ids.map((id) => {
           return this.scope.resolveComponentId(id);
         })
       );
-
-      const fns = this.postPutSlot.values();
-      fns.map((fn) => fn(componentIds));
 
       res.json(ids);
     },

@@ -1,19 +1,22 @@
 .background {
   background: var(--bg-dent);
-  padding: 24px 14px;
+  padding: 12px;
   border-radius: 6px;
   border: 1px solid var(--border-color);
   display: flex;
   overflow-x: auto;
-}
 
-.singleCompositionBox {
-  padding: 10px;
-  background-color: var(--bg-base);
-  border-radius: 5px;
-  width: fit-content;
-  margin: 10px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  // css trick - enforce padding at the end of a overflow: auto list
+  &::after {
+    content: '';
+    padding: 6px;
+  }
+
+  > * {
+    margin-right: 16px;
+    flex: none;
+  }
+  > :last-child {
+    margin: 0;
+  }
 }
