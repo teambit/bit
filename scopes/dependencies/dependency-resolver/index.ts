@@ -29,4 +29,5 @@ export {
   SerializedDependency,
   BaseDependency,
   SemverVersion,
+  ComponentDependency,
 } from './dependencies';

@@ -5915,9 +5915,24 @@
                 "test": false
             },
             {
+                "name": "version-dropdown.composition.tsx",
+                "relativePath": "version-dropdown.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "version-dropdown.docs.tsx",
+                "relativePath": "version-dropdown.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "version-dropdown.module.scss",
                 "relativePath": "version-dropdown.module.scss",
                 "test": false
+            },
+            {
+                "name": "version-dropdown.spec.tsx",
+                "relativePath": "version-dropdown.spec.tsx",
+                "test": true
             },
             {
                 "name": "version-dropdown.tsx",
@@ -5939,9 +5954,24 @@
                 "test": false
             },
             {
+                "name": "version-label.composition.tsx",
+                "relativePath": "version-label.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "version-label.docs.tsx",
+                "relativePath": "version-label.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "version-label.module.scss",
                 "relativePath": "version-label.module.scss",
                 "test": false
+            },
+            {
+                "name": "version-label.spec.tsx",
+                "relativePath": "version-label.spec.tsx",
+                "test": true
             },
             {
                 "name": "version-label.tsx",
@@ -6439,5 +6469,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.142"
+    "version": "14.8.9-dev.150"
 }
