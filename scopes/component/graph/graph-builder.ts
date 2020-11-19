@@ -7,12 +7,17 @@ import {
 } from 'bit-bin/dist/scope/graph/components-graph';
 import { ComponentGraph } from './component-graph';
 
+import type { Dependency } from './dependency';
+
 export class GraphBuilder {
   _graph?: ComponentGraph;
   _initialized = false;
   constructor(private workspace?: Workspace, private scope?: ScopeMain) {}
 
-  async getGraph(ids?: string[] | ComponentID[]): Promise<ComponentGraph | undefined> {
+  async getGraph(
+    ids?: string[] | ComponentID[],
+    filter?: (dep: Dependency) => boolean
+  ): Promise<ComponentGraph | undefined> {
     // if (this._graph || this._initialized) {
     //   return this._graph;
     // }
@@ -24,7 +29,10 @@ export class GraphBuilder {
       // @ts-ignore
       const bitIds = listIds.map((id) => id._legacy);
       const legacyGraph = await buildOneGraphForComponents(bitIds, this.workspace.consumer);
-      const graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.workspace);
+      let graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.workspace);
+
+      if (filter) graph = this.filterGraph(graph, listIds, filter);
+
       this._graph = graph;
       this._initialized = true;
       return this._graph;
@@ -46,11 +54,37 @@ export class GraphBuilder {
         return bitId;
       });
       const legacyGraph = await buildOneGraphForComponentsUsingScope(bitIds, this.scope.legacyScope);
-      const graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.scope);
+      let graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.scope);
+
+      if (filter) graph = this.filterGraph(graph, listIds, filter);
+
       this._graph = graph;
       this._initialized = true;
       return this._graph;
     }
     return this._graph;
   }
+
+  private filterGraph(graph: ComponentGraph, ids: (string | ComponentID)[], filter: (dep: Dependency) => boolean) {
+    const graphIds = resolveGraphIds(graph, ids);
+
+    const filtered = graph.successorsSubgraph(graphIds, filter);
+
+    return filtered;
+  }
+}
+
+function resolveGraphIds(graph: ComponentGraph, ids: (string | ComponentID)[]) {
+  return ids
+    .map((x: string | ComponentID) => {
+      if (typeof x === 'string') return x;
+
+      return (
+        (graph.hasNode(x.toString()) && x.toString()) ||
+        (graph.hasNode(x.toString({ ignoreVersion: true })) && x.toString({ ignoreVersion: true })) ||
+        (graph.hasNode(x.fullName) && x.fullName) ||
+        undefined
+      );
+    })
+    .filter((x) => !!x) as string[];
 }

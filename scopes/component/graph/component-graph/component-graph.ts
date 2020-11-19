@@ -18,6 +18,11 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     super(nodes, edges);
     this.versionMap = new Map();
   }
+
+  protected create(nodes: Node[] = [], edges: Edge[] = []): this {
+    return new ComponentGraph(nodes, edges) as this;
+  }
+
   static async buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Promise<ComponentGraph> {
     const newGraph = new ComponentGraph();
     const setNodeP = legacyGraph.nodes().map(async (nodeId) => {

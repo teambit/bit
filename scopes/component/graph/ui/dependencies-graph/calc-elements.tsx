@@ -5,7 +5,6 @@ import { calcLayout } from './calc-layout';
 import { GraphModel } from '../query';
 
 import { depTypeToClass, depTypeToLabel } from './dep-edge';
-import { filterGraph, isRuntimeOrMine } from './filter-graph';
 
 type ElementsOptions = {
   rootNode?: ComponentID;
@@ -15,16 +14,12 @@ type ElementsOptions = {
  * generate Nodes and Edges for the ReactFlowRenderer graph renderer
  */
 export function calcElements(graph: GraphModel | undefined, { rootNode }: ElementsOptions) {
-  const filteredGraph = useMemo(() => filterGraph(graph, rootNode, isRuntimeOrMine(rootNode?.toString() || '')), [
-    graph,
-  ]);
-
   return useMemo(() => {
-    if (!filteredGraph) return [];
+    if (!graph) return [];
 
-    const positions = calcLayout(filteredGraph);
+    const positions = calcLayout(graph);
 
-    const nodes: Node[] = Array.from(filteredGraph.nodes.values()).map((x) => {
+    const nodes: Node[] = Array.from(graph.nodes.values()).map((x) => {
       return {
         id: x.id,
         type: 'ComponentNode',
@@ -36,7 +31,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       };
     });
 
-    const edges: Edge[] = filteredGraph.edges.map((e) => ({
+    const edges: Edge[] = graph.edges.map((e) => ({
       id: `_${e.sourceId}__${e.targetId}`,
       source: e.sourceId,
       target: e.targetId,
@@ -48,5 +43,5 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
     }));
 
     return [...nodes, ...edges];
-  }, [filteredGraph]);
+  }, [graph]);
 }
