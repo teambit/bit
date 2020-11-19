@@ -7,9 +7,9 @@ import {
   KEY_NAME_BY_LIFECYCLE_TYPE,
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
-} from '../../constants';
-import { DependenciesObjectDefinition, PackageName, SemverVersion } from '../../types';
-import { DependencyLifecycleType } from '../../dependencies';
+} from '../../dependencies/constants';
+import { DependenciesObjectDefinition } from '../../types';
+import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
 import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
 

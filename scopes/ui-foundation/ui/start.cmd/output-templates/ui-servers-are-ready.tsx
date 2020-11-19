@@ -28,7 +28,7 @@ const UIServersAreReady = ({ mainUIServer }: uIServersAreReadyProps) => (
   <>
     <Text>You can now view {mainUIServer.uiRoot.name} components in the browser</Text>
     <Text>
-      Main UI server is running on http://{mainUIServer.targetHost}:{mainUIServer.targetPort}
+      Bit server is running on http://{mainUIServer.targetHost}:{mainUIServer.targetPort}
     </Text>
     <Newline />
     {mainUIServer.uiRoot.workspace ? (

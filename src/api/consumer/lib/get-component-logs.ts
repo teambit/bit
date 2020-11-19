@@ -1,8 +1,9 @@
 import { BitId } from '../../../bit-id';
 import { loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import getRemoteByName from '../../../remotes/get-remote-by-name';
+import { ComponentLog } from '../../../scope/models/model-component';
 
-export default async function getComponentLogs(id: string, isRemote: boolean) {
+export default async function getComponentLogs(id: string, isRemote: boolean): Promise<ComponentLog[]> {
   if (isRemote) {
     const consumer = await loadConsumerIfExist();
     const bitId: BitId = BitId.parse(id, true);

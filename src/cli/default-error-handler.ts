@@ -103,7 +103,6 @@ import {
   UnexpectedNetworkError,
 } from '../scope/network/exceptions';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
-import PermissionDenied from '../scope/network/exceptions/permission-denied';
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import { paintSpecsResults } from './chalk-box';
@@ -225,11 +224,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ValidationError, (err) => `${err.message}\n${reportIssueToGithubMsg}`],
   [ComponentNotFoundInPath, (err) => `error: component in path "${chalk.bold(err.path)}" was not found`],
-  [
-    PermissionDenied,
-    (err) =>
-      `error: permission to scope ${err.scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#authentication-issues`,
-  ],
   [RemoteNotFound, (err) => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, (err) => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
   [

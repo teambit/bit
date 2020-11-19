@@ -1,7 +1,6 @@
 export {
   DependenciesObjectDefinition,
   LegacyDependenciesDefinition,
-  SemverVersion,
   SemverVersionRule,
   DependencyResolverWorkspaceConfig,
   DependencyResolverVariantConfig,
@@ -12,8 +11,7 @@ export {
   RegistriesMap,
   DependenciesPolicy,
 } from './types';
-export { CreateFromComponentsOptions } from './manifest/workspace-manifest';
-export { WorkspaceManifest, ComponentManifest } from './manifest';
+export { WorkspaceManifest, ComponentManifest, CreateFromComponentsOptions } from './manifest';
 export { Registries, Registry } from './registry';
 export {
   PackageManager,
@@ -30,4 +28,6 @@ export {
   DependencyFactory,
   SerializedDependency,
   BaseDependency,
+  SemverVersion,
+  ComponentDependency,
 } from './dependencies';

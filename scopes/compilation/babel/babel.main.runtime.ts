@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { Compiler, CompilerAspect, CompilerMain } from '@teambit/compiler';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import * as babel from '@babel/core';
 import { BabelCompilerOptions } from './compiler-options';
@@ -9,7 +9,7 @@ import { BabelCompiler } from './babel.compiler';
 export class BabelMain {
   constructor(private logger: Logger, private compiler: CompilerMain) {}
 
-  createCompiler(options: BabelCompilerOptions, babelModule = babel): Compiler {
+  createCompiler(options: BabelCompilerOptions, babelModule = babel): BabelCompiler {
     return new BabelCompiler(BabelAspect.id, this.logger, this.compiler, options, babelModule);
   }
 

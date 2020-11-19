@@ -47,8 +47,7 @@ import hasOwnProperty from './object/has-own-property';
 import sortObject from './object/sort';
 import resolveGroupId from './os-resolve-group-id';
 import resolveHomePath from './os-resolve-home-path';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import packCommand from './pack-command';
+import { packCommand } from './pack-command';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, pathResolveToLinux } from './path';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import { pathIsInside } from './path-is-inside';
@@ -72,8 +71,7 @@ import stripTrailingChar from './string/strip-trailing-char';
 import toBase64 from './string/to-base64';
 import toBase64ArrayBuffer from './string/to-base64-array-buffer';
 import toBoolean from './to-boolean';
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-import unpackCommand from './unpack-command';
+import { unpackCommand } from './unpack-command';
 import deflate from './zlib-deflate';
 import inflate from './zlib-inflate';
 

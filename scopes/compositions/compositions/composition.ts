@@ -1,4 +1,4 @@
-import { capitalize } from '@teambit/string.capitalize';
+import { humanizeCompositionId } from '@teambit/model.composition-id';
 
 export type CompositionProps = {
   identifier: string;
@@ -19,8 +19,7 @@ export class Composition {
   ) {}
 
   get displayName() {
-    const text = this.identifier.replace(/([a-z])([A-Z])/g, '$1 $2').toLowerCase();
-    return capitalize(text);
+    return humanizeCompositionId(this.identifier);
   }
 
   toObject() {

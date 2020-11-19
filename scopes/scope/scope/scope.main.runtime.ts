@@ -29,10 +29,13 @@ import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
 import LegacyScope, { OnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ComponentLogs } from 'bit-bin/dist/scope/models/model-component';
+import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
+import { ExportPersist } from 'bit-bin/dist/scope/actions';
+import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
+import { Remotes } from 'bit-bin/dist/remotes';
 import { compact, slice } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
@@ -40,7 +43,7 @@ import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
-import { PutRoute, FetchRoute } from './routes';
+import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -170,7 +173,7 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const capsules = await this.isolator.isolateComponents(
       components,
-      { baseDir: this.path, skipIfExists: true },
+      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
       this.legacyScope
     );
 
@@ -181,11 +184,17 @@ export class ScopeMain implements ComponentFactory {
           file.relative.includes('.scope.runtime.')
         );
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, scopeRuntime.relative));
+        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
         // eslint-disable-next-line global-require, import/no-dynamic-require
         return require(capsule.path);
       });
     });
+  }
+
+  // TODO: temporary compiler workaround - discuss this with david.
+  private toJs(str: string) {
+    if (str.endsWith('.ts')) return str.replace('.ts', '.js');
+    return str;
   }
 
   private parseLocalAspect(localAspects: string[]) {
@@ -195,7 +204,7 @@ export class ScopeMain implements ComponentFactory {
 
   private findRuntime(dirPath: string, runtime: string) {
     const files = readdirSync(join(dirPath, 'dist'));
-    return files.find((path) => path.includes(`${runtime}.runtime.`));
+    return files.find((path) => path.includes(`${runtime}.runtime.js`));
   }
 
   private async loadAspectFromPath(localAspects: string[]) {
@@ -241,7 +250,10 @@ export class ScopeMain implements ComponentFactory {
 
   async resolveAspects(runtimeName: string) {
     const userAspectsIds = this.aspectLoader.getUserAspects();
-    const withoutLocalAspects = userAspectsIds.filter((aspectId) => !this.localAspects.includes(aspectId));
+    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
+      const id = ComponentID.fromString(aspectId);
+      return this.localAspects.includes(id.fullName.replace('/', '.'));
+    });
     const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
     const components = await this.getMany(componentIds);
     const capsules = await this.isolator.isolateComponents(
@@ -277,7 +289,7 @@ export class ScopeMain implements ComponentFactory {
     });
 
     const withoutOwnScope = legacyIds.filter((id) => {
-      return id.scope === this.name;
+      return id.scope !== this.name;
     });
 
     await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
@@ -365,7 +377,7 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
-  async getLogs(id: ComponentID): Promise<ComponentLogs> {
+  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy);
   }
 
@@ -437,6 +449,11 @@ export class ScopeMain implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId);
   }
 
+  // TODO: add new API for this
+  async _legacyRemotes(): Promise<Remotes> {
+    return getScopeRemotes(this.legacyScope);
+  }
+
   /**
    * declare the slots of scope extension.
    */
@@ -485,11 +502,24 @@ export class ScopeMain implements ComponentFactory {
       aspectLoader,
       config
     );
-    cli.registerOnStart(async () => {
+    cli.registerOnStart(async (hasWorkspace: boolean) => {
+      if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    express.register([new PutRoute(scope, postPutSlot), new FetchRoute(scope)]);
+    ExportPersist.onPutHook = (ids: string[]) => {
+      const fns = postPutSlot.values();
+      fns.map(async (fn) => {
+        return fn(await Promise.all(ids.map((id) => scope.resolveComponentId(id))));
+      });
+    };
+
+    express.register([
+      new PutRoute(scope, postPutSlot),
+      new FetchRoute(scope),
+      new ActionRoute(scope),
+      new DeleteRoute(scope),
+    ]);
     // @ts-ignore - @ran to implement the missing functions and remove it
     ui.registerUiRoot(new ScopeUIRoot(scope));
     graphql.register(scopeSchema(scope));

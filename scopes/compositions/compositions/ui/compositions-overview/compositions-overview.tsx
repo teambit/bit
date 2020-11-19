@@ -1,23 +1,20 @@
-import classNames from 'classnames';
 import React from 'react';
+import { CompositionCard } from '@teambit/ui.composition-card';
+import { CompositionsModule } from '@teambit/model.composition-type';
 
 import styles from './compositions-overview.module.scss';
 
 export type CompositionsOverviewProps = {
-  compositions: {};
+  compositions?: CompositionsModule;
 };
 
 export function CompositionsOverview({ compositions }: CompositionsOverviewProps) {
   return (
     <div className={styles.background}>
       {compositions &&
-        Object.keys(compositions).map((key) => {
-          return (
-            <div key={key} style={compositions[key].canvas} className={classNames(styles.singleCompositionBox)}>
-              {compositions[key]()}
-            </div>
-          );
-        })}
+        Object.entries(compositions).map(([key, composition]) => (
+          <CompositionCard key={key} Composition={composition} name={key} />
+        ))}
     </div>
   );
 }
