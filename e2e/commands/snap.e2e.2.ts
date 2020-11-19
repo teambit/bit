@@ -682,4 +682,23 @@ describe('bit snap command', function () {
       });
     });
   });
+  describe('tag after tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1');
+    });
+    it('should fetch previous version files', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const fileObj = comp1.files[0].file;
+      expect(() => helper.command.catObject(fileObj)).to.not.throw();
+    });
+  });
 });
