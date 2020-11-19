@@ -231,6 +231,9 @@ export async function exportMany({
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
+  /**
+   * Harmony only. The legacy is running `getUpdatedObjectsToExportLegacy`.
+   */
   async function getUpdatedObjectsToExport(
     remoteNameStr: string,
     bitIds: BitIds,
@@ -241,8 +244,8 @@ export async function exportMany({
     const idsToChangeLocally = BitIds.fromArray(
       bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
     );
-    const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
-    const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
+    // const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
+    // const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
     const componentsAndObjects: ModelComponentAndObjects[] = [];
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
@@ -253,20 +256,20 @@ export async function exportMany({
       const objectItems = await modelComponent.collectVersionsObjects(scope.objects, localVersions);
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
-      const didConvertScope = await convertToCorrectScope(
+      await convertToCorrectScope(
         scope,
         componentAndObject,
         remoteNameStr,
-        includeDependencies,
+        includeDependencies, // always false in Harmony
         bitIds,
-        codemod,
+        codemod, // always false in Harmony
         idsWithFutureScope
       );
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
-      componentAndObject.component.addScopeListItem(remoteObj);
+      modelComponent.addScopeListItem(remoteObj);
       componentsAndObjects.push(componentAndObject);
-      const componentBuffer = await componentAndObject.component.compress();
-      const componentData = { ref: componentAndObject.component.hash(), buffer: componentBuffer };
+      const componentBuffer = await modelComponent.compress();
+      const componentData = { ref: modelComponent.hash(), buffer: componentBuffer, type: modelComponent.getType() };
       const objectsBuffer = await Promise.all(
         componentAndObject.objects.map(async (obj) => ({
           ref: obj.hash(),
@@ -275,7 +278,7 @@ export async function exportMany({
         }))
       );
       const allObjectsData = [componentData, ...objectsBuffer];
-      objectListPerName[componentAndObject.component.name] = new ObjectList(allObjectsData);
+      objectListPerName[modelComponent.name] = new ObjectList(allObjectsData);
       objectList.addIfNotExist(allObjectsData);
     };
 

@@ -494,7 +494,7 @@ export default class Component extends BitObject {
       refsCollection.push(...versionsRefs);
       // @ts-ignore
       const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
-      versionsObjects.map((versionObject) => {
+      versionsObjects.forEach((versionObject) => {
         const refs = versionObject.refsWithOptions(false, true);
         refsCollection.push(...refs);
       });

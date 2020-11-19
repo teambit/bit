@@ -92,6 +92,6 @@ export class ObjectList {
    * helps debugging
    */
   toConsoleLog() {
-    console.log(this.objects.map((o) => o.ref.hash).join('\n'));
+    console.log(this.objects.map((o) => o.ref.hash).join('\n')); // eslint-disable-line no-console
   }
 }
