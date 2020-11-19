@@ -38,8 +38,11 @@ export function indexByDepId(
 ): PackageNameIndex {
   const result: PackageNameIndex = new Map();
   componentDependenciesMap.forEach((depsObject, compPackageName) => {
-    addPreservedFromRoot(result, compPackageName, rootPolicy);
     forEachObjIndexed(addSpecificLifeCycleDepsToIndex(result, compPackageName), depsObject);
+    // Only add preserved in case it was defined in any component, otherwise it has no meaning at all
+    if (result.has(compPackageName)) {
+      addPreservedFromRoot(result, compPackageName, rootPolicy);
+    }
   });
   return result;
 }
