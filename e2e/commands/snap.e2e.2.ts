@@ -701,21 +701,4 @@ describe('bit snap command', function () {
       expect(() => helper.command.catObject(fileObj)).to.not.throw();
     });
   });
-  describe('tag, export, clear, tag and export', () => {
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
-      helper.fixtures.populateComponents(1);
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      helper.git.mimicGitCloneLocalProjectHarmony();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importAllComponents();
-      helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagAllComponents();
-    });
-    it('should export with no errors', () => {
-      expect(() => helper.command.exportAllComponents()).to.not.throw();
-    });
-  });
 });

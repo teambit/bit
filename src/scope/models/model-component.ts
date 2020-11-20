@@ -685,9 +685,11 @@ export default class Component extends BitObject {
     this.state.versions[version].local = true;
   }
 
+  /**
+   * local versions that are not exported. to get also local snaps, use `getLocalTagsOrHashes()`.
+   */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
   }
