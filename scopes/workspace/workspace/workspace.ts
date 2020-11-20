@@ -387,7 +387,6 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
-    this.clearCache();
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
     // new file. write these changes to the .bitmap file so then other processes have access to
@@ -406,7 +405,6 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentAdd(id: ComponentID): Promise<OnComponentEventResult[]> {
-    this.clearCache();
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
@@ -420,7 +418,6 @@ export class Workspace implements ComponentFactory {
   }
 
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
-    this.clearCache();
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
     await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
@@ -1081,6 +1078,7 @@ export class Workspace implements ComponentFactory {
    */
   async _reloadConsumer() {
     this.consumer = await loadConsumer(this.path, true);
+    this.clearCache();
   }
 
   // TODO: should we return here the dir as it defined (aka components) or with /{name} prefix (as it used in legacy)
