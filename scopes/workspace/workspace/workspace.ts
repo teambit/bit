@@ -976,6 +976,7 @@ export class Workspace implements ComponentFactory {
       await this.dependencyResolver.persistConfig(this.path);
     }
     this.logger.debug(`installing dependencies in workspace with options`, options);
+    this.clearCache();
     const components = await this.list();
     const legacyStringIds = components.map((component) => component.id._legacy.toString());
     // TODO: pass get install options
