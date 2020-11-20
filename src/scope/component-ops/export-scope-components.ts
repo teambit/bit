@@ -60,7 +60,7 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
 export async function exportMany({
   scope,
   isLegacy,
-  ids,
+  ids, // when exporting a lane, the ids are the lane component ids
   remoteName,
   context = {},
   includeDependencies = false, // kind of fork. by default dependencies only cached, with this, their scope-name is changed
@@ -99,7 +99,7 @@ export async function exportMany({
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
   let manyObjectsPerRemote: ObjectsPerRemote[];
-  if (isLegacy || (lanesObjects && lanesObjects.length)) {
+  if (isLegacy) {
     manyObjectsPerRemote = remoteName
       ? [await getUpdatedObjectsToExportLegacy(remoteName, ids, lanesObjects)]
       : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
@@ -244,14 +244,11 @@ export async function exportMany({
     const idsToChangeLocally = BitIds.fromArray(
       bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
     );
-    // const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
-    // const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
     const componentsAndObjects: ModelComponentAndObjects[] = [];
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
     const processModelComponent = async (modelComponent: ModelComponent) => {
-      // @todo: for lanes, it won't work, find the local version by the remotes.
-      const localVersions = modelComponent.getLocalVersions();
+      const localVersions = modelComponent.getLocalTagsOrHashes();
       modelComponent.clearStateData();
       const objectItems = await modelComponent.collectVersionsObjects(scope.objects, localVersions);
       const objectsList = await new ObjectList(objectItems).toBitObjects();
