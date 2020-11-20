@@ -2,7 +2,7 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import semver from 'semver';
-
+import { mapSeries } from 'bluebird';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
 import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
@@ -232,24 +232,22 @@ export default class DependencyResolver {
    * and marked as ignored in the consumer or component config file.
    */
   async populateDependencies(files: string[], testsFiles: string[]) {
-    await Promise.all(
-      files.map(async (file: string) => {
-        const fileType: FileType = {
-          isTestFile: await this.isDevFile(this.component, file, testsFiles),
-        };
-        this.throwForNonExistFile(file);
-        if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
-          return;
-        }
-        this.processCoreAspects(file);
-        this.processMissing(file, fileType);
-        this.processErrors(file);
-        this.processPackages(file, fileType);
-        this.processBits(file, fileType);
-        this.processDepFiles(file, fileType);
-        this.processUnidentifiedPackages(file, fileType);
-      })
-    );
+    await mapSeries(files, async (file: string) => {
+      const fileType: FileType = {
+        isTestFile: await this.isDevFile(this.component, file, testsFiles),
+      };
+      this.throwForNonExistFile(file);
+      if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
+        return;
+      }
+      this.processCoreAspects(file);
+      this.processMissing(file, fileType);
+      this.processErrors(file);
+      this.processPackages(file, fileType);
+      this.processBits(file, fileType);
+      this.processDepFiles(file, fileType);
+      this.processUnidentifiedPackages(file, fileType);
+    });
 
     this.removeIgnoredPackagesByOverrides();
     this.removeDevAndEnvDepsIfTheyAlsoRegulars();

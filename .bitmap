@@ -6725,6 +6725,11 @@
                 "test": false
             },
             {
+                "name": "workspace-component-loader.ts",
+                "relativePath": "workspace-component/workspace-component-loader.ts",
+                "test": false
+            },
+            {
                 "name": "workspace-component.ts",
                 "relativePath": "workspace-component/workspace-component.ts",
                 "test": false
