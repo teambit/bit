@@ -289,6 +289,11 @@ export class Workspace implements ComponentFactory {
     return Promise.all(ids);
   }
 
+  async getNewAndModifiedIds(): Promise<ComponentID[]> {
+    const ids = await this.componentList.listTagPendingComponents();
+    return this.resolveMultipleComponentIds(ids);
+  }
+
   // TODO: refactor asap to get seeders as ComponentID[] not strings (most of the places already has it that way)
   async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
