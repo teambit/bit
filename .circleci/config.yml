@@ -548,10 +548,10 @@ jobs:
       # there is a delay between publishing a package and until it's seen on npm servers
       - run: sleep 2m
       - run: npm view bit-bin@dev version
-      - run: cd bit && node scripts/soft-tag-teambit.js
+      - run: cd bit && bit status
       - run:
           name: tag persist
-          command: cd bit && bit tag --persist
+          command: cd bit && bit tag --all --persist
           no_output_timeout: '25m'
       - run: cd bit && bit export
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
