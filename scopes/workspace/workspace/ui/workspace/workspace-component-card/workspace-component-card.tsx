@@ -1,4 +1,4 @@
-import { ComponentCard } from '@teambit/explorer.ui.component-card';
+import { ComponentCard } from '@teambit/ui.gallery.component-card';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import React, { useState } from 'react';

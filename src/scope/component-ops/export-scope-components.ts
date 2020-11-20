@@ -59,6 +59,7 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
  */
 export async function exportMany({
   scope,
+  isLegacy,
   ids,
   remoteName,
   context = {},
@@ -70,6 +71,7 @@ export async function exportMany({
   idsWithFutureScope,
 }: {
   scope: Scope;
+  isLegacy: boolean;
   ids: BitIds;
   remoteName: string | null | undefined;
   context?: Record<string, any>;
@@ -96,11 +98,21 @@ export async function exportMany({
     .map((scopeName) => `scope "${scopeName}": ${idsGroupedByScope[scopeName].toString()}`)
     .join(', ');
   logger.debug(`export-scope-components, export to the following scopes ${groupedByScopeString}`);
-  const manyObjectsPerRemote = remoteName
-    ? [await getUpdatedObjectsToExport(remoteName, ids, lanesObjects)]
-    : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
-        getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], lanesObjects)
-      );
+  let manyObjectsPerRemote: ObjectsPerRemote[];
+  if (isLegacy || (lanesObjects && lanesObjects.length)) {
+    manyObjectsPerRemote = remoteName
+      ? [await getUpdatedObjectsToExportLegacy(remoteName, ids, lanesObjects)]
+      : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
+          getUpdatedObjectsToExportLegacy(scopeName, idsGroupedByScope[scopeName], lanesObjects)
+        );
+  } else {
+    manyObjectsPerRemote = remoteName
+      ? [await getUpdatedObjectsToExport(remoteName, ids, lanesObjects)]
+      : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
+          getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], lanesObjects)
+        );
+  }
+
   manyObjectsPerRemote.forEach((objectsPerRemote) => {
     objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
       addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
@@ -130,7 +142,7 @@ export async function exportMany({
     exportedIds?: string[];
   };
 
-  async function getUpdatedObjectsToExport(
+  async function getUpdatedObjectsToExportLegacy(
     remoteNameStr: string,
     bitIds: BitIds,
     lanes: Lane[] = []
@@ -216,6 +228,75 @@ export async function exportMany({
       })
     );
     objectList.addIfNotExist(lanesData);
+    return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
+  }
+
+  /**
+   * Harmony only. The legacy is running `getUpdatedObjectsToExportLegacy`.
+   */
+  async function getUpdatedObjectsToExport(
+    remoteNameStr: string,
+    bitIds: BitIds,
+    lanes: Lane[] = []
+  ): Promise<ObjectsPerRemote> {
+    bitIds.throwForDuplicationIgnoreVersion();
+    const remote: Remote = await scopeRemotes.resolve(remoteNameStr, scope);
+    const idsToChangeLocally = BitIds.fromArray(
+      bitIds.filter((id) => !id.scope || id.scope === remoteNameStr || changeLocallyAlthoughRemoteIsDifferent)
+    );
+    // const idsAndObjectsP = lanes.map((laneObj) => laneObj.collectObjectsById(scope.objects));
+    // const idsAndObjects = R.flatten(await Promise.all(idsAndObjectsP));
+    const componentsAndObjects: ModelComponentAndObjects[] = [];
+    const objectList = new ObjectList();
+    const objectListPerName: ObjectListPerName = {};
+    const processModelComponent = async (modelComponent: ModelComponent) => {
+      // @todo: for lanes, it won't work, find the local version by the remotes.
+      const localVersions = modelComponent.getLocalVersions();
+      modelComponent.clearStateData();
+      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, localVersions);
+      const objectsList = await new ObjectList(objectItems).toBitObjects();
+      const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
+      await convertToCorrectScope(
+        scope,
+        componentAndObject,
+        remoteNameStr,
+        includeDependencies, // always false in Harmony
+        bitIds,
+        codemod, // always false in Harmony
+        idsWithFutureScope
+      );
+      const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
+      modelComponent.addScopeListItem(remoteObj);
+      componentsAndObjects.push(componentAndObject);
+      const componentBuffer = await modelComponent.compress();
+      const componentData = { ref: modelComponent.hash(), buffer: componentBuffer, type: modelComponent.getType() };
+      const objectsBuffer = await Promise.all(
+        componentAndObject.objects.map(async (obj) => ({
+          ref: obj.hash(),
+          buffer: await obj.compress(),
+          type: obj.getType(),
+        }))
+      );
+      const allObjectsData = [componentData, ...objectsBuffer];
+      objectListPerName[modelComponent.name] = new ObjectList(allObjectsData);
+      objectList.addIfNotExist(allObjectsData);
+    };
+
+    const modelComponents = await mapSeries(bitIds, (id) => scope.getModelComponent(id));
+    // super important! otherwise, the processModelComponent() changes objects in memory, while the key remains the same
+    scope.objects.clearCache();
+    // don't use Promise.all, otherwise, it'll throw "JavaScript heap out of memory" on a large set of data
+    await mapSeries(modelComponents, processModelComponent);
+    const lanesData = await Promise.all(
+      lanes.map(async (lane) => {
+        lane.components.forEach((c) => {
+          c.id = c.id.changeScope(remoteName);
+        });
+        return { ref: lane.hash(), buffer: await lane.compress() };
+      })
+    );
+    objectList.addIfNotExist(lanesData);
+
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 

@@ -1,4 +1,4 @@
-import { RouteSlot, SlotRouter } from '@teambit/react-router';
+import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import cn from 'classnames';
 import React from 'react';
 import styles from './top-bar.module.scss';
