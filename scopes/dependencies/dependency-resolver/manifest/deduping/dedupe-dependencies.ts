@@ -1,4 +1,5 @@
-import { DependenciesObjectDefinition } from '../../types';
+import { ManifestDependenciesObject } from '../manifest';
+import { WorkspacePolicy } from '../../policy';
 import { PackageName, SemverVersion } from '../../dependencies';
 import { ComponentDependenciesMap } from '../workspace-manifest-factory';
 import { hoistDependencies } from './hoist-dependencies';
@@ -23,7 +24,7 @@ export type DedupedDependenciesIssues = {
 };
 
 export type DedupedDependencies = {
-  rootDependencies: DependenciesObjectDefinition;
+  rootDependencies: ManifestDependenciesObject;
   componentDependenciesMap: ComponentDependenciesMap;
   issus?: DedupedDependenciesIssues;
 };
@@ -35,16 +36,14 @@ export type DedupedDependencies = {
  * it's similar to what happens when you use yarn workspaces
  *
  * @export
- * @param {DependenciesObjectDefinition} rootDependencies
- * @param {ComponentDependenciesMap} componentDependenciesMap
  * @returns {DedupedDependencies}
  */
 export function dedupeDependencies(
-  rootDependencies: DependenciesObjectDefinition,
+  rootPolicy: WorkspacePolicy,
   componentDependenciesMap: ComponentDependenciesMap
 ): DedupedDependencies {
-  const indexedByDepId = indexByDepId(componentDependenciesMap);
+  const indexedByDepId = indexByDepId(rootPolicy, componentDependenciesMap);
   const dedupedDependenciesWithoutRootOriginal = hoistDependencies(indexedByDepId);
-  const result = mergeWithRootDeps(rootDependencies, dedupedDependenciesWithoutRootOriginal);
+  const result = mergeWithRootDeps(rootPolicy.toManifest(), dedupedDependenciesWithoutRootOriginal);
   return result;
 }
