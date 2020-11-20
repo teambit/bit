@@ -168,7 +168,7 @@ export async function exportMany({
         }
       });
       componentAndObject.component.clearStateData();
-      const didConvertScope = await convertToCorrectScope(
+      const didConvertScope = await convertToCorrectScopeLegacy(
         scope,
         componentAndObject,
         remoteNameStr,
@@ -253,15 +253,7 @@ export async function exportMany({
       const objectItems = await modelComponent.collectVersionsObjects(scope.objects, localVersions);
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
-      await convertToCorrectScope(
-        scope,
-        componentAndObject,
-        remoteNameStr,
-        includeDependencies, // always false in Harmony
-        bitIds,
-        codemod, // always false in Harmony
-        idsWithFutureScope
-      );
+      await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
       const remoteObj = { url: remote.host, name: remote.name, date: Date.now().toString() };
       modelComponent.addScopeListItem(remoteObj);
       componentsAndObjects.push(componentAndObject);
@@ -573,7 +565,7 @@ async function throwForMissingLocalDependencies(scope: Scope, versions: Version[
  * when "--rewire" flag is used, import/require statement should be changed from the old scope-name
  * to the new scope-name. Or from no-scope to the new scope.
  */
-async function convertToCorrectScope(
+async function convertToCorrectScopeLegacy(
   scope: Scope,
   componentsObjects: ModelComponentAndObjects,
   remoteScope: string,
@@ -781,5 +773,100 @@ the current import/require module has no scope-name, which result in an invalid 
       return Source.from(Buffer.from(newFileString));
     }
     return null;
+  }
+}
+
+/**
+ * Component and dependencies id changes:
+ * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
+ * a result their scope-name is null. Before the bare-scope gets the components, convert these scope names
+ * to the bare-scope name.
+ *
+ * This is the Harmony version of "convertToCorrectScope". No more codemod and no more hash changes.
+ */
+async function convertToCorrectScopeHarmony(
+  scope: Scope,
+  componentsObjects: ModelComponentAndObjects,
+  remoteScope: string,
+  exportingIds: BitIds,
+  idsWithFutureScope: BitIds
+): Promise<boolean> {
+  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const versionsObjects: Version[] = componentsObjects.objects.filter((object) => object instanceof Version);
+  const haveVersionsChanged = await Promise.all(
+    versionsObjects.map(async (objectVersion: Version) => {
+      const didDependencyChange = changeDependencyScope(objectVersion);
+      changeExtensionsScope(objectVersion);
+      if (updateDependenciesOnExport && typeof updateDependenciesOnExport === 'function') {
+        // @ts-ignore
+        objectVersion = updateDependenciesOnExport(objectVersion, getIdWithUpdatedScope.bind(this));
+      }
+      return didDependencyChange;
+    })
+  );
+  const hasComponentChanged = remoteScope !== componentsObjects.component.scope;
+  componentsObjects.component.scope = remoteScope;
+
+  // return true if one of the versions has changed or the component itself
+  return haveVersionsChanged.some((x) => x) || hasComponentChanged;
+
+  function changeDependencyScope(version: Version): boolean {
+    let hasChanged = false;
+    version.getAllDependencies().forEach((dependency) => {
+      const updatedScope = getIdWithUpdatedScope(dependency.id);
+      if (!updatedScope.isEqual(dependency.id)) {
+        hasChanged = true;
+        dependency.id = updatedScope;
+      }
+    });
+    const flattenedFields = ['flattenedDependencies', 'flattenedDevDependencies'];
+    flattenedFields.forEach((flattenedField) => {
+      const ids: BitIds = version[flattenedField];
+      const needsChange = ids.some((id) => id.scope !== remoteScope);
+      if (needsChange) {
+        version[flattenedField] = getBitIdsWithUpdatedScope(ids);
+        hasChanged = true;
+      }
+    });
+    return hasChanged;
+  }
+
+  function changeExtensionsScope(version: Version): boolean {
+    let hasChanged = false;
+    version.extensions.forEach((ext) => {
+      if (ext.extensionId) {
+        const updatedScope = getIdWithUpdatedScope(ext.extensionId);
+        if (!updatedScope.isEqual(ext.extensionId)) {
+          hasChanged = true;
+          ext.extensionId = updatedScope;
+        }
+      }
+    });
+    return hasChanged;
+  }
+
+  function getIdWithUpdatedScope(dependencyId: BitId): BitId {
+    if (dependencyId.scope === remoteScope) {
+      return dependencyId; // nothing has changed
+    }
+    if (!dependencyId.scope || exportingIds.hasWithoutVersion(dependencyId)) {
+      const depId = ModelComponent.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = scope.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
+      }
+      const currentlyExportedDep = idsWithFutureScope.searchWithoutScopeAndVersion(dependencyId);
+      if (currentlyExportedDep && currentlyExportedDep.scope) {
+        // it's possible that a dependency has a different defaultScope settings.
+        return dependencyId.changeScope(currentlyExportedDep.scope);
+      }
+      return dependencyId.changeScope(remoteScope);
+    }
+    return dependencyId;
+  }
+  function getBitIdsWithUpdatedScope(bitIds: BitIds): BitIds {
+    const updatedIds = bitIds.map((id) => getIdWithUpdatedScope(id));
+    return BitIds.fromArray(updatedIds);
   }
 }
