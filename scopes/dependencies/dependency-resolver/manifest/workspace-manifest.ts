@@ -1,7 +1,7 @@
 import { SemVer } from 'semver';
 
-import { ComponentsManifestsMap, DependenciesObjectDefinition } from '../types';
-import { Manifest, ManifestToJsonOptions } from './manifest';
+import { ComponentsManifestsMap } from '../types';
+import { Manifest, ManifestToJsonOptions, ManifestDependenciesObject } from './manifest';
 
 export interface WorkspaceManifestToJsonOptions extends ManifestToJsonOptions {
   includeDir?: boolean;
@@ -12,7 +12,7 @@ export class WorkspaceManifest extends Manifest {
     // TODO: please prefer readonly on public
     public name: string,
     public version: SemVer,
-    public dependencies: DependenciesObjectDefinition,
+    public dependencies: ManifestDependenciesObject,
     private rootDir: string,
     public componentsManifestsMap: ComponentsManifestsMap
   ) {
