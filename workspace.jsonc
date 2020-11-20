@@ -84,8 +84,6 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.3",
         "@teambit/evangelist.surfaces.tooltip": "0.5.3",
         "@teambit/evangelist.theme.icon-font": "^0.5.3",
-        "@teambit/explorer.ui.component-card": "^0.6.2",
-        "@teambit/explorer.ui.component-grid": "^0.6.2",
         "@teambit/harmony": "0.2.7",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
@@ -109,6 +107,7 @@
         "@types/react-tabs": "^2.3.2",
         "@types/react-transition-group": "^4.4.0",
         "@types/socket.io-client": "^1.4.33",
+        "@types/url-parse": "1.4.3",
         "@types/webpack-dev-server": "^3.10.1",
         "@types/webpack-merge": "^4.1.5",
         "@yarnpkg/cli": "2.3.2",
@@ -195,7 +194,7 @@
         "react-dev-utils": "^10.2.1",
         "react-dom": "^16.13.1",
         "react-error-overlay": "^6.0.7",
-        "react-flow-renderer": "6.0.0",
+        "react-flow-renderer": "^7.1.2",
         "react-hot-loader": "^4.12.21",
         "react-live": "^2.2.2",
         "react-router-dom": "^5.2.0",
@@ -218,6 +217,7 @@
         "typedoc": "0.18.0",
         "typescript-language-server": "0.4.0",
         "url-loader": "^4.1.0",
+        "url-parse": "1.4.7",
         "vscode-languageclient": "6.1.3",
         "vscode-languageserver": "6.1.1",
         "vscode-ws-jsonrpc": "0.2.0",
@@ -233,7 +233,7 @@
         "react": "^16.13.1",
         "browserslist": "^4",
         "mz": "^2.7.0",
-        "bit-bin": "14.8.9-dev.151",
+        "bit-bin": "14.8.9-dev.155",
         "graphql": "^14.3.1",
         "react-dom": "^16.13.1"
       }
@@ -263,7 +263,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.151",
+            "bit-bin": "14.8.9-dev.155",
             "react-dom": "^16.13.1"
           }
         }
@@ -368,7 +368,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.151",
+            "bit-bin": "14.8.9-dev.155",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

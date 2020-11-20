@@ -2,7 +2,7 @@ import { ComponentConfig, ComponentFS } from '@teambit/component';
 import { PathLinux } from 'bit-bin/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
-import { DependencyLifecycleType, PackageName, SemverVersion } from './dependencies';
+import { PackageName } from './dependencies';
 
 export type RegistryName = string;
 
@@ -16,79 +16,11 @@ export type Registry = {
 
 export type RegistriesMap = Record<RegistryName, Registry>;
 
-/**
- * Allowed values are valid semver values and the "-" sign.
- */
-export type SemverVersionRule = SemverVersion | '-';
-export type DetailedDependencyPolicy = {
-  version: SemverVersion;
-  /**
-   * Force this dependency even if its not in use (useful for adding @types/x from example)
-   */
-  force?: boolean;
-};
-
-// TODO: add DetailedDependencyPolicy once support the force prop
-// export type DependencyPolicy = SemverVersionRule | DetailedDependencyPolicy;
-export type DependencyPolicy = SemverVersionRule;
-
-export interface DependenciesPolicyObject {
-  [dependencyId: string]: DependencyPolicy;
-}
-
-export interface DependenciesPolicy extends WorkspaceDependenciesPolicy {
-  devDependencies?: DependenciesPolicyObject;
-}
-
-export interface WorkspaceDependenciesPolicy {
-  // There is no dev dependencies here since to decide if a dependency is a dev dependency or runtime dependency
-  // we calculate it based on the dev files pattern
-  dependencies?: DependenciesPolicyObject;
-  peerDependencies?: DependenciesPolicyObject;
-}
-
-export interface DependencyResolverWorkspaceConfig {
-  policy: WorkspaceDependenciesPolicy;
-  /**
-   * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
-   * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
-   * and totally removes the need of a 'node_modules' directory in your project.
-   */
-  packageManager: string;
-  /**
-   * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
-   * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
-   * an invalid state that can cause build failures or incompatible dependency versions.
-   * (For historical reasons, JavaScript package managers generally do not treat this invalid
-   * state as an error.)
-   *
-   * The default value is false to avoid legacy compatibility issues.
-   * It is strongly recommended to set strictPeerDependencies=true.
-   */
-  strictPeerDependencies: boolean;
-  /**
-   * map of extra arguments to pass to the configured package manager upon the installation
-   * of dependencies.
-   */
-  packageManagerArgs: string[];
-
-  /**
-   * regex to determine whether a file is a file meant for development purposes.
-   */
-  devFilePatterns: string[];
-}
-
-export interface DependencyResolverVariantConfig {
-  policy: DependenciesPolicy;
-}
-
 // Exact format TBD
 export interface RawComponentState {
   filesystem: ComponentFS;
   config: ComponentConfig;
 }
-
-export type DependencyType = 'package' | 'component';
 
 /**
  * Import Specifier data.
@@ -128,14 +60,6 @@ export type RelativePath = {
   importSource?: string; // available when isCustomResolveUsed=true, contains the import path. e.g. "import x from 'src/utils'", importSource is 'src/utils'.
 };
 
-interface LegacyDependencyDefinition {
-  dependencyId: string;
-  dependencyVersion: SemverVersion;
-  type: DependencyType;
-  // Used for legacy support
-  relativePaths?: RelativePath[];
-}
-
 /**
  * A definition of one dependency statement in a file
  * For example `import('something')` or require('something')
@@ -152,25 +76,4 @@ interface FileDependencyDefinition {
 
 export type FileDependenciesDefinition = FileDependencyDefinition[];
 
-export interface LegacyDependenciesDefinition {
-  dependencies?: LegacyDependencyDefinition[];
-  devDependencies?: LegacyDependencyDefinition[];
-  peerDependencies?: LegacyDependencyDefinition[];
-}
-
-export interface DependenciesObjectDefinition {
-  dependencies?: DepObjectValue;
-  devDependencies?: DepObjectValue;
-  peerDependencies?: DepObjectValue;
-}
-
-export type DepObjectValue = Record<PackageName, SemverVersion>;
-export type DepObjectKeyName = 'dependencies' | 'devDependencies' | 'peerDependencies';
-
 export type ComponentsManifestsMap = Map<PackageName, ComponentManifest>;
-
-export type PolicyDep = {
-  packageName: string;
-  version: string;
-  lifecycleType: DependencyLifecycleType;
-};

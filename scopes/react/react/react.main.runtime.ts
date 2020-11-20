@@ -20,7 +20,7 @@ import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
-import { DependenciesPolicy } from '@teambit/dependency-resolver';
+import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
@@ -164,7 +164,7 @@ export class ReactMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: DependenciesPolicy) {
+  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
     });

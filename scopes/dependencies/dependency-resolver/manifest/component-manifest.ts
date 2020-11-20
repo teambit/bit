@@ -1,14 +1,13 @@
 import { Component } from '@teambit/component';
 import { SemVer } from 'semver';
 
-import { DependenciesObjectDefinition } from '../types';
-import { Manifest } from './manifest';
+import { Manifest, ManifestDependenciesObject } from './manifest';
 
 export class ComponentManifest extends Manifest {
   constructor(
     public name: string,
     public version: SemVer,
-    public dependencies: DependenciesObjectDefinition,
+    public dependencies: ManifestDependenciesObject,
     public component: Component
   ) {
     super(name, version, dependencies);

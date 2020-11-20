@@ -21,7 +21,7 @@ import {
   DependencyResolverMain,
   PackageManagerInstallOptions,
   ComponentDependency,
-  PolicyDep,
+  WorkspacePolicyEntry,
   DependencyResolverAspect,
   DependencyList,
 } from '@teambit/dependency-resolver';
@@ -1084,18 +1084,20 @@ export class Workspace implements ComponentFactory {
         })
       );
       const resolvedPackages = await Promise.all(resolvedPackagesP);
-      const resolvedPackagesWithType: PolicyDep[] = [];
+      const newWorkspacePolicyEntries: WorkspacePolicyEntry[] = [];
       resolvedPackages.forEach((resolvedPackage) => {
         if (resolvedPackage.version) {
-          resolvedPackagesWithType.push({
-            version: resolvedPackage.version,
-            packageName: resolvedPackage.packageName,
+          newWorkspacePolicyEntries.push({
+            dependencyId: resolvedPackage.packageName,
+            value: {
+              version: resolvedPackage.version,
+            },
             lifecycleType: options?.lifecycleType || 'runtime',
           });
         }
       });
       if (!options?.variants) {
-        this.dependencyResolver.updateRootPolicy(resolvedPackagesWithType, {
+        this.dependencyResolver.addToRootPolicy(newWorkspacePolicyEntries, {
           updateExisting: options?.updateExisting ?? false,
         });
       } else {
@@ -1112,23 +1114,9 @@ export class Workspace implements ComponentFactory {
     });
     const installationMap = await this.getComponentsDirectory([]);
     const packageJson = this.consumer.packageJson?.packageJsonObject || {};
-    const depsFromPJson = packageJson.dependencies || {};
-    const devDepsFromPJson = packageJson.devDependencies || {};
-    const peerDepsFromPJson = packageJson.peerDependencies || {};
-    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
-    const rootDepsObject = {
-      dependencies: {
-        ...depsFromPJson,
-        ...workspacePolicy.dependencies,
-      },
-      devDependencies: {
-        ...devDepsFromPJson,
-      },
-      peerDependencies: {
-        ...peerDepsFromPJson,
-        ...workspacePolicy.peerDependencies,
-      },
-    };
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+    const policyFromPackageJson = this.dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
+    const mergedRootPolicy = this.dependencyResolver.mergeWorkspacePolices([policyFromPackageJson, workspacePolicy]);
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
@@ -1138,7 +1126,7 @@ export class Workspace implements ComponentFactory {
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
     };
-    await installer.install(this.path, rootDepsObject, installationMap, installOptions);
+    await installer.install(this.path, mergedRootPolicy, installationMap, installOptions);
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);

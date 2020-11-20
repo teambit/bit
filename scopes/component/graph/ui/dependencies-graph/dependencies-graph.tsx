@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, HTMLAttributes } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect } from 'react';
 import classnames from 'classnames';
 import ReactFlow, {
   Controls,
@@ -9,7 +9,9 @@ import ReactFlow, {
   Handle,
   Position,
   NodeProps,
+  ReactFlowProps,
 } from 'react-flow-renderer';
+import { ComponentID } from '@teambit/component';
 
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import { ComponentNode } from '../component-node';
@@ -20,28 +22,26 @@ import { ComponentGraphContext } from './graph-context';
 
 import styles from './dependencies-graph.module.scss';
 
-const NodeTypes: NodeTypesType = {
-  ComponentNode: function ComponentNodeContainer(props: NodeProps) {
-    const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
+function ComponentNodeContainer(props: NodeProps) {
+  const { sourcePosition = Position.Top, targetPosition = Position.Bottom, data, id } = props;
 
-    return (
-      <div key={id}>
-        <Handle type="target" position={targetPosition} isConnectable={false} />
-        <Handle type="source" position={sourcePosition} isConnectable={false} />
-        <ComponentNode node={data.node} type={data.type} />
-      </div>
-    );
-  },
-};
+  return (
+    <div key={id}>
+      <Handle type="target" position={targetPosition} isConnectable={false} />
+      <Handle type="source" position={sourcePosition} isConnectable={false} />
+      <ComponentNode node={data.node} type={data.type} />
+    </div>
+  );
+}
 
-// temporary type, until react-flow-renderer will export ReactFlowProps
-type ReactFlowProps = Omit<HTMLAttributes<HTMLDivElement>, 'onLoad'>;
+const NodeTypes: NodeTypesType = { ComponentNode: ComponentNodeContainer };
+
 export type DependenciesGraphProps = {
-  rootNode: string;
+  rootNode: ComponentID;
   graph: GraphModel;
   componentWidgets: ComponentWidgetSlot;
   onLoad?: (instance: OnLoadParams) => void;
-} & ReactFlowProps;
+} & Omit<ReactFlowProps, 'elements'>;
 
 export function DependenciesGraph({
   graph,
@@ -51,16 +51,25 @@ export function DependenciesGraph({
   onLoad,
   ...rest
 }: DependenciesGraphProps) {
+  const graphRef = useRef<OnLoadParams>();
   const elements = calcElements(graph, { rootNode });
   const context = useMemo(() => ({ componentWidgets }), [componentWidgets]);
 
   const handleLoad = useCallback(
     (instance: OnLoadParams) => {
+      graphRef.current = instance;
       instance.fitView();
       onLoad?.(instance);
     },
     [onLoad]
   );
+
+  // clear ref on unmount
+  useEffect(() => () => (graphRef.current = undefined), []);
+
+  useEffect(() => {
+    graphRef.current?.fitView();
+  }, [graph]);
 
   return (
     <ComponentGraphContext.Provider value={context}>
