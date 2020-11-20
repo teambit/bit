@@ -2046,6 +2046,56 @@
                 "test": false
             },
             {
+                "name": "index.ts",
+                "relativePath": "policy/index.ts",
+                "test": false
+            },
+            {
+                "name": "policy.ts",
+                "relativePath": "policy/policy.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "policy/variant-policy/index.ts",
+                "test": false
+            },
+            {
+                "name": "variant-policy-factory.ts",
+                "relativePath": "policy/variant-policy/variant-policy-factory.ts",
+                "test": false
+            },
+            {
+                "name": "variant-policy.ts",
+                "relativePath": "policy/variant-policy/variant-policy.ts",
+                "test": false
+            },
+            {
+                "name": "entry-already-exist.ts",
+                "relativePath": "policy/workspace-policy/exceptions/entry-already-exist.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "policy/workspace-policy/exceptions/index.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "policy/workspace-policy/index.ts",
+                "test": false
+            },
+            {
+                "name": "workspace-policy-factory.ts",
+                "relativePath": "policy/workspace-policy/workspace-policy-factory.ts",
+                "test": false
+            },
+            {
+                "name": "workspace-policy.ts",
+                "relativePath": "policy/workspace-policy/workspace-policy.ts",
+                "test": false
+            },
+            {
                 "name": "readme.md",
                 "relativePath": "readme.md",
                 "test": false
