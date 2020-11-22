@@ -4670,6 +4670,30 @@
         "exported": false,
         "lanes": []
     },
+     "ui/sidebar-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "sidebar-link.module.scss",
+                "relativePath": "sidebar-link.module.scss",
+                "test": false
+            },
+            {
+                "name": "sidebar-link.tsx",
+                "relativePath": "sidebar-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/sidebar-link",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "teambit.scope/scope@0.0.147": {
         "files": [
             {
