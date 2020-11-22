@@ -3968,6 +3968,30 @@
         "exported": false,
         "lanes": []
     },
+    "sidebar/ui/link-section": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "link-section.module.scss",
+                "relativePath": "link-section.module.scss",
+                "test": false
+            },
+            {
+                "name": "link-section.tsx",
+                "relativePath": "link-section.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/link-section",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "string/capitalize@0.0.135": {
         "files": [
             {
@@ -5456,6 +5480,30 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/side-bar",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/sidebar-link": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "sidebar-link.module.scss",
+                "relativePath": "sidebar-link.module.scss",
+                "test": false
+            },
+            {
+                "name": "sidebar-link.tsx",
+                "relativePath": "sidebar-link.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/sidebar-link",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []
