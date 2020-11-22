@@ -4646,54 +4646,6 @@
         "exported": true,
         "lanes": []
     },
-    "sidebar/ui/link-section": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "link-section.module.scss",
-                "relativePath": "link-section.module.scss",
-                "test": false
-            },
-            {
-                "name": "link-section.tsx",
-                "relativePath": "link-section.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/link-section",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-     "ui/sidebar-link": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "sidebar-link.module.scss",
-                "relativePath": "sidebar-link.module.scss",
-                "test": false
-            },
-            {
-                "name": "sidebar-link.tsx",
-                "relativePath": "sidebar-link.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/sidebar-link",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
     "teambit.scope/scope@0.0.147": {
         "files": [
             {
@@ -4744,11 +4696,6 @@
             {
                 "name": "put.route.ts",
                 "relativePath": "routes/put.route.ts",
-                "test": false
-            },
-            {
-                "name": "scope-badge.ts",
-                "relativePath": "scope-badge.ts",
                 "test": false
             },
             {
@@ -6832,6 +6779,54 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "ui/surfaces/menu/link-item": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "link-item.module.scss",
+                "relativePath": "link-item.module.scss",
+                "test": false
+            },
+            {
+                "name": "link-item.tsx",
+                "relativePath": "link-item.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/surfaces/menu/link-item",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/surfaces/menu/section": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "section.module.scss",
+                "relativePath": "section.module.scss",
+                "test": false
+            },
+            {
+                "name": "section.tsx",
+                "relativePath": "section.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/surfaces/menu/section",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.161"

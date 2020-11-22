@@ -4,24 +4,20 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
 import { RouteSlot } from '@teambit/ui.react-router.slot-router';
 import { Menu } from '@teambit/ui.menu';
-import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
+import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
-import React, { ComponentType } from 'react';
+import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
-import { SidebarLink } from '@teambit/ui.sidebar-link';
+import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
 import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
 
 export type SidebarWidgetSlot = SlotRegistry<ComponentTreeNode>;
-
-export type SidebarLinkType = ComponentType;
-
-export type SidebarLinkSlot = SlotRegistry<SidebarLinkType[]>;
 
 export class WorkspaceUI {
   constructor(
@@ -49,7 +45,7 @@ export class WorkspaceUI {
     /**
      * sidebar link slot
      */
-    private sidebarLinkSlot: SidebarLinkSlot,
+    private sidebarLinkSlot: SidebarItemSlot,
 
     private commandBarUI: CommandBarUI,
 
@@ -81,7 +77,7 @@ export class WorkspaceUI {
     this.componentSearcher.update(components);
   };
 
-  registerSidebarLink = (...links: SidebarLinkType[]) => {
+  registerSidebarLink = (...links: SidebarItem[]) => {
     this.sidebarLinkSlot.register(links);
   };
 
@@ -148,7 +144,7 @@ export class WorkspaceUI {
     Slot.withType<RouteProps>(),
     Slot.withType<ComponentTreeNode>(),
     Slot.withType<MenuItemSlot>(),
-    Slot.withType<SidebarLinkSlot>(),
+    Slot.withType<SidebarItemSlot>(),
   ];
 
   static async provider(
@@ -167,7 +163,7 @@ export class WorkspaceUI {
       RouteSlot,
       MenuItemSlot,
       SidebarWidgetSlot,
-      SidebarLinkSlot
+      SidebarItemSlot
     ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
@@ -189,9 +185,9 @@ export class WorkspaceUI {
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
     workspaceUI.registerSidebarLink(() => (
-      <SidebarLink href="/" icon="comps">
+      <MenuLinkItem href="/" icon="comps">
         Overview
-      </SidebarLink>
+      </MenuLinkItem>
     ));
 
     workspaceUI.menuSlot.register([

@@ -5,20 +5,20 @@ import React, { ComponentType } from 'react';
 
 import { Drawer } from './drawer';
 import { SidebarAspect } from './sidebar.aspect';
-import { SideBar } from './ui';
+import { SideBar, SideBarProps } from './ui';
 
 export type ComponentTypeProps = {
   component: ComponentModel;
 };
 
-export type SidebarLink = ComponentType;
+export type SidebarItem = ComponentType;
 
-export type LinkSlot = SlotRegistry<SidebarLink[]>;
+export type SidebarItemSlot = SlotRegistry<SidebarItem[]>;
 
 export type DrawerSlot = SlotRegistry<Drawer>;
 
 export class SidebarUI {
-  constructor(private drawerSlot: DrawerSlot, private linkSlot: LinkSlot) {}
+  constructor(private drawerSlot: DrawerSlot) {}
 
   /**
    * register a new drawer into the component sidebar.
@@ -29,28 +29,20 @@ export class SidebarUI {
   }
 
   /**
-   * register a new drawer directly into the sidebar.
-   */
-  registerLink(...links: SidebarLink[]) {
-    this.linkSlot.register(links);
-    return this;
-  }
-
-  /**
    * render the sidebar.
    */
-  render = (props) => {
-    return <SideBar {...props} drawerSlot={this.drawerSlot} linkSlot={props.linkSlot}></SideBar>;
+  render = (props: Partial<SideBarProps>) => {
+    return <SideBar drawerSlot={this.drawerSlot} {...props}></SideBar>;
   };
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<Drawer>(), Slot.withType<SidebarLink>()];
+  static slots = [Slot.withType<Drawer>()];
 
   static dependencies = [];
 
-  static async provider(deps, config, [drawerSlot, linkSlot]: [DrawerSlot, LinkSlot]) {
-    return new SidebarUI(drawerSlot, linkSlot);
+  static async provider(deps, config, [drawerSlot]: [DrawerSlot]) {
+    return new SidebarUI(drawerSlot);
   }
 }
 

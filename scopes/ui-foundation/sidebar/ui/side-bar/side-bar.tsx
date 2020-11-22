@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
 import { LinkSection } from '@teambit/sidebar.ui.link-section';
-import { DrawerSlot, LinkSlot } from '../../sidebar.ui.runtime';
+import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import { DrawerUI } from '../drawer';
 import styles from './side-bar.module.scss';
 
@@ -11,16 +11,16 @@ export type SideBarProps = {
    */
   drawerSlot: DrawerSlot;
 
-  linkSlot?: LinkSlot;
-};
+  linkSlot?: SidebarItemSlot;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * side bar component.
  */
-export function SideBar({ drawerSlot, linkSlot }: SideBarProps) {
+export function SideBar({ drawerSlot, linkSlot, ...rest }: SideBarProps) {
   const [openDrawerList, onToggleDrawer] = useState([drawerSlot.toArray()[0][0]]);
+  const links = useMemo(() => flatten(linkSlot?.values()), [linkSlot]);
 
-  const links = flatten(linkSlot?.values());
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
@@ -31,7 +31,7 @@ export function SideBar({ drawerSlot, linkSlot }: SideBarProps) {
   };
 
   return (
-    <div className={styles.sidebar}>
+    <div {...rest} className={styles.sidebar}>
       <LinkSection links={links} />
       {drawerSlot.toArray().map(([id, drawer]) => {
         if (!drawer || !drawer.name) return null;
