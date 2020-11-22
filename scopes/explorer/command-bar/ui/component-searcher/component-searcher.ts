@@ -3,10 +3,12 @@ import memoizeOne from 'memoize-one';
 import { ComponentModel } from '@teambit/component';
 import { SearchProvider, CommanderSearchResult } from '../../types';
 
-const searchedKeys: (keyof CommanderSearchResult)[] = ['displayName'];
+type ComponentSearchResult = CommanderSearchResult & { name: string };
+
+const searchedKeys: (keyof ComponentSearchResult)[] = ['displayName', 'name'];
 
 export class ComponentSearcher implements SearchProvider {
-  private fuseCommands = new Fuse<CommanderSearchResult>([], {
+  private fuseCommands = new Fuse<ComponentSearchResult>([], {
     // weight can be included here.
     // fields loses weight the longer they get, so it seems ok for now.
     keys: searchedKeys,
@@ -21,6 +23,7 @@ export class ComponentSearcher implements SearchProvider {
     const searchResults = components.map((c) => ({
       id: c.id.fullName,
       displayName: c.id.fullName,
+      name: c.id.name,
       handler: () => navigate(`/${c.id.fullName}`),
       icon: c.environment?.icon,
       iconAlt: c.environment?.id,
@@ -29,7 +32,7 @@ export class ComponentSearcher implements SearchProvider {
     this.fuseCommands.setCollection(searchResults);
   });
 
-  search(term: string, limit: number): CommanderSearchResult[] {
+  search(term: string, limit: number): ComponentSearchResult[] {
     const searchResults = this.fuseCommands.search(term, { limit });
     return searchResults.map((x) => x.item);
   }

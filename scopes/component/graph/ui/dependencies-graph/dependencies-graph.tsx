@@ -65,7 +65,7 @@ export function DependenciesGraph({
   );
 
   // clear ref on unmount
-  useEffect(() => (graphRef.current = undefined), []);
+  useEffect(() => () => (graphRef.current = undefined), []);
 
   useEffect(() => {
     graphRef.current?.fitView();

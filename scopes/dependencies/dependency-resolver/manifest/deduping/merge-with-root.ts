@@ -2,7 +2,7 @@ import { forEachObjIndexed } from 'ramda';
 import { SemVer } from 'semver';
 
 import { PackageName } from '../../dependencies';
-import { DependenciesObjectDefinition, DepObjectKeyName, DepObjectValue } from '../../types';
+import { ManifestDependenciesObject, ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
 import { DedupedDependencies } from './dedupe-dependencies';
 
 /**
@@ -12,12 +12,10 @@ import { DedupedDependencies } from './dedupe-dependencies';
  * it used for installing deps in the root level before any component use it
  * otherwise they won't be install, and you will need to re-run install after writing the require statement in the code
  *
- * @param {DependenciesObjectDefinition} rootDependencies
- * @param {DedupedDependencies} dedupedDependencies
  * @returns {DedupedDependencies}
  */
 export function mergeWithRootDeps(
-  rootDependencies: DependenciesObjectDefinition,
+  rootDependencies: ManifestDependenciesObject,
   dedupedDependencies: DedupedDependencies
 ): DedupedDependencies {
   forEachObjIndexed(mergeSpecificLifeCycleRootDepsToDedupedDependencies(dedupedDependencies), rootDependencies);
@@ -25,12 +23,15 @@ export function mergeWithRootDeps(
 }
 
 function mergeSpecificLifeCycleRootDepsToDedupedDependencies(dedupedDependencies: DedupedDependencies) {
-  return (deps: DepObjectValue, depKeyName: DepObjectKeyName) => {
+  return (deps: DepObjectValue, depKeyName: ManifestDependenciesKeysNames) => {
     forEachObjIndexed(mergeRootDepToDedupedDependencies(dedupedDependencies, depKeyName), deps);
   };
 }
 
-function mergeRootDepToDedupedDependencies(dedupedDependencies: DedupedDependencies, depKeyName: DepObjectKeyName) {
+function mergeRootDepToDedupedDependencies(
+  dedupedDependencies: DedupedDependencies,
+  depKeyName: ManifestDependenciesKeysNames
+) {
   return (range: SemVer, depId: PackageName) => {
     // Do not add it if it's already exist from the components calculation
     if (isDepExistInAnyOfTheRootDedupedDependencies(depId, dedupedDependencies)) return;

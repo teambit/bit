@@ -490,18 +490,14 @@ export default class Component extends BitObject {
   async collectVersionsObjects(repo: Repository, versions: string[]): Promise<ObjectItem[]> {
     const collectRefs = async (): Promise<Ref[]> => {
       const refsCollection: Ref[] = [];
-
-      async function addRefs(object: BitObject) {
-        const refs = object.refs();
-        const objs = await Promise.all(refs.map((ref) => ref.load(repo, true)));
-        refsCollection.push(...refs);
-        await Promise.all(objs.map((obj) => addRefs(obj)));
-      }
-
-      const versionsRefs = versions.map((version) => this.versions[version]);
+      const versionsRefs = versions.map((version) => this.getRef(version) as Ref);
       refsCollection.push(...versionsRefs);
-      const versionsObjects = await Promise.all(versions.map((version) => this.versions[version].load(repo)));
-      await Promise.all(versionsObjects.map((versionObject) => addRefs(versionObject)));
+      // @ts-ignore
+      const versionsObjects: Version[] = await Promise.all(versionsRefs.map((versionRef) => versionRef.load(repo)));
+      versionsObjects.forEach((versionObject) => {
+        const refs = versionObject.refsWithOptions(false, true);
+        refsCollection.push(...refs);
+      });
       return refsCollection;
     };
     const refs = await collectRefs();
@@ -689,9 +685,11 @@ export default class Component extends BitObject {
     this.state.versions[version].local = true;
   }
 
+  /**
+   * local versions that are not exported. to get also local snaps, use `getLocalTagsOrHashes()`.
+   */
   getLocalVersions(): string[] {
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
   }
