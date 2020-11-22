@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
-import { LinkSection } from '@teambit/sidebar.ui.link-section';
+import { MenuSection } from '@teambit/ui.surfaces.menu.section';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import { DrawerUI } from '../drawer';
 import styles from './side-bar.module.scss';
@@ -32,7 +32,7 @@ export function SideBar({ drawerSlot, linkSlot, ...rest }: SideBarProps) {
 
   return (
     <div {...rest} className={styles.sidebar}>
-      <LinkSection links={links} />
+      <MenuSection items={links} />
       {drawerSlot.toArray().map(([id, drawer]) => {
         if (!drawer || !drawer.name) return null;
         return (

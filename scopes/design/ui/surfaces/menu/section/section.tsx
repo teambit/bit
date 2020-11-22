@@ -2,17 +2,17 @@ import React, { ComponentType } from 'react';
 import styles from './section.module.scss';
 
 export type MenuSectionProps = {
-  links: ComponentType[];
+  items: ComponentType[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function MenuSection({ links, ...rest }: MenuSectionProps) {
-  if (!links || links.length === 0) return null;
+export function MenuSection({ items, ...rest }: MenuSectionProps) {
+  if (!items || items.length === 0) return null;
 
   return (
     <div {...rest} className={styles.menuSection}>
-      {links.map((link, index) => {
-        const Link = link;
-        return <Link key={index} />;
+      {items.map((item, index) => {
+        const Item = item;
+        return <Item key={index} />;
       })}
     </div>
   );
