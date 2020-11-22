@@ -1,13 +1,26 @@
 import { SemVer } from 'semver';
+import { PackageName, SemverVersion } from '../dependencies';
 
-import { DependenciesObjectDefinition } from '../types';
+// export type ManifestDependenciesKeys = 'dependencies' | 'devDependencies' | 'peerDependencies';
+
+export type ManifestDependenciesKeys = {
+  dependencies: 'dependencies';
+  devDependencies: 'devDependencies';
+  peerDependencies: 'peerDependencies';
+};
+
+export type ManifestDependenciesKeysNames = keyof ManifestDependenciesKeys;
+
+export type ManifestDependenciesObject = Partial<Record<ManifestDependenciesKeysNames, DepObjectValue>>;
+
+export type DepObjectValue = Record<PackageName, SemverVersion>;
 
 export interface ManifestToJsonOptions {
   copyPeerToRuntime?: boolean;
 }
 
 export class Manifest {
-  constructor(public name: string, public version: SemVer, public dependencies: DependenciesObjectDefinition) {}
+  constructor(public name: string, public version: SemVer, public dependencies: ManifestDependenciesObject) {}
 
   // Should be implemented on sub classes
   // get dir(): string {
