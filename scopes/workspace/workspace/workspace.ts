@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
@@ -979,6 +980,14 @@ export class Workspace implements ComponentFactory {
       }
       await this.dependencyResolver.persistConfig(this.path);
     }
+    if (options?.import) {
+      this.logger.setStatusLine('importing missing objects');
+      await this.importObjects();
+      this.logger.consoleSuccess();
+    }
+    this.logger.console(
+      `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
+    );
     this.logger.debug(`installing dependencies in workspace with options`, options);
     this.clearCache();
     const components = await this.list();
@@ -1002,13 +1011,11 @@ export class Workspace implements ComponentFactory {
       dependencyFilterFn: depsFilterFn,
     };
     await installer.install(this.path, mergedRootPolicy, installationMap, installOptions);
+    // TODO: this make duplicate
+    // this.logger.consoleSuccess();
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
-    this.logger.setStatusLine('importing missing objects');
-    if (options?.import) {
-      await this.importObjects();
-    }
     this.logger.consoleSuccess();
     return installationMap;
   }
