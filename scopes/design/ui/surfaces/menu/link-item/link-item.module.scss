@@ -1,0 +1,26 @@
+.menuLinkItem {
+  display: flex;
+  align-items: center;
+  padding: 9px 8px 9px 30px;
+  text-decoration: none;
+  color: var(--highlighted-text);
+  font-size: var(--p-xs);
+  &:hover {
+    background: var(--bg-topping-highlight);
+  }
+  .icon {
+    color: var(--text-muted);
+    margin-right: 12px;
+    font-size: var(--p-md);
+  }
+}
+.active {
+  background: var(--muted-color);
+  font-weight: unset;
+  &:hover {
+    background: var(--muted-color);
+  }
+  .icon {
+    color: var(--base-color);
+  }
+}

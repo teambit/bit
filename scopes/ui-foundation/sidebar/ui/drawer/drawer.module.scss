@@ -59,16 +59,17 @@
   }
 }
 
-.link {
-  text-decoration: none;
-  visibility: hidden;
-  opacity: 0;
-  transition: opacity 300ms, visibility 300ms ease-in-out;
-  color: var(--text-muted);
-  &:hover {
-    color: var(--text-highlight);
-  }
-}
+// kept for now until we return the icons to drawer
+// .link {
+//   text-decoration: none;
+//   visibility: hidden;
+//   opacity: 0;
+//   transition: opacity 300ms, visibility 300ms ease-in-out;
+//   color: var(--text-muted);
+//   &:hover {
+//     color: var(--text-highlight);
+//   }
+// }
 
 .drawerContent {
   flex: 1 1;
