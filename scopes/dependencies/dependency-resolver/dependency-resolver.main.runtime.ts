@@ -307,6 +307,10 @@ export class DependencyResolverMain {
     return new DependencyInstaller(packageManager, this.aspectLoader, options.rootDir, cacheRootDir, linkingOptions);
   }
 
+  getPackageManagerName() {
+    return this.config.packageManager;
+  }
+
   getVersionResolver(options: GetVersionResolverOptions = {}) {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
