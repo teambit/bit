@@ -264,7 +264,7 @@ export class ScopeUI {
     scopeUi.registerMenuItem(scopeUi.menuItems);
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerSidebarLink(() => (
-      <MenuLinkItem href="/" icon="comps">
+      <MenuLinkItem exact href="/" icon="comps">
         Overview
       </MenuLinkItem>
     ));
