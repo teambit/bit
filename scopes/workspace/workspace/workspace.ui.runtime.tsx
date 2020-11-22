@@ -1,7 +1,8 @@
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
+import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
+import { RouteSlot } from '@teambit/ui.react-router.slot-router';
 import { Menu } from '@teambit/ui.menu';
 import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';

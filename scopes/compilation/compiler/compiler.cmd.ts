@@ -3,11 +3,9 @@ import { Logger } from '@teambit/logger';
 import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
-
 import type ConsumerComponent from 'bit-bin/dist/consumer/component';
-
 import { formatCompileResults } from './output-formatter';
-import { CompileError, WorkspaceCompiler } from './workspace-compiler';
+import { CompileError, WorkspaceCompiler, CompileOptions } from './workspace-compiler';
 
 // IDs & events
 import { CompilerAspect } from './compiler.aspect';
@@ -26,26 +24,26 @@ export class CompileCmd implements Command {
   alias = '';
   group = 'component';
   options = [
-    ['v', 'verbose', 'showing npm verbose output for inspection'],
-    ['c', 'no-cache', 'ignore component cache when creating dist file'],
+    ['a', 'all', 'all components, not only new and modified'],
+    ['v', 'verbose', 'show more data, such as, dist paths'],
     ['j', 'json', 'return the compile results in json format'],
   ] as CommandOptions;
 
   constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
 
-  async report([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
+  async report([components]: [string[]], compilerOptions: CompileOptions) {
     const startTimestamp = process.hrtime();
     this.logger.setStatusLine('Compiling your components, hold tight.');
     this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
     let outputString = '';
 
-    await this.compile.compileComponents(components, { verbose, noCache });
+    await this.compile.compileComponents(components, compilerOptions);
     const compileTimeLength = process.hrtime(startTimestamp);
 
     outputString += '\n';
     outputString += `  ${chalk.underline('STATUS')}\t${chalk.underline('COMPONENT ID')}\n`;
-    outputString += formatCompileResults(this.componentsStatus, verbose);
+    outputString += formatCompileResults(this.componentsStatus, compilerOptions.verbose);
     outputString += '\n';
 
     outputString += this.getStatusLine(this.componentsStatus, compileTimeLength);
@@ -58,9 +56,9 @@ export class CompileCmd implements Command {
     };
   }
 
-  async json([components]: [string[]], { verbose, noCache }: { verbose: boolean; noCache: boolean }) {
+  async json([components]: [string[]], compilerOptions: CompileOptions) {
     // @ts-ignore
-    const compileResults = await this.compile.compileComponents(components, { verbose, noCache });
+    const compileResults = await this.compile.compileComponents(components, compilerOptions);
     return {
       data: compileResults,
       // @todo: fix the code once compile is ready.

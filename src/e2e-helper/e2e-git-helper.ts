@@ -46,4 +46,16 @@ export default class GitHelper {
     });
     this.scopeHelper.initWorkspace();
   }
+  mimicGitCloneLocalProjectHarmony(cloneWithComponentsFiles = true) {
+    fs.removeSync(path.join(this.scopes.localPath, '.bit'));
+    if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.scopes.localPath, 'components'));
+    // delete all node-modules from all directories
+    const directories = glob.sync(path.normalize('**/'), { cwd: this.scopes.localPath, dot: true });
+    directories.forEach((dir) => {
+      if (dir.includes('node_modules')) {
+        fs.removeSync(path.join(this.scopes.localPath, dir));
+      }
+    });
+    this.scopeHelper.initHarmonyWorkspace();
+  }
 }

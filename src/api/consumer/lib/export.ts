@@ -119,6 +119,7 @@ async function exportComponents({
 
   const { exported, updatedLocally, newIdsOnRemote } = await exportMany({
     scope: consumer.scope,
+    isLegacy: consumer.isLegacy,
     ids: idsToExport,
     remoteName: remote,
     includeDependencies,

@@ -8,14 +8,14 @@ import {
   PEER_DEP_LIFECYCLE_TYPE,
   RUNTIME_DEP_LIFECYCLE_TYPE,
 } from '../../dependencies/constants';
-import { DependenciesObjectDefinition } from '../../types';
+import { ManifestDependenciesObject } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';
 import { DedupedDependencies, DedupedDependenciesPeerConflicts } from './dedupe-dependencies';
-import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
+import { PackageNameIndex, PackageNameIndexItem, PackageNameIndexComponentItem } from './index-by-dep-id';
 
 type ItemsGroupedByRangeOrVersion = {
-  ranges: PackageNameIndexItem[];
-  versions: PackageNameIndexItem[];
+  ranges: PackageNameIndexComponentItem[];
+  versions: PackageNameIndexComponentItem[];
 };
 
 type MostCommonVersion = {
@@ -53,23 +53,53 @@ export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependen
 
   // TODO: handle git urls
 
-  depIdIndex.forEach((indexItems, packageName) => {
+  depIdIndex.forEach((indexItem, packageName) => {
     let toContinue;
-    toContinue = addOneOccurrenceToRoot(result, packageName, indexItems);
+    toContinue = handlePreserved(result, packageName, indexItem);
     if (!toContinue) return;
-    toContinue = handlePeersOnly(result, packageName, indexItems);
+    toContinue = addOneOccurrenceToRoot(result, packageName, indexItem.componentItems);
     if (!toContinue) return;
-    const groupedByRangeOrVersion = groupByRangeOrVersion(indexItems);
+    toContinue = handlePeersOnly(result, packageName, indexItem.componentItems);
+    if (!toContinue) return;
+    const groupedByRangeOrVersion = groupByRangeOrVersion(indexItem.componentItems);
     if (groupedByRangeOrVersion.versions.length > 0 && groupedByRangeOrVersion.ranges.length === 0) {
-      handleExactVersionsOnly(result, packageName, indexItems);
+      handleExactVersionsOnly(result, packageName, indexItem.componentItems);
     } else if (groupedByRangeOrVersion.versions.length === 0 && groupedByRangeOrVersion.ranges.length > 0) {
-      handleRangesOnly(result, packageName, indexItems);
+      handleRangesOnly(result, packageName, indexItem.componentItems);
     } else {
-      handleRangesAndVersions(result, packageName, indexItems, groupedByRangeOrVersion);
+      handleRangesAndVersions(result, packageName, indexItem.componentItems, groupedByRangeOrVersion);
     }
   });
 
   return result;
+}
+
+function handlePreserved(
+  dedupedDependencies: DedupedDependencies,
+  packageName: PackageName,
+  indexItem: PackageNameIndexItem
+): boolean {
+  const preservedVersion = indexItem.metadata.preservedVersion;
+  // Not preserved, move on
+  if (!preservedVersion) {
+    return true;
+  }
+
+  const preservedLifecycleType = indexItem.metadata.preservedLifecycleType;
+
+  const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[preservedLifecycleType || 'dependencies'];
+  dedupedDependencies.rootDependencies[keyName][packageName] = preservedVersion;
+
+  const filterFunc = (item: PackageNameIndexComponentItem) => {
+    // items which are intersect with the preserved version won't needed to be installed nested in the component
+    // this in very rare cases might create bugs in case the version are intersects, but the real version in the registry
+    // which satisfies the preserved not satisfy the item range.
+    // In such case I would expect to get version not exist when coming to install the version in the nested component
+    return !!intersectNoThrow(item.range, preservedVersion);
+  };
+
+  indexItem.componentItems.map(addToComponentDependenciesMapInDeduped(dedupedDependencies, packageName, filterFunc));
+  return false;
 }
 
 /**
@@ -77,12 +107,12 @@ export function hoistDependencies(depIdIndex: PackageNameIndex): DedupedDependen
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
- * @param {PackageNameIndexItem} indexItem
+ * @param {PackageNameIndexComponentItem} indexItem
  */
 function addOneOccurrenceToRoot(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  indexItems: PackageNameIndexItem[]
+  indexItems: PackageNameIndexComponentItem[]
 ): boolean {
   if (indexItems.length > 1) {
     return true;
@@ -101,13 +131,13 @@ function addOneOccurrenceToRoot(
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
- * @param {PackageNameIndexItem[]} indexItems
+ * @param {PackageNameIndexComponentItem[]} indexItems
  * @returns {boolean}
  */
 function handlePeersOnly(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  indexItems: PackageNameIndexItem[]
+  indexItems: PackageNameIndexComponentItem[]
 ): boolean {
   const nonPeerItems = indexItems.filter((item) => {
     return item.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE;
@@ -147,12 +177,12 @@ function handlePeersOnly(
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
- * @param {PackageNameIndexItem[]} indexItems
+ * @param {PackageNameIndexComponentItem[]} indexItems
  */
 function handleExactVersionsOnly(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  indexItems: PackageNameIndexItem[]
+  indexItems: PackageNameIndexComponentItem[]
 ): void {
   const allVersions = indexItems.map((item) => item.range);
 
@@ -178,12 +208,12 @@ function handleExactVersionsOnly(
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
- * @param {PackageNameIndexItem[]} indexItems
+ * @param {PackageNameIndexComponentItem[]} indexItems
  */
 function handleRangesOnly(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  indexItems: PackageNameIndexItem[]
+  indexItems: PackageNameIndexComponentItem[]
 ): void {
   const rangesVersions = indexItems.map((item) => item.range);
   const bestRange = findBestRange(rangesVersions);
@@ -213,13 +243,13 @@ function handleRangesOnly(
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
- * @param {PackageNameIndexItem[]} indexItems
+ * @param {PackageNameIndexComponentItem[]} indexItems
  * @param {ItemsGroupedByRangeOrVersion} groups
  */
 function handleRangesAndVersions(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  indexItems: PackageNameIndexItem[],
+  indexItems: PackageNameIndexComponentItem[],
   groups: ItemsGroupedByRangeOrVersion
 ): void {
   const allVersions = groups.versions.map((item) => item.range);
@@ -321,10 +351,10 @@ function getSortedRangesCombination(ranges: SemverVersion[]): CombinationWithTot
 /**
  * Check if a package should be a dev dependency or runtime dependency by checking if it appears as runtime dependency at least once
  *
- * @param {PackageNameIndexItem[]} indexItems
+ * @param {PackageNameIndexComponentItem[]} indexItems
  * @returns {DependencyLifecycleType}
  */
-function getLifecycleType(indexItems: PackageNameIndexItem[]): DependencyLifecycleType {
+function getLifecycleType(indexItems: PackageNameIndexComponentItem[]): DependencyLifecycleType {
   let result: DependencyLifecycleType = DEV_DEP_LIFECYCLE_TYPE;
   indexItems.forEach((item) => {
     if (item.lifecycleType === RUNTIME_DEP_LIFECYCLE_TYPE) {
@@ -360,15 +390,15 @@ function findMostCommonVersion(versions: SemverVersion[]): MostCommonVersion {
  *
  * @param {DedupedDependencies} dedupedDependencies
  * @param {PackageName} packageName
- * @param {(item: PackageNameIndexItem) => boolean} [filterFunc]
+ * @param {(item: PackageNameIndexComponentItem) => boolean} [filterFunc]
  * @returns
  */
 function addToComponentDependenciesMapInDeduped(
   dedupedDependencies: DedupedDependencies,
   packageName: PackageName,
-  filterFunc?: (item: PackageNameIndexItem) => boolean
+  filterFunc?: (item: PackageNameIndexComponentItem) => boolean
 ) {
-  return (indexItem: PackageNameIndexItem) => {
+  return (indexItem: PackageNameIndexComponentItem) => {
     if (filterFunc && typeof filterFunc === 'function') {
       const toFilter = filterFunc(indexItem);
       if (toFilter) return;
@@ -390,10 +420,10 @@ function addToComponentDependenciesMapInDeduped(
 /**
  * Get an array of index items and group them to items with ranges and items with exact version
  *
- * @param {PackageNameIndexItem[]} indexItems
+ * @param {PackageNameIndexComponentItem[]} indexItems
  * @returns {ItemsGroupedByRangeOrVersion}
  */
-function groupByRangeOrVersion(indexItems: PackageNameIndexItem[]): ItemsGroupedByRangeOrVersion {
+function groupByRangeOrVersion(indexItems: PackageNameIndexComponentItem[]): ItemsGroupedByRangeOrVersion {
   const result: ItemsGroupedByRangeOrVersion = {
     ranges: [],
     versions: [],
@@ -446,10 +476,18 @@ export function getEmptyDedupedDependencies(): DedupedDependencies {
       devDependencies: {},
       peerDependencies: {},
     },
-    componentDependenciesMap: new Map<PackageName, DependenciesObjectDefinition>(),
+    componentDependenciesMap: new Map<PackageName, ManifestDependenciesObject>(),
     issus: {
       peerConflicts: [],
     },
   };
   return result;
+}
+
+function intersectNoThrow(...args): string | undefined {
+  try {
+    return intersect(...args);
+  } catch (e) {
+    return undefined;
+  }
 }
