@@ -1,9 +1,9 @@
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { MainRuntime } from '@teambit/cli';
 import { PkgAspect, PkgMain } from '@teambit/pkg';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { YarnPackageManager } from './yarn.package-manager';
 import { YarnAspect } from './yarn.aspect';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export class YarnMain {
   static dependencies = [DependencyResolverAspect, PkgAspect, LoggerAspect];

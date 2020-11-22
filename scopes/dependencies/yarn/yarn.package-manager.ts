@@ -33,6 +33,7 @@ import npmPlugin from '@yarnpkg/plugin-npm';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
+
 export class YarnPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
