@@ -50,6 +50,8 @@ export class TestCmd implements Command {
         debug: Boolean(debug),
         env: env as string | undefined,
       });
+
+      return <Box></Box>;
     }
     const { seconds } = timer.stop();
 

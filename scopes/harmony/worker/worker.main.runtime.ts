@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-// import { wrap } from 'comlink';
+import { wrap } from 'comlink';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { WorkerAspect } from './worker.aspect';
 
@@ -11,6 +11,20 @@ export class WorkerMain {
   constructor(private workerSlot: WorkerSlot) {}
 
   static runtime = MainRuntime;
+
+  getWorkers() {
+    return this.workerSlot.values();
+  }
+
+  /**
+   * create a new worker.
+   */
+  createWorker<T>(scriptPath: string) {
+    const systemWorker = new Worker(scriptPath);
+    const harmonyWorker = wrap<T>(systemWorker);
+
+    return harmonyWorker;
+  }
 
   static slots = [Slot.withType<HarmonyWorker>()];
 

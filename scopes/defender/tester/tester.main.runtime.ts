@@ -1,14 +1,14 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentID } from '@teambit/component';
+import { Component } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
+import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 
 import { ComponentsResults, CallbackFn } from './tester';
-import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
 import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
@@ -44,7 +44,7 @@ export type TesterOptions = {
   /**
    * start the tester in debug mode.
    */
-  ui: boolean;
+  ui?: boolean;
 
   /**
    * initiate the tester on given env.

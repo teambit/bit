@@ -164,6 +164,7 @@
         "humanize-string": "2.1.0",
         "is-primitive": "3.0.1",
         "jest": "^26.0.1",
+        "jest-watcher": "26.6.2",
         "join-path": "^1.1.1",
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
