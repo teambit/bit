@@ -61,7 +61,7 @@ export class ScopeUI {
     /**
      * sidebar link slot
      */
-    private sidebarLinkSlot: SidebarItemSlot,
+    private sidebarItemSlot: SidebarItemSlot,
 
     /**
      * main dropdown item slot
@@ -159,7 +159,7 @@ export class ScopeUI {
    * register a sidebar link to the section above the drawers
    */
   registerSidebarLink = (...links: SidebarItem[]) => {
-    this.sidebarLinkSlot.register(links);
+    this.sidebarItemSlot.register(links);
   };
 
   uiRoot(): UIRoot {
@@ -182,7 +182,7 @@ export class ScopeUI {
             <Scope
               routeSlot={this.routeSlot}
               menuSlot={this.menuSlot}
-              sidebar={<this.sidebar.render linkSlot={this.sidebarLinkSlot} />}
+              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
               context={this.getContext()}
@@ -236,7 +236,7 @@ export class ScopeUI {
       ReactRouterUI
     ],
     config,
-    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot, menuItemSlot, sidebarLinkSlot]: [
+    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot, menuItemSlot, sidebarItemSlot]: [
       RouteSlot,
       RouteSlot,
       SidebarSlot,
@@ -257,7 +257,7 @@ export class ScopeUI {
       componentSearcher,
       scopeBadgeSlot,
       menuWidgetSlot,
-      sidebarLinkSlot,
+      sidebarItemSlot,
       menuItemSlot
     );
     scopeUi.registerExplicitRoutes();

@@ -45,7 +45,7 @@ export class WorkspaceUI {
     /**
      * sidebar link slot
      */
-    private sidebarLinkSlot: SidebarItemSlot,
+    private sidebarItemSlot: SidebarItemSlot,
 
     private commandBarUI: CommandBarUI,
 
@@ -78,7 +78,7 @@ export class WorkspaceUI {
   };
 
   registerSidebarLink = (...links: SidebarItem[]) => {
-    this.sidebarLinkSlot.register(links);
+    this.sidebarItemSlot.register(links);
   };
 
   componentSearcher: ComponentSearcher;
@@ -102,7 +102,7 @@ export class WorkspaceUI {
             <Workspace
               menuSlot={this.menuSlot}
               routeSlot={this.routeSlot}
-              sidebar={<this.sidebar.render linkSlot={this.sidebarLinkSlot} />}
+              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
               workspaceUI={this}
               onSidebarTogglerChange={this.setKeyBindHandler}
             />
@@ -158,7 +158,7 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarLinkSlot]: [
+    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot]: [
       RouteSlot,
       RouteSlot,
       MenuItemSlot,
@@ -177,7 +177,7 @@ export class WorkspaceUI {
       menuItemSlot,
       sidebar,
       sidebarSlot,
-      sidebarLinkSlot,
+      sidebarItemSlot,
       commandBarUI,
       reactRouterUI
     );

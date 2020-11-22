@@ -11,15 +11,15 @@ export type SideBarProps = {
    */
   drawerSlot: DrawerSlot;
 
-  linkSlot?: SidebarItemSlot;
+  itemSlot?: SidebarItemSlot;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * side bar component.
  */
-export function SideBar({ drawerSlot, linkSlot, ...rest }: SideBarProps) {
+export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   const [openDrawerList, onToggleDrawer] = useState([drawerSlot.toArray()[0][0]]);
-  const links = useMemo(() => flatten(linkSlot?.values()), [linkSlot]);
+  const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
@@ -32,7 +32,7 @@ export function SideBar({ drawerSlot, linkSlot, ...rest }: SideBarProps) {
 
   return (
     <div {...rest} className={styles.sidebar}>
-      <MenuSection items={links} />
+      <MenuSection items={items} />
       {drawerSlot.toArray().map(([id, drawer]) => {
         if (!drawer || !drawer.name) return null;
         return (
