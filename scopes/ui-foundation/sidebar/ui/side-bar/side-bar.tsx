@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-
-import { DrawerSlot } from '../../sidebar.ui.runtime';
+import { flatten } from 'lodash';
+import { LinkSection } from '@teambit/sidebar.ui.link-section';
+import { DrawerSlot, LinkSlot } from '../../sidebar.ui.runtime';
 import { DrawerUI } from '../drawer';
 import styles from './side-bar.module.scss';
 
@@ -9,14 +10,17 @@ export type SideBarProps = {
    * slot of registered drawers.
    */
   drawerSlot: DrawerSlot;
+
+  linkSlot?: LinkSlot;
 };
 
 /**
  * side bar component.
  */
-export function SideBar({ drawerSlot }: SideBarProps) {
+export function SideBar({ drawerSlot, linkSlot }: SideBarProps) {
   const [openDrawerList, onToggleDrawer] = useState([drawerSlot.toArray()[0][0]]);
 
+  const links = flatten(linkSlot?.values());
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
@@ -28,6 +32,7 @@ export function SideBar({ drawerSlot }: SideBarProps) {
 
   return (
     <div className={styles.sidebar}>
+      <LinkSection links={links} />
       {drawerSlot.toArray().map(([id, drawer]) => {
         if (!drawer || !drawer.name) return null;
         return (
