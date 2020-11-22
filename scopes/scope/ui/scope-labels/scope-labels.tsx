@@ -2,9 +2,9 @@ import { flatten } from 'lodash';
 import { ScopeBadgeSlot } from '@teambit/scope';
 import classNames from 'classnames';
 import React from 'react';
+import { PillLabel } from '@teambit/ui.pill-label';
 
 import styles from './scope-labels.module.scss';
-import { PillLabel } from '@teambit/ui.pill-label';
 
 type ScopeLabelsProps = {
   badgeSlot: ScopeBadgeSlot;

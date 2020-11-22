@@ -2,9 +2,9 @@ import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React from 'react';
+import { UserAvatar } from '@teambit/ui.avatar';
 
 import styles from './scope-title.module.scss';
-import { UserAvatar } from '@teambit/ui.avatar';
 
 type ScopeTitleProps = {
   scopeName: string;

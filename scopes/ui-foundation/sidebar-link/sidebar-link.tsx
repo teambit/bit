@@ -1,5 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink, NavLinkProps } from '@teambit/react-router';
+import { NavLink, NavLinkProps } from '@teambit/ui.react-router.nav-link';
 import classNames from 'classnames';
 import React from 'react';
 
