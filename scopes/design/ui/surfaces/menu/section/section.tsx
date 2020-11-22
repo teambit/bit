@@ -1,17 +1,15 @@
 import React, { ComponentType } from 'react';
-import styles from './link-section.module.scss';
+import styles from './section.module.scss';
 
-export type link = ComponentType;
-
-export type LinkSectionProps = {
-  links: link[];
+export type MenuSectionProps = {
+  links: ComponentType[];
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function LinkSection({ links, ...rest }: LinkSectionProps) {
+export function MenuSection({ links, ...rest }: MenuSectionProps) {
   if (!links || links.length === 0) return null;
 
   return (
-    <div {...rest} className={styles.linkSection}>
+    <div {...rest} className={styles.menuSection}>
       {links.map((link, index) => {
         const Link = link;
         return <Link key={index} />;
