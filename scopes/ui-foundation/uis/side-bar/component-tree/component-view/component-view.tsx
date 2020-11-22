@@ -32,7 +32,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   );
 
   if (!(component instanceof ComponentModel)) return null;
-  const componentId = component.id.toString();
+  const componentId = `sidebar-${component.id.toString()}`;
 
   return (
     <NavLink
