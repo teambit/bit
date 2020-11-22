@@ -21,30 +21,44 @@ export class GraphBuilder {
     // if (this._graph || this._initialized) {
     //   return this._graph;
     // }
+
     if (this.workspace) {
-      let listIds = ids && ids.length ? ids : (await this.workspace.list()).map((comp) => comp.id);
-      if (typeof listIds[0] === 'string') {
-        listIds = await this.workspace.resolveMultipleComponentIds(listIds);
+      // resolve string to component ids:
+      let resolvedIds =
+        ids && ids.length > 0 && typeof ids[0] === 'string'
+          ? await this.workspace.resolveMultipleComponentIds(ids)
+          : (ids as ComponentID[] | undefined);
+
+      // default value
+      if (!resolvedIds || !resolvedIds.length) {
+        resolvedIds = (await this.workspace.list()).map((comp) => comp.id);
       }
-      // @ts-ignore
-      const bitIds = listIds.map((id) => id._legacy);
+
+      const bitIds = resolvedIds.map((id) => id._legacy);
       const legacyGraph = await buildOneGraphForComponents(bitIds, this.workspace.consumer);
       let graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.workspace);
 
-      if (filter) graph = this.filterGraph(graph, listIds, filter);
+      if (filter) graph = this.filterGraph(graph, resolvedIds, filter);
 
       this._graph = graph;
       this._initialized = true;
       return this._graph;
     }
+
     // Build graph from scope
     if (this.scope) {
-      let listIds = ids && ids.length ? ids : (await this.scope.list()).map((comp) => comp.id);
-      if (typeof listIds[0] === 'string') {
-        listIds = await this.scope.resolveMultipleComponentIds(listIds);
+      // resolve string to component ids:
+      let resolvedIds =
+        ids && ids.length > 0 && typeof ids[0] === 'string'
+          ? await this.scope.resolveMultipleComponentIds(ids)
+          : (ids as ComponentID[] | undefined);
+
+      // default value
+      if (!resolvedIds || !resolvedIds.length) {
+        resolvedIds = (await this.scope.list()).map((comp) => comp.id);
       }
-      // @ts-ignore
-      const bitIds = listIds.map((id) => {
+
+      const bitIds = resolvedIds.map((id) => {
         let bitId = id._legacy;
         // The resolve bitId in scope will remove the scope name in case it's the same as the scope
         // We restore it back to use it correctly in the legacy code.
@@ -56,7 +70,7 @@ export class GraphBuilder {
       const legacyGraph = await buildOneGraphForComponentsUsingScope(bitIds, this.scope.legacyScope);
       let graph = await ComponentGraph.buildFromLegacy(legacyGraph, this.scope);
 
-      if (filter) graph = this.filterGraph(graph, listIds, filter);
+      if (filter) graph = this.filterGraph(graph, resolvedIds, filter);
 
       this._graph = graph;
       this._initialized = true;
@@ -65,26 +79,11 @@ export class GraphBuilder {
     return this._graph;
   }
 
-  private filterGraph(graph: ComponentGraph, ids: (string | ComponentID)[], filter: (dep: Dependency) => boolean) {
-    const graphIds = resolveGraphIds(graph, ids);
+  private filterGraph(graph: ComponentGraph, ids: ComponentID[], filter: (dep: Dependency) => boolean) {
+    const graphIds = ids.map((x) => x.toString());
 
     const filtered = graph.successorsSubgraph(graphIds, filter);
 
     return filtered;
   }
-}
-
-function resolveGraphIds(graph: ComponentGraph, ids: (string | ComponentID)[]) {
-  return ids
-    .map((x: string | ComponentID) => {
-      if (typeof x === 'string') return x;
-
-      return (
-        (graph.hasNode(x.toString()) && x.toString()) ||
-        (graph.hasNode(x.toString({ ignoreVersion: true })) && x.toString({ ignoreVersion: true })) ||
-        (graph.hasNode(x.fullName) && x.fullName) ||
-        undefined
-      );
-    })
-    .filter((x) => !!x) as string[];
 }

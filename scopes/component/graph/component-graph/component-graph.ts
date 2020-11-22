@@ -29,7 +29,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
       const componentId = await componentFactory.resolveComponentId(nodeId);
       const component = await componentFactory.get(componentId);
       if (component) {
-        newGraph.setNode(nodeId, component);
+        newGraph.setNode(componentId.toString(), component);
       }
     });
     await Promise.all(setNodeP);
