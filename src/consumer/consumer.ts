@@ -99,7 +99,7 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-
+  public onCacheClear: Array<() => void> = [];
   constructor({
     projectPath,
     config,
@@ -145,6 +145,11 @@ export default class Consumer {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get bitmapIds(): BitIds {
     return this.bitMap.getAllBitIds();
+  }
+
+  clearCache() {
+    this.componentLoader.clearComponentsCache();
+    this.onCacheClear.forEach((func) => func());
   }
 
   async getEnv(envType: EnvType, context: Record<string, any> | undefined): Promise<EnvExtension | undefined> {
@@ -679,7 +684,7 @@ export default class Consumer {
       );
     }
     if (!shouldReloadComponents) return components;
-    this.componentLoader.clearComponentsCache();
+    this.clearCache();
     const { components: reloadedComponents } = await this.loadComponents(ids);
     return reloadedComponents;
   }

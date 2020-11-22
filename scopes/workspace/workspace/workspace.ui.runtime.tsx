@@ -1,15 +1,17 @@
 import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
+import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
+import { RouteSlot } from '@teambit/ui.react-router.slot-router';
 import { Menu } from '@teambit/ui.menu';
-import SidebarAspect, { SidebarUI } from '@teambit/sidebar';
+import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
+import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
 import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
@@ -39,6 +41,11 @@ export class WorkspaceUI {
     private sidebar: SidebarUI,
 
     private sidebarSlot: SidebarWidgetSlot,
+
+    /**
+     * sidebar link slot
+     */
+    private sidebarItemSlot: SidebarItemSlot,
 
     private commandBarUI: CommandBarUI,
 
@@ -70,6 +77,10 @@ export class WorkspaceUI {
     this.componentSearcher.update(components);
   };
 
+  registerSidebarLink = (...links: SidebarItem[]) => {
+    this.sidebarItemSlot.register(links);
+  };
+
   componentSearcher: ComponentSearcher;
 
   uiRoot(): UIRoot {
@@ -91,7 +102,7 @@ export class WorkspaceUI {
             <Workspace
               menuSlot={this.menuSlot}
               routeSlot={this.routeSlot}
-              sidebar={<this.sidebar.render />}
+              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
               workspaceUI={this}
               onSidebarTogglerChange={this.setKeyBindHandler}
             />
@@ -133,6 +144,7 @@ export class WorkspaceUI {
     Slot.withType<RouteProps>(),
     Slot.withType<ComponentTreeNode>(),
     Slot.withType<MenuItemSlot>(),
+    Slot.withType<SidebarItemSlot>(),
   ];
 
   static async provider(
@@ -146,7 +158,13 @@ export class WorkspaceUI {
       GraphUI
     ],
     config,
-    [routeSlot, menuSlot, menuItemSlot, sidebarSlot]: [RouteSlot, RouteSlot, MenuItemSlot, SidebarWidgetSlot]
+    [routeSlot, menuSlot, menuItemSlot, sidebarSlot, sidebarItemSlot]: [
+      RouteSlot,
+      RouteSlot,
+      MenuItemSlot,
+      SidebarWidgetSlot,
+      SidebarItemSlot
+    ]
   ) {
     componentTree.registerTreeNode(new ComponentTreeWidget());
     sidebarSlot.register(new ComponentTreeWidget());
@@ -159,11 +177,18 @@ export class WorkspaceUI {
       menuItemSlot,
       sidebar,
       sidebarSlot,
+      sidebarItemSlot,
       commandBarUI,
       reactRouterUI
     );
     ui.registerRoot(workspaceUI.uiRoot.bind(workspaceUI));
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
+
+    workspaceUI.registerSidebarLink(() => (
+      <MenuLinkItem exact href="/" icon="comps">
+        Overview
+      </MenuLinkItem>
+    ));
 
     workspaceUI.menuSlot.register([
       {

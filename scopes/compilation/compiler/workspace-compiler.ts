@@ -24,10 +24,9 @@ import { Compiler } from './types';
 
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
-type LegacyCompilerOptions = {
-  noCache?: boolean;
+export type CompileOptions = {
+  all?: boolean;
   verbose?: boolean;
-  dontPrintEnvMsg?: boolean;
 };
 
 export type CompileError = { path: string; error: Error };
@@ -145,12 +144,12 @@ export class WorkspaceCompiler {
   }
 
   async compileComponents(
-    componentsIds: string[] | BitId[], // when empty, it compiles all
-    options: LegacyCompilerOptions,
+    componentsIds: string[] | BitId[], // when empty, it compiles new+modified (unless options.all is set),
+    options: CompileOptions,
     noThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    const componentIds = await this.resolveIds(componentsIds);
+    const componentIds = await this.getIdsToCompile(componentsIds, options.all);
     // const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const components = await this.workspace.getMany(componentIds);
 
@@ -179,23 +178,19 @@ export class WorkspaceCompiler {
       );
     }
     if (componentsWithLegacyCompilers.length) {
-      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers, options);
+      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers);
     }
 
     return [...newCompilersResultOnWorkspace, ...oldCompilersResult];
   }
 
-  private async compileWithLegacyCompilers(
-    components: ConsumerComponent[],
-    options: LegacyCompilerOptions
-  ): Promise<BuildResult[]> {
+  private async compileWithLegacyCompilers(components: ConsumerComponent[]): Promise<BuildResult[]> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
     const build = async (component: ConsumerComponent) => {
       if (component.compiler) loader.start(`building component - ${component.id}`);
       await component.build({
         scope: this.workspace.consumer.scope,
         consumer: this.workspace.consumer,
-        ...options,
       });
       const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
       if (component.compiler) loader.succeed();
@@ -210,11 +205,13 @@ export class WorkspaceCompiler {
     return buildResults;
   }
 
-  private async resolveIds(componentsIds: Array<string | BitId>): Promise<ComponentID[]> {
-    const ids: ComponentID[] = componentsIds.length
-      ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
-      : await this.workspace.getAllComponentIds();
-
-    return ids;
+  private async getIdsToCompile(componentsIds: Array<string | BitId>, all = false): Promise<ComponentID[]> {
+    if (componentsIds.length) {
+      return this.workspace.resolveMultipleComponentIds(componentsIds);
+    }
+    if (all) {
+      return this.workspace.getAllComponentIds();
+    }
+    return this.workspace.getNewAndModifiedIds();
   }
 }
