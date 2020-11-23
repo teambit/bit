@@ -1,4 +1,4 @@
-import { Dependency } from './dependency';
+import { Dependency } from '../model/dependency';
 
 export function runtimeOnly(edge: Dependency) {
   return edge.type === 'runtime';

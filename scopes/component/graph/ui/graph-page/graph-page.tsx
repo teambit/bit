@@ -10,6 +10,7 @@ import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { useGraphQuery } from '../query';
 import { DependenciesGraph } from '../dependencies-graph';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
+import type { FilterType } from '../../graph-filters';
 
 import styles from './graph-page.module.scss';
 
@@ -26,22 +27,16 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
     params: { componentId },
   } = useRouteMatch<PageParams>();
 
-  const [filter, setFilter] = useState<string | undefined>(undefined);
+  const [filter, setFilter] = useState<FilterType | undefined>(undefined);
+  const onCheckFilter = (e: ChangeEvent<HTMLInputElement>) => {
+    setFilter(e.target.checked ? 'runtimeOnly' : undefined);
+  };
 
   const { graph, error } = useGraphQuery(componentId ? [componentId] : [], filter);
-
-  if (error) {
-    return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
-  }
+  if (error) return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
   if (!graph) return <FullLoader />;
 
   const isFiltered = filter === 'runtimeOnly';
-
-  const onCheckFilter = (e: ChangeEvent<HTMLInputElement>) => {
-    const { checked } = e.target;
-
-    setFilter(checked ? 'runtimeOnly' : undefined);
-  };
 
   return (
     <div className={styles.page}>

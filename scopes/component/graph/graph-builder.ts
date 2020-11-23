@@ -7,7 +7,7 @@ import {
 } from 'bit-bin/dist/scope/graph/components-graph';
 import { ComponentGraph } from './component-graph';
 
-import type { Dependency } from './dependency';
+import type { Dependency } from './model/dependency';
 
 export class GraphBuilder {
   _graph?: ComponentGraph;

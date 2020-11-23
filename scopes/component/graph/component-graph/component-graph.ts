@@ -4,7 +4,7 @@ import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-
 import { Graph } from 'cleargraph';
 import { Graph as LegacyGraph } from 'graphlib';
 
-import { Dependency } from '../dependency';
+import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];

@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 
 import { GraphBuilder } from './graph-builder';
 import { ComponentGraph } from './component-graph';
-import { DependencyType } from './dependency';
+import { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
 import { filters, FilterType } from './graph-filters';
 
