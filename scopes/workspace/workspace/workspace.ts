@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
@@ -486,6 +487,19 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * This will make sure to fetch the objects prior to load them
+   * do not use it if you are not sure you need it.
+   * It will influence the performance
+   * currently it used only for get many of aspects
+   * @param ids
+   * @param forCapsule
+   */
+  async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+    await this.scope.import(ids);
+    return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  /**
    * track a new component. (practically, add it to .bitmap).
    *
    * @param componentPaths component paths relative to the workspace dir
@@ -766,7 +780,7 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
-    const components = await this.getMany(componentIds);
+    const components = await this.importAndGetMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
@@ -979,6 +993,14 @@ export class Workspace implements ComponentFactory {
       }
       await this.dependencyResolver.persistConfig(this.path);
     }
+    if (options?.import) {
+      this.logger.setStatusLine('importing missing objects');
+      await this.importObjects();
+      this.logger.consoleSuccess();
+    }
+    this.logger.console(
+      `installing dependencies in workspace using ${chalk.cyan(this.dependencyResolver.getPackageManagerName())}`
+    );
     this.logger.debug(`installing dependencies in workspace with options`, options);
     this.clearCache();
     const components = await this.list();
@@ -1002,13 +1024,11 @@ export class Workspace implements ComponentFactory {
       dependencyFilterFn: depsFilterFn,
     };
     await installer.install(this.path, mergedRootPolicy, installationMap, installOptions);
+    // TODO: this make duplicate
+    // this.logger.consoleSuccess();
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
-    this.logger.setStatusLine('importing missing objects');
-    if (options?.import) {
-      await this.importObjects();
-    }
     this.logger.consoleSuccess();
     return installationMap;
   }

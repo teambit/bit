@@ -1,6 +1,5 @@
 import { ScopeAspect } from './scope.aspect';
 
-export { ScopeBadge, ScopeBadgeProps } from './scope-badge';
 export type { ScopeMain, OnTag } from './scope.main.runtime';
 export type { ScopeModel } from './ui/scope-model';
 export { ScopeContext } from './ui/scope-context';

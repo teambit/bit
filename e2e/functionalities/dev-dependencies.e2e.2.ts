@@ -193,6 +193,11 @@ describe('foo', () => {
     it('bit status should show a clean state', () => {
       helper.command.expectStatusToBeClean();
     });
+    it('the nested dev-dependency should be saved in the flattenedDevDependencies', () => {
+      const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
+      expect(barFoo.flattenedDevDependencies).to.have.lengthOf(1);
+      expect(barFoo.flattenedDevDependencies[0].name).to.equal('utils/is-type');
+    });
   });
   describe('dev-dependency that requires prod-dependency', () => {
     let barFoo;

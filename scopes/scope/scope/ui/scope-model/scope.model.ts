@@ -8,6 +8,11 @@ export class ScopeModel {
     readonly name: string,
 
     /**
+     * the scope icon.
+     */
+    readonly icon: string,
+
+    /**
      * description of the scope
      */
     readonly description: string,
@@ -22,12 +27,13 @@ export class ScopeModel {
     const components = object.scope.components || [];
     return new ScopeModel(
       object.scope.name,
+      object.scope.icon,
       object.scope.description,
       components.map((component) => ComponentModel.from(component))
     );
   }
 
   static empty() {
-    return new ScopeModel('', '', []);
+    return new ScopeModel('', '', '', []);
   }
 }

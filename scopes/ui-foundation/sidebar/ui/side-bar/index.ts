@@ -1,1 +1,1 @@
-export { SideBar } from './side-bar';
+export { SideBar, SideBarProps } from './side-bar';

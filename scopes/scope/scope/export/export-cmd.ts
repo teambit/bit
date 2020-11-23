@@ -33,20 +33,20 @@ export class ExportCmd implements Command {
     [
       'd',
       'include-dependencies',
-      "EXPERIMENTAL. include the component's dependencies as part of the export to the remote scope",
+      "LEGACY ONLY. include the component's dependencies as part of the export to the remote scope",
     ],
     [
       's',
       'set-current-scope',
-      "EXPERIMENTAL. ensure the component's remote scope is set according to the target location",
+      "LEGACY ONLY. ensure the component's remote scope is set according to the target location",
     ],
     [
       'r',
       'rewire',
-      'EXPERIMENTAL. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
+      'LEGACY ONLY. when exporting to a different or new scope, replace import/require statements in the source code to match the new scope',
     ],
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
-    ['l', 'lanes', 'EXPERIMENTAL. export lanes'],
+    ['l', 'lanes', 'HARMONY ONLY. export lanes'],
     ['', 'all-versions', 'export not only staged versions but all of them'],
   ] as CommandOptions;
   loader = true;
