@@ -1621,13 +1621,8 @@
                 "test": false
             },
             {
-                "name": "jest.worker.js",
-                "relativePath": "jest.worker.js",
-                "test": false
-            },
-            {
-                "name": "node-endpoint.ts",
-                "relativePath": "node-endpoint.ts",
+                "name": "jest.worker.ts",
+                "relativePath": "jest.worker.ts",
                 "test": false
             },
             {
@@ -6852,6 +6847,11 @@
     "worker": {
         "files": [
             {
+                "name": "expose.ts",
+                "relativePath": "expose.ts",
+                "test": false
+            },
+            {
                 "name": "harmony-worker.ts",
                 "relativePath": "harmony-worker.ts",
                 "test": false
@@ -6864,6 +6864,11 @@
             {
                 "name": "node-endpoint.ts",
                 "relativePath": "node-endpoint.ts",
+                "test": false
+            },
+            {
+                "name": "worker-manifest.ts",
+                "relativePath": "worker-manifest.ts",
                 "test": false
             },
             {

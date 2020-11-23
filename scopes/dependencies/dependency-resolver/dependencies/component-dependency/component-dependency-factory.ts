@@ -80,6 +80,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
         packageName = componentIdToPackageName(depComponent.state._consumer);
       }
     }
+
     return {
       id: legacyDep.id.toString(),
       isExtension: false,

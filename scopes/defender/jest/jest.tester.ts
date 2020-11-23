@@ -1,21 +1,24 @@
 import { readFileSync } from 'fs';
-import { Worker } from 'worker_threads';
 import { compact } from 'lodash';
-import { runCLI } from 'jest';
-import { wrap } from 'comlink';
+// import { runCLI } from 'jest';
+import { HarmonyWorker } from '@teambit/worker';
 import { Tester, CallbackFn, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { JestError } from './error';
+import type { JestWorker } from './jest.worker';
 
 const jest = require('jest');
 
-export type JestWorker = { doSomething: () => string };
-
 export class JestTester implements Tester {
-  constructor(readonly id: string, readonly jestConfig: any, private jestModule: typeof jest) {}
+  constructor(
+    readonly id: string,
+    readonly jestConfig: any,
+    private jestModule: typeof jest,
+    private jestWorker: HarmonyWorker<JestWorker>
+  ) {}
 
   configPath = this.jestConfig;
 
@@ -141,68 +144,34 @@ export class JestTester implements Tester {
   }
 
   async watch(context: TesterContext): Promise<Tests> {
-    try {
-      const jestRawWorker = new Worker(require.resolve('./jest.worker'));
-      const worker = wrap<JestWorker>(nodeAdapter(jestRawWorker));
-      const str = await worker.doSomething();
-      console.log(str);
-    } catch (err) {
-      console.log(err);
-    }
-    // return new Promise((resolve) => {
-    //   // eslint-disable-next-line
-    //   const jestConfig = require(this.jestConfig);
-    //   const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
-    //     specs.forEach((spec) => acc.push(spec.path));
-    //     return acc;
-    //   }, []);
+    const workerApi = this.jestWorker.initiate();
 
-    //   const jestConfigWithSpecs = Object.assign(jestConfig, {
-    //     testMatch: testFiles,
-    //   });
-    //   const config: any = {
-    //     // useStderr: true,
-    //     silent: true,
-    //     json: true,
-    //     outputFile: '/tmp/test-results.json',
-    //     rootDir: context.rootPath,
-    //     watch: true,
-    //     watchAll: true,
-    //     watchPlugins: [
-    //       [
-    //         `${__dirname}/watch.js`,
-    //         {
-    //           specFiles: context.specFiles,
-    //           onComplete: (results) => {
-    //             if (!this._callback) return;
-    //             const testResults = results.testResults;
-    //             const componentsWithTests = this.attachTestsToComponent(context, testResults);
-    //             const componentTestResults = this.buildTestsObj(
-    //               results,
-    //               componentsWithTests,
-    //               context,
-    //               jestConfigWithSpecs
-    //             );
-    //             const globalErrors = this.getErrors(testResults);
-    //             const watchTestResults = {
-    //               loading: false,
-    //               errors: globalErrors,
-    //               components: componentTestResults,
-    //             };
-    //             this._callback(watchTestResults);
-    //           },
-    //         },
-    //       ],
-    //     ],
-    //   };
+    const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
+      specs.forEach((spec) => acc.push(spec.path));
+      return acc;
+    }, []);
 
-    //   const loadingComponents = context.components.map((c) => ({ componentId: c.id, loading: true }));
-    //   if (this._callback) this._callback({ components: loadingComponents });
+    // eslint-disable-next-line
+    const jestConfig = require(this.jestConfig);
 
-    //   const withEnv = Object.assign(jestConfigWithSpecs, config);
-    //   // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    //   runCLI(withEnv, [this.jestConfig]);
-    //   resolve();
-    // });
+    const jestConfigWithSpecs = Object.assign(jestConfig, {
+      testMatch: testFiles,
+    });
+
+    await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
+
+    await workerApi.onTestComplete((results) => {
+      if (!this._callback) return;
+      const testResults = results.testResults;
+      const componentsWithTests = this.attachTestsToComponent(context, testResults);
+      const componentTestResults = this.buildTestsObj(results, componentsWithTests, context, jestConfigWithSpecs);
+      const globalErrors = this.getErrors(testResults);
+      const watchTestResults = {
+        loading: false,
+        errors: globalErrors,
+        components: componentTestResults,
+      };
+      this._callback(watchTestResults);
+    });
   }
 }
