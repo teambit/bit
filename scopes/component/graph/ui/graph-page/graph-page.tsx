@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState, ChangeEvent } from 'react';
 import { useRouteMatch } from 'react-router-dom';
 
 import { H2 } from '@teambit/documenter.ui.heading';
@@ -25,16 +25,31 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
   const {
     params: { componentId },
   } = useRouteMatch<PageParams>();
-  const { graph, error } = useGraphQuery(componentId ? [componentId] : []);
+
+  const [filter, setFilter] = useState<string | undefined>(undefined);
+
+  const { graph, error } = useGraphQuery(componentId ? [componentId] : [], filter);
 
   if (error) {
     return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
   }
   if (!graph) return <FullLoader />;
 
+  const isFiltered = filter === 'runtimeOnly';
+
+  const onCheckFilter = (e: ChangeEvent<HTMLInputElement>) => {
+    const { checked } = e.target;
+
+    setFilter(checked ? 'runtimeOnly' : undefined);
+  };
+
   return (
     <div className={styles.page}>
       <H2 size="xs">Dependencies</H2>
+      <div>
+        <input type="checkbox" checked={isFiltered} onChange={onCheckFilter} />
+        Showing <b>{isFiltered ? 'runtime only' : 'all'}</b>
+      </div>
       <DependenciesGraph
         componentWidgets={componentWidgets}
         graph={graph}

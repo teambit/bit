@@ -5,7 +5,7 @@ import { GraphBuilder } from './graph-builder';
 import { ComponentGraph } from './component-graph';
 import { DependencyType } from './dependency';
 import { EdgeType } from './edge-type';
-import { filters } from './graph-filters';
+import { filters, FilterType } from './graph-filters';
 
 export function graphSchema(graphBuilder: GraphBuilder): Schema {
   return {
@@ -60,7 +60,7 @@ export function graphSchema(graphBuilder: GraphBuilder): Schema {
         },
       },
       Query: {
-        graph: (_parent, { ids, filter }: { ids: string[]; filter?: keyof typeof filters }) => {
+        graph: (_parent, { ids, filter }: { ids: string[]; filter?: FilterType }) => {
           const relevantFilter = filter && filters[filter];
           return graphBuilder.getGraph(ids, relevantFilter);
         },

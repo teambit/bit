@@ -10,9 +10,9 @@ type QueryVariables = {
 };
 
 /** provides dependencies graph data from graphQL */
-export function useGraphQuery(componentId: string[]) {
+export function useGraphQuery(componentId: string[], filter?: string) {
   const { data, error, loading } = useDataQuery<RawGraphQuery, QueryVariables>(GET_GRAPH, {
-    variables: { ids: componentId, filter: 'runtimeOnly' },
+    variables: { ids: componentId, filter },
   });
 
   const rawGraph = data?.graph;

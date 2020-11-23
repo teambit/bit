@@ -17,5 +17,6 @@ export function all(/* edge: Dependency */) {
 export const filters = {
   runtimeOnly,
   all,
-  // runtimeOrMine,
 };
+
+export type FilterType = keyof typeof filters;
