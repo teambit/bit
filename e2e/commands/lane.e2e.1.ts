@@ -445,7 +445,7 @@ describe('bit lane command', function () {
       );
       helper.command.addComponent('utils/is-string', { i: 'utils/is-string' });
       helper.command.linkAndRewire();
-      helper.command.compile('--all');
+      helper.command.compile();
       helper.command.snapAllComponents();
 
       // laneB
