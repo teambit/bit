@@ -8,8 +8,8 @@ import { LongProcessLogger } from './long-process-logger';
 export class Logger implements IBitLogger {
   constructor(private extensionName: string) {}
 
-  silly(message: string, ...meta: any[]) {
-    logger.silly(this.colorMessage(message), ...meta);
+  trace(message: string, ...meta: any[]) {
+    logger.trace(this.colorMessage(message), ...meta);
   }
   debug(message: string, ...meta: any[]) {
     logger.debug(this.colorMessage(message), ...meta);
