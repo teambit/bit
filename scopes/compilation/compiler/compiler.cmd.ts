@@ -24,7 +24,7 @@ export class CompileCmd implements Command {
   alias = '';
   group = 'component';
   options = [
-    ['a', 'all', 'all components, not only new and modified'],
+    ['c', 'changed', 'compile only new and modified components'],
     ['v', 'verbose', 'show more data, such as, dist paths'],
     ['j', 'json', 'return the compile results in json format'],
   ] as CommandOptions;
