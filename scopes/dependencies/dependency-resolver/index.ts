@@ -1,17 +1,10 @@
+export { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export {
-  DependenciesObjectDefinition,
-  LegacyDependenciesDefinition,
-  SemverVersionRule,
-  DependencyResolverWorkspaceConfig,
-  DependencyResolverVariantConfig,
-  RawComponentState,
-  DependencyType,
-  ComponentsManifestsMap,
-  PolicyDep,
-  RegistriesMap,
-  DependenciesPolicy,
-} from './types';
-export { WorkspaceManifest, ComponentManifest, CreateFromComponentsOptions } from './manifest';
+  WorkspaceManifest,
+  ComponentManifest,
+  CreateFromComponentsOptions,
+  ManifestDependenciesObject,
+} from './manifest';
 export { Registries, Registry } from './registry';
 export {
   PackageManager,
@@ -19,7 +12,12 @@ export {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from './package-manager';
-export type { DependencyResolverMain, LinkingOptions } from './dependency-resolver.main.runtime';
+export type {
+  DependencyResolverMain,
+  LinkingOptions,
+  DependencyResolverWorkspaceConfig,
+  DependencyResolverVariantConfig,
+} from './dependency-resolver.main.runtime';
 export { BIT_DEV_REGISTRY, NPM_REGISTRY } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
@@ -29,4 +27,6 @@ export {
   SerializedDependency,
   BaseDependency,
   SemverVersion,
+  ComponentDependency,
 } from './dependencies';
+export { WorkspacePolicyEntry, WorkspacePolicy, VariantPolicyConfigObject } from './policy';

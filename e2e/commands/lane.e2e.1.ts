@@ -780,6 +780,29 @@ describe('bit lane command', function () {
       });
     });
   });
+  // this makes sure that when exporting lanes, it only exports the local snaps.
+  // in this test, the second snap is done on a clean scope without the objects of the first snap.
+  describe('snap on lane, export, clear project, snap and export', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.addDefaultScope();
+      // Do not add "disablePreview()" here. It's important to generate the preview here.
+      // this is the file that exists on the first snap but not on the second.
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1);
+      helper.command.snapAllComponents();
+      helper.command.exportLane('dev');
+      helper.git.mimicGitCloneLocalProjectHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.switchRemoteLane('dev');
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.bitJsonc.disablePreview();
+      helper.command.snapAllComponents();
+    });
+    it('should export with no errors about missing artifact files from the first snap', () => {
+      expect(() => helper.command.exportAllComponents()).to.not.throw();
+    });
+  });
   describe('auto-snap when on a lane', () => {
     let snapOutput;
     let comp3Head;

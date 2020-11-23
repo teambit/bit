@@ -1,4 +1,4 @@
-import { NavLinkProps } from '@teambit/react-router';
+import { NavLinkProps } from '@teambit/ui.react-router.nav-link';
 import { RouteProps } from 'react-router-dom';
 
 export interface Section {

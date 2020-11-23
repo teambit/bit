@@ -1,4 +1,4 @@
-import { DependenciesPolicy } from '@teambit/dependency-resolver';
+import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
@@ -57,7 +57,7 @@ export class NodeMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: DependenciesPolicy) {
+  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.nodeEnv.getDependencies()),
     });

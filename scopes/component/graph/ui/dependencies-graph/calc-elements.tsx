@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { Node, Edge, ArrowHeadType } from 'react-flow-renderer';
+import { ComponentID } from '@teambit/component';
 import { calcLayout } from './calc-layout';
 import { GraphModel } from '../query';
 
-import { depTypeToClass } from './dep-edge';
+import { depTypeToClass, depTypeToLabel } from './dep-edge';
 
 type ElementsOptions = {
-  rootNode?: string;
+  rootNode?: ComponentID;
 };
 
 /**
@@ -22,7 +23,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
         type: 'ComponentNode',
         data: {
           node: x,
-          type: x.component.id.fullName === rootNode ? 'root' : undefined,
+          type: rootNode && x.component.id.isEqual(rootNode, { ignoreVersion: true }) ? 'root' : undefined,
         },
         position: { x: 0, y: 0 },
       };
@@ -32,7 +33,7 @@ export function calcElements(graph: GraphModel | undefined, { rootNode }: Elemen
       id: `_${e.sourceId}__${e.targetId}`,
       source: e.sourceId,
       target: e.targetId,
-      label: e.dependencyLifecycleType?.toLowerCase(),
+      label: depTypeToLabel(e.dependencyLifecycleType),
       labelBgPadding: [4, 4],
       type: 'smoothstep',
       className: depTypeToClass(e.dependencyLifecycleType),

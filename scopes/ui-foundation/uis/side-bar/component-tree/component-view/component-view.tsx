@@ -1,11 +1,11 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { NavLink } from '@teambit/react-router';
+import { NavLink } from '@teambit/ui.react-router.nav-link';
 import { EnvIcon } from '@teambit/ui.env-icon';
 import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
-
+import ReactTooltip from 'react-tooltip';
 import { ComponentModel } from '@teambit/component';
 import { ComponentTreeContext } from '../component-tree-context';
 import { indentClass } from '../indent';
@@ -32,6 +32,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   );
 
   if (!(component instanceof ComponentModel)) return null;
+  const componentId = `sidebar-${component.id.toString()}`;
 
   return (
     <NavLink
@@ -41,8 +42,14 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        <EnvIcon component={component} className={styles.envIcon} />
+        <EnvIcon component={component} className={styles.envIcon} data-tip="" data-for={componentId} />
         <span>{getName(node.id)}</span>
+        <ReactTooltip place="bottom" id={componentId} effect="solid">
+          <div className={styles.componentEnvTooltip}>
+            <div className={styles.componentEnvTitle}>Environment</div>
+            <div className={styles.componentEnv}>{component.environment?.id}</div>
+          </div>
+        </ReactTooltip>
       </div>
 
       <div className={styles.right}>

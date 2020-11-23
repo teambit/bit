@@ -164,8 +164,8 @@ describe('harmony extension config', function () {
           });
         });
       });
-      // TODO: re-enable once we fix the bit install after import from local scope
-      describe.skip('imported component', () => {
+
+      describe('imported component', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localBeforeTag);
           helper.scopeHelper.reInitRemoteScope();

@@ -1,7 +1,7 @@
 import * as semver from 'semver';
 import parsePackageName from 'parse-package-name';
 import {
-  DependenciesObjectDefinition,
+  WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -32,26 +32,29 @@ import { npath, PortablePath } from '@yarnpkg/fslib';
 import npmPlugin from '@yarnpkg/plugin-npm';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
+import { Logger } from '@teambit/logger';
 
 export class YarnPackageManager implements PackageManager {
-  constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain) {}
+  constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
 
   async install(
     rootDir: string,
-    rootDepsObject: DependenciesObjectDefinition,
+    rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
+    this.logger.setStatusLine('installing dependencies');
     const options: CreateFromComponentsOptions = {
       filterComponentsFromManifests: true,
       createManifestForComponentsWithoutDependencies: true,
       dedupe: true,
+      dependencyFilterFn: installOptions.dependencyFilterFn,
     };
     const components = componentDirectoryMap.components;
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
-      rootDepsObject,
+      rootPolicy,
       rootDir,
       components,
       options
@@ -108,6 +111,7 @@ export class YarnPackageManager implements PackageManager {
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.
     this.clean(rootDir, componentDirectoryMap, installOptions);
+    this.logger.consoleSuccess('installing dependencies');
   }
 
   private clean(
