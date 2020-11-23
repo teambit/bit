@@ -93,9 +93,10 @@ export class FlattenedDependenciesGetter {
     prodGraph?: Graph;
   }): Promise<BitIds> {
     const id = componentId.toString();
-    const edges = getEdges(graph, id);
-    if (!edges) return new BitIds();
-    const dependencies = getEdgesWithProdGraph(prodGraph, edges, graph, id);
+    const deps = getEdges(graph, id);
+    const prodDeps = prodGraph ? getEdges(prodGraph, id) : null;
+    if (!deps && !prodDeps) return new BitIds();
+    const dependencies = getEdgesWithProdGraph(prodGraph, deps || [], graph, prodDeps || []);
     if (!dependencies.length) return new BitIds();
     const flattenDependency = async (dependency) => {
       if (this.cache[dependency]) return this.cache[dependency];
@@ -158,15 +159,13 @@ function getEdges(graph: Graph, id: BitIdStr): BitIdStr[] | null {
  */
 function getEdgesWithProdGraph(
   prodGraph: Graph | null | undefined,
-  dependencies: BitIdStr[],
+  nonProdDeps: BitIdStr[],
   graph: Graph,
-  id: string
+  prodDeps: BitIdStr[]
 ): BitIdStr[] {
-  if (!prodGraph) return dependencies;
-  const prodDependencies = R.flatten(dependencies.map((dependency) => getEdges(prodGraph, dependency))).filter(
-    (x) => x
-  );
-  const prodEdges = getEdges(prodGraph, id) || [];
-  const devDependencies = R.flatten(prodEdges.map((dependency) => getEdges(graph, dependency))).filter((x) => x);
-  return R.uniq([...dependencies, ...prodDependencies, ...devDependencies]);
+  if (!prodGraph) return nonProdDeps;
+  const prodDependencies = R.flatten(nonProdDeps.map((dependency) => getEdges(prodGraph, dependency))).filter((x) => x);
+  const devDependencies = R.flatten(prodDeps.map((dependency) => getEdges(graph, dependency))).filter((x) => x);
+
+  return R.uniq([...nonProdDeps, ...prodDependencies, ...devDependencies]);
 }

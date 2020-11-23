@@ -4714,11 +4714,6 @@
                 "test": false
             },
             {
-                "name": "scope-badge.ts",
-                "relativePath": "scope-badge.ts",
-                "test": false
-            },
-            {
                 "name": "scope.aspect.ts",
                 "relativePath": "scope.aspect.ts",
                 "test": false
@@ -6799,6 +6794,54 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "ui/surfaces/menu/link-item": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "link-item.module.scss",
+                "relativePath": "link-item.module.scss",
+                "test": false
+            },
+            {
+                "name": "link-item.tsx",
+                "relativePath": "link-item.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/surfaces/menu/link-item",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/surfaces/menu/section": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "section.module.scss",
+                "relativePath": "section.module.scss",
+                "test": false
+            },
+            {
+                "name": "section.tsx",
+                "relativePath": "section.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/surfaces/menu/section",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.161"

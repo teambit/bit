@@ -113,7 +113,7 @@ describe('compile extension', function () {
               'dist'
             );
             fs.removeSync(distPath);
-            helper.command.compile('--all');
+            helper.command.compile();
             expect(distPath).to.be.a.directory();
             expect(path.join(distPath, 'index.js')).to.be.a.file();
           });

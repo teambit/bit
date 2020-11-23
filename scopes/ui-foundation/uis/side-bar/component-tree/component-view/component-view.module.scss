@@ -72,3 +72,17 @@
     }
   }
 }
+
+.componentEnvTooltip {
+  .componentEnvTitle {
+    font-size: var(--p-xxs);
+    color: #c9c3f6;
+    font-weight: bold;
+    margin-bottom: 4px;
+  }
+  .componentEnv {
+    color: var(--border-color);
+    font-size: var(--p-xs);
+    font-weight: unset;
+  }
+}

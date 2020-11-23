@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-
-import { DrawerSlot } from '../../sidebar.ui.runtime';
+import React, { useState, useMemo } from 'react';
+import { flatten } from 'lodash';
+import { MenuSection } from '@teambit/ui.surfaces.menu.section';
+import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import { DrawerUI } from '../drawer';
 import styles from './side-bar.module.scss';
 
@@ -9,13 +10,16 @@ export type SideBarProps = {
    * slot of registered drawers.
    */
   drawerSlot: DrawerSlot;
-};
+
+  itemSlot?: SidebarItemSlot;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 /**
  * side bar component.
  */
-export function SideBar({ drawerSlot }: SideBarProps) {
+export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   const [openDrawerList, onToggleDrawer] = useState([drawerSlot.toArray()[0][0]]);
+  const items = useMemo(() => flatten(itemSlot?.values()), [itemSlot]);
 
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
@@ -27,7 +31,8 @@ export function SideBar({ drawerSlot }: SideBarProps) {
   };
 
   return (
-    <div className={styles.sidebar}>
+    <div {...rest} className={styles.sidebar}>
+      <MenuSection items={items} />
       {drawerSlot.toArray().map(([id, drawer]) => {
         if (!drawer || !drawer.name) return null;
         return (

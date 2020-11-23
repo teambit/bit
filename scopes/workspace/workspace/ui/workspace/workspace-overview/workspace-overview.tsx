@@ -1,4 +1,3 @@
-
 import React, { useContext } from 'react';
 import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
 import { EmptyWorkspace } from '@teambit/ui.empty-workspace';

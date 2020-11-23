@@ -1,8 +1,15 @@
 .title {
   margin-right: 16px;
-  margin-bottom: 8px;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  > div:first-child {
+    margin-right: 16px;
+  }
 }
 .orgName {
   font-weight: normal;
-  text-transform: capitalize;
+  color: var(--text-highlight);
+  font-weight: bold;
 }

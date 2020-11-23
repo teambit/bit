@@ -9,12 +9,7 @@ export const BaseComponentCardExample = () => {
   );
 };
 export const BaseComponentCardExample2 = () => {
-  return (
-    <BaseComponentCard
-      id="ui/concrete/component-card"
-      preview={<div>hello world</div>}
-    />
-  );
+  return <BaseComponentCard id="ui/concrete/component-card" preview={<div>hello world</div>} />;
 };
 
 export const MainPreview = () => {
