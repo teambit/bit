@@ -1,5 +1,5 @@
 import { useRouteMatch } from 'react-router-dom';
-import { useQuery } from './use-query';
+import { useQuery } from '@teambit/ui.react-router.use-query';
 import { ComponentID } from '../id';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';

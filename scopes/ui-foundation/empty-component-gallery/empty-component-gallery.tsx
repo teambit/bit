@@ -21,7 +21,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
       <div className={styles.bottomText}>
         Find more info in the&nbsp;
         <ExternalLink
-          href="https://bit-harmony-stg.netlify.app/docs/bit-basics/what-is-bit"
+          href="https://bit-harmony.netlify.app/docs/getting-started/what-is-bit"
           className={styles.purpleLink}
         >
           docs

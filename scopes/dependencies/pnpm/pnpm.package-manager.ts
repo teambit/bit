@@ -2,7 +2,7 @@ import { ComponentMap } from '@teambit/component';
 import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
-  DependenciesObjectDefinition,
+  WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -25,7 +25,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async install(
     rootDir: string,
-    rootDepsObject: DependenciesObjectDefinition,
+    rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
@@ -44,7 +44,7 @@ export class PnpmPackageManager implements PackageManager {
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
-      rootDepsObject,
+      rootPolicy,
       rootDir,
       components,
       options

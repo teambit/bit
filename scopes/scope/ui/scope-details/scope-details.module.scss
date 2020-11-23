@@ -1,10 +1,14 @@
 .scopeTitle {
   max-width: 700px;
+  margin-bottom: 32px;
+  > p {
+    margin-bottom: 24px;
+  }
   .titleRow {
     display: flex;
     align-items: baseline;
     flex-wrap: wrap;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
   .avatar {
     margin-right: 4px;

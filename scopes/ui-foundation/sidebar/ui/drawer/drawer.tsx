@@ -1,5 +1,4 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink } from '@teambit/react-router';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -21,9 +20,6 @@ export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: Drawe
           <Icon className={classNames(styles.arrow, { [styles.collapsed]: !isOpen })} of="fat-arrow-down" />
           <span>{drawer.name}</span>
         </div>
-        <NavLink href="/" className={styles.link}>
-          <Icon of="comps" />
-        </NavLink>
       </div>
 
       <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>

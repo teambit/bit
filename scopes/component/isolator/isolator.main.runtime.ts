@@ -90,9 +90,10 @@ export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [DependencyResolverAspect, LoggerAspect];
   static defaultConfig = {};
-  static async provider([dependencyResolver, loggerExtension]: [DependencyResolverMain, LoggerMain]): Promise<
-    IsolatorMain
-  > {
+  static async provider([dependencyResolver, loggerExtension]: [
+    DependencyResolverMain,
+    LoggerMain
+  ]): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(dependencyResolver, logger);
     return isolator;
@@ -145,18 +146,14 @@ export class IsolatorMain {
       // When using isolator we don't want to use the policy defined in the workspace directly,
       // we only want to instal deps from components and the peer from the workspace
 
-      const workspacePolicy = this.dependencyResolver.getWorkspacePolicy() || {};
-      const rootDepsObject = {
-        peerDependencies: {
-          ...workspacePolicy.peerDependencies,
-        },
-      };
+      const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+      const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
       const packageManagerInstallOptions = {
         dedupe: installOptions.dedupe,
         copyPeerToRuntimeOnComponents: installOptions.copyPeerToRuntimeOnComponents,
         copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
       };
-      await installer.install(capsulesDir, rootDepsObject, this.toComponentMap(capsules), packageManagerInstallOptions);
+      await installer.install(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsules), packageManagerInstallOptions);
       await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
       await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
       // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension

@@ -9,7 +9,7 @@ import {
 import { DependencyLifecycleType, SemverVersion } from '../../dependencies';
 import { DedupedDependencies } from './dedupe-dependencies';
 import { hoistDependencies } from './hoist-dependencies';
-import { PackageNameIndex, PackageNameIndexItem } from './index-by-dep-id';
+import { PackageNameIndex, PackageNameIndexComponentItem, PackageNameIndexItemMetadata } from './index-by-dep-id';
 
 const DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX = 'dependent-component';
 
@@ -17,16 +17,16 @@ const generateItemsFromArrays = (
   dependentComponentNamePrefix = 'dependent-component',
   ranges: SemverVersion | SemverVersion[],
   lifecycleTypes: DependencyLifecycleType | DependencyLifecycleType[]
-): PackageNameIndexItem[] => {
+): PackageNameIndexComponentItem[] => {
   let size = 1;
   if (Array.isArray(ranges)) {
     size = ranges.length;
   } else if (Array.isArray(lifecycleTypes)) {
     size = lifecycleTypes.length;
   }
-  const items: PackageNameIndexItem[] = [];
+  const items: PackageNameIndexComponentItem[] = [];
   for (let i = 0; i <= size - 1; i += 1) {
-    const item: PackageNameIndexItem = {
+    const item: PackageNameIndexComponentItem = {
       range: Array.isArray(ranges) ? ranges[i] : ranges,
       origin: `${dependentComponentNamePrefix}-${i}`,
       lifecycleType: Array.isArray(lifecycleTypes) ? lifecycleTypes[i] : lifecycleTypes,
@@ -41,7 +41,7 @@ const generateItems = (
   dependentComponentNamePrefix = DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX,
   range: SemverVersion = '1.0.0',
   lifecycleType: DependencyLifecycleType = RUNTIME_DEP_LIFECYCLE_TYPE
-): PackageNameIndexItem[] => {
+): PackageNameIndexComponentItem[] => {
   const ranges = Array(numOfItems).fill(range);
   const lifecycleTypes = Array(numOfItems).fill(lifecycleType);
   return generateItemsFromArrays(dependentComponentNamePrefix, ranges, lifecycleTypes);
@@ -92,18 +92,52 @@ describe('hoistDependencies', () => {
   let index: PackageNameIndex;
   const dependentComponentName = 'dependent-component';
   let dedupedDependencies: DedupedDependencies;
+  describe('preserved dependency', () => {
+    describe('some component versions are intersect and some not', () => {
+      const dependencyName = 'package-dependency';
+      const preservedVersion = '^4.0.0';
+      const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[RUNTIME_DEP_LIFECYCLE_TYPE];
+      beforeEach(() => {
+        index = new Map();
+        const metadata: PackageNameIndexItemMetadata = {
+          preservedLifecycleType: RUNTIME_DEP_LIFECYCLE_TYPE,
+          preservedVersion,
+        };
+        const items = generateItemsFromArrays(undefined, ['4.0.1', '5.0.0'], RUNTIME_DEP_LIFECYCLE_TYPE);
+        index.set(dependencyName, { metadata, componentItems: items });
+        dedupedDependencies = hoistDependencies(index);
+      });
+      it('the root manifest should have the preserved version', () => {
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, preservedVersion);
+      });
+
+      it('the component dependencies which intersects with the preserved should be empty', () => {
+        expectComponentDependenciesMapToBeEmpty(`${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-0`, dedupedDependencies);
+      });
+      it('the component dependencies which not intersects with the preserved to have a proper version', () => {
+        expectComponentDependenciesMapToHave(
+          dedupedDependencies,
+          `${DEFAULT_DEPENDENT_COMPONENT_NAME_PREFIX}-1`,
+          depKeyName,
+          dependencyName,
+          '5.0.0'
+        );
+      });
+    });
+  });
+
   describe('dependency that appears only once', () => {
     describe('item is exact version', () => {
       const dependencyName = 'package-dependency';
       const dependencyVersion = '1.0.0';
       beforeEach(() => {
         index = new Map();
-        const item: PackageNameIndexItem = {
+        const item: PackageNameIndexComponentItem = {
           range: dependencyVersion,
           origin: dependentComponentName,
           lifecycleType: RUNTIME_DEP_LIFECYCLE_TYPE,
         };
-        index.set(dependencyName, [item]);
+        index.set(dependencyName, { metadata: {}, componentItems: [item] });
         dedupedDependencies = hoistDependencies(index);
       });
       it('the component dependencies should be empty', () => {
@@ -123,12 +157,12 @@ describe('hoistDependencies', () => {
       const dependencyVersion = '^1.0.0';
       beforeEach(() => {
         index = new Map();
-        const item: PackageNameIndexItem = {
+        const item: PackageNameIndexComponentItem = {
           range: dependencyVersion,
           origin: dependentComponentName,
           lifecycleType: RUNTIME_DEP_LIFECYCLE_TYPE,
         };
-        index.set(dependencyName, [item]);
+        index.set(dependencyName, { metadata: {}, componentItems: [item] });
         dedupedDependencies = hoistDependencies(index);
       });
       it('the component dependencies should be empty', () => {
@@ -148,12 +182,12 @@ describe('hoistDependencies', () => {
       const dependencyVersion = '1.0.0';
       beforeEach(() => {
         index = new Map();
-        const item: PackageNameIndexItem = {
+        const item: PackageNameIndexComponentItem = {
           range: dependencyVersion,
           origin: dependentComponentName,
           lifecycleType: PEER_DEP_LIFECYCLE_TYPE,
         };
-        index.set(dependencyName, [item]);
+        index.set(dependencyName, { metadata: {}, componentItems: [item] });
         dedupedDependencies = hoistDependencies(index);
       });
       it('the component dependencies should be empty', () => {
@@ -171,7 +205,7 @@ describe('hoistDependencies', () => {
       beforeEach(() => {
         index = new Map();
         const items = generateItems(3, undefined, undefined, PEER_DEP_LIFECYCLE_TYPE);
-        index.set(dependencyName, items);
+        index.set(dependencyName, { metadata: {}, componentItems: items });
         dedupedDependencies = hoistDependencies(index);
       });
       it('should have the peers in each component', () => {
@@ -192,8 +226,8 @@ describe('hoistDependencies', () => {
         index = new Map();
         const items1 = generateItemsFromArrays(undefined, ['4.0.0', '5.0.0'], PEER_DEP_LIFECYCLE_TYPE);
         const items2 = generateItemsFromArrays(undefined, ['^4.0.0', '^5.0.0'], PEER_DEP_LIFECYCLE_TYPE);
-        index.set(dependencyName1, items1);
-        index.set(dependencyName2, items2);
+        index.set(dependencyName1, { metadata: {}, componentItems: items1 });
+        index.set(dependencyName2, { metadata: {}, componentItems: items2 });
         dedupedDependencies = hoistDependencies(index);
       });
       it('should have the peers in each component', () => {
@@ -222,7 +256,7 @@ describe('hoistDependencies', () => {
         ['4.0.0', '5.0.0', '4.0.0', '5.0.0', '4.0.1', '4.0.0'],
         DEV_DEP_LIFECYCLE_TYPE
       );
-      index.set(dependencyName, items);
+      index.set(dependencyName, { metadata: {}, componentItems: items });
       dedupedDependencies = hoistDependencies(index);
     });
     it('should hoist the most common version to the root', () => {
@@ -261,7 +295,7 @@ describe('hoistDependencies', () => {
         ['^4.0.0', '^5.0.0', '^4.0.0', '^5.0.0', '^5.0.1', '^4.0.1', '^4.0.4'],
         DEV_DEP_LIFECYCLE_TYPE
       );
-      index.set(dependencyName, items);
+      index.set(dependencyName, { metadata: {}, componentItems: items });
       dedupedDependencies = hoistDependencies(index);
     });
     it('should hoist the best range to the root', () => {
@@ -309,7 +343,7 @@ describe('hoistDependencies', () => {
           ['^4.0.0', '5.0.0', '5.0.0', '5.0.0', '^4.0.4'],
           DEV_DEP_LIFECYCLE_TYPE
         );
-        index.set(dependencyName, items);
+        index.set(dependencyName, { metadata: {}, componentItems: items });
         dedupedDependencies = hoistDependencies(index);
       });
       it('should hoist the best version to the root', () => {
@@ -345,7 +379,7 @@ describe('hoistDependencies', () => {
           ['^4.0.0', '^4.0.2', '5.0.0', '5.0.0', '^4.0.4'],
           DEV_DEP_LIFECYCLE_TYPE
         );
-        index.set(dependencyName, items);
+        index.set(dependencyName, { metadata: {}, componentItems: items });
         dedupedDependencies = hoistDependencies(index);
       });
       it('should hoist the best range to the root', () => {
@@ -399,7 +433,7 @@ describe('hoistDependencies', () => {
           ],
           DEV_DEP_LIFECYCLE_TYPE
         );
-        index.set(dependencyName, items);
+        index.set(dependencyName, { metadata: {}, componentItems: items });
         dedupedDependencies = hoistDependencies(index);
       });
       it('should hoist the best range to the root', () => {
