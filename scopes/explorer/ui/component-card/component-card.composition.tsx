@@ -9,10 +9,5 @@ export const ComponentCardExample = () => {
   );
 };
 export const ComponentCardExample2 = () => {
-  return (
-    <ComponentCard
-      id="ui/concrete/component-card"
-      preview={<div>hello world</div>}
-    />
-  );
+  return <ComponentCard id="ui/concrete/component-card" preview={<div>hello world</div>} />;
 };

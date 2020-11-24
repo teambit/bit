@@ -9,8 +9,7 @@ const nextTeambitVersion = nextTeambitSevVer.version;
 console.log('nextTeambitSemVer', nextTeambitVersion);
 
 try {
-  // const output = execSync(`bit tag -a -s ${nextTeambitVersion}`);
-  const output = execSync(`bit tag -a`);
+  const output = execSync(`bit tag -a -s ${nextTeambitVersion}`);
   console.log(output.toString());
 } catch (err) {
   console.log(err);

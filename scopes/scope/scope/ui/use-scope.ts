@@ -8,6 +8,7 @@ const SCOPE = gql`
     scope {
       name
       description
+      icon
       components {
         id {
           name

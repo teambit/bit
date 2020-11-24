@@ -25,7 +25,7 @@ import { Compiler } from './types';
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
 export type CompileOptions = {
-  all?: boolean;
+  changed?: boolean;
   verbose?: boolean;
 };
 
@@ -149,7 +149,7 @@ export class WorkspaceCompiler {
     noThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    const componentIds = await this.getIdsToCompile(componentsIds, options.all);
+    const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     // const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const components = await this.workspace.getMany(componentIds);
 
@@ -205,13 +205,13 @@ export class WorkspaceCompiler {
     return buildResults;
   }
 
-  private async getIdsToCompile(componentsIds: Array<string | BitId>, all = false): Promise<ComponentID[]> {
+  private async getIdsToCompile(componentsIds: Array<string | BitId>, changed = false): Promise<ComponentID[]> {
     if (componentsIds.length) {
       return this.workspace.resolveMultipleComponentIds(componentsIds);
     }
-    if (all) {
-      return this.workspace.getAllComponentIds();
+    if (changed) {
+      return this.workspace.getNewAndModifiedIds();
     }
-    return this.workspace.getNewAndModifiedIds();
+    return this.workspace.getAllComponentIds();
   }
 }
