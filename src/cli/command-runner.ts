@@ -119,6 +119,7 @@ export async function handleErrorAndExit(err: Error, commandName: string, should
   loader.off();
   logger.error(`got an error from command ${commandName}: ${err}`);
   logger.error(err.stack || '<no error stack was found>');
+  console.log(err);
   const { message, error } = defaultHandleError(err);
   if (shouldSerialize) return serializeErrAndExit(error, commandName);
   return logErrAndExit(message, commandName);

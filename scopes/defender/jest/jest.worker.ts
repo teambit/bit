@@ -6,7 +6,7 @@ export class JestWorker {
 
   onTestComplete(onTestComplete) {
     this.onTestCompleteCb = onTestComplete;
-    return this;
+    // return this;
   }
 
   watch(jestConfigPath: string, testFiles: string[], rootPath: string) {

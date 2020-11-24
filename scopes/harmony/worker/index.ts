@@ -1,4 +1,7 @@
 import { WorkerAspect } from './worker.aspect';
+import { setFunctionHandlers } from './expose';
+
+setFunctionHandlers();
 
 export { WorkerAspect };
 export type { WorkerMain } from './worker.main.runtime';

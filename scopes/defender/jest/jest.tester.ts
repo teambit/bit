@@ -1,6 +1,7 @@
 import { readFileSync } from 'fs';
 import { compact } from 'lodash';
 // import { runCLI } from 'jest';
+import { proxy } from 'comlink';
 import { HarmonyWorker } from '@teambit/worker';
 import { Tester, CallbackFn, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
@@ -158,20 +159,28 @@ export class JestTester implements Tester {
       testMatch: testFiles,
     });
 
-    await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
+    try {
+      const cbFn = proxy((results) => {
+        if (!this._callback) return;
+        const testResults = results.testResults;
+        const componentsWithTests = this.attachTestsToComponent(context, testResults);
+        const componentTestResults = this.buildTestsObj(results, componentsWithTests, context, jestConfigWithSpecs);
+        const globalErrors = this.getErrors(testResults);
+        const watchTestResults = {
+          loading: false,
+          errors: globalErrors,
+          components: componentTestResults,
+        };
+        this._callback(watchTestResults);
+      });
 
-    await workerApi.onTestComplete((results) => {
-      if (!this._callback) return;
-      const testResults = results.testResults;
-      const componentsWithTests = this.attachTestsToComponent(context, testResults);
-      const componentTestResults = this.buildTestsObj(results, componentsWithTests, context, jestConfigWithSpecs);
-      const globalErrors = this.getErrors(testResults);
-      const watchTestResults = {
-        loading: false,
-        errors: globalErrors,
-        components: componentTestResults,
-      };
-      this._callback(watchTestResults);
-    });
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      await workerApi.onTestComplete(cbFn).catch((err) => console.log(err));
+
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
+    } catch (err) {
+      console.log(err);
+    }
   }
 }
