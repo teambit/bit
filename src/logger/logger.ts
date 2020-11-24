@@ -33,7 +33,7 @@ const prettyPrint = {
 
 const prettyPrintConsole = {
   colorize: true,
-  ignore: 'hostname,pid,time',
+  ignore: 'hostname,pid,time,level',
 };
 
 /**
@@ -62,10 +62,10 @@ if (!jsonFormat) {
 }
 
 const pinoLogger: PinoLogger = pino(opts, dest);
-
 pinoLogger.level = logLevel;
 
 const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
+pinoLoggerConsole.level = logLevel;
 
 // eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IBitLogger {
@@ -201,7 +201,7 @@ class BitLogger implements IBitLogger {
       try {
         messageStr = chalk.keyword(color)(messageStr);
       } catch (e) {
-        this.silly('a wrong color provided to logger.console method');
+        this.trace('a wrong color provided to logger.console method');
       }
     }
     pinoLoggerConsole[level](messageStr);
