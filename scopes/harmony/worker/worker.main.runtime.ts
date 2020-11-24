@@ -27,7 +27,7 @@ export class WorkerMain {
   /**
    * create a new worker.
    */
-  async declareWorker<T>(name: string) {
+  async declareWorker<T>(name: string, path?: string) {
     this.workerNameSlot.register(name);
 
     const maybeAspectId = this.workerNameSlot.toArray().find(([, workerName]) => {
@@ -37,7 +37,8 @@ export class WorkerMain {
     if (!maybeAspectId) throw new Error(`could not create a worker ${name}`);
     const [aspectId] = maybeAspectId;
 
-    const scriptPath = await this.resolveWorkerScript(name, aspectId);
+    // const scriptPath = path || await this.resolveWorkerScript(name, aspectId);
+    const scriptPath = path;
     const systemWorker = new HarmonyWorker<T>(name, scriptPath);
     this.workerSlot.register(systemWorker);
 

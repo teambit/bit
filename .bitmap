@@ -6796,6 +6796,40 @@
         "exported": true,
         "lanes": []
     },
+    "ui/round-loader": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "round-loader.composition.tsx",
+                "relativePath": "round-loader.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "round-loader.docs.tsx",
+                "relativePath": "round-loader.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "round-loader.module.scss",
+                "relativePath": "round-loader.module.scss",
+                "test": false
+            },
+            {
+                "name": "round-loader.tsx",
+                "relativePath": "round-loader.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/round-loader",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "ui/surfaces/menu/link-item": {
         "files": [
             {
@@ -6840,6 +6874,40 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/surfaces/menu/section",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/test-loader": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "test-loader.composition.tsx",
+                "relativePath": "test-loader.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "test-loader.docs.tsx",
+                "relativePath": "test-loader.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "test-loader.module.scss",
+                "relativePath": "test-loader.module.scss",
+                "test": false
+            },
+            {
+                "name": "test-loader.tsx",
+                "relativePath": "test-loader.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/ui/test-loader",
         "origin": "AUTHORED",
         "exported": false,
         "lanes": []

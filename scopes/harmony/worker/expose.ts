@@ -11,12 +11,12 @@ export function setFunctionHandlers() {
       comlinkExpose(obj, nodeEndpoint(port1));
       return [port2, [port2]];
     },
-    deserialize: (port) => {
+    deserialize: (port: any) => {
       port = nodeEndpoint(port);
       port.start();
       return wrap(port);
     },
-  });
+  } as any);
 }
 
 setFunctionHandlers();

@@ -49,6 +49,7 @@ import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { BitAspect } from './bit.aspect';
+import WorkerAspect from '@teambit/worker';
 
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
@@ -77,6 +78,7 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
+  [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
   [TesterAspect.id]: TesterAspect,

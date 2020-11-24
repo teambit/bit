@@ -21,7 +21,7 @@ export class JestMain {
 
   static async provider([worker, loggerAspect]: [WorkerMain, LoggerMain]) {
     const logger = loggerAspect.createLogger(JestAspect.id);
-    const jestWorker = await worker.declareWorker<JestWorker>(WORKER_NAME);
+    const jestWorker = await worker.declareWorker<JestWorker>(WORKER_NAME, require.resolve('./jest.worker'));
     return new JestMain(jestWorker, logger);
   }
 }
