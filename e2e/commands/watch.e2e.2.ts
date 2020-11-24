@@ -109,7 +109,7 @@ describe('bit watch command', function () {
     before(() => {
       helper.command.resetFeatures();
       helper.command.setFeatures(HARMONY_FEATURE);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
