@@ -1,4 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { WorkerAspect, WorkerMain, HarmonyWorker } from '@teambit/worker';
 import { JestAspect } from './jest.aspect';
 import { JestTester } from './jest.tester';
@@ -9,18 +10,19 @@ const jest = require('jest');
 export const WORKER_NAME = 'jest';
 
 export class JestMain {
-  constructor(private jestWorker: HarmonyWorker<JestWorker>) {}
+  constructor(private jestWorker: HarmonyWorker<JestWorker>, private logger: Logger) {}
 
   createTester(jestConfig: any, jestModule = jest) {
-    return new JestTester(JestAspect.id, jestConfig, jestModule, this.jestWorker);
+    return new JestTester(JestAspect.id, jestConfig, jestModule, this.jestWorker, this.logger);
   }
 
   static runtime = MainRuntime;
-  static dependencies = [WorkerAspect];
+  static dependencies = [WorkerAspect, LoggerAspect];
 
-  static async provider([worker]: [WorkerMain]) {
+  static async provider([worker, loggerAspect]: [WorkerMain, LoggerMain]) {
+    const logger = loggerAspect.createLogger(JestAspect.id);
     const jestWorker = await worker.declareWorker<JestWorker>(WORKER_NAME);
-    return new JestMain(jestWorker);
+    return new JestMain(jestWorker, logger);
   }
 }
 

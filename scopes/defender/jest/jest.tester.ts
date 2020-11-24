@@ -2,6 +2,7 @@ import { readFileSync } from 'fs';
 import { compact } from 'lodash';
 // import { runCLI } from 'jest';
 import { proxy } from 'comlink';
+import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
 import { Tester, CallbackFn, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
@@ -18,7 +19,8 @@ export class JestTester implements Tester {
     readonly id: string,
     readonly jestConfig: any,
     private jestModule: typeof jest,
-    private jestWorker: HarmonyWorker<JestWorker>
+    private jestWorker: HarmonyWorker<JestWorker>,
+    private logger: Logger
   ) {}
 
   configPath = this.jestConfig;
@@ -175,12 +177,12 @@ export class JestTester implements Tester {
       });
 
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      await workerApi.onTestComplete(cbFn).catch((err) => console.log(err));
+      await workerApi.onTestComplete(cbFn);
 
       // eslint-disable-next-line @typescript-eslint/no-floating-promises
       await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
     } catch (err) {
-      console.log(err);
+      this.logger.error(err);
     }
   }
 }
