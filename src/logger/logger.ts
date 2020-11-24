@@ -12,10 +12,14 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_
 
 export { Level as LoggerLevel };
 
-const dest = pino.destination({
-  dest: DEBUG_LOG, // omit for stdout
-  sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
-});
+const noLog = Boolean(process.env.npm_config_nolog);
+
+const dest = noLog
+  ? pino.destination('/dev/null')
+  : pino.destination({
+      dest: DEBUG_LOG, // omit for stdout
+      sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
+    });
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -62,7 +66,7 @@ if (!jsonFormat) {
 }
 
 const pinoLogger: PinoLogger = pino(opts, dest);
-pinoLogger.level = logLevel;
+pinoLogger.level = noLog ? 'silent' : logLevel;
 
 const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
 pinoLoggerConsole.level = logLevel;
