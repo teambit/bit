@@ -4,6 +4,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import findDuplications from 'bit-bin/dist/utils/array/find-duplications';
 import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -260,6 +261,7 @@ export class EnvsMain {
 
   // :TODO can be refactored to few utilities who will make repeating this very easy.
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
+    this.throwForDuplicateComponents(components);
     const envsMap = {};
     components.forEach((component: Component) => {
       const envDef = this.getEnv(component);
@@ -277,6 +279,14 @@ export class EnvsMain {
     return Object.keys(envsMap).map((key) => {
       return new EnvRuntime(key, envsMap[key].env, envsMap[key].components);
     });
+  }
+
+  private throwForDuplicateComponents(components: Component[]) {
+    const idsStr = components.map((c) => c.id.toString());
+    const duplications = findDuplications(idsStr);
+    if (duplications.length) {
+      throw new Error(`found duplicated components: ${duplications.join(', ')}`);
+    }
   }
 
   static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
