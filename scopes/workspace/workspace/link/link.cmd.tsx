@@ -8,6 +8,7 @@ import { timeFormat } from '@teambit/time.time-format';
 import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
 import { ComponentListLinks } from './component-list-links';
+import { CoreAspectsLinks } from './core-aspects-links';
 
 type LinkCommandOpts = {
   rewire: boolean;
@@ -52,12 +53,20 @@ export class LinkCommand implements Command {
     const endTime = Date.now();
     const numOfComponents = linkResults.legacyLinkResults?.length;
     const timeDiff = timeFormat(endTime - startTime);
+    const coreAspectsLinksWithMainAspect = linkResults.coreAspectsLinks || [];
+    if (linkResults.teambitBitLink) {
+      coreAspectsLinksWithMainAspect.unshift(linkResults.teambitBitLink);
+    }
     return (
       <Box key="all" flexDirection="column">
-        <Text>Linked {numOfComponents} components to node_modules</Text>
+        <Text>
+          Linked {numOfComponents} components to node_modules for workspace:{' '}
+          <Text color="cyan">{this.workspace.name}</Text>
+        </Text>
         <Newline />
         <ComponentListLinks componentListLinks={linkResults.legacyLinkResults} verbose={opts.verbose} />
-        {/* {CoreAspects(linkResults.legacyLinkResults, opts.verbose)} */}
+        <Newline />
+        <CoreAspectsLinks coreAspectsLinks={coreAspectsLinksWithMainAspect} verbose={opts.verbose} />
         <Newline />
         <Text>Finished. {timeDiff}</Text>
       </Box>
