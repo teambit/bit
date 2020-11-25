@@ -1,0 +1,74 @@
+.baseCheckbox {
+  cursor: pointer;
+  user-select: none;
+
+  input:disabled + & {
+    cursor: auto;
+  }
+}
+
+.baseCheckboxContainer {
+  input {
+    // css black magic to hide `<input/>` without taking it out of the dom
+    position: absolute !important;
+    height: 1px;
+    width: 1px;
+    overflow: hidden;
+    clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
+    clip: rect(1px, 1px, 1px, 1px);
+  }
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid var(--separator-color);
+  box-sizing: border-box;
+  width: 1em;
+  height: 1em;
+
+  border-radius: 0.125em;
+
+  transition: background-color 80ms, border-color 80ms;
+}
+
+input:focus + .checkbox {
+  box-shadow: 0 0 0 0.125em var(--muted-color);
+}
+
+input:checked + .checkbox {
+  background-color: var(--base-color);
+  border-color: var(--base-color);
+
+  & .icon {
+    visibility: visible;
+  }
+
+  &:hover {
+    background-color: var(--base-highlight);
+    border-color: var(--base-highlight);
+  }
+}
+
+input:disabled + .checkbox {
+  background: var(--border-color); // TODO should be --bg-disabled
+}
+
+input:checked:disabled + .checkbox {
+  background: var(--muted-highlight); // TODO - should be --accent-bg-disabled
+  border-color: var(--muted-highlight); // TODO - should be --accent-bg-disabled
+}
+
+.icon {
+  visibility: hidden;
+  color: white;
+  font-size: 0.75em;
+
+  // fix - put some content, that will be overridden by icon font.
+  // mitigates checkbox 'jumping' before font loads
+  &::before {
+    content: ' '; // <- using 'nbsp' space
+  }
+}

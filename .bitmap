@@ -6796,6 +6796,35 @@
         "exported": true,
         "lanes": []
     },
+    "ui/input/check-box": {
+        "files": [
+            {
+                "name": "check-box.compositions.tsx",
+                "relativePath": "check-box.compositions.tsx",
+                "test": false
+            },
+            {
+                "name": "check-box.module.scss",
+                "relativePath": "check-box.module.scss",
+                "test": false
+            },
+            {
+                "name": "check-box.tsx",
+                "relativePath": "check-box.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/input/check-box",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "ui/surfaces/menu/link-item": {
         "files": [
             {
