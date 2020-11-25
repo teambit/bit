@@ -76,6 +76,7 @@ import {
 } from './workspace.provider';
 import { Issues } from './workspace-component/issues';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
+import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 
 export type EjectConfResult = {
   configPath: string;
@@ -98,6 +99,8 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
 };
+
+export type WorkspaceLinkOptions = LinkingOptions;
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -1009,11 +1012,8 @@ export class Workspace implements ComponentFactory {
     const installer = this.dependencyResolver.getInstaller({
       linkingOptions: { bitLinkType: 'link', linkCoreAspects: true },
     });
-    const installationMap = await this.getComponentsDirectory([]);
-    const packageJson = this.consumer.packageJson?.packageJsonObject || {};
-    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
-    const policyFromPackageJson = this.dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
-    const mergedRootPolicy = this.dependencyResolver.mergeWorkspacePolices([policyFromPackageJson, workspacePolicy]);
+    const compDirMap = await this.getComponentsDirectory([]);
+    const mergedRootPolicy = this.getMergedRootPolicy();
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
@@ -1023,14 +1023,32 @@ export class Workspace implements ComponentFactory {
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
     };
-    await installer.install(this.path, mergedRootPolicy, installationMap, installOptions);
+    await installer.install(this.path, mergedRootPolicy, compDirMap, installOptions);
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
     this.logger.setStatusLine('linking components');
     await link(legacyStringIds, false);
     this.logger.consoleSuccess();
-    return installationMap;
+    return compDirMap;
+  }
+
+  async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
+    const compDirMap = await this.getComponentsDirectory([]);
+    const mergedRootPolicy = this.getMergedRootPolicy();
+    const linker = this.dependencyResolver.getLinker({
+      rootDir: this.path,
+      linkingOptions: options,
+    });
+    return linker.link(this.path, mergedRootPolicy, compDirMap, options);
+  }
+
+  private getMergedRootPolicy() {
+    const packageJson = this.consumer.packageJson?.packageJsonObject || {};
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+    const policyFromPackageJson = this.dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
+    const mergedRootPolicy = this.dependencyResolver.mergeWorkspacePolices([policyFromPackageJson, workspacePolicy]);
+    return mergedRootPolicy;
   }
 
   /**

@@ -30,3 +30,4 @@ export {
   ComponentDependency,
 } from './dependencies';
 export { WorkspacePolicyEntry, WorkspacePolicy, VariantPolicyConfigObject } from './policy';
+export { CoreAspectLinkResult, LinkDetail, LinkResults } from './dependency-linker';
