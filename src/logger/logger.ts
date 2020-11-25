@@ -14,7 +14,13 @@ export { Level as LoggerLevel };
 
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
+const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
+
 const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
+
+if (!isLevel(logLevel)) {
+  throw new Error(`fatal: level ${logLevel} is invalid. permitted levels are: ${LEVELS.join(', ')}`);
+}
 
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
@@ -330,8 +336,7 @@ if (process.env.BIT_LOG) {
 }
 
 function isLevel(maybeLevel: Level | string): maybeLevel is Level {
-  const levels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
-  return levels.includes(maybeLevel);
+  return LEVELS.includes(maybeLevel);
 }
 
 export function writeLogToScreen(levelOrPrefix = '') {
