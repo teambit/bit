@@ -68,7 +68,7 @@ export class JestTester implements Tester {
       const tests = testsFiles.map((test) => {
         const file = this.getTestFile(test.testFilePath, testerContext);
         const testResults = test.testResults.map((testResult) => {
-          const error = formatResultsErrors([testResult], config, { noStackTrace: false });
+          const error = formatResultsErrors([testResult], config, { noStackTrace: true });
           return new TestResult(
             testResult.ancestorTitles,
             testResult.title,
@@ -146,8 +146,8 @@ export class JestTester implements Tester {
     return { components: componentTestResults, errors: globalErrors };
   }
 
-  async watch(context: TesterContext): Promise<Tests> {
-    const workerApi = this.jestWorker.initiate();
+  async watch(context: TesterContext): Promise<void> {
+    const workerApi = this.jestWorker.initiate({ stdout: true, stderr: true });
 
     const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
       specs.forEach((spec) => acc.push(spec.path));
