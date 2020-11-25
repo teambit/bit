@@ -15,11 +15,15 @@ export { Level as LoggerLevel };
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
 const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
-
-const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
-
+const defaultLevel = 'debug';
+let logLevel = getSync(CFG_LOG_LEVEL) || defaultLevel;
 if (!isLevel(logLevel)) {
-  throw new Error(`fatal: level ${logLevel} is invalid. permitted levels are: ${LEVELS.join(', ')}`);
+  console.error(
+    `fatal: level "${logLevel}" coming from ${CFG_LOG_LEVEL} configuration is invalid. permitted levels are: ${LEVELS.join(
+      ', '
+    )}`
+  );
+  logLevel = defaultLevel;
 }
 
 export const baseFileTransportOpts = {
