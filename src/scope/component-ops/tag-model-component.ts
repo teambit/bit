@@ -197,12 +197,15 @@ export default async function tagModelComponent({
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
   const componentsToTag: Component[] = R.values(consumerComponentsIdsMap); // consumerComponents unique
-  // @todo: figure out what the consequences of removing this filter.
-  const idsToTriggerAutoTag = componentsToTag.map((c) => c.id); // .filter((id) => id.hasVersion());
+  const idsToTag = BitIds.fromArray(componentsToTag.map((c) => c.id));
+  // ids without versions are new. it's impossible that tagged (and not-modified) components has
+  // them as dependencies.
+  const idsToTriggerAutoTag = idsToTag.filter((id) => id.hasVersion());
 
   const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
-  const autoTagConsumerComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
-  const allComponentsToTag = componentsToTag.concat(autoTagConsumerComponents);
+  const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
+  const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
+  const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
   // check for each one of the components whether it is using an old version
   if (!ignoreNewestVersion && !isSnap) {
@@ -268,7 +271,7 @@ export default async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
 
-  await addLogToComponents(componentsToTag, autoTagConsumerComponents, persist, message);
+  await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
 
   if (persist) {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
