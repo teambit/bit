@@ -97,7 +97,7 @@ export interface Tester {
   /**
    * watch tests on all components
    */
-  watch?(context: TesterContext): Promise<void>;
+  watch?(context: TesterContext): Promise<Tests>;
   /**
    * return the tester version.
    */

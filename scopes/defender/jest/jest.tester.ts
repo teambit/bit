@@ -146,43 +146,47 @@ export class JestTester implements Tester {
     return { components: componentTestResults, errors: globalErrors };
   }
 
-  async watch(context: TesterContext): Promise<void> {
-    const workerApi = this.jestWorker.initiate({ stdout: true, stderr: true });
+  async watch(context: TesterContext): Promise<Tests> {
+    return new Promise(async (resolve) => {
+      const workerApi = this.jestWorker.initiate(
+        context.ui ? { stdout: true, stderr: true, stdin: true } : { stdout: false, stderr: false, stdin: false }
+      );
+      const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
+        specs.forEach((spec) => acc.push(spec.path));
+        return acc;
+      }, []);
 
-    const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
-      specs.forEach((spec) => acc.push(spec.path));
-      return acc;
-    }, []);
+      // eslint-disable-next-line
+      const jestConfig = require(this.jestConfig);
 
-    // eslint-disable-next-line
-    const jestConfig = require(this.jestConfig);
-
-    const jestConfigWithSpecs = Object.assign(jestConfig, {
-      testMatch: testFiles,
-    });
-
-    try {
-      const cbFn = proxy((results) => {
-        if (!this._callback) return;
-        const testResults = results.testResults;
-        const componentsWithTests = this.attachTestsToComponent(context, testResults);
-        const componentTestResults = this.buildTestsObj(results, componentsWithTests, context, jestConfigWithSpecs);
-        const globalErrors = this.getErrors(testResults);
-        const watchTestResults = {
-          loading: false,
-          errors: globalErrors,
-          components: componentTestResults,
-        };
-        this._callback(watchTestResults);
+      const jestConfigWithSpecs = Object.assign(jestConfig, {
+        testMatch: testFiles,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      await workerApi.onTestComplete(cbFn);
+      try {
+        const cbFn = proxy((results) => {
+          if (!this._callback) return;
+          const testResults = results.testResults;
+          const componentsWithTests = this.attachTestsToComponent(context, testResults);
+          const componentTestResults = this.buildTestsObj(results, componentsWithTests, context, jestConfigWithSpecs);
+          const globalErrors = this.getErrors(testResults);
+          const watchTestResults = {
+            loading: false,
+            errors: globalErrors,
+            components: componentTestResults,
+          };
+          this._callback(watchTestResults);
+          resolve(watchTestResults);
+        });
 
-      // eslint-disable-next-line @typescript-eslint/no-floating-promises
-      await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
-    } catch (err) {
-      this.logger.error(err);
-    }
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        await workerApi.onTestComplete(cbFn);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
+      } catch (err) {
+        this.logger.error(err);
+      }
+    });
   }
 }
