@@ -118,7 +118,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
       });
     }
   } catch (err) {
-    logger.silly(`failed parsing docs using docgen on path ${filePath} with error`, err);
+    logger.trace(`failed parsing docs using docgen on path ${filePath} with error`, err);
   }
   return undefined;
 }

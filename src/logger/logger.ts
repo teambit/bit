@@ -12,79 +12,9 @@ import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_
 
 export { Level as LoggerLevel };
 
-const noLog = Boolean(process.env.npm_config_nolog);
-
-const dest = noLog
-  ? pino.destination('/dev/null')
-  : pino.destination({
-      dest: DEBUG_LOG, // omit for stdout
-      sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
-    });
-
-// Store the extensionsLoggers to prevent create more than one logger for the same extension
-// in case the extension developer use api.logger more than once
-const extensionsLoggers = new Map();
-
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
 const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
-
-const prettyPrint = {
-  colorize: true,
-  translateTime: 'SYS:standard',
-  ignore: 'hostname',
-};
-
-const prettyPrintConsole = {
-  colorize: true,
-  ignore: 'hostname,pid,time,level',
-};
-
-/**
- * by default, Pino expects the first parameter to be an object and the second to be the message
- * string. since all current log messages were written using Winston, they're flipped - message
- * first and then other data.
- * this hook flips the first two arguments, so then it's fine to have the message as the first arg.
- */
-const hooks = {
-  logMethod(inputArgs, method) {
-    if (inputArgs.length >= 2 && inputArgs[1] !== undefined) {
-      const arg1 = inputArgs.shift();
-      const arg2 = inputArgs.shift();
-      return method.apply(this, [arg2, arg1]);
-    }
-    return method.apply(this, inputArgs);
-  },
-};
-
-const opts: LoggerOptions = {
-  hooks,
-};
-
-if (!jsonFormat) {
-  opts.prettyPrint = prettyPrint;
-}
-
-const pinoLogger: PinoLogger = pino(opts, dest);
-pinoLogger.level = noLog ? 'silent' : logLevel;
-
-const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
-pinoLoggerConsole.level = logLevel;
-
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface IBitLogger {
-  trace(message: string, ...meta: any[]): void;
-
-  debug(message: string, ...meta: any[]): void;
-
-  warn(message: string, ...meta: any[]): void;
-
-  info(message: string, ...meta: any[]): void;
-
-  error(message: string, ...meta: any[]): void;
-
-  console(msg: string): void;
-}
 
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
@@ -125,11 +55,79 @@ export function getFormat() {
 /**
  * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
  * functionality.
+ * also, this should start BEFORE Pino. otherwise, Pino starts creating the debug.log file first
+ * and it throws an error if the file doesn't exists on Docker/CI.
  */
 const winstonLogger = winston.createLogger({
   transports: [new winston.transports.File(baseFileTransportOpts)],
   exitOnError: false,
 });
+
+const dest = pino.destination({
+  dest: DEBUG_LOG, // omit for stdout
+  sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
+});
+
+// Store the extensionsLoggers to prevent create more than one logger for the same extension
+// in case the extension developer use api.logger more than once
+const extensionsLoggers = new Map();
+
+const prettyPrint = {
+  colorize: true,
+  translateTime: 'SYS:standard',
+  ignore: 'hostname',
+};
+
+const prettyPrintConsole = {
+  colorize: true,
+  ignore: 'hostname,pid,time,level',
+};
+
+/**
+ * by default, Pino expects the first parameter to be an object and the second to be the message
+ * string. since all current log messages were written using Winston, they're flipped - message
+ * first and then other data.
+ * this hook flips the first two arguments, so then it's fine to have the message as the first arg.
+ */
+const hooks = {
+  logMethod(inputArgs, method) {
+    if (inputArgs.length >= 2 && inputArgs[1] !== undefined) {
+      const arg1 = inputArgs.shift();
+      const arg2 = inputArgs.shift();
+      return method.apply(this, [arg2, arg1]);
+    }
+    return method.apply(this, inputArgs);
+  },
+};
+
+const opts: LoggerOptions = {
+  hooks,
+};
+
+if (!jsonFormat) {
+  opts.prettyPrint = prettyPrint;
+}
+
+const pinoLogger: PinoLogger = pino(opts, dest);
+pinoLogger.level = logLevel;
+
+const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
+pinoLoggerConsole.level = logLevel;
+
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+export interface IBitLogger {
+  trace(message: string, ...meta: any[]): void;
+
+  debug(message: string, ...meta: any[]): void;
+
+  warn(message: string, ...meta: any[]): void;
+
+  info(message: string, ...meta: any[]): void;
+
+  error(message: string, ...meta: any[]): void;
+
+  console(msg: string): void;
+}
 
 /**
  * the method signatures of debug/info/error/etc are similar to Winston.logger.
