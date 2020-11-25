@@ -87,7 +87,7 @@ export class TesterMain {
     private devFiles: DevFilesMain
   ) {}
 
-  _testsResults: { [componentId: string]: ComponentsResults } | never[] = [];
+  _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
 
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
