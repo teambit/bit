@@ -288,11 +288,10 @@ export class ScopeMain implements ComponentFactory {
       return legacyId;
     });
 
-    const withoutOwnScope = legacyIds.filter((id) => {
-      return id.scope !== this.name;
+    const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
+      return id.scope !== this.name && id.hasScope();
     });
-
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals));
 
     // TODO: return a much better output based on legacy version-dependencies
     return this.getMany(ids);

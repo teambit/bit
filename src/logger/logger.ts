@@ -2,36 +2,19 @@ import chalk from 'chalk';
 import * as path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import winston, { LogEntry, Logger } from 'winston';
+import winston, { LogEntry } from 'winston';
+import pino, { Logger as PinoLogger, Level, LoggerOptions } from 'pino';
 import yn from 'yn';
-
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '../constants';
 
-// Store the extensionsLoggers to prevent create more than one logger for the same extension
-// in case the extension developer use api.logger more than once
-const extensionsLoggers = new Map();
+export { Level as LoggerLevel };
 
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
 const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
-
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
-export interface IBitLogger {
-  silly(message: string, ...meta: any[]): void;
-
-  debug(message: string, ...meta: any[]): void;
-
-  warn(message: string, ...meta: any[]): void;
-
-  info(message: string, ...meta: any[]): void;
-
-  error(message: string, ...meta: any[]): void;
-
-  console(msg: string): void;
-}
 
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
@@ -69,9 +52,82 @@ export function getFormat() {
   );
 }
 
-const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
-  filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
+/**
+ * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
+ * functionality.
+ * also, this should start BEFORE Pino. otherwise, Pino starts creating the debug.log file first
+ * and it throws an error if the file doesn't exists on Docker/CI.
+ */
+const winstonLogger = winston.createLogger({
+  transports: [new winston.transports.File(baseFileTransportOpts)],
+  exitOnError: false,
 });
+
+const dest = pino.destination({
+  dest: DEBUG_LOG, // omit for stdout
+  sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
+});
+
+// Store the extensionsLoggers to prevent create more than one logger for the same extension
+// in case the extension developer use api.logger more than once
+const extensionsLoggers = new Map();
+
+const prettyPrint = {
+  colorize: true,
+  translateTime: 'SYS:standard',
+  ignore: 'hostname',
+};
+
+const prettyPrintConsole = {
+  colorize: true,
+  ignore: 'hostname,pid,time,level',
+};
+
+/**
+ * by default, Pino expects the first parameter to be an object and the second to be the message
+ * string. since all current log messages were written using Winston, they're flipped - message
+ * first and then other data.
+ * this hook flips the first two arguments, so then it's fine to have the message as the first arg.
+ */
+const hooks = {
+  logMethod(inputArgs, method) {
+    if (inputArgs.length >= 2 && inputArgs[1] !== undefined) {
+      const arg1 = inputArgs.shift();
+      const arg2 = inputArgs.shift();
+      return method.apply(this, [arg2, arg1]);
+    }
+    return method.apply(this, inputArgs);
+  },
+};
+
+const opts: LoggerOptions = {
+  hooks,
+};
+
+if (!jsonFormat) {
+  opts.prettyPrint = prettyPrint;
+}
+
+const pinoLogger: PinoLogger = pino(opts, dest);
+pinoLogger.level = logLevel;
+
+const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
+pinoLoggerConsole.level = logLevel;
+
+// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+export interface IBitLogger {
+  trace(message: string, ...meta: any[]): void;
+
+  debug(message: string, ...meta: any[]): void;
+
+  warn(message: string, ...meta: any[]): void;
+
+  info(message: string, ...meta: any[]): void;
+
+  error(message: string, ...meta: any[]): void;
+
+  console(msg: string): void;
+}
 
 /**
  * the method signatures of debug/info/error/etc are similar to Winston.logger.
@@ -85,7 +141,7 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
  * normally, no need to call logger.error(). once an error is thrown, it is already logged.
  */
 class BitLogger implements IBitLogger {
-  logger: Logger;
+  logger: PinoLogger;
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
@@ -93,16 +149,19 @@ class BitLogger implements IBitLogger {
    */
   shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
 
-  constructor(logger: Logger) {
+  constructor(logger: PinoLogger) {
     this.logger = logger;
-    logger.on('error', (err) => {
-      // eslint-disable-next-line no-console
-      console.log('got an error from the logger', err);
-    });
   }
 
+  /**
+   * @deprecated use trace instead
+   */
   silly(message: string, ...meta: any[]) {
-    this.logger.silly(message, ...meta);
+    this.logger.trace(message, ...meta);
+  }
+
+  trace(message: string, ...meta: any[]) {
+    this.logger.trace(message, ...meta);
   }
 
   debug(message: string, ...meta: any[]) {
@@ -125,32 +184,33 @@ class BitLogger implements IBitLogger {
    * use this instead of calling `console.log()`, this way it won't break commands that don't
    * expect output during the execution.
    */
-  console(msg?: string | Error, level = 'info', color?: string) {
+  console(msg?: string | Error, level: Level = 'info', color?: string) {
     if (!msg) {
       return;
     }
-    let actualMessage = msg;
+    let messageStr: string;
     if (msg instanceof Error) {
       const { message } = defaultHandleError(msg);
-      actualMessage = message;
+      messageStr = message;
+    } else {
+      messageStr = msg;
     }
     if (!this.shouldWriteToConsole) {
-      this[level](actualMessage);
+      this[level](messageStr);
       return;
     }
     if (color) {
       try {
-        // @ts-ignore
-        actualMessage = chalk.keyword(color)(actualMessage);
+        messageStr = chalk.keyword(color)(messageStr);
       } catch (e) {
-        this.silly('a wrong color provided to logger.console method');
+        this.trace('a wrong color provided to logger.console method');
       }
     }
-    winston.loggers.get('consoleOnly')[level](actualMessage);
+    pinoLoggerConsole[level](messageStr);
   }
 
   profile(id: string, meta?: LogEntry) {
-    this.logger.profile(id, meta);
+    winstonLogger.profile(id, meta);
   }
 
   async exitAfterFlush(code = 0, commandName: string) {
@@ -164,8 +224,11 @@ class BitLogger implements IBitLogger {
       level = 'error';
       msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
     }
+    // this should have been helpful to not miss any log message when using `sync: false` in the
+    // Pino opts, but sadly, it doesn't help.
+    // const finalLogger = pino.final(pinoLogger);
+    // finalLogger[level](msg);
     this.logger[level](msg);
-    await waitForLogger();
     process.exit(code);
   }
 
@@ -204,15 +267,14 @@ class BitLogger implements IBitLogger {
     this.logger[level](`${category}, ${messageWithData}`, extraData);
     addBreadCrumb(category, message, data, extraData);
   }
+
+  switchToConsoleLogger(level?: Level) {
+    this.logger = pinoLoggerConsole;
+    this.logger.level = level || 'debug';
+  }
 }
 
-const winstonLogger = winston.createLogger({
-  transports: [new winston.transports.File(baseFileTransportOpts)],
-  exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
-  exitOnError: false,
-});
-
-const logger = new BitLogger(winstonLogger);
+const logger = new BitLogger(pinoLogger);
 
 /**
  * Create a logger instance for extension
@@ -248,35 +310,6 @@ export const printWarning = (msg: string) => {
   }
 };
 
-/**
- * @credit dpraul from https://github.com/winstonjs/winston/issues/1250
- * it solves an issue when exiting the code explicitly and the log file is not written
- *
- * there are still two issues though.
- * 1. sometimes, an error is thrown "write after end". can be reproduced by running the
- * performance e2e-test on 3,000 components, 100 dependencies, on export.
- * 2. sometimes, it doesn't write all messages to the log. can be reproduced by the same method as
- * above, but even with 300 components and 10 dependencies.
- *
- * if you try to fix these issues, please make sure that after your fix, the following are working:
- * 1. the two cases should work.
- * 2. when error is thrown, it exists successfully with the correct error-code. (the standard
- * e2e-tests cover this multiple times).
- * 3. the ssh is working. (not covered by the e2e-tests). run a simple export to an ssh and make
- * sure it doesn't hang.
- *
- * for the record, the following was working for #1 and #2 but not for #3.
- * ```
- * const loggerDone = new Promise(resolve => logger.logger.on(code ? 'finish' : 'close', resolve));
- * if (code) logger.logger.end();
- * ```
- */
-async function waitForLogger() {
-  const loggerDone = new Promise((resolve) => logger.logger.on('finish', resolve));
-  logger.logger.end();
-  return loggerDone;
-}
-
 function addBreadCrumb(category: string, message: string, data: Record<string, any> = {}, extraData) {
   const hashedData = {};
   Object.keys(data).forEach((key) => (hashedData[key] = Analytics.hashData(data[key])));
@@ -296,35 +329,33 @@ if (process.env.BIT_LOG) {
   writeLogToScreen(process.env.BIT_LOG);
 }
 
-export function writeLogToScreen(levelOrPrefix = '') {
-  const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
-  const isLevel = levels.includes(levelOrPrefix);
-  const prefixes = levelOrPrefix.split(',');
-  const filterPrefix = winston.format((info) => {
-    if (isLevel) return info;
-    if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
-    return false;
-  });
-  logger.logger.add(
-    new winston.transports.Console({
-      level: isLevel ? levelOrPrefix : 'info',
-      format: winston.format.combine(
-        filterPrefix(),
-        winston.format.metadata(),
-        winston.format.errors({ stack: true }),
-        winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
-      ),
-    })
-  );
+function isLevel(maybeLevel: Level | string): maybeLevel is Level {
+  const levels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
+  return levels.includes(maybeLevel);
 }
 
-/**
- * useful when in the middle of the process, Bit needs to print to the console.
- * it's better than using `console.log` because, this way, it's possible to turn it on/off
- */
-winston.loggers.add('consoleOnly', {
-  format: winston.format.combine(winston.format.printf((info) => info.message)),
-  transports: [new winston.transports.Console({ level: 'silly' })],
-});
+export function writeLogToScreen(levelOrPrefix = '') {
+  if (isLevel(levelOrPrefix)) {
+    logger.switchToConsoleLogger(levelOrPrefix);
+  }
+  // @todo: implement
+  // const prefixes = levelOrPrefix.split(',');
+  // const filterPrefix = winston.format((info) => {
+  //   if (isLevel) return info;
+  //   if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
+  //   return false;
+  // });
+  // logger.logger.add(
+  //   new winston.transports.Console({
+  //     level: isLevel ? levelOrPrefix : 'info',
+  //     format: winston.format.combine(
+  //       filterPrefix(),
+  //       winston.format.metadata(),
+  //       winston.format.errors({ stack: true }),
+  //       winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
+  //     ),
+  //   })
+  // );
+}
 
 export default logger;

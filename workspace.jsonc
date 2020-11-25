@@ -229,8 +229,8 @@
         "workbox-webpack-plugin": "^5.1.3"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.162",
         "browserslist": "^4",
+        "bit-bin": "14.8.9-dev.166",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
         "react": "^16.13.1",
@@ -262,7 +262,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.162",
+            "bit-bin": "14.8.9-dev.166",
             "react-dom": "^16.13.1"
           }
         }
@@ -367,7 +367,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.162",
+            "bit-bin": "14.8.9-dev.166",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

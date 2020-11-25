@@ -539,19 +539,21 @@ jobs:
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
-      - run:
-          name: 'git push'
+#       - run:
+#           name: 'git push'
           # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
-          command: 'cd bit && git push origin master'
+#           command: 'cd bit && git push origin master'
       - run: cd bit && npm publish --tag dev
       - run: npm view bit-bin@dev version
       # there is a delay between publishing a package and until it's seen on npm servers
       - run: sleep 2m
       - run: npm view bit-bin@dev version
       - run: cd bit && bit status
+      - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          command: cd bit && bit tag --all --persist
+          # command: cd bit && bit tag --all --persist
+          command: cd bit && bit tag --persist
           no_output_timeout: '25m'
       - run: cd bit && bit export
       - run: cd bit && git commit -am "bump teambit version [skip ci]"

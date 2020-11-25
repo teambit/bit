@@ -487,6 +487,19 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * This will make sure to fetch the objects prior to load them
+   * do not use it if you are not sure you need it.
+   * It will influence the performance
+   * currently it used only for get many of aspects
+   * @param ids
+   * @param forCapsule
+   */
+  async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+    await this.scope.import(ids);
+    return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  /**
    * track a new component. (practically, add it to .bitmap).
    *
    * @param componentPaths component paths relative to the workspace dir
@@ -767,7 +780,7 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
-    const components = await this.getMany(componentIds);
+    const components = await this.importAndGetMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
