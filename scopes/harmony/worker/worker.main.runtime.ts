@@ -27,7 +27,7 @@ export class WorkerMain {
   /**
    * create a new worker.
    */
-  async declareWorker<T>(name: string, path?: string) {
+  async declareWorker<T>(name: string, path: string) {
     this.workerNameSlot.register(name);
 
     const maybeAspectId = this.workerNameSlot.toArray().find(([, workerName]) => {
