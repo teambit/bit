@@ -44,7 +44,6 @@ export class TestCmd implements Command {
         debug: Boolean(debug),
         env: env as string | undefined,
       });
-      return <Box></Box>;
     } else {
       await this.tester.test(components, {
         watch: Boolean(watch),
@@ -54,6 +53,7 @@ export class TestCmd implements Command {
     }
     const { seconds } = timer.stop();
 
+    if (watch) return <Box></Box>;
     return (
       <Box>
         <Text>tested </Text>

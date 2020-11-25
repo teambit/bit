@@ -35,8 +35,6 @@ export class WorkerMain {
     });
 
     if (!maybeAspectId) throw new Error(`could not create a worker ${name}`);
-    const [aspectId] = maybeAspectId;
-
     // const scriptPath = path || await this.resolveWorkerScript(name, aspectId);
     const scriptPath = path;
     const systemWorker = new HarmonyWorker<T>(name, scriptPath);

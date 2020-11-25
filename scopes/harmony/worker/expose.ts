@@ -1,3 +1,4 @@
+// eslint-disable-next-line import/no-unresolved
 import { parentPort, MessageChannel } from 'worker_threads';
 import { expose as comlinkExpose, proxyMarker, wrap, transferHandlers } from 'comlink';
 import nodeEndpoint from './node-endpoint';

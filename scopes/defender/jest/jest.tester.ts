@@ -147,6 +147,7 @@ export class JestTester implements Tester {
   }
 
   async watch(context: TesterContext): Promise<Tests> {
+    // eslint-disable-next-line
     return new Promise(async (resolve) => {
       const workerApi = this.jestWorker.initiate(
         context.ui ? { stdout: true, stderr: true, stdin: true } : { stdout: false, stderr: false, stdin: false }
