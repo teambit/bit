@@ -48,8 +48,8 @@ import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
-import { BitAspect } from './bit.aspect';
 import WorkerAspect from '@teambit/worker';
+import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
   [AspectLoaderAspect.id]: AspectLoaderAspect,
