@@ -154,6 +154,11 @@ export class TesterMain {
      * default test regex for which files tester to apply on.
      */
     patterns: ['*.spec.*', '*.test.*'],
+
+    /**
+     * determine whether to watch on start.
+     */
+    watchOnStart: true,
   };
 
   static async provider(
@@ -184,7 +189,7 @@ export class TesterMain {
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
       ui.registerOnStart(async () => {
-        // if (!config.watchOnStart) return false;
+        if (!config.watchOnStart) return false;
         return tester.uiWatch();
       });
 
