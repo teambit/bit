@@ -13,6 +13,7 @@ import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
+import findDuplications from '../../../src/utils/array/find-duplications';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -260,6 +261,7 @@ export class EnvsMain {
 
   // :TODO can be refactored to few utilities who will make repeating this very easy.
   private aggregateByDefs(components: Component[]): EnvRuntime[] {
+    this.throwForDuplicateComponents(components);
     const envsMap = {};
     components.forEach((component: Component) => {
       const envDef = this.getEnv(component);
@@ -277,6 +279,14 @@ export class EnvsMain {
     return Object.keys(envsMap).map((key) => {
       return new EnvRuntime(key, envsMap[key].env, envsMap[key].components);
     });
+  }
+
+  private throwForDuplicateComponents(components: Component[]) {
+    const idsStr = components.map((c) => c.id.toString());
+    const duplications = findDuplications(idsStr);
+    if (duplications.length) {
+      throw new Error(`found duplicated components: ${duplications.join(', ')}`);
+    }
   }
 
   static slots = [Slot.withType<Environment>(), Slot.withType<EnvService<any>>()];
