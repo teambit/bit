@@ -12,6 +12,8 @@ import { DependenciesGraph } from '../dependencies-graph';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
 import type { FilterType } from '../../graph-filters';
 
+import { GraphFilters } from './graph-filters';
+
 import styles from './graph-page.module.scss';
 
 type GraphPageProps = {
@@ -28,8 +30,8 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
   } = useRouteMatch<PageParams>();
 
   const [filter, setFilter] = useState<FilterType | undefined>(undefined);
-  const onCheckFilter = (e: ChangeEvent<HTMLInputElement>) => {
-    setFilter(e.target.checked ? 'runtimeOnly' : undefined);
+  const onCheckFilter = (isFiltered: boolean) => {
+    setFilter(isFiltered ? 'runtimeOnly' : undefined);
   };
 
   const { graph, error } = useGraphQuery(componentId ? [componentId] : [], filter);
@@ -41,16 +43,14 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
   return (
     <div className={styles.page}>
       <H2 size="xs">Dependencies</H2>
-      <div>
-        <input type="checkbox" checked={isFiltered} onChange={onCheckFilter} />
-        Showing <b>{isFiltered ? 'runtime only' : 'all'}</b>
-      </div>
       <DependenciesGraph
         componentWidgets={componentWidgets}
         graph={graph}
         rootNode={component.id}
         className={styles.graph}
-      />
+      >
+        <GraphFilters className={styles.filters} isFiltered={isFiltered} onChangeFilter={onCheckFilter} />
+      </DependenciesGraph>
     </div>
   );
 }
