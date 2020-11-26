@@ -1,3 +1,4 @@
+import { stringify, parse } from 'flatted';
 import { expose } from '@teambit/worker';
 import { runCLI } from 'jest';
 
@@ -23,7 +24,9 @@ export class JestWorker {
 
       const config: any = {
         // useStderr: true,
-        silent: true,
+        // TODO: check way to enable it
+        runInBand: true,
+        silent: false,
         rootDir: rootPath,
         watch: true,
         watchAll: true,
@@ -34,7 +37,8 @@ export class JestWorker {
               specFiles: testFiles,
               onComplete: (results) => {
                 if (!this.onTestCompleteCb) return;
-                this.onTestCompleteCb(results);
+                const json = parse(stringify(results));
+                this.onTestCompleteCb(json);
               },
             },
           ],
