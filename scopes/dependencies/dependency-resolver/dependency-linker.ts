@@ -14,6 +14,7 @@ import { WorkspacePolicy } from './policy';
 
 export type LinkingOptions = {
   legacyLink?: boolean;
+  rewire?: boolean;
   /**
    * Whether to create link to @teambit/bit in the root node modules
    */
@@ -26,6 +27,7 @@ export type LinkingOptions = {
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   legacyLink: true,
+  rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
 };
@@ -70,7 +72,7 @@ export class DependencyLinker {
     }
     if (linkingOpts.legacyLink) {
       const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
-      const legacyResults = await legacyLink(legacyStringIds, false);
+      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false);
       result.legacyLinkResults = legacyResults.linksResults;
     }
 
