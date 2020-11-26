@@ -8,13 +8,15 @@
 }
 
 .baseCheckboxContainer {
+  position: relative;
+  user-select: none;
+
   input {
     // css black magic to hide `<input/>` without taking it out of the dom
     position: absolute !important;
     height: 1px;
     width: 1px;
     overflow: hidden;
-    clip: rect(1px 1px 1px 1px); /* IE6, IE7 */
     clip: rect(1px, 1px, 1px, 1px);
   }
 }
@@ -32,10 +34,15 @@
   border-radius: 0.125em;
 
   transition: background-color 80ms, border-color 80ms;
+
+  &::before {
+    content: ' '; // <- using 'nbsp' space
+  }
 }
 
 input:focus + .checkbox {
   box-shadow: 0 0 0 0.125em var(--muted-color);
+  outline: none;
 }
 
 input:checked + .checkbox {
@@ -64,11 +71,11 @@ input:checked:disabled + .checkbox {
 .icon {
   visibility: hidden;
   color: white;
-  font-size: 0.75em;
+  font-size: 0.76em;
 
-  // fix - put some content, that will be overridden by icon font.
-  // mitigates checkbox 'jumping' before font loads
-  &::before {
-    content: ' '; // <- using 'nbsp' space
-  }
+  // icon font interferes with vertical positioning
+  // and may 'jump' when the icon-font loads.
+  // positioning it absolutely cancels this effect.
+  // the `content: '&nbsp'` above will act as its substitute.
+  position: absolute;
 }

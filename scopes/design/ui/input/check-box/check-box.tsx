@@ -1,10 +1,10 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useCallback, createRef, MouseEventHandler } from 'react';
 import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 
 import styles from './check-box.module.scss';
 
-type CheckBoxProps = {
+export type CheckBoxProps = {
   checkMark?: ReactNode;
   containerClass?: string;
 } & Omit<
@@ -22,7 +22,6 @@ type CheckBoxProps = {
   | 'type'
   | 'value'
   | 'width'
-  | 'children'
 >;
 
 const checkMarkElement = <Icon of="check-mark" className={styles.icon} />;
@@ -39,15 +38,32 @@ export function CheckBox(props: CheckBoxProps) {
 }
 
 function BaseCheckbox(props: CheckBoxProps) {
-  const { inputProps, fakeCheckboxProps, checkMark, containerClass } = separateProps(props);
+  const { inputProps, fakeCheckboxProps, children, checkMark, containerClass } = separateProps(props);
+
+  const inputRef = createRef<HTMLInputElement>();
+
+  const handleClick = useCallback<MouseEventHandler<HTMLInputElement>>((...args) => {
+    const [e] = args;
+    // should we change target?
+    fakeCheckboxProps.onClick?.(...args);
+    if (e.defaultPrevented) return;
+
+    inputRef.current?.focus();
+  }, []);
 
   return (
     <label className={classNames(styles.baseCheckboxContainer, containerClass)}>
-      <input type="checkbox" {...inputProps} />
+      <input ref={inputRef} type="checkbox" {...inputProps} />
+
       {/* span receives main `className` */}
-      <span {...fakeCheckboxProps} className={classNames(styles.baseCheckbox, fakeCheckboxProps.className)}>
+      <span
+        {...fakeCheckboxProps}
+        onClick={handleClick}
+        className={classNames(styles.baseCheckbox, fakeCheckboxProps.className)}
+      >
         {checkMark}
       </span>
+      {children}
     </label>
   );
 }
@@ -55,6 +71,7 @@ function BaseCheckbox(props: CheckBoxProps) {
 function separateProps(props: CheckBoxProps) {
   const {
     className,
+    children,
     containerClass,
     checkMark,
 
@@ -78,6 +95,7 @@ function separateProps(props: CheckBoxProps) {
     name,
     step,
 
+    onChange,
     defaultChecked,
     defaultValue,
 
@@ -119,6 +137,7 @@ function separateProps(props: CheckBoxProps) {
       required,
       readOnly,
       step,
+      onChange,
       defaultChecked,
       defaultValue,
     },
@@ -128,5 +147,6 @@ function separateProps(props: CheckBoxProps) {
     },
     containerClass,
     checkMark,
+    children,
   };
 }

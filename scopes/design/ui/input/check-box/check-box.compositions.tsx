@@ -57,7 +57,7 @@ export const CheckedSmall = () => {
   return (
     <ThemeContext>
       <div style={{ fontSize: 12 }}>
-        <CheckBox defaultChecked /> <span>Option</span>
+        <CheckBox defaultChecked /> <span>12px</span>
       </div>
     </ThemeContext>
   );
@@ -67,7 +67,7 @@ export const CheckedExtraSmall = () => {
   return (
     <ThemeContext>
       <div style={{ fontSize: 8 }}>
-        <CheckBox defaultChecked /> <span>Option</span>
+        <CheckBox defaultChecked /> <span>8px</span>
       </div>
     </ThemeContext>
   );
