@@ -1028,7 +1028,6 @@ export class Workspace implements ComponentFactory {
   }
 
   async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
-    this.logger.setStatusLine('linking components');
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.getMergedRootPolicy();
     const linker = this.dependencyResolver.getLinker({
@@ -1036,7 +1035,6 @@ export class Workspace implements ComponentFactory {
       linkingOptions: options,
     });
     const res = await linker.link(this.path, mergedRootPolicy, compDirMap, options);
-    this.logger.consoleSuccess('linking components');
     return res;
   }
 
