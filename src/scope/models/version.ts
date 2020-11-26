@@ -405,7 +405,7 @@ export default class Version extends BitObject {
   }
 
   validateBeforePersisting(versionStr: string): void {
-    logger.silly(`validating version object, hash: ${this.hash().hash}`);
+    logger.trace(`validating version object, hash: ${this.hash().hash}`);
     const version = Version.parse(versionStr, this._hash);
     version.validate();
   }

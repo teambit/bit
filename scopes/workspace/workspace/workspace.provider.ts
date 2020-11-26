@@ -27,6 +27,7 @@ import InstallCmd from './install.cmd';
 import { OnComponentLoad, OnComponentAdd, OnComponentChange, OnComponentRemove } from './on-component-events';
 import { WorkspaceExtConfig } from './types';
 import { WatchCommand } from './watch/watch.cmd';
+import { LinkCommand } from './link';
 import { Watcher } from './watch/watcher';
 import { Workspace, WorkspaceInstallOptions } from './workspace';
 import getWorkspaceSchema from './workspace.graphql';
@@ -195,6 +196,8 @@ export default async function provideWorkspace(
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
     cli.register(new WatchCommand(pubsub, logger, watcher));
+    cli.unregister('link');
+    cli.register(new LinkCommand(workspace, logger));
   }
   component.registerHost(workspace);
 

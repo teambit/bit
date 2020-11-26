@@ -123,7 +123,7 @@ export default class EnvExtension extends BaseExtension {
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   toBitJsonObject(): { [key: string]: EnvExtensionObject } {
-    logger.silly('env-extension, toBitJsonObject');
+    logger.trace('env-extension, toBitJsonObject');
     const envVal = {
       rawConfig: this.dynamicConfig,
       options: this.options,
@@ -135,7 +135,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async reload(scopePath: string, context?: Record<string, any>): Promise<void> {
-    logger.silly('env-extension, reload');
+    logger.trace('env-extension, reload');
     if (context) {
       this.context = context;
     }
@@ -218,7 +218,7 @@ export default class EnvExtension extends BaseExtension {
   static async loadFromSerializedModelObject(
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
-    logger.silly('env-extension, loadFromModelObject');
+    logger.trace('env-extension, loadFromModelObject');
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObjectBase(modelObject);
     const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, ...baseExtensionProps };
     return envExtensionProps;
@@ -254,7 +254,7 @@ export default class EnvExtension extends BaseExtension {
     envType: EnvType;
     context?: Record<string, any>;
   }): Promise<EnvExtension | null | undefined> {
-    logger.silly(`env-extension (${envType}) loadFromCorrectSource`);
+    logger.trace(`env-extension (${envType}) loadFromCorrectSource`);
     const isAuthor = componentOrigin === COMPONENT_ORIGINS.AUTHORED;
     const componentHasWrittenConfig = componentConfig && componentConfig.componentHasWrittenConfig;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -270,7 +270,7 @@ export default class EnvExtension extends BaseExtension {
       // $FlowFixMe we made sure before that componentConfig is defined
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const configPath = path.dirname(componentConfig.path);
-      logger.silly(`env-extension loading ${envType} from component config`);
+      logger.trace(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
     if (isAuthor && componentConfig && componentConfig[envType]) {
@@ -282,12 +282,12 @@ export default class EnvExtension extends BaseExtension {
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const envConfig = { [envType]: componentConfig[envType] };
-      logger.silly(`env-extension loading ${envType} from component config in workspace config`);
+      logger.trace(`env-extension loading ${envType} from component config in workspace config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     if (!componentHasWrittenConfig && !isAuthor && componentFromModel && componentFromModel[envType]) {
       // config was not written into component dir, load the config from the model
-      logger.silly(`env-extension, loading ${envType} from the model`);
+      logger.trace(`env-extension, loading ${envType} from the model`);
       return componentFromModel[envType];
     }
     const envFromOverride = overrides.getEnvByType(envType);
@@ -296,12 +296,12 @@ export default class EnvExtension extends BaseExtension {
         logger.debug(`env-extension, ${envType} was manually removed from the overrides`);
         return null;
       }
-      logger.silly(`env-extension, loading ${envType} from the overrides`);
+      logger.trace(`env-extension, loading ${envType} from the overrides`);
       const envConfig = { [envType]: AbstractConfig.transformEnvToObject(envFromOverride) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     if (isAuthor && workspaceConfig[`_${envType}`]) {
-      logger.silly(`env-extension, loading ${envType} from the consumer config`);
+      logger.trace(`env-extension, loading ${envType} from the consumer config`);
       const envConfig = { [envType]: workspaceConfig[`_${envType}`] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }

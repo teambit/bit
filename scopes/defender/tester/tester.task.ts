@@ -51,13 +51,18 @@ export class TesterTask implements BuildTask {
     // TODO: remove after fix AbstractVinyl on capsule
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
+
     return {
       artifacts: [], // @ts-ignore
-      componentsResults: testsResults.components.map((componentTests) => ({
-        component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
-        metadata: { tests: componentTests.results },
-        errors: testsResults.errors ? testsResults.errors : [],
-      })),
+      componentsResults: testsResults.components.map((componentTests) => {
+        return {
+          component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
+          metadata: { tests: componentTests.results },
+          errors: componentTests.results?.testFiles
+            .map((testFile) => testFile.error?.failureMessage)
+            .filter((item) => item),
+        };
+      }),
     };
   }
 }

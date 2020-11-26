@@ -200,7 +200,7 @@ export default class Consumer {
     const bitmapVersion = this.bitMap.version || '0.10.9';
 
     if (semver.gte(bitmapVersion, BIT_VERSION)) {
-      logger.silly('bit.map version is up to date');
+      logger.trace('bit.map version is up to date');
       return {
         run: false,
       };

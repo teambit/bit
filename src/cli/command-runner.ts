@@ -2,7 +2,7 @@ import { render } from 'ink';
 import { serializeError } from 'serialize-error';
 
 import { migrate } from '../api/consumer';
-import logger, { writeLogToScreen } from '../logger/logger';
+import logger, { LoggerLevel } from '../logger/logger';
 import { buildCommandMessage, isNumeric, packCommand } from '../utils';
 import { CLIArgs, Command, Flags } from './command';
 import defaultHandleError from './default-error-handler';
@@ -89,8 +89,8 @@ export class CommandRunner {
       logger.shouldWriteToConsole = false;
     }
     if (this.flags.log) {
-      const logValue = typeof this.flags.log === 'string' ? this.flags.log : '';
-      writeLogToScreen(logValue);
+      const logValue = typeof this.flags.log === 'string' ? this.flags.log : undefined;
+      logger.switchToConsoleLogger(logValue as LoggerLevel);
     }
   }
 
@@ -115,13 +115,21 @@ function serializeErrAndExit(err, commandName: string) {
   return process.stderr.write(data, () => logger.exitAfterFlush(code, commandName));
 }
 
-export async function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false) {
-  loader.off();
-  logger.error(`got an error from command ${commandName}: ${err}`);
-  logger.error(err.stack || '<no error stack was found>');
-  const { message, error } = defaultHandleError(err);
-  if (shouldSerialize) return serializeErrAndExit(error, commandName);
-  return logErrAndExit(message, commandName);
+export async function handleErrorAndExit(err: Error, commandName: string, shouldSerialize = false): Promise<void> {
+  try {
+    loader.off();
+    logger.error(`got an error from command ${commandName}: ${err}`);
+    logger.error(err.stack || '<no error stack was found>');
+    const { message, error } = defaultHandleError(err);
+    if (shouldSerialize) serializeErrAndExit(error, commandName);
+    else await logErrAndExit(message, commandName);
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.error('failed to log the error properly, failure error', e);
+    // eslint-disable-next-line no-console
+    console.error('failed to log the error properly, original error', err);
+    process.exit(1);
+  }
 }
 
 export async function handleUnhandledRejection(err: Error | null | undefined | {}) {

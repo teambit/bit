@@ -29,7 +29,10 @@ export class BuilderCmd implements Command {
     if (!this.workspace) throw new ConsumerNotFound();
     const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
     const envsExecutionResults = await this.builder.build(components, {
-      linkingOptions: { bitLinkType: install ? 'install' : 'link' },
+      installOptions: {
+        installTeambitBit: install,
+      },
+      linkingOptions: { linkTeambitBit: !install },
       emptyRootDir: true,
       includeDeps,
     });

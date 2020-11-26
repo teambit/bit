@@ -52,6 +52,7 @@ import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
 import path, { join } from 'path';
+import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ComponentConfigFile } from './component-config-file';
@@ -98,6 +99,8 @@ export type WorkspaceInstallOptions = {
   copyPeerToRuntimeOnComponents?: boolean;
   updateExisting: boolean;
 };
+
+export type WorkspaceLinkOptions = LinkingOptions;
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -487,6 +490,19 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * This will make sure to fetch the objects prior to load them
+   * do not use it if you are not sure you need it.
+   * It will influence the performance
+   * currently it used only for get many of aspects
+   * @param ids
+   * @param forCapsule
+   */
+  async importAndGetMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
+    await this.scope.import(ids);
+    return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  /**
    * track a new component. (practically, add it to .bitmap).
    *
    * @param componentPaths component paths relative to the workspace dir
@@ -767,7 +783,7 @@ export class Workspace implements ComponentFactory {
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
-    const components = await this.getMany(componentIds);
+    const components = await this.importAndGetMany(componentIds);
     const graph: any = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
@@ -990,34 +1006,44 @@ export class Workspace implements ComponentFactory {
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
     this.clearCache();
-    const components = await this.list();
-    const legacyStringIds = components.map((component) => component.id._legacy.toString());
     // TODO: pass get install options
-    const installer = this.dependencyResolver.getInstaller({
-      linkingOptions: { bitLinkType: 'link', linkCoreAspects: true },
-    });
-    const installationMap = await this.getComponentsDirectory([]);
-    const packageJson = this.consumer.packageJson?.packageJsonObject || {};
-    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
-    const policyFromPackageJson = this.dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
-    const mergedRootPolicy = this.dependencyResolver.mergeWorkspacePolices([policyFromPackageJson, workspacePolicy]);
+    const installer = this.dependencyResolver.getInstaller({});
+    const compDirMap = await this.getComponentsDirectory([]);
+    const mergedRootPolicy = this.getMergedRootPolicy();
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
-    const installOptions: PackageManagerInstallOptions = {
+    const pmInstallOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
     };
-    await installer.install(this.path, mergedRootPolicy, installationMap, installOptions);
+    await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
-    this.logger.setStatusLine('linking components');
-    await link(legacyStringIds, false);
-    this.logger.consoleSuccess();
-    return installationMap;
+    await this.link({ linkTeambitBit: true, legacyLink: true, linkCoreAspects: true });
+    return compDirMap;
+  }
+
+  async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
+    const compDirMap = await this.getComponentsDirectory([]);
+    const mergedRootPolicy = this.getMergedRootPolicy();
+    const linker = this.dependencyResolver.getLinker({
+      rootDir: this.path,
+      linkingOptions: options,
+    });
+    const res = await linker.link(this.path, mergedRootPolicy, compDirMap, options);
+    return res;
+  }
+
+  private getMergedRootPolicy() {
+    const packageJson = this.consumer.packageJson?.packageJsonObject || {};
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+    const policyFromPackageJson = this.dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
+    const mergedRootPolicy = this.dependencyResolver.mergeWorkspacePolices([policyFromPackageJson, workspacePolicy]);
+    return mergedRootPolicy;
   }
 
   /**
