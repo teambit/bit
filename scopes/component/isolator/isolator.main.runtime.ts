@@ -137,7 +137,7 @@ export class IsolatorMain {
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
       await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.includeDeps ?? false);
-      await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions);
+      await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json
@@ -196,7 +196,6 @@ export class IsolatorMain {
     });
     const peerOnlyPolicy = this.getPeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    console.log('linkingOptions', linkingOptions);
     await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), linkingOptions);
     await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
     await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
