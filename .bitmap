@@ -1931,6 +1931,11 @@
                 "test": false
             },
             {
+                "name": "dependency-linker.ts",
+                "relativePath": "dependency-linker.ts",
+                "test": false
+            },
+            {
                 "name": "dependency-resolver.aspect.ts",
                 "relativePath": "dependency-resolver.aspect.ts",
                 "test": false
@@ -6640,6 +6645,41 @@
             {
                 "name": "install.cmd.tsx",
                 "relativePath": "install.cmd.tsx",
+                "test": false
+            },
+            {
+                "name": "component-list-links.tsx",
+                "relativePath": "link/component-list-links.tsx",
+                "test": false
+            },
+            {
+                "name": "core-aspects-links.tsx",
+                "relativePath": "link/core-aspects-links.tsx",
+                "test": false
+            },
+            {
+                "name": "get-package-name-from-target.ts",
+                "relativePath": "link/get-package-name-from-target.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "link/index.ts",
+                "test": false
+            },
+            {
+                "name": "link-row.tsx",
+                "relativePath": "link/link-row.tsx",
+                "test": false
+            },
+            {
+                "name": "link.cmd.tsx",
+                "relativePath": "link/link.cmd.tsx",
+                "test": false
+            },
+            {
+                "name": "rewire-row.tsx",
+                "relativePath": "link/rewire-row.tsx",
                 "test": false
             },
             {
