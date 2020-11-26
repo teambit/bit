@@ -29,12 +29,7 @@ import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries, Registry } from './registry';
 import { ROOT_NAME } from './dependencies/constants';
-import {
-  DependencyInstaller,
-  PreInstallSubscriberList,
-  PostInstallSubscriberList,
-  InstallLinkingOptions,
-} from './dependency-installer';
+import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
 import { DependencyLinker, LinkingOptions } from './dependency-linker';
