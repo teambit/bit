@@ -7,39 +7,26 @@ import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
 import { WorkspacePolicy } from './policy';
 
-const DEFAULT_INSTALL_OPTIONS: PackageManagerInstallOptions = {
+const DEFAULT_PM_INSTALL_OPTIONS: PackageManagerInstallOptions = {
   dedupe: true,
   copyPeerToRuntimeOnRoot: true,
   copyPeerToRuntimeOnComponents: false,
 };
 
-const DEFAULT_LINKING_OPTIONS: InstallLinkingOptions = {
-  bitLinkType: 'link',
-  linkCoreAspects: true,
+const DEFAULT_INSTALL_OPTIONS: InstallOptions = {
+  installTeambitBit: false,
 };
 
 type InstallArgs = {
   rootDir: string | undefined;
   rootPolicy: WorkspacePolicy;
   componentDirectoryMap: ComponentMap<string>;
-  options: PackageManagerInstallOptions;
+  options: InstallOptions;
+  packageManagerOptions: PackageManagerInstallOptions;
 };
 
-export type BitExtendedLinkType = 'none' | BitLinkType;
-export type BitLinkType = 'link' | 'install';
-
-export type InstallLinkingOptions = {
-  /**
-   * How to create the link from the root dir node modules to @teambit/bit -
-   * none - don't create it at all
-   * link - use symlink to the global installation dir
-   * install - use package manager to install it
-   */
-  bitLinkType?: BitExtendedLinkType;
-  /**
-   * Whether to create links in the root dir node modules to all core aspects
-   */
-  linkCoreAspects?: boolean;
+export type InstallOptions = {
+  installTeambitBit: boolean;
 };
 
 export type PreInstallSubscriber = (installer: DependencyInstaller, installArgs: InstallArgs) => Promise<void>;
@@ -63,8 +50,6 @@ export class DependencyInstaller {
 
     private cacheRootDir?: string | PathAbsolute,
 
-    private linkingOptions?: InstallLinkingOptions,
-
     private preInstallSubscriberList?: PreInstallSubscriberList,
 
     private postInstallSubscriberList?: PostInstallSubscriberList
@@ -74,24 +59,30 @@ export class DependencyInstaller {
     rootDir: string | undefined,
     rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
-    options: PackageManagerInstallOptions = DEFAULT_INSTALL_OPTIONS
+    options: InstallOptions = DEFAULT_INSTALL_OPTIONS,
+    packageManagerOptions: PackageManagerInstallOptions = DEFAULT_PM_INSTALL_OPTIONS
   ) {
     const args = {
       componentDirectoryMap,
       options,
+      packageManagerOptions,
       rootDir,
       rootPolicy,
     };
     await this.runPrePostSubscribers(this.preInstallSubscriberList, 'pre', args);
     const mainAspect: MainAspect = this.aspectLoader.mainAspect;
     const finalRootDir = rootDir || this.rootDir;
-    const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {});
     if (!finalRootDir) {
       throw new RootDirNotDefined();
     }
     // Make sure to take other default if passed options with only one option
-    const calculatedOpts = Object.assign({}, DEFAULT_INSTALL_OPTIONS, { cacheRootDir: this.cacheRootDir }, options);
-    if (linkingOpts.bitLinkType === 'install') {
+    const calculatedPmOpts = Object.assign(
+      {},
+      DEFAULT_PM_INSTALL_OPTIONS,
+      { cacheRootDir: this.cacheRootDir },
+      packageManagerOptions
+    );
+    if (options.installTeambitBit) {
       if (!mainAspect.version || !mainAspect.packageName) {
         throw new MainAspectNotInstallable();
       }
@@ -106,7 +97,7 @@ export class DependencyInstaller {
     }
 
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
-    await this.packageManager.install(finalRootDir, rootPolicy, componentDirectoryMap, calculatedOpts);
+    await this.packageManager.install(finalRootDir, rootPolicy, componentDirectoryMap, calculatedPmOpts);
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
     return componentDirectoryMap;
   }
@@ -118,7 +109,7 @@ export class DependencyInstaller {
   ): Promise<void> {
     let message = 'running pre install subscribers';
     if (type === 'post') {
-      message = 'running pre install subscribers';
+      message = 'running post install subscribers';
     }
     this.logger.setStatusLine(message);
     await mapSeries(subscribers, async (subscriber) => {

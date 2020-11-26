@@ -117,7 +117,6 @@ export type GetInstallerOptions = {
   rootDir?: string;
   packageManager?: string;
   cacheRootDirectory?: string;
-  linkingOptions?: InstallLinkingOptions;
 };
 
 export type GetLinkerOptions = {
@@ -127,11 +126,6 @@ export type GetLinkerOptions = {
 
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
-};
-
-const defaultInstallLinkingOptions: InstallLinkingOptions = {
-  bitLinkType: 'link',
-  linkCoreAspects: true,
 };
 
 const defaultLinkingOptions: LinkingOptions = {
@@ -317,7 +311,6 @@ export class DependencyResolverMain {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
-    const linkingOptions = Object.assign({}, defaultInstallLinkingOptions, options?.linkingOptions || {});
     const preInstallSubscribers = this.getPreInstallSubscribers();
     const postInstallSubscribers = this.getPostInstallSubscribers();
     // TODO: we should somehow pass the cache root dir to the package manager constructor
@@ -327,7 +320,6 @@ export class DependencyResolverMain {
       this.logger,
       options.rootDir,
       cacheRootDir,
-      linkingOptions,
       preInstallSubscribers,
       postInstallSubscribers
     );

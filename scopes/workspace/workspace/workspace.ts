@@ -1006,41 +1006,38 @@ export class Workspace implements ComponentFactory {
     );
     this.logger.debug(`installing dependencies in workspace with options`, options);
     this.clearCache();
-    const components = await this.list();
-    const legacyStringIds = components.map((component) => component.id._legacy.toString());
     // TODO: pass get install options
-    const installer = this.dependencyResolver.getInstaller({
-      linkingOptions: { bitLinkType: 'link', linkCoreAspects: true },
-    });
+    const installer = this.dependencyResolver.getInstaller({});
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.getMergedRootPolicy();
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
-    const installOptions: PackageManagerInstallOptions = {
+    const pmInstallOptions: PackageManagerInstallOptions = {
       dedupe: options?.dedupe,
       copyPeerToRuntimeOnRoot: options?.copyPeerToRuntimeOnRoot ?? true,
       copyPeerToRuntimeOnComponents: options?.copyPeerToRuntimeOnComponents ?? false,
       dependencyFilterFn: depsFilterFn,
     };
-    await installer.install(this.path, mergedRootPolicy, compDirMap, installOptions);
+    await installer.install(this.path, mergedRootPolicy, compDirMap, { installTeambitBit: false }, pmInstallOptions);
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
-    this.logger.setStatusLine('linking components');
-    await link(legacyStringIds, false);
-    this.logger.consoleSuccess();
+    await this.link({ linkTeambitBit: true, legacyLink: true, linkCoreAspects: true });
     return compDirMap;
   }
 
   async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
+    this.logger.setStatusLine('linking components');
     const compDirMap = await this.getComponentsDirectory([]);
     const mergedRootPolicy = this.getMergedRootPolicy();
     const linker = this.dependencyResolver.getLinker({
       rootDir: this.path,
       linkingOptions: options,
     });
-    return linker.link(this.path, mergedRootPolicy, compDirMap, options);
+    const res = await linker.link(this.path, mergedRootPolicy, compDirMap, options);
+    this.logger.consoleSuccess('linking components');
+    return res;
   }
 
   private getMergedRootPolicy() {

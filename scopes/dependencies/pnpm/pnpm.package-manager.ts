@@ -65,6 +65,8 @@ export class PnpmPackageManager implements PackageManager {
     this.logger.setStatusLine('installing dependencies');
     const registries = await this.depResolver.getRegistries();
     await install(rootManifest, componentsManifests, storeDir, registries, this.logger);
+    // Make a divider row to improve output
+    this.logger.console('-------------------------');
     this.logger.consoleSuccess('installing dependencies');
   }
 
