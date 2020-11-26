@@ -38,7 +38,7 @@ describe('relative paths flow (components requiring each other by relative paths
         linkOutput = helper.command.linkAndRewire();
       });
       it('should rewire successfully', () => {
-        expect(linkOutput).to.have.string('rewired 1 components');
+        expect(linkOutput).to.have.string('rewired 1 components and total of 1 files');
       });
       it('should not show the component as an invalid anymore', () => {
         const status = helper.command.statusJson();

@@ -1,27 +1,29 @@
+import { useSubscription, useQuery } from '@apollo/react-hooks';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { EmptyBox } from '@teambit/ui.empty-box';
+import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
 import { gql } from 'apollo-boost';
 import React, { HTMLAttributes, useContext } from 'react';
-
-import { useQuery } from '@apollo/react-hooks';
-
 import { TestTable } from '@teambit/ui.test-table';
 
 import styles from './tests-page.module.scss';
 
-const GET_COMPONENT = gql`
-  query($id: String!) {
-    getHost {
-      getTests(id: $id) {
+const TESTS_SUBSCRIPTION_CHANGED = gql`
+  subscription OnTestsChanged($id: String!) {
+    testsChanged(id: $id) {
+      testsResults {
         testFiles {
           file
           duration
           pass
           failed
           pending
+          error {
+            failureMessage
+          }
           tests {
             ancestor
             duration
@@ -35,21 +37,51 @@ const GET_COMPONENT = gql`
   }
 `;
 
+const GET_COMPONENT = gql`
+  query($id: String!) {
+    getHost {
+      getTests(id: $id) {
+        loading
+        testsResults {
+          testFiles {
+            file
+            duration
+            pass
+            failed
+            pending
+            error {
+              failureMessage
+            }
+            tests {
+              ancestor
+              duration
+              status
+              name
+              error
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 type TestsPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function TestsPage({ className }: TestsPageProps) {
   const component = useContext(ComponentContext);
+  const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id: component.id.toString() } });
   const { data } = useQuery(GET_COMPONENT, {
     variables: { id: component.id._legacy.name },
   });
 
-  if (!data) return null;
+  const testData = onTestsChanged.data?.testsChanged || data?.getHost?.getTests;
 
-  // TODO: create TestsResultList from data
-  // const testResults = TestsResultList.from(data?.getHost?.getTests.tests);
-  const testResults = data?.getHost?.getTests?.testFiles;
+  // TODO: change loading EmptyBox
+  if (testData?.loading) return <TestLoader />;
 
-  if (data?.getHost?.getTests === null) {
+  const testResults = testData?.testsResults?.testFiles;
+  if (testResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any tests."

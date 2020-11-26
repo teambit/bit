@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 
-import { getFormat } from './logger';
+import { getFormat } from './winston-logger';
 
-describe('logger', () => {
+describe('winston-logger', () => {
   describe('baseFileTransportOpts', () => {
     it('should print metadata', () => {
       const myFormat = getFormat();

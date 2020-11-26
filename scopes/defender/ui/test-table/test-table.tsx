@@ -17,13 +17,16 @@ export function TestTable({ testResults }: TestTableProps) {
   return (
     <>
       {testResults.map((testFile, index) => {
-        const borderColor = testFile.failed > 0 ? '#e62e5c' : '#37b26c';
+        const testHasErrors = testFile?.error?.failureMessage;
+        const borderColor = testFile.failed > 0 || testHasErrors ? '#e62e5c' : '#37b26c';
         return (
           <div key={index} className={styles.testTable}>
             <TestFileTitle style={{ borderColor }} testFile={testFile} />
-            {testFile.tests.map((test) => {
-              return <TestLine key={test.name} test={test} />;
-            })}
+            {testHasErrors && <TestSuiteError key={testHasErrors} name={testFile.file} error={testHasErrors} />}
+            {!testHasErrors &&
+              testFile.tests.map((test) => {
+                return <TestLine key={test.name} test={test} />;
+              })}
           </div>
         );
       })}
@@ -44,6 +47,19 @@ function TestLine({ test }: { test: TestResult }) {
         <div className={styles.duration}>
           <span>{duration}</span>
           <Icon of="clock" />
+        </div>
+      </div>
+    </TestRow>
+  );
+}
+
+function TestSuiteError({ name, error }: { name: string; error: string }) {
+  return (
+    <TestRow className={classNames(styles.testRow, styles.failed)} content={error}>
+      <div className={styles.testTitle}>
+        <div className={styles.test}>
+          {getStatusIcon('failed')}
+          <div>{name}</div>
         </div>
       </div>
     </TestRow>
