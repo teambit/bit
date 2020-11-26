@@ -363,8 +363,14 @@ export class Workspace implements ComponentFactory {
    * get a component from workspace
    * @param id component ID
    */
-  async get(componentId: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
-    return this.componentLoader.get(componentId, forCapsule, legacyComponent);
+  async get(
+    componentId: ComponentID,
+    forCapsule = false,
+    legacyComponent?: ConsumerComponent,
+    useCache = true,
+    storeInCache = true
+  ): Promise<Component> {
+    return this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
