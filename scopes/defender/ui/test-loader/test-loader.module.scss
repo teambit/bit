@@ -1,0 +1,25 @@
+.testLoader {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 300px;
+  margin: auto;
+  > div:first-child {
+    margin-bottom: 50px;
+  }
+  > div {
+    margin-bottom: 20px;
+  }
+  > img {
+    // height: 160px;
+    width: 100%;
+    max-width: 220px;
+    margin-bottom: 50px;
+  }
+  .text {
+    font-size: 24px;
+  }
+}

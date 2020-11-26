@@ -1611,11 +1611,6 @@
                 "test": false
             },
             {
-                "name": "jest.config.ts",
-                "relativePath": "jest.config.ts",
-                "test": false
-            },
-            {
                 "name": "jest.main.runtime.ts",
                 "relativePath": "jest.main.runtime.ts",
                 "test": false
@@ -1623,6 +1618,16 @@
             {
                 "name": "jest.tester.ts",
                 "relativePath": "jest.tester.ts",
+                "test": false
+            },
+            {
+                "name": "jest.worker.ts",
+                "relativePath": "jest.worker.ts",
+                "test": false
+            },
+            {
+                "name": "watch.ts",
+                "relativePath": "watch.ts",
                 "test": false
             }
         ],
@@ -2335,8 +2340,18 @@
     "teambit.design/ui/empty-box@0.0.154": {
         "files": [
             {
+                "name": "empty-box.composition.tsx",
+                "relativePath": "empty-box.composition.tsx",
+                "test": false
+            },
+            {
                 "name": "empty-box.module.scss",
                 "relativePath": "empty-box.module.scss",
+                "test": false
+            },
+            {
+                "name": "empty-box.spec.tsx",
+                "relativePath": "empty-box.spec.tsx",
                 "test": false
             },
             {
@@ -6827,6 +6842,118 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "ui/round-loader": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "round-loader.composition.tsx",
+                "relativePath": "round-loader.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "round-loader.docs.tsx",
+                "relativePath": "round-loader.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "round-loader.module.scss",
+                "relativePath": "round-loader.module.scss",
+                "test": false
+            },
+            {
+                "name": "round-loader.tsx",
+                "relativePath": "round-loader.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/round-loader",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "ui/test-loader": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "test-loader.composition.tsx",
+                "relativePath": "test-loader.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "test-loader.docs.tsx",
+                "relativePath": "test-loader.docs.tsx",
+                "test": false
+            },
+            {
+                "name": "test-loader.module.scss",
+                "relativePath": "test-loader.module.scss",
+                "test": false
+            },
+            {
+                "name": "test-loader.tsx",
+                "relativePath": "test-loader.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/ui/test-loader",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "worker": {
+        "files": [
+            {
+                "name": "expose.ts",
+                "relativePath": "expose.ts",
+                "test": false
+            },
+            {
+                "name": "harmony-worker.ts",
+                "relativePath": "harmony-worker.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "node-endpoint.ts",
+                "relativePath": "node-endpoint.ts",
+                "test": false
+            },
+            {
+                "name": "worker-manifest.ts",
+                "relativePath": "worker-manifest.ts",
+                "test": false
+            },
+            {
+                "name": "worker.aspect.ts",
+                "relativePath": "worker.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "worker.main.runtime.ts",
+                "relativePath": "worker.main.runtime.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/worker",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.171"

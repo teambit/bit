@@ -52,7 +52,7 @@ export class Watcher {
     return new Promise((resolve, reject) => {
       // prefix your command with "BIT_LOG=*" to see all watch events
       if (process.env.BIT_LOG) {
-        watcher.on('all', opts?.msgs?.onAll);
+        if (opts?.msgs?.onAll) watcher.on('all', opts?.msgs?.onAll);
       }
       watcher.on('ready', () => {
         opts?.msgs?.onReady(this.workspace, this.trackDirs, _verbose);
