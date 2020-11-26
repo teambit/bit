@@ -3,7 +3,7 @@ import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
 import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { Slot } from '@teambit/harmony';
 import { NavigationSlot, RouteSlot } from '@teambit/ui.react-router.slot-router';
-import { NavLinkProps } from '@teambit/ui.react-router.nav-link';
+import { NavLinkProps } from '@teambit/ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
