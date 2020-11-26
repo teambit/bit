@@ -73,6 +73,7 @@ export class LinkCommand implements Command {
     );
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async json([ids]: [string[]], opts: LinkCommandOpts): Promise<LinkResults> {
     this.logger.console(`Linking component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
 

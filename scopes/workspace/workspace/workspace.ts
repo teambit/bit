@@ -52,6 +52,7 @@ import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
 import path, { join } from 'path';
+import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ComponentConfigFile } from './component-config-file';
@@ -76,7 +77,6 @@ import {
 } from './workspace.provider';
 import { Issues } from './workspace-component/issues';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
-import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 
 export type EjectConfResult = {
   configPath: string;
