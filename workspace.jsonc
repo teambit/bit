@@ -261,6 +261,11 @@
           "private": false
         }
       },
+      "teambit.defender/eslint-config-bit-react": {
+        "teambit.envs/envs": {
+          "env": "teambit.harmony/node"
+        }
+      },
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
