@@ -25,7 +25,7 @@ export default async function parse(data: string, filePath?: PathOsBased): Promi
     docs.forEach((doc) => extractDataRegex(doc, doclets, filePath));
   } catch (e) {
     // never mind, ignore the doc of this source
-    logger.silly(`failed parsing docs using on path ${filePath} with error`, e);
+    logger.trace(`failed parsing docs using on path ${filePath} with error`, e);
   }
   return doclets.filter((doclet) => doclet.access === 'public');
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, ComponentType, ReactNode } from 'react';
+import React, { useEffect, ReactNode } from 'react';
 import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RoutingProvider } from '@teambit/ui.routing.provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
@@ -23,11 +23,9 @@ type RootRouteProps = {
  * Setup context needed for routing.
  */
 export function RouteContext({ reactRouterUi, routing = Routing.url, children }: RouterContextProps) {
-  const Router = getRouter(routing);
-
   return (
     // {/* set up the virtual router (browser, inMemory, etc) */}
-    <Router>
+    <Router type={routing}>
       {/* injects History object back to reactRouterUi */}
       <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
       {/* injects react-router Link into context  */}
@@ -43,15 +41,20 @@ export function RootRoute({ rootRoutes, routeSlot }: RootRouteProps) {
   return <SlotRouter slot={routeSlot} rootRoutes={rootRoutes} />;
 }
 
-function getRouter(type: Routing): ComponentType {
+/** provides the router engine (browser, inMemory, etc) */
+function Router({ type, children }: { type: Routing; children: ReactNode }) {
   switch (type) {
     case Routing.inMemory:
-      return MemoryRouter;
+      return (
+        <MemoryRouter initialEntries={[window.location]} initialIndex={1}>
+          {children}
+        </MemoryRouter>
+      );
     case Routing.hash:
-      return HashRouter;
+      return <HashRouter>{children}</HashRouter>;
     case Routing.url:
     default:
-      return BrowserRouter;
+      return <BrowserRouter>{children}</BrowserRouter>;
   }
 }
 

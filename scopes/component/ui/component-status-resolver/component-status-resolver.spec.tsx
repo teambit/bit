@@ -30,6 +30,7 @@ describe('Component Status Resolver', () => {
     // @ts-ignore
     expect(textTooltip).toBeInTheDocument();
   });
+
   it('should render a new status with new component', () => {
     const { getByText } = render(<ComponentStatusResolverWithNewStatus />);
     const textStatus = getByText(/^N$/);

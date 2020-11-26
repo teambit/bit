@@ -117,6 +117,7 @@ export class WorkspaceComponentLoader {
         ? await this.workspace.consumer.loadComponentForCapsule(id._legacy)
         : await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err) {
+      this.logger.error(`failed loading component ${id.toString()}`, err);
       return undefined;
     }
   }

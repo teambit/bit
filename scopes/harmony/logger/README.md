@@ -8,7 +8,7 @@ LoggerMain.createLogger('your-extension-id');
 The following standard methods are available to log into a file. By default it's the `debug.log` file located at  `~/Library/Caches/Bit/logs` for Mac/Linux or  `$LOCALAPPDATA\Bit` for Windows.
 
 ```
-logger.silly(message: string, ...meta: any[]);
+logger.trace(message: string, ...meta: any[]);
 logger.debug(message: string, ...meta: any[]);
 logger.info(message: string, ...meta: any[]);
 logger.warn(message: string, ...meta: any[]);
