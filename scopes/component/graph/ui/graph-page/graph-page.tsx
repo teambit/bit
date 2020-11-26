@@ -10,7 +10,7 @@ import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { useGraphQuery } from '../query';
 import { DependenciesGraph } from '../dependencies-graph';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
-import type { FilterType } from '../../graph-filters';
+import type { FilterType } from '../../component-graph';
 
 import { GraphFilters } from './graph-filters';
 

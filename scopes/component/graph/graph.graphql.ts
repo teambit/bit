@@ -1,13 +1,13 @@
+import { ComponentFactory } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
 import { GraphBuilder } from './graph-builder';
-import { ComponentGraph } from './component-graph';
+import { ComponentGraph, filters, FilterType } from './component-graph';
 import { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
-import { filters, FilterType } from './graph-filters';
 
-export function graphSchema(graphBuilder: GraphBuilder): Schema {
+export function graphSchema(graphBuilder: GraphBuilder, componentsHost: ComponentFactory): Schema {
   return {
     typeDefs: gql`
       type ComponentGraph {
@@ -60,9 +60,23 @@ export function graphSchema(graphBuilder: GraphBuilder): Schema {
         },
       },
       Query: {
-        graph: (_parent, { ids, filter }: { ids: string[]; filter?: FilterType }) => {
+        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: FilterType }) => {
+          const resolvedIds = ids
+            ? await componentsHost.resolveMultipleComponentIds(ids)
+            : (await componentsHost.list()).map((x) => x.id);
+
+          let graph = await graphBuilder.getGraph(resolvedIds);
+          if (!graph) return undefined;
+
           const relevantFilter = filter && filters[filter];
-          return graphBuilder.getGraph(ids, relevantFilter);
+          if (relevantFilter) {
+            graph = graph.successorsSubgraph(
+              resolvedIds.map((x) => x.toString()),
+              relevantFilter
+            );
+          }
+
+          return graph;
         },
       },
     },

@@ -825,6 +825,16 @@
                 "test": false
             },
             {
+                "name": "graph-filters.tsx",
+                "relativePath": "component-graph/graph-filters/graph-filters.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "component-graph/graph-filters/index.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "component-graph/index.ts",
                 "test": false
@@ -842,16 +852,6 @@
             {
                 "name": "graph-builder.ts",
                 "relativePath": "graph-builder.ts",
-                "test": false
-            },
-            {
-                "name": "graph-filters.tsx",
-                "relativePath": "graph-filters/graph-filters.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "graph-filters/index.ts",
                 "test": false
             },
             {
@@ -972,6 +972,11 @@
             {
                 "name": "minimap.ts",
                 "relativePath": "ui/dependencies-graph/minimap.ts",
+                "test": false
+            },
+            {
+                "name": "graph-filters.tsx",
+                "relativePath": "ui/graph-page/graph-filters.tsx",
                 "test": false
             },
             {
