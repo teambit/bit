@@ -8,6 +8,7 @@ import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
+import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
 import { WorkspacePolicy } from './policy';
@@ -41,6 +42,7 @@ export type CoreAspectLinkResult = {
 
 export type LinkResults = {
   legacyLinkResults?: LegacyLinksResult[];
+  legacyLinkCodemodResults?: CodemodResult[];
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
@@ -74,6 +76,7 @@ export class DependencyLinker {
       const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
       const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false);
       result.legacyLinkResults = legacyResults.linksResults;
+      result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions

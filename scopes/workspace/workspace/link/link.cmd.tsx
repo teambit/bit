@@ -9,6 +9,7 @@ import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
 import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
+import { RewireRow } from './rewire-row';
 
 type LinkCommandOpts = {
   rewire: boolean;
@@ -67,6 +68,8 @@ export class LinkCommand implements Command {
         <ComponentListLinks componentListLinks={linkResults.legacyLinkResults} verbose={opts.verbose} />
         <Newline />
         <CoreAspectsLinks coreAspectsLinks={coreAspectsLinksWithMainAspect} verbose={opts.verbose} />
+        <Newline />
+        <RewireRow legacyCodemodResults={linkResults.legacyLinkCodemodResults} />
         <Newline />
         <Text>Finished. {timeDiff}</Text>
       </Box>
