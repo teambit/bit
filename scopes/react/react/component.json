@@ -19,6 +19,11 @@
         "dependencies": {
           "react-app-polyfill": "^1.0.6",
           "resolve-url-loader": "^3.1.1",
+          "eslint-plugin-import": "^2.22.0",
+          "eslint-plugin-jsx-a11y": "^6.3.1",
+          "eslint-plugin-react": "^7.20.3",
+          "eslint-plugin-react-hooks": "^4.0.8",
+          "@typescript-eslint/eslint-plugin": "^4.4.1",
           "file-loader": "^6.0.0",
           "jest-environment-jsdom-fourteen": "^1.0.1",
           "react-native-web": "^0.12.2",
