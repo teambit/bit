@@ -85,6 +85,10 @@ export class Logger implements IBitLogger {
     return loader.off();
   }
 
+  on() {
+    return loader.on();
+  }
+
   /**
    * print to the screen with a red `✖` prefix. if message is empty, print the last logged message.
    */
