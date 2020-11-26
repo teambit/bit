@@ -49,7 +49,12 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
           <MenuNav navigationSlot={widgetSlot} />
         </div>
         {versionList.length > 0 && (
-          <ImportAction copyLink={`bit import ${componentFullName}`} componentName={component.id.name} />
+          <ImportAction
+            componentName={component.id.name}
+            bitLink={component.id.toString()}
+            packageLink={component.packageName}
+            registryName={component.packageName.split('/')[0]}
+          />
         )}
         <VersionDropdown versions={versionList} currentVersion={component.version} />
         {/* <span className={styles.widget}>
