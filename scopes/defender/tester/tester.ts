@@ -4,11 +4,14 @@ import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { TestsResult } from './tests-results';
 
 export type Tests = {
-  components: {
-    componentId: ComponentID;
-    results: TestsResult;
-  }[];
+  components: ComponentsResults[];
   errors?: Error[];
+};
+
+export type ComponentsResults = {
+  componentId: ComponentID;
+  results?: TestsResult;
+  loading?: boolean;
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
@@ -40,14 +43,15 @@ export interface TesterContext extends ExecutionContext {
   rootPath: string;
 
   /**
-   * determines whether tester is expected to run in watch mode.
-   */
-  watch?: boolean;
-
-  /**
    * determines whether tester is expected to run in debug mode.
    */
   debug?: boolean;
+
+  /**
+   * is start from ui
+   */
+
+  ui?: boolean;
 }
 
 /**
@@ -80,12 +84,23 @@ export interface Tester {
   id: string;
 
   /**
+   * on test run complete. (applies only during watch)
+   * @param callback
+   */
+  onTestRunComplete?(callback: CallbackFn): Promise<void>;
+
+  /**
    * execute tests on all components in the given execution context.
    */
   test(context: TesterContext): Promise<Tests>;
 
   /**
+   * watch tests on all components
+   */
+  watch?(context: TesterContext): Promise<Tests>;
+  /**
    * return the tester version.
    */
   version(): string;
 }
+export type CallbackFn = (testSuite: Tests) => void;

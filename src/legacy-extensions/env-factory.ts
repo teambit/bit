@@ -7,7 +7,7 @@ import { EnvExtensionProps, EnvLoadArgsProps, EnvType } from './env-extension-ty
 import TesterExtension from './tester-extension';
 
 export default (async function makeEnv(envType: EnvType, props: EnvLoadArgsProps): Promise<EnvExtension> {
-  logger.silly(`env-factory, create ${envType}`);
+  logger.trace(`env-factory, create ${envType}`);
   props.envType = envType;
   props.throws = true;
   const envExtensionProps: EnvExtensionProps = await EnvExtension.load(props);
@@ -23,7 +23,7 @@ export async function makeEnvFromModel(
   envType: EnvType,
   modelObject: string | BaseExtensionModel
 ): Promise<EnvExtension | null | undefined> {
-  logger.silly(`env-factory, create ${envType} from model`);
+  logger.trace(`env-factory, create ${envType} from model`);
   if (!modelObject) return undefined;
   const actualObject =
     typeof modelObject === 'string'

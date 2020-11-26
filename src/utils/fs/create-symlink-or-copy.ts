@@ -17,11 +17,11 @@ export default function createSymlinkOrCopy(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentId?: string | null | undefined = ''
 ) {
-  logger.silly(`create-symlink-or-copy, deleting ${destPath}`);
+  logger.trace(`create-symlink-or-copy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));
   try {
-    logger.silly(`generating a symlink on ${destPath} pointing to ${srcPath}`);
+    logger.trace(`generating a symlink on ${destPath} pointing to ${srcPath}`);
     symlinkOrCopy.sync(srcPath, destPath);
   } catch (err) {
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
