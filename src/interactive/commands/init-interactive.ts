@@ -43,7 +43,7 @@ function _generateChooseEnvQ(
   skipAnsTxt: string,
   customEnvAnsTxt: string
 ) {
-  let components = [];
+  let components: string[] = [];
   // Fetch the components from the remote. If there was an error or no components returned we will skip the question.
   // We will store the returned components in a higher scope, to prevent another request during the choices calculation
   const whenWithFetch = async () => {

@@ -47,6 +47,7 @@ describe('ConsumerComponent', function () {
       await component.recalculateDocs();
       const docs = component.docs;
       expect(docs).to.have.lengthOf(1);
+      // @ts-ignore
       expect(docs[0].description).to.equal('is a given variable a string');
     });
     it('should return the docs only for non-test files with jsdocs', async () => {
