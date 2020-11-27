@@ -20,7 +20,7 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
@@ -471,14 +471,15 @@ export class ScopeMain implements ComponentFactory {
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
-      ExpressMain
+      ExpressMain,
+      LoggerMain
     ],
     config: ScopeConfig,
     [tagSlot, postPutSlot]: [TagRegistry, OnPostPutSlot],
@@ -490,7 +491,7 @@ export class ScopeMain implements ComponentFactory {
       return undefined;
     }
 
-    // const logger = loggerMain.createLogger(ScopeAspect.id);
+    const logger = loggerMain.createLogger(ScopeAspect.id);
     const scope = new ScopeMain(
       harmony,
       legacyScope,
@@ -506,11 +507,12 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    ExportPersist.onPutHook = (ids: string[]) => {
+    ExportPersist.onPutHook = async (ids: string[]): Promise<void> => {
+      logger.debug(`ExportPersist.onPutHook, started. (${ids.length} components)`);
+      const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postPutSlot.values();
-      fns.map(async (fn) => {
-        return fn(await Promise.all(ids.map((id) => scope.resolveComponentId(id))));
-      });
+      await Promise.all(fns.map(async (fn) => fn(componentIds)));
+      logger.debug(`ExportPersist.onPutHook, completed. (${ids.length} components)`);
     };
 
     express.register([

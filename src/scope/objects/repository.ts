@@ -306,6 +306,17 @@ export default class Repository {
     await this._writeMany();
     await this.remoteLanes.write();
     await this.unmergedComponents.write();
+    this.clearObjects();
+  }
+
+  /**
+   * this is especially critical for http server, where one process lives long and serves multiple
+   * exports. without this, the objects get accumulated over time and being rewritten over and over
+   * again.
+   */
+  private clearObjects() {
+    this.objects = {};
+    this.objectsToRemove = [];
   }
 
   /**
