@@ -34,11 +34,6 @@ type CombinationWithTotal = {
   total: number;
 };
 
-type VersionWithTotal = {
-  version: SemverVersion;
-  total: number;
-};
-
 /**
  * This is the second phase of the deduping process.
  * It will get the index calculated in the first phase (with dep id as key)

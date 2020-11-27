@@ -29,7 +29,6 @@ const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, json
 
 const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IBitLogger {
   trace(message: string, ...meta: any[]): void;
 
