@@ -35,6 +35,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           loader: require.resolve('babel-loader'),
           options: {
             babelrc: false,
+            configFile: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
@@ -46,13 +47,14 @@ export default function (workspaceDir: string, targets: string[], envId: string)
         // MDX support (move to the mdx aspect and extend from there)
         {
           test: /\.mdx?$/,
+          exclude: [/node_modules/, /dist/],
           use: [
             {
               loader: require.resolve('babel-loader'),
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
+                presets: [require.resolve('babel-preset-react-app')],
                 plugins: [require.resolve('react-refresh/babel')],
               },
             },
