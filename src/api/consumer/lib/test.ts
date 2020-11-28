@@ -16,7 +16,7 @@ export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
  * or in child process, or in child process for each component
  * @param {boolean} verbose
  */
-export default (async function test(
+export default async function test(
   id: string | undefined,
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.NONE,
@@ -41,10 +41,11 @@ export default (async function test(
     const ids = components.map((component) => component.id.toString());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const results = await specsRunner({ ids, forkLevel, verbose });
+    // @ts-ignore obsolete code, no need to fix.
     return results;
   }
   throw new GeneralError('unknown fork level, fork level must be one of: NONE, ONE, COMPONENT');
-});
+}
 
 export async function testInProcess(
   id: string | undefined,

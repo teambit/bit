@@ -20,7 +20,7 @@ export type Tester = {
   modules: Record<string, any>;
 };
 
-export default (async function run({
+export default async function run({
   ids,
   forkLevel,
   includeUnmodified = false,
@@ -82,7 +82,7 @@ export default (async function run({
     { type: 'results', childOutput: '', results: [] }
   );
   return finalResults;
-});
+}
 
 async function runOnChildProcess({
   ids,
