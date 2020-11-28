@@ -5,7 +5,7 @@ import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
+import { Component, ComponentMain, ComponentAspect, ComponentID } from '@teambit/component';
 import { DevFilesAspect } from './dev-files.aspect';
 import { DevFiles } from './dev-files';
 import { DevFilesFragment } from './dev-files.fragment';
@@ -141,11 +141,14 @@ export class DevFilesMain {
       });
 
       DependencyResolver.isDevFile = async (consumerComponent: LegacyComponent, file: string) => {
-        const component = await workspace.get(
-          await workspace.resolveComponentId(consumerComponent.id),
-          false,
-          consumerComponent
-        );
+        const componentId = await workspace.resolveComponentId(consumerComponent.id);
+        let component = getFromCacheForDevFiles(componentId);
+        if (!component) {
+          component = await workspace.get(componentId, false, consumerComponent, true, false);
+          if (component) {
+            saveInCacheForDevFiles(component);
+          }
+        }
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         return devFiles.isDevFile(component, file);
       };
@@ -156,3 +159,16 @@ export class DevFilesMain {
 }
 
 DevFilesAspect.addRuntime(DevFilesMain);
+
+// Special cache only for dev files calculation
+// this is special cache since it happens as part of the consumer component loading
+// do not use this cache for other cases!
+const _componentsCacheForDevFiles = {};
+
+function saveInCacheForDevFiles(component: Component): void {
+  _componentsCacheForDevFiles[component.id.toString()] = component;
+}
+
+function getFromCacheForDevFiles(id: ComponentID) {
+  return _componentsCacheForDevFiles[id.toString()];
+}

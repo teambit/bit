@@ -50,16 +50,24 @@ export class WorkspaceComponentLoader {
     return filteredComponents;
   }
 
-  async get(componentId: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
+  async get(
+    componentId: ComponentID,
+    forCapsule = false,
+    legacyComponent?: ConsumerComponent,
+    useCache = true,
+    storeInCache = true
+  ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(this.workspace.consumer.bitmapIds, componentId._legacy);
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, forCapsule);
-    if (fromCache) {
+    if (fromCache && useCache) {
       return fromCache;
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     const component = await this.loadOne(id, consumerComponent);
-    this.saveInCache(component, forCapsule);
+    if (storeInCache) {
+      this.saveInCache(component, forCapsule);
+    }
     return component;
   }
 
