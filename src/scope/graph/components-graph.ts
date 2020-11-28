@@ -73,7 +73,7 @@ export async function buildOneGraphForComponents(
   ids: BitId[],
   consumer: Consumer,
   direction: 'normal' | 'reverse' = 'normal',
-  loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>,
+  loadComponentsFunc?: (bitIds: BitId[]) => Promise<Component[]>,
   ignoreIds?: BitIds
 ): Promise<Graph> {
   const getComponents = async () => {

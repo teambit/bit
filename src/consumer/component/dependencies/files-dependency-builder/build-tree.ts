@@ -21,12 +21,6 @@ export type LinkFile = {
   importSpecifiers: ImportSpecifier[];
 };
 
-interface SimpleGroupedDependencies {
-  bits: string[];
-  packages: string[];
-  files: string[];
-}
-
 interface GroupedDependenciesResolved {
   bits: Array<ResolvedPackageData>;
   packages: PackageDependency;

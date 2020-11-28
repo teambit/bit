@@ -6,7 +6,6 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 import { LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
-// eslint-disable-next-line @typescript-eslint/class-name-casing
 export default class _Log implements LegacyCommand {
   name = '_log <path> <args>';
   private = true;

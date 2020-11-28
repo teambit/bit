@@ -49,6 +49,7 @@ export default class Test implements LegacyCommand {
     verboseReport = verbose || false;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const testRes = await test(id, forkLevel, all, verbose);
+    // @ts-ignore obsolete code, no need to fix
     const pass = testRes.results.every((comp) => comp.pass);
     const res = {
       data: testRes,

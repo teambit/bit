@@ -84,8 +84,8 @@ export class ComponentMap<T> {
     return this.hashMap.keys();
   }
 
-  static create<T>(rawMap: [Component, T][]) {
-    const newMap: [string, [Component, T]][] = rawMap.map(([component, data]) => {
+  static create<U>(rawMap: [Component, U][]) {
+    const newMap: [string, [Component, U]][] = rawMap.map(([component, data]) => {
       return [component.id.toString(), [component, data]];
     });
     return new ComponentMap(new Map(newMap));
@@ -96,8 +96,8 @@ export class ComponentMap<T> {
    * @param components components to zip into the map.
    * @param predicate predicate for returning desired value.
    */
-  static as<T>(components: Component[], predicate: (component: Component) => T): ComponentMap<T> {
-    const tuples: [string, [Component, T]][] = components.map((component) => {
+  static as<U>(components: Component[], predicate: (component: Component) => U): ComponentMap<U> {
+    const tuples: [string, [Component, U]][] = components.map((component) => {
       return [component.id.toString(), [component, predicate(component)]];
     });
 

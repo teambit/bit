@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 
 interface Props {
   components: Array<React.JSXElementConstructor<React.PropsWithChildren<any>>>;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 export function Compose(props: Props) {
