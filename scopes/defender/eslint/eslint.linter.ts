@@ -1,6 +1,6 @@
 import { flatten } from 'lodash';
 import { Linter, LinterContext } from '@teambit/linter';
-import { ESLint } from 'eslint';
+import { ESLint as ESLintLib } from 'eslint';
 import { ESLintOptions } from './eslint.main.runtime';
 
 export class ESLintLinter implements Linter {
@@ -10,14 +10,13 @@ export class ESLintLinter implements Linter {
     /**
      * reference to the eslint module.
      */
-    // eslint-disable-next-line no-shadow
     private ESLint?: any
   ) {}
 
   /**
    * get options for eslint.
    */
-  private getOptions(options: ESLintOptions, context: LinterContext): ESLint.Options {
+  private getOptions(options: ESLintOptions, context: LinterContext): ESLintLib.Options {
     return {
       overrideConfig: options.config,
       extensions: context.extensionFormats,
@@ -43,7 +42,7 @@ export class ESLintLinter implements Linter {
 
       const files = await Promise.all(filesP);
 
-      const results: ESLint.LintResult[] = flatten(files);
+      const results: ESLintLib.LintResult[] = flatten(files);
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
       const output = formatter.format(results);
 
@@ -62,7 +61,7 @@ export class ESLintLinter implements Linter {
     };
   }
 
-  private computeResults(results: ESLint.LintResult[]) {
+  private computeResults(results: ESLintLib.LintResult[]) {
     return results.map((result) => {
       return {
         filePath: result.filePath,
@@ -73,14 +72,14 @@ export class ESLintLinter implements Linter {
     });
   }
 
-  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any): ESLint {
+  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any): ESLintLib {
     // eslint-disable-next-line no-new
     if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context));
-    return new ESLint(this.getOptions(options, context));
+    return new ESLintLib(this.getOptions(options, context));
   }
 
   version() {
     if (this.ESLint) return this.ESLint.version;
-    return ESLint.version;
+    return ESLintLib.version;
   }
 }

@@ -987,7 +987,9 @@ export default class Component {
       scope,
       lang,
       bindingPrefix,
+      // @ts-ignore
       compiler: compilerInstance,
+      // @ts-ignore
       tester: testerInstance,
       dependencies,
       devDependencies,
