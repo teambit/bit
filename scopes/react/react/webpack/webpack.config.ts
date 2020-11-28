@@ -42,6 +42,25 @@ export default function (workspaceDir: string, targets: string[], envId: string)
             plugins: [require.resolve('react-refresh/babel')],
           },
         },
+
+        // MDX support (move to the mdx aspect and extend from there)
+        {
+          test: /\.mdx?$/,
+          use: [
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                presets: [require.resolve('@babel/preset-env'), require.resolve('@babel/preset-react')],
+                plugins: [require.resolve('react-refresh/babel')],
+              },
+            },
+            {
+              loader: require.resolve('@mdx-js/loader'),
+            },
+          ],
+        },
         {
           test: /\.module\.s(a|c)ss$/,
           loader: [
