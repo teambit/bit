@@ -123,7 +123,7 @@ export default class Repository {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
           throw err;
         }
-        logger.silly(`Failed finding a ref file ${this.objectPath(ref)}.`);
+        logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
         if (throws) throw err;
         return null;
       });
@@ -306,6 +306,17 @@ export default class Repository {
     await this._writeMany();
     await this.remoteLanes.write();
     await this.unmergedComponents.write();
+    this.clearObjects();
+  }
+
+  /**
+   * this is especially critical for http server, where one process lives long and serves multiple
+   * exports. without this, the objects get accumulated over time and being rewritten over and over
+   * again.
+   */
+  private clearObjects() {
+    this.objects = {};
+    this.objectsToRemove = [];
   }
 
   /**
@@ -359,7 +370,7 @@ export default class Repository {
   _deleteOne(ref: Ref): Promise<boolean> {
     this.removeFromCache(ref);
     const pathToDelete = this.objectPath(ref);
-    logger.silly(`repository._deleteOne: deleting ${pathToDelete}`);
+    logger.trace(`repository._deleteOne: deleting ${pathToDelete}`);
     return removeFile(pathToDelete, true);
   }
 
@@ -374,7 +385,7 @@ export default class Repository {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
-    logger.silly(`repository._writeOne: ${objectPath}`);
+    logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

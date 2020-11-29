@@ -6,12 +6,15 @@ import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
 import chalk from 'chalk';
 import syntaxHighlighter from 'consolehighlighter';
+import { PubSub } from 'graphql-subscriptions';
 import { DevFilesMain } from '@teambit/dev-files';
 
 import { NoTestFilesFound } from './exceptions';
-import { Tester, Tests } from './tester';
+import { Tester, Tests, CallbackFn } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
+
+export const OnTestsChanged = 'OnTestsChanged';
 
 export type TesterDescriptor = {
   /**
@@ -45,8 +48,12 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
 
     private logger: Logger,
 
+    private pubsub: PubSub,
+
     private devFiles: DevFilesMain
   ) {}
+
+  _callback: CallbackFn | undefined;
 
   render(env: EnvDefinition) {
     const descriptor = this.getDescriptor(env);
@@ -83,6 +90,10 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     };
   }
 
+  onTestRunComplete(callback: CallbackFn) {
+    this._callback = callback;
+  }
+
   async run(context: ExecutionContext, options: TesterOptions): Promise<Tests> {
     const tester: Tester = context.env.getTester();
     const specFiles = ComponentMap.as(context.components, (component) => {
@@ -102,12 +113,30 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       specFiles,
       rootPath: this.workspace.path,
       workspace: this.workspace,
-      watch: options.watch,
       debug: options.debug,
+      ui: options.ui,
     });
+
+    if (options.watch && tester.watch) {
+      if (tester.onTestRunComplete) {
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        tester.onTestRunComplete((results) => {
+          if (this._callback) this._callback(results);
+          results.components.forEach((component) => {
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            this.pubsub.publish(OnTestsChanged, {
+              testsChanged: {
+                id: component.componentId.toString(),
+                testsResults: component.results,
+                loading: component.loading,
+              },
+            });
+          });
+        });
+      }
+      return tester.watch(testerContext);
+    }
 
     return tester.test(testerContext);
   }
-
-  watch() {}
 }

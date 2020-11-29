@@ -39,41 +39,32 @@ export function indexByDepId(
   const result: PackageNameIndex = new Map();
   componentDependenciesMap.forEach((depsObject, compPackageName) => {
     forEachObjIndexed(addSpecificLifeCycleDepsToIndex(result, compPackageName), depsObject);
-    // Only add preserved in case it was defined in any component, otherwise it has no meaning at all
-    if (result.has(compPackageName)) {
-      addPreservedFromRoot(result, compPackageName, rootPolicy);
-    }
   });
+  addPreservedFromRoot(result, rootPolicy);
   return result;
 }
 
-function addPreservedFromRoot(index: PackageNameIndex, depId: PackageName, rootPolicy: WorkspacePolicy): void {
-  const entryFromPolicy = rootPolicy.find(depId);
-  const metadata: PackageNameIndexItemMetadata = {
-    preservedVersion: undefined,
-  };
-  if (entryFromPolicy && entryFromPolicy.value.preserve) {
-    metadata.preservedVersion = entryFromPolicy.value.version;
-    metadata.preservedLifecycleType = entryFromPolicy.lifecycleType;
-  }
-  return setMetadataToIndexItem(index, depId, metadata);
+function addPreservedFromRoot(index: PackageNameIndex, rootPolicy: WorkspacePolicy): void {
+  const preserved = rootPolicy.filter((entry) => !!entry.value.preserve);
+  preserved.forEach((entry) => {
+    const metadata: PackageNameIndexItemMetadata = {
+      preservedVersion: entry.value.version,
+      preservedLifecycleType: entry.lifecycleType,
+    };
+    setMetadataToExistingIndexItem(index, entry.dependencyId, metadata);
+  });
 }
 
-function setMetadataToIndexItem(
+function setMetadataToExistingIndexItem(
   index: PackageNameIndex,
   depId: PackageName,
   metadata: PackageNameIndexItemMetadata
 ): void {
   const existingItem = index.get(depId);
+  // only change existing items
   if (existingItem) {
     existingItem.metadata = metadata;
-    return;
   }
-  const item: PackageNameIndexItem = {
-    componentItems: [],
-    metadata,
-  };
-  index.set(depId, item);
 }
 
 /**

@@ -71,7 +71,7 @@ export type Issues = {
   missingCustomModuleResolutionLinks: {};
   customModuleResolutionUsed: {}; // invalid on Harmony, { importSource: idStr }
   relativeComponents: {};
-  relativeComponentsAuthored: RelativeComponentsAuthoredIssues; // invalid on Harmony
+  relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
   parseErrors: {};
   resolveErrors: {};
   missingBits: {};
@@ -1273,6 +1273,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
   _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
+    if (!this.issues.relativeComponentsAuthored) this.issues.relativeComponentsAuthored = {};
     if (!this.issues.relativeComponentsAuthored[originFile]) {
       this.issues.relativeComponentsAuthored[originFile] = [];
     }

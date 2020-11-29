@@ -1,77 +1,34 @@
+/**
+ * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
+ * functionality.
+ * also, Winston should start BEFORE Pino. otherwise, Pino starts creating the debug.log file first
+ * and it throws an error if the file doesn't exists on Docker/CI.
+ */
 import chalk from 'chalk';
-import * as path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import winston, { LogEntry } from 'winston';
-import pino, { Logger as PinoLogger, Level, LoggerOptions } from 'pino';
+import { LogEntry } from 'winston';
+import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
-import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '../constants';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constants';
+import { getWinstonLogger } from './winston-logger';
+import { getPinoLogger } from './pino-logger';
 
 export { Level as LoggerLevel };
 
-const noLog = Boolean(process.env.npm_config_nolog);
-
-const dest = noLog
-  ? pino.destination('/dev/null')
-  : pino.destination({
-      dest: DEBUG_LOG, // omit for stdout
-      sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
-    });
-
-// Store the extensionsLoggers to prevent create more than one logger for the same extension
-// in case the extension developer use api.logger more than once
-const extensionsLoggers = new Map();
-
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
-const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
+const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
-const prettyPrint = {
-  colorize: true,
-  translateTime: 'SYS:standard',
-  ignore: 'hostname',
-};
+const logLevel = getLogLevel();
 
-const prettyPrintConsole = {
-  colorize: true,
-  ignore: 'hostname,pid,time,level',
-};
+const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
 
-/**
- * by default, Pino expects the first parameter to be an object and the second to be the message
- * string. since all current log messages were written using Winston, they're flipped - message
- * first and then other data.
- * this hook flips the first two arguments, so then it's fine to have the message as the first arg.
- */
-const hooks = {
-  logMethod(inputArgs, method) {
-    if (inputArgs.length >= 2 && inputArgs[1] !== undefined) {
-      const arg1 = inputArgs.shift();
-      const arg2 = inputArgs.shift();
-      return method.apply(this, [arg2, arg1]);
-    }
-    return method.apply(this, inputArgs);
-  },
-};
+const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
 
-const opts: LoggerOptions = {
-  hooks,
-};
-
-if (!jsonFormat) {
-  opts.prettyPrint = prettyPrint;
-}
-
-const pinoLogger: PinoLogger = pino(opts, dest);
-pinoLogger.level = noLog ? 'silent' : logLevel;
-
-const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
-pinoLoggerConsole.level = logLevel;
-
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface IBitLogger {
   trace(message: string, ...meta: any[]): void;
 
@@ -85,51 +42,6 @@ export interface IBitLogger {
 
   console(msg: string): void;
 }
-
-export const baseFileTransportOpts = {
-  filename: DEBUG_LOG,
-  format: jsonFormat ? winston.format.combine(winston.format.timestamp(), winston.format.json()) : getFormat(),
-  level: logLevel,
-  maxsize: 10 * 1024 * 1024, // 10MB
-  maxFiles: 10,
-  // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
-  // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-  tailable: true,
-};
-
-function getMetadata(info) {
-  if (!Object.keys(info.metadata).length) return '';
-  if ((info.level === 'error' || info.level === '\u001b[31merror\u001b[39m') && info.metadata.stack) {
-    // this is probably an instance of Error, show the stack nicely and not serialized.
-    return `\n${info.metadata.stack}`;
-  }
-  try {
-    return JSON.stringify(info.metadata, null, 2);
-  } catch (err) {
-    return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
-  }
-}
-
-export function getFormat() {
-  return winston.format.combine(
-    winston.format.metadata(),
-    winston.format.colorize(),
-    winston.format.timestamp(),
-    winston.format.splat(), // does nothing?
-    winston.format.errors({ stack: true }),
-    winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
-    winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message} ${getMetadata(info)}`)
-  );
-}
-
-/**
- * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
- * functionality.
- */
-const winstonLogger = winston.createLogger({
-  transports: [new winston.transports.File(baseFileTransportOpts)],
-  exitOnError: false,
-});
 
 /**
  * the method signatures of debug/info/error/etc are similar to Winston.logger.
@@ -278,32 +190,6 @@ class BitLogger implements IBitLogger {
 
 const logger = new BitLogger(pinoLogger);
 
-/**
- * Create a logger instance for extension
- * The extension name will be added as label so it will appear in the begining of each log line
- * The logger is cached for each extension so there is no problem to use getLogger few times for the same extension
- * @param {string} extensionName
- */
-export const createExtensionLogger = (extensionName: string) => {
-  // Getting logger from cache
-  const existingLogger = extensionsLoggers.get(extensionName);
-
-  if (existingLogger) {
-    return existingLogger;
-  }
-  const extensionFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
-    filename: path.join(GLOBAL_LOGS, 'extensions.log'),
-    label: extensionName,
-  });
-  const extLogger = winston.createLogger({
-    transports: [new winston.transports.File(extensionFileTransportOpts)],
-    exceptionHandlers: [new winston.transports.File(extensionFileTransportOpts)],
-    exitOnError: false,
-  });
-  extensionsLoggers.set(extensionName, extLogger);
-  return extLogger;
-};
-
 export const printWarning = (msg: string) => {
   const cfgNoWarnings = getSync(CFG_NO_WARNINGS);
   if (cfgNoWarnings !== 'true') {
@@ -331,9 +217,20 @@ if (process.env.BIT_LOG) {
   writeLogToScreen(process.env.BIT_LOG);
 }
 
+function getLogLevel(): Level {
+  const defaultLevel = 'debug';
+  const level = getSync(CFG_LOG_LEVEL) || defaultLevel;
+  if (isLevel(level)) return level;
+  const levelsStr = LEVELS.join(', ');
+  // eslint-disable-next-line no-console
+  console.error(
+    `fatal: level "${level}" coming from ${CFG_LOG_LEVEL} configuration is invalid. permitted levels are: ${levelsStr}`
+  );
+  return defaultLevel;
+}
+
 function isLevel(maybeLevel: Level | string): maybeLevel is Level {
-  const levels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
-  return levels.includes(maybeLevel);
+  return LEVELS.includes(maybeLevel);
 }
 
 export function writeLogToScreen(levelOrPrefix = '') {
@@ -359,5 +256,7 @@ export function writeLogToScreen(levelOrPrefix = '') {
   //   })
   // );
 }
+
+export { createExtensionLogger };
 
 export default logger;

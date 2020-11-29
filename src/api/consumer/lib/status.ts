@@ -32,9 +32,8 @@ export default (async function status(): Promise<StatusResult> {
   const consumer = await loadConsumer();
   const laneObj = await consumer.getCurrentLaneObject();
   const componentsList = new ComponentsList(consumer);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const newComponents: Component[] = await componentsList.listNewComponents(true);
-  const modifiedComponent = await componentsList.listModifiedComponents(true);
+  const newComponents: Component[] = (await componentsList.listNewComponents(true)) as Component[];
+  const modifiedComponent = (await componentsList.listModifiedComponents(true)) as Component[];
   const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents(laneObj);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsIds = autoTagPendingComponents.map((component) => component.id);
@@ -48,12 +47,7 @@ export default (async function status(): Promise<StatusResult> {
   const invalidComponents = allInvalidComponents.filter((c) => !(c.error instanceof ComponentsPendingImport));
   const outdatedComponents = await componentsList.listOutdatedComponents();
   const mergePendingComponents = await componentsList.listMergePendingComponents();
-
-  // Run over the components to check if there is missing dependencies
-  // If there is at least one we won't tag anything
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const newAndModified: BitId[] = newComponents.concat(modifiedComponent);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const newAndModified: Component[] = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     if (consumer.isLegacy && component.issues) {
       delete component.issues.relativeComponentsAuthored;

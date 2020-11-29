@@ -21,8 +21,7 @@ export default class ScopeHelper {
   command: CommandHelper;
   fs: FsHelper;
   npm: NpmHelper;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  cache: Record<string, any>;
+  cache?: Record<string, any>;
   keepEnvs: boolean;
   clonedScopes: string[] = [];
   packageManager = 'npm';
@@ -49,9 +48,7 @@ export default class ScopeHelper {
     fs.removeSync(this.scopes.localPath);
     fs.removeSync(this.scopes.remotePath);
     if (this.cache) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       fs.removeSync(this.cache.localScopePath);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       fs.removeSync(this.cache.remoteScopePath);
       delete this.cache;
     }

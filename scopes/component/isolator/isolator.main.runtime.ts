@@ -1,6 +1,12 @@
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentMap } from '@teambit/component';
-import { DependencyResolverAspect, DependencyResolverMain, LinkingOptions } from '@teambit/dependency-resolver';
+import {
+  DependencyResolverAspect,
+  DependencyResolverMain,
+  LinkingOptions,
+  WorkspacePolicy,
+  InstallOptions,
+} from '@teambit/dependency-resolver';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from 'bit-bin/dist/constants';
@@ -36,6 +42,7 @@ export type IsolateComponentsInstallOptions = {
   dedupe?: boolean;
   copyPeerToRuntimeOnComponents?: boolean;
   copyPeerToRuntimeOnRoot?: boolean;
+  installTeambitBit?: boolean;
 };
 
 export type IsolateComponentsOptions = {
@@ -90,9 +97,10 @@ export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [DependencyResolverAspect, LoggerAspect];
   static defaultConfig = {};
-  static async provider([dependencyResolver, loggerExtension]: [DependencyResolverMain, LoggerMain]): Promise<
-    IsolatorMain
-  > {
+  static async provider([dependencyResolver, loggerExtension]: [
+    DependencyResolverMain,
+    LoggerMain
+  ]): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
     const isolator = new IsolatorMain(dependencyResolver, logger);
     return isolator;
@@ -128,37 +136,8 @@ export class IsolatorMain {
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      const capsulesToInstall: Capsule[] = capsulesWithPackagesData
-        .filter((capsuleWithPackageData) => {
-          const packageJsonHasChanged = wereDependenciesInPackageJsonChanged(capsuleWithPackageData);
-          // @todo: when a component is tagged, it changes all package-json of its dependents, but it
-          // should not trigger any "npm install" because they dependencies are symlinked by us
-          return packageJsonHasChanged;
-        })
-        .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
-      // await this.dependencyResolver.capsulesInstall(capsulesToInstall, { packageManager: config.packageManager });
-      const installer = this.dependencyResolver.getInstaller({
-        rootDir: capsulesDir,
-        linkingOptions: opts.linkingOptions,
-        cacheRootDirectory: opts.includeDeps ? capsulesDir : undefined,
-      });
-      // When using isolator we don't want to use the policy defined in the workspace directly,
-      // we only want to instal deps from components and the peer from the workspace
-
-      const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
-      const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
-      const packageManagerInstallOptions = {
-        dedupe: installOptions.dedupe,
-        copyPeerToRuntimeOnComponents: installOptions.copyPeerToRuntimeOnComponents,
-        copyPeerToRuntimeOnRoot: installOptions.copyPeerToRuntimeOnRoot,
-      };
-      await installer.install(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsules), packageManagerInstallOptions);
-      await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
-      await symlinkDependenciesToCapsules(capsulesToInstall, capsuleList, this.logger);
-      // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
-      // TODO: remove this after exporting core extensions as components
-      await symlinkBitBinToCapsules(capsulesToInstall, this.logger);
-      // await copyBitBinToCapsuleRoot(capsulesDir, this.logger);
+      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.includeDeps ?? false);
+      await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
     // rewrite the package-json with the component dependencies in it. the original package.json
@@ -174,6 +153,70 @@ export class IsolatorMain {
     return capsuleList;
   }
 
+  private async installInCapsules(
+    capsulesDir: string,
+    capsuleList: CapsuleList,
+    isolateInstallOptions: IsolateComponentsInstallOptions,
+    includeDeps: boolean
+  ) {
+    const installer = this.dependencyResolver.getInstaller({
+      rootDir: capsulesDir,
+      cacheRootDirectory: includeDeps ? capsulesDir : undefined,
+    });
+    // When using isolator we don't want to use the policy defined in the workspace directly,
+    // we only want to instal deps from components and the peer from the workspace
+
+    const peerOnlyPolicy = this.getPeersOnlyPolicy();
+    const installOptions: InstallOptions = {
+      installTeambitBit: !!isolateInstallOptions.installTeambitBit,
+    };
+    const packageManagerInstallOptions = {
+      dedupe: isolateInstallOptions.dedupe,
+      copyPeerToRuntimeOnComponents: isolateInstallOptions.copyPeerToRuntimeOnComponents,
+      copyPeerToRuntimeOnRoot: isolateInstallOptions.copyPeerToRuntimeOnRoot,
+    };
+    await installer.install(
+      capsulesDir,
+      peerOnlyPolicy,
+      this.toComponentMap(capsuleList),
+      installOptions,
+      packageManagerInstallOptions
+    );
+  }
+
+  private async linkInCapsules(
+    capsulesDir: string,
+    capsuleList: CapsuleList,
+    capsulesWithPackagesData: CapsulePackageJsonData[],
+    linkingOptions: LinkingOptions
+  ) {
+    const linker = this.dependencyResolver.getLinker({
+      rootDir: capsulesDir,
+      linkingOptions,
+    });
+    const peerOnlyPolicy = this.getPeersOnlyPolicy();
+    const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
+    await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), linkingOptions);
+    await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
+    await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
+    // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
+    // TODO: remove this after exporting core extensions as components
+    await symlinkBitBinToCapsules(capsulesWithModifiedPackageJson, this.logger);
+    // await copyBitBinToCapsuleRoot(capsulesDir, this.logger);
+  }
+
+  private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {
+    const capsulesWithModifiedPackageJson: Capsule[] = capsulesWithPackagesData
+      .filter((capsuleWithPackageData) => {
+        const packageJsonHasChanged = wereDependenciesInPackageJsonChanged(capsuleWithPackageData);
+        // @todo: when a component is tagged, it changes all package-json of its dependents, but it
+        // should not trigger any "npm install" because they dependencies are symlinked by us
+        return packageJsonHasChanged;
+      })
+      .map((capsuleWithPackageData) => capsuleWithPackageData.capsule);
+    return capsulesWithModifiedPackageJson;
+  }
+
   private async writeComponentsInCapsules(components: Component[], capsuleList: CapsuleList, legacyScope?: Scope) {
     const legacyComponents = components.map((component) => component.state._consumer.clone());
     const allIds = BitIds.fromArray(legacyComponents.map((c) => c.id));
@@ -187,6 +230,12 @@ export class IsolatorMain {
         await component.state._consumer.dataToPersist.persistAllToCapsule(capsule, { keepExistingCapsule: true });
       })
     );
+  }
+
+  private getPeersOnlyPolicy(): WorkspacePolicy {
+    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
+    const peerOnlyPolicy = workspacePolicy.byLifecycleType('peer');
+    return peerOnlyPolicy;
   }
 
   private getComponentWriteParams(
@@ -211,8 +260,8 @@ export class IsolatorMain {
     };
   }
 
-  private toComponentMap(capsules: Capsule[]): ComponentMap<string> {
-    const tuples: [Component, string][] = capsules.map((capsule) => {
+  private toComponentMap(capsuleList: CapsuleList): ComponentMap<string> {
+    const tuples: [Component, string][] = capsuleList.map((capsule) => {
       return [capsule.component, capsule.path];
     });
 
@@ -270,7 +319,7 @@ function wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePac
 async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
   return Promise.all(
     capsules.map(async (capsule) => {
-      const packageJsonPath = path.join(capsule.wrkDir, 'package.json');
+      const packageJsonPath = path.join(capsule.path, 'package.json');
       let previousPackageJson: any = null;
       try {
         const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });

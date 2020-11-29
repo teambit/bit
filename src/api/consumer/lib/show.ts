@@ -2,7 +2,7 @@ import { getConsumerComponent, getScopeComponent } from '..';
 import loader from '../../../cli/loader/loader';
 import { BEFORE_SHOW_REMOTE } from '../../../cli/loader/loader-messages';
 
-export default (async function show({
+export default async function show({
   id,
   json,
   versions,
@@ -24,10 +24,11 @@ export default (async function show({
   dependencies: boolean;
 }) {
   if (versions) {
-    return getComponent(versions).then((components) => ({
+    const components = await getComponent(versions);
+    return {
       components,
       versions,
-    }));
+    };
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return getComponent().then(({ component, componentModel, dependentsInfo, dependenciesInfo }) => ({
@@ -55,4 +56,4 @@ export default (async function show({
     }
     return getConsumerComponent({ ...params, compare });
   }
-});
+}
