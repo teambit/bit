@@ -10,7 +10,6 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import { merge } from 'lodash';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
@@ -165,7 +164,7 @@ export class WorkspaceComponentLoader {
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     const existingExtension = component.state.config.extensions.findExtension(extension);
     if (existingExtension) {
-      existingExtension.data = merge(existingExtension.data, data);
+      Object.assign(existingExtension.data, data);
       return;
     }
     component.state.config.extensions.push(await this.getDataEntry(extension, data));
