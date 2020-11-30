@@ -830,6 +830,11 @@
                 "test": false
             },
             {
+                "name": "dependency.ts",
+                "relativePath": "dependency.ts",
+                "test": false
+            },
+            {
                 "name": "duplicate-dependency.ts",
                 "relativePath": "duplicate-dependency.ts",
                 "test": false
@@ -872,26 +877,6 @@
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "dependency.ts",
-                "relativePath": "model/dependency/dependency.ts",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "model/dependency/index.ts",
-                "test": false
-            },
-            {
-                "name": "graph-filters.ts",
-                "relativePath": "model/graph-filters/graph-filters.ts",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "model/graph-filters/index.ts",
                 "test": false
             },
             {
@@ -972,11 +957,6 @@
             {
                 "name": "minimap.ts",
                 "relativePath": "ui/dependencies-graph/minimap.ts",
-                "test": false
-            },
-            {
-                "name": "graph-filters.tsx",
-                "relativePath": "ui/graph-page/graph-filters.tsx",
                 "test": false
             },
             {
@@ -7014,147 +6994,6 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
-        "lanes": []
-    },
-    "ui/input/check-box": {
-        "files": [
-            {
-                "name": "check-box.compositions.tsx",
-                "relativePath": "check-box.compositions.tsx",
-                "test": false
-            },
-            {
-                "name": "check-box.module.scss",
-                "relativePath": "check-box.module.scss",
-                "test": false
-            },
-            {
-                "name": "check-box.tsx",
-                "relativePath": "check-box.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/input/check-box",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "ui/round-loader": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "round-loader.composition.tsx",
-                "relativePath": "round-loader.composition.tsx",
-                "test": false
-            },
-            {
-                "name": "round-loader.docs.tsx",
-                "relativePath": "round-loader.docs.tsx",
-                "test": false
-            },
-            {
-                "name": "round-loader.module.scss",
-                "relativePath": "round-loader.module.scss",
-                "test": false
-            },
-            {
-                "name": "round-loader.tsx",
-                "relativePath": "round-loader.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/round-loader",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "ui/test-loader": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "test-loader.composition.tsx",
-                "relativePath": "test-loader.composition.tsx",
-                "test": false
-            },
-            {
-                "name": "test-loader.docs.tsx",
-                "relativePath": "test-loader.docs.tsx",
-                "test": false
-            },
-            {
-                "name": "test-loader.module.scss",
-                "relativePath": "test-loader.module.scss",
-                "test": false
-            },
-            {
-                "name": "test-loader.tsx",
-                "relativePath": "test-loader.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/defender/ui/test-loader",
-        "origin": "AUTHORED",
-        "exported": false,
-        "lanes": []
-    },
-    "worker": {
-        "files": [
-            {
-                "name": "expose.ts",
-                "relativePath": "expose.ts",
-                "test": false
-            },
-            {
-                "name": "harmony-worker.ts",
-                "relativePath": "harmony-worker.ts",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "node-endpoint.ts",
-                "relativePath": "node-endpoint.ts",
-                "test": false
-            },
-            {
-                "name": "worker-manifest.ts",
-                "relativePath": "worker-manifest.ts",
-                "test": false
-            },
-            {
-                "name": "worker.aspect.ts",
-                "relativePath": "worker.aspect.ts",
-                "test": false
-            },
-            {
-                "name": "worker.main.runtime.ts",
-                "relativePath": "worker.main.runtime.ts",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/harmony/worker",
-        "origin": "AUTHORED",
-        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.171"
