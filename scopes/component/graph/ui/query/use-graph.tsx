@@ -10,5 +10,3 @@ export function useGraph() {
 
   return useGraphQuery([componentId]);
 }
-
-export {};

@@ -4,10 +4,15 @@ import { GraphQlError } from '@teambit/graphql';
 import { GET_GRAPH, RawGraphQuery } from './get-graph.query';
 import { GraphModel } from './graph-model';
 
+type QueryVariables = {
+  ids: string[];
+  filter?: string;
+};
+
 /** provides dependencies graph data from graphQL */
-export function useGraphQuery(componentId: string[]) {
-  const { data, error, loading } = useDataQuery<RawGraphQuery>(GET_GRAPH, {
-    variables: { ids: componentId },
+export function useGraphQuery(componentId: string[], filter?: string) {
+  const { data, error, loading } = useDataQuery<RawGraphQuery, QueryVariables>(GET_GRAPH, {
+    variables: { ids: componentId, filter },
   });
 
   const rawGraph = data?.graph;
@@ -18,6 +23,7 @@ export function useGraphQuery(componentId: string[]) {
     return {
       graph: rawGraph ? GraphModel.from(rawGraph) : undefined,
       error: serverError || clientError,
+      loading,
     };
   }, [rawGraph, error]);
 }
