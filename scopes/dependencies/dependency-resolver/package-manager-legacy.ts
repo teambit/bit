@@ -77,13 +77,13 @@ export default class PackageManager {
     return null;
   }
 
-  async runInstallInFolder(folder: string, opts: {} = {}) {
+  async runInstallInFolder(folder: string, opts: {} = {}): Promise<void> {
     const packageManager = this.packageManagerName;
     if (packageManager === 'yarn') {
       const child = execa('yarn', [], { cwd: folder, stdio: 'pipe' });
       pipeOutput(child);
       await child;
-      return null;
+      return;
     }
     if (packageManager === 'npm') {
       const child = execa('npm', ['install'], { cwd: folder, stdio: 'pipe' });
@@ -102,11 +102,11 @@ export default class PackageManager {
           if (exitStatus) {
             reject(new Error(`${folder}`));
           } else {
-            resolve();
+            resolve(null);
           }
         });
       });
-      return null;
+      return;
     }
     throw new Error(`unsupported package manager ${packageManager}`);
   }
