@@ -23,6 +23,7 @@ export function useGraphQuery(componentId: string[], filter?: string) {
     return {
       graph: rawGraph ? GraphModel.from(rawGraph) : undefined,
       error: serverError || clientError,
+      loading,
     };
   }, [rawGraph, error]);
 }

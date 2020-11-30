@@ -5,13 +5,15 @@ import { CheckBox } from '@teambit/ui.input.check-box';
 type GraphFilters = {
   isFiltered: boolean;
   onChangeFilter: (isFiltered: boolean) => void;
+  disable?: boolean;
 } & CardProps;
 
-export function GraphFilters({ onChangeFilter, isFiltered, ...rest }: GraphFilters) {
+export function GraphFilters({ onChangeFilter, isFiltered, disable, ...rest }: GraphFilters) {
   return (
     <Card {...rest}>
       <div>
-        <CheckBox checked={isFiltered} onChange={(e) => onChangeFilter(e.target.checked)}>
+        {/* show non-runtime === !isFiltered */}
+        <CheckBox checked={!isFiltered} disabled={disable} onChange={(e) => onChangeFilter(!e.target.checked)}>
           {' '}
           show non-runtime
         </CheckBox>

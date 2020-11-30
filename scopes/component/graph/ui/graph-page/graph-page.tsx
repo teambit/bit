@@ -27,7 +27,7 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
     setFilter(isFiltered ? 'runtimeOnly' : undefined);
   };
 
-  const { graph, error } = useGraphQuery([component.id.toString()], filter);
+  const { graph, error, loading } = useGraphQuery([component.id.toString()], filter);
   if (error) return error.code === 404 ? <NotFoundPage /> : <ServerErrorPage />;
   if (!graph) return <FullLoader />;
 
@@ -42,7 +42,12 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
         rootNode={component.id}
         className={styles.graph}
       >
-        <GraphFilters className={styles.filters} isFiltered={isFiltered} onChangeFilter={onCheckFilter} />
+        <GraphFilters
+          className={styles.filters}
+          disable={loading}
+          isFiltered={isFiltered}
+          onChangeFilter={onCheckFilter}
+        />
       </DependenciesGraph>
     </div>
   );
