@@ -271,9 +271,9 @@ export default class NodeModuleLinker {
       if (stat.isSymbolicLink()) {
         this.dataToPersist.removePath(new RemovePath(linkPath));
       }
-      return;
+      return undefined;
     } catch (err) {
-      return; // probably file does not exist
+      return undefined; // probably file does not exist
     }
   }
 
