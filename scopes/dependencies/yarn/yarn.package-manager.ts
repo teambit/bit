@@ -1,5 +1,4 @@
 import * as semver from 'semver';
-import fs from 'fs-extra';
 import parsePackageName from 'parse-package-name';
 import {
   WorkspacePolicy,
@@ -14,7 +13,7 @@ import {
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { ComponentMap } from '@teambit/component';
-import { existsSync, removeSync } from 'fs-extra';
+import fs, { existsSync, removeSync } from 'fs-extra';
 import { join, resolve } from 'path';
 import {
   Workspace,
@@ -118,7 +117,7 @@ export class YarnPackageManager implements PackageManager {
     // mock the files by hooking to `xfs`.
     // see the persistProject: false above
     this.clean(rootDir, componentDirectoryMap, installOptions);
-    this.restorePackageJson(rootDir, existingPackageJson);
+    await this.restorePackageJson(rootDir, existingPackageJson);
     this.logger.consoleSuccess('installing dependencies');
   }
 
@@ -146,7 +145,7 @@ export class YarnPackageManager implements PackageManager {
       if (exists) {
         return fs.remove(packageJsonPath);
       }
-      return;
+      return undefined;
     }
     return fs.writeFile(packageJsonPath, backupJson);
   }
