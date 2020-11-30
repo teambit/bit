@@ -1,4 +1,5 @@
 import * as semver from 'semver';
+import fs from 'fs-extra';
 import parsePackageName from 'parse-package-name';
 import {
   WorkspacePolicy,
@@ -93,6 +94,8 @@ export class YarnPackageManager implements PackageManager {
     this.setupWorkspaces(project, workspaces.concat(rootWs));
 
     const cache = await Cache.find(config);
+    const existingPackageJson = await this.backupRootPackageJson(rootDir);
+
     const installReport = await StreamReport.start(
       {
         stdout: process.stdout,
@@ -100,6 +103,9 @@ export class YarnPackageManager implements PackageManager {
       },
       async (report) => {
         await project.install({
+          // this should be uncomment in order to not mutate the root package.json and / or the package json in components
+          // Currently it's commented since it produce an error in the link step of "Error: Manifest not found"
+          // persistProject: false,
           cache,
           report,
         });
@@ -110,8 +116,39 @@ export class YarnPackageManager implements PackageManager {
 
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.
+    // see the persistProject: false above
     this.clean(rootDir, componentDirectoryMap, installOptions);
+    this.restorePackageJson(rootDir, existingPackageJson);
     this.logger.consoleSuccess('installing dependencies');
+  }
+
+  private getPackageJsonPath(rootDir: string): string {
+    const packageJsonPath = join(rootDir, 'package.json');
+    return packageJsonPath;
+  }
+
+  private async backupRootPackageJson(rootDir: string): Promise<Buffer | undefined> {
+    const packageJsonPath = this.getPackageJsonPath(rootDir);
+    const exists = await fs.pathExists(packageJsonPath);
+    if (!exists) {
+      return undefined;
+    }
+    const existingFile = await fs.readFile(packageJsonPath);
+    return existingFile;
+  }
+
+  private async restorePackageJson(rootDir: string, backupJson?: Buffer): Promise<void> {
+    const packageJsonPath = this.getPackageJsonPath(rootDir);
+    const exists = await fs.pathExists(packageJsonPath);
+
+    // if there is no backup it means it wasn't there before and should be deleted
+    if (!backupJson) {
+      if (exists) {
+        return fs.remove(packageJsonPath);
+      }
+      return;
+    }
+    return fs.writeFile(packageJsonPath, backupJson);
   }
 
   private clean(
