@@ -102,6 +102,10 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return newGraph;
   }
 
+  runtimeOnly(componentIds: string[]) {
+    return this.successorsSubgraph(componentIds, (edge) => edge.type === 'runtime');
+  }
+
   _calculateVersionMap() {
     const versionMap: Map<string, { allVersionNodes: string[]; latestVersionNode: string }> = new Map();
     for (const [compKey, comp] of this.nodes.entries()) {

@@ -825,16 +825,6 @@
                 "test": false
             },
             {
-                "name": "graph-filters.tsx",
-                "relativePath": "component-graph/graph-filters/graph-filters.tsx",
-                "test": false
-            },
-            {
-                "name": "index.ts",
-                "relativePath": "component-graph/graph-filters/index.ts",
-                "test": false
-            },
-            {
                 "name": "index.ts",
                 "relativePath": "component-graph/index.ts",
                 "test": false
@@ -892,6 +882,16 @@
             {
                 "name": "index.ts",
                 "relativePath": "model/dependency/index.ts",
+                "test": false
+            },
+            {
+                "name": "graph-filters.ts",
+                "relativePath": "model/graph-filters/graph-filters.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "model/graph-filters/index.ts",
                 "test": false
             },
             {

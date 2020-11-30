@@ -9,7 +9,7 @@ import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 import { useGraphQuery } from '../query';
 import { DependenciesGraph } from '../dependencies-graph';
 import { ComponentWidgetSlot } from '../../graph.ui.runtime';
-import type { FilterType } from '../../component-graph';
+import type { GraphFilter } from '../../model/graph-filters';
 
 import { GraphFilters } from './graph-filters';
 
@@ -22,7 +22,7 @@ type GraphPageProps = {
 export function GraphPage({ componentWidgets }: GraphPageProps) {
   const component = useContext(ComponentContext);
 
-  const [filter, setFilter] = useState<FilterType | undefined>(undefined);
+  const [filter, setFilter] = useState<GraphFilter>(undefined);
   const onCheckFilter = (isFiltered: boolean) => {
     setFilter(isFiltered ? 'runtimeOnly' : undefined);
   };

@@ -3,7 +3,8 @@ import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
 import { GraphBuilder } from './graph-builder';
-import { ComponentGraph, filters, FilterType } from './component-graph';
+import { ComponentGraph } from './component-graph';
+import { GraphFilter } from './model/graph-filters';
 import { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
 
@@ -60,20 +61,17 @@ export function graphSchema(graphBuilder: GraphBuilder, componentsHost: Componen
         },
       },
       Query: {
-        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: FilterType }) => {
+        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }) => {
           const resolvedIds = ids
             ? await componentsHost.resolveMultipleComponentIds(ids)
             : (await componentsHost.list()).map((x) => x.id);
 
-          let graph = await graphBuilder.getGraph(resolvedIds);
+          const graph = await graphBuilder.getGraph(resolvedIds);
           if (!graph) return undefined;
 
-          const relevantFilter = filter && filters[filter];
-          if (relevantFilter) {
-            graph = graph.successorsSubgraph(
-              resolvedIds.map((x) => x.toString()),
-              relevantFilter
-            );
+          if (filter === 'runtimeOnly') {
+            const runtimeGraph = graph.runtimeOnly(resolvedIds.map((x) => x.toString()));
+            return runtimeGraph;
           }
 
           return graph;
