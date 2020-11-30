@@ -177,6 +177,7 @@ export default class NodeModuleLinker {
 
       this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
     });
+    this._deleteExistingLinksRoot(componentNodeModulesPath);
     this.addSymlinkFromComponentDirNMToWorkspaceDirNM(component, componentNodeModulesPath);
     await this._populateDependenciesAndMissingLinks(component);
   }
@@ -252,9 +253,21 @@ export default class NodeModuleLinker {
         this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
       }
     });
+    this._deleteExistingLinksRoot(linkPath);
     this._deleteOldLinksOfIdWithoutScope(component);
     await this._createPackageJsonForAuthor(component);
   }
+
+  /**
+   * Removing existing links root (the package path) - to handle cases it was created by package manager for example
+   * If you have a case when this deletes something created by the package manager and it's not the desired behavior,
+   * do not delete this, but make sure the package manger nest the installed version into it's dependent
+   * @param component
+   */
+  _deleteExistingLinksRoot(linkPath: string) {
+    this.dataToPersist.removePath(new RemovePath(linkPath));
+  }
+
   /**
    * for AUTHORED components, when a component is new, upon build, we generate links on
    * node_modules. The path doesn't have the scope-name as it doesn't exist yet. (e.g. @bit/foo).
