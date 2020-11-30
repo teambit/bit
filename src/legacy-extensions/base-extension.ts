@@ -99,6 +99,7 @@ export default class BaseExtension {
   context: Record<string, any> | null | undefined;
   script: Function | null | undefined; // Store the required plugin
   _initOptions: InitOptions | null | undefined; // Store the required plugin
+  // @ts-ignore this code is obsolete, no point of fixing the types
   api = _getConcreteBaseAPI({ name: this.name });
 
   constructor(extensionProps: BaseExtensionProps) {

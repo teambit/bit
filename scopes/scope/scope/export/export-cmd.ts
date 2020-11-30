@@ -1,21 +1,10 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { exportAction } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
 import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
 import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
-import { EjectResults } from 'bit-bin/dist/consumer/component-ops/eject-components';
 import GeneralError from 'bit-bin/dist/error/general-error';
-import { Lane } from 'bit-bin/dist/scope/models';
 import chalk from 'chalk';
 import R from 'ramda';
-
-type ExportResults = {
-  componentsIds: BitId[];
-  nonExistOnBitMap: BitId[];
-  missingScope: BitId[];
-  exportedLanes: Lane[];
-  ejectResults: EjectResults | null | undefined;
-};
 
 export class ExportCmd implements Command {
   name = 'export [remote] [id...]';

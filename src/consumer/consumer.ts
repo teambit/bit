@@ -855,6 +855,7 @@ export default class Consumer {
       created: true,
       scope,
       isolated: true,
+      // @ts-ignore @gilad, the config type is incorrect indeed
       config,
     });
   }

@@ -15,7 +15,8 @@ export type SerializedSpecsResultsWithComponentId = {
 const testOneComponent = (verbose) => async (id: string) => {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const res = await testInProcess(id, false, verbose);
-  return res.results[0];
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+  return res.results![0];
 };
 
 export default function run(): Promise<void> {

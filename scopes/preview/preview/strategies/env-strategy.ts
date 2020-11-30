@@ -50,6 +50,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private getArtifactDef(context: BuildContext) {
+    // eslint-disable-next-line @typescript-eslint/prefer-as-const
     const env: 'env' = 'env';
     const rootDir = this.getDirName(context);
 

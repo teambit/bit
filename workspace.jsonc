@@ -18,6 +18,7 @@
         "@babel/core": "7.11.6",
         "@babel/preset-typescript": "7.10.4",
         "@graphql-modules/core": "^0.7.17",
+        "@jest/test-result": "26.6.2",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
         "@pnpm/client": "2.0.4",
         "@pnpm/config": "11.3.0",
@@ -67,7 +68,7 @@
         "@teambit/documenter.ui.consumable-link": "^0.2.3",
         "@teambit/documenter.ui.heading": "^0.2.3",
         "@teambit/documenter.ui.highlighted-text": "0.2.3",
-        "@teambit/documenter.ui.import-action": "^0.2.3",
+        "@teambit/documenter.ui.import-action": "^0.2.5",
         "@teambit/documenter.ui.label-list": "^0.2.3",
         "@teambit/documenter.ui.linked-heading": "^0.2.3",
         "@teambit/documenter.ui.property-table": "^0.2.3",
@@ -164,6 +165,7 @@
         "humanize-string": "2.1.0",
         "is-primitive": "3.0.1",
         "jest": "^26.0.1",
+        "jest-message-util": "26.6.2",
         "jest-watcher": "26.6.2",
         "join-path": "^1.1.1",
         "json-formatter-js": "2.3.4",
@@ -204,7 +206,7 @@
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
-        "semver": "7.3.2",
+        "semver": "^7.3.2",
         "semver-intersect": "^1.4.0",
         "singleton-tsserver": "1.0.1",
         "socket.io": "^2.3.0",
@@ -230,7 +232,7 @@
         "workbox-webpack-plugin": "^5.1.3"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.171",
+        "bit-bin": "14.8.9-dev.179",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -263,7 +265,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.171",
+            "bit-bin": "14.8.9-dev.179",
             "react-dom": "^16.13.1"
           }
         }
@@ -368,7 +370,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.171",
+            "bit-bin": "14.8.9-dev.179",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

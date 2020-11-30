@@ -7,7 +7,6 @@ import clientSupportCompressedCommand from '../../../utils/ssh/client-support-co
 import { LegacyCommand } from '../../legacy-command';
 
 let compressResponse;
-// eslint-disable-next-line @typescript-eslint/class-name-casing
 export default class _Show implements LegacyCommand {
   name = '_show <path> <args>';
   private = true;
