@@ -188,7 +188,7 @@
     "resolve": "^1.5.0",
     "resolve-dependency-path": "^2.0.0",
     "sass-lookup": "^3.0.0",
-    "semver": "^5.4.1",
+    "semver": "^7.3.2",
     "serialize-error": "^5.0.0",
     "ssh2": "^0.5.4",
     "string-format": "^0.5.0",
