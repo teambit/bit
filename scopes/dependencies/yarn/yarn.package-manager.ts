@@ -13,7 +13,7 @@ import {
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
 import { ComponentMap, Component } from '@teambit/component';
-import fs, { existsSync, removeSync } from 'fs-extra';
+import fs from 'fs-extra';
 import { join, resolve } from 'path';
 import {
   Workspace,
@@ -136,13 +136,12 @@ export class YarnPackageManager implements PackageManager {
     const componentsBackupsP = componentDirectoryMap.toArray().map(async ([component, dir]) => {
       const { packageJsonPath, file } = await this.getComponentPackageJsonToBackup(component, dir);
       result[packageJsonPath] = file;
-      return;
     });
     await Promise.all(componentsBackupsP);
     return result;
   }
 
-  private async restorePackageJsons(backupJsons: BackupJsons): Promise<void> {
+  private async restorePackageJsons(backupJsons: BackupJsons): Promise<void | undefined> {
     const promises = Object.entries(backupJsons).map(async ([packageJsonPath, file]) => {
       const exists = await fs.pathExists(packageJsonPath);
       // if there is no backup it means it wasn't there before and should be deleted
@@ -150,7 +149,7 @@ export class YarnPackageManager implements PackageManager {
         if (exists) {
           return fs.remove(packageJsonPath);
         }
-        return;
+        return undefined;
       }
       return fs.writeFile(packageJsonPath, file);
     });
