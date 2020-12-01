@@ -2,7 +2,7 @@ version: 2.1
 
 default_image: &default_image
   docker:
-    - image: circleci/node:10.20.0
+    - image: circleci/node:12.15.0
 
 default_resource_class: &default_resource_class
   resource_class: medium

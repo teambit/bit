@@ -10,7 +10,7 @@ export class LinterService implements EnvService<LintResults> {
     const linter: Linter = context.env.getLinter();
 
     const linterContext: LinterContext = Object.assign(context, {
-      quite: false,
+      quiet: false,
       extensionFormats: this.linterConfig.extensionFormats,
     });
 
