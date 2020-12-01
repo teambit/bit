@@ -2,7 +2,6 @@ import * as path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import semver from 'semver';
-import { mapSeries } from 'bluebird';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
 import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
@@ -108,13 +107,7 @@ export default class DependencyResolver {
 
   static getDepResolverAspectName: () => string;
   static getCoreAspectsPackagesAndIds: () => Record<string, string>;
-
-  static isDevFile: (component: Component, file: string) => Promise<boolean>;
-
-  async isDevFile(component: Component, file: string, testsFiles: string[]) {
-    if (this.consumer.isLegacy) return R.contains(file, testsFiles);
-    return DependencyResolver.isDevFile(component, file);
-  }
+  static getDevFiles: (component: Component) => Promise<string[]>;
 
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
@@ -197,7 +190,8 @@ export default class DependencyResolver {
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
-    await this.populateDependencies(allFiles, testsFiles);
+    const devFiles = this.consumer.isLegacy ? testsFiles : await DependencyResolver.getDevFiles(this.component);
+    this.populateDependencies(allFiles, devFiles);
     this.component.setDependencies(this.allDependencies.dependencies);
     this.component.setDevDependencies(this.allDependencies.devDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
@@ -231,10 +225,10 @@ export default class DependencyResolver {
    * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
    * and marked as ignored in the consumer or component config file.
    */
-  async populateDependencies(files: string[], testsFiles: string[]) {
-    await mapSeries(files, async (file: string) => {
+  populateDependencies(files: string[], testsFiles: string[]) {
+    files.forEach((file) => {
       const fileType: FileType = {
-        isTestFile: await this.isDevFile(this.component, file, testsFiles),
+        isTestFile: testsFiles.includes(file),
       };
       this.throwForNonExistFile(file);
       if (this.overridesDependencies.shouldIgnoreFile(file, fileType)) {
