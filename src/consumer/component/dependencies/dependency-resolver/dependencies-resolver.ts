@@ -107,8 +107,6 @@ export default class DependencyResolver {
 
   static getDepResolverAspectName: () => string;
   static getCoreAspectsPackagesAndIds: () => Record<string, string>;
-
-  static isDevFile: (component: Component, file: string) => Promise<boolean>;
   static getDevFiles: (component: Component) => Promise<string[]>;
 
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
