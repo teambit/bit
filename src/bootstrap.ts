@@ -10,7 +10,7 @@ import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
 import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
 
-const MINIMUM_NODE_VERSION = '10.13.0';
+const MINIMUM_NODE_VERSION = '12.15.0';
 
 process.env.MEMFS_DONT_WARN = 'true'; // suppress fs experimental warnings from memfs
 
