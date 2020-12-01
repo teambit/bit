@@ -279,7 +279,7 @@
     "/dist"
   ],
   "engines": {
-    "node": ">=12.16.0"
+    "node": ">=12.15.0"
   },
   "husky": {
     "hooks": {
