@@ -25,6 +25,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
 
   static async buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Promise<ComponentGraph> {
     const newGraph = new ComponentGraph();
+
     const setNodeP = legacyGraph.nodes().map(async (nodeId) => {
       const componentId = await componentFactory.resolveComponentId(nodeId);
       const component = await componentFactory.get(componentId);
@@ -33,13 +34,16 @@ export class ComponentGraph extends Graph<Component, Dependency> {
       }
     });
     await Promise.all(setNodeP);
-    legacyGraph.edges().forEach((edgeId) => {
-      const source = edgeId.v;
-      const target = edgeId.w;
+
+    const setEdgePromise = legacyGraph.edges().map(async (edgeId) => {
+      const source = await componentFactory.resolveComponentId(edgeId.v);
+      const target = await componentFactory.resolveComponentId(edgeId.w);
       const edgeObj =
-        legacyGraph.edge(source, target) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
-      newGraph.setEdge(source, target, edgeObj);
+        legacyGraph.edge(edgeId.v, edgeId.w) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
+      newGraph.setEdge(source.toString(), target.toString(), edgeObj);
     });
+    await Promise.all(setEdgePromise);
+
     newGraph.versionMap = newGraph._calculateVersionMap();
     return newGraph;
   }
