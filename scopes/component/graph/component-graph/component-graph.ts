@@ -4,7 +4,7 @@ import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-
 import { Graph } from 'cleargraph';
 import { Graph as LegacyGraph } from 'graphlib';
 
-import { Dependency } from '../dependency';
+import { Dependency } from '../model/dependency';
 import { DuplicateDependency, VersionSubgraph } from '../duplicate-dependency';
 
 export const DEPENDENCIES_TYPES = ['dependencies', 'devDependencies'];
@@ -18,23 +18,32 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     super(nodes, edges);
     this.versionMap = new Map();
   }
+
+  protected create(nodes: Node[] = [], edges: Edge[] = []): this {
+    return new ComponentGraph(nodes, edges) as this;
+  }
+
   static async buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Promise<ComponentGraph> {
     const newGraph = new ComponentGraph();
+
     const setNodeP = legacyGraph.nodes().map(async (nodeId) => {
       const componentId = await componentFactory.resolveComponentId(nodeId);
       const component = await componentFactory.get(componentId);
       if (component) {
-        newGraph.setNode(nodeId, component);
+        newGraph.setNode(componentId.toString(), component);
       }
     });
     await Promise.all(setNodeP);
-    legacyGraph.edges().forEach((edgeId) => {
-      const source = edgeId.v;
-      const target = edgeId.w;
+
+    const setEdgePromise = legacyGraph.edges().map(async (edgeId) => {
+      const source = await componentFactory.resolveComponentId(edgeId.v);
+      const target = await componentFactory.resolveComponentId(edgeId.w);
       const edgeObj =
-        legacyGraph.edge(source, target) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
-      newGraph.setEdge(source, target, edgeObj);
+        legacyGraph.edge(edgeId.v, edgeId.w) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
+      newGraph.setEdge(source.toString(), target.toString(), edgeObj);
     });
+    await Promise.all(setEdgePromise);
+
     newGraph.versionMap = newGraph._calculateVersionMap();
     return newGraph;
   }
@@ -95,6 +104,10 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     newGraph.setNodes(newGraphNodes);
     newGraph.setEdges(newGraphEdges);
     return newGraph;
+  }
+
+  runtimeOnly(componentIds: string[]) {
+    return this.successorsSubgraph(componentIds, (edge) => edge.type === 'runtime');
   }
 
   _calculateVersionMap() {
