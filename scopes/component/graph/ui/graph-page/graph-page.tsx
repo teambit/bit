@@ -22,7 +22,7 @@ type GraphPageProps = {
 export function GraphPage({ componentWidgets }: GraphPageProps) {
   const component = useContext(ComponentContext);
 
-  const [filter, setFilter] = useState<GraphFilter>(undefined);
+  const [filter, setFilter] = useState<GraphFilter>('runtimeOnly');
   const onCheckFilter = (isFiltered: boolean) => {
     setFilter(isFiltered ? 'runtimeOnly' : undefined);
   };
