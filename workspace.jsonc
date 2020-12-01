@@ -251,7 +251,7 @@
           "name": "@teambit/{name}",
           "private": false,
           "engines": {
-            "node": ">=12.19.0"
+            "node": ">=12.16.0"
           },
           "repository": {
             "type": "git",
