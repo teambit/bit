@@ -177,7 +177,7 @@ export default class DependencyResolver {
     cacheProjectAst: Record<string, any> | undefined
   ): Promise<Component> {
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
-    const allFiles = [...nonTestsFiles, ...nonTestsFiles];
+    const allFiles = [...nonTestsFiles, ...testsFiles];
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({
       componentDir: bitDir,
@@ -193,7 +193,7 @@ export default class DependencyResolver {
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
     const devFiles = this.consumer.isLegacy ? testsFiles : await DependencyResolver.getDevFiles(this.component);
-    await this.populateDependencies(allFiles, devFiles);
+    this.populateDependencies(allFiles, devFiles);
     this.component.setDependencies(this.allDependencies.dependencies);
     this.component.setDevDependencies(this.allDependencies.devDependencies);
     this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
@@ -227,7 +227,7 @@ export default class DependencyResolver {
    * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
    * and marked as ignored in the consumer or component config file.
    */
-  async populateDependencies(files: string[], testsFiles: string[]) {
+  populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file) => {
       const fileType: FileType = {
         isTestFile: testsFiles.includes(file),
