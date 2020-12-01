@@ -905,17 +905,6 @@ export default class Component {
     });
   }
 
-  // /**
-  //  * Recalculate docs property based on the source files
-  //  * used usually when setting the source files manually
-  //  */
-  // async recalculateDocs() {
-  //   const docsP = _getDocsForFiles(this.files);
-  //   const docs = await Promise.all(docsP);
-  //   const flattenedDocs = docs ? R.flatten(docs) : [];
-  //   this.docs = flattenedDocs;
-  // }
-
   copyAllDependenciesFromModel() {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
