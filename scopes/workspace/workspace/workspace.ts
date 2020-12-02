@@ -819,8 +819,8 @@ export class Workspace implements ComponentFactory {
 
     // no need to filter core aspects as they are not included in the graph
     // here we are trying to load extensions from the workspace.
+    const requireableExtensions: any = await this.requireComponents(aspects);
     try {
-      const requireableExtensions: any = await this.requireComponents(aspects);
       await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
     } catch (err) {
       // if extensions does not exist on workspace, try and load them from the local scope.
