@@ -87,7 +87,6 @@
         "@teambit/harmony": "0.2.7",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
-        "@types/cacache": "^12.0.1",
         "@types/classnames": "^2.2.10",
         "@types/cors": "^2.8.6",
         "@types/cross-spawn": "^6.0.2",
@@ -110,10 +109,10 @@
         "@types/url-parse": "1.4.3",
         "@types/webpack-dev-server": "^3.10.1",
         "@types/webpack-merge": "^4.1.5",
-        "@yarnpkg/cli": "2.3.2",
-        "@yarnpkg/core": "2.3.1",
-        "@yarnpkg/fslib": "2.3.0",
-        "@yarnpkg/plugin-npm": "2.3.0",
+        "@yarnpkg/cli": "2.4.0",
+        "@yarnpkg/core": "2.4.0",
+        "@yarnpkg/fslib": "2.4.0",
+        "@yarnpkg/plugin-npm": "2.4.0",
         "ansi-to-html": "^0.6.14",
         "apollo-boost": "^0.4.9",
         "apollo-cache-inmemory": "^1.6.6",
@@ -129,11 +128,10 @@
         "babel-polyfill": "^6.26.0",
         "babel-preset-jest": "^26.3.0",
         "body-parser": "1.19.0",
-        "cacache": "^15.0.5",
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
         "classnames": "^2.2.6",
-        "cleargraph": "^5.4.0",
+        "cleargraph": "^5.8.0",
         "comlink": "4.3.0",
         "consolehighlighter": "0.1.5",
         "copy-to-clipboard": "^3.3.1",
@@ -197,7 +195,7 @@
         "react-dev-utils": "^10.2.1",
         "react-dom": "^16.13.1",
         "react-error-overlay": "^6.0.7",
-        "react-flow-renderer": "^7.1.2",
+        "react-flow-renderer": "^8.0.0",
         "react-hot-loader": "^4.12.21",
         "react-live": "^2.2.2",
         "react-router-dom": "^5.2.0",
@@ -207,7 +205,7 @@
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
-        "semver": "7.3.2",
+        "semver": "^7.3.2",
         "semver-intersect": "^1.4.0",
         "singleton-tsserver": "1.0.1",
         "socket.io": "^2.3.0",
@@ -233,7 +231,7 @@
         "workbox-webpack-plugin": "^5.1.3"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.179",
+        "bit-bin": "14.8.9-dev.183",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -250,7 +248,26 @@
         ],
         "packageJson": {
           "name": "@teambit/{name}",
-          "private": false
+          "private": false,
+          "engines": {
+            "node": ">=12.15.0"
+          },
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/teambit/bit"
+          },
+          "keywords": [
+            "bit",
+            "components",
+            "collaboration",
+            "web",
+            "react",
+            "react-components",
+            "angular",
+            "angular-components",
+            "vue",
+            "vue-components"
+          ]
         }
       },
       "teambit.dependencies/dependency-resolver": {
@@ -266,7 +283,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.179",
+            "bit-bin": "14.8.9-dev.183",
             "react-dom": "^16.13.1"
           }
         }
@@ -371,7 +388,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.179",
+            "bit-bin": "14.8.9-dev.183",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

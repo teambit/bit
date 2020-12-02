@@ -4,8 +4,8 @@ import { EdgeType } from '@teambit/graph';
 // please update types when updating query, for added safety
 
 export const GET_GRAPH = gql`
-  query graph($ids: [String]) {
-    graph(ids: $ids) {
+  query graph($ids: [String], $filter: String) {
+    graph(ids: $ids, filter: $filter) {
       nodes {
         id
         component {

@@ -61,10 +61,13 @@ export default class WatchRunner {
   }
   killWatcher() {
     const isWin = process.platform === 'win32';
+    const pid = this.watchProcess.pid.toString();
+    if (this.helper.debugMode) console.log(`going to kill watcher process, pid: ${pid}`);
     if (isWin) {
-      childProcess.execSync(`taskkill /pid ${this.watchProcess.pid.toString()} /f /t`);
+      childProcess.execSync(`taskkill /pid ${pid} /f /t`);
     } else {
-      this.watchProcess.kill('SIGINT');
+      const result = this.watchProcess.kill('SIGINT');
+      if (this.helper.debugMode) console.log(`watcher process kill result: ${result}`);
     }
   }
 }
