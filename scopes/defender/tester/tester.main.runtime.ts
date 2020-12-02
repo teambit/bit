@@ -124,7 +124,8 @@ export class TesterMain {
 
   async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
-    if (entry && (await component.isModified())) {
+    const isModified = await component.isModified();
+    if (entry && !isModified) {
       return { testsResults: entry?.data.tests, loading: false };
     }
     return this.getTestsResultsFromState(component);
