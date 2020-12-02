@@ -157,6 +157,7 @@
         "graphql-tools": "6.2.4",
         "graphql-type-json": "0.3.2",
         "history": "4.10.1",
+        "html-escaper": "3.0.0",
         "html-webpack-plugin": "^4.3.0",
         "http-proxy": "^1.18.1",
         "humanize-duration": "3.23.1",
