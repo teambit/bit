@@ -117,7 +117,8 @@ export class Component {
    */
   isModified(): Promise<boolean> {
     if (!this.head) return Promise.resolve(true);
-    return Promise.resolve(this.state.hash !== this.head.hash);
+    return Promise.resolve(this.state.isModified);
+    // return Promise.resolve(this.state.hash !== this.head.hash);
   }
 
   /**
