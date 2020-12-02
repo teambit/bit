@@ -1,4 +1,5 @@
 import * as express from 'express';
+import logger from 'bit-bin/dist/logger/logger';
 
 interface ResponseError {
   status?: number;
@@ -24,6 +25,7 @@ export function errorHandle(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   next: express.NextFunction
 ) {
+  logger.error(`express.errorHandle, url ${req.url}, error:`, err);
   err.status = err.status || 500;
   res.status(err.status);
   return res.jsonp({
