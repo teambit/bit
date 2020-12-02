@@ -18,6 +18,7 @@ import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
+import { MDXAspect, MDXMain } from '@teambit/mdx';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
@@ -40,7 +41,8 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
-  MultiCompilerMain
+  MultiCompilerMain,
+  MDXMain
 ];
 
 export type ReactMainConfig = {
@@ -230,10 +232,24 @@ export class ReactMain {
     TesterAspect,
     ESLintAspect,
     MultiCompilerAspect,
+    MDXAspect,
   ];
 
   static async provider(
-    [envs, jestAspect, tsAspect, compiler, webpack, workspace, graphql, pkg, tester, eslint, multiCompiler]: ReactDeps,
+    [
+      envs,
+      jestAspect,
+      tsAspect,
+      compiler,
+      webpack,
+      workspace,
+      graphql,
+      pkg,
+      tester,
+      eslint,
+      multiCompiler,
+      mdx,
+    ]: ReactDeps,
     config: ReactMainConfig
   ) {
     const reactEnv = new ReactEnv(
@@ -246,7 +262,8 @@ export class ReactMain {
       tester,
       config,
       eslint,
-      multiCompiler
+      multiCompiler,
+      mdx
     );
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));

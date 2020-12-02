@@ -6,6 +6,7 @@ import { CompilerMain, CompilerOptions } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
+import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
@@ -70,7 +71,9 @@ export class ReactEnv implements Environment {
 
     private eslint: ESLintMain,
 
-    private multiCompiler: MultiCompilerMain
+    private multiCompiler: MultiCompilerMain,
+
+    private mdx: MDXMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
@@ -103,7 +106,10 @@ export class ReactEnv implements Environment {
   }
 
   getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    return this.multiCompiler.createCompiler([this.createTsCompiler(targetConfig, compilerOptions, tsModule)]);
+    return this.multiCompiler.createCompiler([
+      this.createTsCompiler(targetConfig, compilerOptions, tsModule),
+      this.mdx.createCompiler(),
+    ]);
   }
 
   /**

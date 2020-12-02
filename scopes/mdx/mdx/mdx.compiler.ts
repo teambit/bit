@@ -1,5 +1,7 @@
+import { join } from 'path';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult } from '@teambit/builder';
+import { compileSync } from '@teambit/modules.mdx-compiler';
 
 export class MDXCompiler implements Compiler {
   displayName = 'MDX';
@@ -13,10 +15,14 @@ export class MDXCompiler implements Compiler {
   }
 
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
+    const output = compileSync(fileContent, {
+      filepath: options.filePath,
+    });
+
     return [
       {
-        outputText: '',
-        outputPath: '',
+        outputText: output.contents,
+        outputPath: this.getDistPathBySrcPath(options.filePath),
       },
     ];
   }
@@ -32,14 +38,14 @@ export class MDXCompiler implements Compiler {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string {
-    return srcPath.replace('.mdx', '.js');
+    return join('dist', srcPath.replace('.mdx', '.js'));
   }
 
   /**
    * only supported files matching get compiled. others, are copied to the dist dir.
    */
   isFileSupported(filePath: string): boolean {
-    return filePath.endsWith('.mdx');
+    return filePath.endsWith('.mdx') || filePath.endsWith('.md');
   }
 
   /**

@@ -8,7 +8,7 @@ export class MDXMain {
   /**
    * create an instance of the MDX compiler.
    */
-  createCompiler(opts: MDXCompilerOpts) {
+  createCompiler(opts: MDXCompilerOpts = {}) {
     const mdxCompiler = new MDXCompiler(MDXAspect.id, opts);
     return mdxCompiler;
   }
