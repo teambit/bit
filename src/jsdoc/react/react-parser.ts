@@ -96,7 +96,7 @@ function stringifyType(prop: { name: string; value?: any; raw?: string }): strin
   return transformed;
 }
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[] | undefined> {
+export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet[] | undefined> {
   const doclets: Array<Doclet> = [];
   try {
     const componentsInfo = reactDocs.parse(data, reactDocs.resolver.findAllExportedComponentDefinitions, undefined, {
