@@ -37,7 +37,6 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
     ?.toArray()
     .map((tag) => tag?.version?.version)
     .reverse();
-  const componentFullName = component?.id?.toString();
 
   return (
     <div className={classnames(styles.topBar, className)}>
