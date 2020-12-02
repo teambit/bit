@@ -150,7 +150,7 @@ class Analytics {
     this.environment = getSync(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
   }
 
-  static sendData() {
+  static sendData(): Promise<void> {
     return new Promise((resolve, reject) => {
       if (this.analytics_usage || (this.error_usage && !this.success)) {
         const file = path.join(__dirname, 'analytics-sender.js');

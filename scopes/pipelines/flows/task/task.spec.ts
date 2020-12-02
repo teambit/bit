@@ -36,7 +36,7 @@ describe.skip('task', function () {
   });
 });
 
-function expectMessage(stream, message: string, pipeName = 'task:stdout', code = 0, value: any = null) {
+function expectMessage(stream, message: string, pipeName = 'task:stdout', code = 0, value: any = null): Promise<void> {
   let out = '';
   return new Promise((resolve) =>
     stream.subscribe({

@@ -19,7 +19,7 @@ export class ScopeUIRoot implements UIRoot {
   }
 
   get configFile(): string {
-    return 'scope.json';
+    return 'scope.jsonc';
   }
 
   get devServers() {

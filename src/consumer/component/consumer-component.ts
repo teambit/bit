@@ -905,17 +905,6 @@ export default class Component {
     });
   }
 
-  /**
-   * Recalculate docs property based on the source files
-   * used usually when setting the source files manually
-   */
-  async recalculateDocs() {
-    const docsP = _getDocsForFiles(this.files);
-    const docs = await Promise.all(docsP);
-    const flattenedDocs = docs ? R.flatten(docs) : [];
-    this.docs = flattenedDocs;
-  }
-
   copyAllDependenciesFromModel() {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
@@ -987,7 +976,9 @@ export default class Component {
       scope,
       lang,
       bindingPrefix,
+      // @ts-ignore
       compiler: compilerInstance,
+      // @ts-ignore
       tester: testerInstance,
       dependencies,
       devDependencies,
@@ -1209,6 +1200,5 @@ export default class Component {
 }
 
 function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet[]>> {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file.contents.toString(), file.relative)));
+  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file)));
 }
