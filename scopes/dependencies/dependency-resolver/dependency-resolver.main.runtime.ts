@@ -49,6 +49,7 @@ import {
   VariantPolicyFactory,
   WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
+  SerializedVariantPolicy,
 } from './policy';
 import { PackageManager } from './package-manager';
 
@@ -183,6 +184,16 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  async getPolicy(component: Component): Promise<VariantPolicy> {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const factory = new VariantPolicyFactory();
+    if (!entry) {
+      return factory.getEmpty();
+    }
+    const serializedPolicy: SerializedVariantPolicy = get(entry, ['data', 'policy'], []);
+    return factory.parse(serializedPolicy);
   }
 
   /**

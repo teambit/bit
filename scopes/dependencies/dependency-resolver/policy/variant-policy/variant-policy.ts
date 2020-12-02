@@ -18,11 +18,15 @@ export type VariantPolicyEntryVersion = SemverVersion;
 
 export type VariantPolicyEntryValue = {
   version: VariantPolicyEntryVersion;
+  resolveFromEnv?: boolean;
 };
 
 export type VariantPolicyEntry = PolicyEntry & {
   value: VariantPolicyEntryValue;
 };
+
+export type SerializedVariantPolicyEntry = VariantPolicyEntry;
+export type SerializedVariantPolicy = SerializedVariantPolicyEntry[];
 
 export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   constructor(private _policiesEntries: VariantPolicyEntry[]) {
@@ -48,6 +52,10 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return entry.value.version;
   }
 
+  serialize(): SerializedVariantPolicy {
+    return this.entries;
+  }
+
   toConfigObject(): VariantPolicyConfigObject {
     const res: VariantPolicyConfigObject = {
       dependencies: {},
@@ -56,7 +64,8 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     };
     this._policiesEntries.reduce((acc, entry) => {
       const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
-      acc[keyName][entry.dependencyId] = entry.value.version;
+      const value = entry.value.resolveFromEnv ? entry.value : entry.value.version;
+      acc[keyName][entry.dependencyId] = value;
       return acc;
     }, res);
     return res;
