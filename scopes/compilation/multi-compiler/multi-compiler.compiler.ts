@@ -39,6 +39,7 @@ export class MultiCompiler implements Compiler {
       if (!compiler.isFileSupported(options.filePath)) return fileContent;
       const compiledContent = compiler.transpileFile(fileContent, options);
       if (!compiledContent) return null;
+      compiledContent[0].outputPath;
       output.push(...compiledContent);
       return compiledContent;
     }, fileContent);

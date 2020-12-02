@@ -50,6 +50,7 @@ import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import WorkerAspect from '@teambit/worker';
 import MultiCompilerAspect from '@teambit/multi-compiler';
+import MDXAspect from '@teambit/mdx';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -61,6 +62,7 @@ export const manifestsMap = {
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
   [ComponentAspect.id]: ComponentAspect,
+  [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,

@@ -38,7 +38,7 @@ export class MDXCompiler implements Compiler {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string {
-    return join('dist', srcPath.replace('.mdx', '.js'));
+    return join(srcPath.replace('.mdx', '.js'));
   }
 
   /**

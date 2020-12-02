@@ -7192,6 +7192,11 @@
     "ui/mdx-layout": {
         "files": [
             {
+                "name": "create-heading.tsx",
+                "relativePath": "create-heading.tsx",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false

@@ -68,6 +68,7 @@
         "@teambit/documenter.code.react-playground": "^0.2.3",
         "@teambit/documenter.theme.theme-context": "^0.2.3",
         "@teambit/documenter.types.docs-file": "^0.2.3",
+        "@teambit/documenter.ui.code-snippet": "0.2.3",
         "@teambit/documenter.ui.consumable-link": "^0.2.3",
         "@teambit/documenter.ui.heading": "^0.2.3",
         "@teambit/documenter.ui.highlighted-text": "0.2.3",

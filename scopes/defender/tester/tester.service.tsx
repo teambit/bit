@@ -99,14 +99,14 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     const specFiles = ComponentMap.as(context.components, (component) => {
       return detectTestFiles(component, this.devFiles);
     });
-    const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
-    const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
-      if (specs.length > 0) acc += 1;
-      return acc;
-    }, 0);
-    if (testCount === 0) throw new NoTestFilesFound(this.patterns.join(','));
+    // const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
+    // const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
+    //   if (specs.length > 0) acc += 1;
+    //   return acc;
+    // }, 0);
+    // if (testCount === 0) throw new NoTestFilesFound(this.patterns.join(','));
 
-    this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
+    // this.logger.consoleTitle(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
     const testerContext = Object.assign(context, {
       release: false,
