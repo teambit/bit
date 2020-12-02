@@ -816,8 +816,8 @@ export class Workspace implements ComponentFactory {
       }
 
       if (!data) return false;
-      if (data.type !== 'aspect')
-        this.logger.debug(
+      if (data.type !== 'aspect' && idsWithoutCore.includes(component.id.toString()))
+        this.logger.error(
           `${component.id.toString()} is configured in workspace.json, but using the ${
             data.type
           } environment. \n please make sure to either apply the aspect environment or a composition of the aspect environment for the aspect to load.`

@@ -1,6 +1,7 @@
 import { join, extname } from 'path';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
+import { mergeComponentResults } from '@teambit/modules.merge-component-results';
 
 export type MultiCompilerOptions = {
   targetExtension?: string;
@@ -48,14 +49,22 @@ export class MultiCompiler implements Compiler {
   }
 
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const builds = Promise.all(
-      this.compilers.map((compiler) => {
-        return compiler.build(context);
+    const builds = await Promise.all(
+      this.compilers.map(async (compiler) => {
+        const buildResult = await compiler.build(context);
+        return buildResult.componentsResults;
       })
     );
 
     return {
-      componentsResults: builds[0],
+      componentsResults: mergeComponentResults(builds),
+      artifacts: [
+        {
+          generatedBy: this.id,
+          name: 'dist',
+          globPatterns: [`${this.distDir}/**`],
+        },
+      ],
     };
   }
 

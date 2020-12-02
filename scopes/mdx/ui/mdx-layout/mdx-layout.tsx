@@ -75,5 +75,5 @@ export function MDXLayout({ children, mdxComponents }: MDXLayoutProps) {
 }
 
 MDXLayout.defaultProps = {
-  componentReferences: [],
+  mdxComponents: [],
 };
