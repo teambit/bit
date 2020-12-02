@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import React, { useMemo } from 'react';
 import Convert from 'ansi-to-html';
+import { escape } from 'html-escaper';
+
 import styles from './cli-snippet.module.scss';
 
 export type CliSnippetProps = {
@@ -27,8 +29,7 @@ const colors = {
 };
 
 export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
-  const convert = new Convert({ colors });
-  const snippetContent = useMemo(() => errorFormat(content), [content]);
+  const snippetContent = useMemo(() => convertSnippetContent(content), [content]);
   return (
     <div {...rest} className={classNames(styles.log, className)}>
       {snippetContent &&
@@ -37,7 +38,7 @@ export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
             <div key={index}>
               <pre className={styles.pre}>
                 <div className={styles.block}>
-                  <span className={styles.line} dangerouslySetInnerHTML={{ __html: convert.toHtml(line) }} />
+                  <span className={styles.line} dangerouslySetInnerHTML={{ __html: line }} />
                 </div>
               </pre>
             </div>
@@ -47,7 +48,8 @@ export function CliSnippet({ content, className, ...rest }: CliSnippetProps) {
   );
 }
 
-function errorFormat(content: string) {
+function convertSnippetContent(content: string) {
   if (!content) return null;
-  return content.split('\n');
+  const convert = new Convert({ colors });
+  return content.split('\n').map((line) => convert.toHtml(escape(line)));
 }
