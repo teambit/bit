@@ -21,24 +21,27 @@ export class TestCmd implements Command {
     ['w', 'watch', 'start the tester in watch mode.'],
     ['d', 'debug', 'start the tester in debug mode.'],
     ['e', 'env <id>', 'test only the given env'],
+    ['s', 'scope <scope>', 'name of the scope to test'],
     // TODO: we need to reduce this redundant casting every time.
   ] as CommandOptions;
 
   constructor(private tester: TesterMain, private workspace: Workspace, private logger: Logger) {}
 
-  async render([userPattern]: [string], { watch, debug, env }: Flags) {
+  async render([userPattern]: [string], { watch, debug, env, scope }: Flags) {
     this.logger.off();
     const timer = Timer.create();
+    const scopeName = typeof scope === 'string' ? scope : undefined;
     timer.start();
     if (!this.workspace) throw new ConsumerNotFound();
     const pattern = userPattern && userPattern.toString();
-    const components = pattern ? await this.workspace.byPattern(pattern) : await this.workspace.list();
+    const components =
+      pattern || scopeName ? await this.workspace.byPattern(pattern || '*', scopeName) : await this.workspace.list();
 
     this.logger.console(
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
     );
 
-    if (watch) {
+    if (watch && !debug) {
       await this.tester.watch(components, {
         watch: Boolean(watch),
         debug: Boolean(debug),

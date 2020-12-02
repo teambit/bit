@@ -27,6 +27,7 @@ import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
+import { isMatchNamespacePatternItem } from '@teambit/modules.match-pattern';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
@@ -474,15 +475,28 @@ export class Workspace implements ComponentFactory {
     return resolvedList;
   }
 
-  // @gilad needs to implement on variants
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async byPattern(pattern: string): Promise<Component[]> {
-    // @todo: this is a naive implementation, replace it with a real one.
-    const all = await this.list();
-    if (!pattern) return this.list();
-    return all.filter((c) => {
-      return c.id.toString({ ignoreVersion: true }) === pattern || c.id.fullName === pattern;
+  /**
+   * get ids of all workspace components.
+   */
+  async listIds() {
+    return Promise.all(this.consumer.bitmapIds.map((id) => this.resolveComponentId(id)));
+  }
+
+  /**
+   * load components into the workspace through a variants pattern.
+   * @param pattern variants.
+   * @param scope scope name.
+   */
+  async byPattern(pattern: string, scope = '*'): Promise<Component[]> {
+    const ids = await this.listIds();
+
+    const targetIds = ids.filter((id) => {
+      const spec = isMatchNamespacePatternItem(id.toString(), `${scope}/${pattern}`);
+      return spec.match;
     });
+
+    const components = await this.getMany(targetIds);
+    return components;
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {

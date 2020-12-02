@@ -13,6 +13,7 @@ const moduleFileExtensions = [
   'json',
   'web.jsx',
   'jsx',
+  'mdx',
 ];
 
 export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
@@ -59,7 +60,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
               },
             },
             {
-              loader: require.resolve('@mdx-js/loader'),
+              loader: require.resolve('@teambit/modules.mdx-loader'),
             },
           ],
         },
@@ -181,6 +182,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },
+        include: [/\.(js|jsx|tsx|ts|mdx)$/],
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
       }),

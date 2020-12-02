@@ -47,7 +47,7 @@ export class AspectEnv implements Environment {
   }
 
   getBuildPipe() {
-    const tsCompiler = this.reactEnv.getCompiler(tsconfig, {
+    const tsCompiler = this.reactEnv.createTsCompiler(tsconfig, {
       artifactName: 'declaration',
       distGlobPatterns: [`dist/**/*.d.ts`],
       shouldCopyNonSupportedFiles: false,

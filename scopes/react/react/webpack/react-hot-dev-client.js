@@ -13,6 +13,7 @@ const formatWebpackMessages = require('./format-webpack-messages');
 
 ErrorOverlay.setEditorHandler(function editorHandler(errorLocation) {
   // Keep this sync with errorOverlayMiddleware.js
+  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   fetch(
     `${launchEditorEndpoint}?fileName=${window.encodeURIComponent(
       errorLocation.fileName

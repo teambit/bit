@@ -114,10 +114,11 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       rootPath: this.workspace.path,
       workspace: this.workspace,
       debug: options.debug,
+      watch: options.watch,
       ui: options.ui,
     });
 
-    if (options.watch && tester.watch) {
+    if (options.watch && options.ui && tester.watch) {
       if (tester.onTestRunComplete) {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         tester.onTestRunComplete((results) => {

@@ -19,6 +19,7 @@ import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
@@ -38,7 +39,8 @@ type ReactDeps = [
   GraphqlMain,
   PkgMain,
   TesterMain,
-  ESLintMain
+  ESLintMain,
+  MultiCompilerMain
 ];
 
 export type ReactMainConfig = {
@@ -227,13 +229,25 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
+    MultiCompilerAspect,
   ];
 
   static async provider(
-    [envs, jestAspect, tsAspect, compiler, webpack, workspace, graphql, pkg, tester, eslint]: ReactDeps,
+    [envs, jestAspect, tsAspect, compiler, webpack, workspace, graphql, pkg, tester, eslint, multiCompiler]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const reactEnv = new ReactEnv(
+      jestAspect,
+      tsAspect,
+      compiler,
+      webpack,
+      workspace,
+      pkg,
+      tester,
+      config,
+      eslint,
+      multiCompiler
+    );
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);

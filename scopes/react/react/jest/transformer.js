@@ -1,5 +1,11 @@
 /* eslint-disable global-require */
 const { transform } = require('@babel/core');
+const jestPreset = require('babel-preset-jest');
+const reactPreset = require('@babel/preset-react');
+const presetEnv = require('@babel/preset-env');
+const transformClassProps = require('@babel/plugin-proposal-class-properties');
+const typescriptPreset = require('@babel/preset-typescript');
+const transformRuntime = require('@babel/plugin-transform-runtime');
 
 const presets = [
   require('@babel/preset-react'),
@@ -9,7 +15,7 @@ const presets = [
     require('@babel/preset-env'),
     {
       targets: {
-        node: 8,
+        node: 12,
       },
       useBuiltIns: 'usage',
       corejs: 3,
@@ -28,6 +34,7 @@ const plugins = [
 module.exports = {
   process(src, filename) {
     const result = transform(src, {
+      sourceMap: 'inline',
       filename,
       presets,
       plugins,

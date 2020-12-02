@@ -21,6 +21,7 @@
         "@graphql-modules/core": "^0.7.17",
         "@mdx-js/loader": "1.6.21",
         "@mdx-js/mdx": "1.6.21",
+        "@mdx-js/react": "1.6.22",
         "@pmmmwh/react-refresh-webpack-plugin": "^0.3.2",
         "@pnpm/client": "2.0.4",
         "@pnpm/config": "11.3.0",
@@ -205,7 +206,7 @@
         "react-tabs": "^3.1.1",
         "react-test-renderer": "^16.13.1",
         "react-tooltip": "^4.2.8",
-        "remark-frontmatter": "3.0.0",
+        "remark-frontmatter": "2.0.0",
         "reset-css": "^5.0.1",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
@@ -221,8 +222,11 @@
         "terser-webpack-plugin": "^4.1.0",
         "typedoc": "0.18.0",
         "typescript-language-server": "0.4.0",
+        "unist-util-remove": "2.0.1",
+        "unist-util-visit": "2.0.3",
         "url-loader": "^4.1.0",
         "url-parse": "1.4.7",
+        "vfile": "4.2.0",
         "vscode-languageclient": "6.1.3",
         "vscode-languageserver": "6.1.1",
         "vscode-ws-jsonrpc": "0.2.0",
@@ -232,7 +236,8 @@
         "webpack-hot-middleware": "^2.25.0",
         "webpack-manifest-plugin": "^2.2.0",
         "webpack-merge": "^4.2.2",
-        "workbox-webpack-plugin": "^5.1.3"
+        "workbox-webpack-plugin": "^5.1.3",
+        "yaml": "1.10.0"
       },
       "peerDependencies": {
         "bit-bin": "14.8.9-dev.174",
@@ -346,6 +351,9 @@
     },
     "scopes/ui-foundation": {
       "defaultScope": "teambit.ui-foundation"
+    },
+    "scopes/mdx": {
+      "defaultScope": "teambit.mdx"
     },
     "scopes/design": {
       "defaultScope": "teambit.design"

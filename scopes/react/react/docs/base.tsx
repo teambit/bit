@@ -9,6 +9,8 @@ import { docsFields } from '@teambit/ui.queries.get-docs';
 import { gql } from 'apollo-boost';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
+import { H1, H2, H3, H4, H5, H6 } from '@teambit/documenter.ui.heading';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
 
 import styles from './base.module.scss';
 import { ComponentOverview } from './component-overview';
@@ -81,7 +83,13 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
           packageName={packageName}
         />
 
-        <Content />
+        {Content.isMDXComponent ? (
+          <MDXLayout>
+            <Content />
+          </MDXLayout>
+        ) : (
+          <Content />
+        )}
 
         <CompositionsSummary compositions={compositions} />
 
