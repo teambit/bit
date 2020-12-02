@@ -6,11 +6,15 @@ import parser from './';
 
 const fixtures = path.join(__dirname, '../../..', 'fixtures', 'jsdoc');
 
+function parseFile(filePath: string) {
+  return parser(fs.readFileSync(filePath).toString(), 'my-file.js');
+}
+
 describe('React docs Parser', () => {
   describe('parse()', () => {
     describe('Invalid code', () => {
       it('should returns an empty array', async () => {
-        const doclets = await parser('this is an invalid code');
+        const doclets = await parser('this is an invalid code', 'some-file');
         expect(doclets).to.be.undefined;
       });
     });
@@ -19,7 +23,7 @@ describe('React docs Parser', () => {
       let doclet;
       before(async () => {
         const file = path.join(fixtures, 'react/react-docs.js');
-        const doclets = await parser(fs.readFileSync(file).toString());
+        const doclets = await parseFile(file);
         // @ts-ignore
         doclet = doclets[0];
       });
@@ -52,7 +56,7 @@ describe('React docs Parser', () => {
       let doclet;
       before(async () => {
         const file = path.join(fixtures, 'react/elevation.tsx');
-        const doclets = await parser(fs.readFileSync(file).toString());
+        const doclets = await parseFile(file);
         // @ts-ignore
         doclet = doclets[0];
         expect(doclet).to.be.an('object');

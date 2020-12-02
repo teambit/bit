@@ -1,4 +1,4 @@
-import fs from 'fs-extra';
+import fs, { Stats } from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -12,6 +12,7 @@ import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
 import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
+import { getLastTrackTimestamp, setLastTrackTimestamp } from '../component/component-fs-cache';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
@@ -369,38 +370,51 @@ export default class ComponentMap {
    * in case new files were created in the track-dir directory, add them to the component-map
    * so then they'll be tracked by bitmap
    */
-  async trackDirectoryChanges(consumer: Consumer, id: BitId) {
+  async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
-    if (trackDir) {
-      const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
-      const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-      if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
-      const addParams = {
-        componentPaths: [trackDirRelative || '.'],
-        id: id.toString(),
-        override: false, // this makes sure to not override existing files of componentMap
-        trackDirFeature: true,
-        origin: this.origin,
-      };
-      const numOfFilesBefore = this.files.length;
-      const addContext: AddContext = { consumer };
-      const addComponents = new AddComponents(addContext, addParams);
-      try {
-        await addComponents.add();
-      } catch (err) {
-        if (err instanceof NoFiles || err instanceof EmptyDirectory) {
-          // it might happen that a component is imported and current .gitignore configuration
-          // are effectively removing all files from bitmap. we should ignore the error in that
-          // case
-        } else {
-          throw err;
-        }
-      }
-      if (this.files.length > numOfFilesBefore) {
-        logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
-        consumer.bitMap.hasChanged = true;
+    if (!trackDir) {
+      return;
+    }
+    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
+    const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
+    let stat: Stats;
+    try {
+      stat = await fs.stat(trackDirAbsolute);
+    } catch (err) {
+      if (err.code === 'ENOENT') throw new ComponentNotFoundInPath(trackDirRelative);
+      throw err;
+    }
+    const lastTrack = await getLastTrackTimestamp(id.toString());
+    const wasModifiedAfterLastTrack = stat.mtimeMs > lastTrack;
+    if (!wasModifiedAfterLastTrack) {
+      return;
+    }
+    const addParams = {
+      componentPaths: [trackDirRelative || '.'],
+      id: id.toString(),
+      override: false, // this makes sure to not override existing files of componentMap
+      trackDirFeature: true,
+      origin: this.origin,
+    };
+    const numOfFilesBefore = this.files.length;
+    const addContext: AddContext = { consumer };
+    const addComponents = new AddComponents(addContext, addParams);
+    try {
+      await addComponents.add();
+    } catch (err) {
+      if (err instanceof NoFiles || err instanceof EmptyDirectory) {
+        // it might happen that a component is imported and current .gitignore configuration
+        // are effectively removing all files from bitmap. we should ignore the error in that
+        // case
+      } else {
+        throw err;
       }
     }
+    if (this.files.length > numOfFilesBefore) {
+      logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
+      consumer.bitMap.hasChanged = true;
+    }
+    await setLastTrackTimestamp(id.toString(), Date.now());
   }
 
   updateNextVersion(nextVersion: NextVersion) {
