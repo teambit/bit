@@ -149,11 +149,10 @@ export class WorkspaceCompiler {
     noThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
+    if (this.workspace.isLegacy) throw new Error('workspace-compiler should work for Harmony workspace only');
     const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
-    // const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
     const components = await this.workspace.getMany(componentIds);
 
-    const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
       const environment = this.envs.getEnv(c).env;
@@ -165,44 +164,14 @@ export class WorkspaceCompiler {
         componentsAndNewCompilers.push(
           new ComponentCompiler(this.pubsub, this.workspace, c.state._consumer, compilerInstance, compilerName)
         );
-      } else {
-        componentsWithLegacyCompilers.push(c.state._consumer);
       }
     });
-    let newCompilersResultOnWorkspace: BuildResult[] = [];
-    let oldCompilersResult: BuildResult[] = [];
-    if (componentsAndNewCompilers.length) {
-      newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
-        componentsAndNewCompilers,
-        (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
-      );
-    }
-    if (componentsWithLegacyCompilers.length) {
-      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers);
-    }
+    const newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
+      componentsAndNewCompilers,
+      (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
+    );
 
-    return [...newCompilersResultOnWorkspace, ...oldCompilersResult];
-  }
-
-  private async compileWithLegacyCompilers(components: ConsumerComponent[]): Promise<BuildResult[]> {
-    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
-    const build = async (component: ConsumerComponent) => {
-      if (component.compiler) loader.start(`building component - ${component.id}`);
-      await component.build({
-        scope: this.workspace.consumer.scope,
-        consumer: this.workspace.consumer,
-      });
-      const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
-      if (component.compiler) loader.succeed();
-      return { component: component.id.toString(), buildResults };
-    };
-    const writeLinks = async (component: ConsumerComponent) =>
-      component.dists.writeDistsLinks(component, this.workspace.consumer);
-
-    const buildResults = await BluebirdPromise.mapSeries(components, build);
-    await BluebirdPromise.mapSeries(components, writeLinks);
-
-    return buildResults;
+    return newCompilersResultOnWorkspace;
   }
 
   private async getIdsToCompile(componentsIds: Array<string | BitId>, changed = false): Promise<ComponentID[]> {
