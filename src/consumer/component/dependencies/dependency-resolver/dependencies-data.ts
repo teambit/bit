@@ -30,11 +30,23 @@ export class DependenciesData {
     const devDependencies = dataParsed.allDependencies.devDependencies.map(
       (dep) => new Dependency(new BitId(dep.id), dep.relativePaths, dep.packageName)
     );
+    const relativeComponentsAuthored = dataParsed.issues?.relativeComponentsAuthored;
+    if (relativeComponentsAuthored) {
+      Object.keys(relativeComponentsAuthored).forEach((fileName) => {
+        relativeComponentsAuthored[fileName] = relativeComponentsAuthored[fileName].map((record) => ({
+          importSource: record.importSource,
+          componentId: new BitId(record.componentId),
+          relativePath: record.relativePath,
+        }));
+      });
+    }
+    const issues = { ...(dataParsed.issues || {}), relativeComponentsAuthored };
+
     const allDependencies = { dependencies, devDependencies };
     return new DependenciesData(
       allDependencies,
       dataParsed.allPackagesDependencies,
-      dataParsed.issues,
+      issues,
       dataParsed.coreAspects,
       dataParsed.overridesDependencies
     );
