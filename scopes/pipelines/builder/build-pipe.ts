@@ -2,7 +2,7 @@ import { EnvDefinition } from '@teambit/envs';
 import { compact } from 'ramda-adjunct';
 import { ComponentMap } from '@teambit/component';
 import { Logger, LongProcessLogger } from '@teambit/logger';
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import prettyTime from 'pretty-time';
 import { ArtifactFactory, ArtifactList } from './artifact';
 import { BuildTask, BuildTaskHelper } from './build-task';
@@ -64,7 +64,7 @@ export class BuildPipe {
   async execute(): Promise<TaskResultsList> {
     await this.executePreBuild();
     this.longProcessLogger = this.logger.createLongProcessLogger('running tasks', this.tasksQueue.length);
-    const results = await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
+    const results = await mapSeries(this.tasksQueue, async ({ task, env }) => this.executeTask(task, env));
     this.longProcessLogger.end();
     const tasksResultsList = new TaskResultsList(this.tasksQueue, compact(results));
     await this.executePostBuild(tasksResultsList);
@@ -74,7 +74,7 @@ export class BuildPipe {
 
   private async executePreBuild() {
     this.logger.setStatusLine('executing pre-build for all tasks');
-    await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => {
+    await mapSeries(this.tasksQueue, async ({ task, env }) => {
       if (!task.preBuild) return;
       await task.preBuild(this.getBuildContext(env.id));
     });
@@ -120,7 +120,7 @@ export class BuildPipe {
 
   private async executePostBuild(tasksResults: TaskResultsList) {
     this.logger.setStatusLine('executing post-build for all tasks');
-    await Bluebird.mapSeries(this.tasksQueue, async ({ task, env }) => {
+    await mapSeries(this.tasksQueue, async ({ task, env }) => {
       if (!task.postBuild) return;
       await task.postBuild(this.getBuildContext(env.id), tasksResults);
     });

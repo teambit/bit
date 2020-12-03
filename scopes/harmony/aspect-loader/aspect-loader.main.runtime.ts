@@ -6,7 +6,7 @@ import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import { difference } from 'ramda';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
 
