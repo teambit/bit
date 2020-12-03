@@ -6794,6 +6794,11 @@
                 "test": false
             },
             {
+                "name": "incorrect-env-aspect.ts",
+                "relativePath": "exceptions/incorrect-env-aspect.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "exceptions/index.ts",
                 "test": false
