@@ -33,8 +33,12 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     this._policiesEntries = uniqEntries(_policiesEntries);
   }
 
-  get entries() {
+  get entries(): VariantPolicyEntry[] {
     return this._policiesEntries;
+  }
+
+  get length(): number {
+    return this.entries.length;
   }
 
   find(depId: string): VariantPolicyEntry | undefined {
@@ -42,6 +46,20 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       return entry.dependencyId === depId;
     });
     return matchedEntry;
+  }
+
+  filter(predicate: (dep: VariantPolicyEntry, index?: number) => boolean): VariantPolicy {
+    const filtered = this.entries.filter(predicate);
+    return new VariantPolicy(filtered);
+  }
+
+  /**
+   * Filter only deps which should be resolved from the env
+   */
+  getResolvedFromEnv() {
+    return this.filter((dep) => {
+      return !!dep.value.resolveFromEnv;
+    });
   }
 
   getDepVersion(depId: string): VariantPolicyEntryVersion | undefined {
