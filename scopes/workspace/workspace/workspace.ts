@@ -847,7 +847,7 @@ export class Workspace implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.getRuntimePath(component, localPath, runtimeName),
+        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
       };
     });
 
@@ -892,24 +892,6 @@ export class Workspace implements ComponentFactory {
     await this.loadAspects(extensionsToLoad, throwOnError);
   }
 
-  private async getCompiler(component: Component) {
-    const env = this.envs.getEnv(component)?.env;
-    return env?.getCompiler();
-  }
-
-  async getRuntimePath(component: Component, modulePath: string, runtime: string): Promise<string | null> {
-    const runtimeFile = component.filesystem.files.find((file: AbstractVinyl) => {
-      return file.relative.includes(`.${runtime}.runtime`);
-    });
-
-    // @david we should add a compiler api for this.
-    if (!runtimeFile) return null;
-    const compiler = await this.getCompiler(component);
-    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
-
-    return join(modulePath, dist);
-  }
-
   /**
    * Provides a cache folder, unique per key.
    * Return value may be undefined, if workspace folder is unconventional (bare-scope, no node_modules, etc)
@@ -942,7 +924,7 @@ export class Workspace implements ComponentFactory {
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const aspect = require(localPath);
         // require aspect runtimes
-        const runtimePath = await this.getRuntimePath(component, localPath, MainRuntime.name);
+        const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
         // eslint-disable-next-line global-require, import/no-dynamic-require
         if (runtimePath) require(runtimePath);
         return aspect;
