@@ -169,6 +169,7 @@
     "open": "^7.2.0",
     "ora": "^4.0.3",
     "p-event": "^4.1.0",
+    "p-map-series": "^2.1.0",
     "p-queue": "^6.2.1",
     "p-series": "^2.1.0",
     "package-json-validator": "^0.6.3",
