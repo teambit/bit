@@ -15,7 +15,9 @@ export class DependenciesLoader {
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
-    this.setDependenciesDataOnComponent(dependenciesData);
+    const dataStr = dependenciesData.serialize();
+    const dataObject = DependenciesData.deserialize(dataStr);
+    this.setDependenciesDataOnComponent(dataObject);
   }
 
   private setDependenciesDataOnComponent(dependenciesData: DependenciesData) {
