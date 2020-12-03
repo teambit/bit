@@ -129,7 +129,7 @@ export class WorkspaceComponentLoader {
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.
       this.logger.error(`failed loading component ${id.toString()}`, err);
-      if (err instanceof ComponentNotFound) return undefined;
+      if (err instanceof ComponentNotFound || err instanceof MissingBitMapComponent) return undefined;
       throw err;
     }
   }

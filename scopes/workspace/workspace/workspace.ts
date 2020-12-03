@@ -49,7 +49,6 @@ import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-pac
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import BluebirdPromise from 'bluebird';
 import findCacheDir from 'find-cache-dir';
-import { BitError } from 'bit-bin/dist/error/bit-error';
 import fs from 'fs-extra';
 import { slice } from 'lodash';
 import path, { join } from 'path';
@@ -372,6 +371,7 @@ export class Workspace implements ComponentFactory {
     useCache = true,
     storeInCache = true
   ): Promise<Component> {
+    this.logger.debug(`get ${componentId.toString()}`);
     return this.componentLoader.get(componentId, forCapsule, legacyComponent, useCache, storeInCache);
   }
 
