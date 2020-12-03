@@ -1,4 +1,5 @@
 import fs, { Stats } from 'fs-extra';
+import { glob } from 'glob';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -377,16 +378,14 @@ export default class ComponentMap {
     }
     const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
     const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-    let stat: Stats;
-    try {
-      stat = await fs.stat(trackDirAbsolute);
-    } catch (err) {
-      if (err.code === 'ENOENT') throw new ComponentNotFoundInPath(trackDirRelative);
-      throw err;
-    }
+    if (!fs.existsSync) throw new ComponentNotFoundInPath(trackDirRelative);
     const lastTrack = await getLastTrackTimestamp(id.toString());
-    const wasModifiedAfterLastTrack = stat.mtimeMs > lastTrack;
-    if (!wasModifiedAfterLastTrack) {
+    const wasModifiedAfterLastTrack = async () => {
+      const allDirs = glob.sync(`${trackDirAbsolute}/**/`); // the trailing slash instructs glob to show only dirs
+      const dirsStats = await Promise.all(allDirs.map((dir) => fs.stat(dir)));
+      return dirsStats.some((dirStat) => dirStat.mtimeMs > lastTrack);
+    };
+    if (!(await wasModifiedAfterLastTrack())) {
       return;
     }
     const addParams = {
