@@ -3,23 +3,21 @@ import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
-
 import BluebirdPromise from 'bluebird';
 import path from 'path';
-
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { Dist, SourceFile } from 'bit-bin/dist/consumer/component/sources';
 import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import logger from 'bit-bin/dist/logger/logger';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
-
 import { Compiler } from './types';
 
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
@@ -126,11 +124,27 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: EnvsMain, private pubsub: PubsubMain) {
+  constructor(
+    private workspace: Workspace,
+    private envs: EnvsMain,
+    private pubsub: PubsubMain,
+    private aspectLoader: AspectLoaderMain
+  ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
     }
+    if (this.aspectLoader) {
+      this.aspectLoader.registerOnAspectLoadErrorSlot(this.onAspectLoadFail.bind(this));
+    }
+  }
+
+  async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
+    if (err.code && err.code === 'MODULE_NOT_FOUND') {
+      await this.compileComponents([id.toString()], {}, true);
+      return true;
+    }
+    return false;
   }
 
   async onComponentChange(component: Component): Promise<SerializableResults> {
