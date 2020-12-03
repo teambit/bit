@@ -382,7 +382,7 @@ export default class ComponentMap {
     const lastTrack = await getLastTrackTimestamp(id.toString());
     const wasModifiedAfterLastTrack = async () => {
       const allDirs = glob.sync(`${trackDirAbsolute}/**/`); // the trailing slash instructs glob to show only dirs
-      const dirsStats = await Promise.all(allDirs.map((dir) => fs.stat(dir)));
+      const dirsStats: Stats[] = await Promise.all(allDirs.map((dir) => fs.stat(dir)));
       return dirsStats.some((dirStat) => dirStat.mtimeMs > lastTrack);
     };
     if (!(await wasModifiedAfterLastTrack())) {
