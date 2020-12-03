@@ -11,7 +11,8 @@ import { getLatestVersionNumber } from '../../utils';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
-import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
 type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
 
@@ -130,12 +131,11 @@ export default class ComponentLoader {
     await this._handleOutOfSyncScenarios(component);
 
     const loadDependencies = async () => {
-      const dependencyResolver = new DependencyResolver(component, this.consumer, id);
-      await dependencyResolver.loadDependenciesForComponent(
-        bitDir,
-        this.cacheResolvedDependencies,
-        this.cacheProjectAst
-      );
+      const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
+        cacheResolvedDependencies: this.cacheResolvedDependencies,
+        cacheProjectAst: this.cacheProjectAst,
+      });
+      await dependenciesLoader.load();
       updateDependenciesVersions(this.consumer, component);
     };
 
