@@ -217,7 +217,7 @@ export class ReactEnv implements Environment {
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TypescriptCompiler', this.createTsCompiler(targetConfig));
+    return this.compiler.createTask('MultiCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {

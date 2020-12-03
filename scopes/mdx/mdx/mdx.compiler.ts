@@ -1,4 +1,5 @@
 import { join } from 'path';
+import { outputFileSync } from 'fs-extra';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
 import { compileSync } from '@teambit/modules.mdx-compiler';
@@ -33,7 +34,36 @@ export class MDXCompiler implements Compiler {
    */
   async build(context: BuildContext): Promise<BuiltTaskResult> {
     const capsules = context.capsuleNetwork.seedersCapsules;
-    const;
+    const componentsResults = capsules.map((capsule) => {
+      const srcFiles = capsule.component.filesystem.files.filter((file) => {
+        return this.isFileSupported(file.relative);
+      });
+
+      const errors = srcFiles.map((srcFile) => {
+        try {
+          const output = compileSync(srcFile.contents.toString('utf-8'));
+          outputFileSync(join(capsule.path, 'dist', this.getDistPathBySrcPath(srcFile.path)), output.contents);
+          return undefined;
+        } catch (err) {
+          return err;
+        }
+      });
+
+      return {
+        errors: errors.filter((err) => !!err),
+        component: capsule.component,
+      };
+    });
+
+    return {
+      componentsResults,
+      artifacts: [
+        {
+          name: 'dist',
+          globPatterns: [`${this.distDir}/**`],
+        },
+      ],
+    };
   }
 
   /**
