@@ -12,6 +12,7 @@ export type MDXCompileOptions = {
   compilers: any[];
   filepath?: string;
   renderer: string;
+  bitFlavour: boolean;
 };
 
 export const DEFAULT_RENDERER = `
@@ -27,6 +28,7 @@ function computeOptions(opts: Partial<MDXCompileOptions>) {
     remarkPlugins: [],
     compilers: [],
     renderer: DEFAULT_RENDERER,
+    bitFlavour: true,
   };
 
   return Object.assign(defaultOptions, opts);
@@ -70,7 +72,7 @@ export function compileSync(mdxContent: string, options: Partial<MDXCompileOptio
 }
 
 function createCompiler(options: Partial<MDXCompileOptions>) {
-  const mustPlugins = [[detectFrontmatter, ['yaml']], extractFrontmatter];
+  const mustPlugins = options.bitFlavour ? [[detectFrontmatter, ['yaml']], extractFrontmatter] : [];
 
   const compilerOpts = Object.assign(options, {
     remarkPlugins: options.remarkPlugins ? mustPlugins.concat(options.remarkPlugins) : mustPlugins,

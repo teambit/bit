@@ -1,4 +1,5 @@
 import { resolve } from 'path';
+import { Slot, SlotRegistry } from '@teambit/harmony';
 import { MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { CompilerAspect, CompilerMain } from '@teambit/compiler';
@@ -15,11 +16,18 @@ import { DocsAspect } from './docs.aspect';
 import { DocModule } from './doc-module';
 import { DocsPreviewDefinition } from './docs.preview-definition';
 import { docsSchema } from './docs.graphql';
+import { DocReader } from './doc-reader';
 
 export type ComponentDocs = {
   files: string[];
   component: Component;
 };
+
+export type DocProp = {};
+
+export type DocPropSlot = SlotRegistry<DocProp>;
+
+export type DocReaderSlot = SlotRegistry<DocReader>;
 
 export type DocsConfig = {
   /**
@@ -46,7 +54,11 @@ export class DocsMain {
 
     private logger: Logger,
 
-    private devFiles: DevFilesMain
+    private devFiles: DevFilesMain,
+
+    private docPropSlot: DocPropSlot,
+
+    private docReader: DocReaderSlot
   ) {}
 
   /**
@@ -117,6 +129,33 @@ export class DocsMain {
     return context.env.getDocsTemplate();
   }
 
+  computeDocProps(component: Component) {
+    const docFiles = this.getDocsFiles(component);
+    if (docFiles.length) {
+      // currently taking the the first docs file found with an abstract. (we support only one)
+      const docFile = docFiles[0];
+      docFile.dirname;
+    }
+
+    return null;
+  }
+
+  /**
+   * register a new documentation property. this property will be parse and extracted
+   * from the configured doc format.
+   */
+  registerDocProperty(docProp: DocProp) {
+    this.docPropSlot.register(docProp);
+    return this;
+  }
+
+  registerDocReader(docReader: DocReader) {
+    this.docReader.register(docReader);
+    return this;
+  }
+
+  static slots = [Slot.withType<DocProp>(), Slot.withType<DocReader>()];
+
   static runtime = MainRuntime;
   static dependencies = [
     PreviewAspect,
@@ -143,10 +182,11 @@ export class DocsMain {
       LoggerMain,
       DevFilesMain
     ],
-    config: DocsConfig
+    config: DocsConfig,
+    [docPropSlot, docReader]: [DocPropSlot, DocReaderSlot]
   ) {
     const logger = loggerAspect.createLogger(DocsAspect.id);
-    const docs = new DocsMain(preview, pkg, compiler, workspace, logger, devFiles);
+    const docs = new DocsMain(preview, pkg, compiler, workspace, logger, devFiles, docPropSlot, docReader);
     devFiles.registerDevPattern(config.patterns);
 
     if (workspace) {

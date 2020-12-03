@@ -2957,6 +2957,11 @@
                 "test": false
             },
             {
+                "name": "doc-reader.ts",
+                "relativePath": "doc-reader.ts",
+                "test": false
+            },
+            {
                 "name": "docs-store.tsx",
                 "relativePath": "docs-store.tsx",
                 "test": false
