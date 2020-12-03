@@ -199,7 +199,13 @@ export class Watcher {
     }
     // @todo: improve performance. probably only bit-map and the component itself need to be updated
     await this.workspace._reloadConsumer();
+    await this.setTrackDirs();
     const componentId = this.trackDirs[trackDir];
+    if (!componentId) {
+      // the file was part of a component before, but not now. this may happen often when switching
+      // git branches. the current branch may not have the component of the previous branch.
+      return null;
+    }
     // loading the component causes the bitMap to be updated with the new paths if needed
     const component = await this.workspace.get(componentId);
     const componentMap: ComponentMap = component.state._consumer.componentMap;
