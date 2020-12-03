@@ -110,10 +110,10 @@ export default class DependencyResolver {
   static getCoreAspectsPackagesAndIds: () => Record<string, string>;
   static getDevFiles: (component: Component) => Promise<string[]>;
 
-  constructor(component: Component, consumer: Consumer, componentId: BitId) {
+  constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer;
-    this.componentId = componentId;
+    this.componentId = component.id;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -175,15 +175,17 @@ export default class DependencyResolver {
    * component.issues.missingDependenciesOnFs
    */
   async getDependenciesData(
-    bitDir: string,
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
   ): Promise<DependenciesData> {
+    const componentDir = this.componentMap?.rootDir
+      ? path.join(this.consumerPath, this.componentMap?.rootDir)
+      : this.consumerPath;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({
-      componentDir: bitDir,
+      componentDir,
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
@@ -197,13 +199,11 @@ export default class DependencyResolver {
     this.setTree(dependenciesTree.tree);
     const devFiles = this.consumer.isLegacy ? testsFiles : await DependencyResolver.getDevFiles(this.component);
     this.populateDependencies(allFiles, devFiles);
-    return new DependenciesData(
-      this.allDependencies,
-      this.allPackagesDependencies,
-      this.issues,
-      this.coreAspects,
-      this.overridesDependencies
-    );
+    return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
+      manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
+      manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
+      missingPackageDependencies: this.overridesDependencies.missingPackageDependencies,
+    });
   }
 
   /**
@@ -912,7 +912,7 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
     this.tree[originFile].bits = bitsFiltered;
-    this.coreAspects.push(R.uniq(usedCoreAspects));
+    this.coreAspects.push(...R.uniq(usedCoreAspects));
   }
 
   /**

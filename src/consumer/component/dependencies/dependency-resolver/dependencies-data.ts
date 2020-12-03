@@ -1,5 +1,11 @@
 import { AllDependencies, AllPackagesDependencies, Issues } from './dependencies-resolver';
-import OverridesDependencies from './overrides-dependencies';
+import { ManuallyChangedDependencies } from './overrides-dependencies';
+
+type OverridesDependenciesData = {
+  manuallyRemovedDependencies: ManuallyChangedDependencies;
+  manuallyAddedDependencies: ManuallyChangedDependencies;
+  missingPackageDependencies: string[];
+};
 
 export class DependenciesData {
   constructor(
@@ -7,6 +13,6 @@ export class DependenciesData {
     public allPackagesDependencies: AllPackagesDependencies,
     public issues: Issues,
     public coreAspects: string[],
-    public overridesDependencies: OverridesDependencies
+    public overridesDependencies: OverridesDependenciesData
   ) {}
 }

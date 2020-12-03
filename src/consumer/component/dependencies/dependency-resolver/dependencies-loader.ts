@@ -10,11 +10,8 @@ type Opts = { cacheResolvedDependencies: Record<string, any>; cacheProjectAst?: 
 export class DependenciesLoader {
   constructor(private component: Component, private consumer: Consumer, private opts: Opts) {}
   async load(): Promise<void> {
-    const id = this.component.id;
-    const compDir = this.component.componentMap?.rootDir || this.consumer.getPath();
-    const dependencyResolver = new DependencyResolver(this.component, this.consumer, id);
+    const dependencyResolver = new DependencyResolver(this.component, this.consumer);
     const dependenciesData = await dependencyResolver.getDependenciesData(
-      compDir,
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
