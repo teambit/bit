@@ -378,7 +378,7 @@ export default class ComponentMap {
     }
     const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
     const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-    if (!fs.existsSync) throw new ComponentNotFoundInPath(trackDirRelative);
+    if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
     const lastTrack = await getLastTrackTimestamp(id.toString());
     const wasModifiedAfterLastTrack = async () => {
       const allDirs = glob.sync(`${trackDirAbsolute}/**/`); // the trailing slash instructs glob to show only dirs
