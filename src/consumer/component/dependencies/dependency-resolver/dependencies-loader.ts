@@ -4,7 +4,6 @@ import { Consumer } from '../../..';
 import logger from '../../../../logger/logger';
 import { getLastModifiedComponentTimestampMs } from '../../../../utils/fs/last-modified';
 import { ExtensionDataEntry } from '../../../config';
-import { getDependenciesDataFromCache, saveDependenciesDataInCache } from '../../component-fs-cache';
 import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
@@ -37,7 +36,7 @@ export class DependenciesLoader {
       this.opts.cacheProjectAst
     );
     if (this.shouldSaveInCache(dependenciesData)) {
-      await saveDependenciesDataInCache(this.idStr, dependenciesData.serialize());
+      await this.consumer.componentFsCache.saveDependenciesDataInCache(this.idStr, dependenciesData.serialize());
     }
 
     return dependenciesData;
@@ -47,7 +46,7 @@ export class DependenciesLoader {
     if (!this.opts.useDependenciesCache) {
       return null;
     }
-    const cacheData = await getDependenciesDataFromCache(this.idStr);
+    const cacheData = await this.consumer.componentFsCache.getDependenciesDataFromCache(this.idStr);
     if (!cacheData) {
       return null; // probably the first time, so it wasn't entered to the cache yet.
     }

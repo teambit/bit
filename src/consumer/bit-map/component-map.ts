@@ -13,7 +13,6 @@ import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
 import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
-import { getLastTrackTimestamp, setLastTrackTimestamp } from '../component/component-fs-cache';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
@@ -379,7 +378,7 @@ export default class ComponentMap {
     const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
     const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
     if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
-    const lastTrack = await getLastTrackTimestamp(id.toString());
+    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
     const wasModifiedAfterLastTrack = async () => {
       const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
       return lastModified > lastTrack;
@@ -412,7 +411,7 @@ export default class ComponentMap {
       logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
       consumer.bitMap.hasChanged = true;
     }
-    await setLastTrackTimestamp(id.toString(), Date.now());
+    await consumer.componentFsCache.setLastTrackTimestamp(id.toString(), Date.now());
   }
 
   updateNextVersion(nextVersion: NextVersion) {

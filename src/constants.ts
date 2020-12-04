@@ -326,7 +326,7 @@ export const CACHE_ROOT = getCacheDirectory();
 
 export const CFG_GLOBAL_REPOSITORY = 'global_repository';
 export const REPOSITORY_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
-export const COMPONENTS_CACHE_ROOT = path.join(CACHE_ROOT, 'components-cache');
+
 /**
  * app cache directory
  */

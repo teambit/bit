@@ -142,6 +142,10 @@ export default class Consumer {
     return this._dirStructure;
   }
 
+  get componentFsCache() {
+    return this.componentLoader.componentFsCache;
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get bitmapIds(): BitIds {
     return this.bitMap.getAllBitIds();

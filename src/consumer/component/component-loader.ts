@@ -12,7 +12,7 @@ import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
-import { deleteAllDependenciesDataCache, listDependenciesDataCache } from './component-fs-cache';
+import { ComponentFsCache } from './component-fs-cache';
 import { updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
@@ -25,9 +25,11 @@ export default class ComponentLoader {
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
   cacheProjectAst: Record<string, any> | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
+  componentFsCache: ComponentFsCache;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
+    this.componentFsCache = new ComponentFsCache(consumer.getPath());
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
@@ -50,7 +52,7 @@ export default class ComponentLoader {
         this.consumer.config.path,
       ];
       const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
-      const dependenciesCacheList = await listDependenciesDataCache();
+      const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
       const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
       const firstCacheEntered = Math.min(...lastUpdateAllComps);
       const shouldInvalidate = lastModified > firstCacheEntered;
@@ -60,7 +62,7 @@ export default class ComponentLoader {
         logger.debug(
           'component-loader, invalidating dependencies cache because either node-modules or workspace config had been changed'
         );
-        await deleteAllDependenciesDataCache();
+        await this.componentFsCache.deleteAllDependenciesDataCache();
       }
     }
     this._shouldCheckForClearingDependenciesCache = false;
