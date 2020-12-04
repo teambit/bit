@@ -1029,6 +1029,7 @@ export class Workspace implements ComponentFactory {
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
     await this.link({ linkTeambitBit: true, legacyLink: true, linkCoreAspects: true });
+    await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
   }
 
