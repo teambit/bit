@@ -30,29 +30,36 @@ export class DependenciesData {
     const devDependencies = dataParsed.allDependencies.devDependencies.map(
       (dep) => new Dependency(new BitId(dep.id), dep.relativePaths, dep.packageName)
     );
-    const issues = dataParsed.issues;
-    if (issues?.relativeComponentsAuthored) {
-      Object.keys(issues.relativeComponentsAuthored).forEach((fileName) => {
-        issues.relativeComponentsAuthored[fileName] = issues.relativeComponentsAuthored[fileName].map((record) => ({
-          importSource: record.importSource,
-          componentId: new BitId(record.componentId),
-          relativePath: record.relativePath,
-        }));
-      });
-    }
-    if (issues?.relativeComponents) {
-      Object.keys(issues?.relativeComponents).forEach((filePath) => {
-        issues.relativeComponents[filePath] = issues.relativeComponents[filePath].map((id) => new BitId(id));
-      });
-    }
-
+    const issues = deserializeIssues(dataParsed.issues);
     const allDependencies = { dependencies, devDependencies };
     return new DependenciesData(
       allDependencies,
       dataParsed.allPackagesDependencies,
-      issues,
+      issues as Issues,
       dataParsed.coreAspects,
       dataParsed.overridesDependencies
     );
   }
+}
+
+function deserializeIssues(issues: Record<string, any>): Partial<Issues> {
+  if (!issues) return {};
+  if (issues.relativeComponentsAuthored) {
+    Object.keys(issues.relativeComponentsAuthored).forEach((fileName) => {
+      issues.relativeComponentsAuthored[fileName] = issues.relativeComponentsAuthored[fileName].map((record) => ({
+        importSource: record.importSource,
+        componentId: new BitId(record.componentId),
+        relativePath: record.relativePath,
+      }));
+    });
+  }
+  const fields = ['relativeComponents', 'missingComponents', 'missingLinks', 'missingCustomModuleResolutionLinks'];
+  fields.forEach((field) => {
+    if (!issues[field]) return;
+    Object.keys(issues[field]).forEach((filePath) => {
+      issues[field][filePath] = issues[field][filePath].map((id) => new BitId(id));
+    });
+  });
+
+  return issues;
 }

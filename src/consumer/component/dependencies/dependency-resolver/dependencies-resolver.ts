@@ -23,6 +23,7 @@ import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/t
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
+import { BitIdStr } from '../../../../bit-id/bit-id';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -61,19 +62,19 @@ type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
 type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
 
 export type Issues = {
-  missingPackagesDependenciesOnFs: {};
+  missingPackagesDependenciesOnFs: { [filePath: string]: string[] };
   missingPackagesDependenciesFromOverrides: string[];
-  missingComponents: {};
+  missingComponents: { [filePath: string]: BitId[] };
   untrackedDependencies: UntrackedDependenciesIssues;
-  missingDependenciesOnFs: {};
-  missingLinks: {};
-  missingCustomModuleResolutionLinks: {};
-  customModuleResolutionUsed: {}; // invalid on Harmony, { importSource: idStr }
+  missingDependenciesOnFs: { [filePath: string]: string[] };
+  missingLinks: { [filePath: string]: BitId[] };
+  missingCustomModuleResolutionLinks: { [filePath: string]: BitId[] };
+  customModuleResolutionUsed: { [importSource: string]: BitIdStr }; // invalid on Harmony, { importSource: idStr }
   relativeComponents: { [filePath: string]: BitId[] };
   relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
-  parseErrors: {};
-  resolveErrors: {};
-  missingBits: {};
+  parseErrors: { [filePath: string]: string };
+  resolveErrors: { [filePath: string]: string };
+  missingBits: { [filePath: string]: BitId[] }; // temporarily. it's combined later with missingComponents. see combineIssues
 };
 
 type WorkspacePolicyGetter = () => {
@@ -145,7 +146,7 @@ export default class DependencyResolver {
       relativeComponentsAuthored: {},
       parseErrors: {},
       resolveErrors: {},
-      missingBits: {}, // temporarily, will be combined with missingComponents. see combineIssues
+      missingBits: {},
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
   }
