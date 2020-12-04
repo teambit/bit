@@ -69,7 +69,7 @@ export type Issues = {
   missingLinks: {};
   missingCustomModuleResolutionLinks: {};
   customModuleResolutionUsed: {}; // invalid on Harmony, { importSource: idStr }
-  relativeComponents: {};
+  relativeComponents: { [filePath: string]: BitId[] };
   relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
   parseErrors: {};
   resolveErrors: {};

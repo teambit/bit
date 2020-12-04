@@ -40,6 +40,11 @@ export class DependenciesData {
         }));
       });
     }
+    if (issues?.relativeComponents) {
+      Object.keys(issues?.relativeComponents).forEach((filePath) => {
+        issues.relativeComponents[filePath] = issues.relativeComponents[filePath].map((id) => new BitId(id));
+      });
+    }
 
     const allDependencies = { dependencies, devDependencies };
     return new DependenciesData(
