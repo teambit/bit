@@ -529,6 +529,9 @@ export default class Consumer {
     const { ids, persist } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
+    if (persist) {
+      await this.componentFsCache.deleteAllDependenciesDataCache();
+    }
     const components = await this._loadComponentsForTag(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
