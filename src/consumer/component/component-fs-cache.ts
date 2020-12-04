@@ -36,6 +36,10 @@ export async function deleteAllDependenciesDataCache() {
   await cacache.rm.all(DEPS_CACHE_PATH);
 }
 
+export async function listDependenciesDataCache() {
+  return cacache.ls(DEPS_CACHE_PATH);
+}
+
 async function saveDataPerFileInCache(filePath: string, cachePath: string, data: any) {
   const dataBuffer = Buffer.from(JSON.stringify(data));
   const metadata = { timestamp: Date.now() };
