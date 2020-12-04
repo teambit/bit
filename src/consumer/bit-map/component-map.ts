@@ -1,5 +1,4 @@
-import fs, { Stats } from 'fs-extra';
-import { glob } from 'glob';
+import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 
