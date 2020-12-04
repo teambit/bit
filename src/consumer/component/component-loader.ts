@@ -55,6 +55,8 @@ export default class ComponentLoader {
       const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
       const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
       const firstCacheEntered = Math.min(...lastUpdateAllComps);
+      // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
+      // always false, which is good. no need to invalidate the cache if nothing there.
       const shouldInvalidate = lastModified > firstCacheEntered;
       if (shouldInvalidate) {
         // at least one component inserted to the cache before workspace-config/node-modules

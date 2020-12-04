@@ -1,5 +1,6 @@
 import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
+import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
 
 const WORKSPACE_CACHE = '.bit.cache';
@@ -10,8 +11,10 @@ const DEPS = 'deps';
 
 export class ComponentFsCache {
   readonly basePath: PathOsBasedAbsolute;
+  private isNoFsCacheFeatureEnabled: boolean;
   constructor(private workspacePath) {
     this.basePath = path.join(this.workspacePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
+    this.isNoFsCacheFeatureEnabled = isFeatureEnabled(NO_FS_CACHE_FEATURE);
   }
 
   async getLastTrackTimestamp(idStr: string): Promise<number> {
@@ -55,6 +58,7 @@ export class ComponentFsCache {
   }
 
   private async saveDataInCache(key: string, cacheName: string, data: any, metadata?: any) {
+    if (this.isNoFsCacheFeatureEnabled) return;
     const cachePath = this.getCachePath(cacheName);
     await cacache.put(cachePath, key, data, { metadata });
   }
@@ -69,6 +73,7 @@ export class ComponentFsCache {
   }
 
   private async getFromCacheIfExist(cacheName: string, key: string): Promise<GetCacheObject | null> {
+    if (this.isNoFsCacheFeatureEnabled) return null;
     const cachePath = this.getCachePath(cacheName);
     try {
       const results = await cacache.get(cachePath, key);
