@@ -134,6 +134,7 @@ export default class ComponentLoader {
       const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
         cacheResolvedDependencies: this.cacheResolvedDependencies,
         cacheProjectAst: this.cacheProjectAst,
+        useDependenciesCache: true,
       });
       await dependenciesLoader.load();
       updateDependenciesVersions(this.consumer, component);

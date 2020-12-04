@@ -4,6 +4,7 @@ import { COMPONENTS_CACHE_ROOT } from '../../constants';
 
 const LAST_TRACK_CACHE_PATH = path.join(COMPONENTS_CACHE_ROOT, 'last-track');
 const DOCS_CACHE_PATH = path.join(COMPONENTS_CACHE_ROOT, 'docs');
+const DEPS_CACHE_PATH = path.join(COMPONENTS_CACHE_ROOT, 'deps');
 
 export async function getLastTrackTimestamp(idStr: string): Promise<number> {
   const results = await getFromCacheIfExist(LAST_TRACK_CACHE_PATH, idStr);
@@ -15,11 +16,20 @@ export async function setLastTrackTimestamp(idStr: string, timestamp: number): P
 }
 
 export async function getDocsFromCache(filePath: string): Promise<{ timestamp: number; data: string } | null> {
-  return getDataPerFileFromCache(filePath, DOCS_CACHE_PATH);
+  return getStringDataFromCache(filePath, DOCS_CACHE_PATH);
 }
 
 export async function saveDocsInCache(filePath: string, docs: Record<string, any>) {
   await saveDataPerFileInCache(filePath, DOCS_CACHE_PATH, docs);
+}
+
+export async function getDependenciesDataFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
+  return getStringDataFromCache(idStr, DEPS_CACHE_PATH);
+}
+
+export async function saveDependenciesDataInCache(idStr: string, dependenciesData: string) {
+  const metadata = { timestamp: Date.now() };
+  await cacache.put(DEPS_CACHE_PATH, idStr, dependenciesData, { metadata });
 }
 
 async function saveDataPerFileInCache(filePath: string, cachePath: string, data: any) {
@@ -28,11 +38,11 @@ async function saveDataPerFileInCache(filePath: string, cachePath: string, data:
   await cacache.put(cachePath, filePath, dataBuffer, { metadata });
 }
 
-async function getDataPerFileFromCache(
-  filePath: string,
+async function getStringDataFromCache(
+  key: string,
   cachePath: string
 ): Promise<{ timestamp: number; data: string } | null> {
-  const results = await getFromCacheIfExist(cachePath, filePath);
+  const results = await getFromCacheIfExist(cachePath, key);
   if (!results) return null;
   return { timestamp: results.metadata.timestamp, data: results.data.toString() };
 }

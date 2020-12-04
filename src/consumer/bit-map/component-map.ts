@@ -9,6 +9,7 @@ import ValidationError from '../../error/validation-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
+import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
@@ -381,9 +382,8 @@ export default class ComponentMap {
     if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
     const lastTrack = await getLastTrackTimestamp(id.toString());
     const wasModifiedAfterLastTrack = async () => {
-      const allDirs = glob.sync(`${trackDirAbsolute}/**/`); // the trailing slash instructs glob to show only dirs
-      const dirsStats: Stats[] = await Promise.all(allDirs.map((dir) => fs.stat(dir)));
-      return dirsStats.some((dirStat) => dirStat.mtimeMs > lastTrack);
+      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
+      return lastModified > lastTrack;
     };
     if (!(await wasModifiedAfterLastTrack())) {
       return;
