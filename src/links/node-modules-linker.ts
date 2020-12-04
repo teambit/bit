@@ -7,6 +7,7 @@ import { BitId } from '../bit-id';
 import { COMPONENT_ORIGINS, DEFAULT_BINDINGS_PREFIX, PACKAGE_JSON } from '../constants';
 import BitMap from '../consumer/bit-map/bit-map';
 import ComponentMap from '../consumer/bit-map/component-map';
+import { deleteAllDependenciesDataCache } from '../consumer/component/component-fs-cache';
 import ComponentsList from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import { Dependency } from '../consumer/component/dependencies';
@@ -50,6 +51,7 @@ export default class NodeModuleLinker {
     const linksResults = this.getLinksResults();
     if (this.consumer) links.addBasePath(this.consumer.getPath());
     await links.persistAllToFS();
+    await deleteAllDependenciesDataCache();
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {

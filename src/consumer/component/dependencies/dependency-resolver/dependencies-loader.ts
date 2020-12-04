@@ -34,7 +34,9 @@ export class DependenciesLoader {
       this.opts.cacheResolvedDependencies,
       this.opts.cacheProjectAst
     );
-    await saveDependenciesDataInCache(this.idStr, dependenciesData.serialize());
+    if (this.shouldSaveInCache(dependenciesData)) {
+      await saveDependenciesDataInCache(this.idStr, dependenciesData.serialize());
+    }
 
     return dependenciesData;
   }
@@ -62,6 +64,13 @@ export class DependenciesLoader {
     }
     logger.debug(`dependencies-loader, getting the dependencies data for ${this.idStr} from the cache`);
     return DependenciesData.deserialize(cacheData.data);
+  }
+
+  private shouldSaveInCache(dependenciesData: DependenciesData) {
+    if (dependenciesData.issues?.missingPackagesDependenciesOnFs) {
+      return false;
+    }
+    return true;
   }
 
   private setDependenciesDataOnComponent(dependenciesData: DependenciesData) {
