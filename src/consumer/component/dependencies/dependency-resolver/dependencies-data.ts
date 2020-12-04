@@ -53,7 +53,7 @@ function deserializeIssues(issues: Record<string, any>): Partial<Issues> {
       }));
     });
   }
-  const fields = ['relativeComponents', 'missingComponents', 'missingLinks', 'missingCustomModuleResolutionLinks'];
+  const fields = ['relativeComponents', 'missingComponents', 'missingLinks'];
   fields.forEach((field) => {
     if (!issues[field]) return;
     Object.keys(issues[field]).forEach((filePath) => {

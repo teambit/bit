@@ -68,7 +68,7 @@ export type Issues = {
   untrackedDependencies: UntrackedDependenciesIssues;
   missingDependenciesOnFs: { [filePath: string]: string[] };
   missingLinks: { [filePath: string]: BitId[] };
-  missingCustomModuleResolutionLinks: { [filePath: string]: BitId[] };
+  missingCustomModuleResolutionLinks: { [filePath: string]: string[] };
   customModuleResolutionUsed: { [importSource: string]: BitIdStr }; // invalid on Harmony, { importSource: idStr }
   relativeComponents: { [filePath: string]: BitId[] };
   relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
@@ -1253,7 +1253,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this.issues.missingPackagesDependenciesOnFs[originFile].concat(missingPackages);
     } else this.issues.missingPackagesDependenciesOnFs[originFile] = missingPackages;
   }
-  _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: BitId) {
+  _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: string) {
     if (this.issues.missingCustomModuleResolutionLinks[originFile]) {
       this.issues.missingCustomModuleResolutionLinks[originFile].push(componentId);
     } else this.issues.missingCustomModuleResolutionLinks[originFile] = [componentId];
