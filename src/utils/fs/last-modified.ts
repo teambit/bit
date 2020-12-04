@@ -11,8 +11,9 @@ export async function getLastModifiedDirTimestampMs(rootDir: string): Promise<nu
 }
 
 export async function getLastModifiedPathsTimestampMs(paths: string[]): Promise<number> {
-  const pathsStats: Stats[] = await Promise.all(paths.map((dir) => fs.stat(dir)));
-  const timestamps = pathsStats.map((stat) => stat.mtimeMs);
+  const pathsStats = await Promise.all(paths.map((dir) => getPathStatIfExist(dir)));
+  const statsWithoutNull = compact(pathsStats);
+  const timestamps = statsWithoutNull.map((stat) => stat.mtimeMs);
   return Math.max(...timestamps);
 }
 
@@ -20,13 +21,6 @@ export async function getLastModifiedComponentTimestampMs(rootDir: string, files
   const lastModifiedDirs = await getLastModifiedDirTimestampMs(rootDir);
   const lastModifiedFiles = await getLastModifiedPathsTimestampMs(files);
   return Math.max(lastModifiedDirs, lastModifiedFiles);
-}
-
-export async function getLastModifiedPathsIfExistTimestampMs(paths: string[]): Promise<number> {
-  const pathsStats = await Promise.all(paths.map((dir) => getPathStatIfExist(dir)));
-  const statsWithoutNull = compact(pathsStats);
-  const timestamps = statsWithoutNull.map((stat) => stat.mtimeMs);
-  return Math.max(...timestamps);
 }
 
 async function getPathStatIfExist(path: string): Promise<Stats | null> {

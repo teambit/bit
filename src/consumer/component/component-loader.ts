@@ -8,7 +8,7 @@ import { ModelComponent } from '../../scope/models';
 import { ObjectList } from '../../scope/objects/object-list';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { getLatestVersionNumber } from '../../utils';
-import { getLastModifiedPathsIfExistTimestampMs } from '../../utils/fs/last-modified';
+import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
@@ -49,12 +49,14 @@ export default class ComponentLoader {
         path.join(this.consumer.getPath(), 'package.json'),
         this.consumer.config.path,
       ];
-      const lastModified = await getLastModifiedPathsIfExistTimestampMs(pathsToCheck);
+      const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
       const dependenciesCacheList = await listDependenciesDataCache();
       const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
-      const lastCacheEntered = Math.max(...lastUpdateAllComps);
-      const shouldInvalidate = lastModified > lastCacheEntered;
+      const firstCacheEntered = Math.min(...lastUpdateAllComps);
+      const shouldInvalidate = lastModified > firstCacheEntered;
       if (shouldInvalidate) {
+        // at least one component inserted to the cache before workspace-config/node-modules
+        // modification, invalidate the entire deps-cache.
         logger.debug(
           'component-loader, invalidating dependencies cache because either node-modules or workspace config had been changed'
         );

@@ -1,4 +1,5 @@
 import R from 'ramda';
+import path from 'path';
 import { Consumer } from '../../..';
 import logger from '../../../../logger/logger';
 import { getLastModifiedComponentTimestampMs } from '../../../../utils/fs/last-modified';
@@ -7,6 +8,7 @@ import { getDependenciesDataFromCache, saveDependenciesDataInCache } from '../..
 import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
+import { COMPONENT_CONFIG_FILE_NAME, PACKAGE_JSON } from '../../../../constants';
 
 type Opts = {
   cacheResolvedDependencies: Record<string, any>;
@@ -57,6 +59,9 @@ export class DependenciesLoader {
       return null;
     }
     const filesPaths = this.component.files.map((f) => f.path);
+    const componentConfigFilename = this.consumer.isLegacy ? PACKAGE_JSON : COMPONENT_CONFIG_FILE_NAME;
+    const componentConfigPath = path.join(this.consumer.getPath(), rootDir, componentConfigFilename);
+    filesPaths.push(componentConfigPath);
     const lastModifiedComponent = await getLastModifiedComponentTimestampMs(rootDir, filesPaths);
     const wasModifiedAfterCache = lastModifiedComponent > cacheData.timestamp;
     if (wasModifiedAfterCache) {
