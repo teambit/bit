@@ -43,6 +43,11 @@
                 "test": false
             },
             {
+                "name": "match-pattern.spec.ts",
+                "relativePath": "match-pattern.spec.ts",
+                "test": false
+            },
+            {
                 "name": "match-pattern.ts",
                 "relativePath": "match-pattern.ts",
                 "test": false

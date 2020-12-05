@@ -1,6 +1,6 @@
 import { join, extname } from 'path';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
-import { BuiltTaskResult, BuildContext } from '@teambit/builder';
+import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/modules.merge-component-results';
 
 export type MultiCompilerOptions = {
@@ -66,6 +66,24 @@ export class MultiCompiler implements Compiler {
         },
       ],
     };
+  }
+
+  async preBuild(context: BuildContext) {
+    await Promise.all(
+      this.compilers.map(async (compiler) => {
+        if (!compiler.preBuild) return;
+        await compiler.preBuild(context);
+      })
+    );
+  }
+
+  async postBuild(context: BuildContext, taskResults: TaskResultsList) {
+    await Promise.all(
+      this.compilers.map(async (compiler) => {
+        if (!compiler.postBuild) return;
+        await compiler.postBuild(context, taskResults);
+      })
+    );
   }
 
   private replaceFileExtToTarget(filePath: string): string {

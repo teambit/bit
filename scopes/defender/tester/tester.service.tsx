@@ -4,15 +4,15 @@ import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
-import chalk from 'chalk';
 import syntaxHighlighter from 'consolehighlighter';
 import { PubSub } from 'graphql-subscriptions';
 import { DevFilesMain } from '@teambit/dev-files';
-
-import { NoTestFilesFound } from './exceptions';
 import { Tester, Tests, CallbackFn } from './tester';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
+import { NoTestFilesFound } from './exceptions';
+
+const chalk = require('chalk');
 
 export const OnTestsChanged = 'OnTestsChanged';
 
@@ -99,14 +99,17 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     const specFiles = ComponentMap.as(context.components, (component) => {
       return detectTestFiles(component, this.devFiles);
     });
-    // const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
-    // const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
-    //   if (specs.length > 0) acc += 1;
-    //   return acc;
-    // }, 0);
-    // if (testCount === 0) throw new NoTestFilesFound(this.patterns.join(','));
+    const testCount = specFiles.toArray().reduce((acc, [, specs]) => acc + specs.length, 0);
 
-    // this.logger.consoleTitle(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
+    const componentWithTests = specFiles.toArray().reduce((acc: number, [, specs]) => {
+      if (specs.length > 0) acc += 1;
+      return acc;
+    }, 0);
+
+    if (testCount === 0) throw new NoTestFilesFound(this.patterns.join(','));
+
+    if (!options.ui)
+      this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
     const testerContext = Object.assign(context, {
       release: false,

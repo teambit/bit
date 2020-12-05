@@ -1,2 +1,2 @@
 export { MDXLayout } from './mdx-layout';
-export type { MDXLayoutProps, ComponentReference } from './mdx-layout';
+export type { MDXLayoutProps, MDXComponents } from './mdx-layout';

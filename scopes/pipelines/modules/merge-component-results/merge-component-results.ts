@@ -21,8 +21,9 @@ export function mergeComponentResults(resultMatrix: ComponentResult[][]) {
   resultMatrix.forEach((results) => {
     results.forEach((result) => {
       const id = result.component.id.toString();
-      const existing = index[id];
+      let existing = index[id];
       if (!existing) index[result.component.id.toString()] = result;
+      existing = result;
 
       index[id] = {
         warnings: existing.warnings?.concat(result.warnings || []) || [],

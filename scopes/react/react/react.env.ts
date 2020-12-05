@@ -147,7 +147,7 @@ export class ReactEnv implements Environment {
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
     const defaultConfig = this.getWebpackConfig(context);
-    const config = targetConfig ? webpackMerge(targetConfig, defaultConfig) : defaultConfig;
+    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
@@ -157,8 +157,8 @@ export class ReactEnv implements Environment {
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const defaultConfig = previewConfigFactory();
-    const config = targetConfig ? webpackMerge(targetConfig, defaultConfig) : defaultConfig;
-    return this.webpack.createBundler(context, config);
+    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
+    return this.webpack.createBundler(context, config as any);
   }
 
   /**
