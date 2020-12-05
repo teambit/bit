@@ -3,7 +3,7 @@ import { PathOsBased } from '../../utils/path';
 import extractDataRegex from '../extract-data-regex';
 import { Doclet } from '../types';
 
-export default async function parse(data: string, filePath?: PathOsBased): Promise<Doclet[]> {
+export default async function parse(data: string, filePath: PathOsBased): Promise<Doclet[]> {
   const doclets: Array<Doclet> = [];
   try {
     /**

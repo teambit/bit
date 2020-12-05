@@ -2,6 +2,7 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 // it's a hack, but I didn't find a better way to access the getCacheDir() function
 import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
+import { loadConsumerIfExist } from '../../../consumer';
 
 import { LegacyCommand } from '../../legacy-command';
 
@@ -15,9 +16,14 @@ export default class ClearCache implements LegacyCommand {
   loader = false;
   skipWorkspace = true;
 
-  action(): Promise<any> {
+  async action(): Promise<any> {
     const cacheDir = v8CompileCache.getCacheDir();
     fs.removeSync(cacheDir);
+    const consumer = await loadConsumerIfExist();
+    if (consumer) {
+      const componentCachePath = consumer.componentFsCache.basePath;
+      fs.removeSync(componentCachePath);
+    }
     return Promise.resolve();
   }
 

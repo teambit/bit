@@ -7,7 +7,7 @@ import { BitError } from 'bit-bin/dist/error/bit-error';
 import LegacyScope from 'bit-bin/dist/scope/scope';
 import { Packer as LegacyPacker, PackWriteOptions, PackOptions } from 'bit-bin/dist/pack';
 import { Logger } from '@teambit/logger';
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
@@ -69,7 +69,7 @@ export class Packer {
   ): Promise<ComponentResult[]> {
     const description = `packing components${dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = Bluebird.mapSeries(capsules, (capsule) => {
+    const results = mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
       return this.packCapsule(capsule, writeOptions, dryRun, omitFullTarPath);
     });

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -140,6 +140,10 @@ export default class Consumer {
       this._dirStructure = new DirStructure(this.config.componentsDefaultDirectory, this.config._dependenciesDirectory);
     }
     return this._dirStructure;
+  }
+
+  get componentFsCache() {
+    return this.componentLoader.componentFsCache;
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -525,6 +529,9 @@ export default class Consumer {
     const { ids, persist } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
+    if (persist) {
+      await this.componentFsCache.deleteAllDependenciesDataCache();
+    }
     const components = await this._loadComponentsForTag(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
@@ -855,6 +862,7 @@ export default class Consumer {
       created: true,
       scope,
       isolated: true,
+      // @ts-ignore @gilad, the config type is incorrect indeed
       config,
     });
   }

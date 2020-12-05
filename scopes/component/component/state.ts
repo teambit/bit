@@ -39,6 +39,14 @@ export class State {
     return '';
   }
 
+  /**
+   * is modified
+   */
+
+  get isModified(): boolean {
+    return this._consumer._isModified;
+  }
+
   get aspects(): AspectList {
     return this._aspects;
   }

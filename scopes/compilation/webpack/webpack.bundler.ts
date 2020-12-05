@@ -1,7 +1,7 @@
 import { Bundler, BundlerResult, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import webpack, { Compiler, Configuration } from 'webpack';
 import merge from 'webpack-merge';
 

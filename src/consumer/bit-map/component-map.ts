@@ -8,6 +8,7 @@ import ValidationError from '../../error/validation-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
+import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
@@ -369,38 +370,48 @@ export default class ComponentMap {
    * in case new files were created in the track-dir directory, add them to the component-map
    * so then they'll be tracked by bitmap
    */
-  async trackDirectoryChanges(consumer: Consumer, id: BitId) {
+  async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
-    if (trackDir) {
-      const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
-      const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-      if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
-      const addParams = {
-        componentPaths: [trackDirRelative || '.'],
-        id: id.toString(),
-        override: false, // this makes sure to not override existing files of componentMap
-        trackDirFeature: true,
-        origin: this.origin,
-      };
-      const numOfFilesBefore = this.files.length;
-      const addContext: AddContext = { consumer };
-      const addComponents = new AddComponents(addContext, addParams);
-      try {
-        await addComponents.add();
-      } catch (err) {
-        if (err instanceof NoFiles || err instanceof EmptyDirectory) {
-          // it might happen that a component is imported and current .gitignore configuration
-          // are effectively removing all files from bitmap. we should ignore the error in that
-          // case
-        } else {
-          throw err;
-        }
-      }
-      if (this.files.length > numOfFilesBefore) {
-        logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
-        consumer.bitMap.hasChanged = true;
+    if (!trackDir) {
+      return;
+    }
+    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
+    const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
+    if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
+    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
+    const wasModifiedAfterLastTrack = async () => {
+      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
+      return lastModified > lastTrack;
+    };
+    if (!(await wasModifiedAfterLastTrack())) {
+      return;
+    }
+    const addParams = {
+      componentPaths: [trackDirRelative || '.'],
+      id: id.toString(),
+      override: false, // this makes sure to not override existing files of componentMap
+      trackDirFeature: true,
+      origin: this.origin,
+    };
+    const numOfFilesBefore = this.files.length;
+    const addContext: AddContext = { consumer };
+    const addComponents = new AddComponents(addContext, addParams);
+    try {
+      await addComponents.add();
+    } catch (err) {
+      if (err instanceof NoFiles || err instanceof EmptyDirectory) {
+        // it might happen that a component is imported and current .gitignore configuration
+        // are effectively removing all files from bitmap. we should ignore the error in that
+        // case
+      } else {
+        throw err;
       }
     }
+    if (this.files.length > numOfFilesBefore) {
+      logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
+      consumer.bitMap.hasChanged = true;
+    }
+    await consumer.componentFsCache.setLastTrackTimestamp(id.toString(), Date.now());
   }
 
   updateNextVersion(nextVersion: NextVersion) {

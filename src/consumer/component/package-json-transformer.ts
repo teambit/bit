@@ -1,4 +1,4 @@
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import { replacePlaceHolderWithComponentValue } from '../../utils/bit/component-placeholders';
 
 import ConsumerComponent from './consumer-component';
@@ -20,7 +20,7 @@ export class PackageJsonTransformer {
   static async applyTransformers(component: ConsumerComponent, packageJson: PackageJsonFile) {
     let newPackageJsonObject = packageJson.packageJsonObject;
 
-    await Bluebird.mapSeries(PackageJsonTransformer.packageJsonTransformersRegistry, async (transformer) => {
+    await mapSeries(PackageJsonTransformer.packageJsonTransformersRegistry, async (transformer) => {
       newPackageJsonObject = await transformer(component, newPackageJsonObject);
     });
 

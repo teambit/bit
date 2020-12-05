@@ -73,7 +73,7 @@ export function testerSchema(tester: TesterMain, graphql: GraphqlMain): Schema {
           const componentId = await host.resolveComponentId(id);
           const component = await host.get(componentId);
           if (!component) return null;
-          const testsResults = tester.getTestsResults(component);
+          const testsResults = await tester.getTestsResults(component);
           if (!testsResults) return null;
           return testsResults;
         },
