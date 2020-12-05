@@ -20,7 +20,8 @@ export default class WatchRunner {
     const cmd = `${this.helper.command.bitBin} watch --verbose`;
     if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     return new Promise((resolve, reject) => {
-      this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath });
+      const cwd = this.helper.scopes.localPath;
+      this.watchProcess = childProcess.spawn(this.helper.command.bitBin, ['watch', '--verbose'], { cwd });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.watchProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
