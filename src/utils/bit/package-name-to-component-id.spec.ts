@@ -11,7 +11,9 @@ describe('packageNameToComponentId', function () {
     // @ts-ignore
     consumer = new Consumer({
       projectPath: '',
+      // @ts-ignore
       config: {},
+      // @ts-ignore
       scope: { getPath: () => '', lanes: { getCurrentLaneName: () => '' } },
     });
   });
