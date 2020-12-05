@@ -19,6 +19,11 @@
                 "test": false
             },
             {
+                "name": "mdx.doc-reader.ts",
+                "relativePath": "mdx.doc-reader.ts",
+                "test": false
+            },
+            {
                 "name": "mdx.main.runtime.ts",
                 "relativePath": "mdx.main.runtime.ts",
                 "test": false
@@ -2952,6 +2957,11 @@
     "teambit.docs/docs@0.0.155": {
         "files": [
             {
+                "name": "default-doc-reader.ts",
+                "relativePath": "default-doc-reader.ts",
+                "test": false
+            },
+            {
                 "name": "doc-module.ts",
                 "relativePath": "doc-module.ts",
                 "test": false
@@ -2959,6 +2969,26 @@
             {
                 "name": "doc-reader.ts",
                 "relativePath": "doc-reader.ts",
+                "test": false
+            },
+            {
+                "name": "doc-prop-list.ts",
+                "relativePath": "doc/doc-prop-list.ts",
+                "test": false
+            },
+            {
+                "name": "doc-prop.ts",
+                "relativePath": "doc/doc-prop.ts",
+                "test": false
+            },
+            {
+                "name": "doc.ts",
+                "relativePath": "doc/doc.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "doc/index.ts",
                 "test": false
             },
             {
@@ -3019,6 +3049,21 @@
             {
                 "name": "index.ts",
                 "relativePath": "events/index.ts",
+                "test": false
+            },
+            {
+                "name": "doc-read-error.ts",
+                "relativePath": "exceptions/doc-read-error.ts",
+                "test": false
+            },
+            {
+                "name": "file-extension-not-supported.ts",
+                "relativePath": "exceptions/file-extension-not-supported.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "exceptions/index.ts",
                 "test": false
             },
             {
@@ -7216,6 +7261,25 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "types/serializable": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "serializable.ts",
+                "relativePath": "serializable.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/types/serializable",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "ui/mdx-layout": {

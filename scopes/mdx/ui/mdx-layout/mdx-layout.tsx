@@ -5,7 +5,7 @@ import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Paragraph } from '@teambit/documenter.ui.paragraph';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { ExternalLink } from '@teambit/documenter.routing.external-link';
-// import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
+import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 
 function createHeading(size: Sizes) {
   return function Heading({ children }: { children: ReactNode }) {
@@ -15,6 +15,10 @@ function createHeading(size: Sizes) {
       </LinkedHeading>
     );
   };
+}
+
+function HighlightedTextSpan({ children }: { children: ReactNode }) {
+  return <HighlightedText>{children}</HighlightedText>;
 }
 
 const defaultMdxComponents = {
@@ -27,7 +31,7 @@ const defaultMdxComponents = {
   p: Paragraph,
   code: CodeSnippet,
   a: ExternalLink,
-  // inlineCode: HighlightedText
+  inlineCode: HighlightedTextSpan,
 };
 
 type ComponentType =
