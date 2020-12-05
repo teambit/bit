@@ -105,7 +105,7 @@ describe('bit watch command', function () {
       }
     });
   });
-  describe('Harmony watch, using Compiler & Typescript extensions', () => {
+  describe.skip('Harmony watch, using Compiler & Typescript extensions', () => {
     before(() => {
       helper.command.resetFeatures();
       helper.command.setFeatures(HARMONY_FEATURE);
