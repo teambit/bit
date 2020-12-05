@@ -9,7 +9,7 @@ import WatchRunner from '../watch-runner';
 
 chai.use(require('chai-fs'));
 
-describe.skip('bit watch command', function () {
+describe('bit watch command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
