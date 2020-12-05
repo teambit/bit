@@ -29,7 +29,7 @@ export default class ComponentLoader {
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
-    this.componentFsCache = new ComponentFsCache(consumer.getPath());
+    this.componentFsCache = new ComponentFsCache(consumer.scope.getPath());
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
