@@ -7,7 +7,6 @@
 import chalk from 'chalk';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import { LogEntry } from 'winston';
 import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
 import { Analytics } from '../analytics/analytics';
@@ -26,6 +25,7 @@ const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
 const logLevel = getLogLevel();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
 
 const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
