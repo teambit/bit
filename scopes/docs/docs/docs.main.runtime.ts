@@ -17,7 +17,7 @@ import { docsSchema } from './docs.graphql';
 import { DocReader } from './doc-reader';
 import { DefaultDocReader } from './default-doc-reader';
 import { FileExtensionNotSupported } from './exceptions';
-import { Doc } from './doc';
+import { Doc, DocPropList } from './doc';
 
 export type ComponentDocs = {
   files: string[];
@@ -81,9 +81,9 @@ export class DocsMain {
    * compute the description of the component from its source code and docs file.
    */
   async getDescription(component: Component): Promise<string> {
-    const componentDoc = await this.getDoc(component);
-    const desc = componentDoc?.props.get('description');
-    if (desc) return desc.value as string;
+    const componentDoc = this.getDoc(component);
+    const desc = componentDoc?.description;
+    if (desc) return desc;
     const consumerComponent: ConsumerComponent = component.state._consumer;
     const fromJsDocs = consumerComponent.docs?.find((doc) => doc.description);
 
@@ -123,8 +123,8 @@ export class DocsMain {
 
   getDoc(component: Component) {
     const docData = component.state.aspects.get(DocsAspect.id)?.data?.doc;
-    if (docData) return null;
-    return new Doc(docData.filePath, docData.props);
+    if (!docData) return null;
+    return new Doc(docData.filePath, new DocPropList(docData.props));
   }
 
   /**

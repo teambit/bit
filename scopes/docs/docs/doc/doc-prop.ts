@@ -12,4 +12,8 @@ export class DocProp {
      */
     readonly value: Serializable
   ) {}
+
+  getAs<T>() {
+    return this.value as T;
+  }
 }

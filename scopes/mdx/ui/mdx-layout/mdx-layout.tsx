@@ -18,7 +18,7 @@ function createHeading(size: Sizes) {
 }
 
 function HighlightedTextSpan({ children }: { children: ReactNode }) {
-  return <HighlightedText>{children}</HighlightedText>;
+  return <HighlightedText element="span">{children}</HighlightedText>;
 }
 
 const defaultMdxComponents = {

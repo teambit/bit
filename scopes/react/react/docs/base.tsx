@@ -34,6 +34,8 @@ const GET_COMPONENT = gql`
         }
         displayName
         packageName
+        description
+        labels
         compositions {
           identifier
         }
@@ -77,8 +79,8 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
         <ComponentOverview
           displayName={Content.displayName || displayName}
           version={version}
-          abstract={Content.abstract || abstract}
-          labels={Content.labels || labels}
+          abstract={component.description || Content.abstract || abstract}
+          labels={component.labels || Content.labels || labels}
           packageName={packageName}
         />
 
