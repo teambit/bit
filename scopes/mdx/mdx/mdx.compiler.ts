@@ -20,6 +20,8 @@ export class MDXCompiler implements Compiler {
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
     const output = compileSync(fileContent, {
       filepath: options.filePath,
+      // this compiler is not indented to compile according to the bit flavour.
+      bitFlavour: false,
     });
 
     return [
