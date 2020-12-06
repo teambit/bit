@@ -3,8 +3,8 @@ import path from 'path';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
 
-const WORKSPACE_CACHE = '.bit.cache';
-const COMPONENTS_CACHE = 'components-cache';
+const WORKSPACE_CACHE = 'cache';
+const COMPONENTS_CACHE = 'components';
 const LAST_TRACK = 'last-track';
 const DOCS = 'docs';
 const DEPS = 'deps';
@@ -12,8 +12,8 @@ const DEPS = 'deps';
 export class ComponentFsCache {
   readonly basePath: PathOsBasedAbsolute;
   private isNoFsCacheFeatureEnabled: boolean;
-  constructor(private workspacePath) {
-    this.basePath = path.join(this.workspacePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
+  constructor(private scopePath: string) {
+    this.basePath = path.join(this.scopePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
     this.isNoFsCacheFeatureEnabled = isFeatureEnabled(NO_FS_CACHE_FEATURE);
   }
 
