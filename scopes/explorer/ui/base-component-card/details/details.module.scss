@@ -34,6 +34,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
+  line-clamp: 2; /* number of lines to show */
+  box-orient: vertical;
   -webkit-line-clamp: 2; /* number of lines to show */
   -webkit-box-orient: vertical;
   -moz-line-clamp: 2; /* number of lines to show */
