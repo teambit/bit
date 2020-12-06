@@ -64,7 +64,7 @@ export function ComponentCard({
 }: ComponentCardProps) {
   return (
     <Card className={className}>
-      <Link className={styles.componentCardLink}>
+      <Link className={styles.componentCardLink} href={id}>
         <DeprecationSticker isDeprecated={isDeprecated} />
         <PreviewContainer preview={preview} />
 
