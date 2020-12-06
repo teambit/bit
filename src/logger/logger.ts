@@ -7,7 +7,6 @@
 import chalk from 'chalk';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import { LogEntry } from 'winston';
 import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
 import { Analytics } from '../analytics/analytics';
@@ -16,6 +15,7 @@ import defaultHandleError from '../cli/default-error-handler';
 import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constants';
 import { getWinstonLogger } from './winston-logger';
 import { getPinoLogger } from './pino-logger';
+import { Profiler } from './profiler';
 
 export { Level as LoggerLevel };
 
@@ -25,6 +25,7 @@ const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
 const logLevel = getLogLevel();
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
 
 const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
@@ -56,6 +57,7 @@ export interface IBitLogger {
  */
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
+  profiler: Profiler;
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
@@ -65,6 +67,7 @@ class BitLogger implements IBitLogger {
 
   constructor(logger: PinoLogger) {
     this.logger = logger;
+    this.profiler = new Profiler();
   }
 
   /**
@@ -123,8 +126,26 @@ class BitLogger implements IBitLogger {
     pinoLoggerConsole[level](messageStr);
   }
 
-  profile(id: string, meta?: LogEntry) {
-    winstonLogger.profile(id, meta);
+  /**
+   * useful to get an idea how long it takes from one point in the code to another point.
+   * to use it, choose an id and call `logger.profile(your-id)` before and after the code you want
+   * to measure. e.g.
+   * ```
+   * logger.profile('loadingComponent');
+   * consumer.loadComponent(id);
+   * logger.profile('loadingComponent');
+   * ```
+   * once done, the log writes the time it took to execute the code between the two calls.
+   * if this is a repeated code it also shows how long this code was executed in total.
+   * an example of the output:
+   * [2020-12-04 16:24:46.100 -0500] INFO	 (31641): loadingComponent: 14ms. (total repeating 14ms)
+   * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
+   */
+  profile(id: string, console?: boolean) {
+    const msg = this.profiler.profile(id);
+    if (!msg) return;
+    const fullMsg = `${id}: ${msg}`;
+    console ? this.console(fullMsg) : this.info(fullMsg);
   }
 
   async exitAfterFlush(code = 0, commandName: string) {

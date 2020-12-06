@@ -78,7 +78,10 @@ export class JestTester implements Tester {
           );
         });
         const filePath = file?.relative || test.testFilePath;
-        const error = { failureMessage: test.failureMessage, error: test.testExecError?.message };
+        const error = {
+          failureMessage: test.testExecError ? test.failureMessage : undefined,
+          error: test.testExecError?.message,
+        };
         return new TestsFiles(
           filePath,
           testResults,
