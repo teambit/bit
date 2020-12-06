@@ -227,7 +227,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
-        'react-native': 'react-native-web',
+        'react-native': require.resolve('react-native-web'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',

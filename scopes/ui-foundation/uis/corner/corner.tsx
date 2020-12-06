@@ -20,7 +20,11 @@ export function Corner({ name, icon, className, ...rest }: CornerProps) {
   return (
     <div {...rest} className={classNames(styles.corner, className)}>
       <NavLink to="/" className={styles.link}>
-        <UserAvatar size={25} account={{ name, profileImage: icon }} className={styles.avatar} />
+        {icon ? (
+          <img src={icon} width={25} height={25} />
+        ) : (
+          <UserAvatar size={25} account={{ name, profileImage: icon }} className={styles.avatar} />
+        )}
         <span>{name}</span>
       </NavLink>
     </div>
