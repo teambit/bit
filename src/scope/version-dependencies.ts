@@ -1,4 +1,4 @@
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import R from 'ramda';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ComponentWithDependencies from './component-dependencies';

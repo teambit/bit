@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';

@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import path from 'path';
 
 import { Consumer } from '../..';

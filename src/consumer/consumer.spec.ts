@@ -9,7 +9,13 @@ describe('Consumer', function () {
   let sandbox;
   const getConsumerInstance = () => {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const consumer = new Consumer({ projectPath: '', config: {}, scope: { lanes: { getCurrentLaneName: () => '' } } });
+    const consumer = new Consumer({
+      projectPath: '',
+      // @ts-ignore
+      config: {},
+      // @ts-ignore
+      scope: { getPath: () => '', lanes: { getCurrentLaneName: () => '' } },
+    });
     return consumer;
   };
   describe('getComponentIdFromNodeModulesPath', () => {

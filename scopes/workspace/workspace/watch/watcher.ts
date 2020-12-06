@@ -9,7 +9,7 @@ import { Consumer } from 'bit-bin/dist/consumer';
 import logger from 'bit-bin/dist/logger/logger';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
@@ -109,14 +109,14 @@ export class Watcher {
     const results: OnComponentEventResult[] = [];
     if (newDirs.length) {
       this.fsWatcher.add(newDirs);
-      const addResults = await Bluebird.mapSeries(newDirs, (dir) =>
+      const addResults = await mapSeries(newDirs, (dir) =>
         this.executeWatchOperationsOnComponent(this.trackDirs[dir], false)
       );
       results.push(...R.flatten(addResults));
     }
     if (removedDirs.length) {
       await this.fsWatcher.unwatch(removedDirs);
-      await Bluebird.mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
+      await mapSeries(removedDirs, (dir) => this.executeWatchOperationsOnRemove(previewsTrackDirs[dir]));
     }
     return results;
   }
@@ -199,7 +199,13 @@ export class Watcher {
     }
     // @todo: improve performance. probably only bit-map and the component itself need to be updated
     await this.workspace._reloadConsumer();
+    await this.setTrackDirs();
     const componentId = this.trackDirs[trackDir];
+    if (!componentId) {
+      // the file was part of a component before, but not now. this may happen often when switching
+      // git branches. the current branch may not have the component of the previous branch.
+      return null;
+    }
     // loading the component causes the bitMap to be updated with the new paths if needed
     const component = await this.workspace.get(componentId);
     const componentMap: ComponentMap = component.state._consumer.componentMap;

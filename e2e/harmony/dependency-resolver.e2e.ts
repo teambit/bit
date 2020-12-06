@@ -13,7 +13,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('dependency-resolver extension', function () {
   let helper: Helper;
   this.timeout(0);
@@ -39,13 +38,13 @@ describe('dependency-resolver extension', function () {
         const depResolverConfig = {
           policy: {
             dependencies: {
-              'lodash.get': '1.0.0',
+              'lodash.get': '4.0.0',
             },
             devDependencies: {
-              'lodash.words': '1.0.0',
+              'lodash.words': '4.0.0',
             },
             peerDependencies: {
-              'lodash.set': '1.0.0',
+              'lodash.set': '4.0.0',
             },
           },
         };
@@ -54,9 +53,9 @@ describe('dependency-resolver extension', function () {
         isTypeOutput = helper.command.showComponentParsed('utils/is-type');
       });
       it('should have the updated dependencies for bar/foo', function () {
-        expect(barFooOutput.packageDependencies).to.have.property('lodash.get', '1.0.0');
-        expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
-        expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
+        expect(barFooOutput.packageDependencies).to.have.property('lodash.get', '4.0.0');
+        expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '4.0.0');
+        expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '4.0.0');
       });
       it('should not put the dependencies for not configured component', function () {
         expect(isTypeOutput.packageDependencies).to.not.have.key('lodash.get');
@@ -109,9 +108,9 @@ describe('dependency-resolver extension', function () {
           isTypeOutput = helper.command.showComponentParsed('utils/is-type');
         });
         it('should have the updated dependencies for bar/foo', function () {
-          expect(barFooOutput.packageDependencies).to.have.property('lodash.get', '1.0.0');
-          expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '1.0.0');
-          expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '1.0.0');
+          expect(barFooOutput.packageDependencies).to.have.property('lodash.get', '4.0.0');
+          expect(barFooOutput.devPackageDependencies).to.have.property('lodash.words', '4.0.0');
+          expect(barFooOutput.peerPackageDependencies).to.have.property('lodash.set', '4.0.0');
         });
         it('should not put the dependencies for not configured component', function () {
           expect(isTypeOutput.packageDependencies).to.not.have.key('lodash.get');

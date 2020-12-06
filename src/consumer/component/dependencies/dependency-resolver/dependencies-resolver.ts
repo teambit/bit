@@ -5,7 +5,6 @@ import semver from 'semver';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
 import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
-import { ExtensionDataEntry } from '../../../../consumer/config';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
@@ -23,6 +22,8 @@ import { getDependencyTree } from '../files-dependency-builder';
 import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
+import { DependenciesData } from './dependencies-data';
+import { BitIdStr } from '../../../../bit-id/bit-id';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -61,19 +62,19 @@ type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
 type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
 
 export type Issues = {
-  missingPackagesDependenciesOnFs: {};
+  missingPackagesDependenciesOnFs: { [filePath: string]: string[] };
   missingPackagesDependenciesFromOverrides: string[];
-  missingComponents: {};
+  missingComponents: { [filePath: string]: BitId[] };
   untrackedDependencies: UntrackedDependenciesIssues;
-  missingDependenciesOnFs: {};
-  missingLinks: {};
-  missingCustomModuleResolutionLinks: {};
-  customModuleResolutionUsed: {}; // invalid on Harmony, { importSource: idStr }
-  relativeComponents: {};
+  missingDependenciesOnFs: { [filePath: string]: string[] };
+  missingLinks: { [filePath: string]: BitId[] };
+  missingCustomModuleResolutionLinks: { [filePath: string]: string[] };
+  customModuleResolutionUsed: { [importSource: string]: BitIdStr }; // invalid on Harmony, { importSource: idStr }
+  relativeComponents: { [filePath: string]: BitId[] };
   relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
-  parseErrors: {};
-  resolveErrors: {};
-  missingBits: {};
+  parseErrors: { [filePath: string]: string };
+  resolveErrors: { [filePath: string]: string };
+  missingBits: { [filePath: string]: BitId[] }; // temporarily. it's combined later with missingComponents. see combineIssues
 };
 
 type WorkspacePolicyGetter = () => {
@@ -93,6 +94,7 @@ export default class DependencyResolver {
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   issues: Issues;
+  coreAspects: string[] = [];
   processedFiles: string[];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   compilerFiles: PathLinux[];
@@ -109,10 +111,10 @@ export default class DependencyResolver {
   static getCoreAspectsPackagesAndIds: () => Record<string, string>;
   static getDevFiles: (component: Component) => Promise<string[]>;
 
-  constructor(component: Component, consumer: Consumer, componentId: BitId) {
+  constructor(component: Component, consumer: Consumer) {
     this.component = component;
     this.consumer = consumer;
-    this.componentId = componentId;
+    this.componentId = component.id;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     this.componentMap = this.component.componentMap;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -144,7 +146,7 @@ export default class DependencyResolver {
       relativeComponentsAuthored: {},
       parseErrors: {},
       resolveErrors: {},
-      missingBits: {}, // temporarily, will be combined with missingComponents. see combineIssues
+      missingBits: {},
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
   }
@@ -155,7 +157,11 @@ export default class DependencyResolver {
   }
 
   /**
-   * Load components and packages dependencies for a component. The process is as follows:
+   * Resolve components and packages dependencies for a component.
+   * This method should NOT have any side-effect on the component. the DependenciesLoader class is
+   * responsible for saving this data on the component object.
+   *
+   * The process is as follows:
    * 1) Use the language driver to parse the component files and find for each file its dependencies.
    * 2) The results we get from the driver per file tells us what are the files and packages that depend on our file.
    * and also whether there are missing packages and files.
@@ -169,16 +175,18 @@ export default class DependencyResolver {
    * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
    * component.issues.missingDependenciesOnFs
    */
-  async loadDependenciesForComponent(
-    bitDir: string,
+  async getDependenciesData(
     cacheResolvedDependencies: Record<string, any>,
     cacheProjectAst: Record<string, any> | undefined
-  ): Promise<Component> {
+  ): Promise<DependenciesData> {
+    const componentDir = this.componentMap?.rootDir
+      ? path.join(this.consumerPath, this.componentMap?.rootDir)
+      : this.consumerPath;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     const allFiles = [...nonTestsFiles, ...testsFiles];
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependencyTree({
-      componentDir: bitDir,
+      componentDir,
       workspacePath: this.consumerPath,
       filePaths: allFiles,
       bindingPrefix: this.component.bindingPrefix,
@@ -192,18 +200,11 @@ export default class DependencyResolver {
     this.setTree(dependenciesTree.tree);
     const devFiles = this.consumer.isLegacy ? testsFiles : await DependencyResolver.getDevFiles(this.component);
     this.populateDependencies(allFiles, devFiles);
-    this.component.setDependencies(this.allDependencies.dependencies);
-    this.component.setDevDependencies(this.allDependencies.devDependencies);
-    this.component.packageDependencies = this.allPackagesDependencies.packageDependencies;
-    this.component.devPackageDependencies = this.allPackagesDependencies.devPackageDependencies;
-    this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
-    if (!R.isEmpty(this.overridesDependencies.missingPackageDependencies)) {
-      this.issues.missingPackagesDependenciesFromOverrides = this.overridesDependencies.missingPackageDependencies;
-    }
-    if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
-    this.component.manuallyRemovedDependencies = this.overridesDependencies.manuallyRemovedDependencies;
-    this.component.manuallyAddedDependencies = this.overridesDependencies.manuallyAddedDependencies;
-    return this.component;
+    return new DependenciesData(this.allDependencies, this.allPackagesDependencies, this.issues, this.coreAspects, {
+      manuallyRemovedDependencies: this.overridesDependencies.manuallyRemovedDependencies,
+      manuallyAddedDependencies: this.overridesDependencies.manuallyAddedDependencies,
+      missingPackageDependencies: this.overridesDependencies.missingPackageDependencies,
+    });
   }
 
   /**
@@ -254,6 +255,7 @@ export default class DependencyResolver {
     }
     this.manuallyAddDependencies();
     this.applyOverridesOnEnvPackages();
+    this.coreAspects = R.uniq(this.coreAspects);
   }
 
   addCustomResolvedIssues() {
@@ -877,7 +879,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     const bits = this.tree[originFile].bits;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
     const missingBits = this.tree[originFile]?.missing?.bits;
-    let usedCoreAspects: string[] = [];
+    const usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
       return coreAspectsPackages.find((coreAspectName) => packageName === coreAspectName);
@@ -911,15 +913,7 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
     this.tree[originFile].bits = bitsFiltered;
-    usedCoreAspects = R.uniq(usedCoreAspects);
-    this.pushCoreAspectsToDependencyResolver(usedCoreAspects);
-  }
-
-  pushCoreAspectsToDependencyResolver(usedCoreAspects: string[]) {
-    if (!usedCoreAspects || !usedCoreAspects.length) {
-      return;
-    }
-    this.pushToDependencyResolverExtension('coreAspects', usedCoreAspects, 'set');
+    this.coreAspects.push(...R.uniq(usedCoreAspects));
   }
 
   /**
@@ -985,35 +979,6 @@ either, use the ignore file syntax or change the require statement to have a mod
       this.allDependencies.devDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
-    }
-  }
-
-  pushToDependencyResolverExtension(dataFiled: string, data: any, operation: 'add' | 'set' = 'add') {
-    const depResolverAspectName = DependencyResolver.getDepResolverAspectName();
-    if (!depResolverAspectName) return;
-
-    let extExistOnComponent = true;
-    let ext = this.component.extensions.findCoreExtension(depResolverAspectName);
-    if (!ext) {
-      extExistOnComponent = false;
-      // Create new deps resolver extension entry to add to the component with data only
-      ext = new ExtensionDataEntry(undefined, undefined, depResolverAspectName, undefined, {});
-    }
-
-    if (!ext.data[dataFiled]) ext.data[dataFiled] = [];
-    if (operation === 'add') {
-      const existing = ext.data[dataFiled].find((c) => c.packageName === data.packageName);
-      if (existing) {
-        existing.componentId = data.componentId;
-      } else {
-        ext.data[dataFiled].push(data);
-      }
-    }
-    if (operation === 'set') {
-      ext.data[dataFiled] = data;
-    }
-    if (!extExistOnComponent) {
-      this.component.extensions.push(ext);
     }
   }
 
@@ -1288,7 +1253,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this.issues.missingPackagesDependenciesOnFs[originFile].concat(missingPackages);
     } else this.issues.missingPackagesDependenciesOnFs[originFile] = missingPackages;
   }
-  _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: BitId) {
+  _pushToMissingCustomModuleIssues(originFile: PathLinuxRelative, componentId: string) {
     if (this.issues.missingCustomModuleResolutionLinks[originFile]) {
       this.issues.missingCustomModuleResolutionLinks[originFile].push(componentId);
     } else this.issues.missingCustomModuleResolutionLinks[originFile] = [componentId];

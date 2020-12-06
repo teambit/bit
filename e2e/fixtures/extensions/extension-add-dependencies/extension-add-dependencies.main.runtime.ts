@@ -9,13 +9,13 @@ export class ExtensionAddDependenciesMain {
   static async provider([dependencyResolver]) {
     dependencyResolver.registerDependenciesPolicies({
       dependencies: {
-        'lodash.get': '1.0.0'
+        'lodash.get': '4.0.0'
       },
       devDependencies: {
-        'lodash.words': '1.0.0'
+        'lodash.words': '4.0.0'
       },
       peerDependencies: {
-        'lodash.set': '1.0.0'
+        'lodash.set': '4.0.0'
       }
     });
   }

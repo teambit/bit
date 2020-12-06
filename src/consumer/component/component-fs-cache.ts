@@ -1,50 +1,92 @@
 import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
-import { COMPONENTS_CACHE_ROOT } from '../../constants';
+import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
+import { PathOsBasedAbsolute } from '../../utils/path';
 
-const LAST_TRACK_CACHE_PATH = path.join(COMPONENTS_CACHE_ROOT, 'last-track');
-const DOCS_CACHE_PATH = path.join(COMPONENTS_CACHE_ROOT, 'docs');
+const WORKSPACE_CACHE = 'cache';
+const COMPONENTS_CACHE = 'components';
+const LAST_TRACK = 'last-track';
+const DOCS = 'docs';
+const DEPS = 'deps';
 
-export async function getLastTrackTimestamp(idStr: string): Promise<number> {
-  const results = await getFromCacheIfExist(LAST_TRACK_CACHE_PATH, idStr);
-  return results ? parseInt(results.data.toString()) : 0;
-}
+export class ComponentFsCache {
+  readonly basePath: PathOsBasedAbsolute;
+  private isNoFsCacheFeatureEnabled: boolean;
+  constructor(private scopePath: string) {
+    this.basePath = path.join(this.scopePath, WORKSPACE_CACHE, COMPONENTS_CACHE);
+    this.isNoFsCacheFeatureEnabled = isFeatureEnabled(NO_FS_CACHE_FEATURE);
+  }
 
-export async function setLastTrackTimestamp(idStr: string, timestamp: number): Promise<void> {
-  await cacache.put(LAST_TRACK_CACHE_PATH, idStr, Buffer.from(timestamp.toString()));
-}
+  async getLastTrackTimestamp(idStr: string): Promise<number> {
+    const results = await this.getFromCacheIfExist(LAST_TRACK, idStr);
+    return results ? parseInt(results.data.toString()) : 0;
+  }
 
-export async function getDocsFromCache(filePath: string): Promise<{ timestamp: number; data: string } | null> {
-  return getDataPerFileFromCache(filePath, DOCS_CACHE_PATH);
-}
+  async setLastTrackTimestamp(idStr: string, timestamp: number): Promise<void> {
+    await this.saveDataInCache(idStr, LAST_TRACK, Buffer.from(timestamp.toString()));
+  }
 
-export async function saveDocsInCache(filePath: string, docs: Record<string, any>) {
-  await saveDataPerFileInCache(filePath, DOCS_CACHE_PATH, docs);
-}
+  async getDocsFromCache(filePath: string): Promise<{ timestamp: number; data: string } | null> {
+    return this.getStringDataFromCache(filePath, DOCS);
+  }
 
-async function saveDataPerFileInCache(filePath: string, cachePath: string, data: any) {
-  const dataBuffer = Buffer.from(JSON.stringify(data));
-  const metadata = { timestamp: Date.now() };
-  await cacache.put(cachePath, filePath, dataBuffer, { metadata });
-}
+  async saveDocsInCache(filePath: string, docs: Record<string, any>) {
+    await this.saveStringDataInCache(filePath, DOCS, docs);
+  }
 
-async function getDataPerFileFromCache(
-  filePath: string,
-  cachePath: string
-): Promise<{ timestamp: number; data: string } | null> {
-  const results = await getFromCacheIfExist(cachePath, filePath);
-  if (!results) return null;
-  return { timestamp: results.metadata.timestamp, data: results.data.toString() };
-}
+  async getDependenciesDataFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
+    return this.getStringDataFromCache(idStr, DEPS);
+  }
 
-async function getFromCacheIfExist(cachePath: string, key: string): Promise<GetCacheObject | null> {
-  try {
-    const results = await cacache.get(cachePath, key);
-    return results;
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      return null; // cache doesn't exists
+  async saveDependenciesDataInCache(idStr: string, dependenciesData: string) {
+    const metadata = { timestamp: Date.now() };
+    await this.saveDataInCache(idStr, DEPS, dependenciesData, metadata);
+  }
+
+  async deleteAllDependenciesDataCache() {
+    await cacache.rm.all(this.getCachePath(DEPS));
+  }
+
+  async listDependenciesDataCache() {
+    return cacache.ls(this.getCachePath(DEPS));
+  }
+
+  private async saveStringDataInCache(key: string, cacheName: string, data: any) {
+    const dataBuffer = Buffer.from(JSON.stringify(data));
+    const metadata = { timestamp: Date.now() };
+    await this.saveDataInCache(key, cacheName, dataBuffer, metadata);
+  }
+
+  private async saveDataInCache(key: string, cacheName: string, data: any, metadata?: any) {
+    if (this.isNoFsCacheFeatureEnabled) return;
+    const cachePath = this.getCachePath(cacheName);
+    await cacache.put(cachePath, key, data, { metadata });
+  }
+
+  private async getStringDataFromCache(
+    key: string,
+    cacheName: string
+  ): Promise<{ timestamp: number; data: string } | null> {
+    const results = await this.getFromCacheIfExist(cacheName, key);
+    if (!results) return null;
+    return { timestamp: results.metadata.timestamp, data: results.data.toString() };
+  }
+
+  private async getFromCacheIfExist(cacheName: string, key: string): Promise<GetCacheObject | null> {
+    if (this.isNoFsCacheFeatureEnabled) return null;
+    const cachePath = this.getCachePath(cacheName);
+    try {
+      const results = await cacache.get(cachePath, key);
+      return results;
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        return null; // cache doesn't exists
+      }
+      throw err;
     }
-    throw err;
+  }
+
+  private getCachePath(cacheName: string) {
+    return path.join(this.basePath, cacheName);
   }
 }

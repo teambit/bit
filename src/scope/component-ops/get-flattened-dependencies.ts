@@ -1,5 +1,5 @@
 import graphlib, { Graph } from 'graphlib';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import R from 'ramda';
 
 import { Scope } from '..';
