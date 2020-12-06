@@ -102,7 +102,7 @@ export class DevFilesMain {
   /**
    * compute all dev files of a component.
    */
-  computeDevFiles(component: Component) {
+  computeDevFiles(component: Component): DevFiles {
     const devPatterns = this.computeDevPatterns(component);
     const rawDevFiles = Object.keys(devPatterns).reduce((acc, aspectId) => {
       if (!acc[aspectId]) acc[aspectId] = [];
@@ -140,14 +140,12 @@ export class DevFilesMain {
         };
       });
 
-      DependencyResolver.isDevFile = async (consumerComponent: LegacyComponent, file: string) => {
-        const component = await workspace.get(
-          await workspace.resolveComponentId(consumerComponent.id),
-          false,
-          consumerComponent
-        );
+      DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
+        const componentId = await workspace.resolveComponentId(consumerComponent.id);
+        const component = await workspace.get(componentId, false, consumerComponent, true, false);
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
-        return devFiles.isDevFile(component, file);
+        const computedDevFiles = devFiles.computeDevFiles(component);
+        return computedDevFiles.list();
       };
     }
 

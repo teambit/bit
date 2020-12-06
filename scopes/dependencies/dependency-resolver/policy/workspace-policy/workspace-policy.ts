@@ -67,6 +67,15 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     this._policiesEntries.push(entry);
   }
 
+  forEach(predicate: (dep: WorkspacePolicyEntry, index?: number) => void): void {
+    this.entries.forEach(predicate);
+  }
+
+  filter(predicate: (dep: WorkspacePolicyEntry, index?: number) => boolean): WorkspacePolicy {
+    const filtered = this.entries.filter(predicate);
+    return new WorkspacePolicy(filtered);
+  }
+
   find(depId: string): WorkspacePolicyEntry | undefined {
     const matchedEntry = this.entries.find((entry) => {
       return entry.dependencyId === depId;

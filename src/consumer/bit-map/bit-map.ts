@@ -743,6 +743,7 @@ export default class BitMap {
         ? componentMapCloned.id.changeVersion(componentMapCloned.defaultVersion)
         : componentMapCloned.id;
       const idStr = id.toString();
+      // @ts-ignore
       delete componentMapCloned?.id;
       components[idStr] = componentMapCloned.toPlainObject();
     });

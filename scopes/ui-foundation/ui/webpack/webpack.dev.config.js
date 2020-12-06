@@ -164,6 +164,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
           include: workspaceDir,
           loader: require.resolve('babel-loader'),
           options: {
+            configFile: false,
+            babelrc: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),

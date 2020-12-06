@@ -10,7 +10,7 @@ export class JestWorker {
     // return this;
   }
 
-  watch(jestConfigPath: string, testFiles: string[], rootPath: string) {
+  watch(jestConfigPath: string, testFiles: string[], rootPath: string): Promise<void> {
     return new Promise((resolve) => {
       // TODO: remove this after jest publish new version to npm: https://github.com/facebook/jest/pull/10804
       // eslint-disable-next-line

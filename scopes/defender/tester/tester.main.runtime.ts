@@ -122,9 +122,12 @@ export class TesterMain {
     return this.watch(components, { watch: true, debug: false, ui: true });
   }
 
-  getTestsResults(component: Component): { testsResults?: TestsResult; loading: boolean } | undefined {
+  async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
-    if (entry && !component.isModified) return entry?.data.tests;
+    const isModified = await component.isModified();
+    if (entry && !isModified) {
+      return { testsResults: entry?.data.tests, loading: false };
+    }
     return this.getTestsResultsFromState(component);
   }
 

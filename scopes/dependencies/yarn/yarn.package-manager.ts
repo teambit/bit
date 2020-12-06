@@ -12,8 +12,8 @@ import {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from '@teambit/dependency-resolver';
-import { ComponentMap } from '@teambit/component';
-import { existsSync, removeSync } from 'fs-extra';
+import { ComponentMap, Component } from '@teambit/component';
+import fs from 'fs-extra';
 import { join, resolve } from 'path';
 import {
   Workspace,
@@ -33,6 +33,10 @@ import npmPlugin from '@yarnpkg/plugin-npm';
 import { PkgMain } from '@teambit/pkg';
 import userHome from 'user-home';
 import { Logger } from '@teambit/logger';
+
+type BackupJsons = {
+  [path: string]: Buffer | undefined;
+};
 
 export class YarnPackageManager implements PackageManager {
   constructor(private depResolver: DependencyResolverMain, private pkg: PkgMain, private logger: Logger) {}
@@ -93,6 +97,8 @@ export class YarnPackageManager implements PackageManager {
     this.setupWorkspaces(project, workspaces.concat(rootWs));
 
     const cache = await Cache.find(config);
+    const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
+
     const installReport = await StreamReport.start(
       {
         stdout: process.stdout,
@@ -100,6 +106,9 @@ export class YarnPackageManager implements PackageManager {
       },
       async (report) => {
         await project.install({
+          // this should be uncomment in order to not mutate the root package.json and / or the package json in components
+          // Currently it's commented since it produce an error in the link step of "Error: Manifest not found"
+          // persistProject: false,
           cache,
           report,
         });
@@ -110,24 +119,62 @@ export class YarnPackageManager implements PackageManager {
 
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.
-    this.clean(rootDir, componentDirectoryMap, installOptions);
+    // see the persistProject: false above
+    await this.restorePackageJsons(existingPackageJsons);
     this.logger.consoleSuccess('installing dependencies');
   }
 
-  private clean(
-    rootDir: string,
-    componentDirectoryMap: ComponentMap<string>,
-    installOptions: PackageManagerInstallOptions
-  ) {
-    return componentDirectoryMap.toArray().forEach(([component, dir]) => {
-      const packageName = this.pkg.getPackageName(component);
-      const modulePath = resolve(join(rootDir, 'node_modules', packageName));
-      const packageJsonPath = resolve(join(dir, 'package.json'));
-      if (!installOptions.cacheRootDir) removeSync(packageJsonPath);
-      const exists = existsSync(modulePath);
-      if (!exists) return; // TODO: check if this can be done through the yarn API.
-      removeSync(modulePath);
+  private getPackageJsonPath(dir: string): string {
+    const packageJsonPath = join(dir, 'package.json');
+    return packageJsonPath;
+  }
+
+  private async backupPackageJsons(rootDir: string, componentDirectoryMap: ComponentMap<string>): Promise<BackupJsons> {
+    const result: BackupJsons = {};
+    const rootPackageJsonPath = this.getPackageJsonPath(rootDir);
+    result[rootPackageJsonPath] = await this.getFileToBackup(rootPackageJsonPath);
+    const componentsBackupsP = componentDirectoryMap.toArray().map(async ([component, dir]) => {
+      const { packageJsonPath, file } = await this.getComponentPackageJsonToBackup(component, dir);
+      result[packageJsonPath] = file;
     });
+    await Promise.all(componentsBackupsP);
+    return result;
+  }
+
+  private async restorePackageJsons(backupJsons: BackupJsons): Promise<void | undefined> {
+    const promises = Object.entries(backupJsons).map(async ([packageJsonPath, file]) => {
+      const exists = await fs.pathExists(packageJsonPath);
+      // if there is no backup it means it wasn't there before and should be deleted
+      if (!file) {
+        if (exists) {
+          return fs.remove(packageJsonPath);
+        }
+        return undefined;
+      }
+      return fs.writeFile(packageJsonPath, file);
+    });
+    await Promise.all(promises);
+  }
+
+  private async getFileToBackup(packageJsonPath: string): Promise<Buffer | undefined> {
+    const exists = await fs.pathExists(packageJsonPath);
+    if (!exists) {
+      return undefined;
+    }
+    const existingFile = await fs.readFile(packageJsonPath);
+    return existingFile;
+  }
+
+  private async getComponentPackageJsonToBackup(
+    component: Component,
+    dir: string
+  ): Promise<{ packageJsonPath: string; file: Buffer | undefined }> {
+    const packageJsonPath = resolve(join(dir, 'package.json'));
+    const result = {
+      packageJsonPath,
+      file: await this.getFileToBackup(packageJsonPath),
+    };
+    return result;
   }
 
   private async createWorkspace(rootDir: string, project: Project, manifest: any) {

@@ -6,11 +6,12 @@ import { compact } from 'ramda-adjunct';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from 'bit-bin/dist/utils';
+import { ComponentNotFound } from 'bit-bin/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import { merge } from 'lodash';
+import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
@@ -50,16 +51,24 @@ export class WorkspaceComponentLoader {
     return filteredComponents;
   }
 
-  async get(componentId: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
+  async get(
+    componentId: ComponentID,
+    forCapsule = false,
+    legacyComponent?: ConsumerComponent,
+    useCache = true,
+    storeInCache = true
+  ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(this.workspace.consumer.bitmapIds, componentId._legacy);
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, forCapsule);
-    if (fromCache) {
+    if (fromCache && useCache) {
       return fromCache;
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     const component = await this.loadOne(id, consumerComponent);
-    this.saveInCache(component, forCapsule);
+    if (storeInCache) {
+      this.saveInCache(component, forCapsule);
+    }
     return component;
   }
 
@@ -117,8 +126,17 @@ export class WorkspaceComponentLoader {
         ? await this.workspace.consumer.loadComponentForCapsule(id._legacy)
         : await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err) {
+      // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
+      // file is missing) it returns the model component later unexpectedly, or if it's new, it
+      // shows MissingBitMapComponent error incorrectly.
       this.logger.error(`failed loading component ${id.toString()}`, err);
-      return undefined;
+      if (
+        err instanceof ComponentNotFound ||
+        err instanceof MissingBitMapComponent ||
+        err instanceof ComponentNotFoundInPath
+      )
+        return undefined;
+      throw err;
     }
   }
 
@@ -157,7 +175,8 @@ export class WorkspaceComponentLoader {
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     const existingExtension = component.state.config.extensions.findExtension(extension);
     if (existingExtension) {
-      existingExtension.data = merge(existingExtension.data, data);
+      // Only merge top level of extension data
+      Object.assign(existingExtension.data, data);
       return;
     }
     component.state.config.extensions.push(await this.getDataEntry(extension, data));

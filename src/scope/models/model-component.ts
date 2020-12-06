@@ -603,7 +603,9 @@ export default class Component extends BitObject {
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile: version.mainFile || null,
+      // @ts-ignore
       compiler,
+      // @ts-ignore
       tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
@@ -614,10 +616,13 @@ export default class Component extends BitObject {
       peerPackageDependencies: clone(version.peerPackageDependencies),
       compilerPackageDependencies: clone(version.compilerPackageDependencies),
       testerPackageDependencies: clone(version.testerPackageDependencies),
+      // @ts-ignore
       files,
+      // @ts-ignore
       dists,
       mainDistFile: version.mainDistFile,
       docs: version.docs,
+      // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       // @ts-ignore
       specsResults: version.specsResults ? version.specsResults.map((res) => SpecsResults.deserialize(res)) : null,

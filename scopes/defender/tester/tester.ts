@@ -28,9 +28,9 @@ export interface TesterContext extends ExecutionContext {
   // workspace: Workspace;
 
   /**
-   * defines whether tester is expected to run in quite mode.
+   * defines whether tester is expected to run in quiet mode.
    */
-  quite?: boolean;
+  quiet?: boolean;
 
   /**
    * list of spec files to test.
@@ -50,8 +50,12 @@ export interface TesterContext extends ExecutionContext {
   /**
    * is start from ui
    */
-
   ui?: boolean;
+
+  /**
+   * determines whether to start the tester in watch mode.
+   */
+  watch?: boolean;
 }
 
 /**
