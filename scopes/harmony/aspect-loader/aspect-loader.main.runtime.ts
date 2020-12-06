@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
-import { Component } from '@teambit/component';
-import { ExtensionManifest, Harmony, Aspect } from '@teambit/harmony';
+import { Component, ComponentID } from '@teambit/component';
+import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-
+import mapSeries from 'p-map-series';
 import { difference } from 'ramda';
 import { AspectDefinition, AspectDefinitionProps } from './aspect-definition';
 import { AspectLoaderAspect } from './aspect-loader.aspect';
@@ -32,6 +32,9 @@ export type ResolvedAspect = {
   aspectPath: string;
   runtimesPath: string | null;
 };
+
+type OnAspectLoadError = (err: Error, id: ComponentID) => Promise<boolean>;
+export type OnAspectLoadErrorSlot = SlotRegistry<OnAspectLoadError>;
 
 export type MainAspect = {
   /**
@@ -66,11 +69,34 @@ export type MainAspect = {
 };
 
 export class AspectLoaderMain {
-  constructor(private logger: Logger, private envs: EnvsMain, private harmony: Harmony) {}
+  constructor(
+    private logger: Logger,
+    private envs: EnvsMain,
+    private harmony: Harmony,
+    private onAspectLoadErrorSlot: OnAspectLoadErrorSlot
+  ) {}
 
-  private async getCompiler(component: Component) {
+  private getCompiler(component: Component) {
     const env = this.envs.getEnv(component)?.env;
     return env?.getCompiler();
+  }
+
+  registerOnAspectLoadErrorSlot(onAspectLoadError: OnAspectLoadError) {
+    this.onAspectLoadErrorSlot.register(onAspectLoadError);
+  }
+
+  /**
+   * returns whether the aspect-load issue has been fixed.
+   */
+  async triggerOnAspectLoadError(err: Error, component: Component): Promise<boolean> {
+    const entries = this.onAspectLoadErrorSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onAspectLoadError] ] ]
+    let isFixed = false;
+    await mapSeries(entries, async ([, onAspectFailFunc]) => {
+      const result = await onAspectFailFunc(err, component.id);
+      if (result) isFixed = true;
+    });
+
+    return isFixed;
   }
 
   async getRuntimePath(component: Component, modulePath: string, runtime: string): Promise<string | null> {
@@ -80,7 +106,7 @@ export class AspectLoaderMain {
 
     // @david we should add a compiler api for this.
     if (!runtimeFile) return null;
-    const compiler = await this.getCompiler(component);
+    const compiler = this.getCompiler(component);
     const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
 
     return join(modulePath, dist);
@@ -211,29 +237,41 @@ export class AspectLoaderMain {
    * in some cases, such as "bit tag", it's better not to tag if an extension changes the model.
    */
   async loadRequireableExtensions(requireableExtensions: RequireableComponent[], throwOnError = false): Promise<void> {
+    const doRequire = async (requireableExtension: RequireableComponent, idStr: string) => {
+      const aspect = await requireableExtension.require();
+      const manifest = aspect.default || aspect;
+      manifest.id = idStr;
+      return manifest;
+    };
     const manifestsP = requireableExtensions.map(async (requireableExtension) => {
       if (!requireableExtensions) return undefined;
-      const id = requireableExtension.component.id.toString();
+      const idStr = requireableExtension.component.id.toString();
       try {
-        // TODO: @gilad compile before or skip running on bit compile? we need to do this properly
-        const aspect = await requireableExtension.require();
-        const manifest = aspect.default || aspect;
-        manifest.id = id;
-        return manifest;
+        return await doRequire(requireableExtension, idStr);
       } catch (e) {
-        this.addFailure(id);
-        const errorMsg = UNABLE_TO_LOAD_EXTENSION(id);
+        this.addFailure(idStr);
+        const errorMsg = UNABLE_TO_LOAD_EXTENSION(idStr);
+        this.logger.error(errorMsg, e);
+        const isFixed = await this.triggerOnAspectLoadError(e, requireableExtension.component);
+        let errAfterReLoad;
+        if (isFixed) {
+          this.logger.info(`the loading issue has been fixed, re-loading ${idStr}`);
+          try {
+            return await doRequire(requireableExtension, idStr);
+          } catch (err) {
+            this.logger.error('re-load of the aspect failed as well', err);
+            errAfterReLoad = err;
+          }
+        }
+        const error = errAfterReLoad || e;
+        if (throwOnError) {
+          throw new CannotLoadExtension(idStr, error);
+        }
         if (this.logger.isLoaderStarted) {
           this.logger.consoleFailure(errorMsg);
-        }
-        this.logger.error(errorMsg, e);
-        if (throwOnError) {
-          // console.log(e);
-          throw new CannotLoadExtension(id, e);
-        }
-        if (!this.logger.isLoaderStarted) {
+        } else {
           this.logger.console(errorMsg);
-          this.logger.console(e.message);
+          this.logger.console(error.message);
         }
       }
       return undefined;
@@ -289,10 +327,16 @@ export class AspectLoaderMain {
 
   static runtime = MainRuntime;
   static dependencies = [LoggerAspect, EnvsAspect];
+  static slots = [Slot.withType<OnAspectLoadError>()];
 
-  static async provider([loggerExt, envs]: [LoggerMain, EnvsMain], config, slots, harmony: Harmony) {
+  static async provider(
+    [loggerExt, envs]: [LoggerMain, EnvsMain],
+    config,
+    [onAspectLoadErrorSlot]: [OnAspectLoadErrorSlot],
+    harmony: Harmony
+  ) {
     const logger = loggerExt.createLogger(AspectLoaderAspect.id);
-    const aspectLoader = new AspectLoaderMain(logger, envs, harmony);
+    const aspectLoader = new AspectLoaderMain(logger, envs, harmony, onAspectLoadErrorSlot);
     return aspectLoader;
   }
 }

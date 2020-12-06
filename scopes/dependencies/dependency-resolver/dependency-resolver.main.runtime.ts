@@ -29,9 +29,10 @@ import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries, Registry } from './registry';
 import { ROOT_NAME } from './dependencies/constants';
-import { BitLinkType, DependencyInstaller } from './dependency-installer';
+import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
+import { DependencyLinker, LinkingOptions } from './dependency-linker';
 import { PackageManagerNotFound } from './exceptions';
 import {
   CreateFromComponentsOptions,
@@ -102,29 +103,19 @@ export interface DependencyResolverVariantConfig {
 export type PoliciesRegistry = SlotRegistry<VariantPolicyConfigObject>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
+export type PreInstallSlot = SlotRegistry<PreInstallSubscriberList>;
+export type PostInstallSlot = SlotRegistry<PostInstallSubscriberList>;
 
 export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<VariantPolicyConfigObject>;
-
-export type BitExtendedLinkType = 'none' | BitLinkType;
-
-export type LinkingOptions = {
-  /**
-   * How to create the link from the root dir node modules to @teambit/bit -
-   * none - don't create it at all
-   * link - use symlink to the global installation dir
-   * install - use package manager to install it
-   */
-  bitLinkType?: BitExtendedLinkType;
-  /**
-   * Whether to create links in the root dir node modules to all core aspects
-   */
-  linkCoreAspects?: boolean;
-};
 
 export type GetInstallerOptions = {
   rootDir?: string;
   packageManager?: string;
   cacheRootDirectory?: string;
+};
+
+export type GetLinkerOptions = {
+  rootDir?: string;
   linkingOptions?: LinkingOptions;
 };
 
@@ -133,7 +124,8 @@ export type GetVersionResolverOptions = {
 };
 
 const defaultLinkingOptions: LinkingOptions = {
-  bitLinkType: 'link',
+  legacyLink: true,
+  linkTeambitBit: true,
   linkCoreAspects: true,
 };
 
@@ -167,7 +159,11 @@ export class DependencyResolverMain {
 
     private packageManagerSlot: PackageManagerSlot,
 
-    private dependencyFactorySlot: DependencyFactorySlot
+    private dependencyFactorySlot: DependencyFactorySlot,
+
+    private preInstallSlot: PreInstallSlot,
+
+    private postInstallSlot: PostInstallSlot
   ) {}
 
   /**
@@ -179,6 +175,14 @@ export class DependencyResolverMain {
 
   registerDependencyFactories(factories: DependencyFactory[]) {
     this.dependencyFactorySlot.register(factories);
+  }
+
+  registerPreInstallSubscribers(subscribers: PreInstallSubscriberList) {
+    this.preInstallSlot.register(subscribers);
+  }
+
+  registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
+    this.postInstallSlot.register(subscribers);
   }
 
   /**
@@ -302,9 +306,35 @@ export class DependencyResolverMain {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
+    const preInstallSubscribers = this.getPreInstallSubscribers();
+    const postInstallSubscribers = this.getPostInstallSubscribers();
+    // TODO: we should somehow pass the cache root dir to the package manager constructor
+    return new DependencyInstaller(
+      packageManager,
+      this.aspectLoader,
+      this.logger,
+      options.rootDir,
+      cacheRootDir,
+      preInstallSubscribers,
+      postInstallSubscribers
+    );
+  }
+
+  private getPreInstallSubscribers(): PreInstallSubscriberList {
+    return flatten(this.preInstallSlot.values());
+  }
+
+  private getPostInstallSubscribers(): PostInstallSubscriberList {
+    return flatten(this.postInstallSlot.values());
+  }
+
+  /**
+   * get a component dependency linker.
+   */
+  getLinker(options: GetLinkerOptions = {}) {
     const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyInstaller(packageManager, this.aspectLoader, options.rootDir, cacheRootDir, linkingOptions);
+    return new DependencyLinker(this.aspectLoader, this.logger, options.rootDir, linkingOptions);
   }
 
   getPackageManagerName() {
@@ -500,6 +530,8 @@ export class DependencyResolverMain {
     Slot.withType<PackageManager>(),
     Slot.withType<RegExp>(),
     Slot.withType<DependencyFactory>(),
+    Slot.withType<PreInstallSubscriberList>(),
+    Slot.withType<PostInstallSubscriberList>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
@@ -522,10 +554,12 @@ export class DependencyResolverMain {
       ComponentMain
     ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot, dependencyFactorySlot]: [
+    [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
       PoliciesRegistry,
       PackageManagerSlot,
-      DependencyFactorySlot
+      DependencyFactorySlot,
+      PreInstallSlot,
+      PostInstallSlot
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
@@ -538,7 +572,9 @@ export class DependencyResolverMain {
       configMain,
       aspectLoader,
       packageManagerSlot,
-      dependencyFactorySlot
+      dependencyFactorySlot,
+      preInstallSlot,
+      postInstallSlot
     );
 
     componentAspect.registerShowFragments([

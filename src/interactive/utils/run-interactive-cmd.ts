@@ -78,7 +78,7 @@ export default (async function runInteractive({
 
   let currentInputTimeout;
 
-  const writePromiseTimeout = async (input: InteractiveInput) => {
+  const writePromiseTimeout = async (input: InteractiveInput): Promise<void> => {
     return new Promise((resolve) => {
       const timeout = input.waitInput || actualDefaultIntervalBetweenInputs;
       const inputValue = typeof input.value === 'string' ? input.value : input.value.value;

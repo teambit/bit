@@ -9,7 +9,7 @@ const presets = [
     require('@babel/preset-env'),
     {
       targets: {
-        node: 8,
+        node: 12,
       },
       useBuiltIns: 'usage',
       corejs: 3,
@@ -28,6 +28,7 @@ const plugins = [
 module.exports = {
   process(src, filename) {
     const result = transform(src, {
+      sourceMap: 'inline',
       filename,
       presets,
       plugins,

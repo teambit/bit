@@ -127,7 +127,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js'],
+      extensions: ['.ts', '.tsx', '.js', '.mdx'],
     },
 
     plugins: [

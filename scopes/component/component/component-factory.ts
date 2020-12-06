@@ -24,6 +24,11 @@ export interface ComponentFactory {
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
 
   /**
+   * resolve multiple `string` component ID to an instance of a ComponentID.
+   */
+  resolveMultipleComponentIds(ids: (string | ComponentID | BitId)[]): Promise<ComponentID[]>;
+
+  /**
    * returns a component by ID.
    */
   get(

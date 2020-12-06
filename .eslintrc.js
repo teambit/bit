@@ -46,7 +46,11 @@ module.exports = {
       { functions: false, classes: true, variables: true, typedefs: true },
     ],
     '@typescript-eslint/no-floating-promises': 'error',
-
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/ban-ts-comment': 'off',
+    '@typescript-eslint/ban-types': 'off',
+    'no-shadow': 'off',
+    '@typescript-eslint/no-shadow': ['error'],
     // ERRORS OF plugin:@typescript-eslint/recommended
     '@typescript-eslint/no-var-requires': 'off',
     '@typescript-eslint/ban-ts-ignore': 'off',

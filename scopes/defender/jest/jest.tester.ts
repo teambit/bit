@@ -78,7 +78,10 @@ export class JestTester implements Tester {
           );
         });
         const filePath = file?.relative || test.testFilePath;
-        const error = { failureMessage: test.failureMessage, error: test.testExecError?.message };
+        const error = {
+          failureMessage: test.testExecError ? test.failureMessage : undefined,
+          error: test.testExecError?.message,
+        };
         return new TestsFiles(
           filePath,
           testResults,
@@ -120,7 +123,16 @@ export class JestTester implements Tester {
       rootDir: context.rootPath,
     };
 
+    // eslint-disable-next-line no-console
+    console.warn = (message: string) => {
+      this.logger.warn(message);
+    };
+
     if (context.debug) config.runInBand = true;
+    if (context.watch) {
+      config.watchAll = true;
+      config.noCache = true;
+    }
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
     const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {

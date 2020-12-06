@@ -7,7 +7,7 @@ import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { Scope } from 'bit-bin/dist/scope';
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import execa from 'execa';
 import R from 'ramda';
 import { PkgAspect } from './pkg.aspect';
@@ -42,7 +42,7 @@ export class Publisher {
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = Bluebird.mapSeries(capsules, (capsule) => {
+    const results = mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
       return this.publishOneCapsule(capsule);
     });

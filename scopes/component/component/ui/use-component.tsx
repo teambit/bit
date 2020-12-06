@@ -12,6 +12,7 @@ export type Component = {
 
 export function useComponent(host: string, id?: ComponentID): Component {
   const {
+    // @ts-ignore
     params: { componentId },
   } = useRouteMatch();
   const query = useQuery();

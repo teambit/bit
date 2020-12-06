@@ -1,0 +1,21 @@
+.previewContainer {
+  overflow: hidden;
+  padding-bottom: 57%;
+  height: 0;
+  position: relative;
+  pointer-events: none;
+  border-radius: 5px;
+}
+.preview {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-color, #ededed);
+}
+
+.emptyPreview {
+  background-color: var(--border-color, #ededed);
+}

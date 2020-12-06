@@ -1,3 +1,4 @@
+import { stringify, parse } from 'flatted';
 import { expose } from '@teambit/worker';
 import { runCLI } from 'jest';
 
@@ -9,7 +10,7 @@ export class JestWorker {
     // return this;
   }
 
-  watch(jestConfigPath: string, testFiles: string[], rootPath: string) {
+  watch(jestConfigPath: string, testFiles: string[], rootPath: string): Promise<void> {
     return new Promise((resolve) => {
       // TODO: remove this after jest publish new version to npm: https://github.com/facebook/jest/pull/10804
       // eslint-disable-next-line
@@ -23,7 +24,9 @@ export class JestWorker {
 
       const config: any = {
         // useStderr: true,
-        silent: true,
+        // TODO: check way to enable it
+        runInBand: true,
+        silent: false,
         rootDir: rootPath,
         watch: true,
         watchAll: true,
@@ -34,7 +37,8 @@ export class JestWorker {
               specFiles: testFiles,
               onComplete: (results) => {
                 if (!this.onTestCompleteCb) return;
-                this.onTestCompleteCb(results);
+                const json = parse(stringify(results));
+                this.onTestCompleteCb(json);
               },
             },
           ],

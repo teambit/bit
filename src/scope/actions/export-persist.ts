@@ -2,6 +2,7 @@ import { Scope } from '..';
 import { BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { mergeObjects } from '../component-ops/export-scope-components';
+import { Lane } from '../models';
 import { Action } from './action';
 
 type Options = { clientId: string };
@@ -21,9 +22,15 @@ export class ExportPersist implements Action<Options, string[]> {
 
     const componentsIds: string[] = bitIds.map((id) => id.toString());
     await scope.removePendingDir(options.clientId);
-    if (ExportPersist.onPutHook) ExportPersist.onPutHook(componentsIds);
+    if (ExportPersist.onPutHook) {
+      const lanes = (await objectList.toBitObjects()).getLanes();
+      ExportPersist.onPutHook(componentsIds, lanes).catch((err) => {
+        logger.error('fatal: onPutHook encountered an error (this error does not stop the process)', err);
+        // let the process continue. we don't want to stop it when onPutHook failed.
+      });
+    }
     return componentsIds;
   }
 
-  static onPutHook: (ids: string[]) => void;
+  static onPutHook: (ids: string[], lanes: Lane[]) => Promise<void>;
 }

@@ -7,7 +7,7 @@ import {
   isMatchPatternItem,
   MATCH_ALL_ITEM,
   sortMatchesBySpecificity,
-} from './variants.main.runtime';
+} from './match-pattern';
 
 describe('isMatchDirPatternItem', () => {
   describe('item is matched', () => {
