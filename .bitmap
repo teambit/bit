@@ -3288,8 +3288,68 @@
                 "test": false
             },
             {
+                "name": "card.module.scss",
+                "relativePath": "card/card.module.scss",
+                "test": false
+            },
+            {
+                "name": "card.tsx",
+                "relativePath": "card/card.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "card/index.ts",
+                "test": false
+            },
+            {
+                "name": "deprecation-sticker.module.scss",
+                "relativePath": "deprecation-sticker/deprecation-sticker.module.scss",
+                "test": false
+            },
+            {
+                "name": "deprecation-sticker.tsx",
+                "relativePath": "deprecation-sticker/deprecation-sticker.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "deprecation-sticker/index.ts",
+                "test": false
+            },
+            {
+                "name": "details.module.scss",
+                "relativePath": "details/details.module.scss",
+                "test": false
+            },
+            {
+                "name": "details.tsx",
+                "relativePath": "details/details.tsx",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "details/index.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "preview-container/index.ts",
+                "test": false
+            },
+            {
+                "name": "preview-container.module.scss",
+                "relativePath": "preview-container/preview-container.module.scss",
+                "test": false
+            },
+            {
+                "name": "preview-container.tsx",
+                "relativePath": "preview-container/preview-container.tsx",
                 "test": false
             }
         ],
