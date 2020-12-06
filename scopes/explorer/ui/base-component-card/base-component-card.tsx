@@ -1,4 +1,4 @@
-import React, { ComponentType } from 'react';
+import React from 'react';
 import { Link } from '@teambit/ui.routing.link';
 import { PreviewContainer } from './preview-container';
 import { DeprecationSticker } from './deprecation-sticker';
@@ -36,10 +36,6 @@ export type BaseComponentCardProps = {
    * true if the component is deprecated
    */
   isDeprecated?: boolean;
-  /**
-   * avatar component
-   */
-  avatar?: ComponentType;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function BaseComponentCard({
@@ -50,7 +46,6 @@ export function BaseComponentCard({
   description,
   isDeprecated,
   children,
-  avatar,
   contentClass,
 }: BaseComponentCardProps) {
   return (
@@ -58,7 +53,6 @@ export function BaseComponentCard({
       <Link href={id} className={styles.link}>
         <DeprecationSticker isDeprecated={isDeprecated} />
         <PreviewContainer preview={preview} />
-        <div className={styles.avatarContainer}>{avatar}</div>
         <ComponentDetails id={id} version={version} description={description} className={contentClass} />
         {children}
       </Link>

@@ -10,7 +10,7 @@ export type ComponentDetailsProps = {
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ComponentDetails({ id, version, description, className, ...rest }: ComponentDetailsProps) {
-  const idArray = id.split('/');
+  const idArray = id.split('/'); // TODO - use component id once it is a separate component
   const nameSpace = idArray.length > 1 && idArray.slice(0, -1).join(' / ');
   const name = idArray.slice(-1);
   return (
