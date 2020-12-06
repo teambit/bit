@@ -50,7 +50,7 @@ import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/d
 import BluebirdPromise from 'bluebird';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice } from 'lodash';
+import { slice, groupBy } from 'lodash';
 import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
@@ -825,15 +825,21 @@ export class Workspace implements ComponentFactory {
     }
   }
 
-  async resolveAspects(runtimeName: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
     const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
     const componentIdsToResolve = await this.resolveMultipleComponentIds(userAspectsIds);
-    const components = await this.getMany(componentIdsToResolve);
-    const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
+    const groupedByHost = groupBy(componentIdsToResolve, (id) => {
+      if (this.hasId(id)) {
+        return 'workspace';
+      }
+      return 'scope';
+    });
+    const wsComponents = await this.getMany(groupedByHost.workspace);
+    const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
@@ -844,11 +850,13 @@ export class Workspace implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimePath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
       };
     });
 
-    const coreAspectDefs = await Promise.all(
+    const scopeAspectDefs = await this.scope.resolveAspects(runtimeName, groupedByHost.scope);
+
+    let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
         const rawDef = await getAspectDef(coreId, runtimeName);
         return this.aspectLoader.loadDefinition(rawDef);
@@ -856,15 +864,17 @@ export class Workspace implements ComponentFactory {
     );
 
     // due to lack of workspace and scope runtimes. TODO: fix after adding them.
-    const workspaceAspects = coreAspectDefs.filter((coreAspect) => {
-      return coreAspect.runtimePath;
-    });
+    if (runtimeName) {
+      coreAspectDefs = coreAspectDefs.filter((coreAspect) => {
+        return coreAspect.runtimePath;
+      });
+    }
 
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs.concat(workspaceAspects);
+    return aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
   }
 
   /**

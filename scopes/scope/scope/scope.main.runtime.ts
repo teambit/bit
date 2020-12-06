@@ -211,18 +211,18 @@ export class ScopeMain implements ComponentFactory {
     this.localAspects = this.localAspects.concat(localAspects);
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
-    const componentIds = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return;
     const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
     // Always throw an error when can't load scope extension
     await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
   }
 
-  private async resolveLocalAspects(ids: string[], runtime: string) {
+  private async resolveLocalAspects(ids: string[], runtime?: string) {
     const dirs = this.parseLocalAspect(ids);
 
     return dirs.map((dir) => {
-      const runtimeManifest = this.findRuntime(dir, runtime);
+      const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       return new AspectDefinition(dir, runtimeManifest ? join(dir, 'dist', runtimeManifest) : null);
     });
   }
@@ -249,14 +249,12 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async resolveAspects(runtimeName: string) {
-    const userAspectsIds = this.aspectLoader.getUserAspects();
+  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      const id = ComponentID.fromString(aspectId);
-      return this.localAspects.includes(id.fullName.replace('/', '.'));
+      return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
     });
-    const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
-    const components = await this.getMany(componentIds);
+    const components = await this.getMany(withoutLocalAspects);
     const capsules = await this.isolator.isolateComponents(
       components,
       { baseDir: this.path, skipIfExists: true },
@@ -269,7 +267,7 @@ export class ScopeMain implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimePath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
       };
     });
 

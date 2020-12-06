@@ -172,7 +172,7 @@ export class AspectLoaderMain {
     return difference(this.harmony.extensionsIds, coreAspectIds);
   }
 
-  async getCoreAspectDefs(runtimeName: string) {
+  async getCoreAspectDefs(runtimeName?: string) {
     const defs = await Promise.all(
       this.coreAspects.map(async (aspect) => {
         const id = aspect.id;

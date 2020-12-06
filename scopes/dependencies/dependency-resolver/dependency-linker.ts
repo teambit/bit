@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from 'bit-bin/dist/api/consumer';
-import { ComponentMap, Component } from '@teambit/component';
+import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { BitError } from 'bit-bin/dist/error/bit-error';
@@ -57,6 +57,8 @@ export class DependencyLinker {
 
     private aspectLoader: AspectLoaderMain,
 
+    private componentAspect: ComponentMain,
+
     private envs: EnvsMain,
 
     private logger: Logger,
@@ -85,6 +87,9 @@ export class DependencyLinker {
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }
+
+    // Link deps which should be linked to the env
+    await this.linkDepsResolvedFromEnv(componentDirectoryMap);
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
@@ -116,25 +121,41 @@ export class DependencyLinker {
     return result;
   }
 
-  private linkDepsResolvedFromEnv(componentDirectoryMap: ComponentMap<string>) {
-    const links: { src: string; dest: string }[] = [];
-    componentDirectoryMap.map(async (dir, comp) => {
-      const policy = await this.dependencyResolver.getPolicy(comp);
+  private async linkDepsResolvedFromEnv(componentDirectoryMap: ComponentMap<string>): Promise<void[][]> {
+    // const links: { src: string; dest: string }[] = [];
+    let allLinksP: Promise<void[]>[] = [];
+    // const cache = {};
+    allLinksP = componentDirectoryMap.toArray().map(async ([component, dir]) => {
+      const policy = await this.dependencyResolver.getPolicy(component);
       const resolvedFromEnv = policy.getResolvedFromEnv();
       // Nothing should be resolved from env, do nothing
       if (!resolvedFromEnv.length) {
-        return;
+        return [];
       }
-      return resolvedFromEnv.entries.map((depEntry) => {
+      const linksP = resolvedFromEnv.entries.map(async (depEntry) => {
         const linkSrc = path.join(dir, 'node_modules', depEntry.dependencyId);
-
-        // const linkTarget =
+        const envDir = await this.getResolvedEnvDir(component);
+        const linkTarget = resolveModuleFromDir(envDir, depEntry.dependencyId);
+        if (!linkTarget) {
+          this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
+        } else {
+          this.logger.info(
+            `linking dependency ${depEntry.dependencyId} from env directory ${envDir}. link src: ${linkSrc} link target: ${linkTarget}`
+          );
+          return createSymlinkOrCopy(linkSrc, linkTarget);
+        }
       });
+      return Promise.all(linksP);
     });
+    return Promise.all(allLinksP);
   }
 
-  private getResolvedEnvDir(component: Component): string {
+  private async getResolvedEnvDir(component: Component): Promise<string> {
     const env = this.envs.getEnv(component);
+    const host = this.componentAspect.getHost();
+    const envId = await host.resolveComponentId(env.id);
+    const resolved = host.resolveAspects(undefined, [envId])[0];
+    return resolved.aspectPath;
   }
 
   private async linkBitAspectIfNotExist(
