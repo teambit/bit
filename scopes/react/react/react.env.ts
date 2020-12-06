@@ -106,10 +106,10 @@ export class ReactEnv implements Environment {
   }
 
   getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    return this.multiCompiler.createCompiler([
-      this.createTsCompiler(targetConfig, compilerOptions, tsModule),
-      this.mdx.createCompiler(),
-    ]);
+    return this.multiCompiler.createCompiler(
+      [this.createTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
+      compilerOptions
+    );
   }
 
   /**

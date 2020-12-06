@@ -1,5 +1,5 @@
 import { join, extname } from 'path';
-import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
+import { Compiler, CompilerOptions, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/modules.merge-component-results';
 
@@ -10,9 +10,29 @@ export type MultiCompilerOptions = {
 export class MultiCompiler implements Compiler {
   displayName = 'Multi compiler';
 
+  shouldCopyNonSupportedFiles = this.compilerOptions.shouldCopyNonSupportedFiles || true;
+
   distDir = 'dist';
 
-  constructor(readonly id: string, readonly compilers: Compiler[], readonly options: MultiCompilerOptions = {}) {}
+  constructor(
+    readonly id: string,
+    readonly compilers: Compiler[],
+    readonly compilerOptions: Partial<CompilerOptions> = {},
+    readonly options: MultiCompilerOptions = {}
+  ) {}
+
+  getArtifactDefinition() {
+    return [
+      {
+        generatedBy: this.id,
+        name: this.compilerOptions.artifactName || 'dist',
+        globPatterns: this.compilerOptions.distGlobPatterns || [
+          `${this.distDir}/**`,
+          `!${this.distDir}/tsconfig.tsbuildinfo`,
+        ],
+      },
+    ];
+  }
 
   private getOptions() {
     const defaultOpts = {
@@ -58,13 +78,7 @@ export class MultiCompiler implements Compiler {
 
     return {
       componentsResults: mergeComponentResults(builds),
-      artifacts: [
-        {
-          generatedBy: this.id,
-          name: 'dist',
-          globPatterns: [`${this.distDir}/**`],
-        },
-      ],
+      artifacts: this.getArtifactDefinition(),
     };
   }
 
@@ -107,8 +121,6 @@ export class MultiCompiler implements Compiler {
   isFileSupported(filePath: string): boolean {
     return !!this.compilers.find((compiler) => compiler.isFileSupported(filePath));
   }
-
-  shouldCopyNonSupportedFiles = true;
 
   /**
    * returns the version of the current compiler instance (e.g. '4.0.1').

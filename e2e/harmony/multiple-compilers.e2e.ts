@@ -81,7 +81,7 @@ describe('multiple compilers - babel and typescript', function () {
           expect(declaration).to.not.be.undefined;
           expect(declaration.files).to.have.lengthOf(1);
           expect(declaration.files[0].relativePath).to.equal('dist/foo.d.ts');
-          expect(declaration.generatedBy).to.equal('teambit.typescript/typescript');
+          expect(declaration.generatedBy).to.equal('teambit.compilation/multi-compiler');
         });
       });
     });
