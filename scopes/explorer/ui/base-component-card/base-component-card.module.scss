@@ -1,82 +1,8 @@
-.componentCard {
+.avatarContainer {
   position: relative;
-  border-color: var(--border-color, #ededed);
-  border-width: 1px;
-  border-style: solid;
-  width: 100%;
-  border-radius: 5px;
-  overflow: hidden;
-  cursor: pointer;
-  transition: border-color 300ms ease-in-out;
-  &:hover {
-    border-color: var(--text-muted, #6c707c);
-  }
-  > a {
-    text-decoration: none;
-    color: var(--text-highlight);
-  }
-}
-.previewContainer {
-  overflow: hidden;
-  padding-bottom: 57%;
-  height: 0;
-  position: relative;
-  pointer-events: none;
-}
-.preview {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  overflow: hidden;
-  border-bottom: 1px solid var(--border-color, #ededed);
-}
-.emptyPreview {
-  background-color: var(--border-color, #ededed);
 }
 
-.deprecated {
-  display: none;
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background-color: #ffc640;
-  text-transform: uppercase;
-  border-radius: 4px;
-  font-weight: bold;
-  font-size: 10px;
-  padding: 3px 8px;
-  z-index: 1;
-  &.show {
-    display: unset;
-  }
-}
-
-.content {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 16px;
-  height: calc(154px - 32px); // to prevent shrinking when there is less data
-}
-.nameSpace {
-  color: var(--text-muted, #6c707c);
-  font-size: 10px;
-  font-weight: bold;
-  text-transform: uppercase;
-  margin-bottom: 7px;
-}
-.name {
-  font-weight: bold;
-  margin-bottom: 6px;
-}
-.description {
-  color: var(--text-muted, #6c707c);
-  font-size: var(--p-xs, 14px);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* number of lines to show */
-  -webkit-box-orient: vertical;
+.link {
+  text-decoration: none;
+  color: var(--text-color);
 }
