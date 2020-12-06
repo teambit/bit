@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { PubsubMain } from '@teambit/pubsub';
-import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import {
@@ -263,6 +263,25 @@ export class Workspace implements ComponentFactory {
 
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
+  }
+
+  /**
+   * get ids of all workspace components.
+   */
+  async listIds(): Promise<ComponentID[]> {
+    return this.resolveMultipleComponentIds(this.consumer.bitmapIds);
+  }
+
+  /**
+   * Check if a specific id exist in the workspace
+   * @param componentId
+   */
+  async hasId(componentId: ComponentID): Promise<boolean> {
+    const ids = await this.listIds();
+    const found = ids.find((id) => {
+      return id.isEqual(componentId);
+    });
+    return !!found;
   }
 
   /**
@@ -761,27 +780,6 @@ export class Workspace implements ComponentFactory {
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
-  // TODO: refactor to aspect-loader after handling of default scope.
-  async isCoreAspect(id: ComponentID) {
-    const scope = await this.componentDefaultScope(id);
-    if (!scope) throw new Error('default scope not defined');
-    // const newId = id.changeScope(scope);
-    // TODO: fix properly ASAP after resolving default scope issue.
-    return this.aspectLoader.isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
-  }
-
-  private async filterCoreAspects(components: Component[]) {
-    const promises = components.map(async (component) => {
-      return {
-        isCore: await this.isCoreAspect(component.id),
-        component,
-      };
-    });
-
-    const res = await Promise.all(promises);
-    return res.filter((aspect) => !aspect.isCore).map((aspect) => aspect.component);
-  }
-
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -828,14 +826,14 @@ export class Workspace implements ComponentFactory {
     }
   }
 
-  async resolveAspects(runtimeName: string) {
+  async resolveAspects(runtimeName: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
-    const ids = this.harmony.extensionsIds;
+    const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const userAspectsIds: string[] = difference(ids, coreAspectsIds);
-    const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
-    const components = await this.getMany(componentIds);
+    const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
+    const componentIdsToResolve = await this.resolveMultipleComponentIds(userAspectsIds);
+    const components = await this.getMany(componentIdsToResolve);
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
@@ -847,7 +845,7 @@ export class Workspace implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
       };
     });
 

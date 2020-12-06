@@ -345,7 +345,7 @@ export class DependencyResolverMain {
   getLinker(options: GetLinkerOptions = {}) {
     const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyLinker(this.aspectLoader, this.logger, options.rootDir, linkingOptions);
+    return new DependencyLinker(this, this.aspectLoader, this.envs, this.logger, options.rootDir, linkingOptions);
   }
 
   getPackageManagerName() {

@@ -30,7 +30,7 @@ export type AspectResolver = (component: Component) => Promise<ResolvedAspect>;
 
 export type ResolvedAspect = {
   aspectPath: string;
-  runtimesPath: string | null;
+  runtimePath: string | null;
 };
 
 export type MainAspect = {
@@ -161,7 +161,7 @@ export class AspectLoaderMain {
   async resolveAspects(components: Component[], resolver: AspectResolver): Promise<AspectDefinition[]> {
     const promises = components.map(async (component) => {
       const resolvedAspect = await resolver(component);
-      return new AspectDefinition(resolvedAspect.aspectPath, resolvedAspect.runtimesPath, component);
+      return new AspectDefinition(resolvedAspect.aspectPath, resolvedAspect.runtimePath, component);
     });
 
     const aspectDefs = await Promise.all(promises);

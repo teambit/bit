@@ -202,6 +202,7 @@
         "react-test-renderer": "^16.13.1",
         "react-tooltip": "^4.2.8",
         "reset-css": "^5.0.1",
+        "resolve-from": "5.0.0",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
         "semver": "^7.3.2",

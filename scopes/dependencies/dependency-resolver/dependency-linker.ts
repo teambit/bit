@@ -1,17 +1,20 @@
 import { compact } from 'ramda-adjunct';
 import path from 'path';
 import fs from 'fs-extra';
+import resolveFrom from 'resolve-from';
 import { link as legacyLink } from 'bit-bin/dist/api/consumer';
-import { ComponentMap } from '@teambit/component';
+import { ComponentMap, Component } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
+import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
 import { WorkspacePolicy } from './policy';
+import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 export type LinkingOptions = {
   legacyLink?: boolean;
@@ -50,7 +53,11 @@ export type LinkResults = {
 
 export class DependencyLinker {
   constructor(
+    private dependencyResolver: DependencyResolverMain,
+
     private aspectLoader: AspectLoaderMain,
+
+    private envs: EnvsMain,
 
     private logger: Logger,
 
@@ -107,6 +114,27 @@ export class DependencyLinker {
     result.harmonyLink = harmonyLink;
     this.logger.consoleSuccess('linking components');
     return result;
+  }
+
+  private linkDepsResolvedFromEnv(componentDirectoryMap: ComponentMap<string>) {
+    const links: { src: string; dest: string }[] = [];
+    componentDirectoryMap.map(async (dir, comp) => {
+      const policy = await this.dependencyResolver.getPolicy(comp);
+      const resolvedFromEnv = policy.getResolvedFromEnv();
+      // Nothing should be resolved from env, do nothing
+      if (!resolvedFromEnv.length) {
+        return;
+      }
+      return resolvedFromEnv.entries.map((depEntry) => {
+        const linkSrc = path.join(dir, 'node_modules', depEntry.dependencyId);
+
+        // const linkTarget =
+      });
+    });
+  }
+
+  private getResolvedEnvDir(component: Component): string {
+    const env = this.envs.getEnv(component);
   }
 
   private async linkBitAspectIfNotExist(
@@ -281,4 +309,8 @@ function getHarmonyDirForDevEnv(): string {
     throw new BitError(`unable to find @teambit/harmony in ${dirPath}`);
   }
   return dirPath;
+}
+
+function resolveModuleFromDir(fromDir: string, moduleId: string): string | undefined {
+  return resolveFrom.silent(fromDir, moduleId);
 }

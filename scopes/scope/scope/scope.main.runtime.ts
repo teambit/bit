@@ -169,28 +169,6 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  async getResolvedAspects(components: Component[]) {
-    if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(
-      components,
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
-      this.legacyScope
-    );
-
-    return capsules.map((capsule) => {
-      // return RequireableComponent.fromCapsule(capsule);
-      return new RequireableComponent(capsule.component, () => {
-        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
-          file.relative.includes('.scope.runtime.')
-        );
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(capsule.path);
-      });
-    });
-  }
-
   // TODO: temporary compiler workaround - discuss this with david.
   private toJs(str: string) {
     if (str.endsWith('.ts')) return str.replace('.ts', '.js');
@@ -227,11 +205,12 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    const aspectIds = ids.filter((id) => !id.startsWith('file://'));
+    // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));
     this.localAspects = this.localAspects.concat(localAspects);
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
-    const aspectIds = ids.filter((id) => !id.startsWith('file://'));
     const componentIds = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
     if (!componentIds || !componentIds.length) return;
     const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
@@ -245,6 +224,28 @@ export class ScopeMain implements ComponentFactory {
     return dirs.map((dir) => {
       const runtimeManifest = this.findRuntime(dir, runtime);
       return new AspectDefinition(dir, runtimeManifest ? join(dir, 'dist', runtimeManifest) : null);
+    });
+  }
+
+  async getResolvedAspects(components: Component[]) {
+    if (!components.length) return [];
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      this.legacyScope
+    );
+
+    return capsules.map((capsule) => {
+      // return RequireableComponent.fromCapsule(capsule);
+      return new RequireableComponent(capsule.component, () => {
+        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
+          file.relative.includes('.scope.runtime.')
+        );
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return require(capsule.path);
+      });
     });
   }
 
@@ -268,7 +269,7 @@ export class ScopeMain implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
       };
     });
 
