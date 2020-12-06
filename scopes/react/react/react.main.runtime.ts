@@ -59,6 +59,13 @@ export type ReactMainConfig = {
   tester: 'jest' | 'mocha';
 
   /**
+   * determine whether to compile MDX files or not.
+   * please note this does not apply to component documentation which will work anyway.
+   * configure this to `true` when sharing MDX components and MDX file compilation is required.
+   */
+  mdx: boolean;
+
+  /**
    * version of React to configure.
    */
   reactVersion: string;

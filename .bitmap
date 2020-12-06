@@ -27,6 +27,11 @@
                 "name": "mdx.main.runtime.ts",
                 "relativePath": "mdx.main.runtime.ts",
                 "test": false
+            },
+            {
+                "name": "readme.md",
+                "relativePath": "readme.md",
+                "test": false
             }
         ],
         "mainFile": "index.ts",
@@ -176,6 +181,11 @@
             {
                 "name": "multi-compiler.compiler.ts",
                 "relativePath": "multi-compiler.compiler.ts",
+                "test": false
+            },
+            {
+                "name": "multi-compiler.docs.mdx",
+                "relativePath": "multi-compiler.docs.mdx",
                 "test": false
             },
             {
@@ -7420,5 +7430,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.187"
+    "version": "14.8.9-dev.188"
 }

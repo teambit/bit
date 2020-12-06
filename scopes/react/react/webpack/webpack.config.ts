@@ -183,7 +183,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },
-        include: [/\.(js|jsx|tsx|ts|mdx)$/],
+        include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
       }),
