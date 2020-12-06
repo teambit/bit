@@ -108,6 +108,8 @@ export class MultiCompiler implements Compiler {
     return !!this.compilers.find((compiler) => compiler.isFileSupported(filePath));
   }
 
+  shouldCopyNonSupportedFiles = true;
+
   /**
    * returns the version of the current compiler instance (e.g. '4.0.1').
    */

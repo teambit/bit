@@ -7,6 +7,8 @@ import { compileSync } from '@teambit/modules.mdx-compiler';
 export class MDXCompiler implements Compiler {
   displayName = 'MDX';
 
+  shouldCopyNonSupportedFiles = true;
+
   distDir = 'dist';
 
   constructor(readonly id: string, readonly config: any) {}
