@@ -1,4 +1,4 @@
-import bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
@@ -287,16 +287,14 @@ export default async function tagModelComponent({
   if (!consumer.isLegacy && persist) {
     const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
 
-    const results: Array<OnTagResult[]> = await bluebird.mapSeries(scope.onTag, (func) =>
-      func(ids, { disableDeployPipeline })
-    );
+    const results: Array<OnTagResult[]> = await mapSeries(scope.onTag, (func) => func(ids, { disableDeployPipeline }));
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     allComponentsToTag.forEach((comp) => {
       const pkgExt = comp.extensions.findCoreExtension('teambit.pkg/pkg');
       const publishedPackage = pkgExt?.data?.publishedPackage;
       if (publishedPackage) publishedPackages.push(publishedPackage);
     });
-    await bluebird.mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
+    await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
   if (persist) {
@@ -308,7 +306,7 @@ export default async function tagModelComponent({
 
 async function addComponentsToScope(consumer: Consumer, components: Component[], resolveUnmerged: boolean) {
   const lane = await consumer.getCurrentLaneObject();
-  await bluebird.mapSeries(components, async (component) => {
+  await mapSeries(components, async (component) => {
     await consumer.scope.sources.addSource({
       source: component,
       consumer,

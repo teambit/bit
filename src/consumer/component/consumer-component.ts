@@ -52,6 +52,7 @@ import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import SpecsResults from '../specs-results';
 import { RawTestsResults } from '../specs-results/specs-results';
+import { ComponentFsCache } from './component-fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
 import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
@@ -1151,7 +1152,7 @@ export default class Component {
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
     const files = await getLoadedFiles();
-    const docsP = _getDocsForFiles(files);
+    const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
 
@@ -1199,6 +1200,6 @@ export default class Component {
   }
 }
 
-function _getDocsForFiles(files: SourceFile[]): Array<Promise<Doclet[]>> {
-  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file)));
+function _getDocsForFiles(files: SourceFile[], componentFsCache: ComponentFsCache): Array<Promise<Doclet[]>> {
+  return files.map((file) => (file.test ? Promise.resolve([]) : docsParser(file, componentFsCache)));
 }

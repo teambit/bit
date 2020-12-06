@@ -1,5 +1,5 @@
 import * as babel from '@babel/core';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 import { Compiler, CompilerMain, TranspileOpts, TranspileOutput } from '@teambit/compiler';

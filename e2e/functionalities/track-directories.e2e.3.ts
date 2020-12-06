@@ -297,4 +297,21 @@ describe('track directories functionality', function () {
       });
     });
   });
+  describe('adding files to sub-directories', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fs.outputFile('bar/foo.ts');
+      helper.command.addComponent('bar');
+      helper.fs.outputFile('bar/baz/index.ts');
+      helper.command.status(); // this adds the last file to .bitmap
+      helper.fs.outputFile('bar/baz/baz.ts');
+      helper.command.status(); // this should add the last file
+    });
+    it('the files on the sub-dir should be auto-tracked', () => {
+      const bitMap = helper.bitMap.read();
+      const bar = bitMap.bar;
+      const paths = bar.files.map((f) => f.relativePath);
+      expect(paths).to.include('baz/baz.ts');
+    });
+  });
 });

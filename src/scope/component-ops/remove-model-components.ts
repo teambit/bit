@@ -1,4 +1,4 @@
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';

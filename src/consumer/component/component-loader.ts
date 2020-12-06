@@ -8,27 +8,66 @@ import { ModelComponent } from '../../scope/models';
 import { ObjectList } from '../../scope/objects/object-list';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { getLatestVersionNumber } from '../../utils';
+import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import Component, { InvalidComponent } from '../component/consumer-component';
 import Consumer from '../consumer';
-import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { ComponentFsCache } from './component-fs-cache';
+import { updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { DependenciesLoader } from './dependencies/dependency-resolver/dependencies-loader';
 
 type OnComponentLoadSubscriber = (component: Component) => Promise<Component>;
 
 export default class ComponentLoader {
   _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components
   _componentsCacheForCapsule: Record<string, any> = {}; // cache loaded components for capsule, must not use the cache for the workspace
+  _shouldCheckForClearingDependenciesCache = true;
   consumer: Consumer;
   cacheResolvedDependencies: Record<string, any>;
   cacheProjectAst: Record<string, any> | undefined; // specific platforms may need to parse the entire project. (was used for Angular, currently not in use)
+  componentFsCache: ComponentFsCache;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
+    this.componentFsCache = new ComponentFsCache(consumer.scope.getPath());
   }
 
   static onComponentLoadSubscribers: OnComponentLoadSubscriber[] = [];
   static registerOnComponentLoadSubscriber(func: OnComponentLoadSubscriber) {
     this.onComponentLoadSubscribers.push(func);
+  }
+
+  clearComponentsCache() {
+    this._componentsCache = {};
+    this._componentsCacheForCapsule = {};
+    this.cacheResolvedDependencies = {};
+    this._shouldCheckForClearingDependenciesCache = true;
+  }
+
+  async invalidateDependenciesCacheIfNeeded(): Promise<void> {
+    if (this._shouldCheckForClearingDependenciesCache) {
+      const pathsToCheck = [
+        path.join(this.consumer.getPath(), 'node_modules'),
+        path.join(this.consumer.getPath(), 'package.json'),
+        this.consumer.config.path,
+      ];
+      const lastModified = await getLastModifiedPathsTimestampMs(pathsToCheck);
+      const dependenciesCacheList = await this.componentFsCache.listDependenciesDataCache();
+      const lastUpdateAllComps = Object.keys(dependenciesCacheList).map((key) => dependenciesCacheList[key].time);
+      const firstCacheEntered = Math.min(...lastUpdateAllComps);
+      // if lastUpdateAllComps is empty, firstCacheEntered is Infinity so shouldInvalidate is
+      // always false, which is good. no need to invalidate the cache if nothing there.
+      const shouldInvalidate = lastModified > firstCacheEntered;
+      if (shouldInvalidate) {
+        // at least one component inserted to the cache before workspace-config/node-modules
+        // modification, invalidate the entire deps-cache.
+        logger.debug(
+          'component-loader, invalidating dependencies cache because either node-modules or workspace config had been changed'
+        );
+        await this.componentFsCache.deleteAllDependenciesDataCache();
+      }
+    }
+    this._shouldCheckForClearingDependenciesCache = false;
   }
 
   async loadForCapsule(id: BitId): Promise<Component> {
@@ -93,7 +132,7 @@ export default class ComponentLoader {
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
-  async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
+  private async loadOne(id: BitId, throwOnFailure: boolean, invalidComponents: InvalidComponent[]) {
     const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
@@ -130,12 +169,13 @@ export default class ComponentLoader {
     await this._handleOutOfSyncScenarios(component);
 
     const loadDependencies = async () => {
-      const dependencyResolver = new DependencyResolver(component, this.consumer, id);
-      await dependencyResolver.loadDependenciesForComponent(
-        bitDir,
-        this.cacheResolvedDependencies,
-        this.cacheProjectAst
-      );
+      await this.invalidateDependenciesCacheIfNeeded();
+      const dependenciesLoader = new DependenciesLoader(component, this.consumer, {
+        cacheResolvedDependencies: this.cacheResolvedDependencies,
+        cacheProjectAst: this.cacheProjectAst,
+        useDependenciesCache: true,
+      });
+      await dependenciesLoader.load();
       updateDependenciesVersions(this.consumer, component);
     };
 
@@ -154,7 +194,7 @@ export default class ComponentLoader {
     return component;
   }
 
-  async _handleOutOfSyncScenarios(component: Component) {
+  private async _handleOutOfSyncScenarios(component: Component) {
     const { componentFromModel, componentMap } = component;
     // $FlowFixMe componentMap is set here
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -192,7 +232,7 @@ export default class ComponentLoader {
     }
   }
 
-  async _throwPendingImportIfNeeded(currentId: BitId) {
+  private async _throwPendingImportIfNeeded(currentId: BitId) {
     if (currentId.hasScope()) {
       const remoteComponent: ModelComponent | null | undefined = await this._getRemoteComponent(currentId);
       // @todo-lanes: make it work with lanes. It needs to go through the objects one by one and check
@@ -204,7 +244,7 @@ export default class ComponentLoader {
     }
   }
 
-  async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
+  private async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
     const remotes = await getScopeRemotes(this.consumer.scope);
     let objectList: ObjectList;
     try {
@@ -216,13 +256,7 @@ export default class ComponentLoader {
     return bitObjectsList.getComponents()[0];
   }
 
-  clearComponentsCache() {
-    this._componentsCache = {};
-    this._componentsCacheForCapsule = {};
-    this.cacheResolvedDependencies = {};
-  }
-
-  _isAngularProject(): boolean {
+  private _isAngularProject(): boolean {
     return Boolean(
       this.consumer.packageJson &&
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

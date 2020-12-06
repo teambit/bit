@@ -8,7 +8,7 @@ import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
 import { EventEmitter } from 'events';
 import execa from 'execa';
 import fs from 'fs-extra';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import path, { join } from 'path';
 
 export default class PackageManager {

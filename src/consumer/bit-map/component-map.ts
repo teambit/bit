@@ -1,4 +1,4 @@
-import fs, { Stats } from 'fs-extra';
+import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -8,11 +8,11 @@ import ValidationError from '../../error/validation-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, sortObject } from '../../utils';
+import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
 import { AddContext } from '../component-ops/add-components/add-components';
 import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
-import { getLastTrackTimestamp, setLastTrackTimestamp } from '../component/component-fs-cache';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import Consumer from '../consumer';
 import OutsideRootDir from './exceptions/outside-root-dir';
@@ -377,16 +377,13 @@ export default class ComponentMap {
     }
     const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
     const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
-    let stat: Stats;
-    try {
-      stat = await fs.stat(trackDirAbsolute);
-    } catch (err) {
-      if (err.code === 'ENOENT') throw new ComponentNotFoundInPath(trackDirRelative);
-      throw err;
-    }
-    const lastTrack = await getLastTrackTimestamp(id.toString());
-    const wasModifiedAfterLastTrack = stat.mtimeMs > lastTrack;
-    if (!wasModifiedAfterLastTrack) {
+    if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
+    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
+    const wasModifiedAfterLastTrack = async () => {
+      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
+      return lastModified > lastTrack;
+    };
+    if (!(await wasModifiedAfterLastTrack())) {
       return;
     }
     const addParams = {
@@ -414,7 +411,7 @@ export default class ComponentMap {
       logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
       consumer.bitMap.hasChanged = true;
     }
-    await setLastTrackTimestamp(id.toString(), Date.now());
+    await consumer.componentFsCache.setLastTrackTimestamp(id.toString(), Date.now());
   }
 
   updateNextVersion(nextVersion: NextVersion) {
