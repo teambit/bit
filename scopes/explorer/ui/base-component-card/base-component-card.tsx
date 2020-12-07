@@ -1,11 +1,8 @@
 import React from 'react';
-import { Link } from '@teambit/ui.routing.link';
 import { PreviewContainer } from './preview-container';
 import { DeprecationSticker } from './deprecation-sticker';
 import { ComponentDetails } from './details';
 import { Card } from './card';
-
-import styles from './base-component-card.module.scss';
 
 export type BaseComponentCardProps = {
   /**
@@ -50,12 +47,10 @@ export function BaseComponentCard({
 }: BaseComponentCardProps) {
   return (
     <Card className={className}>
-      <Link href={id} className={styles.link}>
-        <DeprecationSticker isDeprecated={isDeprecated} />
-        <PreviewContainer preview={preview} />
-        <ComponentDetails id={id} version={version} description={description} className={contentClass} />
-        {children}
-      </Link>
+      <DeprecationSticker isDeprecated={isDeprecated} />
+      <PreviewContainer preview={preview} />
+      <ComponentDetails id={id} version={version} description={description} className={contentClass} />
+      {children}
     </Card>
   );
 }

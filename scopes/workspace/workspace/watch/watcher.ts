@@ -86,7 +86,7 @@ export class Watcher {
       this.completeWatch();
       return buildResults;
     }
-    const componentId = await this.getBitIdByPathAndReloadConsumer(filePath);
+    const componentId = await this.getComponentIdAndClearItsCache(filePath);
     if (!componentId) {
       logger.debug(`file ${filePath} is not part of any component, ignoring it`);
       return this.completeWatch();
@@ -189,24 +189,22 @@ export class Watcher {
     return false;
   }
 
-  private async getBitIdByPathAndReloadConsumer(filePath: string): Promise<ComponentID | null> {
+  /**
+   * if a file was added/remove, once the component is loaded, it changes .bitmap, and then the
+   * entire cache is invalidated and the consumer is reloaded.
+   * when a file just changed, no need to reload the consumer, it is enough to just delete the
+   * component from the cache (both, workspace and consumer)
+   */
+  private async getComponentIdAndClearItsCache(filePath: string): Promise<ComponentID | null> {
     const relativeFile = pathNormalizeToLinux(this.consumer.getPathRelativeToConsumer(filePath));
     const trackDir = this.findTrackDirByFilePathRecursively(relativeFile);
     if (!trackDir) {
-      // the file is not part of any component. If it was a new component, then, .bitmap changes
-      // should have added the path to the trackDir.
+      // the file is not part of any component. If it was a new component, or a new file of
+      // existing component, then, handleBitmapChanges() should deal with it.
       return null;
     }
-    // @todo: improve performance. probably only bit-map and the component itself need to be updated
-    await this.workspace._reloadConsumer();
-    await this.setTrackDirs();
     const componentId = this.trackDirs[trackDir];
-    if (!componentId) {
-      // the file was part of a component before, but not now. this may happen often when switching
-      // git branches. the current branch may not have the component of the previous branch.
-      return null;
-    }
-    // loading the component causes the bitMap to be updated with the new paths if needed
+    this.workspace.clearComponentCache(componentId);
     const component = await this.workspace.get(componentId);
     const componentMap: ComponentMap = component.state._consumer.componentMap;
     if (componentMap.getFilesRelativeToConsumer().find((p) => p === relativeFile)) {
