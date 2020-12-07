@@ -238,7 +238,7 @@
         "exported": false,
         "lanes": []
     },
-    "teambit.compilation/babel@0.0.155": {
+    "teambit.compilation/babel@0.0.168": {
         "files": [
             {
                 "name": "README.md",
