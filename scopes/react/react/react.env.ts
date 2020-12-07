@@ -101,6 +101,7 @@ export class ReactEnv implements Environment {
         types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
         ...compilerOptions,
       },
+      // @ts-ignore
       tsModule
     );
   }

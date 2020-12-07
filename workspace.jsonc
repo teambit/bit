@@ -99,6 +99,7 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
+        "@types/eslint": "7.2.4",
         "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
@@ -149,8 +150,13 @@
         "dagre": "0.8.5",
         "didyoumean": "^1.2.1",
         "eslint-import-resolver-node": "0.3.4",
+        "eslint-plugin-jest": "24.1.3",
         "express": "^4.17.1",
         "express-graphql": "^0.9.0",
+        "eslint-config-airbnb-typescript": {
+          "preserve": true,
+          "version": "^5.1.0"
+        },
         "express-history-api-fallback": "^2.2.1",
         "file-loader": "^6.0.0",
         "filenamify": "^4.1.0",

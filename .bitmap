@@ -150,11 +150,6 @@
                 "test": false
             },
             {
-                "name": "merge-component-results.spec.ts",
-                "relativePath": "merge-component-results.spec.ts",
-                "test": false
-            },
-            {
                 "name": "merge-component-results.ts",
                 "relativePath": "merge-component-results.ts",
                 "test": false

@@ -29,7 +29,6 @@ export class ESLintLinter implements Linter {
   async lint(context: LinterContext) {
     const resultsP = context.components.map(async (component) => {
       const eslint = this.createEslint(this.options, context, this.ESLint);
-      0;
       const filesP = component.filesystem.files.map(async (file) => {
         const sourceCode = file.contents.toString('utf8');
         const lintResults = await eslint.lintText(sourceCode, {
