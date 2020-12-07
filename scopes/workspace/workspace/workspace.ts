@@ -50,7 +50,7 @@ import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/d
 import BluebirdPromise from 'bluebird';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice, groupBy } from 'lodash';
+import { slice, groupBy, uniqBy } from 'lodash';
 import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
@@ -883,7 +883,10 @@ export class Workspace implements ComponentFactory {
       await link(stringIds, false);
     }
 
-    return aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
+    const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
+    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+
+    return uniqDefs;
   }
 
   /**
