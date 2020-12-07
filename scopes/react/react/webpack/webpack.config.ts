@@ -1,5 +1,7 @@
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { Configuration } from 'webpack';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import * as mdxLoader from '@teambit/modules.mdx-loader';
 
 const moduleFileExtensions = [
   'web.mjs',
