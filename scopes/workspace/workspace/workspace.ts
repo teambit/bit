@@ -41,7 +41,6 @@ import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
 import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import legacyLogger from 'bit-bin/dist/logger/logger';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
@@ -500,13 +499,6 @@ export class Workspace implements ComponentFactory {
       return newEntry;
     });
     return resolvedList;
-  }
-
-  /**
-   * get ids of all workspace components.
-   */
-  async listIds() {
-    return Promise.all(this.consumer.bitmapIds.map((id) => this.resolveComponentId(id)));
   }
 
   /**

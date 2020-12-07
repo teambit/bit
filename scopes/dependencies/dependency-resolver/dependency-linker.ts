@@ -129,8 +129,6 @@ export class DependencyLinker {
   private async linkDepsResolvedFromEnv(
     componentDirectoryMap: ComponentMap<string>
   ): Promise<Array<DepsLinkedToEnvResult>> {
-    const result: DepsLinkedToEnvResult[] = [];
-
     const componentsNeedLinks: {
       component: Component;
       dir: string;
@@ -176,6 +174,7 @@ export class DependencyLinker {
         const resolvedModule = resolveModuleFromDir(envDir, depEntry.dependencyId);
         if (!resolvedModule) {
           this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
+          return;
         } else {
           const NM = 'node_modules';
           const linkSrc = path.join(
