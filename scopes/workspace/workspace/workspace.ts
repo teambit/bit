@@ -838,7 +838,7 @@ export class Workspace implements ComponentFactory {
       }
       return 'scope';
     });
-    const wsComponents = await this.getMany(groupedByHost.workspace);
+    const wsComponents = await this.getMany(groupedByHost.workspace || []);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);

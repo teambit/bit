@@ -191,7 +191,8 @@ export class AspectLoaderMain {
     });
 
     const aspectDefs = await Promise.all(promises);
-    return aspectDefs.filter((def) => def.runtimePath);
+    // return aspectDefs.filter((def) => def.runtimePath);
+    return aspectDefs;
   }
 
   private _mainAspect: MainAspect;
