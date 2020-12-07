@@ -174,7 +174,7 @@ export class DependencyLinker {
         const resolvedModule = resolveModuleFromDir(envDir, depEntry.dependencyId);
         if (!resolvedModule) {
           this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
-          return;
+          return undefined;
         }
         const NM = 'node_modules';
         const linkSrc = path.join(
