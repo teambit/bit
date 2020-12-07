@@ -175,24 +175,23 @@ export class DependencyLinker {
         if (!resolvedModule) {
           this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
           return;
-        } else {
-          const NM = 'node_modules';
-          const linkSrc = path.join(
-            resolvedModule?.slice(0, resolvedModule.lastIndexOf(NM) + NM.length),
-            depEntry.dependencyId
-          );
-          const linkDetail: LinkDetail = {
-            from: linkSrc,
-            to: linkTarget,
-          };
-          fs.removeSync(linkTarget);
-          this.logger.info(
-            `linking dependency ${depEntry.dependencyId} from env directory ${envDir}. link src: ${linkSrc} link target: ${linkTarget}`
-          );
-
-          createSymlinkOrCopy(linkSrc, linkTarget);
-          return linkDetail;
         }
+        const NM = 'node_modules';
+        const linkSrc = path.join(
+          resolvedModule?.slice(0, resolvedModule.lastIndexOf(NM) + NM.length),
+          depEntry.dependencyId
+        );
+        const linkDetail: LinkDetail = {
+          from: linkSrc,
+          to: linkTarget,
+        };
+        fs.removeSync(linkTarget);
+        this.logger.info(
+          `linking dependency ${depEntry.dependencyId} from env directory ${envDir}. link src: ${linkSrc} link target: ${linkTarget}`
+        );
+
+        createSymlinkOrCopy(linkSrc, linkTarget);
+        return linkDetail;
       });
       const oneComponentLinks = await Promise.all(oneComponentLinksP);
       const filterdLinkes = compact(oneComponentLinks);

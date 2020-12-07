@@ -88,7 +88,7 @@ export class WorkspaceManifestFactory {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
-      let componentPolicy = await this.dependencyResolver.getPolicy(component);
+      const componentPolicy = await this.dependencyResolver.getPolicy(component);
       if (filterComponentsFromManifests) {
         depList = filterComponents(depList, components);
       }
