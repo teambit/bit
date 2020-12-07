@@ -36,7 +36,7 @@ import BluebirdPromise from 'bluebird';
 import { ExportPersist } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
-import { compact, slice } from 'lodash';
+import { compact, slice, uniqBy } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
@@ -274,7 +274,14 @@ export class ScopeMain implements ComponentFactory {
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
     const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
-    return aspectDefs.concat(coreAspects).concat(localResolved);
+    const allDefs = aspectDefs.concat(coreAspects).concat(localResolved);
+    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
+
+    return defs;
   }
 
   /**

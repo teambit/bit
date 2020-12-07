@@ -885,8 +885,12 @@ export class Workspace implements ComponentFactory {
 
     const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
     const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
 
-    return uniqDefs;
+    return defs;
   }
 
   /**
