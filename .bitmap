@@ -150,11 +150,6 @@
                 "test": false
             },
             {
-                "name": "merge-component-results.spec.ts",
-                "relativePath": "merge-component-results.spec.ts",
-                "test": false
-            },
-            {
                 "name": "merge-component-results.ts",
                 "relativePath": "merge-component-results.ts",
                 "test": false
@@ -3557,11 +3552,6 @@
             {
                 "name": "base-component-card.docs.tsx",
                 "relativePath": "base-component-card.docs.tsx",
-                "test": false
-            },
-            {
-                "name": "base-component-card.module.scss",
-                "relativePath": "base-component-card.module.scss",
                 "test": false
             },
             {
