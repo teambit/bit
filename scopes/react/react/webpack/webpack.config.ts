@@ -13,6 +13,7 @@ const moduleFileExtensions = [
   'json',
   'web.jsx',
   'jsx',
+  'mdx',
 ];
 
 export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
@@ -35,12 +36,33 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           loader: require.resolve('babel-loader'),
           options: {
             babelrc: false,
+            configFile: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
             ],
             plugins: [require.resolve('react-refresh/babel')],
           },
+        },
+
+        // MDX support (move to the mdx aspect and extend from there)
+        {
+          test: /\.mdx?$/,
+          exclude: [/node_modules/, /dist/],
+          use: [
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                presets: [require.resolve('babel-preset-react-app')],
+                plugins: [require.resolve('react-refresh/babel')],
+              },
+            },
+            {
+              loader: require.resolve('@teambit/modules.mdx-loader'),
+            },
+          ],
         },
         {
           test: /\.module\.s(a|c)ss$/,
@@ -147,6 +169,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
       alias: {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
+        '@mdx-js/react': require.resolve('@mdx-js/react'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
     },
@@ -160,6 +183,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },
+        include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
       }),

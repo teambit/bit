@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.187",
+  "version": "14.8.9-dev.188",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -40,7 +40,7 @@
     "link-bit-bin": "ln -sf `pwd` node_modules/bit-bin",
     "import-harmony": "build-harmony/node_modules/.bin/bbit import",
     "status-harmony": "build-harmony/node_modules/.bin/bbit status",
-    "build-harmony": "build-harmony/node_modules/.bin/bbit install && rm -rf node_modules/bit-bin && ln -s `pwd` node_modules/bit-bin && build-harmony/node_modules/.bin/bbit compile -a",
+    "build-harmony": "build-harmony/node_modules/.bin/bbit install && rm -rf node_modules/bit-bin && ln -s `pwd` node_modules/bit-bin && build-harmony/node_modules/.bin/bbit compile",
     "full-setup": "npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
     "full-setup:bbit": "rm -rf node_modules/bit-bin && bbit install && ln -sf `pwd` node_modules/bit-bin && bbit compile && npm run build && npm run build:types",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",

@@ -1,5 +1,13 @@
 import React from 'react';
-import { BaseComponentCard, BaseComponentCardProps } from '@teambit/ui.gallery.base-component-card';
+import { Link } from '@teambit/ui.routing.link';
+import {
+  BaseComponentCardProps,
+  PreviewContainer,
+  DeprecationSticker,
+  ComponentDetails,
+  Card,
+} from '@teambit/ui.gallery.base-component-card';
+
 import styles from './component-card.module.scss';
 
 export type ComponentCardProps = {
@@ -51,33 +59,25 @@ export function ComponentCard({
   preview,
   version,
   description,
-  // ciStatus,
-  // size,
   envIcon,
   isDeprecated,
-}: // isIntetnal,
-ComponentCardProps) {
+}: ComponentCardProps) {
   return (
-    <BaseComponentCard
-      id={id}
-      version={version}
-      preview={preview}
-      description={description}
-      isDeprecated={isDeprecated}
-      className={className}
-    >
-      <div className={styles.bottom}>
-        <div className={styles.left}></div>
-        <img src={envIcon} className={styles.img} />
-      </div>
-    </BaseComponentCard>
+    <Card className={className}>
+      <Link className={styles.componentCardLink} href={id}>
+        <DeprecationSticker isDeprecated={isDeprecated} />
+        <PreviewContainer preview={preview} />
+
+        <ComponentDetails id={id} version={version} description={description} className={styles.content} />
+        <div className={styles.bottom}>
+          <div className={styles.left}></div>
+          <img src={envIcon} className={styles.img} />
+        </div>
+      </Link>
+    </Card>
   );
 }
 
 ComponentCard.defaultProps = {
   isDeprecated: false,
 };
-
-// function CiStatus() {
-//   return <span className={styles.dot}></span>;
-// }
