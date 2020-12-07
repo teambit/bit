@@ -10,8 +10,8 @@ type ComponentListLinksProps = {
 };
 
 export function ComponentListLinks({ componentListLinks, verbose = false }: ComponentListLinksProps) {
-  if (!componentListLinks) {
-    return <Text>No components link were generated</Text>;
+  if (!componentListLinks || !componentListLinks.length) {
+    return <Text color="cyan">No components link were generated</Text>;
   }
   return (
     <Box key="components-links" flexDirection="column">

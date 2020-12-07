@@ -49,6 +49,7 @@ import {
   VariantPolicyFactory,
   WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
+  SerializedVariantPolicy,
 } from './policy';
 import { PackageManager } from './package-manager';
 
@@ -157,6 +158,11 @@ export class DependencyResolverMain {
 
     private aspectLoader: AspectLoaderMain,
 
+    /**
+     * component aspect.
+     */
+    readonly componentAspect: ComponentMain,
+
     private packageManagerSlot: PackageManagerSlot,
 
     private dependencyFactorySlot: DependencyFactorySlot,
@@ -183,6 +189,16 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  async getPolicy(component: Component): Promise<VariantPolicy> {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const factory = new VariantPolicyFactory();
+    if (!entry) {
+      return factory.getEmpty();
+    }
+    const serializedPolicy: SerializedVariantPolicy = get(entry, ['data', 'policy'], []);
+    return factory.parse(serializedPolicy);
   }
 
   /**
@@ -334,7 +350,15 @@ export class DependencyResolverMain {
   getLinker(options: GetLinkerOptions = {}) {
     const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyLinker(this.aspectLoader, this.logger, options.rootDir, linkingOptions);
+    return new DependencyLinker(
+      this,
+      this.aspectLoader,
+      this.componentAspect,
+      this.envs,
+      this.logger,
+      options.rootDir,
+      linkingOptions
+    );
   }
 
   getPackageManagerName() {
@@ -571,6 +595,7 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
+      componentAspect,
       packageManagerSlot,
       dependencyFactorySlot,
       preInstallSlot,
