@@ -404,6 +404,12 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
+  clearComponentCache(id: ComponentID) {
+    this.componentLoader.clearComponentCache(id);
+    this.consumer.componentLoader.clearOneComponentCache(id._legacy);
+    this.componentList = new ComponentsList(this.consumer);
+  }
+
   async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the

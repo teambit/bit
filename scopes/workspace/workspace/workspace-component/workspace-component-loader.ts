@@ -76,6 +76,11 @@ export class WorkspaceComponentLoader {
     this._componentsCache = {};
     this._componentsCacheForCapsule = {};
   }
+  clearComponentCache(id: ComponentID) {
+    const idStr = id.toString();
+    delete this._componentsCache[idStr];
+    delete this._componentsCacheForCapsule[idStr];
+  }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
     const componentFromScope = await this.workspace.scope.get(id);
