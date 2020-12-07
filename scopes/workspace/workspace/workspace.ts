@@ -860,7 +860,10 @@ export class Workspace implements ComponentFactory {
       };
     });
 
-    const scopeAspectDefs = await this.scope.resolveAspects(runtimeName, groupedByHost.scope);
+    let scopeAspectDefs: AspectDefinition[] = [];
+    if (groupedByHost.scope) {
+      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, groupedByHost.scope);
+    }
 
     let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
