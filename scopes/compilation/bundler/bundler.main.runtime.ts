@@ -49,7 +49,7 @@ export class BundlerMain {
     const envRuntime = await this.envs.createEnvironment(components);
     this.devService.uiRoot = root;
     const executionResults = await envRuntime.run<ComponentServer>(this.devService);
-
+    executionResults.throwErrorsIfExist();
     this._componentServers = executionResults.results.map((res) => res.data as ComponentServer);
 
     this.indexByComponent();
