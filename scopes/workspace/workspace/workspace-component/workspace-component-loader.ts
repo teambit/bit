@@ -76,6 +76,11 @@ export class WorkspaceComponentLoader {
     this._componentsCache = {};
     this._componentsCacheForCapsule = {};
   }
+  clearComponentCache(id: ComponentID) {
+    const idStr = id.toString();
+    delete this._componentsCache[idStr];
+    delete this._componentsCacheForCapsule[idStr];
+  }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
     const componentFromScope = await this.workspace.scope.get(id);
@@ -152,12 +157,14 @@ export class WorkspaceComponentLoader {
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
 
-    const dependenciesData = {
+    const depResolverData = {
       dependencies,
+      policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
     promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
 
     await Promise.all(promises);

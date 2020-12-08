@@ -36,7 +36,7 @@ import BluebirdPromise from 'bluebird';
 import { ExportPersist } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
-import { compact, slice } from 'lodash';
+import { compact, slice, uniqBy } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
@@ -169,28 +169,6 @@ export class ScopeMain implements ComponentFactory {
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
 
-  async getResolvedAspects(components: Component[]) {
-    if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(
-      components,
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
-      this.legacyScope
-    );
-
-    return capsules.map((capsule) => {
-      // return RequireableComponent.fromCapsule(capsule);
-      return new RequireableComponent(capsule.component, () => {
-        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
-          file.relative.includes('.scope.runtime.')
-        );
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(capsule.path);
-      });
-    });
-  }
-
   // TODO: temporary compiler workaround - discuss this with david.
   private toJs(str: string) {
     if (str.endsWith('.ts')) return str.replace('.ts', '.js');
@@ -227,35 +205,56 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    const aspectIds = ids.filter((id) => !id.startsWith('file://'));
+    // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));
     this.localAspects = this.localAspects.concat(localAspects);
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
-    const aspectIds = ids.filter((id) => !id.startsWith('file://'));
-    const componentIds = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return;
     const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
     // Always throw an error when can't load scope extension
     await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
   }
 
-  private async resolveLocalAspects(ids: string[], runtime: string) {
+  private async resolveLocalAspects(ids: string[], runtime?: string) {
     const dirs = this.parseLocalAspect(ids);
 
     return dirs.map((dir) => {
-      const runtimeManifest = this.findRuntime(dir, runtime);
+      const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       return new AspectDefinition(dir, runtimeManifest ? join(dir, 'dist', runtimeManifest) : null);
     });
   }
 
-  async resolveAspects(runtimeName: string) {
-    const userAspectsIds = this.aspectLoader.getUserAspects();
-    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      const id = ComponentID.fromString(aspectId);
-      return this.localAspects.includes(id.fullName.replace('/', '.'));
+  async getResolvedAspects(components: Component[]) {
+    if (!components.length) return [];
+    const capsules = await this.isolator.isolateComponents(
+      components,
+      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      this.legacyScope
+    );
+
+    return capsules.map((capsule) => {
+      // return RequireableComponent.fromCapsule(capsule);
+      return new RequireableComponent(capsule.component, () => {
+        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
+          file.relative.includes('.scope.runtime.')
+        );
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return require(capsule.path);
+      });
     });
-    const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
-    const components = await this.getMany(componentIds);
+  }
+
+  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
+    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
+      return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
+    });
+    const components = await this.getMany(withoutLocalAspects);
     const capsules = await this.isolator.isolateComponents(
       components,
       { baseDir: this.path, skipIfExists: true },
@@ -268,14 +267,21 @@ export class ScopeMain implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
       };
     });
 
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
     const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
-    return aspectDefs.concat(coreAspects).concat(localResolved);
+    const allDefs = aspectDefs.concat(coreAspects).concat(localResolved);
+    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
+
+    return defs;
   }
 
   /**

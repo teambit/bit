@@ -213,6 +213,7 @@
         "react-tooltip": "^4.2.8",
         "remark-frontmatter": "2.0.0",
         "reset-css": "^5.0.1",
+        "resolve-from": "5.0.0",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
         "semver": "^7.3.2",
@@ -245,7 +246,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.188",
+        "bit-bin": "14.8.9-dev.195",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -297,7 +298,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.188",
+            "bit-bin": "14.8.9-dev.195",
             "react-dom": "^16.13.1"
           }
         }
@@ -405,7 +406,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.188",
+            "bit-bin": "14.8.9-dev.195",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

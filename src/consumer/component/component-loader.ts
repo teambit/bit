@@ -44,6 +44,13 @@ export default class ComponentLoader {
     this._shouldCheckForClearingDependenciesCache = true;
   }
 
+  clearOneComponentCache(id: BitId) {
+    const idStr = id.toString();
+    delete this._componentsCache[idStr];
+    delete this._componentsCacheForCapsule[idStr];
+    this.cacheResolvedDependencies = {};
+  }
+
   async invalidateDependenciesCacheIfNeeded(): Promise<void> {
     if (this._shouldCheckForClearingDependenciesCache) {
       const pathsToCheck = [
