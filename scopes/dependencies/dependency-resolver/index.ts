@@ -26,6 +26,7 @@ export {
   SerializedDependency,
   BaseDependency,
   SemverVersion,
+  DependenciesManifest,
   ComponentDependency,
 } from './dependencies';
 export { WorkspacePolicyEntry, WorkspacePolicy, VariantPolicyConfigObject } from './policy';
