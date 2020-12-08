@@ -24,8 +24,8 @@ Overview.examples = [
     scope: {
       NotFoundPage,
     },
-    title: 'Error Component Status',
-    description: 'Using the component with error status property',
+    title: '404 page',
+    description: '404 error message',
     jsx: <NotFoundPage />,
   },
 ];
