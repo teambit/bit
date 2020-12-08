@@ -1753,6 +1753,11 @@
                 "test": false
             },
             {
+                "name": "no-matching-components.ts",
+                "relativePath": "exceptions/no-matching-components.ts",
+                "test": false
+            },
+            {
                 "name": "no-test-files-found.ts",
                 "relativePath": "exceptions/no-test-files-found.ts",
                 "test": false
