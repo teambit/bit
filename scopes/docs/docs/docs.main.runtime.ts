@@ -72,7 +72,7 @@ export class DocsMain {
   }
 
   getDocsFiles(component: Component): AbstractVinyl[] {
-    const devFiles = this.devFiles.getDevFiles(component);
+    const devFiles = this.devFiles.computeDevFiles(component);
     const docFiles = devFiles.get(DocsAspect.id);
     return component.state.filesystem.files.filter((file) => docFiles.includes(file.relative));
   }
