@@ -8,16 +8,16 @@ export default function Overview() {
   return (
     <ThemeContext>
       <>
-        <Section>This component is shown when a page does not exist.</Section>
+        <Section>A page component that displays a 404 error message.</Section>
         <Separator />
       </>
     </ThemeContext>
   );
 }
 
-Overview.abstract = 'A component that shows a 404 error page.';
+Overview.abstract = 'A 404 error page.';
 
-Overview.labels = ['react', 'typescript', '404', 'error'];
+Overview.labels = ['react', 'typescript', '404', 'error', 'page'];
 
 Overview.examples = [
   {
