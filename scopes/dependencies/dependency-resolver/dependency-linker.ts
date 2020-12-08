@@ -1,17 +1,20 @@
-import { compact } from 'ramda-adjunct';
 import path from 'path';
+import { uniq, compact } from 'lodash';
 import fs from 'fs-extra';
+import resolveFrom from 'resolve-from';
 import { link as legacyLink } from 'bit-bin/dist/api/consumer';
-import { ComponentMap } from '@teambit/component';
+import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { BitError } from 'bit-bin/dist/error/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
+import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
 import { WorkspacePolicy } from './policy';
+import { DependencyResolverMain } from './dependency-resolver.main.runtime';
 
 export type LinkingOptions = {
   legacyLink?: boolean;
@@ -40,6 +43,11 @@ export type CoreAspectLinkResult = {
   linkDetail: LinkDetail;
 };
 
+export type DepsLinkedToEnvResult = {
+  componentId: string;
+  linksDetail: LinkDetail[];
+};
+
 export type LinkResults = {
   legacyLinkResults?: LegacyLinksResult[];
   legacyLinkCodemodResults?: CodemodResult[];
@@ -50,7 +58,13 @@ export type LinkResults = {
 
 export class DependencyLinker {
   constructor(
+    private dependencyResolver: DependencyResolverMain,
+
     private aspectLoader: AspectLoaderMain,
+
+    private componentAspect: ComponentMain,
+
+    private envs: EnvsMain,
 
     private logger: Logger,
 
@@ -78,6 +92,9 @@ export class DependencyLinker {
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }
+
+    // Link deps which should be linked to the env
+    await this.linkDepsResolvedFromEnv(componentDirectoryMap);
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
@@ -107,6 +124,84 @@ export class DependencyLinker {
     result.harmonyLink = harmonyLink;
     this.logger.consoleSuccess('linking components');
     return result;
+  }
+
+  private async linkDepsResolvedFromEnv(
+    componentDirectoryMap: ComponentMap<string>
+  ): Promise<Array<DepsLinkedToEnvResult>> {
+    const componentsNeedLinks: {
+      component: Component;
+      dir: string;
+      env;
+      resolvedFromEnv;
+      envId?: string;
+      envDir?: string;
+    }[] = [];
+
+    const componentsNeedLinksP = componentDirectoryMap.toArray().map(async ([component, dir]) => {
+      const policy = await this.dependencyResolver.getPolicy(component);
+      const resolvedFromEnv = policy.getResolvedFromEnv();
+      // Nothing should be resolved from env, do nothing
+      if (!resolvedFromEnv.length) {
+        return;
+      }
+      const env = this.envs.getEnv(component);
+      const componentNeedLink = {
+        component,
+        dir,
+        env,
+        resolvedFromEnv,
+      };
+      componentsNeedLinks.push(componentNeedLink);
+    });
+
+    await Promise.all(componentsNeedLinksP);
+    const envsStringIds = componentsNeedLinks.map((obj) => obj.env.id);
+    const uniqEnvIds = uniq(envsStringIds);
+    const host = this.componentAspect.getHost();
+    const resolvedEnvIds = await host.resolveMultipleComponentIds(uniqEnvIds);
+    const resolvedAspects = await host.resolveAspects(undefined, resolvedEnvIds);
+    const resolvedAspectsIndex = resolvedAspects.reduce((acc, curr) => {
+      if (curr.getId) {
+        acc[curr.getId] = curr;
+      }
+      return acc;
+    }, {});
+    const allLinksP = componentsNeedLinks.map(async (entry) => {
+      const oneComponentLinksP: Array<LinkDetail | undefined> = entry.resolvedFromEnv.entries.map(async (depEntry) => {
+        const linkTarget = path.join(entry.dir, 'node_modules', depEntry.dependencyId);
+        const envDir = resolvedAspectsIndex[entry.env.id].aspectPath;
+        const resolvedModule = resolveModuleFromDir(envDir, depEntry.dependencyId);
+        if (!resolvedModule) {
+          this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
+          return undefined;
+        }
+        const NM = 'node_modules';
+        const linkSrc = path.join(
+          resolvedModule?.slice(0, resolvedModule.lastIndexOf(NM) + NM.length),
+          depEntry.dependencyId
+        );
+        const linkDetail: LinkDetail = {
+          from: linkSrc,
+          to: linkTarget,
+        };
+        fs.removeSync(linkTarget);
+        this.logger.info(
+          `linking dependency ${depEntry.dependencyId} from env directory ${envDir}. link src: ${linkSrc} link target: ${linkTarget}`
+        );
+
+        createSymlinkOrCopy(linkSrc, linkTarget);
+        return linkDetail;
+      });
+      const oneComponentLinks = await Promise.all(oneComponentLinksP);
+      const filterdLinkes = compact(oneComponentLinks);
+      const depsLinkedToEnvResult: DepsLinkedToEnvResult = {
+        componentId: entry.component.id.toString(),
+        linksDetail: filterdLinkes,
+      };
+      return depsLinkedToEnvResult;
+    });
+    return Promise.all(allLinksP);
   }
 
   private async linkBitAspectIfNotExist(
@@ -145,7 +240,7 @@ export class DependencyLinker {
     return { from: src, to: target };
   }
 
-  async linkCoreAspects(dir: string) {
+  async linkCoreAspects(dir: string): Promise<Array<CoreAspectLinkResult | undefined>> {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsIdsWithoutMain = coreAspectsIds.filter((id) => id !== this.aspectLoader.mainAspect.id);
     return coreAspectsIdsWithoutMain.map((id) => {
@@ -281,4 +376,8 @@ function getHarmonyDirForDevEnv(): string {
     throw new BitError(`unable to find @teambit/harmony in ${dirPath}`);
   }
   return dirPath;
+}
+
+function resolveModuleFromDir(fromDir: string, moduleId: string): string | undefined {
+  return resolveFrom.silent(fromDir, moduleId);
 }
