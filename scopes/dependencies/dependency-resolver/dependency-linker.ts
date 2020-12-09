@@ -29,6 +29,8 @@ export type LinkingOptions = {
    * Whether to create links in the root dir node modules to all core aspects
    */
   linkCoreAspects?: boolean;
+
+  linkNestedDepsInNM?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -36,6 +38,7 @@ const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
+  linkNestedDepsInNM: true,
 };
 
 export type LinkDetail = { from: string; to: string };
@@ -104,11 +107,12 @@ export class DependencyLinker {
 
     // Link deps which should be linked to the env
     result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
-
-    result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
-      finalRootDir,
-      componentDirectoryMap
-    );
+    if (linkingOpts.linkNestedDepsInNM) {
+      result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
+        finalRootDir,
+        componentDirectoryMap
+      );
+    }
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
@@ -193,9 +197,15 @@ export class DependencyLinker {
       if (!fs.existsSync(compDirNM)) return undefined;
       // TODO: support modules with scoped packages (start with @) - we need to make this logic 2 levels
 
-      const packagesFoldersToLink = getPackagesFoldersToLink(compDirNM);
       const componentPackageName = componentIdToPackageName(component.state._consumer);
       const innerNMofComponentInNM = path.join(rootNodeModules, componentPackageName);
+      // If the folder itself is a symlink, do not try to symlink inside it
+      console.log(innerNMofComponentInNM);
+      console.log(isPathSymlink(innerNMofComponentInNM));
+      if (isPathSymlink(innerNMofComponentInNM)) {
+        return undefined;
+      }
+      const packagesFoldersToLink = getPackagesFoldersToLink(compDirNM);
       fs.ensureDirSync(innerNMofComponentInNM);
 
       const oneComponentLinks: LinkDetail[] = packagesFoldersToLink.map((folderEntry) => {
@@ -489,4 +499,14 @@ function resolveModuleFromDir(fromDir: string, moduleId: string, silent = true):
 function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string): string {
   const NM = 'node_modules';
   return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+}
+
+function isPathSymlink(path: string): boolean | undefined {
+  // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false}); once upgrade fs-extra
+  try {
+    const stat = fs.lstatSync(path);
+    return stat.isSymbolicLink();
+  } catch (e) {
+    return undefined;
+  }
 }
