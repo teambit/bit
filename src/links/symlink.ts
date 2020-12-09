@@ -11,7 +11,7 @@ export default class Symlink {
   componentId: BitId | null | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forDistOutsideComponentsDir: boolean;
-  constructor(src: string, dest: string, componentId?: BitId, forDistOutsideComponentsDir: boolean) {
+  constructor(src: string, dest: string, componentId?: BitId, forDistOutsideComponentsDir = false) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;
