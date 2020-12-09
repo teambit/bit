@@ -42,10 +42,16 @@ export class TesterTask implements BuildTask {
       });
     });
 
+    const patterns = specFilesWithCapsule.toArray().reduce((acc: string[], [, specs]) => {
+      specs.forEach((spec) => acc.push(spec.path));
+      return acc;
+    }, []);
+
     const testerContext = Object.assign(context, {
       release: true,
       specFiles: specFilesWithCapsule,
       rootPath: context.capsuleNetwork.capsulesRootDir,
+      patterns,
     });
 
     // TODO: remove after fix AbstractVinyl on capsule

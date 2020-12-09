@@ -5,6 +5,7 @@ import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import { Timer } from 'bit-bin/dist/toolbox/timer';
 import { Box, Text } from 'ink';
 import React from 'react';
+import { NoMatchingComponents } from './exceptions';
 
 import type { TesterMain } from './tester.main.runtime';
 
@@ -36,6 +37,8 @@ export class TestCmd implements Command {
     const pattern = userPattern && userPattern.toString();
     const components =
       pattern || scopeName ? await this.workspace.byPattern(pattern || '*', scopeName) : await this.workspace.list();
+
+    if (!components.length) throw new NoMatchingComponents(pattern);
 
     this.logger.console(
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
