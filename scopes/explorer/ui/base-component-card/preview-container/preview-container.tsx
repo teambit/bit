@@ -7,9 +7,9 @@ export type PreviewContainerProps = {
   preview?: any;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function PreviewContainer({ preview }: PreviewContainerProps) {
+export function PreviewContainer({ preview, className, ...rest }: PreviewContainerProps) {
   return (
-    <div className={styles.previewContainer}>
+    <div {...rest} className={classNames(styles.previewContainer, className)}>
       <div
         className={classNames(styles.preview, {
           [styles.emptyPreview]: !preview,
