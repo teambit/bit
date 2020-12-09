@@ -12,7 +12,6 @@ import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
-import ComponentsPendingImport from 'bit-bin/dist/consumer/component-ops/exceptions/components-pending-import';
 
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
@@ -33,17 +32,14 @@ export class WorkspaceComponentLoader {
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, forCapsule).catch((err) => {
-        // @todo: we need to figure out which error to suppress and only console them.
-        // some errors are important to throw immediately, such as ComponentsPendingImport,
-        // otherwise, it goes multiple times to the remotes and unable to load any component.
-        if (err instanceof ComponentsPendingImport) {
-          throw err;
+        if (this.isComponentNotExistsError(err)) {
+          errors.push({
+            id,
+            err,
+          });
+          return undefined;
         }
-        errors.push({
-          id,
-          err,
-        });
-        return undefined;
+        throw err;
       });
     });
     const components = await componentsP;
@@ -143,14 +139,19 @@ export class WorkspaceComponentLoader {
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.
       this.logger.error(`failed loading component ${id.toString()}`, err);
-      if (
-        err instanceof ComponentNotFound ||
-        err instanceof MissingBitMapComponent ||
-        err instanceof ComponentNotFoundInPath
-      )
+      if (this.isComponentNotExistsError(err)) {
         return undefined;
+      }
       throw err;
     }
+  }
+
+  private isComponentNotExistsError(err: Error): boolean {
+    return (
+      err instanceof ComponentNotFound ||
+      err instanceof MissingBitMapComponent ||
+      err instanceof ComponentNotFoundInPath
+    );
   }
 
   private async executeLoadSlot(component: Component) {
