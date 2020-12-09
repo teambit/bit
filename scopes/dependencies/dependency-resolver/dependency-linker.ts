@@ -7,9 +7,12 @@ import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { BitError } from 'bit-bin/dist/error/bit-error';
+import { stripTrailingChar } from 'bit-bin/dist/utils';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import Symlink from 'bit-bin/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
@@ -48,12 +51,19 @@ export type DepsLinkedToEnvResult = {
   linksDetail: LinkDetail[];
 };
 
+export type NestedNMDepsLinksResult = {
+  componentId: string;
+  linksDetail: LinkDetail[];
+};
+
 export type LinkResults = {
   legacyLinkResults?: LegacyLinksResult[];
   legacyLinkCodemodResults?: CodemodResult[];
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
+  resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
+  nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
 };
 
 export class DependencyLinker {
@@ -94,7 +104,12 @@ export class DependencyLinker {
     }
 
     // Link deps which should be linked to the env
-    await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+
+    result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
+      finalRootDir,
+      componentDirectoryMap
+    );
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
@@ -124,6 +139,65 @@ export class DependencyLinker {
     result.harmonyLink = harmonyLink;
     this.logger.consoleSuccess('linking components');
     return result;
+  }
+
+  /**
+   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
+   * of the component. e.g.
+   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
+   */
+  private addSymlinkFromComponentDirNMToWorkspaceDirNM(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): NestedNMDepsLinksResult[] {
+    const rootNodeModules = path.join(rootDir, 'node_modules');
+    const linksOfAllComponents = componentDirectoryMap.toArray().map(([component, dir]) => {
+      const compDirNM = path.join(dir, 'node_modules');
+      if (!fs.existsSync(compDirNM)) return undefined;
+      const folders = fs
+        .readdirSync(compDirNM, { withFileTypes: true })
+        .filter((dirent) => {
+          if (dirent.name.startsWith('.')) {
+            return false;
+          }
+          return dirent.isDirectory() || dirent.isSymbolicLink();
+        })
+        .map((dirent) => dirent.name);
+
+      const componentPackageName = componentIdToPackageName(component.state._consumer);
+      const innerNMofComponentInNM = path.join(rootNodeModules, componentPackageName);
+      fs.ensureDirSync(innerNMofComponentInNM);
+
+      const oneComponentLinks: LinkDetail[] = folders.map((folder) => {
+        const withoutTrailingSlash = stripTrailingChar(folder, '/');
+        const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', withoutTrailingSlash);
+        const linkSrc = path.join(compDirNM, withoutTrailingSlash);
+        const linkDetail: LinkDetail = {
+          from: linkSrc,
+          to: linkTarget,
+        };
+        // TODO: consider using relative links here
+        // but this requires check if the src is symlink itself and manage it otherwise you will get an error about - EROFS: read-only file system
+        // const relativeTarget = path.relative(linkTarget, linkSrc);
+        const symlink = new Symlink(linkSrc, linkTarget, component.id._legacy, false);
+        this.logger.info(
+          `linking nested dependency ${
+            folder.split('/')[0]
+          } for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
+        );
+
+        symlink.writeWithNativeFS();
+        return linkDetail;
+      });
+
+      const filteredLinks = compact(oneComponentLinks);
+      return {
+        componentId: component.id.toString(),
+        linksDetail: filteredLinks,
+      };
+    });
+    const filteredLinks = compact(linksOfAllComponents);
+    return filteredLinks;
   }
 
   private async linkDepsResolvedFromEnv(
@@ -194,10 +268,10 @@ export class DependencyLinker {
         return linkDetail;
       });
       const oneComponentLinks = await Promise.all(oneComponentLinksP);
-      const filterdLinkes = compact(oneComponentLinks);
+      const filteredLinks = compact(oneComponentLinks);
       const depsLinkedToEnvResult: DepsLinkedToEnvResult = {
         componentId: entry.component.id.toString(),
-        linksDetail: filterdLinkes,
+        linksDetail: filteredLinks,
       };
       return depsLinkedToEnvResult;
     });
