@@ -193,6 +193,8 @@ export class DependencyLinker {
       const oneComponentLinks: LinkDetail[] = folders.map((folderEntry) => {
         const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', folderEntry?.moduleName);
         const linkSrc = folderEntry.path;
+        // This works as well, consider using it instead
+        // const linkSrc = folderEntry.origPath || folderEntry.path;
         const linkDetail: LinkDetail = {
           from: `${linkSrc} ${folderEntry.origPath ? '(' + folderEntry.origPath + ')' : ''}`,
           to: linkTarget,
