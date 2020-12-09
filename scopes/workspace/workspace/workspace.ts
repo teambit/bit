@@ -516,7 +516,7 @@ export class Workspace implements ComponentFactory {
     const ids = await this.listIds();
 
     const targetIds = ids.filter((id) => {
-      const spec = isMatchNamespacePatternItem(id.toString(), `${scope}/${pattern}`);
+      const spec = isMatchNamespacePatternItem(id._legacy.toStringWithoutVersion().toString(), `${scope}/${pattern}`);
       return spec.match;
     });
 
