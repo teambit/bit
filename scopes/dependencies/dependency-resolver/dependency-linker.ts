@@ -200,8 +200,6 @@ export class DependencyLinker {
       const componentPackageName = componentIdToPackageName(component.state._consumer);
       const innerNMofComponentInNM = path.join(rootNodeModules, componentPackageName);
       // If the folder itself is a symlink, do not try to symlink inside it
-      console.log(innerNMofComponentInNM);
-      console.log(isPathSymlink(innerNMofComponentInNM));
       if (isPathSymlink(innerNMofComponentInNM)) {
         return undefined;
       }
