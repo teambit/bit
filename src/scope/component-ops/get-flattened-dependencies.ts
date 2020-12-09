@@ -33,6 +33,8 @@ export class FlattenedDependenciesGetter {
 
   private createGraphs(components: Component[]) {
     this.dependenciesGraph = buildComponentsGraphCombined(components);
+    // uncomment to see the graph nicely. very helpful for debugging
+    // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
     this.prodGraph = this.dependenciesGraph.getSubGraphByEdgeType('dependencies');
   }
 
@@ -73,13 +75,22 @@ export class FlattenedDependenciesGetter {
   async getFlattenedFromVersion(id: BitId): Promise<Deps> {
     if (!this.cache[id.toString()]) {
       const versionDeps = this.versionDependencies.find(({ component }) => component.toId().isEqual(id));
+      const emptyDeps = { dependencies: new BitIds(), devDependencies: new BitIds() };
       if (versionDeps) {
         const dependencies = await versionDeps.component.flattenedDependencies(this.scope.objects);
         const devDependencies = await versionDeps.component.flattenedDevDependencies(this.scope.objects);
         this.cache[id.toString()] = { dependencies, devDependencies };
       } else {
-        // @todo: should throw an error?
-        this.cache[id.toString()] = { dependencies: new BitIds(), devDependencies: new BitIds() };
+        const existing = this.components.find((c) => c.id.isEqual(id));
+        if (existing) {
+          this.cache[id.toString()] = emptyDeps;
+        } else {
+          const fromModel = await this.scope.getVersionInstance(id);
+          this.cache[id.toString()] = {
+            dependencies: fromModel.flattenedDependencies,
+            devDependencies: fromModel.flattenedDevDependencies,
+          };
+        }
       }
     }
     return this.cache[id.toString()];
