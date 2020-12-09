@@ -32,6 +32,7 @@ export default class Symlink {
     let exists;
     try {
       exists = fs.lstatSync(dest);
+      // eslint-disable-next-line no-empty
     } catch (e) {}
     if (exists) {
       fs.unlinkSync(dest);

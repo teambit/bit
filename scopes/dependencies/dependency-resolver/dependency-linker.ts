@@ -7,7 +7,6 @@ import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
 import { BitError } from 'bit-bin/dist/error/bit-error';
-import { stripTrailingChar } from 'bit-bin/dist/utils';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
@@ -204,8 +203,9 @@ export class DependencyLinker {
         const linkSrc = folderEntry.path;
         // This works as well, consider using it instead
         // const linkSrc = folderEntry.origPath || folderEntry.path;
+        const origPath = folderEntry.origPath ? `(${folderEntry.origPath})` : '';
         const linkDetail: LinkDetail = {
-          from: `${linkSrc} ${folderEntry.origPath ? '(' + folderEntry.origPath + ')' : ''}`,
+          from: `${linkSrc} ${origPath}`,
           to: linkTarget,
         };
         const resolvedTarget = path.resolve(linkTarget, '..');
@@ -279,7 +279,6 @@ export class DependencyLinker {
           this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
           return undefined;
         }
-        const NM = 'node_modules';
         const linkSrc = resolveModuleDirFromFile(resolvedModule, depEntry.dependencyId);
         const linkDetail: LinkDetail = {
           from: linkSrc,
