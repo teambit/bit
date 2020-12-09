@@ -91,7 +91,7 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.3",
         "@teambit/evangelist.surfaces.tooltip": "0.5.3",
         "@teambit/evangelist.theme.icon-font": "^0.5.3",
-        "@teambit/harmony": "0.2.8",
+        "@teambit/harmony": "0.2.10",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/classnames": "^2.2.10",
