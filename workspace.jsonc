@@ -9,8 +9,6 @@
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/pnpm",
-    "strictPeerDependencies": true,
-    "extraArgs": [],
     "policy": {
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
@@ -64,7 +62,7 @@
         "@teambit/base-ui.theme.sizes": "^0.5.3",
         "@teambit/base-ui.theme.theme-provider": "^0.5.3",
         "@teambit/base-ui.utils.sub-paths": "^0.5.3",
-        "@teambit/base-ui.utils.time-ago": "^0.5.3",
+        "@teambit/base-ui.utils.time-ago": "0.5.4",
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "^0.2.3",
         "@teambit/documenter.routing.external-link": "0.2.3",
@@ -253,7 +251,13 @@
         "react": "^16.13.1",
         "react-dom": "^16.13.1"
       }
-    }
+    },
+    "packageManagerArgs": [],
+    "devFilePatterns": [
+      "*.spec.ts"
+    ],
+    "strictPeerDependencies": true,
+    "extraArgs": []
   },
   "teambit.workspace/variants": {
     "*": {
