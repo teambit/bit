@@ -32,6 +32,11 @@ export function buildComponentsGraph(components: Component[]): AllDependenciesGr
   return { graphDeps, graphDevDeps, graphExtensionDeps };
 }
 
+/**
+ * one graph of the given components. it doesn't fetch/load anything. it builds the graph with the
+ * given data. the node is a BitId and the edge has the label of the dependency type. it can be
+ * either "dependencies" or "devDependencies".
+ */
 export function buildComponentsGraphCombined(components: Component[]): Graph {
   const graph = new Graph();
   components.forEach((component) => {

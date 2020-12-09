@@ -27,6 +27,10 @@ export default class Graph extends GraphLib {
     return successorsList;
   }
 
+  /**
+   * e.g. a graph has edges of "dependencies" and "devDependencies" and you want a new graph of the
+   * dependencies only.
+   */
   getSubGraphByEdgeType(edgeType: string): Graph {
     const newGraph = new Graph();
     newGraph.setNodes(this.nodes());
