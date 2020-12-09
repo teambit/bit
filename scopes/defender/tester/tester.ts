@@ -50,8 +50,17 @@ export interface TesterContext extends ExecutionContext {
   /**
    * is start from ui
    */
-
   ui?: boolean;
+
+  /**
+   * determines whether to start the tester in watch mode.
+   */
+  watch?: boolean;
+
+  /**
+   * array of patterns to test.
+   */
+  patterns: string[];
 }
 
 /**

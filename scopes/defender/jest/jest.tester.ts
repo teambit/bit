@@ -123,16 +123,21 @@ export class JestTester implements Tester {
       rootDir: context.rootPath,
     };
 
+    // eslint-disable-next-line no-console
+    console.warn = (message: string) => {
+      this.logger.warn(message);
+    };
+
     if (context.debug) config.runInBand = true;
+    if (context.watch) {
+      config.watchAll = true;
+      config.noCache = true;
+    }
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
-    const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
-      specs.forEach((spec) => acc.push(spec.path));
-      return acc;
-    }, []);
 
     const jestConfigWithSpecs = Object.assign(jestConfig, {
-      testMatch: testFiles,
+      testMatch: context.patterns,
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
@@ -164,7 +169,7 @@ export class JestTester implements Tester {
       const jestConfig = require(this.jestConfig);
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
-        testMatch: testFiles,
+        testMatch: context.patterns,
       });
 
       try {

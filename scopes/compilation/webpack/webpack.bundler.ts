@@ -23,7 +23,7 @@ export class WebpackBundler implements Bundler {
   ) {}
 
   async run(): Promise<BundlerResult[]> {
-    const compilers = this.getConfig().map((config) => webpack(config));
+    const compilers = this.getConfig().map((config) => webpack(config as any));
     const longProcessLogger = this.logger.createLongProcessLogger('bundling component preview', compilers.length);
     const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
@@ -74,7 +74,7 @@ export class WebpackBundler implements Bundler {
     pathArray.pop();
     const rootPath = pathArray.join('/');
 
-    return [merge(configFactory(this.unique(entries), rootPath), this.envConfig)];
+    return [merge(configFactory(this.unique(entries), rootPath), this.envConfig as any)];
   }
 
   private unique(items: string[]): string[] {
@@ -91,7 +91,7 @@ export class WebpackBundler implements Bundler {
 
   private getConfig() {
     return this.targets.map((target) => {
-      return merge(configFactory(target.entries, target.outputPath), this.envConfig);
+      return merge(configFactory(target.entries, target.outputPath), this.envConfig as any);
     });
   }
 }

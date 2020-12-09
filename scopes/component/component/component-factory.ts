@@ -1,5 +1,6 @@
 import { BitId } from 'bit-bin/dist/bit-id';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import type { AspectDefinition } from '@teambit/aspect-loader';
 
 import { Component } from './component';
 import { ComponentID } from './id';
@@ -51,6 +52,11 @@ export interface ComponentFactory {
    * load extension.
    */
   loadAspects: (ids: string[], throwOnError: boolean) => Promise<void>;
+
+  /**
+   * Resolve dirs for aspects
+   */
+  resolveAspects: (runtimeName?: string, componentIds?: ComponentID[]) => Promise<AspectDefinition[]>;
 
   /**
    * list all components in the host.

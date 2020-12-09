@@ -142,7 +142,7 @@ export class DevFilesMain {
 
       DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
         const componentId = await workspace.resolveComponentId(consumerComponent.id);
-        const component = await workspace.get(componentId, false, consumerComponent, true, false);
+        const component = await workspace.get(componentId, false, consumerComponent);
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         const computedDevFiles = devFiles.computeDevFiles(component);
         return computedDevFiles.list();

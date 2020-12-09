@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import type { PubsubMain } from '@teambit/pubsub';
-import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
 import {
@@ -27,6 +27,7 @@ import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
+import { isMatchNamespacePatternItem } from '@teambit/modules.match-pattern';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
@@ -40,7 +41,6 @@ import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
 import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import legacyLogger from 'bit-bin/dist/logger/logger';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
@@ -50,7 +50,7 @@ import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/d
 import BluebirdPromise from 'bluebird';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice } from 'lodash';
+import { slice, groupBy, uniqBy } from 'lodash';
 import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
@@ -267,6 +267,25 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * get ids of all workspace components.
+   */
+  async listIds(): Promise<ComponentID[]> {
+    return this.resolveMultipleComponentIds(this.consumer.bitmapIds);
+  }
+
+  /**
+   * Check if a specific id exist in the workspace
+   * @param componentId
+   */
+  async hasId(componentId: ComponentID): Promise<boolean> {
+    const ids = await this.listIds();
+    const found = ids.find((id) => {
+      return id.isEqual(componentId);
+    });
+    return !!found;
+  }
+
+  /**
    * list all modified components in the workspace.
    */
   async modified() {
@@ -403,6 +422,12 @@ export class Workspace implements ComponentFactory {
     this.componentList = new ComponentsList(this.consumer);
   }
 
+  clearComponentCache(id: ComponentID) {
+    this.componentLoader.clearComponentCache(id);
+    this.consumer.componentLoader.clearOneComponentCache(id._legacy);
+    this.componentList = new ComponentsList(this.consumer);
+  }
+
   async triggerOnComponentChange(id: ComponentID): Promise<OnComponentEventResult[]> {
     const component = await this.get(id);
     // if a new file was added, upon component-load, its .bitmap entry is updated to include the
@@ -482,15 +507,21 @@ export class Workspace implements ComponentFactory {
     return resolvedList;
   }
 
-  // @gilad needs to implement on variants
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async byPattern(pattern: string): Promise<Component[]> {
-    // @todo: this is a naive implementation, replace it with a real one.
-    const all = await this.list();
-    if (!pattern) return this.list();
-    return all.filter((c) => {
-      return c.id.toString({ ignoreVersion: true }) === pattern || c.id.fullName === pattern;
+  /**
+   * load components into the workspace through a variants pattern.
+   * @param pattern variants.
+   * @param scope scope name.
+   */
+  async byPattern(pattern: string, scope = '*'): Promise<Component[]> {
+    const ids = await this.listIds();
+
+    const targetIds = ids.filter((id) => {
+      const spec = isMatchNamespacePatternItem(id._legacy.toStringWithoutVersion(), `${scope}/${pattern}`);
+      return spec.match;
     });
+
+    const components = await this.getMany(targetIds);
+    return components;
   }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
@@ -763,27 +794,6 @@ export class Workspace implements ComponentFactory {
     return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
   }
 
-  // TODO: refactor to aspect-loader after handling of default scope.
-  async isCoreAspect(id: ComponentID) {
-    const scope = await this.componentDefaultScope(id);
-    if (!scope) throw new Error('default scope not defined');
-    // const newId = id.changeScope(scope);
-    // TODO: fix properly ASAP after resolving default scope issue.
-    return this.aspectLoader.isCoreAspect(`teambit.bit/${id._legacy.toStringWithoutScope()}`);
-  }
-
-  private async filterCoreAspects(components: Component[]) {
-    const promises = components.map(async (component) => {
-      return {
-        isCore: await this.isCoreAspect(component.id),
-        component,
-      };
-    });
-
-    const res = await Promise.all(promises);
-    return res.filter((aspect) => !aspect.isCore).map((aspect) => aspect.component);
-  }
-
   // remove this function
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
@@ -827,15 +837,21 @@ export class Workspace implements ComponentFactory {
     }
   }
 
-  async resolveAspects(runtimeName: string) {
+  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
     let missingPaths = false;
     const stringIds: string[] = [];
-    const ids = this.harmony.extensionsIds;
+    const idsToResolve = componentIds ? componentIds.map((id) => id.toString()) : this.harmony.extensionsIds;
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
-    const userAspectsIds: string[] = difference(ids, coreAspectsIds);
-    const componentIds = await this.resolveMultipleComponentIds(userAspectsIds);
-    const components = await this.getMany(componentIds);
-    const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
+    const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
+    const componentIdsToResolve = await this.resolveMultipleComponentIds(userAspectsIds);
+    const groupedByHost = groupBy(componentIdsToResolve, (id) => {
+      if (this.hasId(id)) {
+        return 'workspace';
+      }
+      return 'scope';
+    });
+    const wsComponents = await this.getMany(groupedByHost.workspace || []);
+    const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
       const localPath = path.join(this.path, 'node_modules', packageName);
@@ -846,11 +862,16 @@ export class Workspace implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
       };
     });
 
-    const coreAspectDefs = await Promise.all(
+    let scopeAspectDefs: AspectDefinition[] = [];
+    if (groupedByHost.scope) {
+      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, groupedByHost.scope);
+    }
+
+    let coreAspectDefs = await Promise.all(
       coreAspectsIds.map(async (coreId) => {
         const rawDef = await getAspectDef(coreId, runtimeName);
         return this.aspectLoader.loadDefinition(rawDef);
@@ -858,15 +879,24 @@ export class Workspace implements ComponentFactory {
     );
 
     // due to lack of workspace and scope runtimes. TODO: fix after adding them.
-    const workspaceAspects = coreAspectDefs.filter((coreAspect) => {
-      return coreAspect.runtimePath;
-    });
+    if (runtimeName) {
+      coreAspectDefs = coreAspectDefs.filter((coreAspect) => {
+        return coreAspect.runtimePath;
+      });
+    }
 
     if (missingPaths) {
       await link(stringIds, false);
     }
 
-    return aspectDefs.concat(workspaceAspects);
+    const allDefs = aspectDefs.concat(coreAspectDefs).concat(scopeAspectDefs);
+    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
+
+    return defs;
   }
 
   /**
@@ -889,24 +919,6 @@ export class Workspace implements ComponentFactory {
     const extensionsToLoad = difference(extensionsIds, loadedExtensions);
     if (!extensionsToLoad.length) return;
     await this.loadAspects(extensionsToLoad, throwOnError);
-  }
-
-  private async getCompiler(component: Component) {
-    const env = this.envs.getEnv(component)?.env;
-    return env?.getCompiler();
-  }
-
-  async getRuntimePath(component: Component, modulePath: string, runtime: string): Promise<string | null> {
-    const runtimeFile = component.filesystem.files.find((file: AbstractVinyl) => {
-      return file.relative.includes(`.${runtime}.runtime`);
-    });
-
-    // @david we should add a compiler api for this.
-    if (!runtimeFile) return null;
-    const compiler = await this.getCompiler(component);
-    const dist = compiler.getDistPathBySrcPath(runtimeFile.relative);
-
-    return join(modulePath, dist);
   }
 
   /**
@@ -941,7 +953,7 @@ export class Workspace implements ComponentFactory {
         // eslint-disable-next-line global-require, import/no-dynamic-require
         const aspect = require(localPath);
         // require aspect runtimes
-        const runtimePath = await this.getRuntimePath(component, localPath, MainRuntime.name);
+        const runtimePath = await this.aspectLoader.getRuntimePath(component, localPath, MainRuntime.name);
         // eslint-disable-next-line global-require, import/no-dynamic-require
         if (runtimePath) require(runtimePath);
         return aspect;

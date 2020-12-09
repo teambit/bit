@@ -49,6 +49,8 @@ import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import WorkerAspect from '@teambit/worker';
+import MultiCompilerAspect from '@teambit/multi-compiler';
+import MDXAspect from '@teambit/mdx';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -60,12 +62,14 @@ export const manifestsMap = {
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
   [ComponentAspect.id]: ComponentAspect,
+  [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
+  [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
   [CreateAspect.id]: CreateAspect,
   [EnvsAspect.id]: EnvsAspect,

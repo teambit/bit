@@ -2,13 +2,15 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { Compiler, CompilerMain, CompilerOptions } from '@teambit/compiler';
+import { CompilerMain, CompilerOptions } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
+import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
+import { MultiCompilerMain } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
@@ -67,7 +69,11 @@ export class ReactEnv implements Environment {
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain
+    private eslint: ESLintMain,
+
+    private multiCompiler: MultiCompilerMain,
+
+    private mdx: MDXMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
@@ -86,10 +92,7 @@ export class ReactEnv implements Environment {
     return this.jestAspect.createTester(config, jestModule);
   }
 
-  /**
-   * returns a component compiler.
-   */
-  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts): Compiler {
+  createTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
     const tsconfig = this.getTsConfig(targetConfig);
     return this.tsAspect.createCompiler(
       {
@@ -99,6 +102,15 @@ export class ReactEnv implements Environment {
         ...compilerOptions,
       },
       tsModule
+    );
+  }
+
+  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
+    if (!this.config.mdx) return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
+
+    return this.multiCompiler.createCompiler(
+      [this.createTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
+      compilerOptions
     );
   }
 
@@ -137,7 +149,7 @@ export class ReactEnv implements Environment {
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
     const defaultConfig = this.getWebpackConfig(context);
-    const config = targetConfig ? webpackMerge(targetConfig, defaultConfig) : defaultConfig;
+    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     const withDocs = Object.assign(context, {
       entry: context.entry.concat([require.resolve('./docs')]),
     });
@@ -147,8 +159,8 @@ export class ReactEnv implements Environment {
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const defaultConfig = previewConfigFactory();
-    const config = targetConfig ? webpackMerge(targetConfig, defaultConfig) : defaultConfig;
-    return this.webpack.createBundler(context, config);
+    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
+    return this.webpack.createBundler(context, config as any);
   }
 
   /**
@@ -207,7 +219,7 @@ export class ReactEnv implements Environment {
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(targetConfig));
+    return this.compiler.createTask('MultiCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {
