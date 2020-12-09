@@ -1,5 +1,5 @@
 import path from 'path';
-import { uniq, compact } from 'lodash';
+import { uniq, compact, flatten } from 'lodash';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from 'bit-bin/dist/api/consumer';
@@ -151,12 +151,9 @@ export class DependencyLinker {
     componentDirectoryMap: ComponentMap<string>
   ): NestedNMDepsLinksResult[] {
     const rootNodeModules = path.join(rootDir, 'node_modules');
-    const linksOfAllComponents = componentDirectoryMap.toArray().map(([component, dir]) => {
-      const compDirNM = path.join(dir, 'node_modules');
-      if (!fs.existsSync(compDirNM)) return undefined;
-      // TODO: support modules with scoped packages (start with @) - we need to make this logic 2 levels
+    const getPackagesFoldersToLink = (dir: string, parent?: string) => {
       const folders = fs
-        .readdirSync(compDirNM, { withFileTypes: true })
+        .readdirSync(dir, { withFileTypes: true })
         .filter((dirent) => {
           if (dirent.name.startsWith('.')) {
             return false;
@@ -164,33 +161,45 @@ export class DependencyLinker {
           return dirent.isDirectory() || dirent.isSymbolicLink();
         })
         .map((dirent) => {
-          const dirPath = path.join(compDirNM, dirent.name);
+          const dirPath = path.join(dir, dirent.name);
+          const moduleName = parent ? `${parent}/${dirent.name}` : dirent.name;
+          // This is a scoped package, need to go inside
+          if (dirent.name.startsWith('@')) {
+            return getPackagesFoldersToLink(dirPath, dirent.name);
+          }
+
           if (dirent.isSymbolicLink()) {
-            // console.log('dirPath', dirPath)
-            const resolvedModuleFrom = resolveModuleFromDir(dir, dirent.name);
+            const resolvedModuleFrom = resolveModuleFromDir(dir, moduleName);
             if (!resolvedModuleFrom) {
               return {
-                moduleName: dirent.name,
+                moduleName,
                 path: dirPath,
               };
             }
             return {
               origPath: dirPath,
-              moduleName: dirent.name,
-              path: resolveModuleDirFromFile(resolvedModuleFrom, dirent.name),
+              moduleName,
+              path: resolveModuleDirFromFile(resolvedModuleFrom, moduleName),
             };
           }
           return {
-            moduleName: dirent.name,
+            moduleName,
             path: dirPath,
           };
         });
+      return flatten(folders);
+    };
+    const linksOfAllComponents = componentDirectoryMap.toArray().map(([component, dir]) => {
+      const compDirNM = path.join(dir, 'node_modules');
+      if (!fs.existsSync(compDirNM)) return undefined;
+      // TODO: support modules with scoped packages (start with @) - we need to make this logic 2 levels
 
+      const packagesFoldersToLink = getPackagesFoldersToLink(compDirNM);
       const componentPackageName = componentIdToPackageName(component.state._consumer);
       const innerNMofComponentInNM = path.join(rootNodeModules, componentPackageName);
       fs.ensureDirSync(innerNMofComponentInNM);
 
-      const oneComponentLinks: LinkDetail[] = folders.map((folderEntry) => {
+      const oneComponentLinks: LinkDetail[] = packagesFoldersToLink.map((folderEntry) => {
         const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', folderEntry?.moduleName);
         const linkSrc = folderEntry.path;
         // This works as well, consider using it instead
@@ -199,9 +208,8 @@ export class DependencyLinker {
           from: `${linkSrc} ${folderEntry.origPath ? '(' + folderEntry.origPath + ')' : ''}`,
           to: linkTarget,
         };
-        // TODO: consider using relative links here
-        // but this requires check if the src is symlink itself and manage it otherwise you will get an error about - EROFS: read-only file system
-        const relativeSrc = path.relative(path.resolve(linkTarget, '..'), linkSrc);
+        const resolvedTarget = path.resolve(linkTarget, '..');
+        const relativeSrc = path.relative(resolvedTarget, linkSrc);
         const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
         this.logger.info(
           `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
