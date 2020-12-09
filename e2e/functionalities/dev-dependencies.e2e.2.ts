@@ -165,6 +165,7 @@ describe('foo', () => {
       });
     });
   });
+  // (bar ->(prod)-> is-string ->(dev)->is-type ->(prod)-> baz)
   describe('dev-dependency of a nested component', () => {
     let output;
     before(() => {
@@ -172,7 +173,8 @@ describe('foo', () => {
       helper.fs.createFile('bar', 'foo.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.fs.createFile('utils', 'is-string.js', '');
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.createFile('utils', 'is-type.js', 'require("./baz");');
+      helper.fs.createFile('utils', 'baz.js', '');
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.addComponentUtilsIsType();
       helper.command.addComponent('utils/is-string.js', {
@@ -180,6 +182,7 @@ describe('foo', () => {
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js',
       });
+      helper.command.addComponent('utils/baz.js');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -193,10 +196,11 @@ describe('foo', () => {
     it('bit status should show a clean state', () => {
       helper.command.expectStatusToBeClean();
     });
-    it('the nested dev-dependency should be saved in the flattenedDevDependencies', () => {
+    it('the nested dev-dependency and nested prod of the nested dev-dependency should be saved in the flattenedDevDependencies', () => {
       const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-      expect(barFoo.flattenedDevDependencies).to.have.lengthOf(1);
-      expect(barFoo.flattenedDevDependencies[0].name).to.equal('utils/is-type');
+      expect(barFoo.flattenedDevDependencies).to.have.lengthOf(2);
+      const names = barFoo.flattenedDevDependencies.map((d) => d.name);
+      expect(names).to.deep.equal(['utils/is-type', 'baz']);
     });
   });
   describe('dev-dependency that requires prod-dependency', () => {
