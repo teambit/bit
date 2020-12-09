@@ -275,7 +275,7 @@ export default async function tagModelComponent({
 
   if (persist) {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
-    await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    await addFlattenedDependenciesToComponents(consumer, allComponentsToTag);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
     validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
@@ -316,9 +316,9 @@ async function addComponentsToScope(consumer: Consumer, components: Component[],
   });
 }
 
-async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
+async function addFlattenedDependenciesToComponents(consumer: Consumer, components: Component[]) {
   loader.start('importing missing dependencies...');
-  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
+  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(consumer.scope, components);
   await flattenedDependenciesGetter.populateFlattenedDependencies();
   loader.stop();
 }

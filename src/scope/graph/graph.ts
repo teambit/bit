@@ -1,4 +1,4 @@
-import { Graph as GraphLib } from 'graphlib';
+import graphlib, { Graph as GraphLib } from 'graphlib';
 import R from 'ramda';
 
 import { BitId } from '../../bit-id';
@@ -27,6 +27,18 @@ export default class Graph extends GraphLib {
     return successorsList;
   }
 
+  getSubGraphByEdgeType(edgeType: string): Graph {
+    const newGraph = new Graph();
+    newGraph.setNodes(this.nodes());
+    this.edges().forEach((edge) => {
+      const edgeLabel = this.edge(edge);
+      if (edgeLabel === edgeType) {
+        newGraph.setEdge(edge.v, edge.w, edgeType);
+      }
+    });
+    return newGraph;
+  }
+
   findSuccessorsInGraph(ids: string[]): Component[] {
     const dependenciesFromAllIds = R.flatten(ids.map((id) => this.getSuccessorsByEdgeTypeRecursively(id)));
     const components: Component[] = R.uniq([...dependenciesFromAllIds, ...ids])
@@ -46,6 +58,10 @@ export default class Graph extends GraphLib {
       if (!component) throw new Error(`unable to find ${id.toString()} in the graph`);
       return component.id;
     });
+  }
+
+  toString() {
+    return graphlib.json.write(this);
   }
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

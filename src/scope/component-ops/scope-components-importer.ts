@@ -1,4 +1,5 @@
-import { mapSeries, filter } from 'bluebird';
+import { filter } from 'bluebird';
+import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
 

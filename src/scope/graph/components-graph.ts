@@ -125,7 +125,7 @@ export async function buildOneGraphForComponentsUsingScope(
   return buildGraphFromComponentsObjects(allComponents, direction);
 }
 
-function buildGraphFromComponentsObjects(
+export function buildGraphFromComponentsObjects(
   components: Component[],
   direction: 'normal' | 'reverse' = 'normal',
   ignoreIds = new BitIds()
