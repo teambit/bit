@@ -154,6 +154,7 @@ export class DependencyLinker {
     const linksOfAllComponents = componentDirectoryMap.toArray().map(([component, dir]) => {
       const compDirNM = path.join(dir, 'node_modules');
       if (!fs.existsSync(compDirNM)) return undefined;
+      // TODO: support modules with scoped packages (start with @) - we need to make this logic 2 levels
       const folders = fs
         .readdirSync(compDirNM, { withFileTypes: true })
         .filter((dirent) => {
@@ -162,28 +163,46 @@ export class DependencyLinker {
           }
           return dirent.isDirectory() || dirent.isSymbolicLink();
         })
-        .map((dirent) => dirent.name);
+        .map((dirent) => {
+          const dirPath = path.join(compDirNM, dirent.name);
+          if (dirent.isSymbolicLink()) {
+            // console.log('dirPath', dirPath)
+            const resolvedModuleFrom = resolveModuleFromDir(dir, dirent.name);
+            if (!resolvedModuleFrom) {
+              return {
+                moduleName: dirent.name,
+                path: dirPath,
+              };
+            }
+            return {
+              origPath: dirPath,
+              moduleName: dirent.name,
+              path: resolveModuleDirFromFile(resolvedModuleFrom, dirent.name),
+            };
+          }
+          return {
+            moduleName: dirent.name,
+            path: dirPath,
+          };
+        });
 
       const componentPackageName = componentIdToPackageName(component.state._consumer);
       const innerNMofComponentInNM = path.join(rootNodeModules, componentPackageName);
       fs.ensureDirSync(innerNMofComponentInNM);
 
-      const oneComponentLinks: LinkDetail[] = folders.map((folder) => {
-        const withoutTrailingSlash = stripTrailingChar(folder, '/');
-        const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', withoutTrailingSlash);
-        const linkSrc = path.join(compDirNM, withoutTrailingSlash);
+      const oneComponentLinks: LinkDetail[] = folders.map((folderEntry) => {
+        const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', folderEntry?.moduleName);
+        const linkSrc = folderEntry.path;
         const linkDetail: LinkDetail = {
-          from: linkSrc,
+          from: `${linkSrc} ${folderEntry.origPath ? '(' + folderEntry.origPath + ')' : ''}`,
           to: linkTarget,
         };
         // TODO: consider using relative links here
         // but this requires check if the src is symlink itself and manage it otherwise you will get an error about - EROFS: read-only file system
-        // const relativeTarget = path.relative(linkTarget, linkSrc);
-        const symlink = new Symlink(linkSrc, linkTarget, component.id._legacy, false);
+        const relativeSrc = path.relative(path.resolve(linkTarget, '..'), linkSrc);
+        const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
         this.logger.info(
-          `linking nested dependency ${
-            folder.split('/')[0]
-          } for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
+          `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
         );
 
         symlink.writeWithNativeFS();
@@ -251,10 +270,7 @@ export class DependencyLinker {
           return undefined;
         }
         const NM = 'node_modules';
-        const linkSrc = path.join(
-          resolvedModule?.slice(0, resolvedModule.lastIndexOf(NM) + NM.length),
-          depEntry.dependencyId
-        );
+        const linkSrc = resolveModuleDirFromFile(resolvedModule, depEntry.dependencyId);
         const linkDetail: LinkDetail = {
           from: linkSrc,
           to: linkTarget,
@@ -452,6 +468,16 @@ function getHarmonyDirForDevEnv(): string {
   return dirPath;
 }
 
-function resolveModuleFromDir(fromDir: string, moduleId: string): string | undefined {
-  return resolveFrom.silent(fromDir, moduleId);
+// TODO: extract to new component
+function resolveModuleFromDir(fromDir: string, moduleId: string, silent = true): string | undefined {
+  if (silent) {
+    return resolveFrom.silent(fromDir, moduleId);
+  }
+  return resolveFrom(fromDir, moduleId);
+}
+
+// TODO: extract to new component
+function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string): string {
+  const NM = 'node_modules';
+  return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
 }
