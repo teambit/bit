@@ -106,7 +106,8 @@ export class StartCmd implements Command {
         <CliOutput
           startingTimestamp={Date.now()}
           pubsub={this.pubsub}
-          commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch }}
+          // make sure browser doesn't open until making it work constantly and correctly.
+          commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: true }}
           uiServer={null} // Didn't start yet
         />
       </>
