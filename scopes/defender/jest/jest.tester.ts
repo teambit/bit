@@ -135,6 +135,7 @@ export class JestTester implements Tester {
     }
     // eslint-disable-next-line
     const jestConfig = require(this.jestConfig);
+
     const jestConfigWithSpecs = Object.assign(jestConfig, {
       testMatch: context.patterns,
     });
