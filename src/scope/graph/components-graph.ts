@@ -32,6 +32,16 @@ export function buildComponentsGraph(components: Component[]): AllDependenciesGr
   return { graphDeps, graphDevDeps, graphExtensionDeps };
 }
 
+export function buildComponentsGraphCombined(components: Component[]): Graph {
+  const graph = new Graph();
+  components.forEach((component) => {
+    _setGraphEdges(component.id, component.dependencies, graph);
+    _setGraphEdges(component.id, component.devDependencies, graph, 'devDependencies');
+    _setGraphEdges(component.id, component.extensionDependencies, graph, 'devDependencies');
+  });
+  return graph;
+}
+
 export function buildComponentsGraphForComponentsAndVersion(
   components: ComponentsAndVersions[]
 ): AllDependenciesGraphs {
@@ -164,14 +174,14 @@ export function buildGraphFromComponentsObjects(
   return graph;
 }
 
-function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: GraphLib) {
+function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: GraphLib, label = 'dependencies') {
   const id = bitId.toString();
   dependencies.get().forEach((dependency) => {
     const depId = dependency.id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(id)) graph.setNode(id, bitId);
     if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-    graph.setEdge(id, depId);
+    graph.setEdge(id, depId, label);
   });
 }
 

@@ -7,7 +7,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
 import Component from '../../consumer/component/consumer-component';
 import GeneralError from '../../error/general-error';
-import { buildGraphFromComponentsObjects } from '../graph/components-graph';
+import { buildComponentsGraphCombined } from '../graph/components-graph';
 import Graph from '../graph/graph';
 import VersionDependencies from '../version-dependencies';
 import ScopeComponentsImporter from './scope-components-importer';
@@ -22,7 +22,7 @@ export class FlattenedDependenciesGetter {
   constructor(private scope: Scope, private components: Component[]) {}
 
   async populateFlattenedDependencies() {
-    await this.createGraphs(this.components);
+    this.createGraphs(this.components);
     await this.importExternalDependenciesInBulk();
     await mapSeries(this.components, async (component) => {
       const { dependencies, devDependencies } = await this.getFlattened(component.id);
@@ -31,8 +31,8 @@ export class FlattenedDependenciesGetter {
     });
   }
 
-  private async createGraphs(components: Component[]) {
-    this.dependenciesGraph = buildGraphFromComponentsObjects(components);
+  private createGraphs(components: Component[]) {
+    this.dependenciesGraph = buildComponentsGraphCombined(components);
     this.prodGraph = this.dependenciesGraph.getSubGraphByEdgeType('dependencies');
   }
 
@@ -43,8 +43,8 @@ export class FlattenedDependenciesGetter {
     const idsStr: string[] = R.uniq(R.flatten(allDependencies));
     const bitIds = idsStr
       .filter((id) => id)
-      .map((idStr) => this.dependenciesGraph.node(idStr).id)
-      .filter((bitId: BitId) => bitId.hasScope())
+      .map((idStr) => this.dependenciesGraph.node(idStr))
+      .filter((bitId: BitId) => bitId && bitId.hasScope())
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     this.versionDependencies = await scopeComponentsImporter.importMany(BitIds.fromArray(bitIds));
@@ -54,8 +54,8 @@ export class FlattenedDependenciesGetter {
     const prodDeps = getEdges(this.prodGraph, bitId.toString()) || [];
     const allDeps = getEdges(this.dependenciesGraph, bitId.toString()) || [];
     const devDeps = allDeps.filter((dep) => !prodDeps.includes(dep));
-    const dependencies = prodDeps.map((idStr) => this.dependenciesGraph.node(idStr).id);
-    const devDependencies = devDeps.map((idStr) => this.dependenciesGraph.node(idStr).id);
+    const dependencies = prodDeps.map((idStr) => this.dependenciesGraph.node(idStr));
+    const devDependencies = devDeps.map((idStr) => this.dependenciesGraph.node(idStr));
     [...dependencies, ...devDependencies].forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
     const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep));
     const devDependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep));
