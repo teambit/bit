@@ -68,9 +68,14 @@ export class StartCmd implements Command {
       port,
       rebuild,
       verbose,
-      suppressBrowserLaunch,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
+    const processWrite = process.stdout.write.bind(process.stdout);
+    process.stdout.write = (data, cb) => {
+      if (data.includes('｢wds｣')) return processWrite('', cb);
+      return processWrite(data, cb);
+    };
+
     this.startingtimestamp = Date.now();
 
     const pattern = userPattern && userPattern.toString();
@@ -85,21 +90,17 @@ export class StartCmd implements Command {
         rebuild,
       })
       .then((uiServer) => {
-        setTimeout(() => {
-          this.clearConsole();
-
-          const startingTimestamp = Date.now();
-          const pubsub = this.pubsub;
-          const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: !!suppressBrowserLaunch };
-
-          setTimeout(() => {
-            this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
-          }, 200);
-        }, 0);
+        this.clearConsole();
+        const startingTimestamp = Date.now();
+        const pubsub = this.pubsub;
+        const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: true };
+        this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
       })
       .catch((e) => {
         throw e;
       });
+
+    this.clearConsole();
 
     return (
       <>
