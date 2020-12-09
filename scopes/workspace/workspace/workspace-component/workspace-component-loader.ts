@@ -12,6 +12,8 @@ import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
+import ComponentsPendingImport from 'bit-bin/dist/consumer/component-ops/exceptions/components-pending-import';
+
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
@@ -31,6 +33,12 @@ export class WorkspaceComponentLoader {
     const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, forCapsule).catch((err) => {
+        // @todo: we need to figure out which error to suppress and only console them.
+        // some errors are important to throw immediately, such as ComponentsPendingImport,
+        // otherwise, it goes multiple times to the remotes and unable to load any component.
+        if (err instanceof ComponentsPendingImport) {
+          throw err;
+        }
         errors.push({
           id,
           err,
