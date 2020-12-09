@@ -70,6 +70,7 @@ export class StartCmd implements Command {
       verbose,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
+    // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     const processWrite = process.stdout.write.bind(process.stdout);
     process.stdout.write = (data, cb) => {
       if (data.includes('｢wds｣')) return processWrite('', cb);
