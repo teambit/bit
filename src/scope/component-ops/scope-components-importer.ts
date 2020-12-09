@@ -15,9 +15,8 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
-import { ComponentNotFound, DependencyNotFound } from '../exceptions';
+import { ComponentNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
-import { PermissionDenied, RemoteScopeNotFound } from '../network/exceptions';
 import { Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
@@ -135,18 +134,6 @@ export default class ScopeComponentsImporter {
     }
 
     return versionDependenciesArr;
-  }
-
-  importDependencies(dependencies: BitIds): Promise<VersionDependencies[]> {
-    return new Promise((resolve, reject) => {
-      return this.importMany(dependencies)
-        .then(resolve)
-        .catch((e) => {
-          logger.error(`importDependencies got an error: ${JSON.stringify(e)}`);
-          if (e instanceof RemoteScopeNotFound || e instanceof PermissionDenied) return reject(e);
-          return reject(new DependencyNotFound(e.id));
-        });
-    });
   }
 
   async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
