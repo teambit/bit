@@ -91,7 +91,7 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.3",
         "@teambit/evangelist.surfaces.tooltip": "0.5.3",
         "@teambit/evangelist.theme.icon-font": "^0.5.3",
-        "@teambit/harmony": "0.2.7",
+        "@teambit/harmony": "0.2.10",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/classnames": "^2.2.10",
@@ -246,7 +246,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.195",
+        "bit-bin": "14.8.9-dev.196",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -298,7 +298,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.195",
+            "bit-bin": "14.8.9-dev.196",
             "react-dom": "^16.13.1"
           }
         }
@@ -406,7 +406,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.195",
+            "bit-bin": "14.8.9-dev.196",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
