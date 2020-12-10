@@ -2622,8 +2622,23 @@
                 "test": false
             },
             {
+                "name": "server-error-page.composition.tsx",
+                "relativePath": "server-error-page.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "server-error-page.docs.tsx",
+                "relativePath": "server-error-page.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "server-error-page.module.scss",
                 "relativePath": "server-error-page.module.scss",
+                "test": false
+            },
+            {
+                "name": "server-error-page.spec.tsx",
+                "relativePath": "server-error-page.spec.tsx",
                 "test": false
             },
             {
