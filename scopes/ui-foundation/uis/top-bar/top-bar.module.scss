@@ -8,4 +8,5 @@ $topbarHeight: 56px;
   background: #ededed;
   box-sizing: border-box;
   font-size: var(--p-xs, 14px);
+  z-index: 10; // TODO - move to zindexes component
 }
