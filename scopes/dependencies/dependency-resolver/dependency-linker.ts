@@ -1,5 +1,5 @@
 import path from 'path';
-import { uniq, compact } from 'lodash';
+import { uniq, compact, flatten } from 'lodash';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from 'bit-bin/dist/api/consumer';
@@ -10,6 +10,8 @@ import { BitError } from 'bit-bin/dist/error/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
+import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import Symlink from 'bit-bin/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
@@ -27,6 +29,8 @@ export type LinkingOptions = {
    * Whether to create links in the root dir node modules to all core aspects
    */
   linkCoreAspects?: boolean;
+
+  linkNestedDepsInNM?: boolean;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -34,6 +38,7 @@ const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
   rewire: false,
   linkTeambitBit: true,
   linkCoreAspects: true,
+  linkNestedDepsInNM: true,
 };
 
 export type LinkDetail = { from: string; to: string };
@@ -48,12 +53,25 @@ export type DepsLinkedToEnvResult = {
   linksDetail: LinkDetail[];
 };
 
+export type NestedNMDepsLinksResult = {
+  componentId: string;
+  linksDetail: LinkDetail[];
+};
+
 export type LinkResults = {
   legacyLinkResults?: LegacyLinksResult[];
   legacyLinkCodemodResults?: CodemodResult[];
   teambitBitLink?: CoreAspectLinkResult;
   coreAspectsLinks?: CoreAspectLinkResult[];
   harmonyLink?: LinkDetail;
+  resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
+  nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
+};
+
+type NestedModuleFolderEntry = {
+  moduleName: string;
+  path: string;
+  origPath?: string;
 };
 
 export class DependencyLinker {
@@ -94,7 +112,13 @@ export class DependencyLinker {
     }
 
     // Link deps which should be linked to the env
-    await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    result.resolvedFromEnvLinks = await this.linkDepsResolvedFromEnv(componentDirectoryMap);
+    if (linkingOpts.linkNestedDepsInNM) {
+      result.nestedDepsInNmLinks = await this.addSymlinkFromComponentDirNMToWorkspaceDirNM(
+        finalRootDir,
+        componentDirectoryMap
+      );
+    }
 
     // We remove the version since it used in order to check if it's core aspects, and the core aspects arrived from aspect loader without versions
     const componentIdsWithoutVersions: string[] = [];
@@ -124,6 +148,99 @@ export class DependencyLinker {
     result.harmonyLink = harmonyLink;
     this.logger.consoleSuccess('linking components');
     return result;
+  }
+
+  /**
+   * add symlink from the node_modules in the component's root-dir to the workspace node-modules
+   * of the component. e.g.
+   * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
+   */
+  private addSymlinkFromComponentDirNMToWorkspaceDirNM(
+    rootDir: string,
+    componentDirectoryMap: ComponentMap<string>
+  ): NestedNMDepsLinksResult[] {
+    const rootNodeModules = path.join(rootDir, 'node_modules');
+    const getPackagesFoldersToLink = (dir: string, parent?: string): NestedModuleFolderEntry[] => {
+      const folders = fs
+        .readdirSync(dir, { withFileTypes: true })
+        .filter((dirent) => {
+          if (dirent.name.startsWith('.')) {
+            return false;
+          }
+          return dirent.isDirectory() || dirent.isSymbolicLink();
+        })
+        .map((dirent) => {
+          const dirPath = path.join(dir, dirent.name);
+          const moduleName = parent ? `${parent}/${dirent.name}` : dirent.name;
+          // This is a scoped package, need to go inside
+          if (dirent.name.startsWith('@')) {
+            return getPackagesFoldersToLink(dirPath, dirent.name);
+          }
+
+          if (dirent.isSymbolicLink()) {
+            const resolvedModuleFrom = resolveModuleFromDir(dir, moduleName);
+            if (!resolvedModuleFrom) {
+              return {
+                moduleName,
+                path: dirPath,
+              };
+            }
+            return {
+              origPath: dirPath,
+              moduleName,
+              path: resolveModuleDirFromFile(resolvedModuleFrom, moduleName),
+            };
+          }
+          return {
+            moduleName,
+            path: dirPath,
+          };
+        });
+      return flatten(folders);
+    };
+    const linksOfAllComponents = componentDirectoryMap.toArray().map(([component, dir]) => {
+      const compDirNM = path.join(dir, 'node_modules');
+      if (!fs.existsSync(compDirNM)) return undefined;
+      // TODO: support modules with scoped packages (start with @) - we need to make this logic 2 levels
+
+      const componentPackageName = componentIdToPackageName(component.state._consumer);
+      const innerNMofComponentInNM = path.join(rootNodeModules, componentPackageName);
+      // If the folder itself is a symlink, do not try to symlink inside it
+      if (isPathSymlink(innerNMofComponentInNM)) {
+        return undefined;
+      }
+      const packagesFoldersToLink: NestedModuleFolderEntry[] = getPackagesFoldersToLink(compDirNM);
+      fs.ensureDirSync(innerNMofComponentInNM);
+
+      const oneComponentLinks: LinkDetail[] = packagesFoldersToLink.map((folderEntry: NestedModuleFolderEntry) => {
+        const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', folderEntry?.moduleName);
+        const linkSrc = folderEntry.path;
+        // This works as well, consider using it instead
+        // const linkSrc = folderEntry.origPath || folderEntry.path;
+        const origPath = folderEntry.origPath ? `(${folderEntry.origPath})` : '';
+        const linkDetail: LinkDetail = {
+          from: `${linkSrc} ${origPath}`,
+          to: linkTarget,
+        };
+        const resolvedTarget = path.resolve(linkTarget, '..');
+        const relativeSrc = path.relative(resolvedTarget, linkSrc);
+        const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
+        this.logger.info(
+          `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
+        );
+
+        symlink.writeWithNativeFS();
+        return linkDetail;
+      });
+
+      const filteredLinks = compact(oneComponentLinks);
+      return {
+        componentId: component.id.toString(),
+        linksDetail: filteredLinks,
+      };
+    });
+    const filteredLinks = compact(linksOfAllComponents);
+    return filteredLinks;
   }
 
   private async linkDepsResolvedFromEnv(
@@ -176,11 +293,7 @@ export class DependencyLinker {
           this.logger.console(`could not resolve ${depEntry.dependencyId} from env directory ${envDir}`);
           return undefined;
         }
-        const NM = 'node_modules';
-        const linkSrc = path.join(
-          resolvedModule?.slice(0, resolvedModule.lastIndexOf(NM) + NM.length),
-          depEntry.dependencyId
-        );
+        const linkSrc = resolveModuleDirFromFile(resolvedModule, depEntry.dependencyId);
         const linkDetail: LinkDetail = {
           from: linkSrc,
           to: linkTarget,
@@ -194,10 +307,10 @@ export class DependencyLinker {
         return linkDetail;
       });
       const oneComponentLinks = await Promise.all(oneComponentLinksP);
-      const filterdLinkes = compact(oneComponentLinks);
+      const filteredLinks = compact(oneComponentLinks);
       const depsLinkedToEnvResult: DepsLinkedToEnvResult = {
         componentId: entry.component.id.toString(),
-        linksDetail: filterdLinkes,
+        linksDetail: filteredLinks,
       };
       return depsLinkedToEnvResult;
     });
@@ -378,6 +491,26 @@ function getHarmonyDirForDevEnv(): string {
   return dirPath;
 }
 
-function resolveModuleFromDir(fromDir: string, moduleId: string): string | undefined {
-  return resolveFrom.silent(fromDir, moduleId);
+// TODO: extract to new component
+function resolveModuleFromDir(fromDir: string, moduleId: string, silent = true): string | undefined {
+  if (silent) {
+    return resolveFrom.silent(fromDir, moduleId);
+  }
+  return resolveFrom(fromDir, moduleId);
+}
+
+// TODO: extract to new component
+function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string): string {
+  const NM = 'node_modules';
+  return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+}
+
+function isPathSymlink(folderPath: string): boolean | undefined {
+  // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false}); once upgrade fs-extra
+  try {
+    const stat = fs.lstatSync(folderPath);
+    return stat.isSymbolicLink();
+  } catch (e) {
+    return undefined;
+  }
 }
