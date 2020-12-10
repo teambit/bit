@@ -137,11 +137,6 @@
     "teambit.compilation/compiler@0.0.174": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "compiler.aspect.ts",
                 "relativePath": "compiler.aspect.ts",
                 "test": false
@@ -149,6 +144,11 @@
             {
                 "name": "compiler.cmd.ts",
                 "relativePath": "compiler.cmd.ts",
+                "test": false
+            },
+            {
+                "name": "compiler.docs.md",
+                "relativePath": "compiler.docs.md",
                 "test": false
             },
             {
@@ -4040,11 +4040,6 @@
     "teambit.harmony/logger@0.0.174": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false
@@ -4052,6 +4047,11 @@
             {
                 "name": "logger.aspect.ts",
                 "relativePath": "logger.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "logger.docs.md",
+                "relativePath": "logger.docs.md",
                 "test": false
             },
             {
