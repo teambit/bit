@@ -30,5 +30,12 @@ export {
   ComponentDependency,
 } from './dependencies';
 export { WorkspacePolicyEntry, WorkspacePolicy, VariantPolicyConfigObject } from './policy';
-export { CoreAspectLinkResult, LinkDetail, LinkResults, LinkingOptions } from './dependency-linker';
+export {
+  CoreAspectLinkResult,
+  LinkDetail,
+  LinkResults,
+  LinkingOptions,
+  DepsLinkedToEnvResult,
+  NestedNMDepsLinksResult,
+} from './dependency-linker';
 export { InstallOptions } from './dependency-installer';

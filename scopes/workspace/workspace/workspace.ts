@@ -1040,7 +1040,12 @@ export class Workspace implements ComponentFactory {
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
-    await this.link({ linkTeambitBit: true, legacyLink: true, linkCoreAspects: true });
+    await this.link({
+      linkTeambitBit: true,
+      legacyLink: true,
+      linkCoreAspects: true,
+      linkNestedDepsInNM: !this.isLegacy,
+    });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
   }
