@@ -499,10 +499,10 @@ function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string):
   return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
 }
 
-function isPathSymlink(path: string): boolean | undefined {
+function isPathSymlink(folderPath: string): boolean | undefined {
   // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false}); once upgrade fs-extra
   try {
-    const stat = fs.lstatSync(path);
+    const stat = fs.lstatSync(folderPath);
     return stat.isSymbolicLink();
   } catch (e) {
     return undefined;
