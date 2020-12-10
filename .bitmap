@@ -7234,6 +7234,11 @@
                 "test": false
             },
             {
+                "name": "nested-deps-in-nm-links.tsx",
+                "relativePath": "link/nested-deps-in-nm-links.tsx",
+                "test": false
+            },
+            {
                 "name": "rewire-row.tsx",
                 "relativePath": "link/rewire-row.tsx",
                 "test": false
