@@ -8,6 +8,8 @@ import { GraphFilter } from './model/graph-filters';
 import { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
 
+const textCmp = new Intl.Collator().compare;
+
 export function graphSchema(graphBuilder: GraphBuilder, componentsHost: ComponentFactory): Schema {
   return {
     typeDefs: gql`
@@ -40,24 +42,30 @@ export function graphSchema(graphBuilder: GraphBuilder, componentsHost: Componen
     resolvers: {
       ComponentGraph: {
         nodes: (graph: ComponentGraph) => {
-          return Array.from(graph.nodes).map(([nodeId, component]) => {
-            return {
-              id: nodeId,
-              component,
-            };
-          });
+          return Array.from(graph.nodes)
+            .map(([nodeId, component]) => {
+              return {
+                id: nodeId,
+                component,
+              };
+            })
+            .sort((a, b) => textCmp(a.id, b.id));
         },
         edges: (graph: ComponentGraph) => {
           // TODO: this is a hack since I don't have a proper way to get the edge with the source and target id from cleargraph
           // it should be change once cleargraph provide this
           const graphJson = graph.toJson();
-          return graphJson.edges.map((edge) => {
-            return {
-              sourceId: edge.sourceId,
-              targetId: edge.targetId,
-              dependencyLifecycleType: getDependencyLifecycleType(edge.edge.type),
-            };
-          });
+          return graphJson.edges
+            .map(
+              (edge) =>
+                ({
+                  sourceId: edge.sourceId,
+                  targetId: edge.targetId,
+                  dependencyLifecycleType: getDependencyLifecycleType(edge.edge.type),
+                } as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType })
+            )
+            .sort((a, b) => textCmp(a.sourceId, b.sourceId))
+            .sort((a, b) => textCmp(a.targetId, b.targetId));
         },
       },
       Query: {
