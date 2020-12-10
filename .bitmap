@@ -2034,6 +2034,11 @@
                 "test": false
             },
             {
+                "name": "dependency-resolver.graphql.ts",
+                "relativePath": "dependency-resolver.graphql.ts",
+                "test": false
+            },
+            {
                 "name": "dependency-resolver.main.runtime.ts",
                 "relativePath": "dependency-resolver.main.runtime.ts",
                 "test": false
