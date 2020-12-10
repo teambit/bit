@@ -2,13 +2,14 @@ import { Command, CommandOptions } from '@teambit/cli';
 import React from 'react';
 import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { Text, Box, Newline } from 'ink';
+import { Text, Box } from 'ink';
 import { BASE_DOCS_DOMAIN } from 'bit-bin/dist/constants';
 import { timeFormat } from '@teambit/time.time-format';
 import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
 import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
+import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
 import { RewireRow } from './rewire-row';
 
 type LinkCommandOpts = {
@@ -58,19 +59,17 @@ export class LinkCommand implements Command {
     if (linkResults.teambitBitLink) {
       coreAspectsLinksWithMainAspect.unshift(linkResults.teambitBitLink);
     }
+    const numOfCoreAspects = coreAspectsLinksWithMainAspect.length;
     return (
       <Box key="all" flexDirection="column">
         <Text>
-          Linked {numOfComponents} components to node_modules for workspace:{' '}
+          Linked {numOfComponents} components and {numOfCoreAspects} core aspects to node_modules for workspace:{' '}
           <Text color="cyan">{this.workspace.name}</Text>
         </Text>
-        <Newline />
-        <ComponentListLinks componentListLinks={linkResults.legacyLinkResults} verbose={opts.verbose} />
-        <Newline />
         <CoreAspectsLinks coreAspectsLinks={coreAspectsLinksWithMainAspect} verbose={opts.verbose} />
-        <Newline />
+        <ComponentListLinks componentListLinks={linkResults.legacyLinkResults} verbose={opts.verbose} />
         <RewireRow legacyCodemodResults={linkResults.legacyLinkCodemodResults} />
-        <Newline />
+        <NestedComponentLinksLinks nestedDepsInNmLinks={linkResults.nestedDepsInNmLinks} verbose={opts.verbose} />
         <Text>Finished. {timeDiff}</Text>
       </Box>
     );
@@ -78,7 +77,9 @@ export class LinkCommand implements Command {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async json([ids]: [string[]], opts: LinkCommandOpts): Promise<LinkResults> {
-    this.logger.console(`Linking component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
+    this.logger.console(
+      `Linking components and core aspects to node_modules for workspaces: '${chalk.cyan(this.workspace.name)}'`
+    );
 
     const linkOpts: WorkspaceLinkOptions = {
       legacyLink: true,

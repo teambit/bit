@@ -79,7 +79,6 @@ import {
   ComponentNotFound,
   CorruptedComponent,
   CyclicDependencies,
-  DependencyNotFound,
   HashMismatch,
   HashNotFound,
   HeadNotFound,
@@ -213,13 +212,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       `error: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
         err.version
       } is missing.\n${reportIssueToGithubMsg}`,
-  ],
-  [
-    DependencyNotFound,
-    (err) =>
-      `error: dependency "${chalk.bold(
-        err.id
-      )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`,
   ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ValidationError, (err) => `${err.message}\n${reportIssueToGithubMsg}`],

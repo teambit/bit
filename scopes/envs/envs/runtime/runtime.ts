@@ -1,4 +1,5 @@
 import { Logger } from '@teambit/logger';
+import { ComponentID } from '@teambit/component';
 import BluebirdPromise from 'bluebird';
 import { EnvNotFoundInRuntime } from '../exceptions';
 import { ExecutionContext } from '../context';
@@ -30,7 +31,11 @@ export class Runtime {
     service: EnvService<T>,
     options?: { [key: string]: any }
   ): Promise<EnvsExecutionResult<T>> {
-    const envRuntime = this.runtimeEnvs.find((runtime) => runtime.id === envRuntimeId);
+    const envRuntime = this.runtimeEnvs.find((runtime) => {
+      const id = ComponentID.fromString(runtime.id);
+      const withoutVersion = id._legacy.toStringWithoutVersion();
+      return withoutVersion === envRuntimeId;
+    });
     if (!envRuntime) throw new EnvNotFoundInRuntime(envRuntimeId);
     return this.run(service, options, [envRuntime]);
   }

@@ -1,5 +1,7 @@
 import { Logger } from '@teambit/logger';
+import { resolve } from 'path';
 import React from 'react';
+import { flatten } from 'lodash';
 import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
@@ -8,6 +10,7 @@ import syntaxHighlighter from 'consolehighlighter';
 import { PubSub } from 'graphql-subscriptions';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Tester, Tests, CallbackFn } from './tester';
+import { TesterAspect } from './tester.aspect';
 import { TesterOptions } from './tester.main.runtime';
 import { detectTestFiles } from './utils';
 import { NoTestFilesFound } from './exceptions';
@@ -106,14 +109,25 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
       return acc;
     }, 0);
 
-    if (testCount === 0) throw new NoTestFilesFound(this.patterns.join(','));
+    if (testCount === 0 && !options.ui) throw new NoTestFilesFound(this.patterns.join(','));
 
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
+    const patterns = flatten(
+      await Promise.all(
+        context.components.map(async (component) => {
+          const dir = await this.workspace.componentDir(component.id);
+          const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
+          return componentPatterns.map((pattern) => resolve(dir, pattern));
+        })
+      )
+    );
+
     const testerContext = Object.assign(context, {
       release: false,
       specFiles,
+      patterns,
       rootPath: this.workspace.path,
       workspace: this.workspace,
       debug: options.debug,
@@ -138,6 +152,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
           });
         });
       }
+
       return tester.watch(testerContext);
     }
 

@@ -91,7 +91,7 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.3",
         "@teambit/evangelist.surfaces.tooltip": "0.5.3",
         "@teambit/evangelist.theme.icon-font": "^0.5.3",
-        "@teambit/harmony": "0.2.7",
+        "@teambit/harmony": "0.2.10",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/classnames": "^2.2.10",
@@ -219,6 +219,7 @@
         "react-tooltip": "^4.2.8",
         "remark-frontmatter": "2.0.0",
         "reset-css": "^5.0.1",
+        "resolve-from": "5.0.0",
         "resolve-url-loader": "^3.1.1",
         "rxjs": "^6.5.4",
         "semver": "^7.3.2",
@@ -251,7 +252,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.188",
+        "bit-bin": "14.8.9-dev.199",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -303,7 +304,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.188",
+            "bit-bin": "14.8.9-dev.199",
             "react-dom": "^16.13.1"
           }
         }
@@ -411,7 +412,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.188",
+            "bit-bin": "14.8.9-dev.199",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

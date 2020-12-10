@@ -88,9 +88,11 @@ export class WorkspaceManifestFactory {
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
+      const componentPolicy = await this.dependencyResolver.getPolicy(component);
       if (filterComponentsFromManifests) {
         depList = filterComponents(depList, components);
       }
+      depList = filterResolvedFromEnv(depList, componentPolicy);
       // Remove bit bin from dep list
       depList = depList.filter((dep) => dep.id !== 'bit-bin');
       if (dependencyFilterFn) {
@@ -102,6 +104,7 @@ export class WorkspaceManifestFactory {
       result.set(packageName, depManifest);
       return Promise.resolve();
     });
+
     if (buildResultsP.length) {
       await Promise.all(buildResultsP);
     }
@@ -136,6 +139,25 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       return component.id._legacy.isEqual(dep.componentId._legacy);
     });
     if (existingComponent) return false;
+    return true;
+  });
+  return filtered;
+}
+
+/**
+ * Filter deps which should be resolved from the env, we don't want to install them, they will be linked manually later
+ * @param dependencyList
+ * @param componentPolicy
+ */
+function filterResolvedFromEnv(dependencyList: DependencyList, componentPolicy: VariantPolicy): DependencyList {
+  const filtered = dependencyList.filter((dep) => {
+    const fromPolicy = componentPolicy.find(dep.id);
+    if (!fromPolicy) {
+      return true;
+    }
+    if (fromPolicy.value.resolveFromEnv) {
+      return false;
+    }
     return true;
   });
   return filtered;
