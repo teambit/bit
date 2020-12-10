@@ -68,6 +68,12 @@ export type LinkResults = {
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
 };
 
+type NestedModuleFolderEntry = {
+  moduleName: string;
+  path: string;
+  origPath?: string;
+};
+
 export class DependencyLinker {
   constructor(
     private dependencyResolver: DependencyResolverMain,
@@ -154,7 +160,7 @@ export class DependencyLinker {
     componentDirectoryMap: ComponentMap<string>
   ): NestedNMDepsLinksResult[] {
     const rootNodeModules = path.join(rootDir, 'node_modules');
-    const getPackagesFoldersToLink = (dir: string, parent?: string) => {
+    const getPackagesFoldersToLink = (dir: string, parent?: string): NestedModuleFolderEntry[] => {
       const folders = fs
         .readdirSync(dir, { withFileTypes: true })
         .filter((dirent) => {
@@ -203,10 +209,10 @@ export class DependencyLinker {
       if (isPathSymlink(innerNMofComponentInNM)) {
         return undefined;
       }
-      const packagesFoldersToLink = getPackagesFoldersToLink(compDirNM);
+      const packagesFoldersToLink: NestedModuleFolderEntry[] = getPackagesFoldersToLink(compDirNM);
       fs.ensureDirSync(innerNMofComponentInNM);
 
-      const oneComponentLinks: LinkDetail[] = packagesFoldersToLink.map((folderEntry) => {
+      const oneComponentLinks: LinkDetail[] = packagesFoldersToLink.map((folderEntry: NestedModuleFolderEntry) => {
         const linkTarget = path.join(innerNMofComponentInNM, 'node_modules', folderEntry?.moduleName);
         const linkSrc = folderEntry.path;
         // This works as well, consider using it instead
