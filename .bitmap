@@ -2819,8 +2819,23 @@
                 "test": false
             },
             {
+                "name": "time-ago.composition.tsx",
+                "relativePath": "time-ago.composition.tsx",
+                "test": false
+            },
+            {
+                "name": "time-ago.docs.tsx",
+                "relativePath": "time-ago.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "time-ago.module.scss",
                 "relativePath": "time-ago.module.scss",
+                "test": false
+            },
+            {
+                "name": "time-ago.spec.tsx",
+                "relativePath": "time-ago.spec.tsx",
                 "test": false
             },
             {
