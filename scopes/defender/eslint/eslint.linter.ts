@@ -2,9 +2,13 @@ import { flatten } from 'lodash';
 import { Linter, LinterContext } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
 import { ESLintOptions } from './eslint.main.runtime';
+import mapSeries from 'p-map-series';
+import { Logger } from '@teambit/logger';
 
 export class ESLintLinter implements Linter {
   constructor(
+    private logger: Logger,
+
     private options: ESLintOptions,
 
     /**
@@ -27,7 +31,9 @@ export class ESLintLinter implements Linter {
 
   // @ts-ignore
   async lint(context: LinterContext) {
-    const resultsP = context.components.map(async (component) => {
+    const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
+    const resultsP = mapSeries(context.components, async (component) => {
+      longProcessLogger.logProgress(component.id.toString());
       const eslint = this.createEslint(this.options, context, this.ESLint);
       const filesP = component.filesystem.files.map(async (file) => {
         const sourceCode = file.contents.toString('utf8');
@@ -52,7 +58,7 @@ export class ESLintLinter implements Linter {
       };
     });
 
-    const results = await Promise.all(resultsP);
+    const results = await resultsP;
 
     return {
       results,
