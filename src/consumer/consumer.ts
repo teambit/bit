@@ -564,7 +564,7 @@ export default class Consumer {
       consumer: this,
     });
 
-    return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
+    return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
   updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
@@ -645,6 +645,8 @@ export default class Consumer {
       verbose,
       skipAutoTag: skipAutoSnap,
       persist: true,
+      soft: false,
+      build: true, // @todo: change
       resolveUnmerged,
       isSnap: true,
       disableDeployPipeline: false,

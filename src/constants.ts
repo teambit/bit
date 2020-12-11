@@ -457,3 +457,9 @@ export enum Extensions {
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
 }
+
+export enum BuildStatus {
+  Pending = 'pending',
+  Failed = 'failed',
+  Succeed = 'succeed',
+}
