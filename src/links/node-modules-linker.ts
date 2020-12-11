@@ -179,7 +179,8 @@ export default class NodeModuleLinker {
       this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
     });
     this._deleteExistingLinksRootIfSymlink(componentNodeModulesPath);
-    this.addSymlinkFromComponentDirNMToWorkspaceDirNM(component, componentNodeModulesPath);
+    // remove this for now, it should be handled by dependency-linker.addSymlinkFromComponentDirNMToWorkspaceDirNM
+    // this.addSymlinkFromComponentDirNMToWorkspaceDirNM(component, componentNodeModulesPath);
     await this._populateDependenciesAndMissingLinks(component);
   }
 
@@ -188,19 +189,19 @@ export default class NodeModuleLinker {
    * of the component. e.g.
    * ws-root/node_modules/comp1/node_modules -> ws-root/components/comp1/node_modules
    */
-  private addSymlinkFromComponentDirNMToWorkspaceDirNM(
-    component: Component,
-    componentNodeModulesPath: PathOsBasedRelative
-  ) {
-    const componentMap = component.componentMap as ComponentMap;
-    if (!componentMap.rootDir || !this.consumer) return;
-    const nodeModulesInCompRoot = path.join(componentMap.rootDir, 'node_modules');
-    if (!fs.existsSync(this.consumer.toAbsolutePath(nodeModulesInCompRoot))) return;
-    const nodeModulesInWorkspaceRoot = path.join(componentNodeModulesPath, 'node_modules');
-    this.dataToPersist.addSymlink(
-      Symlink.makeInstance(nodeModulesInCompRoot, nodeModulesInWorkspaceRoot, component.id)
-    );
-  }
+  // private addSymlinkFromComponentDirNMToWorkspaceDirNM(
+  //   component: Component,
+  //   componentNodeModulesPath: PathOsBasedRelative
+  // ) {
+  //   const componentMap = component.componentMap as ComponentMap;
+  //   if (!componentMap.rootDir || !this.consumer) return;
+  //   const nodeModulesInCompRoot = path.join(componentMap.rootDir, 'node_modules');
+  //   if (!fs.existsSync(this.consumer.toAbsolutePath(nodeModulesInCompRoot))) return;
+  //   const nodeModulesInWorkspaceRoot = path.join(componentNodeModulesPath, 'node_modules');
+  //   this.dataToPersist.addSymlink(
+  //     Symlink.makeInstance(nodeModulesInCompRoot, nodeModulesInWorkspaceRoot, component.id)
+  //   );
+  // }
 
   /**
    * even when an authored component has rootDir, we can't just symlink that rootDir to
