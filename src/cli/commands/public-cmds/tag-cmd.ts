@@ -6,6 +6,7 @@ import { TagResults, NOTHING_TO_TAG_MSG, AUTO_TAGGED_MSG, BasicTagParams } from 
 import { isString } from '../../../utils';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
 
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
@@ -55,7 +56,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       skipTests = false,
       skipAutoTag = false,
       scope,
-      build = false,
+      build,
       soft = false,
       persist = false,
       disableDeployPipeline = false,
@@ -69,6 +70,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       scope?: string;
     } & Partial<BasicTagParams>
   ): Promise<any> {
+    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     function getVersion(): string | undefined {
       if (scope) return scope;
       if (all && isString(all)) return all;

@@ -21,6 +21,7 @@ export async function snapAction(args: {
   force: boolean;
   verbose: boolean;
   ignoreUnresolvedDependencies: boolean;
+  build: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
 }): Promise<SnapResults | null> {
@@ -36,6 +37,7 @@ export async function snapAction(args: {
     ignoreUnresolvedDependencies,
     message,
     force,
+    build,
     skipTests,
     verbose,
     skipAutoSnap,

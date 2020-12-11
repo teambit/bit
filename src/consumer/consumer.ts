@@ -591,6 +591,7 @@ export default class Consumer {
     force = false,
     skipTests = false,
     verbose = false,
+    build,
     skipAutoSnap = false,
     resolveUnmerged = false,
   }: {
@@ -600,6 +601,7 @@ export default class Consumer {
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;
+    build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
@@ -646,7 +648,7 @@ export default class Consumer {
       skipAutoTag: skipAutoSnap,
       persist: true,
       soft: false,
-      build: true, // @todo: change
+      build,
       resolveUnmerged,
       isSnap: true,
       disableDeployPipeline: false,
