@@ -2019,6 +2019,11 @@
                 "test": false
             },
             {
+                "name": "dependency-detector.ts",
+                "relativePath": "dependency-detector.ts",
+                "test": false
+            },
+            {
                 "name": "dependency-installer.ts",
                 "relativePath": "dependency-installer.ts",
                 "test": false
