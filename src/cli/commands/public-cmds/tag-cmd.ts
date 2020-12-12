@@ -71,6 +71,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
     } & Partial<BasicTagParams>
   ): Promise<any> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
+    if (soft) build = false;
     function getVersion(): string | undefined {
       if (scope) return scope;
       if (all && isString(all)) return all;
