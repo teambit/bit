@@ -25,7 +25,7 @@ export async function snapAction(args: {
   skipTests: boolean;
   skipAutoSnap: boolean;
 }): Promise<SnapResults | null> {
-  const { id, message, force, verbose, ignoreUnresolvedDependencies, skipTests, skipAutoSnap } = args;
+  const { id, message, force, verbose, ignoreUnresolvedDependencies, skipTests, skipAutoSnap, build } = args;
   const consumer: Consumer = await loadConsumer();
   if (consumer.isLegacy) throw new LanesIsDisabled();
   const componentsList = new ComponentsList(consumer);
