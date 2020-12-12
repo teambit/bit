@@ -106,7 +106,10 @@ export class DependencyLinker {
     }
     if (linkingOpts.legacyLink) {
       const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
-      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false);
+      // @todo, Gilad, it's better not to use the legacyLink here. it runs the consumer onDestroy
+      // which writes to .bitmap during the process and it assumes the consumer is there, which
+      // could be incorrect. instead, extract what you need from there to a new function and use it
+      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false, false);
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }
