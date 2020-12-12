@@ -5,6 +5,7 @@ import { SnapResults } from '../../../api/consumer/lib/snap';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
+import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
 
 export const NOTHING_TO_SNAP_MSG = 'nothing to snap';
 export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
@@ -21,6 +22,7 @@ export default class Snap implements LegacyCommand {
     ['f', 'force', 'force-snap even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
+    ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
   ] as CommandOptions;
@@ -36,6 +38,7 @@ export default class Snap implements LegacyCommand {
       force = false,
       verbose = false,
       ignoreUnresolvedDependencies = false,
+      build,
       skipTests = false,
       skipAutoSnap = false,
     }: {
@@ -44,10 +47,12 @@ export default class Snap implements LegacyCommand {
       force?: boolean;
       verbose?: boolean;
       ignoreUnresolvedDependencies?: boolean;
+      build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
     }
   ): Promise<any> {
+    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (!id && !all) {
       throw new GeneralError('missing [id]. to snap all components, please use --all flag');
     }
@@ -63,6 +68,7 @@ export default class Snap implements LegacyCommand {
       force,
       verbose,
       ignoreUnresolvedDependencies,
+      build,
       skipTests,
       skipAutoSnap,
     });

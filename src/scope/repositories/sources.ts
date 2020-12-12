@@ -293,6 +293,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
+    version.buildStatus = consumerComponent.buildStatus;
     artifacts.forEach((file) => objectRepo.add(file.source));
     objectRepo.add(version);
 

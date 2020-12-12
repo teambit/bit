@@ -6,7 +6,7 @@ import { Artifact, ArtifactList } from './artifact';
 import { TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';
 
-type PipelineReport = {
+export type PipelineReport = {
   taskId: string;
   taskName?: string;
   taskDescription?: string;
@@ -26,9 +26,7 @@ export class BuildPipelineResultList {
   }
 
   private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList> {
-    const artifactListsMaps: ComponentMap<ArtifactList>[] = this.tasksResults.map(
-      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
-    );
+    const artifactListsMaps = this.tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
     return ComponentMap.as<ArtifactList>(this.components, (component) => {
       const artifacts: Artifact[] = [];
       artifactListsMaps.forEach((artifactListMap) => {

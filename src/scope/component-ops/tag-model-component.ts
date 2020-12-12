@@ -3,12 +3,12 @@ import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
-
+import { compact } from 'ramda-adjunct';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
-import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS } from '../../constants';
+import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
@@ -21,7 +21,7 @@ import { PathLinux } from '../../utils/path';
 import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
-import { OnTagResult } from '../scope';
+import { LegacyOnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
 
@@ -170,6 +170,8 @@ export default async function tagModelComponent({
   skipTests = false,
   verbose = false,
   skipAutoTag,
+  soft,
+  build,
   persist,
   resolveUnmerged,
   isSnap = false,
@@ -273,31 +275,29 @@ export default async function tagModelComponent({
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
 
-  if (persist) {
+  if (soft) {
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
+  } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer, allComponentsToTag);
+    addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
     validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
-  } else {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
   }
 
   const publishedPackages: string[] = [];
-  if (!consumer.isLegacy && persist) {
+  if (!consumer.isLegacy && build) {
     const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
-
-    const results: Array<OnTagResult[]> = await mapSeries(scope.onTag, (func) => func(ids, { disableDeployPipeline }));
+    const onTagOpts = { disableDeployPipeline, throwOnError: true };
+    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) => func(ids, onTagOpts));
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
-    allComponentsToTag.forEach((comp) => {
-      const pkgExt = comp.extensions.findCoreExtension('teambit.pkg/pkg');
-      const publishedPackage = pkgExt?.data?.publishedPackage;
-      if (publishedPackage) publishedPackages.push(publishedPackage);
-    });
+    publishedPackages.push(...getPublishedPackages(allComponentsToTag));
+    addBuildStatus(consumer, allComponentsToTag, BuildStatus.Succeed);
     await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
-  if (persist) {
+  if (!soft) {
     await scope.objects.persist();
   }
 
@@ -374,11 +374,26 @@ function setCurrentSchema(components: Component[], consumer: Consumer) {
  * by the last called function. when/if this happen, some kind of merge need to be done between the
  * results.
  */
-function updateComponentsByTagResult(components: Component[], tagResult: OnTagResult[]) {
+export function updateComponentsByTagResult(components: Component[], tagResult: LegacyOnTagResult[]) {
   tagResult.forEach((result) => {
     const matchingComponent = components.find((c) => c.id.isEqual(result.id));
     if (matchingComponent) {
       matchingComponent.extensions = result.extensions;
     }
+  });
+}
+
+export function getPublishedPackages(components: Component[]): string[] {
+  const publishedPackages = components.map((comp) => {
+    const pkgExt = comp.extensions.findCoreExtension(Extensions.pkg);
+    return pkgExt?.data?.publishedPackage;
+  });
+  return compact(publishedPackages);
+}
+
+function addBuildStatus(consumer: Consumer, components: Component[], buildStatus: BuildStatus) {
+  if (consumer.isLegacy) return;
+  components.forEach((component) => {
+    component.buildStatus = buildStatus;
   });
 }
