@@ -1,6 +1,6 @@
 import R from 'ramda';
 import { BitId, BitIds } from '../../bit-id';
-import { DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, DEPENDENCIES_FIELDS } from '../../constants';
+import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, DEPENDENCIES_FIELDS } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { isSchemaSupport, SchemaFeature, SchemaName } from '../../consumer/component/component-schema';
 import { CustomResolvedPath } from '../../consumer/component/consumer-component';
@@ -83,6 +83,7 @@ export type VersionProps = {
   hash?: string;
   parents?: Ref[];
   extensions?: ExtensionDataList;
+  buildStatus?: BuildStatus;
 };
 
 /**
@@ -118,6 +119,7 @@ export default class Version extends BitObject {
   _hash: string; // reason for the underscore prefix is that we already have hash as a method
   parents: Ref[];
   extensions: ExtensionDataList;
+  buildStatus?: BuildStatus;
 
   constructor(props: VersionProps) {
     super();
@@ -149,6 +151,7 @@ export default class Version extends BitObject {
     this._hash = props.hash;
     this.parents = props.parents || [];
     this.extensions = props.extensions || ExtensionDataList.fromArray([]);
+    this.buildStatus = props.buildStatus;
     this.validateVersion();
   }
 
@@ -397,6 +400,7 @@ export default class Version extends BitObject {
         testerPackageDependencies: _removeEmptyPackagesEnvs(this.testerPackageDependencies),
         customResolvedPaths: this.customResolvedPaths,
         overrides: this.overrides,
+        buildStatus: this.buildStatus,
         packageJsonChangedProps: this.packageJsonChangedProps,
         parents: this.parents.map((p) => p.toString()),
       },
@@ -449,6 +453,7 @@ export default class Version extends BitObject {
       overrides,
       packageJsonChangedProps,
       extensions,
+      buildStatus,
       parents,
     } = contentParsed;
 
@@ -550,6 +555,7 @@ export default class Version extends BitObject {
       hash,
       parents: parents ? parents.map((p) => Ref.from(p)) : [],
       extensions: _getExtensions(extensions),
+      buildStatus,
     });
   }
 
@@ -625,6 +631,7 @@ export default class Version extends BitObject {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
+      buildStatus: component.buildStatus,
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;

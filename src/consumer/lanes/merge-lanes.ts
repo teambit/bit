@@ -15,6 +15,7 @@ export async function mergeLanes({
   noSnap,
   snapMessage,
   existingOnWorkspaceOnly,
+  build,
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
@@ -23,6 +24,7 @@ export async function mergeLanes({
   noSnap: boolean;
   snapMessage: string;
   existingOnWorkspaceOnly: boolean;
+  build: boolean;
 }): Promise<ApplyVersionResults> {
   const currentLaneId = consumer.getCurrentLaneId();
   if (!remoteName && laneName === currentLaneId.name) {
@@ -62,6 +64,7 @@ export async function mergeLanes({
     localLane,
     noSnap,
     snapMessage,
+    build,
   });
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {

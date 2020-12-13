@@ -1011,7 +1011,7 @@ describe('bit tag command', function () {
     });
     describe('tagging with --persist flag', () => {
       before(() => {
-        helper.command.hardTag();
+        helper.command.persistTag();
       });
       it('should tag and remove the nextVersion property in .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();

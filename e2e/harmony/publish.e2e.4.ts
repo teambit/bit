@@ -62,7 +62,7 @@ describe('publish functionality', function () {
       describe('automatically by onPostPersistTag hook', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-          helper.command.tagAndPersistAllHarmony();
+          helper.command.tagAllComponents();
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           helper.scopeHelper.reInitLocalScopeHarmony();

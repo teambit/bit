@@ -318,16 +318,10 @@ export class Workspace implements ComponentFactory {
     return this.resolveMultipleComponentIds(ids);
   }
 
-  // TODO: refactor asap to get seeders as ComponentID[] not strings (most of the places already has it that way)
-  async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+  async createNetwork(seeders: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const legacySeedersIdsP = seeders.map(async (seeder) => {
-      const componentId = await this.resolveComponentId(seeder);
-      return componentId._legacy;
-    });
-
-    const legacySeedersIds = await Promise.all(legacySeedersIdsP);
+    const legacySeedersIds = seeders.map((seeder) => seeder._legacy);
     const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
     const seedersStr = seederIdsWithVersions.map((s) => s.toString());
@@ -361,7 +355,7 @@ export class Workspace implements ComponentFactory {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
+    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id));
     const resolvedComponents = components.map((component) => {
       const capsule = isolatedEnvironment.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
