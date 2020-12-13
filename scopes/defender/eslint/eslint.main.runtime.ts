@@ -1,8 +1,8 @@
 import { MainRuntime } from '@teambit/cli';
 import { Linter } from 'eslint';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
-import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 
 export type ESLintOptions = {
   /**

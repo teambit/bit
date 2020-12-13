@@ -1,9 +1,9 @@
 import { flatten } from 'lodash';
 import { Linter, LinterContext } from '@teambit/linter';
 import { ESLint as ESLintLib } from 'eslint';
-import { ESLintOptions } from './eslint.main.runtime';
 import mapSeries from 'p-map-series';
 import { Logger } from '@teambit/logger';
+import { ESLintOptions } from './eslint.main.runtime';
 
 export class ESLintLinter implements Linter {
   constructor(
