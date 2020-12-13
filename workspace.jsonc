@@ -148,7 +148,6 @@
         "dagre": "0.8.5",
         "didyoumean": "^1.2.1",
         "eslint-import-resolver-node": "0.3.4",
-        "eslint-plugin-jest": "24.1.3",
         "express": "^4.17.1",
         "express-graphql": "^0.9.0",
         "eslint-config-airbnb-typescript": {
