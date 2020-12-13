@@ -35,7 +35,7 @@ export default class Symlink {
       // eslint-disable-next-line no-empty
     } catch (e) {}
     if (exists) {
-      fs.unlinkSync(dest);
+      fs.removeSync(dest);
     }
     const dir = path.dirname(dest);
     fs.ensureDirSync(dir);
