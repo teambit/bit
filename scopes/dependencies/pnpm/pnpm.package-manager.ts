@@ -53,6 +53,7 @@ export class PnpmPackageManager implements PackageManager {
       includeDir: true,
       copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
     });
+
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap,
