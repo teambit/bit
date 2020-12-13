@@ -17,18 +17,6 @@ export class ESLintLinter implements Linter {
     private ESLint?: any
   ) {}
 
-  /**
-   * get options for eslint.
-   */
-  private getOptions(options: ESLintOptions, context: LinterContext): ESLintLib.Options {
-    return {
-      overrideConfig: options.config,
-      extensions: context.extensionFormats,
-      useEslintrc: false,
-      cwd: options.pluginPath,
-    };
-  }
-
   // @ts-ignore
   async lint(context: LinterContext) {
     const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
@@ -81,6 +69,18 @@ export class ESLintLinter implements Linter {
     // eslint-disable-next-line no-new
     if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context));
     return new ESLintLib(this.getOptions(options, context));
+  }
+
+  /**
+   * get options for eslint.
+   */
+  private getOptions(options: ESLintOptions, context: LinterContext): ESLintLib.Options {
+    return {
+      overrideConfig: options.config,
+      extensions: context.extensionFormats,
+      useEslintrc: false,
+      cwd: options.pluginPath,
+    };
   }
 
   version() {
