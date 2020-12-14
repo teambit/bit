@@ -7,7 +7,7 @@ import isValidIdChunk from './utils/is-valid-id-chunk';
 import isValidScopeName from './utils/is-valid-scope-name';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 
-export type BitIdProps = {
+type BitIdProps = {
   scope?: string | null | undefined;
   box?: string | undefined;
   name: string;
