@@ -1,7 +1,6 @@
 import { Logger } from '@teambit/logger';
 import { resolve } from 'path';
 import React from 'react';
-import { flatten } from 'lodash';
 import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
