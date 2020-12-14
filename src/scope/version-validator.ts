@@ -77,10 +77,24 @@ export default function validateVersionInstance(version: Version): void {
       const errors = packageNameValidateResult.errors || [];
       throw new VersionInvalid(`${packageName} is invalid package name, errors:  ${errors.join()}`);
     }
+
+    _validatePackageDependencyValue(packageVersion, packageName);
+  };
+
+  const _validatePackageDependencyValue = (packageValue, packageName) => {
+    if (typeof packageValue !== 'string') {
+      validateType(message, packageValue, `value of "${packageName}"`, 'object');
+      validateType(message, packageValue.version, `value.version of "${packageName}"`, 'string');
+      if (packageValue.resolveFromEnv !== undefined) {
+        validateType(message, packageValue.resolveFromEnv, `value.resolveFromEnv of "${packageName}"`, 'boolean');
+      }
+      return;
+    }
     // don't use semver.valid and semver.validRange to validate the package version because it
     // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
-    validateType(message, packageVersion, `version of "${packageName}"`, 'string');
+    validateType(message, packageValue, `version of "${packageName}"`, 'string');
   };
+
   const _validatePackageDependencies = (packageDependencies) => {
     validateType(message, packageDependencies, 'packageDependencies', 'object');
     R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
@@ -281,7 +295,7 @@ ${duplicationStr}`);
       validateType(message, fieldValue, field, 'object');
       Object.keys(fieldValue).forEach((key) => {
         validateType(message, key, `property name of ${field}`, 'string');
-        validateType(message, fieldValue[key], `version of "${field}.${key}"`, 'string');
+        _validatePackageDependencyValue(fieldValue[key], key);
       });
     } else if (!nonPackageJsonFields.includes(fieldName)) {
       const result = validatePackageJsonField(fieldName, fieldValue);
