@@ -116,7 +116,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     const patterns = ComponentMap.as(context.components, (component) => {
       const dir = this.workspace.componentDir(component.id);
       const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
-      return componentPatterns.map((pattern: string) => resolve(dir, pattern));
+      return componentPatterns.map((pattern: string) => ({ path: resolve(dir, pattern), relative: pattern }));
     });
 
     const testerContext = Object.assign(context, {

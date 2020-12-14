@@ -13,7 +13,7 @@ import {
   TestResult,
   TestsResult,
   TestsFiles,
-  Patterns,
+  ComponentPatternsMap,
 } from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
@@ -61,7 +61,7 @@ export class JestTester implements Tester {
       if (!componentSpecFiles) return undefined;
       const [, specs] = componentSpecFiles;
       return testResult.filter((test) => {
-        return specs.filter((pattern) => minimatch(test.testFilePath, pattern)).length > 0;
+        return specs.filter((pattern) => minimatch(test.testFilePath, pattern.path)).length > 0;
       });
     });
   }
@@ -205,7 +205,7 @@ export class JestTester implements Tester {
     });
   }
 
-  private patternsToArray(patterns: Patterns) {
-    return flatten(patterns.toArray().map(([, pattern]) => pattern));
+  private patternsToArray(patterns: ComponentPatternsMap) {
+    return flatten(patterns.toArray().map(([, pattern]) => pattern.map((p) => p.path)));
   }
 }

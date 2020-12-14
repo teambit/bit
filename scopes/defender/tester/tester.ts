@@ -15,7 +15,7 @@ export type ComponentsResults = {
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
-export type Patterns = ComponentMap<string[]>;
+export type ComponentPatternsMap = ComponentMap<{ path: string; relative: string }[]>;
 
 export interface TesterContext extends ExecutionContext {
   /**
@@ -61,7 +61,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * array of patterns to test.
    */
-  patterns: Patterns;
+  patterns: ComponentPatternsMap;
 }
 
 /**
