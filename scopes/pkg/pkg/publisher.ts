@@ -90,7 +90,8 @@ export class Publisher {
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
     this.logger.debug(`total ${idsToPublish.length} to publish out of ${componentIds.length}`);
-    const network = await this.workspace.createNetwork(idsToPublish);
+    const componentIdsToPublish = await this.workspace.resolveMultipleComponentIds(idsToPublish);
+    const network = await this.workspace.createNetwork(componentIdsToPublish);
     return network.seedersCapsules;
   }
 

@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.197",
+  "version": "14.8.9-dev.210",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -247,8 +247,7 @@
     "chai-arrays": "^1.0.0",
     "chai-fs": "^1.0.0",
     "chai-string": "^1.4.0",
-    "eslint": "^6.8.0",
-    "eslint-config-airbnb-typescript": "^5.1.0",
+    "eslint": "^7.11.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-import": "^2.20.1",
     "eslint-plugin-jsx-a11y": "^6.3.0",

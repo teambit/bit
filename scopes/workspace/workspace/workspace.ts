@@ -21,7 +21,7 @@ import {
   WorkspacePolicyEntry,
   DependencyList,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -318,16 +318,10 @@ export class Workspace implements ComponentFactory {
     return this.resolveMultipleComponentIds(ids);
   }
 
-  // TODO: refactor asap to get seeders as ComponentID[] not strings (most of the places already has it that way)
-  async createNetwork(seeders: string[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+  async createNetwork(seeders: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const legacySeedersIdsP = seeders.map(async (seeder) => {
-      const componentId = await this.resolveComponentId(seeder);
-      return componentId._legacy;
-    });
-
-    const legacySeedersIds = await Promise.all(legacySeedersIdsP);
+    const legacySeedersIds = seeders.map((seeder) => seeder._legacy);
     const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
     const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
     const seedersStr = seederIdsWithVersions.map((s) => s.toString());
@@ -361,7 +355,7 @@ export class Workspace implements ComponentFactory {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id.toString()));
+    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id));
     const resolvedComponents = components.map((component) => {
       const capsule = isolatedEnvironment.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
@@ -821,7 +815,15 @@ export class Workspace implements ComponentFactory {
 
       if (!data) return false;
       if (data.type !== 'aspect' && idsWithoutCore.includes(component.id.toString())) {
-        throw new IncorrectEnvAspect(component.id.toString(), data.type);
+        const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
+        if (data.id === DEFAULT_ENV) {
+          // when cloning a project, or when the node-modules dir is deleted, nothing works and all
+          // components are default to the DEFAULT_ENV, which is node-env. we must allow "bit
+          // install" to prepare the workspace and let the proper the envs to be loaded
+          this.logger.error(err.message);
+        } else {
+          throw err;
+        }
       }
       return data.type === 'aspect';
     });
@@ -1040,7 +1042,12 @@ export class Workspace implements ComponentFactory {
     // TODO: this make duplicate
     // this.logger.consoleSuccess();
     // TODO: add the links results to the output
-    await this.link({ linkTeambitBit: true, legacyLink: true, linkCoreAspects: true });
+    await this.link({
+      linkTeambitBit: true,
+      legacyLink: true,
+      linkCoreAspects: true,
+      linkNestedDepsInNM: !this.isLegacy,
+    });
     await this.consumer.componentFsCache.deleteAllDependenciesDataCache();
     return compDirMap;
   }

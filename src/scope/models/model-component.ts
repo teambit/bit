@@ -634,6 +634,7 @@ export default class Component extends BitObject {
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,
+      buildStatus: version.buildStatus,
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);

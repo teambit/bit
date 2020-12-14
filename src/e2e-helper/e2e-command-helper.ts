@@ -139,13 +139,13 @@ export default class CommandHelper {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --persist`);
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options} --persist`);
+    return this.runCmd(`bit tag ${id} ${version} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --persist`);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --build`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
@@ -154,19 +154,12 @@ export default class CommandHelper {
     return this.tagAllComponents(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --persist`);
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
   }
   softTag(options = '') {
-    return this.runCmd(`bit tag ${options}`);
+    return this.runCmd(`bit tag --soft ${options}`);
   }
-  tagAndPersistAllHarmony(options = '', version = '', assertTagged = true) {
-    let result = this.runCmd(`bit tag -a ${version} ${options}`);
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    result = this.runCmd('bit tag --persist');
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    return result;
-  }
-  hardTag(options = '') {
+  persistTag(options = '') {
     return this.runCmd(`bit tag --persist ${options}`);
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
