@@ -546,7 +546,7 @@ jobs:
       - run: cd bit && npm publish --tag dev
       - run: npm view bit-bin@dev version
       # there is a delay between publishing a package and until it's seen on npm servers
-      - run: sleep 2m
+      - run: sleep 5m
       - run: npm view bit-bin@dev version
       - run: cd bit && bit status
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
