@@ -147,13 +147,13 @@
         "cross-spawn": "^7.0.3",
         "dagre": "0.8.5",
         "didyoumean": "^1.2.1",
+        "eslint-config-airbnb-typescript": {
+          "version": "^5.1.0",
+          "preserve": true
+        },
         "eslint-import-resolver-node": "0.3.4",
         "express": "^4.17.1",
         "express-graphql": "^0.9.0",
-        "eslint-config-airbnb-typescript": {
-          "preserve": true,
-          "version": "^5.1.0"
-        },
         "express-history-api-fallback": "^2.2.1",
         "file-loader": "^6.0.0",
         "filenamify": "^4.1.0",
@@ -185,6 +185,7 @@
         "memory-fs": "0.5.0",
         "mime": "^2.4.6",
         "mini-css-extract-plugin": "^0.9.0",
+        "minimatch": "3.0.4",
         "mousetrap": "^1.6.5",
         "mutation-observer": "1.0.3",
         "nerf-dart": "1.0.0",

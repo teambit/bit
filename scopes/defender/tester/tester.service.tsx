@@ -114,15 +114,11 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
-    const patterns = flatten(
-      await Promise.all(
-        context.components.map(async (component) => {
-          const dir = await this.workspace.componentDir(component.id);
-          const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
-          return componentPatterns.map((pattern) => resolve(dir, pattern));
-        })
-      )
-    );
+    const patterns = ComponentMap.as(context.components, (component) => {
+      const dir = this.workspace.componentDir(component.id);
+      const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
+      return componentPatterns.map((pattern: string) => resolve(dir, pattern));
+    });
 
     const testerContext = Object.assign(context, {
       release: false,
