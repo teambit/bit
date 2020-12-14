@@ -1,12 +1,12 @@
 import semver from 'semver';
 import { InvalidVersion } from './exceptions';
-import Version, { LATEST } from './version';
+import { Version, LATEST_VERSION } from './version';
 
 export const HASH_SIZE = 40;
 export const LATEST_TESTED_MARK = '*';
 
 function isLatest(versionStr: string): boolean {
-  return versionStr === LATEST;
+  return versionStr === LATEST_VERSION;
 }
 
 function isLatestTested(versionStr: string) {

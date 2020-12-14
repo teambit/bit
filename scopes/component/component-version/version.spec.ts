@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import Version from './version';
+import { Version } from './version';
 
 describe('Version', () => {
   describe('toString()', () => {

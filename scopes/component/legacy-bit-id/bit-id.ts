@@ -2,13 +2,9 @@ import decamelize from 'decamelize';
 import * as path from 'path';
 import R from 'ramda';
 import * as semver from 'semver';
-
-import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
-import GeneralError from '../error/general-error';
+import { versionParser, isHash, LATEST_VERSION } from '@teambit/component-version';
 import isValidIdChunk from '../utils/is-valid-id-chunk';
 import isValidScopeName from '../utils/is-valid-scope-name';
-import { PathOsBased } from '../utils/path';
-import versionParser, { isHash } from '../version/version-parser';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 
 export type BitIdProps = {
@@ -19,6 +15,8 @@ export type BitIdProps = {
 };
 
 export type BitIdStr = string;
+
+export const VERSION_DELIMITER = '@';
 
 export default class BitId {
   readonly scope: string | null | undefined;
@@ -58,7 +56,7 @@ export default class BitId {
   }
 
   hasVersion(): boolean {
-    return Boolean(this.version && this.version !== LATEST_BIT_VERSION);
+    return Boolean(this.version && this.version !== LATEST_VERSION);
   }
 
   hasScope(): boolean {
@@ -122,7 +120,7 @@ export default class BitId {
     return obj;
   }
 
-  toFullPath(): PathOsBased {
+  toFullPath(): string {
     if (!this.scope || !this.version) {
       throw new Error('BitId.toFullPath is unable to generate a path without a scope or a version');
     }
@@ -154,7 +152,7 @@ export default class BitId {
     return id.split(VERSION_DELIMITER)[1];
   }
 
-  static parse(id: BitIdStr, hasScope = true, version: string = LATEST_BIT_VERSION): BitId {
+  static parse(id: BitIdStr, hasScope = true, version: string = LATEST_VERSION): BitId {
     if (!R.is(String, id)) {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
@@ -200,7 +198,7 @@ export default class BitId {
     };
   }
 
-  static parseObsolete(id: BitIdStr, version: string = LATEST_BIT_VERSION): BitId {
+  static parseObsolete(id: BitIdStr, version: string = LATEST_VERSION): BitId {
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
@@ -273,7 +271,8 @@ export default class BitId {
     }
 
     if (!cleanName) {
-      throw new GeneralError('scope name created by directory name have to contains at least one character or number');
+      // @todo: change it to BitError
+      throw new Error('scope name created by directory name have to contains at least one character or number');
     }
     return cleanName;
   }

@@ -1,9 +1,9 @@
 import semver from 'semver';
 import { InvalidVersion } from './exceptions';
 
-export const LATEST = 'latest';
+export const LATEST_VERSION = 'latest';
 
-export default class Version {
+export class Version {
   versionNum: string | null | undefined;
   latest: boolean;
 
@@ -27,10 +27,10 @@ export default class Version {
   }
 
   isLaterThan(otherVersion: Version): boolean {
-    if (!this.versionNum || this.versionNum === LATEST) {
+    if (!this.versionNum || this.versionNum === LATEST_VERSION) {
       return true;
     }
-    if (!otherVersion.versionNum || otherVersion.versionNum === LATEST) {
+    if (!otherVersion.versionNum || otherVersion.versionNum === LATEST_VERSION) {
       return false;
     }
     return semver.gt(this.versionNum, otherVersion.versionNum);
