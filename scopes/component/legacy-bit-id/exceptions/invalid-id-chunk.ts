@@ -1,10 +1,14 @@
-import AbstractError from '../../error/abstract-error';
+import chalk from 'chalk';
 
-export default class InvalidIdChunk extends AbstractError {
+// @todo: should extends BitError
+export default class InvalidIdChunk extends Error {
   id: string;
 
   constructor(id: string) {
-    super();
-    this.id = id;
+    super(
+      `error: "${chalk.bold(
+        id
+      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+    );
   }
 }

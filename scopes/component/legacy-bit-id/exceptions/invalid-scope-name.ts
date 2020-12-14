@@ -1,12 +1,15 @@
-import AbstractError from '../../error/abstract-error';
+import chalk from 'chalk';
 
-export default class InvalidScopeName extends AbstractError {
+// @todo: should extends BitError
+export default class InvalidScopeName extends Error {
   scopeName: string;
   id: string;
 
   constructor(scopeName: string, id: string) {
-    super();
-    this.scopeName = scopeName;
-    this.id = id;
+    super(
+      `error: "${chalk.bold(
+        id || scopeName
+      )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+    );
   }
 }

@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 
-// @todo: should inherit from BitError
+// @todo: should extends BitError
 export default class InvalidVersion extends Error {
   version: string | null | undefined;
 

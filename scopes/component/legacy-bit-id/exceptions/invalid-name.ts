@@ -1,10 +1,14 @@
-import AbstractError from '../../error/abstract-error';
+import chalk from 'chalk';
 
-export default class InvalidName extends AbstractError {
+// @todo: should extends BitError
+export default class InvalidName extends Error {
   componentName: string;
 
   constructor(componentName: string) {
-    super();
-    this.componentName = componentName;
+    super(
+      `error: "${chalk.bold(
+        componentName
+      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`
+    );
   }
 }

@@ -12,7 +12,6 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import { BASE_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
 import { InvalidBitMap, MissingBitMapComponent, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
@@ -165,10 +164,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
-  [
-    InvalidBitId,
-    (err) => `error: component ID "${chalk.bold(err.id)}" is invalid, please use the following format: [scope]/<name>`,
-  ],
+
   [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration',
@@ -322,27 +318,6 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     },
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
-  [
-    InvalidIdChunk,
-    (err) =>
-      `error: "${chalk.bold(
-        err.id
-      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
-  ],
-  [
-    InvalidName,
-    (err) =>
-      `error: "${chalk.bold(
-        err.componentName
-      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`,
-  ],
-  [
-    InvalidScopeName,
-    (err) =>
-      `error: "${chalk.bold(
-        err.id || err.scopeName
-      )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
-  ],
   [
     InvalidBitJson,
     (err) => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.

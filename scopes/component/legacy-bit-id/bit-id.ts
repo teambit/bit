@@ -3,8 +3,8 @@ import * as path from 'path';
 import R from 'ramda';
 import * as semver from 'semver';
 import { versionParser, isHash, LATEST_VERSION } from '@teambit/component-version';
-import isValidIdChunk from '../utils/is-valid-id-chunk';
-import isValidScopeName from '../utils/is-valid-scope-name';
+import isValidIdChunk from './utils/is-valid-id-chunk';
+import isValidScopeName from './utils/is-valid-scope-name';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 
 export type BitIdProps = {
