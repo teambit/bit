@@ -21,7 +21,7 @@ import {
   WorkspacePolicyEntry,
   DependencyList,
 } from '@teambit/dependency-resolver';
-import { EnvsMain, EnvsAspect, EnvServiceList } from '@teambit/envs';
+import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
 import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
@@ -815,7 +815,15 @@ export class Workspace implements ComponentFactory {
 
       if (!data) return false;
       if (data.type !== 'aspect' && idsWithoutCore.includes(component.id.toString())) {
-        throw new IncorrectEnvAspect(component.id.toString(), data.type);
+        const err = new IncorrectEnvAspect(component.id.toString(), data.type, data.id);
+        if (data.id === DEFAULT_ENV) {
+          // when cloning a project, or when the node-modules dir is deleted, nothing works and all
+          // components are default to the DEFAULT_ENV, which is node-env. we must allow "bit
+          // install" to prepare the workspace and let the proper the envs to be loaded
+          this.logger.error(err.message);
+        } else {
+          throw err;
+        }
       }
       return data.type === 'aspect';
     });
