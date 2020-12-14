@@ -1,7 +1,7 @@
 import semver from 'semver';
+import { InvalidVersion } from './exceptions';
 
-import { DEFAULT_BIT_RELEASE_TYPE, LATEST } from '../constants';
-import { InvalidVersion, InvalidVersionChange } from './exceptions';
+export const LATEST = 'latest';
 
 export default class Version {
   versionNum: string | null | undefined;
@@ -10,12 +10,6 @@ export default class Version {
   constructor(versionNum: string | null | undefined, latest: boolean) {
     this.versionNum = versionNum;
     this.latest = latest;
-  }
-
-  increase(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): Version {
-    if (!this.versionNum) throw new InvalidVersionChange();
-    this.versionNum = semver.inc(this.versionNum, releaseType);
-    return this;
   }
 
   resolve(availableVersion: string[]) {

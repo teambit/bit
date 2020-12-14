@@ -1,10 +1,14 @@
-import AbstractError from '../../error/abstract-error';
+import chalk from 'chalk';
 
-export default class InvalidVersion extends AbstractError {
+// @todo: should inherit from BitError
+export default class InvalidVersion extends Error {
   version: string | null | undefined;
 
-  constructor(version: string | null | undefined) {
-    super();
-    this.version = version;
+  constructor(version?: string | null) {
+    super(
+      `error: version ${chalk.bold(
+        version || '(empty)'
+      )} is not a valid semantic version. learn more: https://semver.org`
+    );
   }
 }
