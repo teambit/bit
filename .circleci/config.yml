@@ -555,12 +555,22 @@ jobs:
           # command: cd bit && bit tag --all --persist --ignore-newest-version
           command: cd bit && bit tag --persist
           no_output_timeout: '25m'
+      - run:
+          name: backup bit objects (before export)
+          command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
       - run: cd bit && bit export
+      - run:
+          name: backup bit objects (after export)
+          command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/objects-before-export.tar
+      - store_artifacts:
+          path: bit/objects-after-export.tar
 
   harmony_deploy_approval_job:
     <<: *defaults
