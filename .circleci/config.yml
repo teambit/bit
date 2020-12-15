@@ -532,10 +532,6 @@ jobs:
       # - run: SCAN=$(ssh-keyscan github.com )
       # - run: echo $SCAN >> ~/.ssh/known_hosts
       - run: cd bit && node scripts/bump-bit-bin-ver.js
-      - run:
-          name: 'git commit'
-          # command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
-          command: 'cd bit && git commit -am "bump bit-bin version [skip ci]"'
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
