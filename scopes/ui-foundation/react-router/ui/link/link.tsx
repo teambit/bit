@@ -9,6 +9,6 @@ export function Link({ href = '', ...rest }: LinkProps) {
   if (rest.external) {
     return <NativeLink {...rest} href={href} />;
   }
-
+  // @ts-ignore todo: it's not clear what's the issue.
   return <ReactRouterLink {...rest} to={href} />;
 }

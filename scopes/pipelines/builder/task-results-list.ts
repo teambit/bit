@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { BuildTaskHelper } from './build-task';
 import { TasksQueue } from './tasks-queue';
 import { TaskResults } from './build-pipe';

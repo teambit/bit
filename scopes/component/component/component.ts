@@ -1,13 +1,12 @@
 import { AnyFS } from '@teambit/any-fs';
 import { capitalize } from '@teambit/string.capitalize';
 import { SemVer } from 'semver';
+import { ComponentID } from '@teambit/component-id';
 
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
-// eslint-disable-next-line import/no-cycle
-import { ComponentID } from './id';
 // eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
 import { State } from './state';
