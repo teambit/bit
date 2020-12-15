@@ -5813,7 +5813,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/notifications": {
+    "notifications": {
         "files": [
             {
                 "name": "index.ts",
@@ -5842,7 +5842,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/panels": {
+    "panels": {
         "files": [
             {
                 "name": "index.ts",
@@ -5876,7 +5876,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/react-router": {
+    "react-router": {
         "files": [
             {
                 "name": "index.ts",
@@ -5920,7 +5920,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/sidebar": {
+    "sidebar": {
         "files": [
             {
                 "name": "drawer.module.scss",
@@ -6004,7 +6004,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/corner": {
+    "ui/corner": {
         "files": [
             {
                 "name": "corner.module.scss",
@@ -6028,7 +6028,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/empty-component-gallery": {
+    "ui/empty-component-gallery": {
         "files": [
             {
                 "name": "empty-component-gallery.composition.tsx",
@@ -6057,7 +6057,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/full-loader": {
+    "ui/full-loader": {
         "files": [
             {
                 "name": "full-loader.module.scss",
@@ -6081,7 +6081,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/hooks/use-bind-key": {
+    "ui/hooks/use-bind-key": {
         "files": [
             {
                 "name": "index.ts",
@@ -6100,7 +6100,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/hooks/use-in-out-transition": {
+    "ui/hooks/use-in-out-transition": {
         "files": [
             {
                 "name": "index.ts",
@@ -6119,7 +6119,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/keycap": {
+    "ui/keycap": {
         "files": [
             {
                 "name": "index.ts",
@@ -6148,7 +6148,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/main-dropdown": {
+    "ui/main-dropdown": {
         "files": [
             {
                 "name": "index.ts",
@@ -6172,7 +6172,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/menu": {
+    "ui/menu": {
         "files": [
             {
                 "name": "index.ts",
@@ -6196,7 +6196,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/notifications/notification-center": {
+    "ui/notifications/notification-center": {
         "files": [
             {
                 "name": "dismiss-button.module.scss",
@@ -6235,7 +6235,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/notifications/notification-context": {
+    "ui/notifications/notification-context": {
         "files": [
             {
                 "name": "index.ts",
@@ -6254,7 +6254,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/notifications/notification": {
+    "ui/notifications/notification": {
         "files": [
             {
                 "name": "index.ts",
@@ -6293,7 +6293,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/notifications/store": {
+    "ui/notifications/store": {
         "files": [
             {
                 "name": "index.ts",
@@ -6312,7 +6312,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/react-router/extend-path": {
+    "ui/react-router/extend-path": {
         "files": [
             {
                 "name": "extend-path.spec.ts",
@@ -6336,7 +6336,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/react-router/link": {
+    "ui/react-router/link": {
         "files": [
             {
                 "name": "index.ts",
@@ -6355,7 +6355,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/react-router/nav-link": {
+    "ui/react-router/nav-link": {
         "files": [
             {
                 "name": "index.ts",
@@ -6374,7 +6374,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/react-router/slot-router": {
+    "ui/react-router/slot-router": {
         "files": [
             {
                 "name": "index.ts",
@@ -6393,7 +6393,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/react-router/use-query": {
+    "ui/react-router/use-query": {
         "files": [
             {
                 "name": "index.ts",
@@ -6412,7 +6412,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/routing/compare-url": {
+    "ui/routing/compare-url": {
         "files": [
             {
                 "name": "compare-url.spec.ts",
@@ -6436,7 +6436,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/routing/link": {
+    "ui/routing/link": {
         "files": [
             {
                 "name": "index.ts",
@@ -6455,7 +6455,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/routing/native-link": {
+    "ui/routing/native-link": {
         "files": [
             {
                 "name": "index.ts",
@@ -6484,7 +6484,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/routing/native-nav-link": {
+    "ui/routing/native-nav-link": {
         "files": [
             {
                 "name": "index.ts",
@@ -6508,7 +6508,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/routing/nav-link": {
+    "ui/routing/nav-link": {
         "files": [
             {
                 "name": "index.ts",
@@ -6527,7 +6527,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/routing/provider": {
+    "ui/routing/provider": {
         "files": [
             {
                 "name": "index.ts",
@@ -6551,7 +6551,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/side-bar": {
+    "ui/side-bar": {
         "files": [
             {
                 "name": "component-tree-context.tsx",
@@ -6800,7 +6800,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui/top-bar": {
+    "ui/top-bar": {
         "files": [
             {
                 "name": "index.ts",
@@ -6824,7 +6824,7 @@
         "exported": false,
         "lanes": []
     },
-    "foundation/ui": {
+    "ui": {
         "files": [
             {
                 "name": "compose.tsx",
