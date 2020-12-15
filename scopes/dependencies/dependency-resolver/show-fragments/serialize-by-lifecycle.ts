@@ -12,9 +12,9 @@ export function serializeByLifecycle(deps: DependencyList, lifecycle: Dependency
 }
 
 function getLongestDepName(deps: DependencyList): number {
-  const dep = maxBy(deps.dependencies, (dep) => getNameWithVersion(dep).length);
-  if (!dep) return 50;
-  return getNameWithVersion(dep).length;
+  const longestDep = maxBy(deps.dependencies, (dep) => getNameWithVersion(dep).length);
+  if (!longestDep) return 50;
+  return getNameWithVersion(longestDep).length;
 }
 
 function getNameWithVersion(dep: Dependency) {
