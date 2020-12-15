@@ -1,16 +1,15 @@
-const webpack = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const safePostCssParser = require('postcss-safe-parser');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
-const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
-const path = require('path');
-const postcssNormalize = require('postcss-normalize');
-const { EnvironmentPlugin } = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const html = require('./html');
+import webpack, { EnvironmentPlugin, Configuration } from 'webpack';
+import TerserPlugin from 'terser-webpack-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
+import safePostCssParser from 'postcss-safe-parser';
+import ManifestPlugin from 'webpack-manifest-plugin';
+import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
+import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
+import path from 'path';
+import postcssNormalize from 'postcss-normalize';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import html from './html';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -42,9 +41,9 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-module.exports = function (workspaceDir, entryFiles, title) {
+export default function createWebpackConfig(workspaceDir: string, entryFiles: string[], title: string): Configuration {
   const isEnvProduction = true;
-  const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
+  const resolveWorkspacePath = (relativePath: string) => path.resolve(workspaceDir, relativePath);
 
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
@@ -57,7 +56,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
     const loaders = [
       {
         loader: MiniCssExtractPlugin.loader,
@@ -519,4 +518,4 @@ module.exports = function (workspaceDir, entryFiles, title) {
     // our own hints via the FileSizeReporter
     performance: false,
   };
-};
+}
