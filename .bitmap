@@ -37,7 +37,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/babel",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "bundler": {
@@ -131,7 +131,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/bundler",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "compiler": {
@@ -205,7 +205,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/compiler",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "multi-compiler": {
@@ -239,7 +239,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "webpack": {
@@ -313,7 +313,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/webpack",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "changelog": {
@@ -357,7 +357,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/changelog",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "component-tree": {
@@ -401,7 +401,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "component": {
@@ -780,7 +780,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "deprecation": {
@@ -809,7 +809,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "dev-files": {
@@ -848,7 +848,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/dev-files",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "graph": {
@@ -1072,7 +1072,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/graph",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "isolator": {
@@ -1141,7 +1141,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/isolator",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/component-status-resolver": {
@@ -1185,7 +1185,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-status-resolver",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/component-status": {
@@ -1224,7 +1224,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-status",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/component-tooltip": {
@@ -1263,7 +1263,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/component-tooltip",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/deprecation-icon": {
@@ -1297,7 +1297,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/deprecation-icon",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/version-block": {
@@ -1326,7 +1326,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-block",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/version-dropdown": {
@@ -1365,7 +1365,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-dropdown",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/version-label": {
@@ -1404,7 +1404,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-label",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "compositions": {
@@ -1543,7 +1543,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/compositions",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "model/composition-id": {
@@ -1567,7 +1567,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-id",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "model/composition-type": {
@@ -1586,7 +1586,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/composition-card": {
@@ -1615,7 +1615,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "eslint": {
@@ -1644,7 +1644,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/eslint",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "jest": {
@@ -1688,7 +1688,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "linter": {
@@ -1742,7 +1742,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/linter",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "tester": {
@@ -1851,7 +1851,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/test-loader": {
@@ -1885,7 +1885,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/ui/test-loader",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/test-row": {
@@ -1909,7 +1909,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/ui/test-row",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/test-table": {
@@ -1953,7 +1953,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/ui/test-table",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "dependency-resolver": {
@@ -2257,7 +2257,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependency-resolver",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "pnpm": {
@@ -2311,7 +2311,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "yarn": {
@@ -2340,7 +2340,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/avatar": {
@@ -2389,7 +2389,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/Avatar",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/cli-snippet": {
@@ -2413,7 +2413,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/cli-snippet",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/contributors": {
@@ -2437,7 +2437,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/contributors",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/empty-box": {
@@ -2471,7 +2471,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/empty-box",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/error-page": {
@@ -2495,7 +2495,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/error-page",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/external-link": {
@@ -2519,7 +2519,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/external-link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/input/check-box": {
@@ -2548,7 +2548,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/input/check-box",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/label": {
@@ -2577,7 +2577,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/pages/not-found": {
@@ -2616,7 +2616,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/not-found-page",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/pages/server-error": {
@@ -2655,7 +2655,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/server-error-page",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/pages/standalone-not-found-page": {
@@ -2674,7 +2674,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/pages/standalone-not-found-page",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/pill-label": {
@@ -2698,7 +2698,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/pill-label",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/round-loader": {
@@ -2732,7 +2732,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/round-loader",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/separator": {
@@ -2756,7 +2756,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/separator",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/styles/ellipsis": {
@@ -2780,7 +2780,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/styles/ellipsis",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/surfaces/menu/link-item": {
@@ -2804,7 +2804,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/surfaces/menu/link-item",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/surfaces/menu/section": {
@@ -2828,7 +2828,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/surfaces/menu/section",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/time-ago": {
@@ -2867,7 +2867,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/time-ago",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "docs": {
@@ -3006,7 +3006,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/queries/get-docs": {
@@ -3025,7 +3025,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "envs": {
@@ -3169,7 +3169,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/env-icon": {
@@ -3188,7 +3188,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/ui/env-icon",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "command-bar": {
@@ -3322,7 +3322,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/command-bar",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "insights": {
@@ -3396,7 +3396,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/gallery/base-component-card": {
@@ -3485,7 +3485,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/ui/base-component-card",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/gallery/component-card": {
@@ -3519,7 +3519,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/ui/component-card",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/gallery/component-grid": {
@@ -3543,7 +3543,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/ui/component-grid",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "generator": {
@@ -3592,7 +3592,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "aspect-loader": {
@@ -3641,7 +3641,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "aspect": {
@@ -3685,7 +3685,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "bit": {
@@ -3759,7 +3759,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "cache": {
@@ -3788,7 +3788,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cache",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "cli": {
@@ -3852,7 +3852,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/cli",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "config": {
@@ -3931,7 +3931,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/config",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "express": {
@@ -3995,7 +3995,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "graphql": {
@@ -4069,7 +4069,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/graphql",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "logger": {
@@ -4108,7 +4108,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/logger",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "modules/requireable-component": {
@@ -4127,7 +4127,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/requireable-component",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "modules/resolved-component": {
@@ -4146,7 +4146,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "node": {
@@ -4175,7 +4175,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/node",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "pubsub": {
@@ -4214,7 +4214,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/aspect-box": {
@@ -4238,7 +4238,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "worker": {
@@ -4282,7 +4282,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/worker",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "mdx": {
@@ -4321,7 +4321,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "modules/mdx-compiler": {
@@ -4365,7 +4365,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/modules/compiler",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "modules/mdx-loader": {
@@ -4399,7 +4399,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/modules/loader",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/mdx-layout": {
@@ -4423,7 +4423,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-layout",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "builder": {
@@ -4577,7 +4577,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/builder",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "flows": {
@@ -4701,7 +4701,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/flows",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "modules/merge-component-results": {
@@ -4720,7 +4720,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/merge-component-results",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "pkg": {
@@ -4839,7 +4839,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pkg/pkg",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "preview": {
@@ -4993,7 +4993,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/preview",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/preview-placeholder": {
@@ -5017,7 +5017,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/ui/preview-placeholder",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "eslint-config-bit-react": {
@@ -5036,7 +5036,7 @@
         "mainFile": "index.js",
         "rootDir": "scopes/react/eslint-config-bit-react",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "react": {
@@ -5240,7 +5240,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "scope": {
@@ -5394,7 +5394,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "sign": {
@@ -5423,7 +5423,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/sign",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/empty-scope": {
@@ -5452,7 +5452,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/empty-scope",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/scope-details": {
@@ -5491,7 +5491,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-details",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/scope-labels": {
@@ -5515,7 +5515,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-labels",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/scope-title": {
@@ -5539,7 +5539,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-title",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "schema": {
@@ -5608,7 +5608,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/schema",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "path/is-path-inside": {
@@ -5627,7 +5627,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/path/is-path-inside",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "path/to-windows-compatible-path": {
@@ -5646,7 +5646,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/path/to-windows-compatible-path",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "string/capitalize": {
@@ -5670,7 +5670,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/capitalize",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "string/strip-trailing-char": {
@@ -5689,7 +5689,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/strip-trailing-char",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "time/time-format": {
@@ -5708,7 +5708,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/time/time-format",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "types/serializable": {
@@ -5727,7 +5727,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/types/serializable",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "url/query-string": {
@@ -5751,7 +5751,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/url/query-string",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "typescript": {
@@ -5810,7 +5810,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/typescript",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/notifications": {
@@ -5839,7 +5839,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/panels": {
@@ -5873,7 +5873,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/panels",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/react-router": {
@@ -5917,7 +5917,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/sidebar": {
@@ -6001,7 +6001,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/sidebar",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/corner": {
@@ -6025,7 +6025,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/corner",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/empty-component-gallery": {
@@ -6054,7 +6054,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/empty-component-gallery",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/full-loader": {
@@ -6078,7 +6078,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/full-loader",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/hooks/use-bind-key": {
@@ -6097,7 +6097,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-bind-key",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/hooks/use-in-out-transition": {
@@ -6116,7 +6116,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-in-out-transition",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/keycap": {
@@ -6145,7 +6145,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/keycap",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/main-dropdown": {
@@ -6169,7 +6169,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/main-dropdown",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/menu": {
@@ -6193,7 +6193,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/notifications/notification-center": {
@@ -6232,7 +6232,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-center",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/notifications/notification-context": {
@@ -6251,7 +6251,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-context",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/notifications/notification": {
@@ -6290,7 +6290,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/notifications/store": {
@@ -6309,7 +6309,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/ui/notification-store",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/react-router/extend-path": {
@@ -6333,7 +6333,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/extend-path",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/react-router/link": {
@@ -6352,7 +6352,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/react-router/nav-link": {
@@ -6371,7 +6371,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/nav-link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/react-router/slot-router": {
@@ -6390,7 +6390,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/slot-router",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/react-router/use-query": {
@@ -6409,7 +6409,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/use-query",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/routing/compare-url": {
@@ -6433,7 +6433,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/compare-url",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/routing/link": {
@@ -6452,7 +6452,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/routing/native-link": {
@@ -6481,7 +6481,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/native-link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/routing/native-nav-link": {
@@ -6505,7 +6505,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/native-nav-link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/routing/nav-link": {
@@ -6524,7 +6524,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/nav-link",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/routing/provider": {
@@ -6548,7 +6548,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/routing-provider",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/side-bar": {
@@ -6797,7 +6797,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/side-bar",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui/top-bar": {
@@ -6821,7 +6821,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/top-bar",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "foundation/ui": {
@@ -7065,7 +7065,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "modules/match-pattern": {
@@ -7089,7 +7089,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/modules/match-pattern",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/empty-workspace": {
@@ -7118,7 +7118,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/empty-workspace",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "ui/status": {
@@ -7152,7 +7152,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/status",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "variants": {
@@ -7191,7 +7191,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "workspace": {
@@ -7525,7 +7525,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
-        "exported": true,
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.210"
