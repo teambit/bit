@@ -454,6 +454,15 @@ jobs:
           name: 'status harmony'
           command: 'cd bit && npm run status-harmony'
       - run:
+          name: 'status harmony'
+          command: 'cd bit && npm run status-harmony'
+      - run:
+          name: 'link harmony'
+          command: 'cd bit && npm run link-harmony'
+      - run:
+          name: 'status harmony'
+          command: 'cd bit && npm run status-harmony'
+      - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
       - run:
