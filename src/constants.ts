@@ -366,8 +366,6 @@ export const BIT_WORKSPACE_TMP_DIRNAME = '.bitTmp';
 
 export const BIT_CACHE_DIRNAME = 'cache';
 
-export const LATEST_TESTED_MARK = '*';
-
 export const SUB_DIRECTORIES_GLOB_PATTERN = '/**/*';
 
 export const SCOPE_JSON = 'scope.json';

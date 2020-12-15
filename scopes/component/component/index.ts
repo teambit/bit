@@ -2,7 +2,7 @@ import { ComponentAspect } from './component.aspect';
 
 export { useComponentHost } from './host';
 export { Component } from './component';
-export { ComponentID } from './id';
+export { ComponentID } from '@teambit/component-id';
 export { default as ComponentFS } from './component-fs';
 export type { default as ComponentConfig } from './config';
 export type { ComponentFactory } from './component-factory';

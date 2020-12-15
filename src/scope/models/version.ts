@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { BuildStatus, DEFAULT_BINDINGS_PREFIX, DEFAULT_BUNDLE_FILENAME, DEPENDENCIES_FIELDS } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -17,7 +18,6 @@ import { TesterExtensionModel } from '../../legacy-extensions/tester-extension';
 import logger from '../../logger/logger';
 import { filterObject, first, getStringifyArgs } from '../../utils';
 import { PathLinux, PathLinuxRelative } from '../../utils/path';
-import { isHash } from '../../version/version-parser';
 import VersionInvalid from '../exceptions/version-invalid';
 import { BitObject, Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';

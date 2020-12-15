@@ -1,4 +1,4 @@
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { MissingScope } from './exceptions';
 
 export class ComponentID {

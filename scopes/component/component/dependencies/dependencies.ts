@@ -1,5 +1,5 @@
 /* eslint-disable max-classes-per-file */
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { BitId } from 'bit-bin/dist/bit-id';
 
 const DEV_ENV = 'development';

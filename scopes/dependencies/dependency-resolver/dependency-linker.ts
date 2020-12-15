@@ -6,7 +6,7 @@ import { link as legacyLink } from 'bit-bin/dist/api/consumer';
 import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';

@@ -1,7 +1,8 @@
 import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
+import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
-import BitId from '../../bit-id/bit-id';
+import { BitId } from '../../bit-id';
 import {
   COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
@@ -23,7 +24,6 @@ import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
-import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';

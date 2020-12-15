@@ -12,7 +12,7 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
