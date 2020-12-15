@@ -329,7 +329,7 @@ export class Workspace implements ComponentFactory {
     const consumerComponents = compsAndDeps.filter((c) =>
       this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
     );
-    const ids = await Promise.all(consumerComponents.map(async (c) => this.resolveComponentId(c.id)));
+    const ids = await this.resolveMultipleComponentIds(consumerComponents.map((c) => c.id));
     const components = await this.getMany(ids, true);
     opts.baseDir = opts.baseDir || this.consumer.getPath();
     const capsuleList = await this.isolateEnv.isolateComponents(components, opts);

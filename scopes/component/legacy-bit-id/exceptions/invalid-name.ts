@@ -1,7 +1,7 @@
 import chalk from 'chalk';
+import { BitError } from '@teambit/bit-error';
 
-// @todo: should extends BitError
-export default class InvalidName extends Error {
+export default class InvalidName extends BitError {
   componentName: string;
 
   constructor(componentName: string) {

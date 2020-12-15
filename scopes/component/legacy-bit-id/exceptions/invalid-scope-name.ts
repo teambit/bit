@@ -1,7 +1,7 @@
 import chalk from 'chalk';
+import { BitError } from '@teambit/bit-error';
 
-// @todo: should extends BitError
-export default class InvalidScopeName extends Error {
+export default class InvalidScopeName extends BitError {
   scopeName: string;
   id: string;
 

@@ -4,7 +4,7 @@ import { ComponentID } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { Workspace } from '@teambit/workspace';
 import { BuildStatus } from 'bit-bin/dist/constants';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { SignMain } from './sign.main.runtime';
 
 export class SignCmd implements Command {

@@ -1,7 +1,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
-
+import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
@@ -60,7 +60,6 @@ import {
 } from '../consumer/exceptions';
 import { LanesIsDisabled } from '../consumer/lanes/exceptions/lanes-is-disabled';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
-import { BitError } from '../error/bit-error';
 import GeneralError from '../error/general-error';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import ValidationError from '../error/validation-error';
