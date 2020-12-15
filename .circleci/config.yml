@@ -552,7 +552,7 @@ jobs:
       - run:
           name: soft
           command: cd bit && node scripts/soft-tag-scope-teambit.js
-          no_output_timeout: '25m'
+          # no_output_timeout: '25m'
       - run:
           name: tag persist
           # command: cd bit && bit tag --all --persist --ignore-newest-version
