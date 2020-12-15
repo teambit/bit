@@ -12,10 +12,67 @@ export async function createRoot(
   runtime = 'ui'
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
-  const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `
-import { Harmony } from '@teambit/harmony';
+${createImports(aspectDefs)}
+
+export function render(...props){
+  return Harmony.load([${getIdentifiers(
+    aspectDefs.map((def) => def.aspectPath),
+    'Aspect'
+  )}], '${runtime}', {})
+    .then((harmony) => {
+      return harmony
+      .run()
+      .then(() => {
+        const rootExtension = harmony.get('${rootAspect}');
+        return rootExtension.render(${rootId}, ...props);
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+}
+
+render();
+`;
+}
+
+export async function createSsrRoot(
+  aspectDefs: AspectDefinition[],
+  rootExtensionName?: string,
+  rootAspect = UIAspect.id,
+  runtime = 'ui'
+) {
+  const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
+
+  return `
+${createImports(aspectDefs)}
+
+export function render(...props){
+  return Harmony.load([${getIdentifiers(
+    aspectDefs.map((def) => def.aspectPath),
+    'Aspect'
+  )}], '${runtime}', {})
+    .then((harmony) => {
+      return harmony
+      .run()
+      .then(() => {
+        const rootExtension = harmony.get('${rootAspect}');
+        return rootExtension.renderSsr(${rootId}, ...props);
+      })
+      .catch((err) => {
+        throw err;
+      });
+    });
+}
+`;
+}
+
+function createImports(aspectDefs: AspectDefinition[]) {
+  const defs = aspectDefs.filter((def) => def.runtimePath);
+
+  return `import { Harmony } from '@teambit/harmony';
 ${getImportStatements(
   aspectDefs.map((def) => def.aspectPath),
   'Aspect'
@@ -24,24 +81,7 @@ ${getImportStatements(
   // @ts-ignore no nulls can be found here - see above.
   defs.map((def) => def.runtimePath),
   'Runtime'
-)}
-
-Harmony.load([${getIdentifiers(
-    aspectDefs.map((def) => def.aspectPath),
-    'Aspect'
-  )}], '${runtime}', {})
-  .then((harmony) => {
-    harmony
-      .run()
-      .then(() => {
-        const rootExtension = harmony.get('${rootAspect}');
-        rootExtension.render(${rootId});
-      })
-      .catch((err) => {
-        throw err;
-      });
-  });
-  `;
+)}`;
 }
 
 function getImportStatements(extensionPaths: string[], suffix: string): string {

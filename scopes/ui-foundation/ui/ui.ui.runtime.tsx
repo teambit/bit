@@ -3,13 +3,21 @@ import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
+// WIP!
+import { getDataFromTree } from '@apollo/react-ssr';
+
 import React, { ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+// WIP!
+import ReactDOMServer from 'react-dom/server';
 
 import { Compose } from './compose';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
+import { Html, Assets } from './ssr/html';
+// WIP!
+import { makeSsrGqlClient, getGqlProvider } from './ssr/gql-client';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
@@ -68,6 +76,40 @@ export class UiUI {
       </GraphqlProvider>,
       document.getElementById('root')
     );
+  }
+
+  // WORK IN PROGRESS.
+  renderSsr(rootExtension: string, assets: Assets) {
+    const GraphqlProvider = getGqlProvider();
+    const rootFactory = this.getRoot(rootExtension);
+    if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
+
+    const uiRoot = rootFactory();
+    const routes = this.router.renderRoutes(uiRoot.routes);
+    const hudItems = this.hudSlot.values();
+    const contexts = this.contextSlot.values();
+
+    const client = makeSsrGqlClient();
+
+    const app = (
+      <Html title="bit dev ssred!" assets={assets}>
+        <GraphqlProvider client={client}>
+          <ClientContext>
+            <Compose components={contexts}>
+              {hudItems}
+              {routes}
+            </Compose>
+          </ClientContext>
+        </GraphqlProvider>
+      </Html>
+    );
+
+    return getDataFromTree(app)
+      .then(() => {
+        const content = ReactDOMServer.renderToString(app);
+        return `<!DOCTYPE html>${content}`;
+      })
+      .catch((err) => console.error(err)); // TODO
   }
 
   /** adds elements to the Heads Up Display */

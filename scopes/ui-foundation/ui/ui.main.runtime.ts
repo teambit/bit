@@ -18,7 +18,7 @@ import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
-import { createRoot } from './create-root';
+import { createRoot, createSsrRoot } from './create-root';
 import { UnknownUI } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
@@ -162,9 +162,16 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
-      await this.buildIfChanged(name, uiRoot, rebuild);
-      await this.buildIfNoBundle(name, uiRoot);
-      await uiServer.start({ port: targetPort });
+      // TEMP! WIP!
+      // await this.buildIfChanged(name, uiRoot, rebuild);
+      // const bundlingStats = await this.buildIfNoBundle(name, uiRoot);
+      const bundlingStats = await this.build(name);
+      if (bundlingStats.hasErrors()) {
+        // TEMP
+        console.error('bundling error:', bundlingStats.compilation.errors);
+      }
+
+      await uiServer.start({ port: targetPort, bundlingStats });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
@@ -236,6 +243,7 @@ export class UiMain {
     return uiSlot;
   }
 
+  // check if unused
   createLink(aspectDefs: AspectDefinition[], rootExtensionName: string) {
     return createRoot(aspectDefs, rootExtensionName);
   }
@@ -249,7 +257,7 @@ export class UiMain {
     runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id
   ) {
-    const contents = await createRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
+    const contents = await createSsrRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
     const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);

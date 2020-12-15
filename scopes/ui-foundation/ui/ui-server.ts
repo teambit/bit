@@ -6,9 +6,11 @@ import fallback from 'express-history-api-fallback';
 import getPort from 'get-port';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
-import { join } from 'path';
-import webpack from 'webpack';
+import { join /* , extname */ } from 'path';
+import webpack, { Stats } from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
+import { getWebpackAssets } from './webpack/get-webpack-assets';
+import { ssrRender } from './ssr-render';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
@@ -28,6 +30,11 @@ export type StartOptions = {
    * port for the UI server to bind. default is a port range of 4000-4200.
    */
   port?: number;
+
+  /**
+   * bundling result from webpack build
+   */
+  bundlingStats?: Stats;
 };
 
 export class UIServer {
@@ -68,22 +75,37 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ port }: StartOptions = {}) {
+  async start({ port, bundlingStats }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
     const root = join(this.uiRoot.path, '/public');
+    const ssrBundlePath = join(this.uiRoot.path, '/public', 'ssr', 'bundle');
     const server = await this.graphql.createServer({ app });
 
+    // set up preview proxy, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
+
+    // pass through files from public /folder:
     app.use(express.static(root));
+    app.get(
+      '/~ssr',
+      await ssrRender({
+        entryFilePath: ssrBundlePath,
+        assets: getWebpackAssets(bundlingStats?.compilation),
+      })
+    );
+
+    // in any and all other cases, serve index.html.
+    // No any other endpoints past this will be execute
     app.use(fallback('index.html', { root }));
+
     server.listen(selectedPort);
     this._port = selectedPort;
+
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
   }
 
-  // TODO - check if this is necessary
   private async configureProxy(app: Express, server: Server) {
     const proxServer = httpProxy.createProxyServer();
     proxServer.on('error', (e) => this.logger.error(e.message));

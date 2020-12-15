@@ -1,5 +1,5 @@
 import React, { useEffect, ReactNode } from 'react';
-import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
+import { BrowserRouter, StaticRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RoutingProvider } from '@teambit/ui.routing.provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { ReactRouterUI } from './react-router.ui.runtime';
@@ -43,6 +43,11 @@ export function RootRoute({ rootRoutes, routeSlot }: RootRouteProps) {
 
 /** provides the router engine (browser, inMemory, etc) */
 function Router({ type, children }: { type: Routing; children: ReactNode }) {
+  // WIP
+  if (typeof window === 'undefined') {
+    return <StaticRouter location="/input/checkbox/label/~tests">{children}</StaticRouter>;
+  }
+
   switch (type) {
     case Routing.inMemory:
       return (
