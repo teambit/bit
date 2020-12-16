@@ -26,12 +26,12 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
     resolvers: {
       Mutation: {
         deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: Verb }) => {
-          if (context.verb !== Verb.WRITE) throw new Error('You are not authorized');
+          if (context.verb != Verb.WRITE) throw new Error('You are not authorized');
           return deprecation.deprecate(bitIds);
         },
 
         undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: Verb }) => {
-          if (context.verb !== Verb.WRITE) throw new Error('You are not authorized');
+          if (context.verb != Verb.WRITE) throw new Error('You are not authorized');
           return deprecation.unDeprecate(bitIds);
         },
       },
