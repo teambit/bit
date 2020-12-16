@@ -12,6 +12,7 @@ import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
 import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
+import { GraphFromFsBuilder } from './build-graph-from-fs';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
@@ -110,8 +111,8 @@ export async function buildOneGraphForComponents(
     }
   };
   const components = await getComponents();
-  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);
-  return flattenedDependencyLoader.buildGraph(components);
+  const graphFromFsBuilder = new GraphFromFsBuilder(consumer, ignoreIds, loadComponentsFunc);
+  return graphFromFsBuilder.buildGraph(components);
 }
 
 /**

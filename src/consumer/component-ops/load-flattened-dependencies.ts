@@ -7,55 +7,14 @@ import BitIds from '../../bit-id/bit-ids';
 import { COMPONENT_ORIGINS } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import Component from '../component/consumer-component';
-import Graph from '../../scope/graph/graph';
-import logger from '../../logger/logger';
 
 export class FlattenedDependencyLoader {
   private cache: { [bitIdStr: string]: Component } = {};
-  private graph = new Graph();
-  private completed: string[] = [];
   constructor(
     private consumer: Consumer,
     private ignoreIds = new BitIds(),
     private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
   ) {}
-  async buildGraph(components: Component[]): Promise<Graph> {
-    components.forEach((c) => {
-      this.graph.setNode(c.id.toString(), c);
-    });
-    await mapSeries(components, (component) => this.buildOneComponent(component));
-    return this.graph;
-  }
-
-  async buildOneComponent(component: Component) {
-    const compId = component.id;
-    if (this.completed.includes(compId.toString())) return;
-    const dependencies = await this.loadManyComponents(
-      component.dependencies.getAllIds().difference(this.ignoreIds),
-      compId
-    );
-    const devDependencies = await this.loadManyComponents(
-      component.devDependencies.getAllIds().difference(this.ignoreIds),
-      compId
-    );
-    const extensionDependencies = await this.loadManyComponents(
-      component.extensions.extensionsBitIds.difference(this.ignoreIds),
-      compId
-    );
-    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach((depId) => {
-        if (this.ignoreIds.has(depId)) return;
-        if (!this.graph.hasNode(depId.toString())) {
-          throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
-        }
-        this.graph.setEdge(compId.toString(), depId.toString(), depType);
-      });
-    });
-    this.completed.push(compId.toString());
-    const allComps = [...dependencies, ...devDependencies, ...extensionDependencies];
-    await mapSeries(allComps, (comp) => this.buildOneComponent(comp));
-  }
-
   async load(component: Component) {
     const dependencies = await this.loadManyDependencies(component.dependencies.getAllIds().difference(this.ignoreIds));
     const devDependencies = await this.loadManyDependencies(
@@ -88,47 +47,6 @@ export class FlattenedDependencyLoader {
       extensionDependencies: filteredExtDeps,
     });
   }
-  async loadManyComponents(componentsIds: BitId[], dependenciesOf: BitId): Promise<Component[]> {
-    // const nonIgnored = componentsIds.filter(id => !this.ignoreIds.has(id)); // @todo: maybe should be done on the first level only
-    return mapSeries(componentsIds, async (comp: BitId) => {
-      const idStr = comp.toString();
-      const fromGraph = this.graph.node(idStr);
-      if (fromGraph) return fromGraph;
-      try {
-        return await this.loadComponent(comp);
-      } catch (err) {
-        logger.error(`failed loading dependencies of ${dependenciesOf.toString()}`);
-        throw err;
-      }
-    });
-  }
-  async loadComponent(componentId: BitId): Promise<Component> {
-    const idStr = componentId.toString();
-    const fromGraph = this.graph.node(idStr);
-    if (fromGraph) return fromGraph;
-    const componentMap = this.consumer.bitMap.getComponentIfExist(componentId);
-    const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
-    if (couldBeModified) {
-      if (this.loadComponentsFunc) {
-        const dependency = await this.loadComponentsFunc([componentId]);
-        if (!dependency.length || !dependency[0]) {
-          throw new Error(`unable to load ${componentId.toString()} using custom load function`);
-        }
-        this.graph.setNode(idStr, dependency[0]);
-      } else {
-        this.graph.setNode(idStr, await this.consumer.loadComponentForCapsule(componentId));
-      }
-      return this.graph.node(idStr);
-    }
-    // for capsule, a dependency might have been installed as a package in the workspace, and as
-    // such doesn't have a componentMap.
-    const componentFromModel = await this.consumer.loadComponentFromModel(componentId);
-    this.graph.setNode(idStr, componentFromModel.clone());
-    this.cache[componentId.toString()] = componentFromModel.clone();
-
-    return this.cache[componentId.toString()];
-  }
-
   async loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {
     return mapSeries(dependenciesIds, (dep: BitId) => this.loadDependency(dep));
   }
