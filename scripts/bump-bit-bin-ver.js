@@ -5,6 +5,7 @@ const { platform } = require('process');
 
 const cwd = path.resolve(__dirname, '..');
 const WAIT_FOR_NPM_IN_SEC = 10;
+const MAX_NPM_ATTEMPTS = 50;
 
 const shouldBump = shouldBumpBitBin();
 if (!shouldBump) {
@@ -14,30 +15,31 @@ if (!shouldBump) {
 
 const currentBitBinVersionInCode = require('../package.json').version;
 console.log('currentBitBinVersionInCode', currentBitBinVersionInCode);
-
 const currentBitBinVersionInNpm = getCurrentBitBinVerFromNpm();
 const nextBitBinVersion = getNextBitBinVersion();
 
 replaceVersionOccurrencesInCode();
-
-const results = execSync(`git commit -am "bump bit-bin version to ${nextBitBinVersion} [skip ci]"`, { cwd });
-console.log('commit output: ', results.toString());
-
+gitCommitChanges();
 publishBitBin();
-
 waitUntilShownInNpm().then(() => console.log('bump has completed!'));
 
 async function waitUntilShownInNpm() {
   let shouldWait = true;
+  let numOfAttempts = 0;
   while (shouldWait) {
     const currentVer = getCurrentBitBinVerFromNpm();
     if (currentVer == nextBitBinVersion) {
       console.log('NPM is up to date!');
       shouldWait = false;
-    } else {
+    } else if (numOfAttempts < MAX_NPM_ATTEMPTS) {
+      numOfAttempts++;
       console.log(`NPM is still showing version ${currentVer}. will try again in ${WAIT_FOR_NPM_IN_SEC} seconds`);
       // sleep X seconds. it takes time to get the results from npm anyway.
       await sleep(WAIT_FOR_NPM_IN_SEC * 1000);
+    } else {
+      throw new Error(
+        `something is wrong with NPM. wait time of ${WAIT_FOR_NPM_IN_SEC * MAX_NPM_ATTEMPTS} seconds was not enough`
+      );
     }
   }
 }
@@ -99,4 +101,9 @@ function replaceVersionOccurrencesInCode() {
   execSync(`find scopes -name component.json -exec ${sed} {} \\;`, { cwd });
 
   console.log(`completed changing all occurrences of "${currentBitBinVersionInCode}" to "${nextBitBinVersion}"`);
+}
+
+function gitCommitChanges() {
+  const results = execSync(`git commit -am "bump bit-bin version to ${nextBitBinVersion} [skip ci]"`, { cwd });
+  console.log('commit output: ', results.toString());
 }
