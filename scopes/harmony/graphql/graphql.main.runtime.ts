@@ -194,6 +194,11 @@ export class GraphqlMain {
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
         imports: moduleDeps,
+        context: (session) => {
+          return {
+            verb: session.headers['x-verb'] || 'read',
+          };
+        },
       });
 
       this.modules.set(extensionId, module);

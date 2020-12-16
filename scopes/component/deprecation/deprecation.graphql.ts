@@ -25,11 +25,13 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
     `,
     resolvers: {
       Mutation: {
-        deprecate: (req: any, { bitIds }: { bitIds: string[] }) => {
+        deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: 'read' | 'write' }) => {
+          if (context.verb !== 'write') throw new Error('You are not authorized');
           return deprecation.deprecate(bitIds);
         },
 
-        undeprecate: (req: any, { bitIds }: { bitIds: string[] }) => {
+        undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: 'read' | 'write' }) => {
+          if (context.verb !== 'write') throw new Error('You are not authorized');
           return deprecation.unDeprecate(bitIds);
         },
       },

@@ -52,7 +52,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(SCOPE_QUERY);
+    const data = await this.graphClientRequest(SCOPE_QUERY, 'read');
 
     return {
       name: data.scope.name,
@@ -70,7 +70,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': 'write' }),
     });
     await this.throwForNonOkStatus(res);
     const results = await this.getJsonResponse(res);
@@ -86,7 +86,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'POST',
       body: pack,
-      headers: this.getHeaders({ 'push-options': JSON.stringify(pushOptions) }),
+      headers: this.getHeaders({ 'push-options': JSON.stringify(pushOptions), 'x-verb': 'write' }),
     });
     await this.throwForNonOkStatus(res);
     const ids = await this.getJsonResponse(res);
@@ -103,7 +103,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': 'write' }),
     });
     await this.throwForNonOkStatus(res);
     const results = await this.getJsonResponse(res);
@@ -120,7 +120,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': 'read' }),
     });
     await this.throwForNonOkStatus(res);
     const objectList = await ObjectList.fromTar(res.body);
@@ -155,9 +155,10 @@ export class Http implements Network {
     throw err;
   }
 
-  private async graphClientRequest(query: string, variables?: Record<string, any>) {
+  private async graphClientRequest(query: string, verb: string = 'read', variables?: Record<string, any>) {
     logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
+      this.graphClient.setHeader('x-verb', verb);
       return await this.graphClient.request(query, variables);
     } catch (err) {
       if (err instanceof ClientError) {
@@ -185,7 +186,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(LIST_LEGACY, {
+    const data = await this.graphClientRequest(LIST_LEGACY, 'read', {
       namespaces: namespacesUsingWildcards,
     });
 
@@ -204,7 +205,7 @@ export class Http implements Network {
         }
       }
     `;
-    const data = await this.graphClientRequest(SHOW_COMPONENT, {
+    const data = await this.graphClientRequest(SHOW_COMPONENT, 'read', {
       id: bitId.toString(),
     });
 
@@ -217,7 +218,7 @@ export class Http implements Network {
         deprecate(bitIds: $bitIds)
       }
     `;
-    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, {
+    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, 'write', {
       ids,
     });
 
@@ -230,7 +231,7 @@ export class Http implements Network {
         undeprecate(bitIds: $bitIds)
       }
     `;
-    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, {
+    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, 'read', {
       ids,
     });
 
@@ -253,7 +254,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(GET_LOG_QUERY, {
+    const data = await this.graphClientRequest(GET_LOG_QUERY, 'read', {
       id: id.toString(),
     });
 
@@ -269,7 +270,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(GET_LATEST_VERSIONS, {
+    const data = await this.graphClientRequest(GET_LATEST_VERSIONS, 'read', {
       ids: bitIds.map((id) => id.toString()),
     });
 
@@ -290,7 +291,7 @@ export class Http implements Network {
     }
     `;
 
-    const res = await this.graphClientRequest(LIST_LANES, {
+    const res = await this.graphClientRequest(LIST_LANES, 'read', {
       mergeData,
     });
 
