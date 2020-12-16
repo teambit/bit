@@ -82,7 +82,12 @@ export class GraphqlMain {
     app.use(cors());
     app.use(
       '/graphql',
-      graphqlHTTP((request) => ({
+      graphqlHTTP((request, res, param) => ({
+        customFormatErrorFn: (err) => {
+          this.logger.error('graphql got an error during running the following query:', param);
+          this.logger.error('graphql error ', err);
+          return err;
+        },
         schema,
         rootValue: request,
         graphiql,
