@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import { Schema } from '@teambit/graphql';
+import { Schema, Verb } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
 import { DeprecationMain } from './deprecation.main.runtime';
@@ -25,13 +25,13 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
     `,
     resolvers: {
       Mutation: {
-        deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: 'read' | 'write' }) => {
-          if (context.verb !== 'write') throw new Error('You are not authorized');
+        deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: Verb }) => {
+          if (context.verb !== Verb.WRITE) throw new Error('You are not authorized');
           return deprecation.deprecate(bitIds);
         },
 
-        undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: 'read' | 'write' }) => {
-          if (context.verb !== 'write') throw new Error('You are not authorized');
+        undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: Verb }) => {
+          if (context.verb !== Verb.WRITE) throw new Error('You are not authorized');
           return deprecation.unDeprecate(bitIds);
         },
       },
