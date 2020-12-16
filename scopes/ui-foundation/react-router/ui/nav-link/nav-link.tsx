@@ -9,6 +9,6 @@ export function NavLink({ href = '', ...rest }: NavLinkProps) {
   if (rest.external) {
     return <NativeNavLink {...rest} href={href} />;
   }
-
+  // @ts-ignore todo: it's not clear what's the issue.
   return <ReactRouterNavLink {...rest} to={href} />;
 }

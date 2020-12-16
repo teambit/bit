@@ -7,7 +7,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions } from '@teambit/isolator';
 import { OnTagOpts } from 'bit-bin/dist/scope/scope';
@@ -43,9 +43,7 @@ export class BuilderMain {
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
-    const artifacts: ComponentMap<ArtifactList>[] = tasksResults.map(
-      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
-    );
+    const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
     const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
@@ -88,18 +86,21 @@ export class BuilderMain {
     });
   }
 
-  async tagListener(components: Component[], options: OnTagOpts = {}): Promise<ComponentMap<AspectList>> {
+  async tagListener(components: Component[], options: OnTagOpts = {}): Promise<OnTagResults> {
+    const pipeResults: TaskResultsList[] = [];
     const envsExecutionResults = await this.build(components, { emptyRootDir: true });
-    envsExecutionResults.throwErrorsIfExist();
+    if (options.throwOnError) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
-    if (!options.disableDeployPipeline) {
+    pipeResults.push(envsExecutionResults);
+    if (!options.disableDeployPipeline && !envsExecutionResults.hasErrors()) {
       const deployEnvsExecutionResults = await this.deploy(components);
-      deployEnvsExecutionResults.throwErrorsIfExist();
+      if (options.throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
+      pipeResults.push(deployEnvsExecutionResults);
     }
     await this.storeArtifacts(allTasksResults);
-    const aspectList = this.pipelineResultsToAspectList(components, allTasksResults);
-    return aspectList;
+    const aspectListMap = this.pipelineResultsToAspectList(components, allTasksResults);
+    return { aspectListMap, pipeResults };
   }
 
   /**
@@ -169,8 +170,11 @@ export class BuilderMain {
    * env. at the end, the results contain the data and errors per env.
    */
   async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
-    const idsStr = components.map((c) => c.id.toString());
-    const network = await this.workspace.createNetwork(idsStr, isolateOptions);
+    const ids = components.map((c) => c.id);
+    const createNetwork = this.workspace
+      ? this.workspace.createNetwork.bind(this.workspace)
+      : this.scope.createNetwork.bind(this.scope);
+    const network = await createNetwork(ids, isolateOptions);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const buildResult = await envs.runOnce(this.buildService);
     return buildResult;
@@ -230,7 +234,15 @@ export class BuilderMain {
   ) {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const buildService = new BuilderService(workspace, logger, buildTaskSlot, 'getBuildPipe', 'build', artifactFactory);
+    const buildService = new BuilderService(
+      workspace,
+      logger,
+      buildTaskSlot,
+      'getBuildPipe',
+      'build',
+      artifactFactory,
+      scope
+    );
     envs.registerService(buildService);
     const deployService = new BuilderService(
       workspace,
@@ -238,7 +250,8 @@ export class BuilderMain {
       deployTaskSlot,
       'getDeployPipe',
       'deploy',
-      artifactFactory
+      artifactFactory,
+      scope
     );
     const builder = new BuilderMain(
       envs,

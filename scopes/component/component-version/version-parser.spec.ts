@@ -1,6 +1,6 @@
 import { expect } from 'chai';
 
-import versionParser from '../version/version-parser';
+import versionParser from './version-parser';
 import { InvalidVersion } from './exceptions';
 
 describe('versionParser()', () => {

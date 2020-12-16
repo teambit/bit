@@ -564,7 +564,7 @@ export default class Consumer {
       consumer: this,
     });
 
-    return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
+    return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
   updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
@@ -591,6 +591,7 @@ export default class Consumer {
     force = false,
     skipTests = false,
     verbose = false,
+    build,
     skipAutoSnap = false,
     resolveUnmerged = false,
   }: {
@@ -600,6 +601,7 @@ export default class Consumer {
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;
+    build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
@@ -645,6 +647,8 @@ export default class Consumer {
       verbose,
       skipAutoTag: skipAutoSnap,
       persist: true,
+      soft: false,
+      build,
       resolveUnmerged,
       isSnap: true,
       disableDeployPipeline: false,

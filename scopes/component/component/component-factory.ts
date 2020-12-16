@@ -1,9 +1,9 @@
 import { BitId } from 'bit-bin/dist/bit-id';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
+import { ComponentID } from '@teambit/component-id';
 
 import { Component } from './component';
-import { ComponentID } from './id';
 import { State } from './state';
 
 export interface ComponentFactory {

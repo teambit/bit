@@ -48,6 +48,7 @@ import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
+import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
@@ -106,6 +107,7 @@ export const manifestsMap = {
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
+  [SignAspect.id]: SignAspect,
 };
 
 export function isCoreAspect(id: string) {

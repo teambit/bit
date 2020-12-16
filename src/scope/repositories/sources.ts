@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -9,7 +10,6 @@ import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
-import { isHash } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
@@ -293,6 +293,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
+    version.buildStatus = consumerComponent.buildStatus;
     artifacts.forEach((file) => objectRepo.add(file.source));
     objectRepo.add(version);
 

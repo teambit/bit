@@ -1,21 +1,15 @@
 import semver from 'semver';
+import { InvalidVersion } from './exceptions';
 
-import { DEFAULT_BIT_RELEASE_TYPE, LATEST } from '../constants';
-import { InvalidVersion, InvalidVersionChange } from './exceptions';
+export const LATEST_VERSION = 'latest';
 
-export default class Version {
+export class Version {
   versionNum: string | null | undefined;
   latest: boolean;
 
   constructor(versionNum: string | null | undefined, latest: boolean) {
     this.versionNum = versionNum;
     this.latest = latest;
-  }
-
-  increase(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): Version {
-    if (!this.versionNum) throw new InvalidVersionChange();
-    this.versionNum = semver.inc(this.versionNum, releaseType);
-    return this;
   }
 
   resolve(availableVersion: string[]) {
@@ -33,10 +27,10 @@ export default class Version {
   }
 
   isLaterThan(otherVersion: Version): boolean {
-    if (!this.versionNum || this.versionNum === LATEST) {
+    if (!this.versionNum || this.versionNum === LATEST_VERSION) {
       return true;
     }
-    if (!otherVersion.versionNum || otherVersion.versionNum === LATEST) {
+    if (!otherVersion.versionNum || otherVersion.versionNum === LATEST_VERSION) {
       return false;
     }
     return semver.gt(this.versionNum, otherVersion.versionNum);

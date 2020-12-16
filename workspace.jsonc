@@ -9,8 +9,6 @@
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/pnpm",
-    "strictPeerDependencies": true,
-    "extraArgs": [],
     "policy": {
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
@@ -64,7 +62,7 @@
         "@teambit/base-ui.theme.sizes": "^0.5.3",
         "@teambit/base-ui.theme.theme-provider": "^0.5.3",
         "@teambit/base-ui.utils.sub-paths": "^0.5.3",
-        "@teambit/base-ui.utils.time-ago": "^0.5.3",
+        "@teambit/base-ui.utils.time-ago": "0.5.4",
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "^0.2.3",
         "@teambit/documenter.routing.external-link": "0.2.3",
@@ -99,6 +97,7 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
+        "@types/eslint": "7.2.4",
         "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
@@ -148,6 +147,10 @@
         "cross-spawn": "^7.0.3",
         "dagre": "0.8.5",
         "didyoumean": "^1.2.1",
+        "eslint-config-airbnb-typescript": {
+          "version": "^5.1.0",
+          "preserve": true
+        },
         "eslint-import-resolver-node": "0.3.4",
         "express": "^4.17.1",
         "express-graphql": "^0.9.0",
@@ -182,6 +185,7 @@
         "memory-fs": "0.5.0",
         "mime": "^2.4.6",
         "mini-css-extract-plugin": "^0.9.0",
+        "minimatch": "3.0.4",
         "mousetrap": "^1.6.5",
         "mutation-observer": "1.0.3",
         "nerf-dart": "1.0.0",
@@ -246,14 +250,20 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.196",
+        "bit-bin": "14.8.9-dev.221",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
         "react": "^16.13.1",
         "react-dom": "^16.13.1"
       }
-    }
+    },
+    "packageManagerArgs": [],
+    "devFilePatterns": [
+      "*.spec.ts"
+    ],
+    "strictPeerDependencies": true,
+    "extraArgs": []
   },
   "teambit.workspace/variants": {
     "*": {
@@ -292,13 +302,11 @@
           },
           "devDependencies": {
             "@types/mocha": "^5.2.7",
-            // why this is needed? try to automate this
-            "@types/node": "^12.12.27",
             "bit-bin": "-"
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.196",
+            "bit-bin": "14.8.9-dev.221",
             "react-dom": "^16.13.1"
           }
         }
@@ -406,7 +414,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.196",
+            "bit-bin": "14.8.9-dev.221",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

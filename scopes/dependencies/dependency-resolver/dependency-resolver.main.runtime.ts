@@ -6,6 +6,7 @@ import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
 import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
@@ -62,6 +63,7 @@ import {
   DependencyList,
 } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
+import { dependencyResolverSchema } from './dependency-resolver.graphql';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -547,7 +549,7 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect, GraphqlAspect];
 
   static slots = [
     Slot.withType<VariantPolicyConfigObject>(),
@@ -570,12 +572,13 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql]: [
       EnvsMain,
       LoggerMain,
       Config,
       AspectLoaderMain,
-      ComponentMain
+      ComponentMain,
+      GraphqlMain
     ],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
@@ -626,6 +629,8 @@ export class DependencyResolverMain {
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
+
+    graphql.register(dependencyResolverSchema(dependencyResolver));
 
     return dependencyResolver;
   }

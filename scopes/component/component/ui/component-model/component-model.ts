@@ -1,8 +1,8 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
+import { ComponentID } from '@teambit/component-id';
 
-import { ComponentID } from '../../id';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
