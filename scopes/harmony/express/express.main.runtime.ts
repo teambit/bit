@@ -119,7 +119,7 @@ export class ExpressMain {
   private verbValidation(route: Route): Middleware {
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
       const verb = req.headers['x-verb'] || Verb.READ;
-      if (verb != route.verb) {
+      if (verb !== route.verb) {
         res.status(403);
         return res.jsonp({ message: 'You are not authorized', error: 'forbidden' });
       }
