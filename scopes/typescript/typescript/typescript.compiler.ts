@@ -5,7 +5,7 @@ import { Logger } from '@teambit/logger';
 import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
 import { TypeScriptCompilerOptions } from './compiler-options';
 

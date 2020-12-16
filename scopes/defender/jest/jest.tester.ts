@@ -1,10 +1,20 @@
 import { readFileSync } from 'fs';
-import { compact } from 'lodash';
+import minimatch from 'minimatch';
+import { compact, flatten } from 'lodash';
 // import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
-import { Tester, CallbackFn, TesterContext, Tests, TestResult, TestsResult, TestsFiles } from '@teambit/tester';
+import {
+  Tester,
+  CallbackFn,
+  TesterContext,
+  Tests,
+  TestResult,
+  TestsResult,
+  TestsFiles,
+  ComponentPatternsMap,
+} from '@teambit/tester';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
@@ -37,21 +47,21 @@ export class JestTester implements Tester {
     return this.jestModule.getVersion();
   }
 
-  private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
-    return testerContext.specFiles.toArray().reduce((acc: AbstractVinyl | undefined, [, specs]) => {
-      const file = specs.find((spec) => spec.path === path);
-      if (file) acc = file;
-      return acc;
-    }, undefined);
-  }
+  // private getTestFile(path: string, testerContext: TesterContext): AbstractVinyl | undefined {
+  //   return testerContext.specFiles.toArray().reduce((acc: AbstractVinyl | undefined, [, specs]) => {
+  //     const file = specs.find((spec) => spec.path === path);
+  //     if (file) acc = file;
+  //     return acc;
+  //   }, undefined);
+  // }
 
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
-      const componentSpecFiles = testerContext.specFiles.get(component);
+      const componentSpecFiles = testerContext.patterns.get(component);
       if (!componentSpecFiles) return undefined;
       const [, specs] = componentSpecFiles;
       return testResult.filter((test) => {
-        return specs.filter((spec) => spec.path === test.testFilePath).length > 0;
+        return specs.filter((pattern) => minimatch(test.testFilePath, pattern.path)).length > 0;
       });
     });
   }
@@ -66,7 +76,7 @@ export class JestTester implements Tester {
       if (!testsFiles) return;
       if (testsFiles?.length === 0) return;
       const tests = testsFiles.map((test) => {
-        const file = this.getTestFile(test.testFilePath, testerContext);
+        const file = new AbstractVinyl({ path: test.testFilePath, contents: readFileSync(test.testFilePath) });
         const testResults = test.testResults.map((testResult) => {
           const error = formatResultsErrors([testResult], config, { noStackTrace: true });
           return new TestResult(
@@ -137,7 +147,7 @@ export class JestTester implements Tester {
     const jestConfig = require(this.jestConfig);
 
     const jestConfigWithSpecs = Object.assign(jestConfig, {
-      testMatch: context.patterns,
+      testMatch: this.patternsToArray(context.patterns),
     });
 
     const withEnv = Object.assign(jestConfigWithSpecs, config);
@@ -160,16 +170,12 @@ export class JestTester implements Tester {
       const workerApi = this.jestWorker.initiate(
         context.ui ? { stdout: true, stderr: true, stdin: true } : { stdout: false, stderr: false, stdin: false }
       );
-      const testFiles = context.specFiles.toArray().reduce((acc: string[], [, specs]) => {
-        specs.forEach((spec) => acc.push(spec.path));
-        return acc;
-      }, []);
 
       // eslint-disable-next-line
       const jestConfig = require(this.jestConfig);
 
       const jestConfigWithSpecs = Object.assign(jestConfig, {
-        testMatch: context.patterns,
+        testMatch: this.patternsToArray(context.patterns),
       });
 
       try {
@@ -192,10 +198,14 @@ export class JestTester implements Tester {
         await workerApi.onTestComplete(cbFn);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
-        await workerApi.watch(this.jestConfig, testFiles, context.rootPath);
+        await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);
       } catch (err) {
         this.logger.error(err);
       }
     });
+  }
+
+  private patternsToArray(patterns: ComponentPatternsMap) {
+    return flatten(patterns.toArray().map(([, pattern]) => pattern.map((p) => p.path)));
   }
 }

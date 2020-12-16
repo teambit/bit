@@ -78,6 +78,7 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
+    // @ts-ignore todo: it's not clear what's the issue.
     app.use(cors());
     app.use(
       '/graphql',

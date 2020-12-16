@@ -43,7 +43,7 @@ describe('import functionality on Harmony', function () {
     (supportNpmCiRegistryTesting ? describe : describe.skip)('tag and export', () => {
       before(async () => {
         await npmCiRegistry.init();
-        helper.command.tagAndPersistAllHarmony();
+        helper.command.tagAllComponents();
         helper.command.exportAllComponents();
       });
       after(() => {

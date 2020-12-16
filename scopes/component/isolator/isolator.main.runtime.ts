@@ -196,7 +196,10 @@ export class IsolatorMain {
     });
     const peerOnlyPolicy = this.getPeersOnlyPolicy();
     const capsulesWithModifiedPackageJson = this.getCapsulesWithModifiedPackageJson(capsulesWithPackagesData);
-    await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), linkingOptions);
+    await linker.link(capsulesDir, peerOnlyPolicy, this.toComponentMap(capsuleList), {
+      ...linkingOptions,
+      legacyLink: false,
+    });
     await symlinkOnCapsuleRoot(capsuleList, this.logger, capsulesDir);
     await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension

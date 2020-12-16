@@ -1,4 +1,5 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import type { TaskResultsList } from '@teambit/builder';
 import { readdirSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
@@ -19,8 +20,8 @@ import {
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain, Network } from '@teambit/isolator';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
@@ -28,7 +29,7 @@ import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
 import { Ref } from 'bit-bin/dist/scope/objects';
-import LegacyScope, { OnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
+import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
 import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
@@ -36,6 +37,7 @@ import BluebirdPromise from 'bluebird';
 import { ExportPersist } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
+import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
 import { compact, slice, uniqBy } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
@@ -47,7 +49,8 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
-export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<ComponentMap<AspectList>>;
+export type OnTagResults = { aspectListMap: ComponentMap<AspectList>; pipeResults: TaskResultsList[] };
+export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
 
 export type OnPostPut = (ids: ComponentID[]) => void;
 
@@ -88,7 +91,9 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private config: ScopeConfig
+    private config: ScopeConfig,
+
+    private logger: Logger
   ) {}
 
   /**
@@ -118,30 +123,35 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
-    const legacyOnTagFunc: OnTagFunc = async (legacyIds: BitId[], options?: OnTagOpts): Promise<OnTagResult[]> => {
+    const legacyOnTagFunc: OnTagFunc = async (
+      legacyIds: BitId[],
+      options?: OnTagOpts
+    ): Promise<LegacyOnTagResult[]> => {
       const host = this.componentExtension.getHost();
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
       const components = await host.getMany(ids);
-      // TODO: fix what legacy tag accepts to just extension name and files.
-      const aspectListComponentMap = await tagFn(components, options);
-      const extensionsToLegacy = (aspectList: AspectList) => {
-        const extensionsDataList = aspectList.toLegacy();
-        extensionsDataList.forEach((extension) => {
-          if (extension.id && this.aspectLoader.isCoreAspect(extension.id.toString())) {
-            extension.name = extension.id.toString();
-            extension.extensionId = undefined;
-          }
-        });
-        return extensionsDataList;
-      };
-      const results = aspectListComponentMap.toArray().map(([component, aspectList]) => ({
-        id: component.id._legacy,
-        extensions: extensionsToLegacy(aspectList),
-      }));
-      return results;
+      const { aspectListMap } = await tagFn(components, options);
+      return this.aspectMapToLegacyOnTagResults(aspectListMap);
     };
     this.legacyScope.onTag.push(legacyOnTagFunc);
     this.tagRegistry.register(tagFn);
+  }
+
+  aspectMapToLegacyOnTagResults(aspectListComponentMap: ComponentMap<AspectList>): LegacyOnTagResult[] {
+    const extensionsToLegacy = (aspectList: AspectList) => {
+      const extensionsDataList = aspectList.toLegacy();
+      extensionsDataList.forEach((extension) => {
+        if (extension.id && this.aspectLoader.isCoreAspect(extension.id.toString())) {
+          extension.name = extension.id.toString();
+          extension.extensionId = undefined;
+        }
+      });
+      return extensionsDataList;
+    };
+    return aspectListComponentMap.toArray().map(([component, aspectList]) => ({
+      id: component.id._legacy,
+      extensions: extensionsToLegacy(aspectList),
+    }));
   }
 
   /**
@@ -284,6 +294,26 @@ export class ScopeMain implements ComponentFactory {
     return defs;
   }
 
+  async createNetwork(ids: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {
+    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network from scope');
+    const legacySeedersIds: BitId[] = ids.map((id) => id._legacy);
+    const graph = await buildOneGraphForComponentsUsingScope(legacySeedersIds, this.legacyScope);
+    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
+    const seedersStr = seederIdsWithVersions.map((s) => s.toString());
+    const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
+    const compIds = await this.resolveMultipleComponentIds(compsAndDeps.map((c) => c.id));
+    const components = await this.getMany(compIds);
+    opts.baseDir = this.path;
+    const capsuleList = await this.isolator.isolateComponents(components, opts);
+    longProcessLogger.end();
+    this.logger.consoleSuccess();
+    return new Network(
+      capsuleList,
+      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
+      this.isolator.getCapsulesRootDir(this.path)
+    );
+  }
+
   /**
    * import components into the scope.
    */
@@ -391,14 +421,18 @@ export class ScopeMain implements ComponentFactory {
    * @param id component ID.
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    if (id.toString().startsWith(this.name)) {
-      const withoutOwn = id.toString().replace(`${this.name}/`, '');
-      const legacyId = await this.legacyScope.getParsedId(withoutOwn);
-      if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
-      return ComponentID.fromLegacy(legacyId);
-    }
-
-    const legacyId = await this.legacyScope.getParsedId(id.toString());
+    const idStr = id.toString();
+    const component = await this.legacyScope.loadModelComponentByIdStr(idStr);
+    const getIdToCheck = () => {
+      if (component) return idStr; // component exists in the scope with the scope-name.
+      if (idStr.startsWith(`${this.name}/`)) {
+        // component with the full name doesn't exist in the scope, it might be locally tagged
+        return idStr.replace(`${this.name}/`, '');
+      }
+      return idStr;
+    };
+    const IdToCheck = getIdToCheck();
+    const legacyId = await this.legacyScope.getParsedId(IdToCheck);
     if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
     return ComponentID.fromLegacy(legacyId);
   }
@@ -506,7 +540,8 @@ export class ScopeMain implements ComponentFactory {
       postPutSlot,
       isolator,
       aspectLoader,
-      config
+      config,
+      logger
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;

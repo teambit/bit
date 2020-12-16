@@ -1,5 +1,6 @@
 import { EnvDefinition, EnvService, ExecutionContext } from '@teambit/envs';
 import React from 'react';
+import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
@@ -50,8 +51,8 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
      * pipe name to display on the console during the execution
      */
     private displayPipeName: string,
-
-    private artifactFactory: ArtifactFactory
+    private artifactFactory: ArtifactFactory,
+    private scope: ScopeMain
   ) {}
 
   /**
@@ -68,9 +69,12 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     const envsBuildContext: EnvsBuildContext = {};
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
-        const componentIds = executionContext.components.map((component) => component.id.toString());
+        const componentIds = executionContext.components.map((component) => component.id);
+        const createNetwork = this.workspace
+          ? this.workspace.createNetwork.bind(this.workspace)
+          : this.scope.createNetwork.bind(this.scope);
         const buildContext = Object.assign(executionContext, {
-          capsuleNetwork: await this.workspace.createNetwork(componentIds, { getExistingAsIs: true }),
+          capsuleNetwork: await createNetwork(componentIds, { getExistingAsIs: true }),
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
