@@ -381,6 +381,8 @@ export default class BitMap {
   }
   getAuthoredNonExportedComponents(): BitId[] {
     const authoredIds = this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED]);
+    // @todo: fix.
+    return authoredIds;
     return authoredIds.filter((id) => !id.hasScope());
   }
 

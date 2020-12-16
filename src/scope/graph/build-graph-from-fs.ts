@@ -6,6 +6,8 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import Component from '../../consumer/component/consumer-component';
 import Graph from '../../scope/graph/graph';
 import logger from '../../logger/logger';
+import { ComponentNotFound } from '../exceptions';
+import GeneralError from '../../error/general-error';
 
 export class GraphFromFsBuilder {
   private graph = new Graph();
@@ -62,6 +64,11 @@ export class GraphFromFsBuilder {
         this.graph.setNode(idStr, component);
         return component;
       } catch (err) {
+        if (err instanceof ComponentNotFound) {
+          throw new GeneralError(
+            `error: component "${idStr}" was not found.\nthis component is a dependency of "${dependenciesOf.toString()}" and is needed as part of the graph generation`
+          );
+        }
         logger.error(`failed loading dependencies of ${dependenciesOf.toString()}`);
         throw err;
       }
