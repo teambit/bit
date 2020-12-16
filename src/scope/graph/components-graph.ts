@@ -1,5 +1,4 @@
 import graphLib, { Graph as GraphLib } from 'graphlib';
-import mapSeries from 'p-map-series';
 import R from 'ramda';
 
 import { Scope } from '..';
@@ -87,7 +86,6 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
 export async function buildOneGraphForComponents(
   ids: BitId[],
   consumer: Consumer,
-  direction: 'normal' | 'reverse' = 'normal',
   loadComponentsFunc?: (bitIds: BitId[]) => Promise<Component[]>,
   ignoreIds?: BitIds
 ): Promise<Graph> {
@@ -113,12 +111,7 @@ export async function buildOneGraphForComponents(
   };
   const components = await getComponents();
   const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);
-  const componentsWithDeps = await mapSeries(components, (component: Component) =>
-    flattenedDependencyLoader.load(component)
-  );
-  const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));
-
-  return buildGraphFromComponentsObjects(allComponents, direction, ignoreIds);
+  return flattenedDependencyLoader.buildGraph(components);
 }
 
 /**

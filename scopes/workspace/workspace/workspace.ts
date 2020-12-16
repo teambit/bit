@@ -785,7 +785,7 @@ export class Workspace implements ComponentFactory {
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     const ignoredIds = coreAspectsBitIds.concat([]);
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
+    return buildOneGraphForComponents(ids, this.consumer, undefined, BitIds.fromArray(ignoredIds));
   }
 
   // remove this function
