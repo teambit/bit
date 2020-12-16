@@ -868,12 +868,25 @@ either, use the ignore file syntax or change the require statement to have a mod
       return;
     }
 
+    // const scopes = coreAspects.map((id) => {
+    //   const id = id.split()
+    // });
+
+    const coreAspectIds = Object.values(coreAspects);
     const defaultScope = this.component.defaultScope;
-    // @todo: remove this hack, once we have a better idea how to recognize core components
-    if (defaultScope && defaultScope.startsWith('teambit') && this.component.id.name.split('/').length === 1) {
-      // this component itself is a core-extension/core-aspect/core-component, do not filter.
+
+    let id: undefined | BitId;
+
+    if (this.component.id.scope) {
+      id = this.component.id;
+    } else {
+      id = this.component.id.changeScope(defaultScope);
+    }
+
+    if (coreAspectIds.includes(id.toStringWithoutVersion())) {
       return;
     }
+
     const coreAspectsPackages = Object.keys(coreAspects);
 
     const bits = this.tree[originFile].bits;
