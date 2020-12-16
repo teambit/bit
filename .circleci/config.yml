@@ -539,20 +539,19 @@ jobs:
 #           name: 'git push'
           # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
 #           command: 'cd bit && git push origin master'
-      - run: cd bit && npm publish --tag dev
-      - run: npm view bit-bin@dev version
+      # - run: cd bit && npm publish --tag dev
+      # - run: npm view bit-bin@dev version
       # there is a delay between publishing a package and until it's seen on npm servers
-      - run: sleep 5m
-      - run: npm view bit-bin@dev version
+      # - run: sleep 5m
+      # - run: npm view bit-bin@dev version
       - run: cd bit && bit status
-      - run:
-          name: soft
-          command: cd bit && node scripts/soft-tag-scope-teambit.js
-          # no_output_timeout: '25m'
+      # - run:
+      #     name: soft
+      #     command: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          # command: cd bit && bit tag --all --persist --ignore-newest-version
-          command: cd bit && bit tag --persist
+          command: cd bit && bit tag --all --persist --ignore-newest-version
+          # command: cd bit && bit tag --persist
           no_output_timeout: '25m'
       - run:
           name: backup bit objects (before export)
