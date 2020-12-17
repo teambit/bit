@@ -360,7 +360,7 @@ describe('bit lane command', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.switchRemoteLane('dev');
-        importedScope = helper.scopeHelper.cloneLocalScope(false);
+        importedScope = helper.scopeHelper.cloneLocalScope();
         helper.scopeHelper.getClonedLocalScope(authorScope);
         helper.fixtures.populateComponents(undefined, undefined, ' v2');
         helper.command.snapAllComponents();

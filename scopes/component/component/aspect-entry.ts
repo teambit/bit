@@ -1,5 +1,5 @@
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
-import { ComponentID } from './id';
+import { ComponentID } from '@teambit/component-id';
 
 export type Serializable = {
   toString(): string;

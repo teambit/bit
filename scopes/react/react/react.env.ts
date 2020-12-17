@@ -101,6 +101,7 @@ export class ReactEnv implements Environment {
         types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
         ...compilerOptions,
       },
+      // @ts-ignore
       tsModule
     );
   }
@@ -196,11 +197,14 @@ export class ReactEnv implements Environment {
       },
       // TODO: add this only if using ts
       devDependencies: {
+        '@types/node': '^12.12.27',
         'core-js': '^3.6.5',
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
+        // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
+        '@babel/runtime': '^7.11.2'
       },
       // TODO: take version from config
       peerDependencies: {

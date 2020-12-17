@@ -6,7 +6,7 @@ import { link as legacyLink } from 'bit-bin/dist/api/consumer';
 import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
 import { PathAbsolute } from 'bit-bin/dist/utils/path';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
 import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
 import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
@@ -106,7 +106,10 @@ export class DependencyLinker {
     }
     if (linkingOpts.legacyLink) {
       const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
-      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false);
+      // @todo, Gilad, it's better not to use the legacyLink here. it runs the consumer onDestroy
+      // which writes to .bitmap during the process and it assumes the consumer is there, which
+      // could be incorrect. instead, extract what you need from there to a new function and use it
+      const legacyResults = await legacyLink(legacyStringIds, linkingOpts.rewire ?? false, false);
       result.legacyLinkResults = legacyResults.linksResults;
       result.legacyLinkCodemodResults = legacyResults.codemodResults;
     }

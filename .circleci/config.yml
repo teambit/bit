@@ -444,9 +444,9 @@ jobs:
       - run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
-      - run:
-          name: 'import objects'
-          command: 'cd bit && npm run import-harmony'
+      # - run:
+      #     name: 'import objects'
+      #     command: 'cd bit && npm run import-harmony'
       - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
@@ -532,10 +532,6 @@ jobs:
       # - run: SCAN=$(ssh-keyscan github.com )
       # - run: echo $SCAN >> ~/.ssh/known_hosts
       - run: cd bit && node scripts/bump-bit-bin-ver.js
-      - run:
-          name: 'git commit'
-          # command: 'cd bit && git commit .bitmap -m "update .bitmap file [skip ci]"'
-          command: 'cd bit && git commit -am "bump bit-bin version [skip ci]"'
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
@@ -543,24 +539,36 @@ jobs:
 #           name: 'git push'
           # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
 #           command: 'cd bit && git push origin master'
-      - run: cd bit && npm publish --tag dev
-      - run: npm view bit-bin@dev version
+      # - run: cd bit && npm publish --tag dev
+      # - run: npm view bit-bin@dev version
       # there is a delay between publishing a package and until it's seen on npm servers
-      - run: sleep 2m
-      - run: npm view bit-bin@dev version
+      # - run: sleep 5m
+      # - run: npm view bit-bin@dev version
       - run: cd bit && bit status
-      - run: cd bit && node scripts/soft-tag-scope-teambit.js
+      # - run:
+      #     name: soft
+      #     command: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          # command: cd bit && bit tag --all --persist
-          command: cd bit && bit tag --persist
+          command: cd bit && bit tag --all --persist --ignore-newest-version
+          # command: cd bit && bit tag --persist
           no_output_timeout: '25m'
+      - run:
+          name: backup bit objects (before export)
+          command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
       - run: cd bit && bit export
+      - run:
+          name: backup bit objects (after export)
+          command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
       - run: cd bit && git commit -am "bump teambit version [skip ci]"
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/objects-before-export.tar
+      - store_artifacts:
+          path: bit/objects-after-export.tar
 
   harmony_deploy_approval_job:
     <<: *defaults

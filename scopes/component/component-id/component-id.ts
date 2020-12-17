@@ -1,4 +1,4 @@
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { MissingScope } from './exceptions';
 
 export class ComponentID {
@@ -83,6 +83,18 @@ export class ComponentID {
       return result && this.version === id.version;
     }
     return result;
+  }
+
+  /**
+   * serialize a component ID without its version.
+   */
+  toStringWithoutVersion() {
+    let id = this._legacy;
+    if (this._scope && !this._legacy.scope) {
+      id = id.changeScope(this._scope);
+    }
+
+    return id.toStringWithoutVersion();
   }
 
   /**

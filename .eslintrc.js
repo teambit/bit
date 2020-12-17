@@ -12,7 +12,7 @@ module.exports = {
   },
   parserOptions: {
     project: require.resolve('./tsconfig.json'),
-    createDefaultProgram: true,
+    // createDefaultProgram: true,
     ecmaFeatures: {
       jsx: true, // Allows for the parsing of JSX
     },

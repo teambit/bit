@@ -1,4 +1,4 @@
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { WorkspacePolicyEntry } from '../workspace-policy';
 
 export class EntryAlreadyExist extends BitError {

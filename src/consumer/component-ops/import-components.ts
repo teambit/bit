@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
@@ -19,7 +20,6 @@ import { Lane, ModelComponent, Version } from '../../scope/models';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { pathNormalizeToLinux } from '../../utils';
 import hasWildcard from '../../utils/string/has-wildcard';
-import { isTag } from '../../version/version-parser';
 import Component from '../component';
 import { NothingToImport } from '../exceptions';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
