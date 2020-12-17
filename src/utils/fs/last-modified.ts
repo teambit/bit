@@ -1,4 +1,4 @@
-import { glob } from 'glob';
+import glob from 'glob';
 import fs, { Stats } from 'fs-extra';
 import { compact } from 'ramda-adjunct';
 
