@@ -5,6 +5,7 @@ import classNames from 'classnames';
 import styles from './item.module.scss';
 
 export interface MenuItemsProps extends React.HTMLAttributes<HTMLSpanElement> {
+  /** Optional icon to render at the start of the item (icomoon id) */
   icon?: string;
   /** apply active styles */
   active?: boolean;
@@ -12,6 +13,9 @@ export interface MenuItemsProps extends React.HTMLAttributes<HTMLSpanElement> {
   interactive?: boolean;
 }
 
+/**
+ * Menu entry with icon.
+ */
 export function MenuItem({ children, className, icon, active, interactive, ...rest }: MenuItemsProps) {
   return (
     <div

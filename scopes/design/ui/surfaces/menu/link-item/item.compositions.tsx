@@ -3,7 +3,7 @@ import { MenuLinkItem } from './link-item';
 import { useLocation } from '@teambit/ui.routing.provider';
 
 export function Preview() {
-  return <MenuLinkItem icon="settings">Menu link</MenuLinkItem>;
+  return <MenuLinkItem icon="settings" href="/settings">Menu link</MenuLinkItem>;
 }
 
 export function Active() {
