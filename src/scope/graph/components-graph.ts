@@ -89,29 +89,8 @@ export async function buildOneGraphForComponents(
   loadComponentsFunc?: (bitIds: BitId[]) => Promise<Component[]>,
   ignoreIds?: BitIds
 ): Promise<Graph> {
-  const getComponents = async () => {
-    if (loadComponentsFunc) {
-      return loadComponentsFunc(ids);
-    }
-
-    try {
-      const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-      return components;
-    } catch (err) {
-      if (err instanceof MissingBitMapComponent) {
-        const componentsP = ids.map((id) => {
-          return consumer.loadComponentFromModel(id);
-        });
-
-        return Promise.all(componentsP);
-      }
-
-      throw err;
-    }
-  };
-  const components = await getComponents();
   const graphFromFsBuilder = new GraphFromFsBuilder(consumer, ignoreIds, loadComponentsFunc);
-  return graphFromFsBuilder.buildGraph(components);
+  return graphFromFsBuilder.buildGraph(ids);
 }
 
 /**
