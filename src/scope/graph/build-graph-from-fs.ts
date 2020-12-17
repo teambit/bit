@@ -20,6 +20,33 @@ export class GraphFromFsBuilder {
     private ignoreIds = new BitIds(),
     private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
   ) {}
+
+  /**
+   * create a graph with all dependencies and flattened dependencies of the given components.
+   * the nodes are components and the edges has a label of the dependency type.
+   *
+   * the way how it is done is iterations by depths. each depth we gather all the dependencies of
+   * that depths, make sure all objects exist and then check their dependencies for the next depth.
+   * once there is no dependency left, we're on the last depth level and the graph is ready.
+   *
+   * for example, imagine the following graph:
+   * A1 -> A2 -> A3
+   * B1 -> B2 -> B3
+   * C1 -> C2 -> C3
+   *
+   * where the buildGraph is given [A1, B1, C1].
+   * first, it saves all these components as nodes in the graph. then, it finds the dependencies of
+   * the next level, in this case they're [A2, B2, C2]. it runs `importMany` in case some objects
+   * are missing. then, it loads them all (some from FS, some from the model) and sets the edges
+   * between the component and the dependencies.
+   * once done, it finds all their dependencies, which are [A2, B3, C3] and repeat the process
+   * above. since there are no more dependencies, the graph is completed.
+   * in this case, the total depth levels are 3.
+   *
+   * even with a huge project, there are not many depth levels. by iterating through depth levels
+   * we keep performance sane as the importMany doesn't run multiple time and therefore the round
+   * trips to the remotes are minimal.
+   */
   async buildGraph(components: Component[]): Promise<Graph> {
     logger.debug(`GraphFromFsBuilder, buildGraph with ${components.length} seeders`);
     components.forEach((c) => {
@@ -85,9 +112,6 @@ export class GraphFromFsBuilder {
     });
   }
   private async loadComponent(componentId: BitId): Promise<Component> {
-    const idStr = componentId.toString();
-    const fromGraph = this.graph.node(idStr);
-    if (fromGraph) return fromGraph;
     const componentMap = this.consumer.bitMap.getComponentIfExist(componentId);
     const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     if (couldBeModified) {
