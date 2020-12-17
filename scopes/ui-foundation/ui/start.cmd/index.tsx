@@ -73,7 +73,7 @@ export class StartCmd implements Command {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
     const processWrite = process.stdout.write.bind(process.stdout);
     process.stdout.write = (data, cb) => {
-      if (data.includes('｢wds｣')) return processWrite('', cb);
+      if (data.includes('｢wds｣') && !verbose) return processWrite('', cb);
       return processWrite(data, cb);
     };
 

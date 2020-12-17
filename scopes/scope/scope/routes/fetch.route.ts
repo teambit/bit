@@ -1,4 +1,4 @@
-import { Route, Request, Response } from '@teambit/express';
+import { Route, Verb, Request, Response } from '@teambit/express';
 import { fetch } from 'bit-bin/dist/api/scope';
 import { ScopeMain } from '../scope.main.runtime';
 
@@ -7,6 +7,7 @@ export class FetchRoute implements Route {
 
   route = '/scope/fetch';
   method = 'post';
+  verb = Verb.READ;
 
   middlewares = [
     async (req: Request, res: Response) => {

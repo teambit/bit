@@ -1,4 +1,4 @@
-import { Route, Request, Response } from '@teambit/express';
+import { Route, Verb, Request, Response } from '@teambit/express';
 import { action } from 'bit-bin/dist/api/scope/lib/action';
 import { ScopeMain } from '../scope.main.runtime';
 
@@ -7,6 +7,7 @@ export class ActionRoute implements Route {
 
   method = 'post';
   route = '/scope/action';
+  verb = Verb.WRITE;
 
   middlewares = [
     async (req: Request, res: Response) => {

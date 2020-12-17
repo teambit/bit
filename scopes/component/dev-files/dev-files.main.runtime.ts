@@ -68,7 +68,7 @@ export class DevFilesMain {
   /**
    * get all dev files configured on a component.
    */
-  getDevPatterns(component: Component, aspectId?: string) {
+  getDevPatterns(component: Component, aspectId?: string): string[] {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const devPatterns = entry?.data.devPatterns || {};
     return aspectId ? devPatterns[aspectId] : flatten(Object.values(devPatterns));

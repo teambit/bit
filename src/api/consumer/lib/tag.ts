@@ -34,6 +34,8 @@ export type BasicTagParams = {
   skipTests: boolean;
   verbose: boolean;
   skipAutoTag: boolean;
+  build: boolean;
+  soft: boolean;
   persist: boolean;
   disableDeployPipeline: boolean;
 };

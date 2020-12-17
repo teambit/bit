@@ -11,6 +11,7 @@ import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import {
   BASE_WEB_DOMAIN,
   BIT_WORKSPACE_TMP_DIRNAME,
+  BuildStatus,
   COMPILER_ENV_TYPE,
   COMPONENT_ORIGINS,
   DEFAULT_BINDINGS_PREFIX,
@@ -108,6 +109,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   extensions: ExtensionDataList;
   componentFromModel?: Component;
+  buildStatus?: BuildStatus;
 };
 
 export default class Component {
@@ -181,6 +183,7 @@ export default class Component {
   scopesList: ScopeListItem[] | undefined;
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
+  buildStatus?: BuildStatus;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
@@ -227,6 +230,7 @@ export default class Component {
     customResolvedPaths,
     scopesList,
     extensions,
+    buildStatus,
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -264,6 +268,7 @@ export default class Component {
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
     this.schema = schema;
+    this.buildStatus = buildStatus;
   }
 
   validateComponent() {
@@ -1196,6 +1201,7 @@ export default class Component {
       packageJsonFile,
       packageJsonChangedProps,
       extensions,
+      buildStatus: componentFromModel ? componentFromModel.buildStatus : undefined,
     });
   }
 }

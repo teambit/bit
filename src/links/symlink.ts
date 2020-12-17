@@ -11,10 +11,11 @@ export default class Symlink {
   componentId: BitId | null | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forDistOutsideComponentsDir: boolean;
-  constructor(src: string, dest: string, componentId?: BitId) {
+  constructor(src: string, dest: string, componentId?: BitId, forDistOutsideComponentsDir = false) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;
+    this.forDistOutsideComponentsDir = forDistOutsideComponentsDir;
   }
   write() {
     this._throwForMissingDistOutsideComponent();
@@ -24,9 +25,17 @@ export default class Symlink {
   writeWithNativeFS() {
     const dest = this.dest;
     this._throwForMissingDistOutsideComponent();
-    const exists = fs.pathExistsSync(dest);
+    // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
+    // TODO: this requires to upgrade fs-extra to have the throwIfNoEntry property
+    // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
+    // const exists = fs.pathExistsSync(dest);
+    let exists;
+    try {
+      exists = fs.lstatSync(dest);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
     if (exists) {
-      fs.unlinkSync(dest);
+      fs.removeSync(dest);
     }
     const dir = path.dirname(dest);
     fs.ensureDirSync(dir);

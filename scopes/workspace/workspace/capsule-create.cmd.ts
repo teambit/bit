@@ -41,7 +41,8 @@ export class CapsuleCreateCmd implements Command {
       alwaysNew,
       name: id,
     };
-    const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
+    const ids = await this.workspace.resolveMultipleComponentIds(componentIds);
+    const isolatedEnvironment = await this.workspace.createNetwork(ids, capsuleOptions);
     const capsules = isolatedEnvironment.graphCapsules;
     return capsules;
   }

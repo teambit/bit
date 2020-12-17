@@ -5,7 +5,7 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { Scope } from 'bit-bin/dist/scope';
 import mapSeries from 'p-map-series';
 import execa from 'execa';
@@ -90,7 +90,8 @@ export class Publisher {
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
     this.logger.debug(`total ${idsToPublish.length} to publish out of ${componentIds.length}`);
-    const network = await this.workspace.createNetwork(idsToPublish);
+    const componentIdsToPublish = await this.workspace.resolveMultipleComponentIds(idsToPublish);
+    const network = await this.workspace.createNetwork(componentIdsToPublish);
     return network.seedersCapsules;
   }
 

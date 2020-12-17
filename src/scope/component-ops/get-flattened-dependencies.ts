@@ -1,129 +1,123 @@
-import graphlib, { Graph } from 'graphlib';
+import graphlib, { Graph as GraphLib } from 'graphlib';
+import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import R from 'ramda';
-
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
 import Component from '../../consumer/component/consumer-component';
 import GeneralError from '../../error/general-error';
-import { DependencyNotFound } from '../exceptions';
-import { flattenDependencyIds } from '../flatten-dependencies';
-import { AllDependenciesGraphs, buildComponentsGraph } from '../graph/components-graph';
+import { buildComponentsGraphCombined } from '../graph/components-graph';
+import Graph from '../graph/graph';
+import VersionDependencies from '../version-dependencies';
 import ScopeComponentsImporter from './scope-components-importer';
 
+type Deps = { dependencies: BitIds; devDependencies: BitIds };
+
 export class FlattenedDependenciesGetter {
-  private allDependenciesGraphs: AllDependenciesGraphs;
-  private cache: Record<string, any> = {};
-  private notFoundDependencies = new BitIds();
+  private dependenciesGraph: Graph;
+  private prodGraph: Graph;
+  private versionDependencies: VersionDependencies[];
+  private cache: { [idStr: string]: Deps } = {};
   constructor(private scope: Scope, private components: Component[]) {}
+
+  /**
+   * to get the flattened dependencies of a component, we iterate over the direct dependencies and
+   * figure out what should be the flattened of each one of the dependencies.
+   * a dependency can be one of the two scenarios and should be handled accordingly.
+   * 1. a dependency can be tagged/snapped along with the current component.
+   * 2. a dependency can be a component that was already tagged before.
+   * there is no option #3 of a component that exists on the workspace but wasn't tagged and is not
+   * part of the current tag. In such case, we throw an error, see throwWhenDepNotIncluded below.
+   *
+   * the flattened dependencies process handles the two cases above differently.
+   * 1. first, it builds a graph with all current components, this way it's easier to get the
+   * flattened dependencies by graph algorithm. (without graph, it becomes difficult when there are
+   * circular dependencies).
+   * 2. for other components, it loads them from the model and gets the flattened from the objects.
+   *
+   * to determine whether a flattened is dependency or devDependency, we check whether the path
+   * from the component to the flattened consists of only prod, then it's "dependency". otherwise,
+   * if there is even only one devDependency in the chain, then it's a devDependency.
+   */
   async populateFlattenedDependencies() {
-    this.allDependenciesGraphs = buildComponentsGraph(this.components);
+    this.createGraphs(this.components);
     await this.importExternalDependenciesInBulk();
-    await Promise.all(
-      this.components.map(async (component) => {
-        const { flattenedDependencies, flattenedDevDependencies } = await this.getAllFlattenedDependencies(
-          component.id
-        );
-        component.flattenedDependencies = flattenedDependencies;
-        component.flattenedDevDependencies = flattenedDevDependencies;
-      })
-    );
+    await mapSeries(this.components, async (component) => {
+      const { dependencies, devDependencies } = await this.getFlattened(component.id);
+      component.flattenedDependencies = dependencies;
+      component.flattenedDevDependencies = devDependencies;
+    });
   }
+
+  private createGraphs(components: Component[]) {
+    this.dependenciesGraph = buildComponentsGraphCombined(components);
+    // uncomment to see the graph nicely. very helpful for debugging
+    // console.log("this.dependenciesGraph", this.dependenciesGraph.toString())
+    this.prodGraph = this.dependenciesGraph.getSubGraphByEdgeType('dependencies');
+  }
+
   private async importExternalDependenciesInBulk() {
-    const allGraphs = Object.values(this.allDependenciesGraphs);
     const allDependencies = this.components.map((component) => {
-      return allGraphs.map((graph) => getEdges(graph, component.id.toString()));
+      return getEdges(this.dependenciesGraph, component.id.toString());
     });
     const idsStr: string[] = R.uniq(R.flatten(allDependencies));
     const bitIds = idsStr
       .filter((id) => id)
-      .map((idStr) => {
-        const graphWithId = allGraphs.find((g) => g.node(idStr));
-        return graphWithId?.node(idStr);
-      })
+      .map((idStr) => this.dependenciesGraph.node(idStr))
       .filter((bitId: BitId) => bitId && bitId.hasScope())
       .filter((bitId) => !this.components.find((c) => c.id.isEqual(bitId)));
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-    await scopeComponentsImporter.importMany(BitIds.fromArray(bitIds));
-  }
-  private async getAllFlattenedDependencies(
-    componentId: BitId
-  ): Promise<{
-    flattenedDependencies: BitIds;
-    flattenedDevDependencies: BitIds;
-  }> {
-    const { graphDeps, graphDevDeps, graphExtensionDeps } = this.allDependenciesGraphs;
-
-    const flattenedDependencies = await this.getFlattenedDependencies({
-      componentId,
-      graph: graphDeps,
-    });
-    const flattenedDevDependencies = await this.getFlattenedDependencies({
-      componentId,
-      graph: graphDevDeps,
-      prodGraph: graphDeps,
-    });
-    const flattenedExtensionDependencies = await this.getFlattenedDependencies({
-      componentId,
-      graph: graphExtensionDeps,
-      prodGraph: graphDeps,
-    });
-
-    const getFlattenedDevDeps = () => {
-      // remove extensions dependencies that are also regular dependencies
-      // (no need to do the same for devDependencies, because their duplicated are removed previously)
-      const flattenedExt = flattenedExtensionDependencies.removeMultipleIfExistWithoutVersion(flattenedDependencies);
-      return BitIds.uniqFromArray([...flattenedDevDependencies, ...flattenedExt]);
-    };
-
-    return {
-      flattenedDependencies,
-      flattenedDevDependencies: getFlattenedDevDeps(),
-    };
+    this.versionDependencies = await scopeComponentsImporter.importMany(BitIds.fromArray(bitIds));
   }
 
-  private async getFlattenedDependencies({
-    componentId,
-    graph,
-    prodGraph,
-  }: {
-    componentId: BitId;
-    graph: Graph;
-    prodGraph?: Graph;
-  }): Promise<BitIds> {
-    const id = componentId.toString();
-    const deps = getEdges(graph, id);
-    const prodDeps = prodGraph ? getEdges(prodGraph, id) : null;
-    if (!deps && !prodDeps) return new BitIds();
-    const dependencies = getEdgesWithProdGraph(prodGraph, deps || [], graph, prodDeps || []);
-    if (!dependencies.length) return new BitIds();
-    const flattenDependency = async (dependency) => {
-      if (this.cache[dependency]) return this.cache[dependency];
-      // @ts-ignore if graph doesn't have the node, prodGraph must have it
-      const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
-      let versionDependencies;
-      if (this.notFoundDependencies.has(dependencyBitId)) return [dependencyBitId];
-      const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
-      try {
-        versionDependencies = await scopeComponentsImporter.importDependencies(BitIds.fromArray([dependencyBitId]));
-      } catch (err) {
-        if (err instanceof DependencyNotFound) {
-          this.notFoundDependencies.push(dependencyBitId);
-          throwWhenDepNotIncluded(componentId, dependencyBitId);
-          return [dependencyBitId];
+  private async getFlattened(bitId: BitId): Promise<Deps> {
+    const { dependencies, devDependencies } = this.getFlattenedFromCurrentComponents(bitId);
+    [...dependencies, ...devDependencies].forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
+    const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep));
+    const devDependenciesDeps = await mapSeries(devDependencies, (dep) => this.getFlattenedFromVersion(dep));
+    const dependenciesDepsFlattened = flatten(dependenciesDeps.map((d) => d.dependencies));
+    const devDependenciesDepsFlattened = flatten([
+      ...dependenciesDeps.map((d) => d.devDependencies),
+      ...devDependenciesDeps.map((d) => d.dependencies),
+      ...devDependenciesDeps.map((d) => d.devDependencies),
+    ]);
+    dependencies.push(...dependenciesDepsFlattened);
+    devDependencies.push(...devDependenciesDepsFlattened);
+    return { dependencies: BitIds.uniqFromArray(dependencies), devDependencies: BitIds.uniqFromArray(devDependencies) };
+  }
+
+  private getFlattenedFromCurrentComponents(bitId: BitId): { dependencies: BitId[]; devDependencies: BitId[] } {
+    const prodDeps = getEdges(this.prodGraph, bitId.toString()) || [];
+    const allDeps = getEdges(this.dependenciesGraph, bitId.toString()) || [];
+    const devDeps = allDeps.filter((dep) => !prodDeps.includes(dep));
+    const dependencies = prodDeps.map((idStr) => this.dependenciesGraph.node(idStr));
+    const devDependencies = devDeps.map((idStr) => this.dependenciesGraph.node(idStr));
+    return { dependencies, devDependencies };
+  }
+
+  private async getFlattenedFromVersion(id: BitId): Promise<Deps> {
+    if (!this.cache[id.toString()]) {
+      const versionDeps = this.versionDependencies.find(({ component }) => component.toId().isEqual(id));
+      const emptyDeps = { dependencies: new BitIds(), devDependencies: new BitIds() };
+      if (versionDeps) {
+        const dependencies = await versionDeps.component.flattenedDependencies(this.scope.objects);
+        const devDependencies = await versionDeps.component.flattenedDevDependencies(this.scope.objects);
+        this.cache[id.toString()] = { dependencies, devDependencies };
+      } else {
+        const existing = this.components.find((c) => c.id.isEqual(id));
+        if (existing) {
+          this.cache[id.toString()] = emptyDeps;
+        } else {
+          const fromModel = await this.scope.getVersionInstance(id);
+          this.cache[id.toString()] = {
+            dependencies: fromModel.flattenedDependencies,
+            devDependencies: fromModel.flattenedDevDependencies,
+          };
         }
-        throw err;
       }
-      const flattenedDependencies = await flattenDependencyIds(versionDependencies, this.scope.objects);
-      // Store the flatten dependencies in cache
-      this.cache[dependency] = flattenedDependencies;
-      return flattenedDependencies;
-    };
-    const flattened = await mapSeries(dependencies, flattenDependency);
-    const flattenedUnique = BitIds.uniqFromArray(R.flatten(flattened));
-    // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
-    return flattenedUnique.removeIfExistWithoutVersion(componentId);
+    }
+    return this.cache[id.toString()];
   }
 }
 
@@ -134,38 +128,9 @@ this dependency was not included in the tag command.`);
   }
 }
 
-function getEdges(graph: Graph, id: BitIdStr): BitIdStr[] | null {
+function getEdges(graph: GraphLib, id: BitIdStr): BitIdStr[] | null {
   if (!graph.hasNode(id)) return null;
   // @ts-ignore
   const edges = graphlib.alg.preorder(graph, id);
   return R.tail(edges); // the first item is the component itself
-}
-
-/**
- * ** dev-dep that requires prod-dep indirectly **
- * for non-prod files, such as test files, we're interested also with its prod dependency.
- * for example, a test file foo.spec.js of component 'foo', requires bar.js from component
- * 'bar'. 'bar.js' requires 'baz.js' from component 'baz'.
- * when calculating the edges of foo.spec.js by devGraph only, we'll get bar.js but not
- * baz.js because the relationship between bar and baz are set on prodGraph only.
- * this part is fetched by `prodDependencies` var.
- * @see dev-dependencies.e2e, 'dev-dependency that requires prod-dependency' case.
- *
- * ** dev-dep that requires prod-dep indirectly **
- * imagine that foo requires bar that has baz as a devDependency. investigating only the devGraph
- * misses this relationship between bar and baz. so we need to fetch also the prod edges and then
- * check their devDependencies.
- * this part is done by `devDependencies` var.
- */
-function getEdgesWithProdGraph(
-  prodGraph: Graph | null | undefined,
-  nonProdDeps: BitIdStr[],
-  graph: Graph,
-  prodDeps: BitIdStr[]
-): BitIdStr[] {
-  if (!prodGraph) return nonProdDeps;
-  const prodDependencies = R.flatten(nonProdDeps.map((dependency) => getEdges(prodGraph, dependency))).filter((x) => x);
-  const devDependencies = R.flatten(prodDeps.map((dependency) => getEdges(graph, dependency))).filter((x) => x);
-
-  return R.uniq([...nonProdDeps, ...prodDependencies, ...devDependencies]);
 }
