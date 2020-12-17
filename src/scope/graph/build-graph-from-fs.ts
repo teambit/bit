@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { flatten } from 'lodash';
 import { Consumer } from '../../consumer';
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
@@ -8,6 +9,7 @@ import Graph from '../../scope/graph/graph';
 import logger from '../../logger/logger';
 import { ComponentNotFound } from '../exceptions';
 import GeneralError from '../../error/general-error';
+import ScopeComponentsImporter from '../component-ops/scope-components-importer';
 
 export class GraphFromFsBuilder {
   private graph = new Graph();
@@ -21,27 +23,31 @@ export class GraphFromFsBuilder {
     components.forEach((c) => {
       this.graph.setNode(c.id.toString(), c);
     });
-    await mapSeries(components, (component) => this.processOneComponent(component));
+    await this.processManyComponents(components);
     return this.graph;
+  }
+
+  private getAllDeps(component: Component) {
+    return component.getAllDependenciesIds().difference(this.ignoreIds);
+  }
+
+  private async processManyComponents(components: Component[]) {
+    const allDeps = flatten(components.map((c) => this.getAllDeps(c)));
+    const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
+    await scopeComponentsImporter.importMany(BitIds.uniqFromArray(allDeps));
+    const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
+    const allDependenciesFlattened = flatten(allDependencies);
+    if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
   }
 
   private async processOneComponent(component: Component) {
     const compId = component.id;
-    if (this.completed.includes(compId.toString())) return;
-    const dependencies = await this.loadManyComponents(
-      component.dependencies.getAllIds().difference(this.ignoreIds),
-      compId
-    );
-    const devDependencies = await this.loadManyComponents(
-      component.devDependencies.getAllIds().difference(this.ignoreIds),
-      compId
-    );
-    const extensionDependencies = await this.loadManyComponents(
-      component.extensions.extensionsBitIds.difference(this.ignoreIds),
-      compId
-    );
-    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depIds]) => {
-      depIds.forEach((depId) => {
+    if (this.completed.includes(compId.toString())) return [];
+    const allIds = this.getAllDeps(component);
+
+    const allDependencies = await this.loadManyComponents(allIds, compId);
+    Object.entries(component.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
+      depsIds.forEach((depId) => {
         if (this.ignoreIds.has(depId)) return;
         if (!this.graph.hasNode(depId.toString())) {
           throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
@@ -50,8 +56,7 @@ export class GraphFromFsBuilder {
       });
     });
     this.completed.push(compId.toString());
-    const allComps = [...dependencies, ...devDependencies, ...extensionDependencies];
-    await mapSeries(allComps, (comp) => this.processOneComponent(comp));
+    return allDependencies;
   }
 
   private async loadManyComponents(componentsIds: BitId[], dependenciesOf: BitId): Promise<Component[]> {

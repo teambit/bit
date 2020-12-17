@@ -4,7 +4,6 @@ import R from 'ramda';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
-import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-flattened-dependencies';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import GeneralError from '../../error/general-error';
