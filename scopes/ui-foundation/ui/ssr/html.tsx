@@ -3,6 +3,7 @@ import React from 'react';
 export type Assets = Partial<{
   js: string[];
   css: string[];
+  state: string;
 }>;
 
 interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
@@ -30,6 +31,9 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
       </head>
       <body>
         <div>YOU ARE SERVER-SIDED</div>
+        {assets.state && (
+          <script id="gql-cache" type="application/json" dangerouslySetInnerHTML={{ __html: assets.state }} />
+        )}
         <div id="root">{children}</div>
         {/* load scripts after showing the the whole html  */}
         {assets.js?.map((x, idx) => (

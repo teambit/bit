@@ -27,6 +27,7 @@ import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.config';
+import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -131,11 +132,18 @@ export class UiMain {
   async build(uiRootName?: string) {
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = createWebpackConfig(
-      uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name
-    );
+    const config = [
+      createWebpackConfig(
+        uiRoot.path,
+        [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
+        uiRoot.name
+      ),
+      createSsrWebpackConfig(
+        uiRoot.path,
+        [await this.generateSsrRoot(await uiRoot.resolveAspects(UIRuntime.name), name)]
+        // uiRoot.name
+      ),
+    ];
 
     const compiler = webpack(config);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -165,13 +173,15 @@ export class UiMain {
       // TEMP! WIP!
       // await this.buildIfChanged(name, uiRoot, rebuild);
       // const bundlingStats = await this.buildIfNoBundle(name, uiRoot);
-      const bundlingStats = await this.build(name);
-      if (bundlingStats.hasErrors()) {
+      const multiStats = await this.build(name);
+      const [browserBundle, ssrBundle] = multiStats.stats;
+
+      if (multiStats.hasErrors()) {
         // TEMP
-        console.error('bundling error:', bundlingStats.compilation.errors);
+        console.error('bundling error:', browserBundle.compilation.errors, ssrBundle.compilation.errors);
       }
 
-      await uiServer.start({ port: targetPort, bundlingStats });
+      await uiServer.start({ port: targetPort, bundlingStats: browserBundle });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
@@ -252,6 +262,22 @@ export class UiMain {
    * generate the root file of the UI runtime.
    */
   async generateRoot(
+    aspectDefs: AspectDefinition[],
+    rootExtensionName: string,
+    runtimeName = UIRuntime.name,
+    rootAspect = UIAspect.id
+  ) {
+    const contents = await createRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
+    const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
+    if (fs.existsSync(filepath)) return filepath;
+    fs.outputFileSync(filepath, contents);
+    return filepath;
+  }
+
+  /**
+   * generate the root file of the UI runtime.
+   */
+  async generateSsrRoot(
     aspectDefs: AspectDefinition[],
     rootExtensionName: string,
     runtimeName = UIRuntime.name,

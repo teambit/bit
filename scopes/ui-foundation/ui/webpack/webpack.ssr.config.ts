@@ -1,15 +1,16 @@
 import webpack, { EnvironmentPlugin, Configuration } from 'webpack';
-import TerserPlugin from 'terser-webpack-plugin';
+// import TerserPlugin from 'terser-webpack-plugin';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-import safePostCssParser from 'postcss-safe-parser';
+// import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
+// import safePostCssParser from 'postcss-safe-parser';
 import ManifestPlugin from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
 import postcssNormalize from 'postcss-normalize';
-import HtmlWebpackPlugin from 'html-webpack-plugin';
-import html from './html';
+// import { CleanWebpackPlugin } from 'clean-webpack-plugin';
+// import HtmlWebpackPlugin from 'html-webpack-plugin';
+// import html from './html';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -41,7 +42,7 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function createWebpackConfig(workspaceDir: string, entryFiles: string[], title: string): Configuration {
+export default function createWebpackConfig(workspaceDir: string, entryFiles: string[]): Configuration {
   const isEnvProduction = true;
   const resolveWorkspacePath = (relativePath: string) => path.resolve(workspaceDir, relativePath);
 
@@ -113,16 +114,20 @@ export default function createWebpackConfig(workspaceDir: string, entryFiles: st
   };
 
   return {
+    target: 'node',
+    devtool: 'cheap-eval-source-map', // TODO
+
     entry: {
-      main: entryFiles,
-      // preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
+      main: entryFiles[0],
     },
 
     output: {
       // The build folder.
-      path: resolveWorkspacePath('public'),
+      path: resolveWorkspacePath('public/ssr'),
+      libraryTarget: 'commonjs',
 
-      filename: 'static/js/[name].[contenthash:8].js',
+      // filename: 'static/js/[name].[contenthash:8].js',
+      filename: 'index.js',
       // TODO: remove this when upgrading to webpack 5
       futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
@@ -137,79 +142,79 @@ export default function createWebpackConfig(workspaceDir: string, entryFiles: st
     },
 
     optimization: {
-      minimize: true,
-      minimizer: [
-        // This is only used in production mode
-        new TerserPlugin({
-          terserOptions: {
-            parse: {
-              // We want terser to parse ecma 8 code. However, we don't want it
-              // to apply any minification steps that turns valid ecma 5 code
-              // into invalid ecma 5 code. This is why the 'compress' and 'output'
-              // sections only apply transformations that are ecma 5 safe
-              // https://github.com/facebook/create-react-app/pull/4234
-              ecma: 8,
-            },
-            compress: {
-              ecma: 5,
-              warnings: false,
-              // Disabled because of an issue with Uglify breaking seemingly valid code:
-              // https://github.com/facebook/create-react-app/issues/2376
-              // Pending further investigation:
-              // https://github.com/mishoo/UglifyJS2/issues/2011
-              comparisons: false,
-              // Disabled because of an issue with Terser breaking valid code:
-              // https://github.com/facebook/create-react-app/issues/5250
-              // Pending further investigation:
-              // https://github.com/terser-js/terser/issues/120
-              inline: 2,
-            },
-            mangle: {
-              safari10: true,
-            },
-            output: {
-              ecma: 5,
-              comments: false,
-              // Turned on because emoji and regex is not minified properly using default
-              // https://github.com/facebook/create-react-app/issues/2488
-              ascii_only: true,
-            },
-          },
-          sourceMap: shouldUseSourceMap,
-        }),
-        // This is only used in production mode
-        new OptimizeCSSAssetsPlugin({
-          cssProcessorOptions: {
-            parser: safePostCssParser,
-            map: shouldUseSourceMap
-              ? {
-                  // `inline: false` forces the sourcemap to be output into a
-                  // separate file
-                  inline: false,
-                  // `annotation: true` appends the sourceMappingURL to the end of
-                  // the css file, helping the browser find the sourcemap
-                  annotation: true,
-                }
-              : false,
-          },
-          cssProcessorPluginOptions: {
-            preset: ['default', { minifyFontValues: { removeQuotes: false } }],
-          },
-        }),
-      ],
+      // minimize: isEnvProduction,
+      // minimizer: [
+      //   // This is only used in production mode
+      //   new TerserPlugin({
+      //     terserOptions: {
+      //       parse: {
+      //         // We want terser to parse ecma 8 code. However, we don't want it
+      //         // to apply any minification steps that turns valid ecma 5 code
+      //         // into invalid ecma 5 code. This is why the 'compress' and 'output'
+      //         // sections only apply transformations that are ecma 5 safe
+      //         // https://github.com/facebook/create-react-app/pull/4234
+      //         ecma: 8,
+      //       },
+      //       compress: {
+      //         ecma: 5,
+      //         warnings: false,
+      //         // Disabled because of an issue with Uglify breaking seemingly valid code:
+      //         // https://github.com/facebook/create-react-app/issues/2376
+      //         // Pending further investigation:
+      //         // https://github.com/mishoo/UglifyJS2/issues/2011
+      //         comparisons: false,
+      //         // Disabled because of an issue with Terser breaking valid code:
+      //         // https://github.com/facebook/create-react-app/issues/5250
+      //         // Pending further investigation:
+      //         // https://github.com/terser-js/terser/issues/120
+      //         inline: 2,
+      //       },
+      //       mangle: {
+      //         safari10: true,
+      //       },
+      //       output: {
+      //         ecma: 5,
+      //         comments: false,
+      //         // Turned on because emoji and regex is not minified properly using default
+      //         // https://github.com/facebook/create-react-app/issues/2488
+      //         ascii_only: true,
+      //       },
+      //     },
+      //     sourceMap: shouldUseSourceMap,
+      //   }),
+      //   // This is only used in production mode
+      //   new OptimizeCSSAssetsPlugin({
+      //     cssProcessorOptions: {
+      //       parser: safePostCssParser,
+      //       map: shouldUseSourceMap
+      //         ? {
+      //             // `inline: false` forces the sourcemap to be output into a
+      //             // separate file
+      //             inline: false,
+      //             // `annotation: true` appends the sourceMappingURL to the end of
+      //             // the css file, helping the browser find the sourcemap
+      //             annotation: true,
+      //           }
+      //         : false,
+      //     },
+      //     cssProcessorPluginOptions: {
+      //       preset: ['default', { minifyFontValues: { removeQuotes: false } }],
+      //     },
+      //   }),
+      // ],
       // Automatically split vendor and commons
       // https://twitter.com/wSokra/status/969633336732905474
       // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-      },
-      // Keep the runtime chunk separated to enable long term caching
-      // https://twitter.com/wSokra/status/969679223278505985
-      // https://github.com/facebook/create-react-app/issues/5358
-      runtimeChunk: {
-        name: (entrypoint) => `runtime-${entrypoint.name}`,
-      },
+      // splitChunks: {
+      //   chunks: 'all',
+      //   name: false,
+      // },
+      // // Keep the runtime chunk separated to enable long term caching
+      // // https://twitter.com/wSokra/status/969679223278505985
+      // // https://github.com/facebook/create-react-app/issues/5358
+      // runtimeChunk: {
+      //   name: (entrypoint) => `runtime-${entrypoint.name}`,
+      // },
     },
     resolve: {
       // These are the reasonable defaults supported by the Node ecosystem.
@@ -426,29 +431,29 @@ export default function createWebpackConfig(workspaceDir: string, entryFiles: st
       ],
     },
     plugins: [
-      new HtmlWebpackPlugin(
-        Object.assign(
-          {},
-          {
-            inject: true,
-            templateContent: html(title),
-          },
-          {
-            minify: {
-              removeComments: true,
-              collapseWhitespace: true,
-              removeRedundantAttributes: true,
-              useShortDoctype: true,
-              removeEmptyAttributes: true,
-              removeStyleLinkTypeAttributes: true,
-              keepClosingSlash: true,
-              minifyJS: true,
-              minifyCSS: true,
-              minifyURLs: true,
-            },
-          }
-        )
-      ),
+      // new HtmlWebpackPlugin(
+      //   Object.assign(
+      //     {},
+      //     {
+      //       inject: true,
+      //       templateContent: html(title),
+      //     },
+      //     {
+      //       minify: {
+      //         removeComments: true,
+      //         collapseWhitespace: true,
+      //         removeRedundantAttributes: true,
+      //         useShortDoctype: true,
+      //         removeEmptyAttributes: true,
+      //         removeStyleLinkTypeAttributes: true,
+      //         keepClosingSlash: true,
+      //         minifyJS: true,
+      //         minifyCSS: true,
+      //         minifyURLs: true,
+      //       },
+      //     }
+      //   )
+      // ),
 
       new EnvironmentPlugin({ NODE_ENV: 'production' }),
       new MiniCssExtractPlugin({
@@ -464,7 +469,7 @@ export default function createWebpackConfig(workspaceDir: string, entryFiles: st
       //   can be used to reconstruct the HTML if necessary
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
-        publicPath: 'public/',
+        publicPath: 'public/ssr',
         generate: (seed, files, entrypoints) => {
           const manifestFiles = files.reduce((manifest, file) => {
             manifest[file.name] = file.path;

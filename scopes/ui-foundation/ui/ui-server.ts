@@ -89,7 +89,7 @@ export class UIServer {
     // pass through files from public /folder:
     app.use(express.static(root));
     app.get(
-      '/~ssr',
+      '*',
       await ssrRender({
         entryFilePath: ssrBundlePath,
         assets: getWebpackAssets(bundlingStats?.compilation),

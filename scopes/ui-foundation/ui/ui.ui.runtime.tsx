@@ -92,21 +92,27 @@ export class UiUI {
     const client = makeSsrGqlClient();
 
     const app = (
-      <Html title="bit dev ssred!" assets={assets}>
-        <GraphqlProvider client={client}>
-          <ClientContext>
-            <Compose components={contexts}>
-              {hudItems}
-              {routes}
-            </Compose>
-          </ClientContext>
-        </GraphqlProvider>
-      </Html>
+      <GraphqlProvider client={client}>
+        <ClientContext>
+          <Compose components={contexts}>
+            {hudItems}
+            {routes}
+          </Compose>
+        </ClientContext>
+      </GraphqlProvider>
     );
 
     return getDataFromTree(app)
       .then(() => {
-        const content = ReactDOMServer.renderToString(app);
+        const state = JSON.stringify(client.extract());
+        // TODO - .replace(/</g, '\\u003c')
+
+        const content = ReactDOMServer.renderToString(
+          <Html title="bit dev ssred!" assets={{ ...assets, state }}>
+            {app}
+          </Html>
+        );
+
         return `<!DOCTYPE html>${content}`;
       })
       .catch((err) => console.error(err)); // TODO
