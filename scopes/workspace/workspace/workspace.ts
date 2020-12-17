@@ -369,7 +369,7 @@ export class Workspace implements ComponentFactory {
       return new AspectEntry(await this.resolveComponentId(entry.id), entry);
     });
 
-    const entries = await Promise.all(entiresP);
+    const entries: AspectEntry[] = await Promise.all(entiresP);
     return this.componentAspect.createAspectListFromEntries(entries);
   }
 
