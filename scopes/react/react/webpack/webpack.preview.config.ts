@@ -20,6 +20,7 @@ const moduleFileExtensions = [
   'json',
   'web.jsx',
   'jsx',
+  'mdx',
 ];
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
@@ -200,6 +201,7 @@ export default function (): Configuration {
         react: require.resolve('react'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
+        '@mdx-js/react': require.resolve('@mdx-js/react'),
         'react-refresh/runtime': require.resolve('react-refresh/runtime'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
@@ -278,6 +280,25 @@ export default function (): Configuration {
                 sourceMaps: shouldUseSourceMap,
                 inputSourceMap: shouldUseSourceMap,
               },
+            },
+            // MDX support (move to the mdx aspect and extend from there)
+            {
+              test: /\.mdx?$/,
+              exclude: [/node_modules/, /dist/],
+              use: [
+                {
+                  loader: require.resolve('babel-loader'),
+                  options: {
+                    babelrc: false,
+                    configFile: false,
+                    presets: [require.resolve('babel-preset-react-app')],
+                    plugins: [require.resolve('react-refresh/babel')],
+                  },
+                },
+                {
+                  loader: require.resolve('@teambit/modules.mdx-loader'),
+                },
+              ],
             },
             // "postcss" loader applies autoprefixer to our CSS.
             // "css" loader resolves paths in CSS and adds assets as dependencies.

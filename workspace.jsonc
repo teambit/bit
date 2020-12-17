@@ -68,14 +68,14 @@
         "@teambit/documenter.routing.external-link": "0.2.3",
         "@teambit/documenter.theme.theme-context": "^0.2.3",
         "@teambit/documenter.types.docs-file": "^0.2.3",
-        "@teambit/documenter.ui.code-snippet": "0.2.3",
+        "@teambit/documenter.ui.code-snippet": "^0.2.3",
         "@teambit/documenter.ui.consumable-link": "^0.2.3",
         "@teambit/documenter.ui.heading": "^0.2.3",
-        "@teambit/documenter.ui.highlighted-text": "0.2.3",
+        "@teambit/documenter.ui.highlighted-text": "^0.2.3",
         "@teambit/documenter.ui.import-action": "^1.0.0",
         "@teambit/documenter.ui.label-list": "^0.2.3",
         "@teambit/documenter.ui.linked-heading": "^0.2.3",
-        "@teambit/documenter.ui.paragraph": "0.2.3",
+        "@teambit/documenter.ui.paragraph": "^0.2.3",
         "@teambit/documenter.ui.property-table": "^0.2.3",
         "@teambit/documenter.ui.section": "^0.2.3",
         "@teambit/documenter.ui.separator": "^0.2.3",
@@ -250,7 +250,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.221",
+        "bit-bin": "14.8.9-dev.223",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -306,7 +306,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.221",
+            "bit-bin": "14.8.9-dev.223",
             "react-dom": "^16.13.1"
           }
         }
@@ -414,7 +414,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.221",
+            "bit-bin": "14.8.9-dev.223",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
