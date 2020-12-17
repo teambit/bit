@@ -14,12 +14,14 @@ import ScopeComponentsImporter from '../component-ops/scope-components-importer'
 export class GraphFromFsBuilder {
   private graph = new Graph();
   private completed: string[] = [];
+  private depth = 1;
   constructor(
     private consumer: Consumer,
     private ignoreIds = new BitIds(),
     private loadComponentsFunc?: (ids: BitId[]) => Promise<Component[]>
   ) {}
   async buildGraph(components: Component[]): Promise<Graph> {
+    logger.debug(`GraphFromFsBuilder, buildGraph with ${components.length} seeders`);
     components.forEach((c) => {
       this.graph.setNode(c.id.toString(), c);
     });
@@ -32,9 +34,12 @@ export class GraphFromFsBuilder {
   }
 
   private async processManyComponents(components: Component[]) {
+    logger.debug(`GraphFromFsBuilder.processManyComponents depth ${this.depth}, ${components.length} components`);
+    this.depth += 1;
     const allDeps = flatten(components.map((c) => this.getAllDeps(c)));
+    const allDepsWithScope = allDeps.filter((dep) => dep.hasScope());
     const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
-    await scopeComponentsImporter.importMany(BitIds.uniqFromArray(allDeps));
+    await scopeComponentsImporter.importMany(BitIds.uniqFromArray(allDepsWithScope));
     const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
     const allDependenciesFlattened = flatten(allDependencies);
     if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
