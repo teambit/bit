@@ -2923,8 +2923,8 @@
                 "test": false
             },
             {
-                "name": "link-item.module.scss",
-                "relativePath": "link-item.module.scss",
+                "name": "item.compositions.tsx",
+                "relativePath": "item.compositions.tsx",
                 "test": false
             },
             {
@@ -7687,8 +7687,8 @@
                 "test": false
             },
             {
-                "name": "item.classes.ts",
-                "relativePath": "item.classes.ts",
+                "name": "item.compositions.tsx",
+                "relativePath": "item.compositions.tsx",
                 "test": false
             },
             {
