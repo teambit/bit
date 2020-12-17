@@ -202,4 +202,6 @@ precinct.paperwork = function (filename, options) {
   return deps;
 };
 
+export const detectors = [];
+
 export default precinct;
