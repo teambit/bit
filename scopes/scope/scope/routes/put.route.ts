@@ -1,4 +1,4 @@
-import { Route, Request, Response } from '@teambit/express';
+import { Route, Verb, Request, Response } from '@teambit/express';
 import { ObjectList } from 'bit-bin/dist/scope/objects/object-list';
 import { put } from 'bit-bin/dist/api/scope';
 import { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
@@ -8,6 +8,7 @@ export class PutRoute implements Route {
 
   method = 'post';
   route = '/scope/put';
+  verb = Verb.WRITE;
 
   middlewares = [
     async (req: Request, res: Response) => {
