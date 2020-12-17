@@ -1,9 +1,15 @@
-import React, { ComponentType, ReactNode, HTMLAttributes } from 'react';
+import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
 
 import styles from './item.module.scss';
 
+export const classes = {
+  menuItem: styles.menuItem,
+  interactive: styles.interactive,
+  active: styles.active,
+  icon: styles.icon,
+}; 
 export interface MenuItemsProps extends React.HTMLAttributes<HTMLSpanElement> {
   /** Optional icon to render at the start of the item (icomoon id) */
   icon?: string;
@@ -30,11 +36,4 @@ export function MenuItem({ children, className, icon, active, interactive, ...re
 
 MenuItem.defaultProps = {
   interactive: true,
-};
-
-export const classes = {
-  menuItem: styles.menuItem,
-  interactive: styles.interactive,
-  active: styles.active,
-  icon: styles.icon,
 };

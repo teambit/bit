@@ -1,9 +1,14 @@
 import React from 'react';
-import { MenuLinkItem } from './link-item';
 import { useLocation } from '@teambit/ui.routing.provider';
 
+import { MenuLinkItem } from './link-item';
+
 export function Preview() {
-  return <MenuLinkItem icon="settings" href="/settings">Menu link</MenuLinkItem>;
+  return (
+    <MenuLinkItem icon="settings" href="/settings">
+      Menu link
+    </MenuLinkItem>
+  );
 }
 
 export function Active() {
