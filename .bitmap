@@ -35,7 +35,7 @@
         "exported": false,
         "lanes": []
     },
-    "teambit.compilation/babel@0.0.186": {
+    "teambit.compilation/babel@0.0.187": {
         "files": [
             {
                 "name": "README.md",
@@ -74,7 +74,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compilation/bundler@0.0.186": {
+    "teambit.compilation/bundler@0.0.187": {
         "files": [
             {
                 "name": "browser-runtime.ts",
@@ -168,7 +168,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compilation/compiler@0.0.186": {
+    "teambit.compilation/compiler@0.0.187": {
         "files": [
             {
                 "name": "compiler.aspect.ts",
@@ -242,7 +242,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compilation/multi-compiler@0.0.186": {
+    "teambit.compilation/multi-compiler@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -276,7 +276,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compilation/webpack@0.0.186": {
+    "teambit.compilation/webpack@0.0.187": {
         "files": [
             {
                 "name": "html.js",
@@ -350,7 +350,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/changelog@0.0.186": {
+    "teambit.component/changelog@0.0.187": {
         "files": [
             {
                 "name": "changelog.aspect.ts",
@@ -394,7 +394,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/component-id@0.0.186": {
+    "teambit.component/component-id@0.0.187": {
         "files": [
             {
                 "name": "component-id.ts",
@@ -423,7 +423,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/component-tree@0.0.186": {
+    "teambit.component/component-tree@0.0.187": {
         "files": [
             {
                 "name": "component-tree-node.ts",
@@ -467,7 +467,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/component-version@0.0.186": {
+    "teambit.component/component-version@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -511,7 +511,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/component@0.0.186": {
+    "teambit.component/component@0.0.187": {
         "files": [
             {
                 "name": "aspect-entry.ts",
@@ -880,7 +880,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/deprecation@0.0.186": {
+    "teambit.component/deprecation@0.0.187": {
         "files": [
             {
                 "name": "deprecation.aspect.ts",
@@ -909,7 +909,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/dev-files@0.0.186": {
+    "teambit.component/dev-files@0.0.187": {
         "files": [
             {
                 "name": "dev-files.aspect.ts",
@@ -948,7 +948,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/graph@0.0.186": {
+    "teambit.component/graph@0.0.187": {
         "files": [
             {
                 "name": "component-graph.ts",
@@ -1172,7 +1172,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/isolator@0.0.186": {
+    "teambit.component/isolator@0.0.187": {
         "files": [
             {
                 "name": "capsule-list.ts",
@@ -1241,7 +1241,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/legacy-bit-id@0.0.186": {
+    "teambit.component/legacy-bit-id@0.0.187": {
         "files": [
             {
                 "name": "bit-id.spec.ts",
@@ -1305,7 +1305,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/component-status-resolver@0.0.186": {
+    "teambit.component/ui/component-status-resolver@0.0.187": {
         "files": [
             {
                 "name": "color-override.ts",
@@ -1349,7 +1349,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/component-status@0.0.186": {
+    "teambit.component/ui/component-status@0.0.187": {
         "files": [
             {
                 "name": "component-status.composition.tsx",
@@ -1388,7 +1388,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/component-tooltip@0.0.186": {
+    "teambit.component/ui/component-tooltip@0.0.187": {
         "files": [
             {
                 "name": "component-tooltip.composition.tsx",
@@ -1427,7 +1427,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/deprecation-icon@0.0.186": {
+    "teambit.component/ui/deprecation-icon@0.0.187": {
         "files": [
             {
                 "name": "deprecation-icon.composition.tsx",
@@ -1461,7 +1461,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/version-block@0.0.186": {
+    "teambit.component/ui/version-block@0.0.187": {
         "files": [
             {
                 "name": "change-log.data.ts",
@@ -1490,7 +1490,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/version-dropdown@0.0.186": {
+    "teambit.component/ui/version-dropdown@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -1529,7 +1529,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.component/ui/version-label@0.0.186": {
+    "teambit.component/ui/version-label@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -1568,7 +1568,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compositions/compositions@0.0.186": {
+    "teambit.compositions/compositions@0.0.187": {
         "files": [
             {
                 "name": "composition.section.tsx",
@@ -1707,7 +1707,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compositions/model/composition-id@0.0.186": {
+    "teambit.compositions/model/composition-id@0.0.187": {
         "files": [
             {
                 "name": "humanize.spec.ts",
@@ -1731,7 +1731,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compositions/model/composition-type@0.0.186": {
+    "teambit.compositions/model/composition-type@0.0.187": {
         "files": [
             {
                 "name": "composition-type.ts",
@@ -1750,7 +1750,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.compositions/ui/composition-card@0.0.186": {
+    "teambit.compositions/ui/composition-card@0.0.187": {
         "files": [
             {
                 "name": "composition-card.composition.tsx",
@@ -1779,7 +1779,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/eslint@0.0.186": {
+    "teambit.defender/eslint@0.0.187": {
         "files": [
             {
                 "name": "eslint.aspect.ts",
@@ -1808,7 +1808,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/jest@0.0.186": {
+    "teambit.defender/jest@0.0.187": {
         "files": [
             {
                 "name": "error.ts",
@@ -1852,7 +1852,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/linter@0.0.186": {
+    "teambit.defender/linter@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -1906,7 +1906,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/tester@0.0.186": {
+    "teambit.defender/tester@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2015,7 +2015,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/ui/test-loader@0.0.186": {
+    "teambit.defender/ui/test-loader@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2049,7 +2049,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/ui/test-row@0.0.186": {
+    "teambit.defender/ui/test-row@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2073,7 +2073,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.defender/ui/test-table@0.0.186": {
+    "teambit.defender/ui/test-table@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2117,7 +2117,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.dependencies/dependency-resolver@0.0.186": {
+    "teambit.dependencies/dependency-resolver@0.0.187": {
         "files": [
             {
                 "name": "base-dependency.ts",
@@ -2177,6 +2177,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "dependencies/index.ts",
+                "test": false
+            },
+            {
+                "name": "dependency-detector.ts",
+                "relativePath": "dependency-detector.ts",
                 "test": false
             },
             {
@@ -2421,7 +2426,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.dependencies/pnpm@0.0.186": {
+    "teambit.dependencies/pnpm@0.0.187": {
         "files": [
             {
                 "name": "create-resolver.ts",
@@ -2475,7 +2480,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.dependencies/yarn@0.0.186": {
+    "teambit.dependencies/yarn@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2504,7 +2509,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/avatar@0.0.186": {
+    "teambit.design/ui/avatar@0.0.187": {
         "files": [
             {
                 "name": "avatar-colors.module.scss",
@@ -2553,7 +2558,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/cli-snippet@0.0.186": {
+    "teambit.design/ui/cli-snippet@0.0.187": {
         "files": [
             {
                 "name": "cli-snippet.module.scss",
@@ -2577,7 +2582,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/contributors@0.0.186": {
+    "teambit.design/ui/contributors@0.0.187": {
         "files": [
             {
                 "name": "contributors.module.scss",
@@ -2601,7 +2606,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/empty-box@0.0.186": {
+    "teambit.design/ui/empty-box@0.0.187": {
         "files": [
             {
                 "name": "empty-box.composition.tsx",
@@ -2635,7 +2640,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/error-page@0.0.186": {
+    "teambit.design/ui/error-page@0.0.187": {
         "files": [
             {
                 "name": "error-page.module.scss",
@@ -2659,7 +2664,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/external-link@0.0.186": {
+    "teambit.design/ui/external-link@0.0.187": {
         "files": [
             {
                 "name": "external-link.module.scss",
@@ -2683,7 +2688,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/input/check-box@0.0.186": {
+    "teambit.design/ui/input/check-box@0.0.187": {
         "files": [
             {
                 "name": "check-box.compositions.tsx",
@@ -2712,7 +2717,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/label@0.0.186": {
+    "teambit.design/ui/label@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2741,7 +2746,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/pages/not-found@0.0.186": {
+    "teambit.design/ui/pages/not-found@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2780,7 +2785,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/pages/server-error@0.0.186": {
+    "teambit.design/ui/pages/server-error@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2819,7 +2824,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/pages/standalone-not-found-page@0.0.186": {
+    "teambit.design/ui/pages/standalone-not-found-page@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2838,7 +2843,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/pill-label@0.0.186": {
+    "teambit.design/ui/pill-label@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2862,7 +2867,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/round-loader@0.0.186": {
+    "teambit.design/ui/round-loader@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2896,7 +2901,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/separator@0.0.186": {
+    "teambit.design/ui/separator@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2920,7 +2925,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/styles/ellipsis@0.0.186": {
+    "teambit.design/ui/styles/ellipsis@0.0.187": {
         "files": [
             {
                 "name": "ellipsis.module.scss",
@@ -2944,7 +2949,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/surfaces/menu/link-item@0.0.186": {
+    "teambit.design/ui/surfaces/menu/link-item@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2968,7 +2973,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/surfaces/menu/section@0.0.186": {
+    "teambit.design/ui/surfaces/menu/section@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -2992,7 +2997,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.design/ui/time-ago@0.0.186": {
+    "teambit.design/ui/time-ago@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -3031,7 +3036,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.docs/docs@0.0.186": {
+    "teambit.docs/docs@0.0.187": {
         "files": [
             {
                 "name": "default-doc-reader.ts",
@@ -3170,7 +3175,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.docs/ui/queries/get-docs@0.0.186": {
+    "teambit.docs/ui/queries/get-docs@0.0.187": {
         "files": [
             {
                 "name": "get-docs.ts",
@@ -3189,7 +3194,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.envs/envs@0.0.186": {
+    "teambit.envs/envs@0.0.187": {
         "files": [
             {
                 "name": "README.md",
@@ -3333,7 +3338,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.envs/ui/env-icon@0.0.186": {
+    "teambit.envs/ui/env-icon@0.0.187": {
         "files": [
             {
                 "name": "env-icon.tsx",
@@ -3352,7 +3357,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.explorer/command-bar@0.0.186": {
+    "teambit.explorer/command-bar@0.0.187": {
         "files": [
             {
                 "name": "command-bar.aspect.ts",
@@ -3486,7 +3491,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.explorer/insights@0.0.186": {
+    "teambit.explorer/insights@0.0.187": {
         "files": [
             {
                 "name": "duplicate-dependencies.tsx",
@@ -3560,7 +3565,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.explorer/ui/gallery/base-component-card@0.0.186": {
+    "teambit.explorer/ui/gallery/base-component-card@0.0.187": {
         "files": [
             {
                 "name": "base-component-card.composition.tsx",
@@ -3649,7 +3654,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.explorer/ui/gallery/component-card@0.0.186": {
+    "teambit.explorer/ui/gallery/component-card@0.0.187": {
         "files": [
             {
                 "name": "component-card.composition.tsx",
@@ -3683,7 +3688,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.explorer/ui/gallery/component-grid@0.0.186": {
+    "teambit.explorer/ui/gallery/component-grid@0.0.187": {
         "files": [
             {
                 "name": "component-grid.module.scss",
@@ -3707,7 +3712,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.generator/generator@0.0.186": {
+    "teambit.generator/generator@0.0.187": {
         "files": [
             {
                 "name": "README.md",
@@ -3756,7 +3761,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/aspect-loader@0.0.186": {
+    "teambit.harmony/aspect-loader@0.0.187": {
         "files": [
             {
                 "name": "aspect-definition.ts",
@@ -3805,7 +3810,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/aspect@0.0.186": {
+    "teambit.harmony/aspect@0.0.187": {
         "files": [
             {
                 "name": "aspect.aspect.ts",
@@ -3849,7 +3854,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/bit-error@0.0.186": {
+    "teambit.harmony/bit-error@0.0.187": {
         "files": [
             {
                 "name": "bit-error.ts",
@@ -3868,7 +3873,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/bit@0.0.186": {
+    "teambit.harmony/bit@0.0.187": {
         "files": [
             {
                 "name": "app.ts",
@@ -3942,7 +3947,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/cache@0.0.186": {
+    "teambit.harmony/cache@0.0.187": {
         "files": [
             {
                 "name": "cache.aspect.ts",
@@ -3971,7 +3976,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/cli@0.0.186": {
+    "teambit.harmony/cli@0.0.187": {
         "files": [
             {
                 "name": "bit",
@@ -4035,7 +4040,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/config@0.0.186": {
+    "teambit.harmony/config@0.0.187": {
         "files": [
             {
                 "name": "config.aspect.ts",
@@ -4114,7 +4119,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/express@0.0.186": {
+    "teambit.harmony/express@0.0.187": {
         "files": [
             {
                 "name": "express.aspect.ts",
@@ -4178,7 +4183,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/graphql@0.0.186": {
+    "teambit.harmony/graphql@0.0.187": {
         "files": [
             {
                 "name": "create-link.ts",
@@ -4252,7 +4257,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/logger@0.0.186": {
+    "teambit.harmony/logger@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -4291,7 +4296,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/modules/requireable-component@0.0.186": {
+    "teambit.harmony/modules/requireable-component@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -4310,7 +4315,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/modules/resolved-component@0.0.186": {
+    "teambit.harmony/modules/resolved-component@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -4329,7 +4334,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/node@0.0.186": {
+    "teambit.harmony/node@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -4358,7 +4363,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/pubsub@0.0.186": {
+    "teambit.harmony/pubsub@0.0.187": {
         "files": [
             {
                 "name": "bit-base-event.ts",
@@ -4397,7 +4402,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/ui/aspect-box@0.0.186": {
+    "teambit.harmony/ui/aspect-box@0.0.187": {
         "files": [
             {
                 "name": "aspect-box.module.scss",
@@ -4421,7 +4426,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.harmony/worker@0.0.186": {
+    "teambit.harmony/worker@0.0.187": {
         "files": [
             {
                 "name": "expose.ts",
@@ -4465,7 +4470,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.mdx/mdx@0.0.186": {
+    "teambit.mdx/mdx@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -4504,7 +4509,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.mdx/modules/mdx-compiler@0.0.186": {
+    "teambit.mdx/modules/mdx-compiler@0.0.187": {
         "files": [
             {
                 "name": "compile-output.ts",
@@ -4548,7 +4553,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.mdx/modules/mdx-loader@0.0.186": {
+    "teambit.mdx/modules/mdx-loader@0.0.187": {
         "files": [
             {
                 "name": "simple.mdx",
@@ -4582,7 +4587,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.mdx/ui/mdx-layout@0.0.186": {
+    "teambit.mdx/ui/mdx-layout@0.0.187": {
         "files": [
             {
                 "name": "create-heading.tsx",
@@ -4606,7 +4611,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.pipelines/builder@0.0.186": {
+    "teambit.pipelines/builder@0.0.187": {
         "files": [
             {
                 "name": "artifact-definition.ts",
@@ -4760,7 +4765,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.pipelines/flows@0.0.186": {
+    "teambit.pipelines/flows@0.0.187": {
         "files": [
             {
                 "name": "README.md",
@@ -4884,7 +4889,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.pipelines/modules/merge-component-results@0.0.186": {
+    "teambit.pipelines/modules/merge-component-results@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -4903,7 +4908,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.pkg/pkg@0.0.186": {
+    "teambit.pkg/pkg@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5022,7 +5027,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.preview/preview@0.0.186": {
+    "teambit.preview/preview@0.0.187": {
         "files": [
             {
                 "name": "bundling-strategy.ts",
@@ -5176,7 +5181,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.preview/ui/preview-placeholder@0.0.186": {
+    "teambit.preview/ui/preview-placeholder@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5219,7 +5224,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.react/react@0.0.186": {
+    "teambit.react/react@0.0.187": {
         "files": [
             {
                 "name": "base.module.scss",
@@ -5423,7 +5428,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.scope/scope@0.0.186": {
+    "teambit.scope/scope@0.0.187": {
         "files": [
             {
                 "name": "components.drawer.tsx",
@@ -5577,7 +5582,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.scope/sign@0.0.186": {
+    "teambit.scope/sign@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5606,7 +5611,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.scope/ui/empty-scope@0.0.186": {
+    "teambit.scope/ui/empty-scope@0.0.187": {
         "files": [
             {
                 "name": "empty-scope.composition.tsx",
@@ -5635,7 +5640,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.scope/ui/scope-details@0.0.186": {
+    "teambit.scope/ui/scope-details@0.0.187": {
         "files": [
             {
                 "name": "contributors.module.scss",
@@ -5674,7 +5679,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.scope/ui/scope-labels@0.0.186": {
+    "teambit.scope/ui/scope-labels@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5698,7 +5703,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.scope/ui/scope-title@0.0.186": {
+    "teambit.scope/ui/scope-title@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5722,7 +5727,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.semantics/schema@0.0.186": {
+    "teambit.semantics/schema@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5791,7 +5796,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/path/is-path-inside@0.0.186": {
+    "teambit.toolbox/path/is-path-inside@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5810,7 +5815,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/path/to-windows-compatible-path@0.0.186": {
+    "teambit.toolbox/path/to-windows-compatible-path@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5829,7 +5834,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/string/capitalize@0.0.186": {
+    "teambit.toolbox/string/capitalize@0.0.187": {
         "files": [
             {
                 "name": "capitalize.spec.ts",
@@ -5853,7 +5858,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/string/strip-trailing-char@0.0.186": {
+    "teambit.toolbox/string/strip-trailing-char@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5872,7 +5877,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/time/time-format@0.0.186": {
+    "teambit.toolbox/time/time-format@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5891,7 +5896,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/types/serializable@0.0.186": {
+    "teambit.toolbox/types/serializable@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5910,7 +5915,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.toolbox/url/query-string@0.0.186": {
+    "teambit.toolbox/url/query-string@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -5934,7 +5939,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.typescript/typescript@0.0.186": {
+    "teambit.typescript/typescript@0.0.187": {
         "files": [
             {
                 "name": "init.cmd.ts",
@@ -5993,7 +5998,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/notifications@0.0.186": {
+    "teambit.ui-foundation/notifications@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6022,7 +6027,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/panels@0.0.186": {
+    "teambit.ui-foundation/panels@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6056,7 +6061,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/react-router@0.0.186": {
+    "teambit.ui-foundation/react-router@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6100,7 +6105,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/sidebar@0.0.186": {
+    "teambit.ui-foundation/sidebar@0.0.187": {
         "files": [
             {
                 "name": "drawer.module.scss",
@@ -6184,7 +6189,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/corner@0.0.186": {
+    "teambit.ui-foundation/ui/corner@0.0.187": {
         "files": [
             {
                 "name": "corner.module.scss",
@@ -6208,7 +6213,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/empty-component-gallery@0.0.186": {
+    "teambit.ui-foundation/ui/empty-component-gallery@0.0.187": {
         "files": [
             {
                 "name": "empty-component-gallery.composition.tsx",
@@ -6237,7 +6242,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/full-loader@0.0.186": {
+    "teambit.ui-foundation/ui/full-loader@0.0.187": {
         "files": [
             {
                 "name": "full-loader.module.scss",
@@ -6261,7 +6266,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/hooks/use-bind-key@0.0.186": {
+    "teambit.ui-foundation/ui/hooks/use-bind-key@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6280,7 +6285,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/hooks/use-in-out-transition@0.0.186": {
+    "teambit.ui-foundation/ui/hooks/use-in-out-transition@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6299,7 +6304,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/keycap@0.0.186": {
+    "teambit.ui-foundation/ui/keycap@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6328,7 +6333,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/main-dropdown@0.0.186": {
+    "teambit.ui-foundation/ui/main-dropdown@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6352,7 +6357,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/menu@0.0.186": {
+    "teambit.ui-foundation/ui/menu@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6376,7 +6381,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/notifications/notification-center@0.0.186": {
+    "teambit.ui-foundation/ui/notifications/notification-center@0.0.187": {
         "files": [
             {
                 "name": "dismiss-button.module.scss",
@@ -6415,7 +6420,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/notifications/notification-context@0.0.186": {
+    "teambit.ui-foundation/ui/notifications/notification-context@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6434,7 +6439,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/notifications/notification@0.0.186": {
+    "teambit.ui-foundation/ui/notifications/notification@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6473,7 +6478,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/notifications/store@0.0.186": {
+    "teambit.ui-foundation/ui/notifications/store@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6492,7 +6497,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/react-router/extend-path@0.0.186": {
+    "teambit.ui-foundation/ui/react-router/extend-path@0.0.187": {
         "files": [
             {
                 "name": "extend-path.spec.ts",
@@ -6516,7 +6521,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/react-router/link@0.0.186": {
+    "teambit.ui-foundation/ui/react-router/link@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6535,7 +6540,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/react-router/nav-link@0.0.186": {
+    "teambit.ui-foundation/ui/react-router/nav-link@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6554,7 +6559,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/react-router/slot-router@0.0.186": {
+    "teambit.ui-foundation/ui/react-router/slot-router@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6573,7 +6578,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/react-router/use-query@0.0.186": {
+    "teambit.ui-foundation/ui/react-router/use-query@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6592,7 +6597,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/routing/compare-url@0.0.186": {
+    "teambit.ui-foundation/ui/routing/compare-url@0.0.187": {
         "files": [
             {
                 "name": "compare-url.spec.ts",
@@ -6616,7 +6621,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/routing/link@0.0.186": {
+    "teambit.ui-foundation/ui/routing/link@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6635,7 +6640,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/routing/native-link@0.0.186": {
+    "teambit.ui-foundation/ui/routing/native-link@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6664,7 +6669,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/routing/native-nav-link@0.0.186": {
+    "teambit.ui-foundation/ui/routing/native-nav-link@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6688,7 +6693,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/routing/nav-link@0.0.186": {
+    "teambit.ui-foundation/ui/routing/nav-link@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6707,7 +6712,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/routing/provider@0.0.186": {
+    "teambit.ui-foundation/ui/routing/provider@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -6731,7 +6736,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/side-bar@0.0.186": {
+    "teambit.ui-foundation/ui/side-bar@0.0.187": {
         "files": [
             {
                 "name": "component-tree-context.tsx",
@@ -6980,7 +6985,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui/top-bar@0.0.186": {
+    "teambit.ui-foundation/ui/top-bar@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -7004,7 +7009,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.ui-foundation/ui@0.0.186": {
+    "teambit.ui-foundation/ui@0.0.187": {
         "files": [
             {
                 "name": "compose.tsx",
@@ -7248,7 +7253,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.workspace/modules/match-pattern@0.0.186": {
+    "teambit.workspace/modules/match-pattern@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -7272,7 +7277,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.workspace/ui/empty-workspace@0.0.186": {
+    "teambit.workspace/ui/empty-workspace@0.0.187": {
         "files": [
             {
                 "name": "empty-workspace.composition.tsx",
@@ -7301,7 +7306,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.workspace/ui/status@0.0.186": {
+    "teambit.workspace/ui/status@0.0.187": {
         "files": [
             {
                 "name": "index.ts",
@@ -7335,7 +7340,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.workspace/variants@0.0.186": {
+    "teambit.workspace/variants@0.0.187": {
         "files": [
             {
                 "name": "constants.ts",
@@ -7374,7 +7379,7 @@
         "exported": true,
         "lanes": []
     },
-    "teambit.workspace/workspace@0.0.186": {
+    "teambit.workspace/workspace@0.0.187": {
         "files": [
             {
                 "name": "capsule-create.cmd.ts",
@@ -7708,5 +7713,5 @@
         "exported": true,
         "lanes": []
     },
-    "version": "14.8.9-dev.221"
+    "version": "14.8.9-dev.223"
 }

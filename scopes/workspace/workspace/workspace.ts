@@ -369,7 +369,7 @@ export class Workspace implements ComponentFactory {
       return new AspectEntry(await this.resolveComponentId(entry.id), entry);
     });
 
-    const entries = await Promise.all(entiresP);
+    const entries: AspectEntry[] = await Promise.all(entiresP);
     return this.componentAspect.createAspectListFromEntries(entries);
   }
 
@@ -510,7 +510,7 @@ export class Workspace implements ComponentFactory {
     const ids = await this.listIds();
 
     const targetIds = ids.filter((id) => {
-      const spec = isMatchNamespacePatternItem(id._legacy.toStringWithoutVersion(), `${scope}/${pattern}`);
+      const spec = isMatchNamespacePatternItem(id.toStringWithoutVersion(), `${scope}/${pattern}`);
       return spec.match;
     });
 
@@ -785,7 +785,7 @@ export class Workspace implements ComponentFactory {
     // This come to solve a circular loop when an env aspect use an aspect (as regular dep) and the aspect use the env aspect as its env
     // TODO: @gilad it causes many issues we need to find a better solution. removed for now.
     const ignoredIds = coreAspectsBitIds.concat([]);
-    return buildOneGraphForComponents(ids, this.consumer, 'normal', undefined, BitIds.fromArray(ignoredIds));
+    return buildOneGraphForComponents(ids, this.consumer, undefined, BitIds.fromArray(ignoredIds));
   }
 
   // remove this function

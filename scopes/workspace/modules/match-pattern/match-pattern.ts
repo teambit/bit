@@ -95,6 +95,7 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   let specificity = 0;
   const splittedComp = componentName.split('/');
   const splittedPattern = patternItemStriped.split('/');
+
   if (splittedPattern.length > splittedComp.length) {
     return {
       match: false,
