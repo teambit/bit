@@ -1,9 +1,8 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { NavLink, NavLinkProps } from '@teambit/ui.react-router.nav-link';
+import { NavLink, NavLinkProps } from '@teambit/ui.routing.nav-link';
+import { classes } from '@teambit/ui.surfaces.menu.item';
 import classNames from 'classnames';
 import React from 'react';
-
-import styles from './link-item.module.scss';
 
 export type MenuLinkItemProps = {
   icon?: string;
@@ -15,10 +14,10 @@ export function MenuLinkItem({ href, children, icon, className, activeClassName,
     <NavLink
       {...rest}
       href={href}
-      activeClassName={classNames(styles.active, activeClassName)}
-      className={classNames(styles.menuLinkItem, className)}
+      className={classNames(className, classes.menuItem, classes.interactive)}
+      activeClassName={classNames(activeClassName, classes.active)}
     >
-      {icon && <Icon of={icon} className={styles.icon} />}
+      {icon && <Icon of={icon} className={classes.icon} />}
       {children}
     </NavLink>
   );

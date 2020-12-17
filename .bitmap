@@ -7679,5 +7679,34 @@
         "exported": true,
         "lanes": []
     },
+    "ui/surfaces/menu/item": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "item.classes.ts",
+                "relativePath": "item.classes.ts",
+                "test": false
+            },
+            {
+                "name": "item.module.scss",
+                "relativePath": "item.module.scss",
+                "test": false
+            },
+            {
+                "name": "item.tsx",
+                "relativePath": "item.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/surfaces/menu/item",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "version": "14.8.9-dev.223"
 }
