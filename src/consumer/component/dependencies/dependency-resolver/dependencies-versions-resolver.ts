@@ -132,11 +132,16 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const packageObject = resolveNodePackage(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
-    const packageId = Object.keys(packageObject)[0];
-    const version = packageObject[packageId];
+    const version =
+      getValidVersion(packageObject.concreteVersion) || getValidVersion(packageObject.versionUsedByDependent);
+    if (!version) return null;
+    return componentId.changeVersion(version);
+  }
+
+  function getValidVersion(version) {
+    if (!version) return null;
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
-    const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
-    return componentId.changeVersion(validVersion);
+    return version.replace(/[^0-9.]/g, '');
   }
 
   function getIdFromDependentPackageJson(componentId: BitId): BitId | null | undefined {
