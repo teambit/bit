@@ -17,6 +17,11 @@ import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
 
+export enum Verb {
+  WRITE = 'write',
+  READ = 'read',
+}
+
 export type GraphQLConfig = {
   port: number;
   subscriptionsPortRange: number[];
@@ -199,6 +204,11 @@ export class GraphqlMain {
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
         imports: moduleDeps,
+        context: (session) => {
+          return {
+            verb: session.headers['x-verb'] || Verb.READ,
+          };
+        },
       });
 
       this.modules.set(extensionId, module);
