@@ -75,7 +75,7 @@ export class FlattenedDependenciesGetter {
     const { dependencies, devDependencies } = this.getFlattenedFromCurrentComponents(bitId);
     [...dependencies, ...devDependencies].forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
     const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep));
-    const devDependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep));
+    const devDependenciesDeps = await mapSeries(devDependencies, (dep) => this.getFlattenedFromVersion(dep));
     const dependenciesDepsFlattened = flatten(dependenciesDeps.map((d) => d.dependencies));
     const devDependenciesDepsFlattened = flatten([
       ...dependenciesDeps.map((d) => d.devDependencies),

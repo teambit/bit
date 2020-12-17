@@ -86,6 +86,18 @@ export class ComponentID {
   }
 
   /**
+   * serialize a component ID without its version.
+   */
+  toStringWithoutVersion() {
+    let id = this._legacy;
+    if (this._scope && !this._legacy.scope) {
+      id = id.changeScope(this._scope);
+    }
+
+    return id.toStringWithoutVersion();
+  }
+
+  /**
    * serialize the component ID.
    */
   toString(opts: { ignoreVersion?: boolean } = {}) {
