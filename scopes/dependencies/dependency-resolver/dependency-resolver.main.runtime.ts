@@ -548,6 +548,8 @@ export class DependencyResolverMain {
     return version;
   }
 
+  registerDetector() {}
+
   static runtime = MainRuntime;
   static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect, GraphqlAspect];
 
