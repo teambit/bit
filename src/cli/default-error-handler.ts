@@ -412,7 +412,13 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [WriteToNpmrcError, (err) => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, (err) => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
-  [VersionNotFound, (err) => `error: version "${chalk.bold(err.version)}" was not found.`],
+  [
+    VersionNotFound,
+    (err) =>
+      `error: version "${chalk.bold(err.version)}"${
+        err.componentId ? ` of component ${chalk.bold(err.componentId)}` : ''
+      } was not found.`,
+  ],
   [
     ParentNotFound,
     (err) =>
