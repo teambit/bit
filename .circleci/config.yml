@@ -545,13 +545,13 @@ jobs:
       # - run: sleep 5m
       # - run: npm view bit-bin@dev version
       - run: cd bit && bit status
-      # - run:
-      #     name: soft
-      #     command: cd bit && node scripts/soft-tag-scope-teambit.js
+      - run:
+          name: soft
+          command: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          command: cd bit && bit tag --all --persist --ignore-newest-version
-          # command: cd bit && bit tag --persist
+          # command: cd bit && bit tag --all --ignore-newest-version
+          command: cd bit && bit tag --persist
           no_output_timeout: '25m'
       - run:
           name: backup bit objects (before export)

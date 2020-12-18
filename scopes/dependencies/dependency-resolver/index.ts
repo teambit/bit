@@ -24,12 +24,25 @@ export {
   DependencyList,
   DependencyFactory,
   SerializedDependency,
+  Dependency,
   BaseDependency,
   SemverVersion,
   DependenciesManifest,
   ComponentDependency,
 } from './dependencies';
-export { WorkspacePolicyEntry, WorkspacePolicy, VariantPolicyConfigObject } from './policy';
+export {
+  WorkspacePolicyEntry,
+  WorkspacePolicy,
+  VariantPolicyConfigObject,
+  Policy,
+  PolicySemver,
+  PolicyConfigKeys,
+  PolicyConfigKeysNames,
+  PolicyEntry,
+  VariantPolicy,
+  VariantPolicyFactory,
+  SerializedVariantPolicy,
+ } from './policy';
 export {
   CoreAspectLinkResult,
   LinkDetail,
