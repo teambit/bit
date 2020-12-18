@@ -193,11 +193,12 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     ComponentNotFound,
     (err) => {
-      const msg = err.dependentId
+      const baseMsg = err.dependentId
         ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
             err.dependentId
           )}" was not found`
         : `error: component "${chalk.bold(err.id)}" was not found`;
+      const msg = `${baseMsg}\nconsider running "bit dependents ${err.id}" to understand why this component was needed`;
       return msg;
     },
   ],
