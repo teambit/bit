@@ -273,7 +273,7 @@ describe('bit diff command', function () {
     });
     describe('diff between a non-exist version and current version', () => {
       it('should throw an VersionNotFound error', () => {
-        const error = new VersionNotFound('1.0.6');
+        const error = new VersionNotFound('1.0.6', 'bar/foo');
         const diffFunc = () => helper.command.diff('bar/foo 1.0.6');
         helper.general.expectToThrow(diffFunc, error);
       });
