@@ -10,7 +10,6 @@ import GeneralError from '../../error/general-error';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
-import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
 
 export type AllDependenciesGraphs = {
