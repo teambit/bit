@@ -65,7 +65,7 @@ export async function getAllVersionsInfo({
             await addParentsRecursively(parentVersion);
           } else {
             versionInfo.error = versionInfo.tag
-              ? new VersionNotFound(versionInfo.tag)
+              ? new VersionNotFound(versionInfo.tag, modelComponent.id())
               : new ParentNotFound(modelComponent.id(), version.hash().toString(), parent.toString());
             if (throws) throw versionInfo.error;
           }
@@ -87,7 +87,7 @@ export async function getAllVersionsInfo({
         const versionInfo: VersionInfo = { ref, tag: version };
         if (versionObj) versionInfo.version = versionObj;
         else {
-          versionInfo.error = new VersionNotFound(version);
+          versionInfo.error = new VersionNotFound(version, modelComponent.id());
           if (throws) throw versionInfo.error;
         }
         results.push(versionInfo);

@@ -49,8 +49,8 @@ describe('import functionality on Harmony', function () {
       after(() => {
         npmCiRegistry.destroy();
       });
-      describe('importing dependencies as packages, requiring them and then running bit import', () => {
-        let importOutput;
+      describe('installing dependencies as packages, requiring them and then running build-one-graph', () => {
+        // let importOutput;
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
@@ -65,11 +65,12 @@ describe('import functionality on Harmony', function () {
           const localScope = helper.command.listLocalScopeParsed('--scope');
           expect(localScope).to.have.lengthOf(0);
 
-          importOutput = helper.command.importAllComponents();
+          helper.command.runCmd('bit insights'); // this command happened to run the build-one-graph.
+          // importOutput = helper.command.importAllComponents();
         });
-        it('should import the components objects that were installed as packages', () => {
-          expect(importOutput).to.have.string('successfully imported one component');
-        });
+        // it('should import the components objects that were installed as packages', () => {
+        //   expect(importOutput).to.have.string('successfully imported one component');
+        // });
         it('the scope should have the dependencies and the flattened dependencies', () => {
           const localScope = helper.command.listLocalScopeParsed('--scope');
           expect(localScope).to.have.lengthOf(3);

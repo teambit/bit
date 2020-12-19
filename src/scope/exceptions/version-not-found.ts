@@ -1,9 +1,7 @@
 import AbstractError from '../../error/abstract-error';
 
 export default class VersionNotFound extends AbstractError {
-  version: string;
-  constructor(version: string) {
+  constructor(public version: string, public componentId: string) {
     super();
-    this.version = version;
   }
 }
