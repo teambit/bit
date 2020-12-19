@@ -226,13 +226,15 @@ export default class ImportComponents {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
+    // this is probably not needed anymore because the build-one-graph already imports all
+    // missing objects.
+    // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
     const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
     const componentsIdsToImport = BitIds.fromArray([
       ...authoredExportedComponents,
       ...importedComponents,
-      ...idsOfDepsInstalledAsPackages,
+      // ...idsOfDepsInstalledAsPackages,
     ]);
 
     let compiler;

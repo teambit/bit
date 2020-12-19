@@ -10,7 +10,6 @@ import GeneralError from '../../error/general-error';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
-import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
 
 export type AllDependenciesGraphs = {
@@ -89,29 +88,8 @@ export async function buildOneGraphForComponents(
   loadComponentsFunc?: (bitIds: BitId[]) => Promise<Component[]>,
   ignoreIds?: BitIds
 ): Promise<Graph> {
-  const getComponents = async () => {
-    if (loadComponentsFunc) {
-      return loadComponentsFunc(ids);
-    }
-
-    try {
-      const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-      return components;
-    } catch (err) {
-      if (err instanceof MissingBitMapComponent) {
-        const componentsP = ids.map((id) => {
-          return consumer.loadComponentFromModel(id);
-        });
-
-        return Promise.all(componentsP);
-      }
-
-      throw err;
-    }
-  };
-  const components = await getComponents();
   const graphFromFsBuilder = new GraphFromFsBuilder(consumer, ignoreIds, loadComponentsFunc);
-  return graphFromFsBuilder.buildGraph(components);
+  return graphFromFsBuilder.buildGraph(ids);
 }
 
 /**
