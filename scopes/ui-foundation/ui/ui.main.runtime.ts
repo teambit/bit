@@ -18,7 +18,7 @@ import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
-import { createRoot, createSsrRoot } from './create-root';
+import { createRoot } from './create-root';
 import { UnknownUI } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
@@ -140,7 +140,7 @@ export class UiMain {
       ),
       createSsrWebpackConfig(
         uiRoot.path,
-        [await this.generateSsrRoot(await uiRoot.resolveAspects(UIRuntime.name), name)]
+        [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
         // uiRoot.name
       ),
     ];
@@ -268,22 +268,6 @@ export class UiMain {
     rootAspect = UIAspect.id
   ) {
     const contents = await createRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
-    const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
-    if (fs.existsSync(filepath)) return filepath;
-    fs.outputFileSync(filepath, contents);
-    return filepath;
-  }
-
-  /**
-   * generate the root file of the UI runtime.
-   */
-  async generateSsrRoot(
-    aspectDefs: AspectDefinition[],
-    rootExtensionName: string,
-    runtimeName = UIRuntime.name,
-    rootAspect = UIAspect.id
-  ) {
-    const contents = await createSsrRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
     const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);

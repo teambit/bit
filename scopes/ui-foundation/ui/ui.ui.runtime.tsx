@@ -104,8 +104,10 @@ export class UiUI {
 
     return getDataFromTree(app)
       .then(() => {
-        const state = JSON.stringify(client.extract());
-        // TODO - .replace(/</g, '\\u003c')
+        const state = {
+          'gql-cache': JSON.stringify(client.extract()),
+          // TODO - .replace(/</g, '\\u003c')
+        };
 
         const content = ReactDOMServer.renderToString(
           <Html title="bit dev ssred!" assets={{ ...assets, state }}>

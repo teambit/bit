@@ -16,38 +16,7 @@ export async function createRoot(
   return `
 ${createImports(aspectDefs)}
 
-export function render(...props){
-  return Harmony.load([${getIdentifiers(
-    aspectDefs.map((def) => def.aspectPath),
-    'Aspect'
-  )}], '${runtime}', {})
-    .then((harmony) => {
-      return harmony
-      .run()
-      .then(() => {
-        const rootExtension = harmony.get('${rootAspect}');
-        return rootExtension.render(${rootId}, ...props);
-      })
-      .catch((err) => {
-        throw err;
-      });
-    });
-}
-
-render();
-`;
-}
-
-export async function createSsrRoot(
-  aspectDefs: AspectDefinition[],
-  rootExtensionName?: string,
-  rootAspect = UIAspect.id,
-  runtime = 'ui'
-) {
-  const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
-
-  return `
-${createImports(aspectDefs)}
+const isBrowser = typeof window !== "undefined";
 
 export function render(...props){
   return Harmony.load([${getIdentifiers(
@@ -59,13 +28,20 @@ export function render(...props){
       .run()
       .then(() => {
         const rootExtension = harmony.get('${rootAspect}');
-        return rootExtension.renderSsr(${rootId}, ...props);
+        
+        if (isBrowser) {
+          return rootExtension.render(${rootId}, ...props);
+        } else {
+          return rootExtension.renderSsr(${rootId}, ...props);
+        }
       })
       .catch((err) => {
         throw err;
       });
     });
 }
+
+if (isBrowser) render();
 `;
 }
 

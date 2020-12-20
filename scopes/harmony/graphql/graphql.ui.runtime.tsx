@@ -1,6 +1,7 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ComponentID } from '@teambit/component';
+import { InMemoryCache, IdGetterObj } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
 import { ApolloLink } from 'apollo-link';
 import { onError } from 'apollo-link-error';
@@ -60,10 +61,24 @@ export class GraphqlUI {
   }
 
   private getCache() {
-    return new InMemoryCache({
-      // @ts-ignore TODO: @uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
-      dataIdFromObject: (o) => (o._id ? `${o.__typename}:${o._id}` : null),
+    const cache = new InMemoryCache({
+      dataIdFromObject: getIdFromObject,
     });
+
+    try {
+      const domState = typeof document !== 'undefined' && document.getElementById('gql-cache');
+
+      if (domState) {
+        const parsed = JSON.parse(domState.innerHTML);
+        cache.restore(parsed);
+      } else {
+        console.log('no cache to load');
+      }
+    } catch (e) {
+      console.error('failing loading cache', e);
+    }
+
+    return cache;
   }
 
   createLinks() {
@@ -111,3 +126,20 @@ export class GraphqlUI {
 }
 
 GraphqlAspect.addRuntime(GraphqlUI);
+
+// TEMP!
+function getIdFromObject(o: IdGetterObj) {
+  switch (o.__typename) {
+    case 'Component':
+      return ComponentID.fromObject(o.id).toString();
+    case 'ComponentHost':
+      return 'ComponentHost';
+    case 'ComponentID':
+      return `id__${ComponentID.fromObject(o).toString()}`;
+    case 'ReactDocs':
+      return null;
+    default:
+      // @ts-ignore
+      return o.__id || o.id || null;
+  }
+}
