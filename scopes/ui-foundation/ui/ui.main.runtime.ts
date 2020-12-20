@@ -181,7 +181,7 @@ export class UiMain {
         console.error('bundling error:', browserBundle.compilation.errors, ssrBundle.compilation.errors);
       }
 
-      await uiServer.start({ port: targetPort, bundlingStats: browserBundle });
+      await uiServer.start({ port: targetPort });
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));

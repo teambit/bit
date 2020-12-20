@@ -7,10 +7,9 @@ import getPort from 'get-port';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
 import { join /* , extname */ } from 'path';
-import webpack, { Stats } from 'webpack';
+import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import { getWebpackAssets } from './webpack/get-webpack-assets';
-import { ssrRender } from './ssr-render';
+import { ssrRenderer } from './ssr-render';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
@@ -30,11 +29,6 @@ export type StartOptions = {
    * port for the UI server to bind. default is a port range of 4000-4200.
    */
   port?: number;
-
-  /**
-   * bundling result from webpack build
-   */
-  bundlingStats?: Stats;
 };
 
 export class UIServer {
@@ -75,26 +69,29 @@ export class UIServer {
   /**
    * start a UI server.
    */
-  async start({ port, bundlingStats }: StartOptions = {}) {
+  async start({ port }: StartOptions = {}) {
     const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
     const root = join(this.uiRoot.path, '/public');
-    const ssrBundlePath = join(this.uiRoot.path, '/public', 'ssr', 'bundle');
     const server = await this.graphql.createServer({ app });
 
     // set up preview proxy, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
 
+    const ssrMiddleware = await ssrRenderer({
+      rootPath: this.uiRoot.path,
+    });
+
+    if (ssrMiddleware) {
+      app.get('*', ssrMiddleware);
+      console.log('ssr served-ing at "*"');
+    } else {
+      console.error('ssr middleware failed construction');
+    }
+
     // pass through files from public /folder:
     app.use(express.static(root));
-    app.get(
-      '*',
-      await ssrRender({
-        entryFilePath: ssrBundlePath,
-        assets: getWebpackAssets(bundlingStats?.compilation),
-      })
-    );
 
     // in any and all other cases, serve index.html.
     // No any other endpoints past this will be execute
