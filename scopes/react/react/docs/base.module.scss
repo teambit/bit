@@ -47,3 +47,27 @@
     font-size: 14px;
   }
 }
+
+.mdx {
+  font-size: 14px;
+  // to allow user to control culumn alignment via mdx table
+  table,
+  th,
+  td,
+  tr,
+  thead {
+    text-align: start;
+    &[align='center'] {
+      text-align: center;
+    }
+    &[align='left'] {
+      text-align: start;
+    }
+    &[align='right'] {
+      text-align: end;
+    }
+  }
+  // > * {
+  //   margin-bottom: 16px;
+  // }
+}

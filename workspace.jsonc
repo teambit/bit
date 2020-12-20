@@ -103,6 +103,7 @@
         "@types/history": "^4.7.6",
         "@types/lodash": "4.14.165",
         "@types/lodash.head": "^4.0.6",
+        "@types/mdx-js__react": "1.5.3",
         "@types/mousetrap": "^1.6.3",
         "@types/node-fetch": "2.5.7",
         "@types/proper-lockfile": "^4.1.1",
