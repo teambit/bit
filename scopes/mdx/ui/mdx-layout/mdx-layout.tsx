@@ -1,41 +1,28 @@
-import React, { ReactNode, createContext, useContext } from 'react';
+import React, { ReactNode } from 'react';
 import { MDXProvider, mdx } from '@mdx-js/react';
-// import { ComponentID } from '@teambit/component-id';
-// import { ComponentContext } from '@teambit/component';
 import type { Sizes } from '@teambit/documenter.ui.heading';
-// import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
+import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Paragraph } from '@teambit/documenter.ui.paragraph';
-// import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
+import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-// import { ExternalLink } from '@teambit/documenter.routing.external-link';
-
+import { ExternalLink } from '@teambit/documenter.routing.external-link';
 import { Separator } from '@teambit/documenter.ui.separator';
-// import { Image } from '@teambit/evangelist.elements.image';
-// import { List } from '@teambit/documenter.ui.list';
-// import { Playground } from '@teambit/documenter.code.react-playground';
-
-import { Bold } from '../../../../../react-new-project/components/bold';
-import { Italic } from '../../../../../react-new-project/components/italic';
-import { Sup } from '../../../../../react-new-project/components/sup';
-import { Table } from '../../../../../react-new-project/components/base-table';
-// import { Pre } from '../../../../../react-new-project/components/pre';
-import { Tr } from '../../../../../react-new-project/components/tr';
-import { Td } from '../../../../../react-new-project/components/td';
-import { Ul } from '../../../../../react-new-project/components/ul';
-import { Ol } from '../../../../../react-new-project/components/ol';
-import { Image } from '../../../../../react-new-project/components/image';
-import { LinkedHeading } from '../../../../../react-new-project/components/linked-heading';
-import { BlockQuote } from '../../../../../react-new-project/components/block-quote';
-import { ExternalLink } from '../../../../../react-new-project/components/external-link';
-import { CodeSnippet } from '../../../../../react-new-project/components/code-snippet';
-import { Playground } from '../../../../../react-new-project/components/code/react-playground';
+import { Playground } from '@teambit/documenter.code.react-playground';
+import { Bold } from '@teambit/documenter.ui.bold';
+import { Italic } from '@teambit/documenter.ui.italic';
+import { Sup } from '@teambit/documenter.ui.sup';
+import { Table } from '@teambit/documenter.ui.table.base-table';
+import { Tr } from '@teambit/documenter.ui.table.tr';
+import { Td } from '@teambit/documenter.ui.table.td';
+import { Ul } from '@teambit/documenter.ui.ul';
+import { Ol } from '@teambit/documenter.ui.ol';
+import { Image } from '@teambit/documenter.ui.image';
+import { BlockQuote } from '@teambit/documenter.ui.block-quote';
 
 import styles from './mdx.module.scss';
 
 function createHeading(size: Sizes) {
   return function Heading({ children }: { children: ReactNode }) {
-    // const component = useContext(ComponentContext);
-    // console.log("component", component)
     return (
       <LinkedHeading className={styles.mdxLinkedHeading} size={size} link="">
         {children}
