@@ -2923,8 +2923,8 @@
                 "test": false
             },
             {
-                "name": "link-item.module.scss",
-                "relativePath": "link-item.module.scss",
+                "name": "item.compositions.tsx",
+                "relativePath": "item.compositions.tsx",
                 "test": false
             },
             {
@@ -7716,6 +7716,35 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "ui/surfaces/menu/item": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "item.compositions.tsx",
+                "relativePath": "item.compositions.tsx",
+                "test": false
+            },
+            {
+                "name": "item.module.scss",
+                "relativePath": "item.module.scss",
+                "test": false
+            },
+            {
+                "name": "item.tsx",
+                "relativePath": "item.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/surfaces/menu/item",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.228"

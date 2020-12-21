@@ -1,4 +1,9 @@
 .menuSection {
   padding: 16px 0;
   border-bottom: 1px solid var(--border-color);
+  font-size: var(--p-xs);
+
+  > * {
+    padding-left: 30px;
+  }
 }
