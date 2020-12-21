@@ -65,9 +65,6 @@ describe('Version', () => {
       it('should not have flattenedDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('flattenedDependencies');
       });
-      it('should not have flattenedDevDependencies property', () => {
-        expect(idParsed).to.not.haveOwnProperty('flattenedDevDependencies');
-      });
       it('should not have devPackageDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('devPackageDependencies');
       });
@@ -275,11 +272,6 @@ describe('Version', () => {
     it('should throw when a flattenDependency does not have a version', () => {
       version.flattenedDependencies[0] = version.flattenedDependencies[0].changeVersion(null);
       expect(validateFunc).to.throw('does not have a version');
-    });
-    it('should throw when a dependency is duplicated', () => {
-      version.devDependencies = version.dependencies;
-      version.flattenedDevDependencies = version.flattenedDependencies;
-      expect(validateFunc).to.throw(GeneralError);
     });
     it('should throw when the log is empty', () => {
       version.log = undefined;

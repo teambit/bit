@@ -61,7 +61,7 @@ function getComponentLinks({
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
-  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap, createNpmLinkFiles);
+  const flattenedDependencies: BitIds = component.flattenedDependencies;
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
     const getDependencyIdWithResolvedVersion = (): BitId => {
@@ -140,16 +140,6 @@ function _getDirectDependencies(
   return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
     ? component.dependencies.get()
     : component.getAllNonEnvsDependencies();
-}
-
-function _getFlattenedDependencies(
-  component: Component,
-  componentMap: ComponentMap,
-  createNpmLinkFiles: boolean
-): BitIds {
-  return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
-    ? component.flattenedDependencies
-    : BitIds.fromArray(component.getAllNonEnvsFlattenedDependencies());
 }
 
 function groupLinks(

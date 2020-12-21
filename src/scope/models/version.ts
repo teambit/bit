@@ -66,7 +66,6 @@ export type VersionProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
-  flattenedDevDependencies?: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies?: { [key: string]: string };
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -104,7 +103,6 @@ export default class Version extends BitObject {
   dependencies: Dependencies;
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
-  flattenedDevDependencies: BitIds;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageDependencies: { [key: string]: string };
@@ -138,7 +136,6 @@ export default class Version extends BitObject {
     this.ci = props.ci || {};
     this.specsResults = props.specsResults;
     this.flattenedDependencies = props.flattenedDependencies || new BitIds();
-    this.flattenedDevDependencies = props.flattenedDevDependencies || new BitIds();
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
@@ -253,7 +250,7 @@ export default class Version extends BitObject {
   }
 
   getAllFlattenedDependencies(): BitIds {
-    return BitIds.fromArray([...this.flattenedDependencies, ...this.flattenedDevDependencies]);
+    return BitIds.fromArray([...this.flattenedDependencies]);
   }
 
   getAllDependencies(): Dependency[] {
@@ -295,7 +292,6 @@ export default class Version extends BitObject {
       return BitIds.fromArray(updatedIds);
     };
     this.flattenedDependencies = getUpdated(this.flattenedDependencies);
-    this.flattenedDevDependencies = getUpdated(this.flattenedDevDependencies);
   }
 
   refs(): Ref[] {
@@ -394,7 +390,6 @@ export default class Version extends BitObject {
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map((dep) => dep.serialize()),
-        flattenedDevDependencies: this.flattenedDevDependencies.map((dep) => dep.serialize()),
         extensions: this.extensions.toModelObjects(),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
@@ -491,8 +486,16 @@ export default class Version extends BitObject {
       });
     };
 
-    const _getFlattenedDependencies = (deps = []): BitIds => {
-      return BitIds.fromArray(deps.map((dep) => BitId.parseBackwardCompatible(dep)));
+    const _getFlattenedDependencies = (deps = []): BitId[] => {
+      return deps.map((dep) => BitId.parseBackwardCompatible(dep));
+    };
+
+    const _groupFlattenedDependencies = () => {
+      // support backward compatibility. until v15, there was both flattenedDependencies and
+      // flattenedDevDependencies. since then, these both were grouped to one flattenedDependencies
+      const flattenedDeps = _getFlattenedDependencies(flattenedDependencies);
+      const flattenedDevDeps = _getFlattenedDependencies(flattenedDevDependencies);
+      return BitIds.fromArray([...flattenedDeps, ...flattenedDevDeps]);
     };
 
     const parseFile = (file) => {
@@ -545,8 +548,7 @@ export default class Version extends BitObject {
       docs,
       dependencies: _getDependencies(dependencies),
       devDependencies: _getDependencies(devDependencies),
-      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
-      flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
+      flattenedDependencies: _groupFlattenedDependencies(),
       devPackageDependencies,
       peerPackageDependencies,
       compilerPackageDependencies,
@@ -627,7 +629,6 @@ export default class Version extends BitObject {
         testerDynamicPakageDependencies || {}
       ),
       flattenedDependencies: component.flattenedDependencies,
-      flattenedDevDependencies: component.flattenedDevDependencies,
       schema: component.schema,
       customResolvedPaths: component.customResolvedPaths,
       overrides: component.overrides.componentOverridesData,

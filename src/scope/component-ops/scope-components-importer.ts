@@ -196,10 +196,8 @@ export default class ScopeComponentsImporter {
       } found, going to collect its dependencies`
     );
     const dependencies = await this.importManyWithoutDependencies(version.flattenedDependencies);
-    const devDependencies = await this.importManyWithoutDependencies(version.flattenedDevDependencies);
-    const extensionsDependencies = await this.importManyWithoutDependencies(version.extensions.extensionsBitIds);
 
-    return new VersionDependencies(versionComp, dependencies, devDependencies, extensionsDependencies, source);
+    return new VersionDependencies(versionComp, dependencies, [], [], source);
   }
 
   async componentsToComponentsObjects(

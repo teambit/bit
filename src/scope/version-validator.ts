@@ -239,12 +239,6 @@ export default function validateVersionInstance(version: Version): void {
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
-  // @todo: temporarily disable this validation. we need to figure out whether we want all flattened
-  // grouped into one prop.
-
-  // if (!version.devDependencies.isEmpty() && !version.flattenedDevDependencies.length) {
-  //   throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
-  // }
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
     dependencies.forEach((dependency) => {
@@ -259,7 +253,6 @@ export default function validateVersionInstance(version: Version): void {
     });
   };
   validateFlattenedDependencies(version.flattenedDependencies);
-  validateFlattenedDependencies(version.flattenedDevDependencies);
   // extensions can be duplicate with other dependencies type. e.g. "test" can have "compile" as a
   // dependency and extensionDependency. we can't remove it from extDep, otherwise, the ext won't
   // be running
