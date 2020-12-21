@@ -5,7 +5,7 @@ import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
-import syntaxHighlighter from 'consolehighlighter';
+import highlight from 'cli-highlight';
 import { PubSub } from 'graphql-subscriptions';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Tester, Tests, CallbackFn } from './tester';
@@ -72,7 +72,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
         <Newline />
         <Text>
           {/* refactor a separate component which highlights for cli */}
-          {syntaxHighlighter.highlight(descriptor?.config, 'javascript')}
+          {highlight(descriptor?.config || '', {language: 'javascript', ignoreIllegals: true})}
         </Text>
         <Newline />
       </Text>
