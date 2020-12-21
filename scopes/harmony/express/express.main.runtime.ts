@@ -118,6 +118,7 @@ export class ExpressMain {
 
   private verbValidation(route: Route): Middleware {
     return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (!route.verb) return next();
       const verb = req.headers['x-verb'] || Verb.READ;
       if (verb !== route.verb) {
         res.status(403);
