@@ -5,7 +5,7 @@ import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
 import { Paragraph } from '@teambit/documenter.ui.paragraph';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-import { ExternalLink } from '@teambit/documenter.routing.external-link';
+import { ExternalLink, ExternalLinkProps } from '@teambit/documenter.routing.external-link';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { Playground } from '@teambit/documenter.code.react-playground';
 import { Bold } from '@teambit/documenter.ui.bold';
@@ -46,11 +46,11 @@ function Snippet({ children, live }: { live: string; children: string }) {
   return <CodeSnippet>{children}</CodeSnippet>;
 }
 
-function Link(props) {
+function Link(props: ExternalLinkProps) {
   return <ExternalLink {...props} className={styles.link} />;
 }
 
-function P({ children }) {
+function P({ children }: { children: ReactNode }) {
   return (
     <Paragraph size="xs" className={styles.mdxParagraph}>
       {children}
