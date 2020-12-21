@@ -23,7 +23,9 @@ import Version from './models/version';
  * make sure a Version instance is correct. throw an exceptions if it is not.
  */
 export default function validateVersionInstance(version: Version): void {
-  const message = 'unable to save Version object';
+  const message = `unable to save Version object${
+    version.componentId ? ` of "${version.componentId.toString()}"` : ''
+  }`;
   const validateBitId = (bitId: BitId, field: string, validateVersion = true, validateScope = true) => {
     if (validateVersion && !bitId.hasVersion()) {
       throw new VersionInvalid(`${message}, the ${field} ${bitId.toString()} does not have a version`);
@@ -237,9 +239,12 @@ export default function validateVersionInstance(version: Version): void {
   if (!version.dependencies.isEmpty() && !version.flattenedDependencies.length) {
     throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
   }
-  if (!version.devDependencies.isEmpty() && !version.flattenedDevDependencies.length) {
-    throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
-  }
+  // @todo: temporarily disable this validation. we need to figure out whether we want all flattened
+  // grouped into one prop.
+
+  // if (!version.devDependencies.isEmpty() && !version.flattenedDevDependencies.length) {
+  //   throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
+  // }
   const validateFlattenedDependencies = (dependencies: BitIds) => {
     validateType(message, dependencies, 'dependencies', 'array');
     dependencies.forEach((dependency) => {

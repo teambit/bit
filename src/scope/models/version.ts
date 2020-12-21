@@ -84,6 +84,7 @@ export type VersionProps = {
   parents?: Ref[];
   extensions?: ExtensionDataList;
   buildStatus?: BuildStatus;
+  componentId?: BitId;
 };
 
 /**
@@ -120,6 +121,7 @@ export default class Version extends BitObject {
   parents: Ref[];
   extensions: ExtensionDataList;
   buildStatus?: BuildStatus;
+  componentId?: BitId; // can help debugging errors when validating Version object
 
   constructor(props: VersionProps) {
     super();
@@ -152,6 +154,7 @@ export default class Version extends BitObject {
     this.parents = props.parents || [];
     this.extensions = props.extensions || ExtensionDataList.fromArray([]);
     this.buildStatus = props.buildStatus;
+    this.componentId = props.componentId;
     this.validateVersion();
   }
 
@@ -632,6 +635,7 @@ export default class Version extends BitObject {
       packageJsonChangedProps: component.packageJsonChangedProps,
       extensions: component.extensions,
       buildStatus: component.buildStatus,
+      componentId: component.id,
     });
     if (isHash(component.version)) {
       version._hash = component.version as string;
