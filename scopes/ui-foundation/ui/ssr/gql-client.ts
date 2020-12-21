@@ -8,13 +8,22 @@ import { ComponentID } from '@teambit/component';
 // WORK IN PROGRESS
 // this will move to gql aspect
 
-export function makeSsrGqlClient() {
+// WIP
+const serverUrl = 'http://localhost:3000/graphql';
+
+type GqlClientOptions = {
+  cookie?: any;
+};
+
+export function makeSsrGqlClient({ cookie }: GqlClientOptions = {}) {
   const client = new ApolloClient({
     ssrMode: true,
     link: createHttpLink({
       credentials: 'same-origin',
-      uri: 'http://localhost:3000/graphql',
-      headers: {},
+      uri: serverUrl,
+      headers: {
+        cookie,
+      },
       fetch: crossFetch,
     }),
     cache: new InMemoryCache({

@@ -15,7 +15,8 @@ import { Compose } from './compose';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
-import { Html, Assets } from './ssr/html';
+import { Html } from './ssr/html';
+import type { SsrContent } from './ssr/ssr-content';
 // WIP!
 import { makeSsrGqlClient, getGqlProvider } from './ssr/gql-client';
 
@@ -61,7 +62,7 @@ export class UiUI {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
     const uiRoot = rootFactory();
-    const routes = this.router.renderRoutes(uiRoot.routes);
+    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: window.location.href });
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 
@@ -79,17 +80,17 @@ export class UiUI {
   }
 
   // WORK IN PROGRESS.
-  renderSsr(rootExtension: string, assets: Assets) {
+  renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
     const GraphqlProvider = getGqlProvider();
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
     const uiRoot = rootFactory();
-    const routes = this.router.renderRoutes(uiRoot.routes);
+    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: browser?.location.href });
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 
-    const client = makeSsrGqlClient();
+    const client = makeSsrGqlClient({ cookie: browser?.cookie });
 
     const app = (
       <GraphqlProvider client={client}>

@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import * as fs from 'fs-extra';
+import { requestToObj } from './request-browser';
+import { SsrContent } from './ssr-content';
 
 const staticFiles = /\.(ico|js|css|html|js\.map|css\.map|LICENCE.txt)$/;
 
@@ -39,6 +41,8 @@ export async function ssrRenderer({ rootPath }: ssrRenderProps) {
   return function ssrRenderingMiddleware(req: Request, res: Response, next: NextFunction) {
     const { query, url } = req;
 
+    const browser = requestToObj(req);
+
     // TODO - ssr Middelware should run after static files middleware
     if (staticFiles.test(url)) {
       next();
@@ -52,7 +56,8 @@ export async function ssrRenderer({ rootPath }: ssrRenderProps) {
     }
 
     console.log('ssr', url);
-    Promise.resolve(render(assets))
+    const content: SsrContent = { assets, browser };
+    Promise.resolve(render(content))
       .then((rendered) => {
         res.send(rendered);
       })

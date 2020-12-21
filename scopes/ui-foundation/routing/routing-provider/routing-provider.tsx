@@ -16,10 +16,14 @@ export interface Routing {
   useLocation: <State>() => Location<State>;
 }
 
+// this is just a fallback,
+// will only be used if run outside of react-router and the browser
+const defaultLocation = { pathname: '/', search: '', hash: '' };
+
 const defaultRouting: Routing = {
   Link: NativeLink,
   NavLink: NativeNavLink,
-  useLocation: () => window.location,
+  useLocation: () => (typeof window !== 'undefined' ? window.location : defaultLocation),
 };
 
 const RoutingContext = createContext<Routing>(defaultRouting);

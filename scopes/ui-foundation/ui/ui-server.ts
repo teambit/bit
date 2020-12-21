@@ -9,7 +9,7 @@ import httpProxy from 'http-proxy';
 import { join /* , extname */ } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import { ssrRenderer } from './ssr-render';
+import { ssrRenderer } from './ssr/render-middleware';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
