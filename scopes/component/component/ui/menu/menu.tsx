@@ -3,6 +3,7 @@ import { MainDropdown, MenuItemSlot } from '@teambit/ui.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/ui.version-dropdown';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import { Link } from '@teambit/ui.routing.link';
 import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
@@ -51,6 +52,7 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
           <ImportAction
             componentName={component.id.name}
             bitLink={component.id.toString()}
+            Link={(props) => <Link {...props} />}
             packageLink={component.packageName}
             registryName={component.packageName.split('/')[0]}
           />

@@ -7,6 +7,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
 import Component from '../../consumer/component/consumer-component';
 import GeneralError from '../../error/general-error';
+import logger from '../../logger/logger';
 import { buildComponentsGraphCombined } from '../graph/components-graph';
 import Graph from '../graph/graph';
 import VersionDependencies from '../version-dependencies';
@@ -41,6 +42,7 @@ export class FlattenedDependenciesGetter {
    * if there is even only one devDependency in the chain, then it's a devDependency.
    */
   async populateFlattenedDependencies() {
+    logger.debug(`populateFlattenedDependencies starts with ${this.components.length} components`);
     this.createGraphs(this.components);
     await this.importExternalDependenciesInBulk();
     await mapSeries(this.components, async (component) => {

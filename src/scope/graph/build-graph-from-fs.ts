@@ -47,11 +47,9 @@ export class GraphFromFsBuilder {
    * we keep performance sane as the importMany doesn't run multiple time and therefore the round
    * trips to the remotes are minimal.
    */
-  async buildGraph(components: Component[]): Promise<Graph> {
-    logger.debug(`GraphFromFsBuilder, buildGraph with ${components.length} seeders`);
-    components.forEach((c) => {
-      this.graph.setNode(c.id.toString(), c);
-    });
+  async buildGraph(ids: BitId[]): Promise<Graph> {
+    logger.debug(`GraphFromFsBuilder, buildGraph with ${ids.length} seeders`);
+    const components = await this.loadManyComponents(ids, '<none>');
     await this.processManyComponents(components);
     return this.graph;
   }
@@ -73,25 +71,25 @@ export class GraphFromFsBuilder {
   }
 
   private async processOneComponent(component: Component) {
-    const compId = component.id;
-    if (this.completed.includes(compId.toString())) return [];
+    const idStr = component.id.toString();
+    if (this.completed.includes(idStr)) return [];
     const allIds = this.getAllDeps(component);
 
-    const allDependencies = await this.loadManyComponents(allIds, compId);
+    const allDependencies = await this.loadManyComponents(allIds, idStr);
     Object.entries(component.depsIdsGroupedByType).forEach(([depType, depsIds]) => {
       depsIds.forEach((depId) => {
         if (this.ignoreIds.has(depId)) return;
         if (!this.graph.hasNode(depId.toString())) {
           throw new Error(`buildOneComponent: missing node of ${depId.toString()}`);
         }
-        this.graph.setEdge(compId.toString(), depId.toString(), depType);
+        this.graph.setEdge(idStr, depId.toString(), depType);
       });
     });
-    this.completed.push(compId.toString());
+    this.completed.push(idStr);
     return allDependencies;
   }
 
-  private async loadManyComponents(componentsIds: BitId[], dependenciesOf: BitId): Promise<Component[]> {
+  private async loadManyComponents(componentsIds: BitId[], dependenciesOf: string): Promise<Component[]> {
     return mapSeries(componentsIds, async (comp: BitId) => {
       const idStr = comp.toString();
       const fromGraph = this.graph.node(idStr);
@@ -103,10 +101,10 @@ export class GraphFromFsBuilder {
       } catch (err) {
         if (err instanceof ComponentNotFound) {
           throw new GeneralError(
-            `error: component "${idStr}" was not found.\nthis component is a dependency of "${dependenciesOf.toString()}" and is needed as part of the graph generation`
+            `error: component "${idStr}" was not found.\nthis component is a dependency of "${dependenciesOf}" and is needed as part of the graph generation`
           );
         }
-        logger.error(`failed loading dependencies of ${dependenciesOf.toString()}`);
+        logger.error(`failed loading dependencies of ${dependenciesOf}`);
         throw err;
       }
     });

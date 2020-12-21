@@ -39,6 +39,7 @@ import InjectConf from './commands/public-cmds/inject-conf-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import Lane from './commands/public-cmds/lane-cmd';
 import Link from './commands/public-cmds/link-cmd';
+import Dependents from './commands/public-cmds/dependents-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Login from './commands/public-cmds/login-cmd';
@@ -86,6 +87,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatComponent(),
       new CatLane(),
+      new Dependents(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
