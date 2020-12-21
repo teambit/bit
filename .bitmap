@@ -4569,6 +4569,11 @@
                 "name": "mdx-layout.tsx",
                 "relativePath": "mdx-layout.tsx",
                 "test": false
+            },
+            {
+                "name": "mdx.module.scss",
+                "relativePath": "mdx.module.scss",
+                "test": false
             }
         ],
         "mainFile": "index.ts",
