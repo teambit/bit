@@ -571,6 +571,7 @@ jobs:
           root: .
           paths:
             - bit/.git/bit
+            - bit/.bitmap
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
