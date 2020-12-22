@@ -45,9 +45,6 @@ describe('dev-dependencies functionality', function () {
       it('should not save the dev-dependencies because they are the same as dependencies', () => {
         expect(barFoo.devDependencies).to.be.an('array').that.is.empty;
       });
-      it('should not save the anything to flattened-dev-dependencies', () => {
-        expect(barFoo.flattenedDevDependencies).to.be.an('array').that.is.empty;
-      });
       it('should save "chai" in the dev-packages because it is only required in the tests files', () => {
         expect(barFoo.devPackageDependencies).to.be.an('object').that.has.property('chai');
       });
@@ -100,9 +97,9 @@ describe('foo', () => {
         expect(barFoo.devDependencies).to.be.an('array').that.have.lengthOf(1);
         expect(barFoo.devDependencies[0].id).to.deep.equal({ name: 'utils/is-string', version: '0.0.1' });
       });
-      it('should save the flattened-dev-dependencies', () => {
-        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
-        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      it('should save the flattened-dependencies', () => {
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save "chai" in the dev-packages', () => {
         expect(barFoo.devPackageDependencies).to.be.an('object').that.has.property('chai');
@@ -113,8 +110,8 @@ describe('foo', () => {
       it('should not save anything into dependencies', () => {
         expect(barFoo.dependencies).to.be.an('array').that.is.empty;
       });
-      it('should not save anything into flattened-dependencies', () => {
-        expect(barFoo.flattenedDependencies).to.be.an('array').that.is.empty;
+      it('should save the flattened dev-dependencies into flattened-dependencies', () => {
+        expect(barFoo.flattenedDependencies).to.be.an('array').with.lengthOf(2);
       });
       it('bit status should not show any component as modified', () => {
         const output = helper.command.runCmd('bit status');
@@ -196,11 +193,11 @@ describe('foo', () => {
     it('bit status should show a clean state', () => {
       helper.command.expectStatusToBeClean();
     });
-    it('the nested dev-dependency and nested prod of the nested dev-dependency should be saved in the flattenedDevDependencies', () => {
+    it('the nested dev-dependency and nested prod of the nested dev-dependency should be saved in the flattenedDependencies', () => {
       const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-      expect(barFoo.flattenedDevDependencies).to.have.lengthOf(2);
-      const names = barFoo.flattenedDevDependencies.map((d) => d.name);
-      expect(names).to.deep.equal(['utils/is-type', 'baz']);
+      expect(barFoo.flattenedDependencies).to.have.lengthOf(3);
+      const names = barFoo.flattenedDependencies.map((d) => d.name);
+      expect(names).to.deep.equal(['utils/is-string', 'utils/is-type', 'baz']);
     });
   });
   // (bar ->(dev)-> is-string ->(dev)->is-type
@@ -228,9 +225,9 @@ describe('foo', () => {
 
       helper.command.tagAllComponents();
     });
-    it('the flattened dependencies should contain the entire chain of the devDependencies', () => {
+    it('the flattened dependencies should contain the entire chain of the dependencies', () => {
       const barFoo = helper.command.catComponent('bar/foo@latest');
-      const names = barFoo.flattenedDevDependencies.map((d) => d.name);
+      const names = barFoo.flattenedDependencies.map((d) => d.name);
       expect(names).to.include('utils/is-type');
       expect(names).to.include('utils/is-string');
     });
@@ -255,8 +252,8 @@ describe('foo', () => {
       expect(barFoo.devDependencies).to.have.lengthOf(1);
       expect(barFoo.devDependencies[0].id.name).to.equal('utils/is-string');
     });
-    it('should include the prod dependencies inside flattenedDevDependencies', () => {
-      expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+    it('should include the prod dependencies inside flattenedDependencies', () => {
+      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
     });
   });
 });
