@@ -2923,11 +2923,6 @@
                 "test": false
             },
             {
-                "name": "item.compositions.tsx",
-                "relativePath": "item.compositions.tsx",
-                "test": false
-            },
-            {
                 "name": "link-item.tsx",
                 "relativePath": "link-item.tsx",
                 "test": false
@@ -7747,5 +7742,5 @@
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.228"
+    "version": "14.8.9-dev.229"
 }
