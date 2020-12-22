@@ -110,8 +110,8 @@ describe('foo', () => {
       it('should not save anything into dependencies', () => {
         expect(barFoo.dependencies).to.be.an('array').that.is.empty;
       });
-      it('should not save anything into flattened-dependencies', () => {
-        expect(barFoo.flattenedDependencies).to.be.an('array').that.is.empty;
+      it('should save the flattened dev-dependencies into flattened-dependencies', () => {
+        expect(barFoo.flattenedDependencies).to.be.an('array').with.lengthOf(2);
       });
       it('bit status should not show any component as modified', () => {
         const output = helper.command.runCmd('bit status');
@@ -195,9 +195,9 @@ describe('foo', () => {
     });
     it('the nested dev-dependency and nested prod of the nested dev-dependency should be saved in the flattenedDependencies', () => {
       const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-      expect(barFoo.flattenedDependencies).to.have.lengthOf(2);
+      expect(barFoo.flattenedDependencies).to.have.lengthOf(3);
       const names = barFoo.flattenedDependencies.map((d) => d.name);
-      expect(names).to.deep.equal(['utils/is-type', 'baz']);
+      expect(names).to.deep.equal(['utils/is-string', 'utils/is-type', 'baz']);
     });
   });
   // (bar ->(dev)-> is-string ->(dev)->is-type

@@ -4,7 +4,6 @@ import R from 'ramda';
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
 import versionFixture from '../../../fixtures/version-model-object.json';
 import { SchemaName } from '../../consumer/component/component-schema';
-import GeneralError from '../../error/general-error';
 import Version from '../../scope/models/version';
 
 const getVersionWithDepsFixture = () => {
