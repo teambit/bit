@@ -86,7 +86,9 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
 
         {Content.isMDXComponent ? (
           <MDXLayout>
-            <Content />
+            <div className={styles.mdx}>
+              <Content />
+            </div>
           </MDXLayout>
         ) : (
           <Content />

@@ -92,3 +92,11 @@ bin/bit
 # package managers
 pnpm-lock.yaml
 yarn.lock
+
+# yarn2 (as suggested here https://yarnpkg.com/getting-started/qa)
+.yarn/*
+!.yarn/cache
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions

@@ -93,9 +93,9 @@ describe('harmony extension config', function () {
           it('should not insert extensions into the component dev deps', () => {
             expect(componentModel.devDependencies).to.be.of.length(0);
           });
-          it('should insert extensions flattened dependencies into the component dev flattened dependencies', () => {
-            expect(componentModel.flattenedDevDependencies).to.be.of.length(1);
-            expect(componentModel.flattenedDevDependencies[0].name).to.equal('dummy-extension');
+          it('should insert extensions flattened dependencies into the component flattened dependencies', () => {
+            expect(componentModel.flattenedDependencies).to.be.of.length(1);
+            expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension');
           });
           it('should auto tag the component when tagging the extension again', () => {
             output = helper.command.tagComponent('dummy-extension', 'message', '-f');

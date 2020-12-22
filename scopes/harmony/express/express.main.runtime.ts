@@ -6,7 +6,7 @@ import { concat, flatten, lowerCase } from 'lodash';
 import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
-import { Middleware, Request, Response, Route } from './types';
+import { Middleware, Request, Response, Route, Verb } from './types';
 import { MiddlewareManifest } from './middleware-manifest';
 
 export type ExpressConfig = {
@@ -103,14 +103,29 @@ export class ExpressMain {
   private createRoutes() {
     const routesSlots = this.moduleSlot.toArray();
     const routeEntries = routesSlots.map(([, routes]) => {
-      return routes.map((route) => ({
-        method: lowerCase(route.method),
-        path: route.route,
-        middlewares: route.middlewares,
-      }));
+      return routes.map((route) => {
+        const middlewares = flatten([this.verbValidation(route), route.middlewares]);
+        return {
+          method: lowerCase(route.method),
+          path: route.route,
+          middlewares,
+        };
+      });
     });
 
     return flatten(routeEntries);
+  }
+
+  private verbValidation(route: Route): Middleware {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (!route.verb) return next();
+      const verb = req.headers['x-verb'] || Verb.READ;
+      if (verb !== route.verb) {
+        res.status(403);
+        return res.jsonp({ message: 'You are not authorized', error: 'forbidden' });
+      }
+      return next();
+    };
   }
 
   private catchErrorsMiddlewares(middlewares: Middleware[]) {

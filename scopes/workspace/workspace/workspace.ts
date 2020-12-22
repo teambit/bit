@@ -327,7 +327,9 @@ export class Workspace implements ComponentFactory {
     const seedersStr = seederIdsWithVersions.map((s) => s.toString());
     const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
     const consumerComponents = compsAndDeps.filter((c) =>
-      this.consumer.bitMap.getComponentIfExist(c.id, { ignoreVersion: true })
+      // do not ignore the version here. a component might be in .bitmap with one version and
+      // installed as a package with another version. we don't want them both.
+      this.consumer.bitMap.getComponentIfExist(c.id)
     );
     const ids = await this.resolveMultipleComponentIds(consumerComponents.map((c) => c.id));
     const components = await this.getMany(ids, true);
@@ -369,7 +371,7 @@ export class Workspace implements ComponentFactory {
       return new AspectEntry(await this.resolveComponentId(entry.id), entry);
     });
 
-    const entries = await Promise.all(entiresP);
+    const entries: AspectEntry[] = await Promise.all(entiresP);
     return this.componentAspect.createAspectListFromEntries(entries);
   }
 

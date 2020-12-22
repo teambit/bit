@@ -65,10 +65,11 @@ export class ShowCmd implements Command {
 
     const headers = [
       {
-        width: 65,
+        width: 35,
         color: 'cyan',
       },
       {
+        width: 150,
         alias: 'content',
       },
     ];

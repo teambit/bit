@@ -3,6 +3,7 @@ import { MainDropdown, MenuItemSlot } from '@teambit/ui.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/ui.version-dropdown';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import { Link } from '@teambit/ui.routing.link';
 import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
 import React, { useMemo } from 'react';
@@ -37,7 +38,6 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
     ?.toArray()
     .map((tag) => tag?.version?.version)
     .reverse();
-  const componentFullName = component?.id?.toString();
 
   return (
     <div className={classnames(styles.topBar, className)}>
@@ -49,7 +49,13 @@ export function Menu({ navigationSlot, widgetSlot, className, host, menuItemSlot
           <MenuNav navigationSlot={widgetSlot} />
         </div>
         {versionList.length > 0 && (
-          <ImportAction copyLink={`bit import ${componentFullName}`} componentName={component.id.name} />
+          <ImportAction
+            componentName={component.id.name}
+            bitLink={component.id.toString()}
+            Link={(props) => <Link {...props} />}
+            packageLink={component.packageName}
+            registryName={component.packageName.split('/')[0]}
+          />
         )}
         <VersionDropdown versions={versionList} currentVersion={component.version} />
         {/* <span className={styles.widget}>
