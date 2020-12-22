@@ -85,7 +85,6 @@ export type ComponentProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
-  flattenedDevDependencies?: BitIds;
   packageDependencies?: Record<string, any>;
   devPackageDependencies?: Record<string, any>;
   peerPackageDependencies?: Record<string, any>;
@@ -139,7 +138,6 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
-  flattenedDevDependencies: BitIds;
   packageDependencies: any;
   devPackageDependencies: any;
   peerPackageDependencies: any;
@@ -207,7 +205,6 @@ export default class Component {
     dependencies,
     devDependencies,
     flattenedDependencies,
-    flattenedDevDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -245,7 +242,6 @@ export default class Component {
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
-    this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
@@ -412,11 +408,7 @@ export default class Component {
   }
 
   getAllFlattenedDependencies(): BitId[] {
-    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
-  }
-
-  getAllNonEnvsFlattenedDependencies(): BitId[] {
-    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
+    return [...this.flattenedDependencies];
   }
 
   /**
@@ -901,13 +893,11 @@ export default class Component {
     };
 
     const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
-    const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
-    const extensionDependencies = await getDependenciesComponents(this.extensions.extensionsBitIds);
     return new ComponentWithDependencies({
       component: this,
       dependencies,
-      devDependencies,
-      extensionDependencies,
+      devDependencies: [],
+      extensionDependencies: [],
     });
   }
 
