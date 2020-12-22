@@ -28,7 +28,8 @@ export function NativeNavLink({
   className,
   ...rest
 }: NavLinkProps) {
-  const activeHref = window.location.href;
+  // TODO - consider using getLocation()
+  const activeHref = typeof window !== 'undefined' ? window.location.href : '/';
 
   const isActive = useMemo(() => rest.href && compareUrl(activeHref, rest.href), [
     exact,

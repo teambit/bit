@@ -12,6 +12,7 @@ import { SearchProvider, Keybinding, CommandHandler, CommandId } from './types';
 import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
 import { CommandBarContext } from './ui/command-bar-context';
+import { MousetrapStub } from './mousetrap-stub';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
@@ -26,7 +27,7 @@ export type CommandEntry = {
 
 /** Quick launch actions. Use the `addSearcher` slot to extend the available actions */
 export class CommandBarUI {
-  private mousetrap = new Mousetrap();
+  private mousetrap = typeof window !== 'undefined' ? new Mousetrap() : new MousetrapStub();
   private commandSearcher = new CommandSearcher([]);
 
   /** Opens the command bar */

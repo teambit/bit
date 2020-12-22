@@ -26,21 +26,16 @@ export class PubsubPreview {
       });
   }
 
-  // TODO[uri]: need to run on every possibility of adding new IFrames
-  // TODO[uri]: Role back to 'focus' event?
-  public async updateParentPubsubWithRetry() {
+  public init = () => {
     window.addEventListener('load', () => {
-      this.init();
-    });
-  }
 
-  public init() {
-    const _this = this;
-    // Making sure parent call connect-to-child before the child call connect-to-parent
-    setTimeout(() => {
-      _this.updateParentPubsub();
-    }, 0);
-  }
+      // Making sure parent call connect-to-child before the child call connect-to-parent
+      // (not sure if its needed anymore)
+      setTimeout(() => {
+        this.updateParentPubsub();
+      }, 0);
+    });
+  };
 
   public sub(topicUUID, callback) {
     if (this._parentPubsub) {
@@ -58,7 +53,10 @@ export class PubsubPreview {
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
-    await pubsubPreview.updateParentPubsubWithRetry();
+    if (typeof window !== 'undefined') {
+      pubsubPreview.init();
+    }
+
     return pubsubPreview;
   }
 }

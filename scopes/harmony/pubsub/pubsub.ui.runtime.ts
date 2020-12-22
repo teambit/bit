@@ -52,6 +52,7 @@ export class PubsubUI {
     this.updateConnectionsList();
     const config = { childList: true, subtree: true };
 
+    // TODO - consider collecting iframes using a react context, instead of using MutationObserver
     const observer = new MutationObserver((e: MutationRecord[]) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const addedIframes = e
@@ -76,7 +77,9 @@ export class PubsubUI {
 
   static async provider() {
     const pubsubUI = new PubsubUI();
-    await pubsubUI.updateConnectionListWithRetry();
+    if (typeof window !== 'undefined') {
+      await pubsubUI.updateConnectionListWithRetry();
+    }
     return pubsubUI;
   }
 }

@@ -48,7 +48,7 @@ export class ComponentUI {
 
     private commandBarUI: CommandBarUI
   ) {
-    this.registerPubSub();
+    if (typeof window !== 'undefined') this.registerPubSub();
   }
 
   /**

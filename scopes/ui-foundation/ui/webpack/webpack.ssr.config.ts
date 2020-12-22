@@ -431,6 +431,11 @@ export default function createWebpackConfig(workspaceDir: string, entryFiles: st
       ],
     },
     plugins: [
+      // TODO - substitute mutation-observer
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^mutation-observer$/,
+      }),
+
       // new HtmlWebpackPlugin(
       //   Object.assign(
       //     {},
