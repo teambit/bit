@@ -572,6 +572,7 @@ jobs:
           paths:
             - bit/.git/bit
             - bit/.bitmap
+            - bit/workspace.jsonc
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
