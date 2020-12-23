@@ -148,7 +148,7 @@
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
         "classnames": "^2.2.6",
-        "cleargraph": "^5.8.0",
+        "cleargraph": "^7.0.0",
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "copy-to-clipboard": "^3.3.1",
