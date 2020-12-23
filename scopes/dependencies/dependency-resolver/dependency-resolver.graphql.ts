@@ -56,12 +56,12 @@ export function dependencyResolverSchema(dependencyResolver: DependencyResolverM
 
       extend type Component {
         dependencies: [Dependency]
-        policies: [Policy]
+        componentPolicy: [Policy]
       }
     `,
     resolvers: {
       Component: {
-        policies: async (component: Component) => {
+        componentPolicy: async (component: Component) => {
           const variantPolicy = await dependencyResolver.getPolicy(component);
           return variantPolicy.serialize();
         },
