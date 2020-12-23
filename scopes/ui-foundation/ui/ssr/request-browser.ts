@@ -10,13 +10,44 @@ export type BrowserData = {
     body: any;
   };
   location: {
-    baseUrl: string;
+    /** hostname + port
+     * @example localhost:3000
+     */
+    host: string;
+    /**
+     * @example localhost
+     */
     hostname: string;
-    query: ParsedQuery;
-    // search: string;
-    pathname: string;
-    protocol: string;
+    /** full url
+     * @example http://localhost:3000/components?q=button
+     */
     href: string;
+    /** full url without query
+     * @example http://localhost:3000/components
+     */
+    origin: string;
+    /**
+     * @example /component
+     */
+    pathname: string;
+    /**
+     * @example 3000
+     */
+    port: number;
+    /**
+     * @example http
+     */
+    protocol: string;
+    /**
+     * parsed search params
+     * @example { one: 1, two: [2,3]}
+     */
+    query: ParsedQuery;
+    /**
+     * full resource path, including query, without hostname
+     * @example /components?q=button
+     */
+    url: string;
   };
   cookie?: string;
 };
@@ -25,6 +56,8 @@ export type BrowserData = {
  * extract relevant information from Express request.
  */
 export function requestToObj(req: Request) {
+  const port = 3000; // TODO
+
   const browser: BrowserData = {
     connection: {
       secure: req.secure,
@@ -33,15 +66,15 @@ export function requestToObj(req: Request) {
     },
     // trying to match to browser.location
     location: {
-      baseUrl: req.baseUrl,
-      // host: req.host, // deprecated
+      host: `${req.hostname}:${port}`,
       hostname: req.hostname,
-      query: req.query,
+      href: `${req.protocol}://${req.hostname}:${port}${req.url}`,
+      origin: `${req.protocol}://${req.hostname}:${port}`,
       pathname: req.path,
-      protocol: req.protocol,
-      href: req.url, // complete url
-      // hash: ''
-      // port: ''
+      port, // TODO
+      protocol: `${req.protocol}:`,
+      query: req.query,
+      url: req.url,
     },
     cookie: req.header('Cookie'),
   };

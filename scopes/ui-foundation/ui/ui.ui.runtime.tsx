@@ -17,8 +17,6 @@ import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
 import { Html } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
-// WIP!
-import { makeSsrGqlClient, getGqlProvider } from './ssr/gql-client';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
@@ -81,16 +79,21 @@ export class UiUI {
 
   // WORK IN PROGRESS.
   renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
-    const GraphqlProvider = getGqlProvider();
+    const GraphqlProvider = this.graphql.getSsrProvider();
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
     const uiRoot = rootFactory();
-    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: browser?.location.href });
+    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: browser?.location.url });
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 
-    const client = makeSsrGqlClient({ cookie: browser?.cookie });
+    // maybe we should use internal url?
+    const serverUrl = browser?.location.origin
+      ? `${browser?.location.origin}/graphql`
+      : 'http://localhost:3000/graphql';
+
+    const client = this.graphql.createSsrClient({ serverUrl, cookie: browser?.cookie });
 
     const app = (
       <GraphqlProvider client={client}>
