@@ -29,6 +29,6 @@ Overview.examples = [
     },
     title: 'long string',
     description: 'long string with ellipsis displayed',
-    jsx: <Ellipsis className={styles['input-width']}>Looooooooooooooong string</Ellipsis>,
+    jsx: <Ellipsis className={styles['div-width']}>Looooooooooooooong string</Ellipsis>,
   },
 ];
