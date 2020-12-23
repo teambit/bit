@@ -280,16 +280,15 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainDistFile,
     });
-    // $FlowFixMe it's ok to override the pendingVersion attribute
-    consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
+    consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
 
     return { version, files, dists, compilerFiles, testerFiles };
   }
 
   async enrichSource(consumerComponent: ConsumerComponent) {
     const objectRepo = this.objects();
-    const component = await this.findOrAddComponent(consumerComponent);
-    const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
+    const version = consumerComponent.pendingVersion;
+    if (!version) throw new Error(`unable to find previously added version of ${consumerComponent.id.toString()}`);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
