@@ -1,4 +1,5 @@
 import { BitId } from 'bit-bin/dist/bit-id';
+import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
@@ -42,6 +43,8 @@ export interface ComponentFactory {
    * returns many components with a group of ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
   /**
    * returns a specific state of a component by hash or semver.

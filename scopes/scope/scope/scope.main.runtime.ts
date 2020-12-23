@@ -33,6 +33,7 @@ import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/di
 import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
+import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
 import BluebirdPromise from 'bluebird';
 import { ExportPersist } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
@@ -292,6 +293,22 @@ export class ScopeMain implements ComponentFactory {
     }
 
     return defs;
+  }
+
+  async getLegacyGraph(ids?: BitId[]): Promise<LegacyGraph> {
+    if (!ids || ids.length < 1) ids = (await this.list()).map((comp) => comp.id);
+    const legacyIds = ids.map((id) => {
+      let bitId = id._legacy;
+      // The resolve bitId in scope will remove the scope name in case it's the same as the scope
+      // We restore it back to use it correctly in the legacy code.
+      if (!bitId.hasScope()) {
+        bitId = bitId.changeScope(this.legacyScope?.name);
+      }
+      return bitId;
+    });
+
+    const legacyGraph = await buildOneGraphForComponentsUsingScope(legacyIds, this.legacyScope);
+    return legacyGraph;
   }
 
   async createNetwork(ids: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {

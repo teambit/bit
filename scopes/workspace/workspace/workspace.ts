@@ -32,6 +32,7 @@ import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
 import { link, importAction } from 'bit-bin/dist/api/consumer';
+import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
 import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
 import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
@@ -316,6 +317,15 @@ export class Workspace implements ComponentFactory {
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
     const ids = await this.componentList.listTagPendingComponents();
     return this.resolveMultipleComponentIds(ids);
+  }
+
+  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
+    if (!ids || ids.length < 1) ids = (await this.listIds())
+
+    const legacyIds = ids.map((id) => id._legacy);
+
+    const legacyGraph = await buildOneGraphForComponents(legacyIds, this.consumer);
+    return legacyGraph;
   }
 
   async createNetwork(seeders: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {
