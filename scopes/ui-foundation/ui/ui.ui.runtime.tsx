@@ -15,14 +15,24 @@ import { Compose } from './compose';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
-import { Html } from './ssr/html';
+import { Html, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
+import type { BrowserData } from './ssr/request-browser';
 
 type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
 export type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
 type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
+
+type RenderingContext = Record<string, any>;
+type Serializable = any;
+type SsrLifecycle = {
+  init?: (browser: BrowserData | undefined) => any | undefined;
+  beforeRender?: (ctx: RenderingContext) => any | undefined;
+  afterRender?: (ctx: RenderingContext) => { state: Serializable } | Promise<{ state: Serializable }> | undefined;
+};
+type SsrLifecycleSlot = SlotRegistry<SsrLifecycle>;
 
 // import * as serviceWorker from './serviceWorker';
 
@@ -52,7 +62,9 @@ export class UiUI {
     /** slot for overlay ui elements */
     private hudSlot: HudSlot,
     /** slot for context provider elements */
-    private contextSlot: ContextSlot
+    private contextSlot: ContextSlot,
+    /** hooks into the ssr render process */
+    private ssrLifecycleSlot: SsrLifecycleSlot
   ) {}
 
   async render(rootExtension: string) {
@@ -78,7 +90,7 @@ export class UiUI {
   }
 
   // WORK IN PROGRESS.
-  renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
+  async renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
     const GraphqlProvider = this.graphql.getSsrProvider();
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
@@ -95,6 +107,8 @@ export class UiUI {
 
     const client = this.graphql.createSsrClient({ serverUrl, cookie: browser?.cookie });
 
+    let context = await this.initSsrContext(browser);
+
     const app = (
       <GraphqlProvider client={client}>
         <ClientContext>
@@ -106,22 +120,21 @@ export class UiUI {
       </GraphqlProvider>
     );
 
-    return getDataFromTree(app)
-      .then(() => {
-        const state = {
-          'gql-cache': JSON.stringify(client.extract()),
-          // TODO - .replace(/</g, '\\u003c')
-        };
+    context = await this.beforeRenderHook(context);
 
-        const content = ReactDOMServer.renderToString(
-          <Html title="bit dev ssred!" assets={{ ...assets, state }}>
-            {app}
-          </Html>
-        );
+    await getDataFromTree(app);
 
-        return `<!DOCTYPE html>${content}`;
-      })
-      .catch((err) => console.error(err)); // TODO
+    const realtimeAssets = await this.afterRenderHook(context);
+    const state = {
+      'gql-cache': JSON.stringify(client.extract()),
+    };
+
+    const content = ReactDOMServer.renderToString(
+      <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets, ...{ state } }}>
+        {app}
+      </Html>
+    );
+    return `<!DOCTYPE html>${content}`;
   }
 
   /** adds elements to the Heads Up Display */
@@ -138,11 +151,67 @@ export class UiUI {
     return this.uiRootSlot.register(uiRoot);
   }
 
+  private async initSsrContext(browserData: BrowserData | undefined) {
+    const ctx = {};
+
+    const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
+      if (!hooks.init) return;
+
+      const result = await hooks.init(browserData);
+      if (result) ctx[key] = result;
+    });
+
+    await Promise.all(promises);
+
+    return ctx;
+  }
+
+  private async beforeRenderHook(ctx: RenderingContext) {
+    const update: RenderingContext = {};
+
+    const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
+      if (!hooks.beforeRender) return;
+
+      const result = await hooks.beforeRender(ctx[key]);
+      if (result) update[key] = result;
+    });
+
+    await Promise.all(promises);
+
+    return {
+      ...ctx,
+      ...update,
+    };
+  }
+
+  private async afterRenderHook(ctx: RenderingContext) {
+    const state = {};
+
+    const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
+      if (!hooks.afterRender) return;
+
+      const result = await hooks.afterRender(ctx[key]);
+
+      if (result?.state) state[key] = result.state;
+    });
+
+    await Promise.all(promises);
+
+    // more assets will be added in the future
+    const assets: Assets = { state };
+    return assets;
+  }
+
   private getRoot(rootExtension: string) {
     return this.uiRootSlot.get(rootExtension);
   }
 
-  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<ContextType>()];
+  static slots = [
+    Slot.withType<UIRootFactory>(),
+    Slot.withType<ReactNode>(),
+    Slot.withType<ContextType>(),
+    Slot.withType<SsrLifecycle>(),
+  ];
 
   static dependencies = [GraphqlAspect, ReactRouterAspect];
 
@@ -151,9 +220,9 @@ export class UiUI {
   static async provider(
     [graphql, router]: [GraphqlUI, ReactRouterUI],
     config,
-    [uiRootSlot, hudSlot, contextSlot]: [UIRootRegistry, HudSlot, ContextSlot]
+    [uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, ContextSlot, SsrLifecycleSlot]
   ) {
-    return new UiUI(graphql, router, uiRootSlot, hudSlot, contextSlot);
+    return new UiUI(graphql, router, uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot);
   }
 }
 
