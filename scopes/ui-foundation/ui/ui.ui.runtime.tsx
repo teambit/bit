@@ -6,7 +6,7 @@ import { ReactRouterAspect } from '@teambit/react-router';
 // WIP!
 import { getDataFromTree } from '@apollo/react-ssr';
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, ComponentType } from 'react';
 import ReactDOM from 'react-dom';
 // WIP!
 import ReactDOMServer from 'react-dom/server';
@@ -15,7 +15,7 @@ import { Compose } from './compose';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
-import { Html, Assets } from './ssr/html';
+import { Html, MountPoint, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
 import type { BrowserData } from './ssr/request-browser';
 
@@ -23,7 +23,7 @@ type HudSlot = SlotRegistry<ReactNode>;
 type ContextSlot = SlotRegistry<ContextType>;
 export type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
-type ContextType = React.JSXElementConstructor<React.PropsWithChildren<any>>;
+type ContextType = ComponentType<{}>;
 
 type RenderingContext = Record<string, any>;
 type Serializable = any;
@@ -110,31 +110,34 @@ export class UiUI {
     let context = await this.initSsrContext(browser);
 
     const app = (
-      <GraphqlProvider client={client}>
-        <ClientContext>
-          <Compose components={contexts}>
-            {hudItems}
-            {routes}
-          </Compose>
-        </ClientContext>
-      </GraphqlProvider>
+      <MountPoint>
+        <GraphqlProvider client={client}>
+          <ClientContext>
+            <Compose components={contexts}>
+              {hudItems}
+              {routes}
+            </Compose>
+          </ClientContext>
+        </GraphqlProvider>
+      </MountPoint>
     );
 
     context = await this.beforeRenderHook(context);
 
     await getDataFromTree(app);
 
+    const renderedApp = ReactDOMServer.renderToString(app);
+
     const realtimeAssets = await this.afterRenderHook(context);
     const state = {
       'gql-cache': JSON.stringify(client.extract()),
     };
 
-    const content = ReactDOMServer.renderToString(
-      <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets, ...{ state } }}>
-        {app}
-      </Html>
-    );
-    return `<!DOCTYPE html>${content}`;
+    const html = <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets, state }} />;
+    const renderedHtml = `<!DOCTYPE html>${ReactDOMServer.renderToStaticMarkup(html)}`;
+    const fullHtml = Html.fillContent(renderedHtml, renderedApp);
+
+    return fullHtml;
   }
 
   /** adds elements to the Heads Up Display */

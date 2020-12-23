@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 
 export type Assets = Partial<{
   js: string[];
@@ -32,7 +32,7 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
       <body>
         <div>YOU ARE SERVER-SIDED</div>
 
-        <div id="root">{children}</div>
+        <MountPoint>{children}</MountPoint>
 
         {assets.state &&
           Object.entries(assets.state).map(([key, content]) => (
@@ -46,3 +46,13 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
     </html>
   );
 }
+
+export function MountPoint({ children }: { children: ReactNode }) {
+  return <div id="root">{children}</div>;
+}
+
+const placeholderRegex = /<div id="root"><\/div>/;
+Html.fillContent = (htmlTemplate: string, content: string) => {
+  const filled = htmlTemplate.replace(placeholderRegex, content);
+  return filled;
+};
