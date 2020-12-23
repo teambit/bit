@@ -24,7 +24,10 @@ export class SignCmd implements Command {
     const error = results.error ? `${results.error}\n\n` : '';
     const color = error ? 'red' : 'green';
     const signed = `signed total ${results.components.length} components, with build-status ${status}`;
-    return error + chalk.bold[color](signed);
+    return {
+      data: error + chalk.bold[color](signed),
+      code: error ? 1 : 0,
+    };
   }
 
   async getComponentIdsToSign(ids: string[]): Promise<ComponentID[]> {

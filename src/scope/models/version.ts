@@ -406,6 +406,12 @@ export default class Version extends BitObject {
     );
   }
 
+  get enableCache() {
+    // if buildStatus is pending, bit-sign will change the object in a different process, causing
+    // the main scope process (bit start) to serve the old Version data without build data.
+    return Boolean(this.buildStatus !== BuildStatus.Pending);
+  }
+
   validateBeforePersisting(versionStr: string): void {
     logger.trace(`validating version object, hash: ${this.hash().hash}`);
     const version = Version.parse(versionStr, this._hash);

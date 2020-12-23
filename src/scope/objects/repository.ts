@@ -242,7 +242,9 @@ export default class Repository {
   }
 
   setCache(object: BitObject) {
-    this._cache[object.hash().toString()] = object;
+    if (object.enableCache) {
+      this._cache[object.hash().toString()] = object;
+    }
     return this;
   }
 

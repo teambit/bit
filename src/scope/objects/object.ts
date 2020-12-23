@@ -110,6 +110,13 @@ path: ${err.path}`);
   }
 
   /**
+   * enable caching the object in-memory for fast retrieval.
+   */
+  get enableCache() {
+    return true;
+  }
+
+  /**
    * see `this.parseSync` for the sync version
    */
   static parseObject(fileContents: Buffer): Promise<BitObject> {
