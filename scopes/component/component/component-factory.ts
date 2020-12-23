@@ -66,6 +66,10 @@ export interface ComponentFactory {
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
 
+  listIds(): Promise<ComponentID[]>;
+
+  hasId(componentId: ComponentID): Promise<boolean>;
+
   /**
    * determine whether host should be the prior one in case multiple hosts persist.
    */

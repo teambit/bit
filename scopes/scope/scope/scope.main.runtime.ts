@@ -379,6 +379,17 @@ export class ScopeMain implements ComponentFactory {
    * list all components in the scope.
    */
   async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
+    const componentsIds = await this.listIds(includeCache);
+
+    return this.getMany(
+      filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
+    );
+  }
+
+  /**
+   * get ids of all scope components.
+   */
+  async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
     if (!includeCache) {
       modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
@@ -387,10 +398,19 @@ export class ScopeMain implements ComponentFactory {
     const componentsIds = modelComponents.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
     );
+    return componentsIds;
+  }
 
-    return this.getMany(
-      filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
-    );
+  /**
+   * Check if a specific id exist in the scope
+   * @param componentId
+   */
+  async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
+    const ids = await this.listIds(includeCache);
+    const found = ids.find((id) => {
+      return id.isEqual(componentId);
+    });
+    return !!found;
   }
 
   /**
