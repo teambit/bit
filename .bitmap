@@ -2894,6 +2894,21 @@
     "teambit.design/ui/styles/ellipsis@0.0.205": {
         "files": [
             {
+                "name": "ellipsis.compositions.module.scss",
+                "relativePath": "ellipsis.compositions.module.scss",
+                "test": false
+            },
+            {
+                "name": "ellipsis.compositions.tsx",
+                "relativePath": "ellipsis.compositions.tsx",
+                "test": false
+            },
+            {
+                "name": "ellipsis.docs.tsx",
+                "relativePath": "ellipsis.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "ellipsis.module.scss",
                 "relativePath": "ellipsis.module.scss",
                 "test": false
