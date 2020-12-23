@@ -251,9 +251,10 @@ once your changes are merged with the new remote version, you can tag and export
       }
       if (err.idsNeedUpdate) {
         output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
-          .map((i) => `${chalk.bold(i.id)} (lane: ${i.lane})`)
+          .map((i) => `${chalk.bold(i.id)}${i.lane ? ` (lane: ${i.lane})` : ''}`)
           .join(', ')} to the remote scope.
-to resolve this error, please re-import the above components`;
+to resolve this error, please re-import the above components.
+if the component is up to date, run "bit status" to make sure it's not merge-pending`;
       }
       return output;
     },
