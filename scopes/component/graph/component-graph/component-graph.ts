@@ -23,38 +23,6 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     return new ComponentGraph(nodes, edges) as this;
   }
 
-  static async buildFromLegacy(legacyGraph: LegacyGraph, componentFactory: ComponentFactory): Promise<ComponentGraph> {
-    const newGraph = new ComponentGraph();
-
-    const setNodeP = legacyGraph.nodes().map(async (nodeId) => {
-      const componentId = await componentFactory.resolveComponentId(nodeId);
-      const component = await componentFactory.get(componentId);
-      if (component) {
-        newGraph.setNode(componentId.toString(), component);
-      }
-    });
-    await Promise.all(setNodeP);
-
-    const setEdgePromise = legacyGraph.edges().map(async (edgeId) => {
-      const source = await componentFactory.resolveComponentId(edgeId.v);
-      const target = await componentFactory.resolveComponentId(edgeId.w);
-      const edgeObj =
-        legacyGraph.edge(edgeId.v, edgeId.w) === 'dependencies' ? new Dependency('runtime') : new Dependency('dev');
-      newGraph.setEdge(source.toString(), target.toString(), edgeObj);
-    });
-    await Promise.all(setEdgePromise);
-
-    newGraph.versionMap = newGraph._calculateVersionMap();
-    return newGraph;
-  }
-
-  static async build(workspace: Workspace, componentFactory: ComponentFactory) {
-    const ids = (await workspace.list()).map((comp) => comp.id);
-    const bitIds = ids.map((id) => id._legacy);
-    const initialGraph = await buildOneGraphForComponents(bitIds, workspace.consumer);
-    return this.buildFromLegacy(initialGraph, componentFactory);
-  }
-
   findDuplicateDependencies(): Map<string, DuplicateDependency> {
     const duplicateDependencies: Map<string, DuplicateDependency> = new Map();
     for (const [compFullName, versions] of this.versionMap) {

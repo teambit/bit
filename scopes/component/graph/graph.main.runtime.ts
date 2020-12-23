@@ -10,7 +10,7 @@ import { provide } from './graph.provider';
 export const GraphMain = {
   name: 'graph',
   runtime: MainRuntime,
-  dependencies: [GraphqlAspect, ComponentAspect, WorkspaceAspect, ScopeAspect],
+  dependencies: [GraphqlAspect, ScopeAspect],
   provider: provide,
 };
 
