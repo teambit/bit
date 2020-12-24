@@ -132,18 +132,13 @@ export class UiMain {
   async build(uiRootName?: string) {
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = [
-      createWebpackConfig(
-        uiRoot.path,
-        [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-        uiRoot.name
-      ),
-      createSsrWebpackConfig(
-        uiRoot.path,
-        [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-        // uiRoot.name
-      ),
-    ];
+    const ssr = uiRoot.buildOptions?.ssr || false;
+    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
+
+    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name);
+    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry]);
+
+    const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
 
     const compiler = webpack(config);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -253,7 +248,6 @@ export class UiMain {
     return uiSlot;
   }
 
-  // check if unused
   createLink(aspectDefs: AspectDefinition[], rootExtensionName: string) {
     return createRoot(aspectDefs, rootExtensionName);
   }
@@ -300,7 +294,7 @@ export class UiMain {
     const res = await this.build(name);
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
-    if (res.hasErrors()) res.compilation.errors.forEach((err) => console.error(err));
+    if (res.hasErrors()) res.stats.forEach((stats) => stats.compilation.errors.forEach((err) => console.error(err)));
     await this.cache.set(uiRoot.path, hash);
   }
 
@@ -310,7 +304,7 @@ export class UiMain {
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name
     );
-    if (fs.pathExistsSync(config.output.path)) return;
+    if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
