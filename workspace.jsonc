@@ -393,6 +393,12 @@
     "scopes/component": {
       "defaultScope": "teambit.component"
     },
+    "scopes/component/component-id": {
+      "defaultScope": "teambit.component",
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
     "scopes/ui-foundation": {
       "defaultScope": "teambit.ui-foundation"
     },
