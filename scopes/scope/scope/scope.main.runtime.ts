@@ -20,7 +20,7 @@ import {
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
-import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain, Network } from '@teambit/isolator';
+import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
@@ -240,11 +240,13 @@ export class ScopeMain implements ComponentFactory {
 
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(
-      components,
+    const network = await this.isolator.isolateComponents(
+      components.map(c => c.id),
       { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
       this.legacyScope
     );
+
+    const capsules = network.seedersCapsules;
 
     return capsules.map((capsule) => {
       // return RequireableComponent.fromCapsule(capsule);
@@ -266,11 +268,12 @@ export class ScopeMain implements ComponentFactory {
       return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
     });
     const components = await this.getMany(withoutLocalAspects);
-    const capsules = await this.isolator.isolateComponents(
-      components,
+    const network = await this.isolator.isolateComponents(
+      withoutLocalAspects,
       { baseDir: this.path, skipIfExists: true },
       this.legacyScope
     );
+    const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
@@ -309,26 +312,6 @@ export class ScopeMain implements ComponentFactory {
 
     const legacyGraph = await buildOneGraphForComponentsUsingScope(legacyIds, this.legacyScope);
     return legacyGraph;
-  }
-
-  async createNetwork(ids: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {
-    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network from scope');
-    const legacySeedersIds: BitId[] = ids.map((id) => id._legacy);
-    const graph = await buildOneGraphForComponentsUsingScope(legacySeedersIds, this.legacyScope);
-    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
-    const seedersStr = seederIdsWithVersions.map((s) => s.toString());
-    const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
-    const compIds = await this.resolveMultipleComponentIds(compsAndDeps.map((c) => c.id));
-    const components = await this.getMany(compIds);
-    opts.baseDir = this.path;
-    const capsuleList = await this.isolator.isolateComponents(components, opts);
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
-    return new Network(
-      capsuleList,
-      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
-      this.isolator.getCapsulesRootDir(this.path)
-    );
   }
 
   /**

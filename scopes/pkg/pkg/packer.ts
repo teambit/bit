@@ -120,12 +120,8 @@ export class Packer {
 
   private async getCapsule(componentIdStr: string, legacyScope: LegacyScope): Promise<Capsule> {
     const componentId = await this.host.resolveComponentId(componentIdStr);
-    const component = await this.host.get(componentId);
-    if (!component) {
-      throw new BitError(`unable to find "${componentId}"`);
-    }
-    const capsules = await this.isolator.isolateComponents([component], { baseDir: this.host.path }, legacyScope);
-    const capsule = capsules.getCapsule(componentId);
+    const network = await this.isolator.isolateComponents([componentId], { baseDir: this.host.path }, legacyScope);
+    const capsule = network.seedersCapsules.getCapsule(componentId);
 
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
     return capsule;
