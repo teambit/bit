@@ -104,6 +104,7 @@ export class Packer {
       component,
       metadata,
       errors: packResult.errors,
+      warnings: packResult.warnings,
       startTime: packResult.startTime,
       endTime: packResult.endTime,
     };
