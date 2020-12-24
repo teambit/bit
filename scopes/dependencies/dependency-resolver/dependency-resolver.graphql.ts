@@ -43,12 +43,28 @@ export function dependencyResolverSchema(dependencyResolver: DependencyResolverM
         type: String!
       }
 
+      type PolicyValue {
+        version: String!
+        resolveFromEnv: Boolean
+      }
+
+      type Policy {
+        dependencyId: String!
+        lifecycleType: String!
+        value: PolicyValue!
+      }
+
       extend type Component {
         dependencies: [Dependency]
+        componentPolicy: [Policy]
       }
     `,
     resolvers: {
       Component: {
+        componentPolicy: async (component: Component) => {
+          const variantPolicy = await dependencyResolver.getPolicy(component);
+          return variantPolicy.serialize();
+        },
         dependencies: async (component: Component) => {
           const dependenciesList = await dependencyResolver.getDependencies(component);
           const serialized = dependenciesList.serialize();

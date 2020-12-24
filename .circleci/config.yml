@@ -95,6 +95,25 @@ commands: # reusable commands
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: which bit
 
+  update_ssh_agent:
+    steps:
+      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      - run: 'ssh-add ~/.ssh/id_rsa'
+
+  set_git_credentials:
+    steps:
+      - run:
+          name: 'set GitHub token'
+          command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
+      - add_ssh_keys:
+          fingerprints:
+            - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
+      - run:
+          name: set git user.name and user.email
+          command: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
+
+
 orbs:
   win: circleci/windows@2.4.0
 
@@ -250,9 +269,6 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      # - run:
-      #     name: set GitHub token
-      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       - run: 'cd bit && npm run release:circle'
 
   github-pre-release:
@@ -260,9 +276,6 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      # - run:
-      #     name: set GitHub token
-      #     command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
       - run: 'cd bit && npm run pre-release:circle'
 
   build-debian:
@@ -482,9 +495,7 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-        run: 'chmod 400 ~/.ssh/id_rsa'
-      - run: 'ssh-add ~/.ssh/id_rsa'
+      - update_ssh_agent
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
@@ -496,7 +507,27 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
 
-  tag_and_publish:
+  bump_bit_bin:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      - attach_workspace:
+          at: ./
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry8
+      - update_ssh_agent
+      - set_git_credentials
+      - run: cd bit && node scripts/bump-bit-bin-ver.js
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit
+
+  bit_tag:
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
@@ -511,20 +542,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-        run: 'chmod 400 ~/.ssh/id_rsa'
-      - run: 'ssh-add ~/.ssh/id_rsa'
-      - run:
-          name: 'bit status'
-          command: 'cd bit && bit status'
-      - run:
-          name: 'set GitHub token'
-          command: export GH_RELEASE_GITHUB_API_TOKEN=$ghToken
-      - add_ssh_keys:
-          fingerprints:
-            - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
-
-      - run: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
+      - update_ssh_agent
+      - set_git_credentials
       # - run:
       #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
       #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
@@ -535,15 +554,7 @@ jobs:
       - run: cd bit && git remote rm origin
       # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
-#       - run:
-#           name: 'git push'
-          # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
-#           command: 'cd bit && git push origin master'
-      # - run: cd bit && npm publish --tag dev
-      # - run: npm view bit-bin@dev version
-      # there is a delay between publishing a package and until it's seen on npm servers
-      # - run: sleep 5m
-      # - run: npm view bit-bin@dev version
+
       - run: cd bit && bit status
       - run:
           name: soft
@@ -556,7 +567,46 @@ jobs:
       - run:
           name: backup bit objects (before export)
           command: cd bit && tar -zcvf objects-before-export.tar .git/bit/objects
-      - run: cd bit && bit export
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit/.git/bit
+            - bit/.bitmap
+            - bit/workspace.jsonc
+      - store_artifacts:
+          path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/objects-before-export.tar
+
+  bit_export:
+    <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+    steps:
+      - attach_workspace:
+          at: ./
+      - bit_global_for_npm
+      - bit_config:
+          env: "hub"
+      - restore_cache:
+          key: bitsrc-ssh-key3
+      - restore_cache:
+          key: bitsrc-registry8
+      - update_ssh_agent
+      - set_git_credentials
+      # - run:
+      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
+      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
+      # - run: mkdir -p ~/.ssh
+      # - run: SCAN=$(ssh-keyscan github.com )
+      # - run: echo $SCAN >> ~/.ssh/known_hosts
+      - run: cd bit && git remote rm origin
+      # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
+      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
+      - run:
+          name: export components
+          command: cd bit && bit export
       - run:
           name: backup bit objects (after export)
           command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
@@ -565,8 +615,6 @@ jobs:
       - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
-      - store_artifacts:
-          path: bit/objects-before-export.tar
       - store_artifacts:
           path: bit/objects-after-export.tar
 
@@ -1066,12 +1114,22 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - tag_and_publish:
+      - bump_bit_bin:
+          <<: *master_only_filter
           requires:
             - setup_harmony
+      - bit_tag:
+          <<: *master_only_filter
+          requires:
+            - bump_bit_bin
+            - setup_harmony
+      - bit_export:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
       - docker_build:
           requires:
-            - tag_and_publish
+            - bit_tag
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
@@ -1096,13 +1154,24 @@ workflows:
             - harmony_deploy_approval_job
             - set_npm_registries
             - checkout_code
-      - tag_and_publish:
+      - bump_bit_bin:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
+      - bit_tag:
+          <<: *master_only_filter
+          requires:
+            - bump_bit_bin
+            - harmony_deploy_approval_job
+            - setup_harmony
+      - bit_export:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+            - harmony_deploy_approval_job
       - docker_build:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
-            - tag_and_publish
+            - bit_tag

@@ -9,7 +9,7 @@ export default class CatObject implements LegacyCommand {
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"'],
-    ['h', 'headers', 'shows the headers only'],
+    ['', 'headers', 'shows the headers only'],
   ] as CommandOptions;
 
   action(

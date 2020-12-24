@@ -48,7 +48,6 @@ type State = {
   };
 };
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
@@ -610,7 +609,6 @@ export default class Component extends BitObject {
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
-      flattenedDevDependencies: version.flattenedDevDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
