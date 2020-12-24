@@ -24,6 +24,7 @@ function createSsrConfig(workspaceDir: string) {
 
     output: {
       path: path.resolve(workspaceDir, 'public/ssr'),
+      publicPath: '/public/ssr/',
       libraryTarget: 'commonjs',
       filename: 'index.js',
     },
