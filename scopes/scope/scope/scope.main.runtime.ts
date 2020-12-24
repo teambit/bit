@@ -298,8 +298,8 @@ export class ScopeMain implements ComponentFactory {
     return defs;
   }
 
-  async getLegacyGraph(ids?: BitId[]): Promise<LegacyGraph> {
-    if (!ids || ids.length < 1) ids = (await this.list()).map((comp) => comp.id);
+  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
+    if (!ids || ids.length < 1) ids = (await this.list()).map((comp) => comp.id) || [];
     const legacyIds = ids.map((id) => {
       let bitId = id._legacy;
       // The resolve bitId in scope will remove the scope name in case it's the same as the scope
