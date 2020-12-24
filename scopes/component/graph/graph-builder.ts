@@ -1,5 +1,5 @@
 import { ComponentID, ComponentMain } from '@teambit/component';
-import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import { ComponentGraph } from './component-graph';
 import { Dependency } from './model/dependency';
 

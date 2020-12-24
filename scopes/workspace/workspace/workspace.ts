@@ -32,7 +32,7 @@ import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
 import { link, importAction } from 'bit-bin/dist/api/consumer';
-import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
 import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';

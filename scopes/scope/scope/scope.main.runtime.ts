@@ -33,7 +33,7 @@ import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/di
 import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
-import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import BluebirdPromise from 'bluebird';
 import { ExportPersist } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
