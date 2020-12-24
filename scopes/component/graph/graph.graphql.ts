@@ -42,7 +42,7 @@ export function graphSchema(graphBuilder: GraphBuilder, componentAspect: Compone
     resolvers: {
       ComponentGraph: {
         nodes: (graph: ComponentGraph) => {
-          graph.nodes.map((node) => {
+          return graph.nodes.map((node) => {
               return {
                 id: node.id,
                 component: node.attr,
