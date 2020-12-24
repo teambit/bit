@@ -2798,6 +2798,16 @@
                 "test": false
             },
             {
+                "name": "standalone-not-found.compositions.tsx",
+                "relativePath": "standalone-not-found.compositions.tsx",
+                "test": false
+            },
+            {
+                "name": "standalone-not-found.docs.tsx",
+                "relativePath": "standalone-not-found.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "standalone-not-found.tsx",
                 "relativePath": "standalone-not-found.tsx",
                 "test": false
