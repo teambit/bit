@@ -11,7 +11,7 @@ import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import ComponentObjects from '../component-objects';
-import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
+import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -532,15 +532,21 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore
     // const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
-    const allHashes = await getAllVersionHashesByVersionsObjects(component, versionObjects, false);
+    const allVersionsInfo = await getAllVersionsInfo({ modelComponent: component, throws: false, versionObjects });
+    const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
       this.putModelComponent(component);
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
+    const hashesOfHistoryGraph = allVersionsInfo
+      .map((v) => (v.isPartOfHistory ? v.ref : null))
+      .filter((ref) => ref) as Ref[];
     const existingComponentHead = existingComponent.getHead();
     const existingHeadIsMissingInIncomingComponent =
-      component.hasHead() && existingComponentHead && !allHashes.find((ref) => ref.isEqual(existingComponentHead));
+      component.hasHead() &&
+      existingComponentHead &&
+      !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead));
     if (
       !local &&
       existingHeadIsMissingInIncomingComponent &&
@@ -564,7 +570,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       );
       const componentHead = component.getHead();
       if (componentHead) {
-        // when importing (local), do not override the head
+        // when importing (local), do not override the head unless the incoming is ahead.
         if (!local || !existingHeadIsMissingInIncomingComponent) {
           mergedComponent.setHead(componentHead);
         }
