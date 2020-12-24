@@ -221,7 +221,7 @@ export default class Consumer {
     result.bitMap.markAsChanged();
     // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
     this.bitMap.version = result.bitMap.version;
-    await result.bitMap.write();
+    await result.bitMap.write(this.componentFsCache);
 
     loader.stop();
 
@@ -234,7 +234,7 @@ export default class Consumer {
   async write(): Promise<Consumer> {
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
-    await this.bitMap.write();
+    await this.bitMap.write(this.componentFsCache);
     return this;
   }
 
@@ -1001,6 +1001,6 @@ export default class Consumer {
   async onDestroy() {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
-    return this.bitMap.write();
+    return this.bitMap.write(this.componentFsCache);
   }
 }

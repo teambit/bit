@@ -43,7 +43,8 @@ ${componentsToSign.map((c) => c.toString()).join('\n')}`;
     componentsToSign: ComponentID[];
   }> {
     const compIds = await this.scope.resolveMultipleComponentIds(ids);
-    const components = await this.scope.getMany(compIds);
+    // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
+    const components = await this.scope.loadMany(compIds);
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {
