@@ -128,7 +128,7 @@ export class IsolatorMain {
     // installed as a package with another version. we don't want them both.
     const existingComps = compsAndDeps.filter((c) => host.hasId(c.id))
     opts.baseDir = opts.baseDir || host.path;
-    const capsuleList = await this.createCapsules(existingComps, opts);
+    const capsuleList = await this.createCapsules(existingComps, opts, legacyScope);
     longProcessLogger.end();
     this.logger.consoleSuccess();
     return new Network(

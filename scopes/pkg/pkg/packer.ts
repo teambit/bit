@@ -3,7 +3,6 @@ import { ComponentFactory } from '@teambit/component';
 import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { ScopeMain } from '@teambit/scope';
-import { BitError } from '@teambit/bit-error';
 import LegacyScope from 'bit-bin/dist/scope/scope';
 import { Packer as LegacyPacker, PackWriteOptions, PackOptions } from 'bit-bin/dist/pack';
 import { Logger } from '@teambit/logger';

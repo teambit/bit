@@ -1,7 +1,6 @@
-import { ComponentID } from '@teambit/component';
-import { ComponentMain } from '@teambit/component';
-import { ComponentGraph } from './component-graph';
+import { ComponentID, ComponentMain } from '@teambit/component';
 import { Graph as LegacyGraph } from 'bit-bin/dist/scope/graph/graph';
+import { ComponentGraph } from './component-graph';
 import { Dependency } from './model/dependency';
 
 export class GraphBuilder {

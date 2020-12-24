@@ -24,7 +24,7 @@ import {
 import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
-import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
+import { IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/modules.match-pattern';
