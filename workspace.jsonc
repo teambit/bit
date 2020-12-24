@@ -394,7 +394,16 @@
       "defaultScope": "teambit.component"
     },
     "scopes/component/component-id": {
-      "defaultScope": "teambit.component",
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/component/component-version": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/component/legacy-bit-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       }
