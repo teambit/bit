@@ -7,9 +7,8 @@ import { graphSchema } from './graph.graphql';
 export type GraphDeps = [GraphqlMain, ComponentMain];
 
 export async function provide([graphql, componentAspect]: GraphDeps): Promise<GraphBuilder> {
-  const host = componentAspect.getHost();
   const graphBuilder = new GraphBuilder(componentAspect);
   // TODO: make sure it's working (the host here might be undefined?)
-  graphql.register(graphSchema(graphBuilder, host));
+  graphql.register(graphSchema(graphBuilder, componentAspect));
   return graphBuilder;
 }
