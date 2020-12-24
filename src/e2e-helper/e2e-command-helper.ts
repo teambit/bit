@@ -6,7 +6,7 @@ import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
@@ -149,6 +149,11 @@ export default class CommandHelper {
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
+  tagAllWithoutBuild(options = '') {
+    const result = this.runCmd(`bit tag -a ${options}`, undefined, undefined, BUILD_ON_CI);
+    expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
     this.linkAndRewire();
     return this.tagAllComponents(options, version, assertTagged);
@@ -164,6 +169,9 @@ export default class CommandHelper {
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+  }
+  snapComponentWithoutBuild(id: string, options = '') {
+    return this.runCmd(`bit snap ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
   }
   snapAllComponents(options = '', assertSnapped = true) {
     const result = this.runCmd(`bit snap -a ${options} `);

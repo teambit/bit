@@ -206,7 +206,7 @@ export class GraphqlMain {
         imports: moduleDeps,
         context: (session) => {
           return {
-            verb: session.headers['x-verb'] || Verb.READ,
+            verb: session?.headers?.['x-verb'] || Verb.READ,
           };
         },
       });
