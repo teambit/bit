@@ -113,29 +113,34 @@ export class IsolatorMain {
     const isolator = new IsolatorMain(dependencyResolver, logger, componentAspect, graphAspect);
     return isolator;
   }
-  constructor(private dependencyResolver: DependencyResolverMain, private logger: Logger, private componentAspect: ComponentMain, private graphBuilder: GraphBuilder) {}
+  constructor(
+    private dependencyResolver: DependencyResolverMain,
+    private logger: Logger,
+    private componentAspect: ComponentMain,
+    private graphBuilder: GraphBuilder
+  ) {}
 
   // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
   // TODO: we should think of another way to provide it (maybe a new opts) then take the scope internally from the host
-  async isolateComponents(seeders: ComponentID[], opts: IsolateComponentsOptions = {}, legacyScope?: LegacyScope): Promise<Network> {
+  async isolateComponents(
+    seeders: ComponentID[],
+    opts: IsolateComponentsOptions = {},
+    legacyScope?: LegacyScope
+  ): Promise<Network> {
     const host = this.componentAspect.getHost();
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
     const graph = await this.graphBuilder.getGraph(seeders);
-    const successorsSubgraph = graph.successorsSubgraph(seeders.map(id => id.toString()));
-    const compsAndDeps = successorsSubgraph.nodes.map(node => node.attr);
+    const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
+    const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
-    const existingComps = compsAndDeps.filter((c) => host.hasId(c.id))
+    const existingComps = compsAndDeps.filter((c) => host.hasId(c.id));
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(existingComps, opts, legacyScope);
     longProcessLogger.end();
     this.logger.consoleSuccess();
-    return new Network(
-      capsuleList,
-      seeders,
-      this.getCapsulesRootDir(opts.baseDir)
-    );
+    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
   }
 
   /**
