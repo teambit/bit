@@ -538,7 +538,7 @@ async function throwForMissingLocalDependencies(scope: Scope, versions: Version[
           const existingModelComponent = await scope.getModelComponent(depId);
           const versionRef = existingModelComponent.getRef(depId.version as string);
           if (!versionRef) throw new Error(`unable to find Ref/Hash of ${depId.toString()}`);
-          const objectExist = scope.objects.getCache(versionRef) || (await scope.objects.has(versionRef));
+          const objectExist = scope.objects.getFromMemory(versionRef) || (await scope.objects.has(versionRef));
           if (!objectExist) throw new ComponentNotFound(depId.toString());
         })
       );

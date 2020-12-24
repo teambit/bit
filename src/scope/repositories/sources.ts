@@ -287,8 +287,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
   async enrichSource(consumerComponent: ConsumerComponent) {
     const objectRepo = this.objects();
-    const version = consumerComponent.pendingVersion;
-    if (!version) throw new Error(`unable to find previously added version of ${consumerComponent.id.toString()}`);
+    const component = await this.findOrAddComponent(consumerComponent);
+    const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;

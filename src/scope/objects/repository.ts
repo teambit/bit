@@ -23,8 +23,7 @@ import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  objects: { [key: string]: BitObject } = {};
+  objects: { [key: string]: BitObject } = {}; // objects that are persist-pending. once persisted, they get cleared
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   onRead: ContentTransformer;
@@ -32,7 +31,6 @@ export default class Repository {
   scopePath: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeIndex: ScopeIndex;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   _cache: { [key: string]: BitObject } = {};
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
@@ -100,10 +98,22 @@ export default class Repository {
     return fs.pathExists(objectPath);
   }
 
-  async load(ref: Ref, throws = false): Promise<BitObject> {
+  getFromMemory(ref: Ref): BitObject | null {
     const cached = this.getCache(ref);
     if (cached) {
       return cached;
+    }
+    const fromObjects = this.objects[ref.hash];
+    if (fromObjects) {
+      return fromObjects;
+    }
+    return null;
+  }
+
+  async load(ref: Ref, throws = false): Promise<BitObject> {
+    const fromMemory = this.getFromMemory(ref);
+    if (fromMemory) {
+      return fromMemory;
     }
     // @ts-ignore @todo: fix! it should return BitObject | null.
     return fs
