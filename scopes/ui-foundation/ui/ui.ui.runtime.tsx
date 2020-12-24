@@ -1,14 +1,9 @@
-import type { GraphqlUI } from '@teambit/graphql';
-import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
-// WIP!
-import { getDataFromTree } from '@apollo/react-ssr';
 
 import React, { ReactNode, ComponentType } from 'react';
 import ReactDOM from 'react-dom';
-// WIP!
 import ReactDOMServer from 'react-dom/server';
 
 import { Compose } from './compose';
@@ -19,38 +14,38 @@ import { Html, MountPoint, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
 import type { BrowserData } from './ssr/request-browser';
 
-type HudSlot = SlotRegistry<ReactNode>;
-type ContextSlot = SlotRegistry<ContextType>;
-export type UIRootRegistry = SlotRegistry<UIRootFactory>;
-
-type ContextType = ComponentType<{}>;
-
-type RenderingContext = Record<string, any>;
-type Serializable = any;
-type SsrLifecycle = {
-  init?: (browser: BrowserData | undefined) => any | undefined;
-  beforeRender?: (ctx: RenderingContext) => any | undefined;
-  afterRender?: (ctx: RenderingContext) => { state: Serializable } | Promise<{ state: Serializable }> | undefined;
+export type SsrLifecycle<T = any> = {
+  /**
+   * Initialize a context state for this specific rendering.
+   * Context state will only be available to the current Aspect, in the other hooks, as well as a prop to the react context component.
+   */
+  init?: (browser: BrowserData | undefined) => T | Promise<T> | undefined;
+  /**
+   * Executes before running ReactDOM.renderToString(). Return value will replace the existing context state.
+   */
+  onBeforeRender?: (ctx: T, app: ReactNode) => T | Promise<T> | undefined;
+  /**
+   * Produce html assets, after the body is rendered, and before rendering the complete html.
+   * @returns
+   * state: will be rendered to the dom as a `<script type="json"/>`.
+   * More assets will be available in the future.
+   */
+  onSerializeAssets?: (ctx: T, app: ReactNode) => { state: string } | Promise<{ state: string }> | undefined;
 };
+
+export type ContextComponentType<T = any> = ComponentType<{ renderCtx?: T; children: ReactNode }>;
+type RenderingContext = Record<string, any>;
+
+type HudSlot = SlotRegistry<ReactNode>;
+type ContextSlot = SlotRegistry<ContextComponentType>;
 type SsrLifecycleSlot = SlotRegistry<SsrLifecycle>;
-
-// import * as serviceWorker from './serviceWorker';
-
-// If you want your app to work offline and load faster, you can change
-// unregister() to register() below. Note this comes with some pitfalls.
-// Learn more about service workers: https://bit.ly/CRA-PWA
-// serviceWorker.unregister();
+type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
 /**
  * extension
  */
 export class UiUI {
   constructor(
-    /**
-     * GraphQL extension.
-     */
-    private graphql: GraphqlUI,
-
     /**
      * react-router extension.
      */
@@ -68,7 +63,6 @@ export class UiUI {
   ) {}
 
   async render(rootExtension: string) {
-    const GraphqlProvider = this.graphql.getProvider;
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
     const uiRoot = rootFactory();
@@ -76,22 +70,20 @@ export class UiUI {
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 
+    // .render() should already run .hydrate() if possible.
+    // in the future, we may want to replace it with .hydrate()
     ReactDOM.render(
-      <GraphqlProvider>
+      <Compose components={contexts}>
         <ClientContext>
-          <Compose components={contexts}>
-            {hudItems}
-            {routes}
-          </Compose>
+          {hudItems}
+          {routes}
         </ClientContext>
-      </GraphqlProvider>,
+      </Compose>,
       document.getElementById('root')
     );
   }
 
-  // WORK IN PROGRESS.
   async renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
-    const GraphqlProvider = this.graphql.getSsrProvider();
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
@@ -100,43 +92,37 @@ export class UiUI {
     const hudItems = this.hudSlot.values();
     const contexts = this.contextSlot.values();
 
-    // maybe we should use internal url?
-    const serverUrl = browser?.location.origin
-      ? `${browser?.location.origin}/graphql`
-      : 'http://localhost:3000/graphql';
+    // (1) init
+    let renderCtx = await this.initSsrContext(browser);
 
-    const client = this.graphql.createSsrClient({ serverUrl, cookie: browser?.cookie });
+    const contextProps = this.contextSlot
+      .toArray()
+      .map(([key]) => renderCtx[key])
+      .map((ctx) => ({ renderCtx: ctx }));
 
-    let context = await this.initSsrContext(browser);
-
+    // (2) make (virtual) dom
     const app = (
       <MountPoint>
-        <GraphqlProvider client={client}>
+        <Compose components={contexts} forwardProps={contextProps}>
           <ClientContext>
-            <Compose components={contexts}>
-              {hudItems}
-              {routes}
-            </Compose>
+            {hudItems}
+            {routes}
           </ClientContext>
-        </GraphqlProvider>
+        </Compose>
       </MountPoint>
     );
 
-    context = await this.beforeRenderHook(context);
-
-    await getDataFromTree(app);
-
+    // (3) render
+    renderCtx = await this.onBeforeRender(renderCtx, app);
     const renderedApp = ReactDOMServer.renderToString(app);
 
-    const realtimeAssets = await this.afterRenderHook(context);
-    const state = {
-      'gql-cache': JSON.stringify(client.extract()),
-    };
-
-    const html = <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets, state }} />;
+    // (3) render html-template
+    const realtimeAssets = await this.onSerializeAssets(renderCtx, app);
+    const html = <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets }} />;
     const renderedHtml = `<!DOCTYPE html>${ReactDOMServer.renderToStaticMarkup(html)}`;
     const fullHtml = Html.fillContent(renderedHtml, renderedApp);
 
+    // (4) serve
     return fullHtml;
   }
 
@@ -146,12 +132,16 @@ export class UiUI {
   };
 
   // ** adds global context at the ui root */
-  registerContext(context: ContextType) {
+  registerContext<T>(context: ContextComponentType<T>) {
     this.contextSlot.register(context);
   }
 
   registerRoot(uiRoot: UIRootFactory) {
     return this.uiRootSlot.register(uiRoot);
+  }
+
+  registerRenderHooks(hooks: SsrLifecycle) {
+    return this.ssrLifecycleSlot.register(hooks);
   }
 
   private async initSsrContext(browserData: BrowserData | undefined) {
@@ -169,13 +159,13 @@ export class UiUI {
     return ctx;
   }
 
-  private async beforeRenderHook(ctx: RenderingContext) {
+  private async onBeforeRender(ctx: RenderingContext, app: ReactNode) {
     const update: RenderingContext = {};
 
     const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
-      if (!hooks.beforeRender) return;
+      if (!hooks.onBeforeRender) return;
 
-      const result = await hooks.beforeRender(ctx[key]);
+      const result = await hooks.onBeforeRender(ctx[key], app);
       if (result) update[key] = result;
     });
 
@@ -187,13 +177,13 @@ export class UiUI {
     };
   }
 
-  private async afterRenderHook(ctx: RenderingContext) {
+  private async onSerializeAssets(ctx: RenderingContext, app: ReactNode) {
     const state = {};
 
     const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
-      if (!hooks.afterRender) return;
+      if (!hooks.onSerializeAssets) return;
 
-      const result = await hooks.afterRender(ctx[key]);
+      const result = await hooks.onSerializeAssets(ctx[key], app);
 
       if (result?.state) state[key] = result.state;
     });
@@ -212,20 +202,20 @@ export class UiUI {
   static slots = [
     Slot.withType<UIRootFactory>(),
     Slot.withType<ReactNode>(),
-    Slot.withType<ContextType>(),
+    Slot.withType<ContextComponentType>(),
     Slot.withType<SsrLifecycle>(),
   ];
 
-  static dependencies = [GraphqlAspect, ReactRouterAspect];
+  static dependencies = [ReactRouterAspect];
 
   static runtime = UIRuntime;
 
   static async provider(
-    [graphql, router]: [GraphqlUI, ReactRouterUI],
+    [router]: [ReactRouterUI],
     config,
     [uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, ContextSlot, SsrLifecycleSlot]
   ) {
-    return new UiUI(graphql, router, uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot);
+    return new UiUI(router, uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot);
   }
 }
 

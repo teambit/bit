@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime } from '@teambit/ui';
+import { UIRuntime, UIAspect, UiUI, BrowserData } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
 import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
 import { ApolloProvider } from '@apollo/react-hooks';
+import { getDataFromTree } from '@apollo/react-ssr';
 import { ApolloLink } from 'apollo-link';
 import { onError } from 'apollo-link-error';
 import { HttpLink, createHttpLink } from 'apollo-link-http';
@@ -17,6 +18,10 @@ import { GraphQLServer } from './graphql-server';
 import { GraphqlAspect } from './graphql.aspect';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
+
+type RenderContext = {
+  client: ApolloClient<any>;
+};
 
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
@@ -35,7 +40,7 @@ export class GraphqlUI {
     return this.client.query(options);
   }
 
-  createClient(host: string = window.location.host) {
+  createClient(host: string = typeof window !== 'undefined' ? window.location.host : '/') {
     const client = new ApolloClient({
       link: this.createApolloLink(host),
       cache: this.getCache({ restore: true }),
@@ -95,7 +100,7 @@ export class GraphqlUI {
 
   private restoreCacheFromDom() {
     try {
-      const domState = typeof document !== 'undefined' && document.getElementById('gql-cache');
+      const domState = typeof document !== 'undefined' && document.getElementById(GraphqlAspect.id);
 
       if (!domState) {
         console.log('no cache to load');
@@ -142,20 +147,63 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  getProvider = ({ children }: { children: JSX.Element }) => {
+  Provider = ({ children }: { children: ReactNode }) => {
     return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
   };
 
-  getSsrProvider = () => {
-    return ApolloProvider;
-  };
+  SsrProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {
+    if (!renderCtx?.client) throw new TypeError('Gql client is has not been initialized during SSR');
+    const { client } = renderCtx;
+    return <ApolloProvider client={client}>{children}</ApolloProvider>;
+  }
+
+  protected initRender(browser?: BrowserData) {
+    if (!browser) return undefined;
+
+    // maybe we should use internal url?
+    const serverUrl = browser?.location.origin
+      ? `${browser?.location.origin}/graphql`
+      : 'http://localhost:3000/graphql';
+
+    const client = this.createSsrClient({ serverUrl, cookie: browser?.cookie });
+
+    const ctx: RenderContext = {
+      client,
+    };
+    return ctx;
+  }
+
+  protected async prePopulate(ctx: RenderContext, app: ReactNode) {
+    await getDataFromTree(app);
+  }
+
+  protected serialize(ctx?: RenderContext) {
+    const client = ctx?.client;
+    if (!client) return undefined;
+
+    return {
+      state: JSON.stringify(client.extract()),
+    };
+  }
+
+  static dependencies = [UIAspect];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<GraphQLServer>()];
 
-  static async provider(deps, config, [serverSlot]: [GraphQLServerSlot]) {
-    return new GraphqlUI(serverSlot);
+  static async provider([uiUi]: [UiUI], config, [serverSlot]: [GraphQLServerSlot]) {
+    const graphqlUI = new GraphqlUI(serverSlot);
+
+    const GqlContext = typeof window !== 'undefined' ? graphqlUI.Provider : graphqlUI.SsrProvider;
+    uiUi.registerContext(GqlContext);
+    uiUi.registerRenderHooks({
+      init: graphqlUI.initRender.bind(graphqlUI),
+      onBeforeRender: graphqlUI.prePopulate.bind(graphqlUI),
+      onSerializeAssets: graphqlUI.serialize.bind(graphqlUI),
+    });
+
+    return graphqlUI;
   }
 }
 

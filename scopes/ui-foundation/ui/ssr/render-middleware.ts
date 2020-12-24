@@ -61,8 +61,10 @@ export async function ssrRenderer({ rootPath }: ssrRenderProps) {
       .then((rendered) => {
         res.send(rendered);
       })
-      .catch((e) => {
+      .catch((e: Error) => {
+        console.log(e, e.stack);
         res.send(`exception during SSR! ${e.toString()}`);
+        if (e.stack) res.send(e.stack.toString());
       });
   };
 }

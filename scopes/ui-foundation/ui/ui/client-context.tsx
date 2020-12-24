@@ -4,11 +4,12 @@ import React, { ReactNode } from 'react';
 
 import { LoaderContext, LoaderRibbon, useLoaderApi } from './global-loader';
 
-export function ClientContext({ children }: { children: ReactNode }) {
+export function ClientContext({ children }: { children?: ReactNode }) {
   const [loaderApi, isLoading] = useLoaderApi();
 
   return (
     <React.StrictMode>
+      {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
         <EvaIconFont query="av92bs" />
         <Theme>
