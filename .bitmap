@@ -2483,6 +2483,16 @@
                 "test": false
             },
             {
+                "name": "avatar.compositions.tsx",
+                "relativePath": "avatar.compositions.tsx",
+                "test": false
+            },
+            {
+                "name": "avatar.docs.tsx",
+                "relativePath": "avatar.docs.tsx",
+                "test": false
+            },
+            {
                 "name": "avatar.tsx",
                 "relativePath": "avatar.tsx",
                 "test": false
