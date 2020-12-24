@@ -3,7 +3,6 @@ import { Section } from '@teambit/documenter.ui.section';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { Ellipsis } from './index';
-import styles from './ellipsis.compositions.module.scss';
 
 export default function Overview() {
   return (
@@ -29,6 +28,6 @@ Overview.examples = [
     },
     title: 'long string',
     description: 'long string with ellipsis displayed',
-    jsx: <Ellipsis className={styles['div-width']}>Looooooooooooooong string</Ellipsis>,
+    jsx: <Ellipsis style={{ width: 100 }}>Looooooooooooooong string</Ellipsis>,
   },
 ];
