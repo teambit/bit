@@ -393,6 +393,23 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * load components from a scope and load its aspects.
+   */
+  async loadMany(ids: ComponentID[]) {
+    // get all components.
+    const components = await this.getMany(ids);
+    // load all component aspects.
+    await Promise.all(
+      components.map(async (component) => {
+        const aspectIds = component.state.aspects.ids;
+        await this.loadAspects(aspectIds);
+      })
+    );
+
+    return components;
+  }
+
+  /**
    * get a component and throw an exception if not found.
    * @param id component id
    */
