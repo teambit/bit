@@ -2537,6 +2537,16 @@
     "teambit.design/ui/cli-snippet@0.0.205": {
         "files": [
             {
+                "name": "cli-snippet.compositions.tsx",
+                "relativePath": "cli-snippet.compositions.tsx",
+                "test": false
+            },
+            {
+                "name": "cli-snippet.docs.mdx",
+                "relativePath": "cli-snippet.docs.mdx",
+                "test": false
+            },
+            {
                 "name": "cli-snippet.module.scss",
                 "relativePath": "cli-snippet.module.scss",
                 "test": false

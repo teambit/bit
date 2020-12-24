@@ -1,0 +1,23 @@
+---
+labels: ['react', 'typescript', 'cli', 'snippet']
+description: 'cli snippet component'
+---
+
+### Overview
+
+Component for styling and display of Cli content in html
+
+
+
+import { CliSnippet} from './index';
+const content = `this is some cli content\n which should be rendered properly as html`;
+export const examples = [
+  {
+    scope: {
+      CliSnippet
+    },
+    title: 'Basic cli snippet',
+    description: 'Show a basic Cli Snippet',
+    jsx: <CliSnippet content={content}/>,
+  }
+];
