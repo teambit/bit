@@ -98,22 +98,10 @@ export default class Repository {
     return fs.pathExists(objectPath);
   }
 
-  getFromMemory(ref: Ref): BitObject | null {
+  async load(ref: Ref, throws = false): Promise<BitObject> {
     const cached = this.getCache(ref);
     if (cached) {
       return cached;
-    }
-    const fromObjects = this.objects[ref.hash];
-    if (fromObjects) {
-      return fromObjects;
-    }
-    return null;
-  }
-
-  async load(ref: Ref, throws = false): Promise<BitObject> {
-    const fromMemory = this.getFromMemory(ref);
-    if (fromMemory) {
-      return fromMemory;
     }
     // @ts-ignore @todo: fix! it should return BitObject | null.
     return fs
