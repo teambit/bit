@@ -510,6 +510,8 @@ export class ScopeMain implements ComponentFactory {
     return getScopeRemotes(this.legacyScope);
   }
 
+  load() {}
+
   /**
    * declare the slots of scope extension.
    */
@@ -543,7 +545,8 @@ export class ScopeMain implements ComponentFactory {
     harmony: Harmony
   ) {
     cli.register(new ExportCmd());
-    const legacyScope = await loadScopeIfExist();
+    const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+    const legacyScope = await loadScopeIfExist(bitConfig.cwd);
     if (!legacyScope) {
       return undefined;
     }
