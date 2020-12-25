@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import { uniq } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -12,8 +11,9 @@ import {
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { BuildStatus } from 'bit-bin/dist/constants';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
-import { ClearScopeCache } from 'bit-bin/dist/scope/actions';
+import { PostSign } from 'bit-bin/dist/scope/actions';
 import { Remotes } from 'bit-bin/dist/remotes';
+import { BitIds } from 'bit-bin/dist/bit-id';
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -41,12 +41,13 @@ export class SignMain {
   }
 
   private async clearScopesCaches(components: ConsumerComponent[]) {
-    const scopes = uniq(components.map((c) => c.scope as string));
+    const bitIds = BitIds.fromArray(components.map((c) => c.id));
+    const idsGroupedByScope = bitIds.toGroupByScopeName(new BitIds());
     const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
     await Promise.all(
-      scopes.map(async (scopeName) => {
+      Object.keys(idsGroupedByScope).map(async (scopeName) => {
         const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
-        return remote.action(ClearScopeCache.name);
+        return remote.action(PostSign.name, { ids: idsGroupedByScope[scopeName].map((id) => id.toString()) });
       })
     );
   }

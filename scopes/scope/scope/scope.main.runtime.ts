@@ -34,7 +34,7 @@ import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import BluebirdPromise from 'bluebird';
-import { ExportPersist } from 'bit-bin/dist/scope/actions';
+import { ExportPersist, PostSign } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
 import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
@@ -158,7 +158,6 @@ export class ScopeMain implements ComponentFactory {
    * register to the post-export slot.
    */
   onPostPut(postPutFn: OnPostPut) {
-    this.legacyScope.onPostExport.push(postPutFn);
     this.postPutSlot.register(postPutFn);
     return this;
   }
@@ -565,13 +564,16 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    ExportPersist.onPutHook = async (ids: string[]): Promise<void> => {
+    const onPutHook = async (ids: string[]): Promise<void> => {
       logger.debug(`ExportPersist.onPutHook, started. (${ids.length} components)`);
       const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postPutSlot.values();
       await Promise.all(fns.map(async (fn) => fn(componentIds)));
       logger.debug(`ExportPersist.onPutHook, completed. (${ids.length} components)`);
     };
+
+    ExportPersist.onPutHook = onPutHook;
+    PostSign.onPutHook = onPutHook;
 
     express.register([
       new PutRoute(scope, postPutSlot),
