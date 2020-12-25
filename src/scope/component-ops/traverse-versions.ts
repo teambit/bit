@@ -14,7 +14,18 @@ import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
 
-type VersionInfo = { ref: Ref; tag?: string; version?: Version; error?: Error };
+type VersionInfo = {
+  ref: Ref;
+  tag?: string;
+  version?: Version;
+  error?: Error;
+  /**
+   * can be 'false' when retrieved from the tags data on the component-object and the Version is
+   * not legacy. It can happen when running "bit import" on a diverge component and before the
+   * merge. the component itself is merged, but the head wasn't changed.
+   */
+  isPartOfHistory?: boolean;
+};
 
 /**
  * by default it starts the traverse from the head or lane-head, unless "startFrom" is passed.
@@ -59,13 +70,17 @@ export async function getAllVersionsInfo({
       await Promise.all(
         version.parents.map(async (parent) => {
           const parentVersion = await getVersionObj(parent);
-          const versionInfo: VersionInfo = { ref: parent, tag: modelComponent.getTagOfRefIfExists(parent) };
+          const versionInfo: VersionInfo = {
+            ref: parent,
+            tag: modelComponent.getTagOfRefIfExists(parent),
+            isPartOfHistory: true,
+          };
           if (parentVersion) {
             versionInfo.version = parentVersion;
             await addParentsRecursively(parentVersion);
           } else {
             versionInfo.error = versionInfo.tag
-              ? new VersionNotFound(versionInfo.tag)
+              ? new VersionNotFound(versionInfo.tag, modelComponent.id())
               : new ParentNotFound(modelComponent.id(), version.hash().toString(), parent.toString());
             if (throws) throw versionInfo.error;
           }
@@ -85,9 +100,13 @@ export async function getAllVersionsInfo({
         const ref = modelComponent.versions[version];
         const versionObj = await getVersionObj(ref);
         const versionInfo: VersionInfo = { ref, tag: version };
-        if (versionObj) versionInfo.version = versionObj;
-        else {
-          versionInfo.error = new VersionNotFound(version);
+        if (versionObj) {
+          versionInfo.version = versionObj;
+          // legacy versions didn't have the "parents" concept and they're part of the history.
+          // for new versions, since we didn't find this tag during the traversal, they're not part of history.
+          versionInfo.isPartOfHistory = Boolean(versionObj.isLegacy);
+        } else {
+          versionInfo.error = new VersionNotFound(version, modelComponent.id());
           if (throws) throw versionInfo.error;
         }
         results.push(versionInfo);

@@ -11,6 +11,7 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
+import { ComponentFsCache } from '../component/component-fs-cache';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
@@ -43,33 +44,23 @@ export const LANE_KEY = '_bit_lane';
  * Once .bitmap is saved, the "version" is related by the "defaultVersion" if exists.
  */
 export default class BitMap {
-  projectRoot: string;
-  mapPath: string;
   components: ComponentMap[];
   hasChanged: boolean;
-  version: string;
-  remoteLaneName?: RemoteLaneId;
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
   _cacheIds: { [origin: string]: BitIds | undefined };
   allTrackDirs: { [trackDir: string]: BitId } | null | undefined;
-  workspaceLane: WorkspaceLane | null;
 
   constructor(
-    projectRoot: string,
-    mapPath: string,
-    version: string,
-    workspaceLane: WorkspaceLane | null,
-    remoteLaneName?: RemoteLaneId
+    public projectRoot: string,
+    private mapPath: string,
+    public version: string,
+    public workspaceLane: WorkspaceLane | null,
+    private remoteLaneName?: RemoteLaneId
   ) {
-    this.projectRoot = projectRoot;
-    this.mapPath = mapPath;
     this.components = [];
     this.hasChanged = false;
-    this.version = version;
-    this.remoteLaneName = remoteLaneName;
-    this.workspaceLane = workspaceLane;
     this.paths = {};
     this.pathsLowerCase = {};
     this._cacheIds = {};
@@ -757,7 +748,12 @@ export default class BitMap {
    * the risk of calling this method in other places is a parallel writing of this file, which
    * may result in a damaged file
    */
-  async write(): Promise<any> {
+  async write(componentFsCache: ComponentFsCache): Promise<any> {
+    await Promise.all(
+      this.components.map((c) =>
+        c.recentlyTracked ? componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now()) : Promise.resolve()
+      )
+    );
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();

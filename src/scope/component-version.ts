@@ -35,10 +35,6 @@ export default class ComponentVersion {
     return this.getVersion(repository).then((version) => version.flattenedDependencies);
   }
 
-  flattenedDevDependencies(repository: Repository): Promise<BitIds> {
-    return this.getVersion(repository).then((version) => version.flattenedDevDependencies);
-  }
-
   toId(): BitId {
     return new BitId({
       scope: this.component.scope,

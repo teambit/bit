@@ -48,7 +48,6 @@ type State = {
   };
 };
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
@@ -475,14 +474,14 @@ export default class Component extends BitObject {
 
   async loadVersion(version: string, repository: Repository): Promise<Version> {
     const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version);
+    if (!versionRef) throw new VersionNotFound(version, this.id());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.load(repository);
   }
 
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version);
+    if (!versionRef) throw new VersionNotFound(version, this.id());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
   }
@@ -610,7 +609,6 @@ export default class Component extends BitObject {
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
-      flattenedDevDependencies: version.flattenedDevDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),

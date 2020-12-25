@@ -193,11 +193,12 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     ComponentNotFound,
     (err) => {
-      const msg = err.dependentId
+      const baseMsg = err.dependentId
         ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
             err.dependentId
           )}" was not found`
         : `error: component "${chalk.bold(err.id)}" was not found`;
+      const msg = `${baseMsg}\nconsider running "bit dependents ${err.id}" to understand why this component was needed`;
       return msg;
     },
   ],
@@ -250,9 +251,10 @@ once your changes are merged with the new remote version, you can tag and export
       }
       if (err.idsNeedUpdate) {
         output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
-          .map((i) => `${chalk.bold(i.id)} (lane: ${i.lane})`)
+          .map((i) => `${chalk.bold(i.id)}${i.lane ? ` (lane: ${i.lane})` : ''}`)
           .join(', ')} to the remote scope.
-to resolve this error, please re-import the above components`;
+to resolve this error, please re-import the above components.
+if the component is up to date, run "bit status" to make sure it's not merge-pending`;
       }
       return output;
     },
@@ -411,7 +413,13 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [WriteToNpmrcError, (err) => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, (err) => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
-  [VersionNotFound, (err) => `error: version "${chalk.bold(err.version)}" was not found.`],
+  [
+    VersionNotFound,
+    (err) =>
+      `error: version "${chalk.bold(err.version)}"${
+        err.componentId ? ` of component ${chalk.bold(err.componentId)}` : ''
+      } was not found.`,
+  ],
   [
     ParentNotFound,
     (err) =>

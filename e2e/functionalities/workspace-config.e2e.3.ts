@@ -1669,7 +1669,7 @@ describe('workspace config', function () {
       it('bit tag should throw an error', () => {
         const output = helper.general.runWithTryCatch('bit tag -a');
         expect(output).to.have.string(
-          'unable to save Version object, "overrides.private" is a package.json field but is not compliant with npm requirements. Type for field private, was expected to be boolean, not string'
+          'unable to save Version object of "bar/foo@0.0.1", "overrides.private" is a package.json field but is not compliant with npm requirements. Type for field private, was expected to be boolean, not string'
         );
       });
     });
