@@ -255,6 +255,7 @@ export default class Repository {
   }
 
   clearCache() {
+    logger.debug('repository.clearCache');
     this._cache = {};
   }
 
