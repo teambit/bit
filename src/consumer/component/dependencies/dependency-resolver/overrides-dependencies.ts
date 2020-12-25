@@ -134,7 +134,10 @@ export default class OverridesDependencies {
   ): { components: Record<string, any>; packages: Record<string, any> } | null | undefined {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
-    const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const idsFromBitmap = this.consumer.bitMap.getAllBitIdsFromAllLanes([
+      COMPONENT_ORIGINS.AUTHORED,
+      COMPONENT_ORIGINS.IMPORTED,
+    ]);
     const components = {};
     const packages = {};
     DEPENDENCIES_FIELDS.forEach((depField) => {
