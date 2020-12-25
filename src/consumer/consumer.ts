@@ -148,7 +148,7 @@ export default class Consumer {
 
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get bitmapIds(): BitIds {
-    return this.bitMap.getAllBitIds();
+    return this.bitMap.getAllBitIdsFromAllLanes();
   }
 
   clearCache() {

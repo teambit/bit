@@ -212,7 +212,12 @@ export default class BitMap {
     return R.filter(filter, this.components);
   }
 
-  getAllBitIds(origin?: ComponentOrigin[]): BitIds {
+  /**
+   * important! you probably want to use "getAllIdsAvailableOnLane".
+   * this method returns ids that are not available on the current lane and will throw errors when
+   * trying to load them.
+   */
+  getAllBitIdsFromAllLanes(origin?: ComponentOrigin[]): BitIds {
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map((c) => c.id));
     const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
       const cacheKey = oneOrigin || 'all';
@@ -264,7 +269,7 @@ export default class BitMap {
     if (!(bitId instanceof BitId)) {
       throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
-    const allIds = this.getAllBitIds();
+    const allIds = this.getAllBitIdsFromAllLanes();
     const exactMatch = allIds.search(bitId);
     if (exactMatch) return exactMatch;
     if (ignoreVersion) {
@@ -340,7 +345,7 @@ export default class BitMap {
   }
 
   getNonNestedComponentIfExist(bitId: BitId): ComponentMap | undefined {
-    const nonNestedIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const nonNestedIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
     const id: BitId | undefined = nonNestedIds.searchWithoutScopeAndVersion(bitId);
     if (!id) return undefined;
     return this.getComponent(id);
@@ -351,7 +356,7 @@ export default class BitMap {
   }
 
   getAuthoredAndImportedBitIds(): BitIds {
-    return this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    return this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   }
 
   getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
@@ -367,7 +372,7 @@ export default class BitMap {
   }
 
   getAuthoredExportedComponents(): BitId[] {
-    const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
+    const authoredIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter((id) => id.hasScope());
   }
   getAuthoredNonExportedComponents(): BitId[] {
@@ -385,7 +390,7 @@ export default class BitMap {
    * if compareWithoutScope is false, the scope should be identical in addition to the name
    */
   findSimilarIds(id: BitId, compareWithoutScope = false): BitIds {
-    const allIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const allIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
     const similarIds = allIds.filter((existingId: BitId) => {
       const isSimilar = compareWithoutScope
         ? existingId.isEqualWithoutScopeAndVersion(id)
