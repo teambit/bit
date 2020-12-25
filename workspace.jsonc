@@ -261,7 +261,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.231",
+        "bit-bin": "14.8.9-dev.234",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -317,7 +317,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.231",
+            "bit-bin": "14.8.9-dev.234",
             "react-dom": "^16.13.1"
           }
         }
@@ -394,7 +394,16 @@
       "defaultScope": "teambit.component"
     },
     "scopes/component/component-id": {
-      "defaultScope": "teambit.component",
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/component/component-version": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/component/legacy-bit-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       }
@@ -431,7 +440,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.231",
+            "bit-bin": "14.8.9-dev.234",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
