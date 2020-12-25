@@ -1,5 +1,5 @@
 import type { Scope } from '..';
 
-export interface Action<Options, Result> {
-  execute(scope: Scope, options: Options): Promise<Result>;
+export interface Action<Options = undefined, Result = void> {
+  execute(scope: Scope, options?: Options): Promise<Result>;
 }
