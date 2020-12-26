@@ -56,7 +56,7 @@ export class TesterTask implements BuildTask {
     return {
       artifacts: [], // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => {
-        const errors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
+        const componentErrors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
           if (file?.error?.failureMessage) {
             errors.push(file.error.failureMessage);
           }
@@ -69,7 +69,7 @@ export class TesterTask implements BuildTask {
         return {
           component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
           metadata: { tests: componentTests.results },
-          errors,
+          errors: componentErrors,
         };
       }),
     };
