@@ -56,12 +56,20 @@ export class TesterTask implements BuildTask {
     return {
       artifacts: [], // @ts-ignore
       componentsResults: testsResults.components.map((componentTests) => {
+        const errors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
+          if (file?.error?.failureMessage) {
+            errors.push(file.error.failureMessage);
+          }
+          file.tests.forEach((test) => {
+            if (test.error) errors.push(test.error);
+          });
+
+          return errors;
+        }, []);
         return {
           component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
           metadata: { tests: componentTests.results },
-          errors: componentTests.results?.testFiles
-            .map((testFile) => testFile.error?.failureMessage)
-            .filter((item) => item),
+          errors,
         };
       }),
     };
