@@ -18,7 +18,7 @@ const WAIT_BEFORE_RETRY_IN_MS = 1000;
  * once done, clear the objects from the memory so then they won't be used by mistake later on.
  * this also makes sure that non-external dependencies are not missing.
  */
-export class ExportValidate implements Action<Options, void> {
+export class ExportValidate implements Action<Options> {
   scope: Scope;
   clientId: string;
   async execute(scope: Scope, options: Options) {
