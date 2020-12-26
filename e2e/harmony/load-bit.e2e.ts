@@ -5,7 +5,7 @@ import { expect } from 'chai';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
-describe.only('loadBit()', function () {
+describe('loadBit()', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
