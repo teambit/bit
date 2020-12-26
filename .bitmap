@@ -162,11 +162,6 @@
                 "test": false
             },
             {
-                "name": "compiler.spec.ts",
-                "relativePath": "compiler.spec.ts",
-                "test": false
-            },
-            {
                 "name": "compiler.task.ts",
                 "relativePath": "compiler.task.ts",
                 "test": false
