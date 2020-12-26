@@ -162,6 +162,11 @@
                 "test": false
             },
             {
+                "name": "compiler.spec.ts",
+                "relativePath": "compiler.spec.ts",
+                "test": false
+            },
+            {
                 "name": "compiler.task.ts",
                 "relativePath": "compiler.task.ts",
                 "test": false
@@ -3928,6 +3933,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "load-bit.ts",
+                "relativePath": "load-bit.ts",
                 "test": false
             },
             {
