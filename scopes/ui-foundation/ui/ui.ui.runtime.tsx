@@ -76,19 +76,28 @@ export class UiUI {
     const uiRoot = rootFactory();
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: window.location.href });
     const hudItems = this.hudSlot.values();
-    const contexts = this.contextSlot.values();
 
-    // .render() should already run .hydrate() if possible.
-    // in the future, we may want to replace it with .hydrate()
-    ReactDOM.render(
-      <Compose components={contexts}>
+    const lifecycleHooks = this.lifecycleSlot.toArray();
+    const renderContexts = await this.deserialize(lifecycleHooks);
+    const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
+
+    const app = (
+      <Compose components={reactContexts}>
         <ClientContext>
           {hudItems}
           {routes}
         </ClientContext>
-      </Compose>,
-      document.getElementById('root')
+      </Compose>
     );
+
+    await Promise.all(lifecycleHooks.map(([key, hooks], idx) => hooks.onBeforeHydrate?.(app, renderContexts[idx])));
+
+    const mountPoint = document.getElementById('root');
+    // .render() should already run .hydrate() if possible.
+    // in the future, we may want to replace it with .hydrate()
+    ReactDOM.render(app, mountPoint);
+
+    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onHydrate?.(mountPoint, renderContexts[idx])));
   }
 
   async renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
@@ -204,15 +213,37 @@ export class UiUI {
     return { json };
   }
 
+  private async deserialize(lifecycleHooks: [string, RenderLifecycle][]) {
+    const raws: Record<string, Element> = {};
+
+    const inDom = Array.from(document.querySelectorAll('body > .state > *'));
+    inDom.forEach((elem) => {
+      const aspectName = elem.getAttribute('data-aspect');
+      if (!aspectName) return;
+
+      raws[aspectName] = elem;
+    });
+
+    const deserialized = await Promise.all(
+      lifecycleHooks.map(async ([key, hooks]) => {
+        const raw = raws[key];
+        try {
+          return hooks.deserialize?.(raw.innerHTML);
+        } catch (e) {
+          console.log(`failed deserializing server state for aspect ${key}`);
+          return undefined;
+        }
+      })
+    );
+
+    return deserialized;
+  }
+
   private getRoot(rootExtension: string) {
     return this.uiRootSlot.get(rootExtension);
   }
 
-  static slots = [
-    Slot.withType<UIRootFactory>(),
-    Slot.withType<ReactNode>(),
-    Slot.withType<RenderLifecycle>(),
-  ];
+  static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderLifecycle>()];
 
   static dependencies = [ReactRouterAspect];
 

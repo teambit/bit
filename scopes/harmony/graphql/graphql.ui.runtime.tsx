@@ -23,6 +23,8 @@ type RenderContext = {
   client: ApolloClient<any>;
 };
 
+type ClientOptions = { state?: NormalizedCacheObject };
+
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
 
@@ -40,10 +42,13 @@ export class GraphqlUI {
     return this.client.query(options);
   }
 
-  createClient(host: string = typeof window !== 'undefined' ? window.location.host : '/') {
+  createClient(
+    host: string = typeof window !== 'undefined' ? window.location.host : '/',
+    { state }: ClientOptions = {}
+  ) {
     const client = new ApolloClient({
       link: this.createApolloLink(host),
-      cache: this.getCache({ restore: true }),
+      cache: this.getCache({ state }),
     });
 
     return client;
@@ -87,33 +92,14 @@ export class GraphqlUI {
     ]);
   }
 
-  private getCache({ restore }: { restore?: boolean } = {}) {
+  private getCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache({
       dataIdFromObject: getIdFromObject,
     });
 
-    const restored = restore && this.restoreCacheFromDom();
-    if (restored) cache.restore(restored);
+    if (state) cache.restore(state);
 
     return cache;
-  }
-
-  private restoreCacheFromDom() {
-    try {
-      const domState = typeof document !== 'undefined' && document.getElementById(GraphqlAspect.id);
-
-      if (!domState) {
-        console.log('no cache to load');
-        return undefined;
-      }
-
-      const parsed = JSON.parse(domState.innerHTML) as NormalizedCacheObject;
-      return parsed;
-    } catch (e) {
-      console.error('failing loading cache', e);
-    }
-
-    return undefined;
   }
 
   createLinks() {
@@ -147,8 +133,9 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  Provider = ({ children }: { children: ReactNode }) => {
-    return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
+  Provider = ({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) => {
+    const client = renderCtx?.client || this.client;
+    return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
 
   SsrProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {
@@ -186,6 +173,21 @@ export class GraphqlUI {
     };
   }
 
+  protected deserialize(raw?: string) {
+    if (!raw) return undefined;
+    let state: NormalizedCacheObject | undefined;
+    try {
+      state = JSON.parse(raw);
+    } catch (e) {
+      console.error('failed deserializing graphql state');
+    }
+
+    const client = this.createClient(undefined, { state });
+    this._client = client;
+
+    return { client };
+  }
+
   static dependencies = [UIAspect];
 
   static runtime = UIRuntime;
@@ -200,6 +202,7 @@ export class GraphqlUI {
       init: graphqlUI.renderInit.bind(graphqlUI),
       onBeforeRender: graphqlUI.prePopulate.bind(graphqlUI),
       serialize: graphqlUI.serialize.bind(graphqlUI),
+      deserialize: graphqlUI.deserialize.bind(graphqlUI),
       reactContext: GqlContext,
     });
 

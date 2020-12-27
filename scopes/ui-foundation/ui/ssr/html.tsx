@@ -34,10 +34,19 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
 
         <MountPoint>{children}</MountPoint>
 
-        {assets.json &&
-          Object.entries(assets.json).map(([key, content]) => (
-            <script key={key} id={key} type="application/json" dangerouslySetInnerHTML={{ __html: content }} />
-          ))}
+        {assets.json && (
+          <div className="state" style={{ display: 'none' }}>
+            {Object.entries(assets.json).map(([key, content]) => (
+              <script
+                key={key}
+                data-aspect={key}
+                type="application/json"
+                dangerouslySetInnerHTML={{ __html: content }}
+              />
+            ))}
+          </div>
+        )}
+
         {/* load scripts after showing the the whole html  */}
         {assets.js?.map((x, idx) => (
           <script key={idx} src={x} />
