@@ -291,7 +291,7 @@ export default function (): Configuration {
                   options: {
                     babelrc: false,
                     configFile: false,
-                    presets: [require.resolve('babel-preset-react-app')],
+                    presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
                   },
                 },
                 {
