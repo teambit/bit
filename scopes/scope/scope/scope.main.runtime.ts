@@ -35,7 +35,7 @@ import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import BluebirdPromise from 'bluebird';
-import { ExportPersist } from 'bit-bin/dist/scope/actions';
+import { ExportPersist, PostSign } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
 import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
@@ -159,7 +159,6 @@ export class ScopeMain implements ComponentFactory {
    * register to the post-export slot.
    */
   onPostPut(postPutFn: OnPostPut) {
-    this.legacyScope.onPostExport.push(postPutFn);
     this.postPutSlot.register(postPutFn);
     return this;
   }
@@ -413,6 +412,23 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * load components from a scope and load its aspects.
+   */
+  async loadMany(ids: ComponentID[]) {
+    // get all components.
+    const components = await this.getMany(ids);
+    // load all component aspects.
+    await Promise.all(
+      components.map(async (component) => {
+        const aspectIds = component.state.aspects.ids;
+        await this.loadAspects(aspectIds);
+      })
+    );
+
+    return components;
+  }
+
+  /**
    * get a component and throw an exception if not found.
    * @param id component id
    */
@@ -513,6 +529,8 @@ export class ScopeMain implements ComponentFactory {
     return getScopeRemotes(this.legacyScope);
   }
 
+  load() {}
+
   /**
    * declare the slots of scope extension.
    */
@@ -546,7 +564,8 @@ export class ScopeMain implements ComponentFactory {
     harmony: Harmony
   ) {
     cli.register(new ExportCmd());
-    const legacyScope = await loadScopeIfExist();
+    const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+    const legacyScope = await loadScopeIfExist(bitConfig.cwd);
     if (!legacyScope) {
       return undefined;
     }
@@ -568,13 +587,16 @@ export class ScopeMain implements ComponentFactory {
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    ExportPersist.onPutHook = async (ids: string[]): Promise<void> => {
+    const onPutHook = async (ids: string[]): Promise<void> => {
       logger.debug(`ExportPersist.onPutHook, started. (${ids.length} components)`);
       const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postPutSlot.values();
       await Promise.all(fns.map(async (fn) => fn(componentIds)));
       logger.debug(`ExportPersist.onPutHook, completed. (${ids.length} components)`);
     };
+
+    ExportPersist.onPutHook = onPutHook;
+    PostSign.onPutHook = onPutHook;
 
     express.register([
       new PutRoute(scope, postPutSlot),

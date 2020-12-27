@@ -58,9 +58,10 @@ export class ComponentID {
   /**
    * return the scope if included in the ID.
    */
-  get scope() {
+  get scope(): string {
     const scope = this._legacy.scope;
     if (scope) return scope;
+    if (!this._scope) throw new Error('scope cannot be undefined');
     return this._scope;
   }
 
