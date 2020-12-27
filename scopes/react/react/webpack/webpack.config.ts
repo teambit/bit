@@ -16,6 +16,7 @@ const moduleFileExtensions = [
   'web.jsx',
   'jsx',
   'mdx',
+  'md',
 ];
 
 export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
