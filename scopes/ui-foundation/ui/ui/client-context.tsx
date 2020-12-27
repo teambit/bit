@@ -4,7 +4,7 @@ import React, { ReactNode } from 'react';
 
 import { LoaderContext, LoaderRibbon, useLoaderApi } from './global-loader';
 
-export function ClientContext({ children }: { children?: ReactNode }) {
+export function ClientContext({ children }: { children: ReactNode }) {
   const [loaderApi, isLoading] = useLoaderApi();
 
   return (

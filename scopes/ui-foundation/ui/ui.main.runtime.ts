@@ -165,17 +165,8 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
-      // TEMP! WIP!
-      // await this.buildIfChanged(name, uiRoot, rebuild);
-      // const bundlingStats = await this.buildIfNoBundle(name, uiRoot);
-      const multiStats = await this.build(name);
-      const [browserBundle, ssrBundle] = multiStats.stats;
-
-      if (multiStats.hasErrors()) {
-        // TEMP
-        console.error('bundling error:', browserBundle.compilation.errors, ssrBundle.compilation.errors);
-      }
-
+      await this.buildIfChanged(name, uiRoot, rebuild);
+      await this.buildIfNoBundle(name, uiRoot);
       await uiServer.start({ port: targetPort });
     }
 
