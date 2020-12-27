@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime, UIAspect, UiUI, BrowserData } from '@teambit/ui';
+import { UIRuntime, BrowserData } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
 import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
@@ -144,6 +144,14 @@ export class GraphqlUI {
     return <ApolloProvider client={client}>{children}</ApolloProvider>;
   }
 
+  renderHooks = {
+    init: this.renderInit.bind(this),
+    onBeforeRender: this.prePopulate.bind(this),
+    serialize: this.serialize.bind(this),
+    deserialize: this.deserialize.bind(this),
+    reactContext: typeof window !== 'undefined' ? this.Provider : this.SsrProvider,
+  };
+
   protected renderInit(browser?: BrowserData) {
     if (!browser) return undefined;
 
@@ -188,23 +196,14 @@ export class GraphqlUI {
     return { client };
   }
 
-  static dependencies = [UIAspect];
+  static dependencies = [];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<GraphQLServer>()];
 
-  static async provider([uiUi]: [UiUI], config, [serverSlot]: [GraphQLServerSlot]) {
+  static async provider(deps, config, [serverSlot]: [GraphQLServerSlot]) {
     const graphqlUI = new GraphqlUI(serverSlot);
-
-    const GqlContext = typeof window !== 'undefined' ? graphqlUI.Provider : graphqlUI.SsrProvider;
-    uiUi.registerRenderHooks({
-      init: graphqlUI.renderInit.bind(graphqlUI),
-      onBeforeRender: graphqlUI.prePopulate.bind(graphqlUI),
-      serialize: graphqlUI.serialize.bind(graphqlUI),
-      deserialize: graphqlUI.deserialize.bind(graphqlUI),
-      reactContext: GqlContext,
-    });
 
     return graphqlUI;
   }

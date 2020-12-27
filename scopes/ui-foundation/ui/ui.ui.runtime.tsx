@@ -1,3 +1,5 @@
+import type { GraphqlUI } from '@teambit/graphql';
+import { GraphqlAspect } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
@@ -245,16 +247,20 @@ export class UiUI {
 
   static slots = [Slot.withType<UIRootFactory>(), Slot.withType<ReactNode>(), Slot.withType<RenderLifecycle>()];
 
-  static dependencies = [ReactRouterAspect];
+  static dependencies = [GraphqlAspect, ReactRouterAspect];
 
   static runtime = UIRuntime;
 
   static async provider(
-    [router]: [ReactRouterUI],
+    [GraphqlAspect, router]: [GraphqlUI, ReactRouterUI],
     config,
     [uiRootSlot, hudSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
   ) {
-    return new UiUI(router, uiRootSlot, hudSlot, ssrLifecycleSlot);
+    const uiUi = new UiUI(router, uiRootSlot, hudSlot, ssrLifecycleSlot);
+
+    uiUi.registerRenderHooks(GraphqlAspect.renderHooks);
+
+    return uiUi;
   }
 }
 
