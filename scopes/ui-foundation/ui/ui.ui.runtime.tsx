@@ -92,7 +92,7 @@ export class UiUI {
       </Compose>
     );
 
-    await Promise.all(lifecycleHooks.map(([key, hooks], idx) => hooks.onBeforeHydrate?.(app, renderContexts[idx])));
+    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onBeforeHydrate?.(app, renderContexts[idx])));
 
     const mountPoint = document.getElementById('root');
     // .render() should already run .hydrate() if possible.
@@ -260,13 +260,13 @@ export class UiUI {
   static runtime = UIRuntime;
 
   static async provider(
-    [GraphqlAspect, router]: [GraphqlUI, ReactRouterUI],
+    [GraphqlUi, router]: [GraphqlUI, ReactRouterUI],
     config,
     [uiRootSlot, hudSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
   ) {
     const uiUi = new UiUI(router, uiRootSlot, hudSlot, ssrLifecycleSlot);
 
-    uiUi.registerRenderHooks(GraphqlAspect.renderHooks);
+    uiUi.registerRenderHooks(GraphqlUi.renderHooks);
 
     return uiUi;
   }
