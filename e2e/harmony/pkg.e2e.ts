@@ -94,8 +94,7 @@ describe('pkg extension', function () {
         helper.command.addComponent(extensionFolder);
         helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.harmony/aspect');
         helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
-        helper.scopeHelper.linkBitBin();
-        helper.command.link();
+        helper.command.install();
         helper.command.compile();
         helper.command.createCapsuleHarmony('bar/foo');
         helper.command.createCapsuleHarmony('utils/is-type');
