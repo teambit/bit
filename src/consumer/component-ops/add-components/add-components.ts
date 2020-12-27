@@ -850,7 +850,7 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
   }
 
   _removeNamespaceIfNotNeeded(addedComponents: AddedComponent[]): void {
-    const allIds = this.bitMap.getAllBitIds();
+    const allIds = this.bitMap.getAllBitIdsFromAllLanes();
     addedComponents.forEach((addedComponent) => {
       if (!addedComponent.idFromPath) return; // when the id was not generated from the path do nothing.
       const componentsWithSameName = addedComponents // $FlowFixMe
