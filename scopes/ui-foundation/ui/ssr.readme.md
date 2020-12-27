@@ -48,6 +48,21 @@ hooks.onHydrate(ref, context);
 
 The rendering flow will ensure that the rendering Context will be unique per request, and keep a separation between aspects.
 
+## Hiding elements before JS execution
+
+Certain items look badly in the static HTML, and only get decent when JS executes. Tooltips are a notable example. They take up space in the DOM and only hide once their react code runs.
+
+For this, I added a continence class `--ssr-hidden`. Add this to any misbehaving element, and it will have `display: none` until reactDom.render() is complete.
+
+## .rehydrate vs .render()
+
+.rehydrate() attach a React virtual dom to a mount point, without asserting the virtual-dom matches the actual dom.  
+.render() updates the mount point to match the react virtual dom.
+
+On paper, `.rehydrate()` should be the preferred option.  
+In practice, `.render()` is backward compatible to React 15, and will know to "hydrate" according to the `data-reactroot` attribute on the mount point, without revalidating the DOM.  
+ReactDOM should show up warnings in dev mode about mismatch between ssr dom and the client side dom.
+
 ## Best practices
 
 - Use ReactContext instead of mutating `App`.

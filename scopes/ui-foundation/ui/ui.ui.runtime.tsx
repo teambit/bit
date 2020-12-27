@@ -100,6 +100,9 @@ export class UiUI {
     ReactDOM.render(app, mountPoint);
 
     await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onHydrate?.(mountPoint, renderContexts[idx])));
+
+    // remove ssr only styles
+    document.getElementById('ssr-before-hydrate-styles')?.remove();
   }
 
   async renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
@@ -237,6 +240,11 @@ export class UiUI {
         }
       })
     );
+
+    document.querySelector('body > .state')?.remove();
+
+    // @ts-ignore
+    window.__ssrState = deserialized;
 
     return deserialized;
   }

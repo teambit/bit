@@ -18,6 +18,11 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
       <head>
         <meta charSet="utf-8" />
         <title>{title}</title>
+        <style id="ssr-before-hydrate-styles">
+          .--ssr-hidden {'{'}
+            display: none;
+          {'}'}
+        </style>
         <script>
           {/* // Allow to use react dev-tools inside the examples */}
           {withDevTools
