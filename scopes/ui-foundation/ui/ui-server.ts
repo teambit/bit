@@ -6,7 +6,7 @@ import fallback from 'express-history-api-fallback';
 import getPort from 'get-port';
 import { Server } from 'http';
 import httpProxy from 'http-proxy';
-import { join /* , extname */ } from 'path';
+import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import { ssrRenderer } from './ssr/render-middleware';
@@ -79,9 +79,11 @@ export class UIServer {
     // set up preview proxy, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
 
-    const ssrMiddleware = await ssrRenderer({
-      rootPath: this.uiRoot.path,
-    });
+    const ssrMiddleware =
+      this.uiRoot.buildOptions?.ssr &&
+      (await ssrRenderer({
+        rootPath: this.uiRoot.path,
+      }));
 
     if (ssrMiddleware) {
       app.get('*', ssrMiddleware);
