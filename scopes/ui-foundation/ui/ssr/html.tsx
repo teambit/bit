@@ -3,7 +3,7 @@ import React, { ReactNode } from 'react';
 export type Assets = Partial<{
   js: string[];
   css: string[];
-  state: Record<string, string>;
+  json: Record<string, string>;
 }>;
 
 interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
@@ -34,8 +34,8 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
 
         <MountPoint>{children}</MountPoint>
 
-        {assets.state &&
-          Object.entries(assets.state).map(([key, content]) => (
+        {assets.json &&
+          Object.entries(assets.json).map(([key, content]) => (
             <script key={key} id={key} type="application/json" dangerouslySetInnerHTML={{ __html: content }} />
           ))}
         {/* load scripts after showing the the whole html  */}

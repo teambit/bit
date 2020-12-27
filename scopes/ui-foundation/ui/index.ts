@@ -4,7 +4,7 @@ export * from './events';
 export { useDataQuery } from './ui/data/use-data-query';
 export { UIRoot, PostStartOptions, ProxyEntry } from './ui-root';
 export type { UiMain } from './ui.main.runtime';
-export type { UiUI, SsrLifecycle, ContextComponentType } from './ui.ui.runtime';
+export type { UiUI, RenderLifecycle, ContextProps } from './ui.ui.runtime';
 export { UIRootUI, UIRootFactory } from './ui-root.ui';
 export { UIAspect, UIRuntime };
 export type { BrowserData } from './ssr/request-browser';

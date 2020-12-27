@@ -5,8 +5,9 @@ import { ReactRouterAspect } from '@teambit/react-router';
 import React, { ReactNode, ComponentType } from 'react';
 import ReactDOM from 'react-dom';
 import ReactDOMServer from 'react-dom/server';
+import compact from 'lodash.compact';
 
-import { Compose } from './compose';
+import { Compose, Wrapper } from './compose';
 import { UIRootFactory } from './ui-root.ui';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { ClientContext } from './ui/client-context';
@@ -14,7 +15,7 @@ import { Html, MountPoint, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
 import type { BrowserData } from './ssr/request-browser';
 
-export type SsrLifecycle<T = any> = {
+export type RenderLifecycle<T = any> = {
   /**
    * Initialize a context state for this specific rendering.
    * Context state will only be available to the current Aspect, in the other hooks, as well as a prop to the react context component.
@@ -25,20 +26,29 @@ export type SsrLifecycle<T = any> = {
    */
   onBeforeRender?: (ctx: T, app: ReactNode) => T | Promise<T> | undefined;
   /**
-   * Produce html assets, after the body is rendered, and before rendering the complete html.
+   * Produce html assets. Runs after the body is rendered, and before rendering the final html.
    * @returns
-   * state: will be rendered to the dom as a `<script type="json"/>`.
+   * json: will be rendered to the dom as a `<script type="json"/>`.
    * More assets will be available in the future.
    */
-  onSerializeAssets?: (ctx: T, app: ReactNode) => { state: string } | Promise<{ state: string }> | undefined;
+  serialize?: (ctx: T, app: ReactNode) => { json: string } | Promise<{ json: string }> | undefined;
+  /**
+   * converts serialized data from raw string back to structured data.
+   */
+  deserialize?: (data?: string) => T;
+  onBeforeHydrate?: (app: ReactNode, context: T) => void;
+  onHydrate?: (ref: HTMLElement | null, context: T) => void;
+
+  /**
+   * Wraps dom with a context. Will receive render context, produced by `onBeforeRender()`
+   */
+  reactContext?: ComponentType<ContextProps<T>>;
 };
 
-export type ContextComponentType<T = any> = ComponentType<{ renderCtx?: T; children: ReactNode }>;
-type RenderingContext = Record<string, any>;
+export type ContextProps<T = any> = { renderCtx?: T; children: ReactNode };
 
 type HudSlot = SlotRegistry<ReactNode>;
-type ContextSlot = SlotRegistry<ContextComponentType>;
-type SsrLifecycleSlot = SlotRegistry<SsrLifecycle>;
+type renderLifecycleSlot = SlotRegistry<RenderLifecycle>;
 type UIRootRegistry = SlotRegistry<UIRootFactory>;
 
 /**
@@ -56,10 +66,8 @@ export class UiUI {
     private uiRootSlot: UIRootRegistry,
     /** slot for overlay ui elements */
     private hudSlot: HudSlot,
-    /** slot for context provider elements */
-    private contextSlot: ContextSlot,
     /** hooks into the ssr render process */
-    private ssrLifecycleSlot: SsrLifecycleSlot
+    private lifecycleSlot: renderLifecycleSlot
   ) {}
 
   async render(rootExtension: string) {
@@ -90,20 +98,18 @@ export class UiUI {
     const uiRoot = rootFactory();
     const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation: browser?.location.url });
     const hudItems = this.hudSlot.values();
-    const contexts = this.contextSlot.values();
+
+    // create array once to keep consistent indexes
+    const lifecycleHooks = this.lifecycleSlot.toArray();
 
     // (1) init
-    let renderCtx = await this.initSsrContext(browser);
-
-    const contextProps = this.contextSlot
-      .toArray()
-      .map(([key]) => renderCtx[key])
-      .map((ctx) => ({ renderCtx: ctx }));
+    let renderContexts = await Promise.all(lifecycleHooks.map(([, hooks]) => hooks.init?.(browser)));
+    const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
 
     // (2) make (virtual) dom
     const app = (
       <MountPoint>
-        <Compose components={contexts} forwardProps={contextProps}>
+        <Compose components={reactContexts}>
           <ClientContext>
             {hudItems}
             {routes}
@@ -113,11 +119,14 @@ export class UiUI {
     );
 
     // (3) render
-    renderCtx = await this.onBeforeRender(renderCtx, app);
+    renderContexts = await this.onBeforeRender(renderContexts, lifecycleHooks, app);
+
     const renderedApp = ReactDOMServer.renderToString(app);
 
     // (3) render html-template
-    const realtimeAssets = await this.onSerializeAssets(renderCtx, app);
+    const realtimeAssets = await this.serialize(lifecycleHooks, renderContexts, app);
+
+    // TODO - merge assets deeply (maybe using webpack-merge)
     const html = <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets }} />;
     const renderedHtml = `<!DOCTYPE html>${ReactDOMServer.renderToStaticMarkup(html)}`;
     const fullHtml = Html.fillContent(renderedHtml, renderedApp);
@@ -131,68 +140,68 @@ export class UiUI {
     this.hudSlot.register(element);
   };
 
-  // ** adds global context at the ui root */
-  registerContext<T>(context: ContextComponentType<T>) {
-    this.contextSlot.register(context);
+  /**
+   * adds global context at the ui root
+   * @deprecated replace with `.registerRenderHooks({ reactContext })`.
+   */
+  registerContext<T>(context: ComponentType<ContextProps<T>>) {
+    this.lifecycleSlot.register({
+      reactContext: context,
+    });
   }
 
   registerRoot(uiRoot: UIRootFactory) {
     return this.uiRootSlot.register(uiRoot);
   }
 
-  registerRenderHooks(hooks: SsrLifecycle) {
-    return this.ssrLifecycleSlot.register(hooks);
+  registerRenderHooks(hooks: RenderLifecycle) {
+    return this.lifecycleSlot.register(hooks);
   }
 
-  private async initSsrContext(browserData: BrowserData | undefined) {
-    const ctx = {};
-
-    const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
-      if (!hooks.init) return;
-
-      const result = await hooks.init(browserData);
-      if (result) ctx[key] = result;
-    });
-
-    await Promise.all(promises);
-
-    return ctx;
+  private getReactContexts(lifecycleHooks: [string, RenderLifecycle<any>][], renderContexts: any[]): Wrapper[] {
+    return compact(
+      lifecycleHooks.map(([, hooks], idx) => {
+        const renderCtx = renderContexts[idx];
+        const props = { renderCtx };
+        return hooks.reactContext ? [hooks.reactContext, props] : undefined;
+      })
+    );
   }
 
-  private async onBeforeRender(ctx: RenderingContext, app: ReactNode) {
-    const update: RenderingContext = {};
-
-    const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
-      if (!hooks.onBeforeRender) return;
-
-      const result = await hooks.onBeforeRender(ctx[key], app);
-      if (result) update[key] = result;
-    });
-
-    await Promise.all(promises);
-
-    return {
-      ...ctx,
-      ...update,
-    };
+  private async onBeforeRender(
+    renderContexts: any[],
+    lifecycleHooks: [string, RenderLifecycle<any>][],
+    app: JSX.Element
+  ) {
+    renderContexts = await Promise.all(
+      lifecycleHooks.map(async ([, hooks], idx) => {
+        const ctx = renderContexts[idx];
+        const nextCtx = await hooks.onBeforeRender?.(ctx, app);
+        return nextCtx || ctx;
+      })
+    );
+    return renderContexts;
   }
 
-  private async onSerializeAssets(ctx: RenderingContext, app: ReactNode) {
-    const state = {};
+  private async serialize(
+    lifecycleHooks: [string, RenderLifecycle][],
+    renderContexts: any[],
+    app: ReactNode
+  ): Promise<Assets> {
+    const json = {};
 
-    const promises = this.ssrLifecycleSlot.toArray().map(async ([key, hooks]) => {
-      if (!hooks.onSerializeAssets) return;
+    await Promise.all(
+      lifecycleHooks.map(async ([key, hooks], idx) => {
+        const renderCtx = renderContexts[idx];
+        const result = await hooks.serialize?.(renderCtx, app);
 
-      const result = await hooks.onSerializeAssets(ctx[key], app);
+        if (!result) return;
+        if (result.json) json[key] = result.json;
+      })
+    );
 
-      if (result?.state) state[key] = result.state;
-    });
-
-    await Promise.all(promises);
-
-    // more assets will be added in the future
-    const assets: Assets = { state };
-    return assets;
+    // more assets will be available in the future
+    return { json };
   }
 
   private getRoot(rootExtension: string) {
@@ -202,8 +211,7 @@ export class UiUI {
   static slots = [
     Slot.withType<UIRootFactory>(),
     Slot.withType<ReactNode>(),
-    Slot.withType<ContextComponentType>(),
-    Slot.withType<SsrLifecycle>(),
+    Slot.withType<RenderLifecycle>(),
   ];
 
   static dependencies = [ReactRouterAspect];
@@ -213,9 +221,9 @@ export class UiUI {
   static async provider(
     [router]: [ReactRouterUI],
     config,
-    [uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, ContextSlot, SsrLifecycleSlot]
+    [uiRootSlot, hudSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
   ) {
-    return new UiUI(router, uiRootSlot, hudSlot, contextSlot, ssrLifecycleSlot);
+    return new UiUI(router, uiRootSlot, hudSlot, ssrLifecycleSlot);
   }
 }
 

@@ -157,7 +157,7 @@ export class GraphqlUI {
     return <ApolloProvider client={client}>{children}</ApolloProvider>;
   }
 
-  protected initRender(browser?: BrowserData) {
+  protected renderInit(browser?: BrowserData) {
     if (!browser) return undefined;
 
     // maybe we should use internal url?
@@ -182,7 +182,7 @@ export class GraphqlUI {
     if (!client) return undefined;
 
     return {
-      state: JSON.stringify(client.extract()),
+      json: JSON.stringify(client.extract()),
     };
   }
 
@@ -196,11 +196,11 @@ export class GraphqlUI {
     const graphqlUI = new GraphqlUI(serverSlot);
 
     const GqlContext = typeof window !== 'undefined' ? graphqlUI.Provider : graphqlUI.SsrProvider;
-    uiUi.registerContext(GqlContext);
     uiUi.registerRenderHooks({
-      init: graphqlUI.initRender.bind(graphqlUI),
+      init: graphqlUI.renderInit.bind(graphqlUI),
       onBeforeRender: graphqlUI.prePopulate.bind(graphqlUI),
-      onSerializeAssets: graphqlUI.serialize.bind(graphqlUI),
+      serialize: graphqlUI.serialize.bind(graphqlUI),
+      reactContext: GqlContext,
     });
 
     return graphqlUI;
