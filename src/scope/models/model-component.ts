@@ -537,7 +537,10 @@ export default class Component extends BitObject {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTag(versionNum!)) {
       throw new ShowDoctorError(
-        `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
+        `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersions().join(
+          '\n'
+        )}, versions array.
+make sure that this component is available on your lane.`
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

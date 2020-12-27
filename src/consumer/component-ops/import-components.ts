@@ -230,7 +230,7 @@ export default class ImportComponents {
     // missing objects.
     // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
+    const importedComponents = this.consumer.bitMap.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED]);
     const componentsIdsToImport = BitIds.fromArray([
       ...authoredExportedComponents,
       ...importedComponents,

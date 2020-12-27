@@ -87,7 +87,7 @@ export class JestTester implements Tester {
             error || undefined
           );
         });
-        const filePath = file?.relative || test.testFilePath;
+        const filePath = file?.basename || test.testFilePath;
         const error = {
           failureMessage: test.testExecError ? test.failureMessage : undefined,
           error: test.testExecError?.message,
@@ -119,6 +119,9 @@ export class JestTester implements Tester {
       if (test.testExecError) {
         const { message, stack, code, type } = test.testExecError;
         errors.push(new JestError(message, stack, code, type));
+      }
+      if (test.failureMessage) {
+        errors.push(new JestError(test.failureMessage));
       }
       return errors;
     }, []);

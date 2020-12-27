@@ -23,7 +23,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
-const jest = require('jest');
+const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 
@@ -87,7 +87,7 @@ export class ReactEnv implements Environment {
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string, jestModule = jest): Tester {
+  getTester(jestConfigPath: string, jestModule = jestM): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
     return this.jestAspect.createTester(config, jestModule);
   }
@@ -204,7 +204,7 @@ export class ReactEnv implements Environment {
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '^7.11.2'
+        '@babel/runtime': '^7.11.2',
       },
       // TODO: take version from config
       peerDependencies: {
