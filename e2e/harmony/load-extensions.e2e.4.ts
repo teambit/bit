@@ -126,7 +126,7 @@ describe('load extensions', function () {
     describe('loading simple extension', () => {
       before(() => {
         helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/dummy-extension', config);
-        helper.command.link();
+        helper.command.install();
         helper.command.compile();
       });
 
