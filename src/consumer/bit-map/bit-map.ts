@@ -443,7 +443,7 @@ export default class BitMap {
     if (searchWithoutScopeInProvidedId) {
       // continue with searching without the scope name (in the provided id)
       const delimiterIndex = id.indexOf('/');
-      if (delimiterIndex) {
+      if (delimiterIndex !== -1) {
         const idWithoutScope = BitId.getScopeAndName(id).name;
         const matches = this.components.filter((componentMap: ComponentMap) => {
           return idHasVersion
