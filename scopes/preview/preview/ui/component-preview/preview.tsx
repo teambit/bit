@@ -33,8 +33,9 @@ export type ComponentPreviewProps = {
  */
 export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
   const serverUrl = `/api/${component.id.toString()}/~aspect/preview`;
+  // const compWithVersion = component.id.version !== 'latest' ? `${component.id.fullName}@${component.id.version}`: component.id.fullName;
 
-  const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.fullName}${
+  const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.toString()}${
     `?preview=${previewName}&${queryParams && queryParams}` || ''
   }`;
 
