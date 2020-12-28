@@ -1,10 +1,9 @@
 import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime, BrowserData } from '@teambit/ui';
+import { UIRuntime, BrowserData, RenderLifecycle } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
 import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
-import { ApolloProvider } from '@apollo/react-hooks';
 import { getDataFromTree } from '@apollo/react-ssr';
 import { ApolloLink } from 'apollo-link';
 import { onError } from 'apollo-link-error';
@@ -141,24 +140,23 @@ export class GraphqlUI {
   SsrProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {
     if (!renderCtx?.client) throw new TypeError('Gql client is has not been initialized during SSR');
     const { client } = renderCtx;
-    return <ApolloProvider client={client}>{children}</ApolloProvider>;
+    return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   }
 
-  renderHooks = {
-    init: this.renderInit.bind(this),
+  renderHooks: RenderLifecycle<RenderContext, { state?: NormalizedCacheObject }> = {
+    serverInit: this.serverInit.bind(this),
     onBeforeRender: this.prePopulate.bind(this),
     serialize: this.serialize.bind(this),
     deserialize: this.deserialize.bind(this),
+    browserInit: this.browserInit.bind(this),
     reactContext: typeof window !== 'undefined' ? this.Provider : this.SsrProvider,
   };
 
-  protected renderInit(browser?: BrowserData) {
+  private serverInit(browser?: BrowserData) {
     if (!browser) return undefined;
 
     // maybe we should use internal url?
-    const serverUrl = browser?.location.origin
-      ? `${browser?.location.origin}/graphql`
-      : 'http://localhost:3000/graphql';
+    const serverUrl = browser.location.origin ? `${browser?.location.origin}/graphql` : 'http://localhost:3000/graphql';
 
     const client = this.createSsrClient({ serverUrl, cookie: browser?.cookie });
 
@@ -168,11 +166,25 @@ export class GraphqlUI {
     return ctx;
   }
 
-  protected async prePopulate(ctx: RenderContext, app: ReactNode) {
+  private browserInit({ state }: { state?: NormalizedCacheObject }) {
+    const client = this.createClient(undefined, { state });
+    this._client = client;
+
+    return { client };
+  }
+
+  /**
+   * Eagerly and recursively execute all gql queries in the app.
+   * Data will be available in gqlClient.extract()
+   */
+  private async prePopulate(ctx: RenderContext, app: ReactNode) {
     await getDataFromTree(app);
   }
 
-  protected serialize(ctx?: RenderContext) {
+  /**
+   * stringify gql cache
+   */
+  private serialize(ctx?: RenderContext) {
     const client = ctx?.client;
     if (!client) return undefined;
 
@@ -181,8 +193,11 @@ export class GraphqlUI {
     };
   }
 
-  protected deserialize(raw?: string) {
-    if (!raw) return undefined;
+  /**
+   * parse raw gql cache to an object
+   */
+  private deserialize(raw?: string) {
+    if (!raw) return { state: undefined };
     let state: NormalizedCacheObject | undefined;
     try {
       state = JSON.parse(raw);
@@ -190,10 +205,7 @@ export class GraphqlUI {
       console.error('failed deserializing graphql state');
     }
 
-    const client = this.createClient(undefined, { state });
-    this._client = client;
-
-    return { client };
+    return { state };
   }
 
   static dependencies = [];
@@ -211,7 +223,8 @@ export class GraphqlUI {
 
 GraphqlAspect.addRuntime(GraphqlUI);
 
-// TEMP!
+// good enough for now.
+// generate unique id for each gql object, in order for cache to work.
 function getIdFromObject(o: IdGetterObj) {
   switch (o.__typename) {
     case 'Component':

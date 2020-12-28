@@ -17,14 +17,14 @@ We can then enrich the page with hooks:
 
 ```tsx
 /** at server: */
-const context = hooks.init();
+let context = hooks.serverInit();
 const app = (
 	<hooks.reactContext value={context}>
 		<App />
 	</hooks.reactContext>
 );
 
-const context = hooks.onBeforeRender(app, context);
+context = hooks.onBeforeRender(app, context);
 const dom = ...
 
 const assets = hooks.serialize(context);
@@ -32,7 +32,8 @@ const html = ...
 send(html);
 
 /** at client: */
-const context = hooks.deserialize();
+const parsed = hooks.deserialize();
+const context = hooks.browserInit(parsed);
 const app = (
 	<hooks.reactContext value={context}>
 		<App />
@@ -46,32 +47,33 @@ const ref = ReactDom.render(app, mountPoint);
 hooks.onHydrate(ref, context);
 ```
 
-The rendering flow will ensure that the rendering Context will be unique per request, and keep a separation between aspects.
+The rendering flow will ensure that the rendering Context will be unique per request, and separate between aspects.
 
 ## Hiding elements before JS execution
 
-Certain items look badly in the static HTML, and only get decent when JS executes. Tooltips are a notable example. They take up space in the DOM and only hide once their react code runs.
+Certain items look badly in the static HTML, and only get decent after JS executes. Tooltips are a notable example. They take up space in the DOM and only hide once their react code runs.
 
-For this, I added a continence class `--ssr-hidden`. Add this to any misbehaving element, and it will have `display: none` until reactDom.render() is complete.
+For this, I added a convenience class `--ssr-hidden`. Add this to any misbehaving elements, and it will hide them using `display: none` until reactDom.render() is complete.
 
 ## .rehydrate vs .render()
 
 .rehydrate() attach a React virtual dom to a mount point, without asserting the virtual-dom matches the actual dom.  
 .render() updates the mount point to match the react virtual dom.
 
-On paper, `.rehydrate()` should be the preferred option.  
-In practice, `.render()` is backward compatible to React 15, and will know to "hydrate" according to the `data-reactroot` attribute on the mount point, without revalidating the DOM.  
-ReactDOM should show up warnings in dev mode about mismatch between ssr dom and the client side dom.
+On paper, `.rehydrate()` should be the preferred option, with better performance.  
+In practice, `.render()` is backward compatible to React 15, and will know to "hydrate" according to the `data-reactroot` attribute on the mount point, with similar performance and without revalidating the DOM.  
+ReactDOM will also show warnings in dev mode about mismatch between ssr dom and the client side dom.
 
 ## Best practices
 
-- Use ReactContext instead of mutating `App`.
+- Add a ReactContext instead of mutating `App`.
 - Use existing context object.
-- Do not use other Aspects context object.
+- Do not use other Aspects' context object.
 - Try to keep process symmetrical between server and client;
 
 ## Examples
 
+### Graphql:
 Graphql adds extra instructions to pre-fetch queries on the server:
 
 ```tsx
@@ -94,7 +96,8 @@ Graphql adds extra instructions to pre-fetch queries on the server:
 });
 ```
 
-StyledComponents extract css from page and adds it to the `<head/>`:
+### Styled-components
+StyledComponents can extract css from page and adds it to the `<head/>`:
 
 ```tsx
 .registerRenderLifecycle({

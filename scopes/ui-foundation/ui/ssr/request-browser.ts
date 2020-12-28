@@ -9,6 +9,9 @@ export type BrowserData = {
     headers: IncomingHttpHeaders;
     body: any;
   };
+  /**
+   * isomorphic location object, resembling the browser's window.location
+   */
   location: {
     /** hostname + port
      * @example localhost:3000
@@ -55,8 +58,8 @@ export type BrowserData = {
 /**
  * extract relevant information from Express request.
  */
-export function requestToObj(req: Request) {
-  const port = 3000; // TODO
+export function requestToObj(req: Request, port: number) {
+  // apparently port is not readily available in request.
 
   const browser: BrowserData = {
     connection: {
@@ -71,7 +74,7 @@ export function requestToObj(req: Request) {
       href: `${req.protocol}://${req.hostname}:${port}${req.url}`,
       origin: `${req.protocol}://${req.hostname}:${port}`,
       pathname: req.path,
-      port, // TODO
+      port,
       protocol: `${req.protocol}:`,
       query: req.query,
       url: req.url,

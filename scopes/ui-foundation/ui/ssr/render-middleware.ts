@@ -9,6 +9,7 @@ const denyList = /^\/favicon.ico$/;
 
 type ssrRenderProps = {
   root: string;
+  port: number;
 };
 
 type ManifestFile = {
@@ -16,7 +17,7 @@ type ManifestFile = {
   entrypoints?: string[];
 };
 
-export async function createSsrMiddleware({ root }: ssrRenderProps) {
+export async function createSsrMiddleware({ root, port }: ssrRenderProps) {
   const runtime = await loadRuntime(root);
   if (!runtime) return undefined;
 
@@ -25,7 +26,7 @@ export async function createSsrMiddleware({ root }: ssrRenderProps) {
   return async function serverRenderMiddleware(req: Request, res: Response, next: NextFunction) {
     const { query, url } = req;
 
-    const browser = requestToObj(req);
+    const browser = requestToObj(req, port);
 
     if (denyList.test(url)) {
       console.log('[ssr] skipping static file', url);

@@ -83,19 +83,19 @@ export class UIServer {
     // setting `index: false` so index.html will be served by the fallback() middleware
     app.use(express.static(root, { index: false }));
 
-    const ssrMiddleware =
-      this.uiRoot.buildOptions?.ssr &&
-      await createSsrMiddleware({ root });
+    if (this.uiRoot.buildOptions?.ssr) {
+      const ssrMiddleware = await createSsrMiddleware({ root, port: selectedPort });
 
-    if (ssrMiddleware) {
-      app.get('*', ssrMiddleware);
-      console.log('ssr served-ing at "*"');
-    } else {
-      console.error('ssr middleware failed construction');
+      if (ssrMiddleware) {
+        app.get('*', ssrMiddleware);
+        console.log('[ssr] serving for "*"');
+      } else {
+        console.error('[ssr] middleware failed setup');
+      }
     }
 
     // in any and all other cases, serve index.html.
-    // No any other endpoints past this will be execute
+    // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
 
     server.listen(selectedPort);

@@ -17,16 +17,16 @@ import { Html, MountPoint, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
 import type { BrowserData } from './ssr/request-browser';
 
-export type RenderLifecycle<T = any> = {
+export type RenderLifecycle<T = any, Y = any> = {
   /**
    * Initialize a context state for this specific rendering.
    * Context state will only be available to the current Aspect, in the other hooks, as well as a prop to the react context component.
    */
-  init?: (browser: BrowserData | undefined) => T | Promise<T> | undefined;
+  serverInit?: (browser: BrowserData | undefined) => T | void | undefined | Promise<T | void | undefined>;
   /**
    * Executes before running ReactDOM.renderToString(). Return value will replace the existing context state.
    */
-  onBeforeRender?: (ctx: T, app: ReactNode) => T | Promise<T> | undefined;
+  onBeforeRender?: (ctx: T, app: ReactNode) => T | void | undefined | Promise<T | void | undefined>;
   /**
    * Produce html assets. Runs after the body is rendered, and before rendering the final html.
    * @returns
@@ -35,14 +35,27 @@ export type RenderLifecycle<T = any> = {
    */
   serialize?: (ctx: T, app: ReactNode) => { json: string } | Promise<{ json: string }> | undefined;
   /**
-   * converts serialized data from raw string back to structured data.
+   * Converts serialized data from raw string back to structured data.
+   * @example deserialize: (data) => { const parsed = JSON.parse(data); return { analytics: new AnalyticsService(parsed); } }
    */
-  deserialize?: (data?: string) => T;
-  onBeforeHydrate?: (app: ReactNode, context: T) => void;
-  onHydrate?: (ref: HTMLElement | null, context: T) => void;
+  deserialize?: (data?: string) => Y;
+  /**
+   * Initialize the context state for client side rendering.
+   * Context state will only be available to the current Aspect, in the other hooks, as well as a prop to the react context component.
+   */
+  browserInit?: (deserializedData: Y) => T | void | undefined | Promise<T | void | undefined>;
+  /**
+   * Executes before running ReactDOM.hydrate() (or .render() in case server side rendering is skipped). Receives the context produced by `deserialize()`
+   */
+  onBeforeHydrate?: (context: T, app: ReactNode) => T | void | undefined | Promise<T | void | undefined>;
+  /**
+   * Executes after browser rendering is complete. Receives context from the previous steps.
+   * @example onHydrate: (ref, { analytics }) => { analytics.reportPageView() }
+   */
+  onHydrate?: (context: T, ref: HTMLElement | null) => void;
 
   /**
-   * Wraps dom with a context. Will receive render context, produced by `onBeforeRender()`
+   * Wraps dom with a context. Will receive render context, produced by `onBeforeRender()` (at server-side) or `deserialize()` (at the browser)
    */
   reactContext?: ComponentType<ContextProps<T>>;
 };
@@ -80,7 +93,10 @@ export class UiUI {
     const hudItems = this.hudSlot.values();
 
     const lifecycleHooks = this.lifecycleSlot.toArray();
-    const renderContexts = await this.deserialize(lifecycleHooks);
+    const deserializedState = await this.deserialize(lifecycleHooks);
+    let renderContexts = await Promise.all(
+      lifecycleHooks.map(([, hooks], idx) => hooks.browserInit?.(deserializedState[idx]))
+    );
     const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
 
     const app = (
@@ -92,17 +108,17 @@ export class UiUI {
       </Compose>
     );
 
-    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onBeforeHydrate?.(app, renderContexts[idx])));
+    renderContexts = await this.onAfterHydrate(renderContexts, lifecycleHooks, app);
 
     const mountPoint = document.getElementById('root');
     // .render() should already run .hydrate() if possible.
     // in the future, we may want to replace it with .hydrate()
     ReactDOM.render(app, mountPoint);
 
-    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onHydrate?.(mountPoint, renderContexts[idx])));
+    await Promise.all(lifecycleHooks.map(([, hooks], idx) => hooks.onHydrate?.(renderContexts[idx], mountPoint)));
 
     // remove ssr only styles
-    document.getElementById('ssr-before-hydrate-styles')?.remove();
+    document.getElementById('before-hydrate-styles')?.remove();
   }
 
   async renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
@@ -117,7 +133,7 @@ export class UiUI {
     const lifecycleHooks = this.lifecycleSlot.toArray();
 
     // (1) init
-    let renderContexts = await Promise.all(lifecycleHooks.map(([, hooks]) => hooks.init?.(browser)));
+    let renderContexts = await Promise.all(lifecycleHooks.map(([, hooks]) => hooks.serverInit?.(browser)));
     const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
 
     // (2) make (virtual) dom
@@ -187,7 +203,7 @@ export class UiUI {
     lifecycleHooks: [string, RenderLifecycle<any>][],
     app: JSX.Element
   ) {
-    renderContexts = await Promise.all(
+    await Promise.all(
       lifecycleHooks.map(async ([, hooks], idx) => {
         const ctx = renderContexts[idx];
         const nextCtx = await hooks.onBeforeRender?.(ctx, app);
@@ -195,6 +211,16 @@ export class UiUI {
       })
     );
     return renderContexts;
+  }
+
+  private onAfterHydrate(renderContexts: any[], lifecycleHooks: [string, RenderLifecycle<any>][], app: JSX.Element) {
+    return Promise.all(
+      lifecycleHooks.map(async ([, hooks], idx) => {
+        const ctx = renderContexts[idx];
+        const nextCtx = await hooks.onBeforeHydrate?.(ctx, app);
+        return nextCtx || ctx;
+      })
+    );
   }
 
   private async serialize(
@@ -243,9 +269,6 @@ export class UiUI {
 
     document.querySelector('body > .state')?.remove();
 
-    // @ts-ignore
-    window.__ssrState = deserialized;
-
     return deserialized;
   }
 
@@ -262,9 +285,9 @@ export class UiUI {
   static async provider(
     [GraphqlUi, router]: [GraphqlUI, ReactRouterUI],
     config,
-    [uiRootSlot, hudSlot, ssrLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
+    [uiRootSlot, hudSlot, renderLifecycleSlot]: [UIRootRegistry, HudSlot, renderLifecycleSlot]
   ) {
-    const uiUi = new UiUI(router, uiRootSlot, hudSlot, ssrLifecycleSlot);
+    const uiUi = new UiUI(router, uiRootSlot, hudSlot, renderLifecycleSlot);
 
     uiUi.registerRenderHooks(GraphqlUi.renderHooks);
 

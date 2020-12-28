@@ -18,13 +18,13 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
       <head>
         <meta charSet="utf-8" />
         <title>{title}</title>
-        <style id="ssr-before-hydrate-styles">
+        <style id="before-hydrate-styles">
           .--ssr-hidden {'{'}
-            display: none;
+          display: none;
           {'}'}
         </style>
         <script>
-          {/* // Allow to use react dev-tools inside the examples */}
+          {'// Allow to use react dev-tools inside the examples'}
           {withDevTools
             ? 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;'
             : null}
@@ -35,8 +35,6 @@ export function Html({ title, assets = {}, withDevTools = false, children, ...re
         ))}
       </head>
       <body>
-        <div>YOU ARE SERVER-SIDED</div>
-
         <MountPoint>{children}</MountPoint>
 
         {assets.json && (
