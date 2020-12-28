@@ -141,6 +141,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: {
         react: require.resolve('react'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },

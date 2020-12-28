@@ -170,6 +170,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),

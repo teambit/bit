@@ -18,10 +18,6 @@ function createSsrConfig(workspaceDir: string) {
     target: 'node',
     devtool: 'cheap-eval-source-map', // TODO
 
-    // entry: {
-    //   main: mainFiles[0],
-    // },
-
     output: {
       path: path.resolve(workspaceDir, 'public/ssr'),
       publicPath: '/public/ssr/',
