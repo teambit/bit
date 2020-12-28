@@ -1,0 +1,58 @@
+$panelBg: #fafafa;
+
+.codePage {
+  height: calc(100vh - 56px);
+  width: 100%;
+}
+
+.left {
+  min-width: 200px;
+
+  //cannot assign max-width directly to right side
+  max-width: calc(100% - 200px);
+
+  display: flex;
+  // overflow-y: auto;
+}
+
+.right {
+  position: relative;
+  background: $panelBg;
+  overflow-y: auto;
+  min-width: 200px;
+}
+
+.splitter {
+  position: relative;
+  border-right: 1px solid var(--border-color, #ededed);
+}
+
+.collapser {
+  right: 0;
+}
+
+.codeView {
+  padding: 24px 40px;
+  width: calc(100% - 80px);
+  overflow: hidden;
+
+  .codeSnippetWrapper {
+    width: 100%;
+    max-width: 100%;
+    .codeSnippet {
+      display: block;
+      overflow: auto;
+      height: calc(100vh - 200px);
+    }
+  }
+}
+
+.img {
+  width: 20px;
+  margin-right: 10px;
+}
+
+.fileName {
+  display: flex;
+  align-items: center;
+}
