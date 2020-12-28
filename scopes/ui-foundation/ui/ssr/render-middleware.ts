@@ -10,6 +10,7 @@ const denyList = /^\/favicon.ico$/;
 type ssrRenderProps = {
   root: string;
   port: number;
+  title: string;
 };
 
 type ManifestFile = {
@@ -17,11 +18,12 @@ type ManifestFile = {
   entrypoints?: string[];
 };
 
-export async function createSsrMiddleware({ root, port }: ssrRenderProps) {
+export async function createSsrMiddleware({ root, port, title }: ssrRenderProps) {
   const runtime = await loadRuntime(root);
   if (!runtime) return undefined;
 
-  const { assets, render } = runtime;
+  const { render } = runtime;
+  const assets = { ...runtime.assets, title };
 
   return async function serverRenderMiddleware(req: Request, res: Response, next: NextFunction) {
     const { query, url } = req;
@@ -46,6 +48,7 @@ export async function createSsrMiddleware({ root, port }: ssrRenderProps) {
     try {
       const rendered = await render(props);
       console.log('[ssr]', 'success', url);
+      res.set('Cache-Control', 'no-cache');
       res.send(rendered);
     } catch (e) {
       console.error(e, e.stack);

@@ -4,6 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
 
+import merge from 'webpack-merge';
 import React, { ReactNode, ComponentType } from 'react';
 import ReactDOM from 'react-dom';
 import ReactDOMServer from 'react-dom/server';
@@ -155,9 +156,10 @@ export class UiUI {
 
     // (3) render html-template
     const realtimeAssets = await this.serialize(lifecycleHooks, renderContexts, app);
+    // @ts-ignore // TODO upgrade 'webpack-merge'
+    const totalAssets = merge(assets, realtimeAssets) as Assets;
 
-    // TODO - merge assets deeply (maybe using webpack-merge)
-    const html = <Html title="bit dev ssred!" assets={{ ...assets, ...realtimeAssets }} />;
+    const html = <Html assets={totalAssets} />;
     const renderedHtml = `<!DOCTYPE html>${ReactDOMServer.renderToStaticMarkup(html)}`;
     const fullHtml = Html.fillContent(renderedHtml, renderedApp);
 

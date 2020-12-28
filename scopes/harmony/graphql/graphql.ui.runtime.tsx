@@ -166,7 +166,7 @@ export class GraphqlUI {
     return ctx;
   }
 
-  private browserInit({ state }: { state?: NormalizedCacheObject }) {
+  private browserInit({ state }: { state?: NormalizedCacheObject } = {}) {
     const client = this.createClient(undefined, { state });
     this._client = client;
 

@@ -84,7 +84,7 @@ export class UIServer {
     app.use(express.static(root, { index: false }));
 
     if (this.uiRoot.buildOptions?.ssr) {
-      const ssrMiddleware = await createSsrMiddleware({ root, port: selectedPort });
+      const ssrMiddleware = await createSsrMiddleware({ root, port: selectedPort, title: this.uiRoot.name });
 
       if (ssrMiddleware) {
         app.get('*', ssrMiddleware);

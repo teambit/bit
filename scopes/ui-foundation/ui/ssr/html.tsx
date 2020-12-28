@@ -1,23 +1,23 @@
 import React, { ReactNode } from 'react';
 
 export type Assets = Partial<{
+  title: string;
   js: string[];
   css: string[];
   json: Record<string, string>;
 }>;
 
 interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
-  title: string;
   withDevTools?: boolean;
   assets?: Assets;
 }
 
-export function Html({ title, assets = {}, withDevTools = false, children, ...rest }: HtmlProps) {
+export function Html({ assets = {}, withDevTools = false, children, ...rest }: HtmlProps) {
   return (
     <html lang="en" {...rest}>
       <head>
         <meta charSet="utf-8" />
-        <title>{title}</title>
+        <title>{assets.title || 'bit scope'}</title>
         <style id="before-hydrate-styles">
           .--ssr-hidden {'{'}
           display: none;
