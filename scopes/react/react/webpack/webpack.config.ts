@@ -16,6 +16,7 @@ const moduleFileExtensions = [
   'web.jsx',
   'jsx',
   'mdx',
+  'md',
 ];
 
 export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
@@ -57,7 +58,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('babel-preset-react-app')],
+                presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
                 plugins: [require.resolve('react-refresh/babel')],
               },
             },

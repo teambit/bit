@@ -1,5 +1,6 @@
 import PubsubAspect, { PubsubPreview } from '@teambit/pubsub';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { ComponentID } from '@teambit/component-id';
 
 import { PreviewNotFound } from './exceptions';
 import { PreviewType } from './preview-type';
@@ -45,17 +46,16 @@ export class PreviewPreview {
     if (!preview) {
       throw new PreviewNotFound(previewName);
     }
-
     const includes = (preview.include || [])
       .map((prevName) => {
         const includedPreview = this.getPreview(prevName);
         if (!includedPreview) return undefined;
 
-        return includedPreview.selectPreviewModel?.(componentId, PREVIEW_MODULES[prevName]);
+        return includedPreview.selectPreviewModel?.(componentId.fullName, PREVIEW_MODULES[prevName]);
       })
       .filter((module) => !!module);
 
-    return preview.render(componentId, PREVIEW_MODULES[name], includes);
+    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes);
   };
 
   /**
@@ -91,7 +91,7 @@ export class PreviewPreview {
 
     return {
       previewName: this.getParam(after, 'preview'),
-      componentId: before,
+      componentId: ComponentID.fromString(before),
     };
   }
 
