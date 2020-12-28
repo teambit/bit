@@ -1,0 +1,47 @@
+@import '~@teambit/base-ui.theme.colors/colors.module.scss';
+
+.folder {
+  position: relative;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  font-weight: bold;
+  font-size: inherit;
+  padding-right: 8px;
+  font-size: var(--p-xs);
+  &:hover {
+    background: var(--bg-topping-highlight);
+  }
+
+  .arrow {
+    display: inline-block;
+    line-height: inherit;
+    transition: all 300ms;
+    margin-right: 10px;
+    color: var(--text-muted);
+    &.collapsed {
+      transform: rotate(-0.25turn);
+    }
+  }
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  .name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 8px;
+  }
+}
+
+.childrenTree {
+  overflow: hidden;
+  transition: max-height 400ms ease-in-out;
+  font-size: var(--p-xs);
+}
