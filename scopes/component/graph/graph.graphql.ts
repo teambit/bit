@@ -1,4 +1,4 @@
-import { ComponentFactory } from '@teambit/component';
+import { ComponentMain } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
@@ -10,7 +10,7 @@ import { EdgeType } from './edge-type';
 
 const textCmp = new Intl.Collator().compare;
 
-export function graphSchema(graphBuilder: GraphBuilder, componentsHost: ComponentFactory): Schema {
+export function graphSchema(graphBuilder: GraphBuilder, componentAspect: ComponentMain): Schema {
   return {
     typeDefs: gql`
       type ComponentGraph {
@@ -42,26 +42,22 @@ export function graphSchema(graphBuilder: GraphBuilder, componentsHost: Componen
     resolvers: {
       ComponentGraph: {
         nodes: (graph: ComponentGraph) => {
-          return Array.from(graph.nodes)
-            .map(([nodeId, component]) => {
+          return graph.nodes.map((node) => {
               return {
-                id: nodeId,
-                component,
+                id: node.id,
+                component: node.attr,
               };
             })
             .sort((a, b) => textCmp(a.id, b.id));
         },
         edges: (graph: ComponentGraph) => {
-          // TODO: this is a hack since I don't have a proper way to get the edge with the source and target id from cleargraph
-          // it should be change once cleargraph provide this
-          const graphJson = graph.toJson();
-          return graphJson.edges
+          return graph.edges
             .map(
               (edge) =>
                 ({
                   sourceId: edge.sourceId,
                   targetId: edge.targetId,
-                  dependencyLifecycleType: getDependencyLifecycleType(edge.edge.type),
+                  dependencyLifecycleType: getDependencyLifecycleType(edge.attr.type),
                 } as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType })
             )
             .sort((a, b) => textCmp(a.sourceId, b.sourceId))
@@ -70,6 +66,7 @@ export function graphSchema(graphBuilder: GraphBuilder, componentsHost: Componen
       },
       Query: {
         graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }) => {
+          const componentsHost = componentAspect.getHost();
           const resolvedIds = ids
             ? await componentsHost.resolveMultipleComponentIds(ids)
             : (await componentsHost.list()).map((x) => x.id);
