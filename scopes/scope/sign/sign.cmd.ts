@@ -3,6 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
 import { BuildStatus } from 'bit-bin/dist/constants';
+import { Logger } from '@teambit/logger';
 import { SignMain } from './sign.main.runtime';
 
 export class SignCmd implements Command {
@@ -12,7 +13,7 @@ export class SignCmd implements Command {
   group = 'component';
   options = [] as CommandOptions;
 
-  constructor(private signMain: SignMain, private scope: ScopeMain) {}
+  constructor(private signMain: SignMain, private scope: ScopeMain, private logger: Logger) {}
 
   async report([components]: [string[]]) {
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(components);
@@ -43,7 +44,9 @@ ${componentsToSign.map((c) => c.toString()).join('\n')}`;
     componentsToSign: ComponentID[];
   }> {
     const compIds = await this.scope.resolveMultipleComponentIds(ids);
-    const components = await this.scope.getMany(compIds);
+    // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
+    this.logger.setStatusLine(`loading ${ids.length} components and their extensions...`);
+    const components = await this.scope.loadMany(compIds);
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {

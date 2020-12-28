@@ -1,4 +1,5 @@
 import BluebirdPromise from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as path from 'path';
 
 import { BitId, BitIds } from '../../bit-id';
@@ -125,7 +126,7 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
     const allComponents: Component[] = [];
-    await BluebirdPromise.mapSeries(idsToProcess, async (id: BitId) => {
+    await mapSeries(idsToProcess, async (id: BitId) => {
       const component = await this.loadOne(id, throwOnFailure, invalidComponents);
       if (component) {
         this._componentsCache[component.id.toString()] = component;
