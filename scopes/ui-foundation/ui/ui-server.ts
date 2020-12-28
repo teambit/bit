@@ -76,7 +76,7 @@ export class UIServer {
     const root = join(this.uiRoot.path, '/public');
     const server = await this.graphql.createServer({ app });
 
-    // set up preview proxy, e.g. '/preview/teambit.react/react'
+    // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
 
     // pass through files from public /folder:
@@ -84,13 +84,18 @@ export class UIServer {
     app.use(express.static(root, { index: false }));
 
     if (this.uiRoot.buildOptions?.ssr) {
-      const ssrMiddleware = await createSsrMiddleware({ root, port: selectedPort, title: this.uiRoot.name });
+      const ssrMiddleware = await createSsrMiddleware({
+        root,
+        port: selectedPort,
+        title: this.uiRoot.name,
+        logger: this.logger,
+      });
 
       if (ssrMiddleware) {
         app.get('*', ssrMiddleware);
-        console.log('[ssr] serving for "*"');
+        this.logger.debug('[ssr] serving for "*"');
       } else {
-        console.error('[ssr] middleware failed setup');
+        this.logger.warn('[ssr] middleware failed setup');
       }
     }
 

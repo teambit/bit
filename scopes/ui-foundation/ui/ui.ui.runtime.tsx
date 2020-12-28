@@ -263,7 +263,8 @@ export class UiUI {
         try {
           return hooks.deserialize?.(raw.innerHTML);
         } catch (e) {
-          console.log(`failed deserializing server state for aspect ${key}`);
+          // eslint-disable-next-line no-console
+          console.error(`failed deserializing server state for aspect ${key}`, e);
           return undefined;
         }
       })

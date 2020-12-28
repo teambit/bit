@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import path from 'path';
 import * as fs from 'fs-extra';
+import type { Logger } from '@teambit/logger';
 import { requestToObj } from './request-browser';
 import { SsrContent } from './ssr-content';
 import type { Assets } from './html';
@@ -11,6 +12,7 @@ type ssrRenderProps = {
   root: string;
   port: number;
   title: string;
+  logger: Logger;
 };
 
 type ManifestFile = {
@@ -18,8 +20,8 @@ type ManifestFile = {
   entrypoints?: string[];
 };
 
-export async function createSsrMiddleware({ root, port, title }: ssrRenderProps) {
-  const runtime = await loadRuntime(root);
+export async function createSsrMiddleware({ root, port, title, logger }: ssrRenderProps) {
+  const runtime = await loadRuntime(root, { logger });
   if (!runtime) return undefined;
 
   const { render } = runtime;
@@ -31,33 +33,33 @@ export async function createSsrMiddleware({ root, port, title }: ssrRenderProps)
     const browser = requestToObj(req, port);
 
     if (denyList.test(url)) {
-      console.log('[ssr] skipping static file', url);
+      logger.debug(`[ssr] skipping static denyList file ${url}`);
       next();
       return;
     }
 
     if (query.rendering !== 'server') {
-      console.log('[ssr] skipping', url);
+      logger.debug(`[ssr] skipping ${url}`);
       next();
       return;
     }
 
-    console.log('[ssr]', req.method, url);
+    logger.debug(`[ssr] ${req.method} ${url}`);
     const props: SsrContent = { assets, browser };
 
     try {
       const rendered = await render(props);
-      console.log('[ssr]', 'success', url);
       res.set('Cache-Control', 'no-cache');
       res.send(rendered);
+      logger.debug(`[ssr] success '${url}'`);
     } catch (e) {
-      console.error(e, e.stack);
+      logger.error(`[ssr] failed at '${url}'`, e);
       next();
     }
   };
 }
 
-async function loadRuntime(root: string) {
+async function loadRuntime(root: string, { logger }: { logger: Logger }) {
   let render: (...arg: any[]) => any;
   let assets: Assets | undefined;
 
@@ -65,17 +67,17 @@ async function loadRuntime(root: string) {
     const entryFilepath = path.join(root, 'ssr', 'index.js');
     const manifestFilepath = path.join(root, 'asset-manifest.json');
     if (!fs.existsSync(entryFilepath)) {
-      console.log('[ssr] - Failed finding ssr/index.js. Skipping setup.');
+      logger.warn('[ssr] - Failed finding ssr/index.js. Skipping setup.');
       return undefined;
     }
     if (!fs.existsSync(manifestFilepath)) {
-      console.log('[ssr] - Failed finding asset manifest file. Skipping setup.');
+      logger.warn('[ssr] - Failed finding asset manifest file. Skipping setup.');
       return undefined;
     }
 
     assets = await parseManifest(manifestFilepath);
     if (!assets) {
-      console.log('[ssr] - failed parsing assets manifest. Skipping setup.');
+      logger.warn('[ssr] - failed parsing assets manifest. Skipping setup.');
       return undefined;
     }
 
@@ -83,11 +85,11 @@ async function loadRuntime(root: string) {
     render = imported?.render;
 
     if (!render || typeof render !== 'function') {
-      console.log('[ssr] - index file does not export a render() function. Skipping setup.');
+      logger.warn('[ssr] - index file does not export a render() function. Skipping setup.');
       return undefined;
     }
   } catch (e) {
-    console.error('[ssr]', e);
+    logger.error(e);
     return undefined;
   }
 

@@ -202,7 +202,8 @@ export class GraphqlUI {
     try {
       state = JSON.parse(raw);
     } catch (e) {
-      console.error('failed deserializing graphql state');
+      // eslint-disable-next-line no-console
+      console.error('[GraphQL] failed deserializing state from DOM', e);
     }
 
     return { state };
