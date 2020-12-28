@@ -9,7 +9,7 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
-import { ssrRenderer } from './ssr/render-middleware';
+import { createSsrMiddleware } from './ssr/render-middleware';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
@@ -79,11 +79,13 @@ export class UIServer {
     // set up preview proxy, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
 
+    // pass through files from public /folder:
+    // setting `index: false` so index.html will be served by the fallback() middleware
+    app.use(express.static(root, { index: false }));
+
     const ssrMiddleware =
       this.uiRoot.buildOptions?.ssr &&
-      (await ssrRenderer({
-        rootPath: this.uiRoot.path,
-      }));
+      await createSsrMiddleware({ root });
 
     if (ssrMiddleware) {
       app.get('*', ssrMiddleware);
@@ -91,9 +93,6 @@ export class UIServer {
     } else {
       console.error('ssr middleware failed construction');
     }
-
-    // pass through files from public /folder:
-    app.use(express.static(root));
 
     // in any and all other cases, serve index.html.
     // No any other endpoints past this will be execute
