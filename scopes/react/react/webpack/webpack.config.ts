@@ -43,7 +43,15 @@ export default function (workspaceDir: string, targets: string[], envId: string,
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
             ],
-            plugins: [require.resolve('react-refresh/babel')],
+            plugins: [
+              require.resolve('react-refresh/babel'),
+              [
+                require.resolve('@teambit/babel.bit-react-transformer'),
+                {
+                  componentFilesPath: fileMapPath,
+                },
+              ],
+            ],
           },
         },
 
@@ -58,15 +66,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
                 babelrc: false,
                 configFile: false,
                 presets: [require.resolve('babel-preset-react-app')],
-                plugins: [
-                  require.resolve('react-refresh/babel'),
-                  [
-                    require.resolve('@teambit/babel.bit-react-transformer'),
-                    {
-                      bitMap: fileMapPath,
-                    },
-                  ],
-                ],
+                plugins: [require.resolve('react-refresh/babel')],
               },
             },
             {

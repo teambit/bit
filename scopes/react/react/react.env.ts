@@ -1,5 +1,4 @@
 import ts, { TsConfigSourceFile } from 'typescript';
-import { join } from 'path';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
@@ -18,12 +17,12 @@ import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
+import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
-import { outputFile } from 'fs-extra';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
@@ -132,8 +131,8 @@ export class ReactEnv implements Environment {
 
   private getFileMap(components: Component[]) {
     return components.reduce<{ [key: string]: string }>((index, component: Component) => {
-      component.state.filesystem.files.map((file) => {
-        index[file.relative] = component.id.toString();
+      component.state.filesystem.files.forEach((file) => {
+        index[file.path] = component.id.toString();
       });
 
       return index;
@@ -143,7 +142,7 @@ export class ReactEnv implements Environment {
   private writeFileMap(components: Component[]) {
     const fileMap = this.getFileMap(components);
     const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
-    outputFile(path, JSON.stringify(fileMap));
+    outputFileSync(path, JSON.stringify(fileMap));
     return path;
   }
 

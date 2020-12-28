@@ -8,7 +8,7 @@
     // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/yarn",
+    "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
@@ -328,6 +328,12 @@
       "teambit.harmony/aspect": {}
     },
     "{modules/*}": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      },
+      "teambit.harmony/node": {}
+    },
+    "{babel/*}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },

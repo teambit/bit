@@ -1,4 +1,5 @@
 import * as t from '@babel/types';
+import { readFileSync } from 'fs-extra';
 
 export type BitReactTransformer = {};
 
@@ -8,13 +9,22 @@ const COMPONENT_IDENTIFIER = 'componentId';
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
  */
-export function createBitReactTransformer({ types: t }) {
+export function createBitReactTransformer({ types: c }) {
+  let componentMap;
+  function setMap(mapPath?: string) {
+    if (!mapPath || componentMap) return;
+    const json = readFileSync(mapPath, 'utf-8');
+    componentMap = JSON.parse(json);
+  }
+
   function addComponentId(path: any, filePath: string, identifier: string) {
-    const componentIdStaticProp = t.expressionStatement(
-      t.assignmentExpression(
+    const componentId = componentMap[filePath];
+    if (!componentId) return;
+    const componentIdStaticProp = c.expressionStatement(
+      c.assignmentExpression(
         '=',
-        t.memberExpression(t.identifier(identifier), t.identifier(COMPONENT_IDENTIFIER)),
-        t.identifier(filePath)
+        c.memberExpression(c.identifier(identifier), c.identifier(COMPONENT_IDENTIFIER)),
+        t.identifier(`'${componentId}'`)
       )
     );
 
@@ -24,41 +34,48 @@ export function createBitReactTransformer({ types: t }) {
   return {
     visitor: {
       FunctionDeclaration(path, state) {
-        if (!isFunctionComponent(path.body)) {
+        setMap(state.opts.componentFilesPath);
+        if (!isFunctionComponent(path.node.body)) {
           return;
         }
-        const name = path.declaration.id.name;
+        const name = path.node.id.name;
         addComponentId(path, state.file.opts.filename, name);
       },
 
-      VariableDeclarator(path: t.VariableDeclarator, state) {
-        if (!path.init) return;
-        if (path.id.type !== 'Identifier') return;
-        const id = path.id as t.Identifier;
-        switch (path.init.type) {
+      VariableDeclarator(path, state) {
+        setMap(state.opts.componentFilesPath);
+        const node = path.node as t.VariableDeclarator;
+        if (!node.init) return;
+        if (node.id.type !== 'Identifier') return;
+        const id = node.id as t.Identifier;
+        switch (node.init.type) {
           case 'FunctionExpression':
-            const funcExpression = path.init as t.FunctionExpression;
-            if (isFunctionComponent(funcExpression.body)) {
-              addComponentId(path, state.file.opts.filename, id.name);
+            path.init as t.FunctionExpression;
+            if (isFunctionComponent(node.init.body)) {
+              addComponentId(path.parentPath, state.file.opts.filename, id.name);
             }
             break;
 
           case 'ArrowFunctionExpression':
-            const arrowFuncExpression = path.init as t.ArrowFunctionExpression;
-            if (isJsxReturnValid(arrowFuncExpression.body)) {
-              addComponentId(path, state.file.opts.filename, id.name);
+            node.init as t.ArrowFunctionExpression;
+            if (isJsxReturnValid(node.init.body)) {
+              addComponentId(path.parentPath, state.file.opts.filename, id.name);
             }
 
-            const block = path.init.body as t.BlockStatement;
-            if (isFunctionComponent(block)) {
-              addComponentId(path, state.file.opts.filename, id.name);
+            node.init.body as t.BlockStatement;
+            if (isFunctionComponent(node.init.body as any)) {
+              addComponentId(path.parentPath, state.file.opts.filename, id.name);
             }
+            break;
+
+          default:
             break;
         }
       },
 
       ClassDeclaration(path, state) {
-        if (!isClassComponent(path)) {
+        setMap(state.opts.componentFilesPath);
+        if (!isClassComponent(path.node)) {
           return;
         }
         const name = path.id.name;
@@ -77,10 +94,11 @@ function isJsxReturnValid(node?: t.Node) {
       return elm?.type === 'JSXElement';
     });
   }
+
+  return false;
 }
 
 function isClassComponent(classDec: t.ClassDeclaration) {
-  classDec.id.name;
   const renderMethod = classDec.body.body.find((classMember) => {
     if (classMember.type === 'ClassMethod') {
       classMember as t.ClassMethod;
@@ -88,6 +106,8 @@ function isClassComponent(classDec: t.ClassDeclaration) {
       const key = classMember.key as t.Identifier;
       return key.name === 'render';
     }
+
+    return false;
   }) as t.ClassMethod;
 
   return doesReturnJsx(renderMethod.body);
