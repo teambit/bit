@@ -115,12 +115,13 @@ export class YarnPackageManager implements PackageManager {
       }
     );
 
-    if (installReport.hasErrors()) process.exit(installReport.exitCode());
-
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.
     // see the persistProject: false above
     await this.restorePackageJsons(existingPackageJsons);
+
+    if (installReport.hasErrors()) process.exit(installReport.exitCode());
+
     this.logger.consoleSuccess('installing dependencies');
   }
 
