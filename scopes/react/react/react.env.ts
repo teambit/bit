@@ -1,4 +1,7 @@
 import ts, { TsConfigSourceFile } from 'typescript';
+import { join } from 'path';
+import { tmpdir } from 'os';
+import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -20,6 +23,7 @@ import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
+import { outputFile } from 'fs-extra';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
@@ -126,16 +130,36 @@ export class ReactEnv implements Environment {
     });
   }
 
+  private getFileMap(components: Component[]) {
+    return components.reduce<{ [key: string]: string }>((index, component: Component) => {
+      component.state.filesystem.files.map((file) => {
+        index[file.relative] = component.id.toString();
+      });
+
+      return index;
+    }, {});
+  }
+
+  private writeFileMap(components: Component[]) {
+    const fileMap = this.getFileMap(components);
+    const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
+    outputFile(path, JSON.stringify(fileMap));
+    return path;
+  }
+
   /**
    * get the default react webpack config.
    */
   getWebpackConfig(context: DevServerContext): Configuration {
+    // @ts-ignore due to issue with component ID types. TODO: make sure all types are aligned to one.
+    const fileMapPath = this.writeFileMap(context.components);
+
     // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
     const packagePaths = context.components
       .map((comp) => this.pkg.getPackageName(comp))
       .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
 
-    return webpackConfigFactory(this.workspace.path, packagePaths, context.id);
+    return webpackConfigFactory(this.workspace.path, packagePaths, context.id, fileMapPath);
   }
 
   /**
