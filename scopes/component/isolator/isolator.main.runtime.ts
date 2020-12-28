@@ -1,4 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
+import { compact } from 'lodash';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
 import { GraphAspect } from '@teambit/graph';
@@ -135,7 +136,12 @@ export class IsolatorMain {
     const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
-    const existingComps = compsAndDeps.filter((c) => host.hasId(c.id));
+    const existingCompsP = await compsAndDeps.map(async (c) => {
+      const existing = await host.hasId(c.id);
+      if (existing) return c;
+      return undefined;
+    });
+    const existingComps = compact(await Promise.all(existingCompsP));
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(existingComps, opts, legacyScope);
     longProcessLogger.end();
