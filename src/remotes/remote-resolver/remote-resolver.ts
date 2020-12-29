@@ -11,6 +11,7 @@ import {
 } from '../../constants';
 import Scope from '../../scope/scope';
 import logger from '../../logger/logger';
+import { DEFAULT_AUTH_TYPE } from '../../scope/network/http/http';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
@@ -33,7 +34,7 @@ async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
   const token = getSync(CFG_USER_TOKEN_KEY);
   const client = new GraphQLClient(`https://${symphonyUrl}/graphql`);
-  if (token) client.setHeader('Authorization', `Bearer ${token}`);
+  if (token) client.setHeader('Authorization', `${DEFAULT_AUTH_TYPE} ${token}`);
 
   try {
     const res = await client.request(SCOPE_GET, {
