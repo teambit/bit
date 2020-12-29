@@ -229,7 +229,6 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return;
-    // TODO: we should make sure all aspect dependencies are loaded.
     const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
     // Always throw an error when can't load scope extension
     await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
@@ -428,7 +427,7 @@ export class ScopeMain implements ComponentFactory {
     await Promise.all(
       components.map(async (component) => {
         const aspectIds = component.state.aspects.ids;
-        await this.loadAspects(aspectIds);
+        await this.loadAspects(aspectIds, true);
       })
     );
 
