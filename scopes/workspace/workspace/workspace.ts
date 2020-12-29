@@ -319,7 +319,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
-    if (!ids || ids.length < 1) ids = (await this.listIds())
+    if (!ids || ids.length < 1) ids = await this.listIds();
 
     const legacyIds = ids.map((id) => id._legacy);
 
