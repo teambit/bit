@@ -20,6 +20,30 @@
         "exported": false,
         "lanes": []
     },
+    "modules/dom-to-react": {
+        "files": [
+            {
+                "name": "dom-to-react.docs.mdx",
+                "relativePath": "dom-to-react.docs.mdx",
+                "test": false
+            },
+            {
+                "name": "dom-to-react.ts",
+                "relativePath": "dom-to-react.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/dom-to-react",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
     "teambit.compilation/babel@0.0.211": {
         "files": [
             {
@@ -7769,6 +7793,30 @@
         "rootDir": "scopes/workspace/workspace",
         "origin": "AUTHORED",
         "exported": true,
+        "lanes": []
+    },
+    "ui/component-highlighter": {
+        "files": [
+            {
+                "name": "component-highlighter.docs.mdx",
+                "relativePath": "component-highlighter.docs.mdx",
+                "test": false
+            },
+            {
+                "name": "component-highlighter.ts",
+                "relativePath": "component-highlighter.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/component-highlighter",
+        "origin": "AUTHORED",
+        "exported": false,
         "lanes": []
     },
     "version": "14.8.9-dev.235"

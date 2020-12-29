@@ -45,6 +45,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
             ],
             plugins: [
               require.resolve('react-refresh/babel'),
+              // for component highlighting in preview.
               [
                 require.resolve('@teambit/babel.bit-react-transformer'),
                 {

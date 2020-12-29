@@ -182,7 +182,8 @@ export class ReactEnv implements Environment {
   }
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
-    const defaultConfig = previewConfigFactory();
+    const path = this.writeFileMap(context.components);
+    const defaultConfig = previewConfigFactory(path);
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     return this.webpack.createBundler(context, config as any);
   }
