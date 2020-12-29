@@ -72,7 +72,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         const componentIds = executionContext.components.map((component) => component.id);
         const capsuleNetwork = await this.isolator.isolateComponents(componentIds, { getExistingAsIs: true });
         const buildContext = Object.assign(executionContext, {
-          capsuleNetwork
+          capsuleNetwork,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })

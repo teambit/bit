@@ -1,4 +1,5 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { difference } from 'ramda';
 import type { TaskResultsList } from '@teambit/builder';
 import { readdirSync } from 'fs-extra';
 import { resolve, join } from 'path';
@@ -215,7 +216,12 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
-    const aspectIds = ids.filter((id) => !id.startsWith('file://'));
+    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    if (!notLoadedIds.length) return;
+
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
+    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
     // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));
     this.localAspects = this.localAspects.concat(localAspects);
@@ -223,6 +229,7 @@ export class ScopeMain implements ComponentFactory {
     await this.loadAspectFromPath(localAspects);
     const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return;
+    // TODO: we should make sure all aspect dependencies are loaded.
     const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
     // Always throw an error when can't load scope extension
     await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
@@ -240,7 +247,7 @@ export class ScopeMain implements ComponentFactory {
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
-      components.map(c => c.id),
+      components.map((c) => c.id),
       { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
       this.legacyScope
     );

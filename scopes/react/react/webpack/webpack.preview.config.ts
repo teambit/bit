@@ -40,7 +40,7 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (): Configuration {
+export default function (fileMapPath: string): Configuration {
   const isEnvProduction = true;
 
   // Variable used for enabling profiling in Production
@@ -239,6 +239,12 @@ export default function (): Configuration {
               options: {
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
                 plugins: [
+                  [
+                    require.resolve('@teambit/babel.bit-react-transformer'),
+                    {
+                      componentFilesPath: fileMapPath,
+                    },
+                  ],
                   [
                     require.resolve('babel-plugin-named-asset-import'),
                     {
