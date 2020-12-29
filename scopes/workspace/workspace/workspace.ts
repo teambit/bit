@@ -24,7 +24,7 @@ import {
 import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
 import { GraphqlMain } from '@teambit/graphql';
 import { Harmony } from '@teambit/harmony';
-import { IsolateComponentsOptions, IsolatorMain, Network } from '@teambit/isolator';
+import { IsolatorMain } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { isMatchNamespacePatternItem } from '@teambit/modules.match-pattern';
@@ -32,6 +32,7 @@ import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
 import { link, importAction } from 'bit-bin/dist/api/consumer';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
 import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
@@ -42,7 +43,6 @@ import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-compon
 import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
 import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import legacyLogger from 'bit-bin/dist/logger/logger';
 import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
 import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
@@ -135,7 +135,7 @@ export class Workspace implements ComponentFactory {
      */
     private componentAspect: ComponentMain,
 
-    readonly isolateEnv: IsolatorMain,
+    private isolator: IsolatorMain,
 
     private dependencyResolver: DependencyResolverMain,
 
@@ -318,30 +318,13 @@ export class Workspace implements ComponentFactory {
     return this.resolveMultipleComponentIds(ids);
   }
 
-  async createNetwork(seeders: ComponentID[], opts: IsolateComponentsOptions = {}): Promise<Network> {
-    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
-    legacyLogger.debug(`workspaceExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const legacySeedersIds = seeders.map((seeder) => seeder._legacy);
-    const graph = await buildOneGraphForComponents(legacySeedersIds, this.consumer);
-    const seederIdsWithVersions = graph.getBitIdsIncludeVersionsFromGraph(legacySeedersIds, graph);
-    const seedersStr = seederIdsWithVersions.map((s) => s.toString());
-    const compsAndDeps = graph.findSuccessorsInGraph(seedersStr);
-    const consumerComponents = compsAndDeps.filter((c) =>
-      // do not ignore the version here. a component might be in .bitmap with one version and
-      // installed as a package with another version. we don't want them both.
-      this.consumer.bitMap.getComponentIfExist(c.id)
-    );
-    const ids = await this.resolveMultipleComponentIds(consumerComponents.map((c) => c.id));
-    const components = await this.getMany(ids, true);
-    opts.baseDir = opts.baseDir || this.consumer.getPath();
-    const capsuleList = await this.isolateEnv.isolateComponents(components, opts);
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
-    return new Network(
-      capsuleList,
-      await Promise.all(seederIdsWithVersions.map(async (legacyId) => this.resolveComponentId(legacyId))),
-      this.isolateEnv.getCapsulesRootDir(this.path)
-    );
+  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
+    if (!ids || ids.length < 1) ids = await this.listIds();
+
+    const legacyIds = ids.map((id) => id._legacy);
+
+    const legacyGraph = await buildOneGraphForComponents(legacyIds, this.consumer);
+    return legacyGraph;
   }
 
   async loadCapsules(bitIds: string[]) {
@@ -357,9 +340,9 @@ export class Workspace implements ComponentFactory {
     const componentIdsP = ids.map((id) => this.resolveComponentId(id));
     const componentIds = await Promise.all(componentIdsP);
     const components = await this.getMany(componentIds);
-    const isolatedEnvironment = await this.createNetwork(components.map((c) => c.id));
+    const network = await this.isolator.isolateComponents(components.map((c) => c.id));
     const resolvedComponents = components.map((component) => {
-      const capsule = isolatedEnvironment.graphCapsules.getCapsule(component.id);
+      const capsule = network.graphCapsules.getCapsule(component.id);
       if (!capsule) throw new Error(`unable to find capsule for ${component.id.toString()}`);
       return new ResolvedComponent(component, capsule);
     });

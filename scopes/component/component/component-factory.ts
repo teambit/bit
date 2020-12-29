@@ -1,4 +1,5 @@
 import { BitId } from 'bit-bin/dist/bit-id';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
@@ -43,6 +44,8 @@ export interface ComponentFactory {
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
 
+  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
+
   /**
    * returns a specific state of a component by hash or semver.
    */
@@ -62,6 +65,10 @@ export interface ComponentFactory {
    * list all components in the host.
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
+
+  listIds(): Promise<ComponentID[]>;
+
+  hasId(componentId: ComponentID): Promise<boolean>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.
