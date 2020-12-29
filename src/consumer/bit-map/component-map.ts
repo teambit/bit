@@ -76,6 +76,7 @@ export default class ComponentMap {
   defaultVersion?: string | null;
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
+  recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
   constructor({
     id,
     files,
@@ -411,7 +412,7 @@ export default class ComponentMap {
       logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
       consumer.bitMap.hasChanged = true;
     }
-    await consumer.componentFsCache.setLastTrackTimestamp(id.toString(), Date.now());
+    this.recentlyTracked = true;
   }
 
   updateNextVersion(nextVersion: NextVersion) {

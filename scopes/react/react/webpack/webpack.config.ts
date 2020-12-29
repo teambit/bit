@@ -16,9 +16,10 @@ const moduleFileExtensions = [
   'web.jsx',
   'jsx',
   'mdx',
+  'md',
 ];
 
-export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
+export default function (workspaceDir: string, targets: string[], envId: string, fileMapPath: string): Configuration {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -43,7 +44,16 @@ export default function (workspaceDir: string, targets: string[], envId: string)
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
             ],
-            plugins: [require.resolve('react-refresh/babel')],
+            plugins: [
+              require.resolve('react-refresh/babel'),
+              // for component highlighting in preview.
+              [
+                require.resolve('@teambit/babel.bit-react-transformer'),
+                {
+                  componentFilesPath: fileMapPath,
+                },
+              ],
+            ],
           },
         },
 
@@ -57,7 +67,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('babel-preset-react-app')],
+                presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
                 plugins: [require.resolve('react-refresh/babel')],
               },
             },

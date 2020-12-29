@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { CapsuleList, IsolateComponentsOptions } from '@teambit/isolator';
+import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import chalk from 'chalk';
 
 import { Workspace } from '.';
@@ -27,7 +27,7 @@ export class CapsuleCreateCmd implements Command {
     ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private isolator: IsolatorMain) {}
 
   async create(
     [componentIds]: [string[]],
@@ -42,8 +42,8 @@ export class CapsuleCreateCmd implements Command {
       name: id,
     };
     const ids = await this.workspace.resolveMultipleComponentIds(componentIds);
-    const isolatedEnvironment = await this.workspace.createNetwork(ids, capsuleOptions);
-    const capsules = isolatedEnvironment.graphCapsules;
+    const network = await this.isolator.isolateComponents(ids, capsuleOptions);
+    const capsules = network.graphCapsules;
     return capsules;
   }
 

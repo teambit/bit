@@ -36,7 +36,8 @@ describe('load extensions', function () {
         helper.fixtures.copyFixtureExtensions('dummy-extension');
         helper.extensions.addExtensionToVariant('dummy-extension', 'teambit.harmony/aspect');
         helper.command.addComponent('dummy-extension');
-        helper.command.linkAndCompile();
+        helper.command.install();
+        helper.command.compile();
         helper.extensions.addExtensionToWorkspace('my-scope/dummy-extension', config);
       });
       it('should load the extension when loading the workspace', () => {
@@ -51,7 +52,8 @@ describe('load extensions', function () {
         helper.command.addComponent('non-requireable-aspect');
         helper.extensions.addExtensionToVariant('non-requireable-aspect', 'teambit.harmony/aspect');
         helper.extensions.addExtensionToWorkspace('my-scope/non-requireable-aspect', config);
-        helper.command.linkAndCompile();
+        helper.command.install();
+        helper.command.compile();
       });
       // TODO: implement
       it.skip('when config set to throw error on failed extensions', () => {
@@ -80,7 +82,8 @@ describe('load extensions', function () {
         helper.command.addComponent('extension-provider-error');
         helper.extensions.addExtensionToWorkspace('my-scope/extension-provider-error', config);
         helper.extensions.addExtensionToVariant('extension-provider-error', 'teambit.harmony/aspect');
-        helper.command.linkAndCompile();
+        helper.command.install();
+        helper.command.compile();
       });
       it.skip('when config set to throw error on failed extensions', () => {
         const func = () => helper.command.status();
@@ -123,7 +126,7 @@ describe('load extensions', function () {
     describe('loading simple extension', () => {
       before(() => {
         helper.extensions.setExtensionToVariant('affected-comp1', 'my-scope/dummy-extension', config);
-        helper.command.link();
+        helper.command.install();
         helper.command.compile();
       });
 
