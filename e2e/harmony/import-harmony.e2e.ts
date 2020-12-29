@@ -76,6 +76,26 @@ describe('import functionality on Harmony', function () {
           expect(localScope).to.have.lengthOf(3);
         });
       });
+      describe('importing the components', () => {
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          npmCiRegistry.setCiScopeInBitJson();
+          npmCiRegistry.setResolver();
+          helper.command.importComponent('comp1');
+        });
+        it('should not save the dependencies as components', () => {
+          const bitMap = helper.bitMap.readComponentsMapOnly();
+          expect(bitMap).to.have.property(`${helper.scopes.remote}/comp1@0.0.1`);
+          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp2@0.0.1`);
+          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp3@0.0.1`);
+        });
+        it('bit status should be clean with no errors', () => {
+          helper.command.expectStatusToBeClean();
+        });
+        it('app should be running', () => {
+          helper.fixtures.app;
+        });
+      });
     });
   });
 });
