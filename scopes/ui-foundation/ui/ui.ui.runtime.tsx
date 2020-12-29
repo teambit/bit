@@ -247,21 +247,21 @@ export class UiUI {
   }
 
   private async deserialize(lifecycleHooks: [string, RenderLifecycle][]) {
-    const raws: Record<string, Element> = {};
+    const elements: Record<string, Element | undefined> = {};
 
     const inDom = Array.from(document.querySelectorAll('body > .state > *'));
     inDom.forEach((elem) => {
       const aspectName = elem.getAttribute('data-aspect');
       if (!aspectName) return;
 
-      raws[aspectName] = elem;
+      elements[aspectName] = elem;
     });
 
     const deserialized = await Promise.all(
       lifecycleHooks.map(async ([key, hooks]) => {
-        const raw = raws[key];
         try {
-          return hooks.deserialize?.(raw.innerHTML);
+          const raw = elements[key]?.innerHTML;
+          return hooks.deserialize?.(raw);
         } catch (e) {
           // eslint-disable-next-line no-console
           console.error(`failed deserializing server state for aspect ${key}`, e);
