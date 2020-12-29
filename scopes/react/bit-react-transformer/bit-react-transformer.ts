@@ -110,7 +110,7 @@ function isClassComponent(classDec: t.ClassDeclaration) {
     return false;
   }) as t.ClassMethod;
 
-  return doesReturnJsx(renderMethod.body);
+  return doesReturnJsx(renderMethod?.body);
 }
 
 function isFunctionComponent(block: t.BlockStatement): boolean {
@@ -119,6 +119,7 @@ function isFunctionComponent(block: t.BlockStatement): boolean {
 }
 
 function doesReturnJsx(block: t.BlockStatement): boolean {
+  if (!block) return false;
   return !!block.body.find((statement) => {
     return statement.type === 'ReturnStatement' && isJsxReturnValid(statement.argument || undefined);
   });

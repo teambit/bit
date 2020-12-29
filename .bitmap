@@ -4,6 +4,11 @@
     "babel/bit-react-transformer": {
         "files": [
             {
+                "name": "bit-react-tranformer.docs.mdx",
+                "relativePath": "bit-react-tranformer.docs.mdx",
+                "test": false
+            },
+            {
                 "name": "bit-react-transformer.ts",
                 "relativePath": "bit-react-transformer.ts",
                 "test": false
