@@ -240,7 +240,7 @@ export class ScopeMain implements ComponentFactory {
   async getResolvedAspects(components: Component[]) {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
-      components.map(c => c.id),
+      components.map((c) => c.id),
       { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
       this.legacyScope
     );
@@ -448,6 +448,12 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
+  async getSnap(id: ComponentID, hash: string): Promise<Snap> {
+    // TODO: add cache by hash
+    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
+    return this.createSnapFromVersion(version);
+  }
+
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy);
   }
@@ -496,7 +502,7 @@ export class ScopeMain implements ComponentFactory {
     return new Snap(
       version.hash().toString(),
       new Date(parseInt(version.log.date)),
-      [],
+      version.parents.map((p) => p.toString()),
       {
         displayName: version.log.username || 'unknown',
         email: version.log.email || 'unknown@anywhere',
