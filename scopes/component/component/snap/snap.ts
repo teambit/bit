@@ -26,7 +26,7 @@ export class Snap {
     /**
      * parent snap
      */
-    readonly parents: Snap[],
+    readonly parents: string[],
 
     /**
      * author of the component `Snap`.
