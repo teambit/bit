@@ -82,7 +82,7 @@ export interface Command {
    * @param flags - command flags as described in options.
    * @return - JSX element which is rendered with ink
    */
-  render?(args: CLIArgs, flags: Flags): Promise<React.ReactElement>;
+  render?(args: CLIArgs, flags: Flags): Promise<RenderResult | React.ReactElement>;
 
   /**
    * Command handler which is called for legacy commands or when process.isTTY is false
@@ -105,3 +105,4 @@ export type Flags = { [flagName: string]: string | boolean | undefined };
 export type CLIArgs = Array<string[] | string>;
 export type GenericObject = { [k: string]: any };
 export type Report = { data: string; code: number };
+export type RenderResult = { data: React.ReactElement; code: number };
