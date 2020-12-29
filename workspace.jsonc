@@ -333,6 +333,12 @@
       },
       "teambit.harmony/node": {}
     },
+    "{babel/*}": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      },
+      "teambit.harmony/node": {}
+    },
     "{ui/*}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"

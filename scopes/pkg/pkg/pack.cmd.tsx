@@ -33,10 +33,12 @@ export class PackCmd implements Command {
   async report(args: PackArgs, options: PackCmdOptions) {
     const packResult = await this.json(args, options);
     const warnings: any = packResult.data?.warnings || [];
-    const warningsOutput: any = warnings.map(warning => chalk.yellow(warning)).join('\n');
+    const warningsOutput: any = warnings.map((warning) => chalk.yellow(warning)).join('\n');
     const errors: any = packResult.data?.errors || [];
-    const errorsOutput: any = errors.map(error => chalk.yellow(error)).join('\n');
-    const tarPathOutput = packResult.data.metadata?.tarPath ? chalk.green(`tar path for component ${packResult.data.id}: ${packResult.data.metadata?.tarPath}`): '';
+    const errorsOutput: any = errors.map((error) => chalk.yellow(error)).join('\n');
+    const tarPathOutput = packResult.data.metadata?.tarPath
+      ? chalk.green(`tar path for component ${packResult.data.id}: ${packResult.data.metadata?.tarPath}`)
+      : '';
     return `${warningsOutput}\n${errorsOutput}\n${tarPathOutput}`;
   }
 
