@@ -118,6 +118,7 @@ export default class ManyComponentsWriter {
   }
 
   static externalInstaller: ExternalPackageInstaller;
+  static externalCompiler: (ids: BitId[]) => Promise<void>;
   static registerExternalInstaller(installer: ExternalPackageInstaller) {
     this.externalInstaller = installer;
   }
@@ -366,6 +367,7 @@ to move all component files to a different directory, run bit remove and then bi
       });
     } else {
       await ManyComponentsWriter.externalInstaller?.install();
+      await ManyComponentsWriter.externalCompiler?.(this.componentsWithDependencies.map((c) => c.component.id));
     }
   }
   async _getAllLinks(): Promise<DataToPersist> {
