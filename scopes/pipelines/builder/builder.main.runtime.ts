@@ -87,9 +87,13 @@ export class BuilderMain {
     });
   }
 
-  async tagListener(components: Component[], options: OnTagOpts = {}): Promise<OnTagResults> {
+  async tagListener(
+    components: Component[],
+    options: OnTagOpts = {},
+    isolateOptions: IsolateComponentsOptions = {}
+  ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
-    const envsExecutionResults = await this.build(components, { emptyRootDir: true });
+    const envsExecutionResults = await this.build(components, { emptyRootDir: true, ...isolateOptions });
     if (options.throwOnError) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
@@ -174,13 +178,13 @@ export class BuilderMain {
     const ids = components.map((c) => c.id);
     const network = await this.isolator.isolateComponents(ids, isolateOptions);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
-    const buildResult = await envs.runOnce(this.buildService);
+    const buildResult = await envs.runOnce(this.buildService, { seedersOnly: isolateOptions?.seedersOnly });
     return buildResult;
   }
 
-  async deploy(components: Component[]): Promise<TaskResultsList> {
+  async deploy(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.deployService);
+    const buildResult = await envs.runOnce(this.deployService, { seedersOnly: isolateOptions?.seedersOnly });
 
     return buildResult;
   }
