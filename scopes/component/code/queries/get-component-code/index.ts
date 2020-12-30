@@ -1,1 +1,1 @@
-export { useCode } from './get-component-code';
+export { useCode, useFileContent } from './get-component-code';
