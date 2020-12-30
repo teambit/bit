@@ -5,7 +5,6 @@ import remove from 'unist-util-remove';
 import parseImports from 'parse-es6-imports';
 import yaml from 'yaml';
 import vfile from 'vfile';
-import rehypeWrap from 'rehype-wrap';
 import { CompileOutput } from './compile-output';
 
 export type MDXCompileOptions = {

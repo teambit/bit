@@ -43,7 +43,6 @@ function HighlightedTextSpan({ children }: { children: ReactNode }) {
 // TODO: @oded please refactor to an individual component.
 function Snippet({ children, live }: { live: string; children: string }) {
   const components = useContext(MDXScopeContext);
-  console.log(components);
   const scope = Object.assign({}, components, {
     mdx,
   });
