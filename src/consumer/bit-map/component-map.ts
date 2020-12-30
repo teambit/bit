@@ -108,7 +108,8 @@ export default class ComponentMap {
   }
 
   static fromJson(
-    componentMapObj: Omit<ComponentMapData, 'lanes'> & { lanes: Array<{ remoteLane: string; version: string }> }
+    componentMapObj: Omit<ComponentMapData, 'lanes'> & { lanes: Array<{ remoteLane: string; version: string }> },
+    isLegacy: boolean
   ): ComponentMap {
     const componentMapParams = {
       ...componentMapObj,
@@ -119,16 +120,19 @@ export default class ComponentMap {
           }))
         : [],
     };
+    if (!isLegacy) {
+      componentMapParams.origin = COMPONENT_ORIGINS.AUTHORED;
+    }
     return new ComponentMap(componentMapParams);
   }
 
-  toPlainObject(): Record<string, any> {
+  toPlainObject(isLegacy: boolean): Record<string, any> {
     let res = {
       files: this.files.map((file) => sortObject(file)),
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      origin: this.origin,
+      origin: isLegacy ? this.origin : undefined,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported,

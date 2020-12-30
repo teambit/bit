@@ -115,7 +115,7 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
+    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, config.isLegacy, scope.lanes.getCurrentLaneName());
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.componentLoader = ComponentLoader.getInstance(this);
@@ -830,7 +830,8 @@ export default class Consumer {
     const scopeP = Scope.ensure(resolvedScopePath);
     const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
-    const bitMap = BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
+
+    const bitMap = BitMap.load(projectPath, scope.path, config.isLegacy, scope.lanes.getCurrentLaneName());
     return new Consumer({
       projectPath,
       created: true,
@@ -908,11 +909,6 @@ export default class Consumer {
    * new workspaces use workspace.jsonc file
    */
   get isLegacy(): boolean {
-    if (!('isLegacy' in this.config)) {
-      // this happens for example when running `bit import --compiler`. the environment dir has its
-      // own consumer and the config is not ILegacyWorkspaceConfig but WorkspaceConfig
-      return true;
-    }
     return this.config.isLegacy;
   }
 
