@@ -78,7 +78,7 @@ export function createBitReactTransformer({ types: c }) {
         if (!isClassComponent(path.node)) {
           return;
         }
-        const name = path.id.name;
+        const name = path.node.id.name;
         addComponentId(path, state.file.opts.filename, name);
       },
     },

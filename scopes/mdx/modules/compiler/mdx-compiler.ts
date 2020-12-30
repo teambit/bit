@@ -61,7 +61,7 @@ export function compile(content: string, options: Partial<MDXCompileOptions> = {
 
 export function wrapWithScopeContext() {
   return (tree, file) => {
-    const imports: any[] = file.data.imports;
+    const imports: any[] = file.data?.imports || [];
     const ids = imports.reduce<string[]>((identifiers: string[], importSpecifier: any) => {
       const newIds: string[] = [];
       if (importSpecifier.defaultImport) newIds.push(importSpecifier.defaultImport);
