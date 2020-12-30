@@ -82,12 +82,12 @@ export class WorkspaceConfig implements HostConfig {
   _path?: string;
   _extensions: ExtensionDataList;
   _legacyProps?: WorkspaceLegacyProps;
-  _isLegacy: boolean;
+  isLegacy: boolean;
 
   constructor(private data?: WorkspaceConfigFileProps, private legacyConfig?: LegacyWorkspaceConfig) {
     const isHarmony = data || (isHarmonyEnabled() && !legacyConfig);
-    this._isLegacy = !isHarmony;
-    logger.debug(`workspace-config, isLegacy: ${this._isLegacy}`);
+    this.isLegacy = !isHarmony;
+    logger.debug(`workspace-config, isLegacy: ${this.isLegacy}`);
     Analytics.setExtraData('is_harmony', isHarmony);
     if (isHarmony) {
       this.raw = data;
@@ -118,15 +118,6 @@ export class WorkspaceConfig implements HostConfig {
 
   get extensions(): ExtensionDataList {
     return this._extensions;
-  }
-
-  get isLegacy(): boolean {
-    if (!('_isLegacy' in this)) {
-      // this happens for example when running `bit import --compiler`. the environment dir has its
-      // own consumer and the config is not ILegacyWorkspaceConfig but WorkspaceConfig
-      return true;
-    }
-    return this._isLegacy;
   }
 
   private loadExtensions() {
@@ -429,7 +420,7 @@ export class WorkspaceConfig implements HostConfig {
       // @ts-ignore
       path: this.path,
       _getEnvsByType,
-      isLegacy: this._isLegacy,
+      isLegacy: this.isLegacy,
       write: ({ workspaceDir }) => this.write.call(this, { dir: workspaceDir }),
       toVinyl: this.toVinyl.bind(this),
       componentsConfig: this.legacyConfig ? this.legacyConfig?.overrides : undefined,
