@@ -24,7 +24,11 @@ export class SignMain {
 
   async sign(ids: ComponentID[]): Promise<SignResult> {
     const components = await this.scope.getMany(ids);
-    const { aspectListMap, pipeResults } = await this.builder.tagListener(components, { throwOnError: false });
+    const { aspectListMap, pipeResults } = await this.builder.tagListener(
+      components,
+      { throwOnError: false },
+      { seedersOnly: true }
+    );
     const legacyBuildResults = this.scope.aspectMapToLegacyOnTagResults(aspectListMap);
     const legacyComponents = components.map((c) => c.state._consumer);
     updateComponentsByTagResult(legacyComponents, legacyBuildResults);

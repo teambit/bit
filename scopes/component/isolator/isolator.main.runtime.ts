@@ -88,9 +88,14 @@ export type IsolateComponentsOptions = {
   getExistingAsIs?: boolean;
 
   /**
-   * include all dependencies the capsule root context.
+   * place the package-manager cache on the capsule-root
    */
-  includeDeps?: boolean;
+  cachePackagesOnCapsule?: boolean;
+
+  /**
+   * do not build graph with all dependencies. isolate the seeders only.
+   */
+  seedersOnly?: boolean;
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -131,22 +136,27 @@ export class IsolatorMain {
     const host = this.componentAspect.getHost();
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
+    const componentsToIsolate = opts.seedersOnly ? await host.getMany(seeders) : await this.createGraph(seeders);
+    opts.baseDir = opts.baseDir || host.path;
+    const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
+    longProcessLogger.end();
+    this.logger.consoleSuccess();
+    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
+  }
+
+  async createGraph(seeders: ComponentID[]): Promise<Component[]> {
+    const host = this.componentAspect.getHost();
     const graph = await this.graphBuilder.getGraph(seeders);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
     const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
-    const existingCompsP = await compsAndDeps.map(async (c) => {
+    const existingCompsP = compsAndDeps.map(async (c) => {
       const existing = await host.hasId(c.id);
       if (existing) return c;
       return undefined;
     });
-    const existingComps = compact(await Promise.all(existingCompsP));
-    opts.baseDir = opts.baseDir || host.path;
-    const capsuleList = await this.createCapsules(existingComps, opts, legacyScope);
-    longProcessLogger.end();
-    this.logger.consoleSuccess();
-    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
+    return compact(await Promise.all(existingCompsP));
   }
 
   /**
@@ -185,7 +195,7 @@ export class IsolatorMain {
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.includeDeps ?? false);
+      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsule ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
@@ -206,11 +216,11 @@ export class IsolatorMain {
     capsulesDir: string,
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
-    includeDeps: boolean
+    cachePackagesOnCapsule: boolean
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: includeDeps ? capsulesDir : undefined,
+      cacheRootDirectory: cachePackagesOnCapsule ? capsulesDir : undefined,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
