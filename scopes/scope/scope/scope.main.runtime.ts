@@ -479,6 +479,12 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
+  async getSnap(id: ComponentID, hash: string): Promise<Snap> {
+    // TODO: add cache by hash
+    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
+    return this.createSnapFromVersion(version);
+  }
+
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy);
   }
@@ -527,7 +533,7 @@ export class ScopeMain implements ComponentFactory {
     return new Snap(
       version.hash().toString(),
       new Date(parseInt(version.log.date)),
-      [],
+      version.parents.map((p) => p.toString()),
       {
         displayName: version.log.username || 'unknown',
         email: version.log.email || 'unknown@anywhere',
