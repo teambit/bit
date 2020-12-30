@@ -199,7 +199,7 @@ export class Component {
     };
     const iterable = this.snapsIterable(snapToStartFrom, { firstParentOnly: true, stopFn });
     const snaps: Snap[] = [];
-    for await (let snap of iterable) {
+    for await (const snap of iterable) {
       snaps.push(snap);
     }
     if (snaps.length) {

@@ -13,7 +13,7 @@ export type VersionBlockProps = {
   version: string;
   hash: string;
   timestamp: string;
-  parents: Snap[];
+  parents: string[];
   author?: Author;
   message: string;
   isLatest: boolean;
