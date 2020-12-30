@@ -569,7 +569,7 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
-    devFilePatterns: ['*.spec.ts'],
+    devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
   };
 
