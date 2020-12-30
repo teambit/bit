@@ -108,8 +108,7 @@ export default class ComponentMap {
   }
 
   static fromJson(
-    componentMapObj: Omit<ComponentMapData, 'lanes'> & { lanes: Array<{ remoteLane: string; version: string }> },
-    isLegacy: boolean
+    componentMapObj: Omit<ComponentMapData, 'lanes'> & { lanes: Array<{ remoteLane: string; version: string }> }
   ): ComponentMap {
     const componentMapParams = {
       ...componentMapObj,
@@ -120,9 +119,6 @@ export default class ComponentMap {
           }))
         : [],
     };
-    if (!isLegacy) {
-      componentMapParams.origin = COMPONENT_ORIGINS.AUTHORED;
-    }
     return new ComponentMap(componentMapParams);
   }
 

@@ -194,6 +194,9 @@ export default class BitMap {
   loadComponents(componentsJson: Record<string, any>) {
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
+      if (!this.isLegacy) {
+        componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
+      }
       const idHasScope = (): boolean => {
         if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
         if ('exported' in componentFromJson) {
@@ -203,7 +206,7 @@ export default class BitMap {
         return BitId.parseObsolete(componentId).hasScope();
       };
       componentFromJson.id = BitId.parse(componentId, idHasScope());
-      const componentMap = ComponentMap.fromJson(componentFromJson, this.isLegacy);
+      const componentMap = ComponentMap.fromJson(componentFromJson);
       componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
