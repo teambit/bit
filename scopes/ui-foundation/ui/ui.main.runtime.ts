@@ -51,6 +51,12 @@ export type UIConfig = {
    * host for the UI root
    */
   host: string;
+
+  /**
+   * directory in workspace to use for public assets.
+   * always relative to the workspace root directory.
+   */
+  publicDir: string;
 };
 
 export type RuntimeOptions = {
@@ -125,6 +131,14 @@ export class UiMain {
     private logger: Logger
   ) {}
 
+  get publicDir() {
+    if (this.config.publicDir.startsWith('/')) {
+      return this.config.publicDir.substring(1);
+    }
+
+    return this.config.publicDir;
+  }
+
   /**
    * create a build of the given UI root.
    */
@@ -134,7 +148,8 @@ export class UiMain {
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name
+      uiRoot.name,
+      this.publicDir
     );
 
     const compiler = webpack(config);
@@ -155,6 +170,7 @@ export class UiMain {
       uiRootExtension: name,
       ui: this,
       logger: this.logger,
+      publicDir: this.publicDir,
     });
 
     const targetPort = await this.getPort(port);
@@ -290,7 +306,8 @@ export class UiMain {
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name
+      uiRoot.name,
+      this.publicDir
     );
     if (fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
@@ -304,6 +321,7 @@ export class UiMain {
   }
 
   static defaultConfig = {
+    publicDir: 'public/bit',
     portRange: [3000, 3100],
     host: 'localhost',
   };
