@@ -3,7 +3,7 @@ import React from 'react';
 import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
+import { IsolatorMain } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 import { BuildPipe } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
@@ -27,9 +27,9 @@ export type EnvsBuildContext = { [envId: string]: BuildContext };
 export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
   constructor(
     /**
-     * workspace extension.
+     * isolator extension.
      */
-    private workspace: Workspace,
+    private isolator: IsolatorMain,
 
     /**
      * logger extension.
@@ -70,11 +70,9 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id);
-        const createNetwork = this.workspace
-          ? this.workspace.createNetwork.bind(this.workspace)
-          : this.scope.createNetwork.bind(this.scope);
+        const capsuleNetwork = await this.isolator.isolateComponents(componentIds, { getExistingAsIs: true });
         const buildContext = Object.assign(executionContext, {
-          capsuleNetwork: await createNetwork(componentIds, { getExistingAsIs: true }),
+          capsuleNetwork,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })

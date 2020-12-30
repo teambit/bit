@@ -31,6 +31,7 @@ import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
+import { Scope } from '../../../scope';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -65,6 +66,11 @@ export default (async function exportAction(params: {
     exportedLanes,
   };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
+  if (Scope.onPostExport) {
+    Scope.onPostExport(exported, exportedLanes).catch((err) => {
+      logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
+    });
+  }
   return exportResults;
 });
 

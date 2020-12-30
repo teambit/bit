@@ -44,6 +44,7 @@ export class TestCmd implements Command {
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
     );
 
+    let code = 0;
     if (watch && !debug) {
       await this.tester.watch(components, {
         watch: Boolean(watch),
@@ -51,23 +52,27 @@ export class TestCmd implements Command {
         env: env as string | undefined,
       });
     } else {
-      await this.tester.test(components, {
+      const results = await this.tester.test(components, {
         watch: Boolean(watch),
         debug: Boolean(debug),
         env: env as string | undefined,
       });
+      if (results.errors?.length) code = 1;
     }
     const { seconds } = timer.stop();
 
     if (watch) return <Box></Box>;
-    return (
-      <Box>
-        <Text>tested </Text>
-        <Text color="cyan">{components.length} </Text>
-        <Text>components in </Text>
-        <Text color="cyan">{seconds} </Text>
-        <Text>seconds.</Text>
-      </Box>
-    );
+    return {
+      code,
+      data: (
+        <Box>
+          <Text>tested </Text>
+          <Text color="cyan">{components.length} </Text>
+          <Text>components in </Text>
+          <Text color="cyan">{seconds} </Text>
+          <Text>seconds.</Text>
+        </Box>
+      ),
+    };
   }
 }

@@ -9,7 +9,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { IsolateComponentsOptions } from '@teambit/isolator';
+import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { OnTagOpts } from 'bit-bin/dist/scope/scope';
 import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
@@ -36,6 +36,7 @@ export class BuilderMain {
     private buildService: BuilderService,
     private deployService: BuilderService,
     private scope: ScopeMain,
+    private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
     private buildTaskSlot: TaskSlot,
     private deployTaskSlot: TaskSlot,
@@ -171,10 +172,7 @@ export class BuilderMain {
    */
   async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
-    const createNetwork = this.workspace
-      ? this.workspace.createNetwork.bind(this.workspace)
-      : this.scope.createNetwork.bind(this.scope);
-    const network = await createNetwork(ids, isolateOptions);
+    const network = await this.isolator.isolateComponents(ids, isolateOptions);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
     const buildResult = await envs.runOnce(this.buildService);
     return buildResult;
@@ -213,6 +211,7 @@ export class BuilderMain {
     EnvsAspect,
     WorkspaceAspect,
     ScopeAspect,
+    IsolatorAspect,
     LoggerAspect,
     AspectLoaderAspect,
     GraphqlAspect,
@@ -220,11 +219,12 @@ export class BuilderMain {
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, loggerExt, aspectLoader, graphql]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql]: [
       CLIMain,
       EnvsMain,
       Workspace,
       ScopeMain,
+      IsolatorMain,
       LoggerMain,
       AspectLoaderMain,
       GraphqlMain
@@ -235,7 +235,7 @@ export class BuilderMain {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
     const buildService = new BuilderService(
-      workspace,
+      isolator,
       logger,
       buildTaskSlot,
       'getBuildPipe',
@@ -245,7 +245,7 @@ export class BuilderMain {
     );
     envs.registerService(buildService);
     const deployService = new BuilderService(
-      workspace,
+      isolator,
       logger,
       deployTaskSlot,
       'getDeployPipe',
@@ -259,6 +259,7 @@ export class BuilderMain {
       buildService,
       deployService,
       scope,
+      isolator,
       aspectLoader,
       buildTaskSlot,
       deployTaskSlot,

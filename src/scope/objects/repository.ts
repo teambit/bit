@@ -67,6 +67,8 @@ export default class Repository {
     return path.join(scopePath, OBJECTS_DIR);
   }
 
+  static onPostObjectsPersist: () => Promise<void>;
+
   ensureDir() {
     return fs.ensureDir(this.getPath());
   }
@@ -255,6 +257,7 @@ export default class Repository {
   }
 
   clearCache() {
+    logger.debug('repository.clearCache');
     this._cache = {};
   }
 
@@ -307,6 +310,11 @@ export default class Repository {
     await this.remoteLanes.write();
     await this.unmergedComponents.write();
     this.clearObjects();
+    if (Repository.onPostObjectsPersist) {
+      Repository.onPostObjectsPersist().catch((err) => {
+        logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
+      });
+    }
   }
 
   /**

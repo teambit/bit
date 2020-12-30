@@ -1,4 +1,6 @@
 import ts, { TsConfigSourceFile } from 'typescript';
+import { tmpdir } from 'os';
+import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -15,6 +17,7 @@ import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
+import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
@@ -23,7 +26,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
-const jest = require('jest');
+const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 
@@ -87,7 +90,7 @@ export class ReactEnv implements Environment {
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string, jestModule = jest): Tester {
+  getTester(jestConfigPath: string, jestModule = jestM): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
     return this.jestAspect.createTester(config, jestModule);
   }
@@ -126,16 +129,36 @@ export class ReactEnv implements Environment {
     });
   }
 
+  private getFileMap(components: Component[]) {
+    return components.reduce<{ [key: string]: string }>((index, component: Component) => {
+      component.state.filesystem.files.forEach((file) => {
+        index[file.path] = component.id.toString();
+      });
+
+      return index;
+    }, {});
+  }
+
+  private writeFileMap(components: Component[]) {
+    const fileMap = this.getFileMap(components);
+    const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
+    outputFileSync(path, JSON.stringify(fileMap));
+    return path;
+  }
+
   /**
    * get the default react webpack config.
    */
   getWebpackConfig(context: DevServerContext): Configuration {
+    // @ts-ignore due to issue with component ID types. TODO: make sure all types are aligned to one.
+    const fileMapPath = this.writeFileMap(context.components);
+
     // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
     const packagePaths = context.components
       .map((comp) => this.pkg.getPackageName(comp))
       .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
 
-    return webpackConfigFactory(this.workspace.path, packagePaths, context.id);
+    return webpackConfigFactory(this.workspace.path, packagePaths, context.id, fileMapPath);
   }
 
   /**
@@ -159,7 +182,8 @@ export class ReactEnv implements Environment {
   }
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
-    const defaultConfig = previewConfigFactory();
+    const path = this.writeFileMap(context.components);
+    const defaultConfig = previewConfigFactory(path);
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     return this.webpack.createBundler(context, config as any);
   }
@@ -204,7 +228,7 @@ export class ReactEnv implements Environment {
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '^7.11.2'
+        '@babel/runtime': '^7.11.2',
       },
       // TODO: take version from config
       peerDependencies: {

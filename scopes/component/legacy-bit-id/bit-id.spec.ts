@@ -74,7 +74,7 @@ describe('Bit-id', () => {
       const bitName = 'CSSComp';
       expect(BitId.getValidBitId('global', bitName).toString()).to.equal('global/css-comp');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    }).timeout(5000);
+    });
     it('should convert EN-US to en-us', () => {
       const bitName = 'EN-US';
       expect(BitId.getValidBitId('global', bitName).toString()).to.equal('global/en-us');

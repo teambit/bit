@@ -3,7 +3,6 @@ import { ComponentFactory } from '@teambit/component';
 import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { ScopeMain } from '@teambit/scope';
-import { BitError } from '@teambit/bit-error';
 import LegacyScope from 'bit-bin/dist/scope/scope';
 import { Packer as LegacyPacker, PackWriteOptions, PackOptions } from 'bit-bin/dist/pack';
 import { Logger } from '@teambit/logger';
@@ -104,6 +103,7 @@ export class Packer {
       component,
       metadata,
       errors: packResult.errors,
+      warnings: packResult.warnings,
       startTime: packResult.startTime,
       endTime: packResult.endTime,
     };
@@ -120,12 +120,8 @@ export class Packer {
 
   private async getCapsule(componentIdStr: string, legacyScope: LegacyScope): Promise<Capsule> {
     const componentId = await this.host.resolveComponentId(componentIdStr);
-    const component = await this.host.get(componentId);
-    if (!component) {
-      throw new BitError(`unable to find "${componentId}"`);
-    }
-    const capsules = await this.isolator.isolateComponents([component], { baseDir: this.host.path }, legacyScope);
-    const capsule = capsules.getCapsule(componentId);
+    const network = await this.isolator.isolateComponents([componentId], { baseDir: this.host.path }, legacyScope);
+    const capsule = network.seedersCapsules.getCapsule(componentId);
 
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
     return capsule;

@@ -3,7 +3,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
-import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Component, ComponentID } from '@teambit/component';
 import {
   getPublishedPackages,
@@ -11,6 +10,10 @@ import {
 } from 'bit-bin/dist/scope/component-ops/tag-model-component';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { BuildStatus } from 'bit-bin/dist/constants';
+import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
+import { PostSign } from 'bit-bin/dist/scope/actions';
+import { Remotes } from 'bit-bin/dist/remotes';
+import { BitIds } from 'bit-bin/dist/bit-id';
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -29,11 +32,24 @@ export class SignMain {
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+    await this.clearScopesCaches(legacyComponents);
     return {
       components,
       publishedPackages,
       error: pipeWithError ? pipeWithError.getErrorMessageFormatted() : null,
     };
+  }
+
+  private async clearScopesCaches(components: ConsumerComponent[]) {
+    const bitIds = BitIds.fromArray(components.map((c) => c.id));
+    const idsGroupedByScope = bitIds.toGroupByScopeName(new BitIds());
+    const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
+    await Promise.all(
+      Object.keys(idsGroupedByScope).map(async (scopeName) => {
+        const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
+        return remote.action(PostSign.name, { ids: idsGroupedByScope[scopeName].map((id) => id.toString()) });
+      })
+    );
   }
 
   private async saveExtensionsDataIntoScope(components: ConsumerComponent[], buildStatus: BuildStatus) {
@@ -46,18 +62,12 @@ export class SignMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [CLIAspect, WorkspaceAspect, ScopeAspect, LoggerAspect, BuilderAspect];
+  static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
 
-  static async provider([cli, workspace, scope, loggerMain, builder]: [
-    CLIMain,
-    Workspace,
-    ScopeMain,
-    LoggerMain,
-    BuilderMain
-  ]) {
+  static async provider([cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain]) {
     const logger = loggerMain.createLogger(SignAspect.id);
     const signMain = new SignMain(scope, logger, builder);
-    cli.register(new SignCmd(signMain, scope, workspace));
+    cli.register(new SignCmd(signMain, scope, logger));
     return signMain;
   }
 }

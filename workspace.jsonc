@@ -8,7 +8,7 @@
     // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/pnpm",
+    "packageManager": "teambit.dependencies/yarn",
     "policy": {
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
@@ -154,7 +154,7 @@
         "camelcase": "^6.0.0",
         "case-sensitive-paths-webpack-plugin": "^2.3.0",
         "classnames": "^2.2.6",
-        "cleargraph": "^5.8.0",
+        "cleargraph": "^7.0.0",
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "copy-to-clipboard": "^3.3.1",
@@ -269,7 +269,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.231",
+        "bit-bin": "14.8.9-dev.238",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -325,7 +325,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.231",
+            "bit-bin": "14.8.9-dev.238",
             "react-dom": "^16.13.1"
           }
         }
@@ -336,6 +336,12 @@
       "teambit.harmony/aspect": {}
     },
     "{modules/*}": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      },
+      "teambit.harmony/node": {}
+    },
+    "{babel/*}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
@@ -401,6 +407,21 @@
     "scopes/component": {
       "defaultScope": "teambit.component"
     },
+    "scopes/component/component-id": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/component/component-version": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
+    "scopes/component/legacy-bit-id": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
     "scopes/ui-foundation": {
       "defaultScope": "teambit.ui-foundation"
     },
@@ -433,7 +454,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.231",
+            "bit-bin": "14.8.9-dev.238",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
