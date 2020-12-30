@@ -571,7 +571,7 @@ export class ScopeMain implements ComponentFactory {
   ) {
     cli.register(new ExportCmd());
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
-    const legacyScope = await loadScopeIfExist(bitConfig.cwd);
+    const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       return undefined;
     }
