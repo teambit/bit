@@ -156,7 +156,7 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: ['*.spec.*', '*.test.*'],
+    patterns: ['**/*.spec.*', '**/*.test.*'],
 
     /**
      * determine whether to watch on start.

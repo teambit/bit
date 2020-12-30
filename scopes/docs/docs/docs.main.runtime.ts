@@ -151,7 +151,7 @@ export class DocsMain {
   ];
 
   static defaultConfig = {
-    patterns: ['*.docs.*'],
+    patterns: ['**/*.docs.*'],
   };
 
   static async provider(
