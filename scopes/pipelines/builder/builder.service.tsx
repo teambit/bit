@@ -20,6 +20,8 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
+export type BuilderServiceOptions = { seedersOnly: boolean };
+
 export type BuilderDescriptor = { tasks: string[] };
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
@@ -58,7 +60,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   /**
    * runs all tasks for all envs
    */
-  async runOnce(envsExecutionContext: ExecutionContext[]): Promise<TaskResultsList> {
+  async runOnce(envsExecutionContext: ExecutionContext[], options: BuilderServiceOptions): Promise<TaskResultsList> {
     const envs = envsExecutionContext.map((executionContext) => executionContext.envDefinition);
     const tasksQueue = calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv);
     tasksQueue.validate();
@@ -70,7 +72,13 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id);
-        const capsuleNetwork = await this.isolator.isolateComponents(componentIds, { getExistingAsIs: true });
+        const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
+          getExistingAsIs: true,
+          seedersOnly: options.seedersOnly,
+        });
+        this.logger.console(
+          `generated graph for env "${executionContext.id}", seeders total: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
+        );
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
         });
