@@ -47,6 +47,7 @@ export interface ManyComponentsWriterParams {
   installProdPackagesOnly?: boolean;
   excludeRegistryPrefix?: boolean;
   saveOnLane?: boolean;
+  isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
 }
 
@@ -87,6 +88,7 @@ export default class ManyComponentsWriter {
   basePath?: string;
   saveOnLane?: boolean; // whether a component belongs to a lane, needed for populating `onLanesOnly` prop of .bitmap
   packageManager?: string;
+  isLegacy?: boolean;
   applyPackageJsonTransformers?: boolean;
   // Apply config added by extensions
 
@@ -110,15 +112,16 @@ export default class ManyComponentsWriter {
     this.excludeRegistryPrefix = this._setBooleanDefault(params.excludeRegistryPrefix, false);
     this.dependenciesIdsCache = {};
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap();
+    this.bitMap = this.consumer ? this.consumer.bitMap : new BitMap(undefined, undefined, undefined, params.isLegacy);
     this.saveOnLane = params.saveOnLane;
     this.packageManager = params.packageManager;
+    this.isLegacy = this.consumer ? this.consumer.isLegacy : params.isLegacy;
     this.applyPackageJsonTransformers = params.applyPackageJsonTransformers ?? true;
     if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
 
   static externalInstaller: ExternalPackageInstaller;
-  static externalCompiler: (ids: BitId[]) => Promise<void>;
+  static externalCompiler: (ids: BitId[]) => Promise<any>;
   static registerExternalInstaller(installer: ExternalPackageInstaller) {
     this.externalInstaller = installer;
   }
