@@ -6,7 +6,7 @@ const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMi
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
-const html = require('./html');
+const { default: html } = require('./html');
 
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
@@ -95,6 +95,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       // Enable hot reloading
       hot: true,
 
+      allowedHosts: ['sym.bit.dev'],
       host,
 
       historyApiFallback: {
