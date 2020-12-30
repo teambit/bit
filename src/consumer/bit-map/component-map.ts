@@ -103,7 +103,7 @@ export default class ComponentMap {
     this.onLanesOnly = onLanesOnly;
     this.lanes = lanes || [];
     this.defaultVersion = defaultVersion;
-    this.isAvailableOnCurrentLane = isAvailableOnCurrentLane;
+    this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
   }
 
