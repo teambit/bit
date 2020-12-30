@@ -92,9 +92,6 @@ describe('import functionality on Harmony', function () {
         it('bit status should be clean with no errors', () => {
           helper.command.expectStatusToBeClean();
         });
-        it('app should be running', () => {
-          helper.fixtures.app;
-        });
       });
     });
   });
