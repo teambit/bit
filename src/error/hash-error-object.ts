@@ -35,7 +35,8 @@ function hashValue(value: any): string {
     case 'object':
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (Array.isArray(value)) return value.map((v) => hash(v));
-      return hash(value);
+      // ignoreUnknown helps to not throw error for some errors with custom props.
+      return hash(value, { ignoreUnknown: true });
     default:
       return hash(value);
   }

@@ -291,14 +291,11 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
-  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
-    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
-    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
-    });
-    const components = await this.getMany(withoutLocalAspects);
+  private async resolveUserAspects(runtimeName?: string, userAspectsIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    if (!userAspectsIds || !userAspectsIds.length) return [];
+    const components = await this.getMany(userAspectsIds);
     const network = await this.isolator.isolateComponents(
-      withoutLocalAspects,
+      userAspectsIds,
       { baseDir: this.path, skipIfExists: true },
       this.legacyScope
     );
@@ -313,11 +310,19 @@ export class ScopeMain implements ComponentFactory {
         runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
       };
     });
+    return aspectDefs;
+  }
 
+  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
+    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
+      return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
+    });
+    const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
     const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
-    const allDefs = aspectDefs.concat(coreAspects).concat(localResolved);
+    const allDefs = userAspectsDefs.concat(coreAspects).concat(localResolved);
     const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
     let defs = uniqDefs;
     if (runtimeName) {
