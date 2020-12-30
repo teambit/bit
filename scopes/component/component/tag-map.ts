@@ -15,6 +15,17 @@ export class TagMap extends Map<SemVer, Tag> {
   }
 
   /**
+   * Get a map that map snap hash to tag
+   */
+  getHashMap(): Map<Hash, Tag> {
+    const res: Map<Hash, Tag> = new Map();
+    this.forEach((tag: Tag) => {
+      res.set(tag.hash, tag);
+    });
+    return res;
+  }
+
+  /**
    * get the latest semver from the tag map.
    */
   getLatest(): string {
