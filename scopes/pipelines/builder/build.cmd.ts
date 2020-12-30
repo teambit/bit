@@ -15,7 +15,7 @@ export class BuilderCmd implements Command {
   shortDescription = '';
   options = [
     ['', 'install', 'install core aspects in capsules'],
-    ['', 'cache-packages-on-capsule', 'set the package-manager cache on the capsule root'],
+    ['', 'cache-packages-on-capsule-root', 'set the package-manager cache on the capsule root'],
   ] as CommandOptions;
 
   constructor(private builder: BuilderMain, private workspace: Workspace, private logger: Logger) {}
@@ -24,8 +24,8 @@ export class BuilderCmd implements Command {
     [userPattern]: [string],
     {
       install = false,
-      cachePackagesOnCapsule = false,
-    }: { rebuild: boolean; install: boolean; cachePackagesOnCapsule: boolean }
+      cachePackagesOnCapsulesRoot = false,
+    }: { rebuild: boolean; install: boolean; cachePackagesOnCapsulesRoot: boolean }
   ): Promise<string> {
     const longProcessLogger = this.logger.createLongProcessLogger('build');
     const pattern = userPattern && userPattern.toString();
@@ -37,7 +37,7 @@ export class BuilderCmd implements Command {
       },
       linkingOptions: { linkTeambitBit: !install },
       emptyRootDir: true,
-      cachePackagesOnCapsule,
+      cachePackagesOnCapsulesRoot,
     });
     longProcessLogger.end();
     envsExecutionResults.throwErrorsIfExist();

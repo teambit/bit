@@ -90,7 +90,7 @@ export type IsolateComponentsOptions = {
   /**
    * place the package-manager cache on the capsule-root
    */
-  cachePackagesOnCapsule?: boolean;
+  cachePackagesOnCapsulesRoot?: boolean;
 
   /**
    * do not build graph with all dependencies. isolate the seeders only.
@@ -195,7 +195,7 @@ export class IsolatorMain {
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsule ?? false);
+      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
@@ -216,11 +216,11 @@ export class IsolatorMain {
     capsulesDir: string,
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
-    cachePackagesOnCapsule: boolean
+    cachePackagesOnCapsulesRoot: boolean
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: cachePackagesOnCapsule ? capsulesDir : undefined,
+      cacheRootDirectory: cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
