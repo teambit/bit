@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { flatten } from 'lodash';
 import { BitIds } from '../../bit-id';
 import { COMPILER_ENV_TYPE, COMPONENT_DIST_PATH_TEMPLATE, COMPONENT_ORIGINS, TESTER_ENV_TYPE } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -17,12 +16,6 @@ import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import { PackageJsonTransformer } from '../component/package-json-transformer';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
-import { ArtifactVinyl } from '../component/sources/artifact';
-import {
-  ArtifactFiles,
-  deserializeArtifactFiles,
-  getArtifactFilesByExtension,
-} from '../component/sources/artifact-files';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import ComponentConfig from '../config/component-config';
@@ -138,7 +131,6 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
-    await this.populateArtifacts();
     return this.component;
   }
 
@@ -207,40 +199,6 @@ export default class ComponentWriter {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.component.dataToPersist.addFile(this.component.license);
     }
-  }
-
-  /**
-   * currently, it writes all artifacts.
-   * later, this responsibility might move to pkg extension, which could write only artifacts
-   * that are set in package.json.files[], to have a similar structure of a package.
-   */
-  private async populateArtifacts() {
-    if (!this.scope) {
-      // when capsules are written via the workspace, do not write artifacts, they get created by
-      // build-pipeline. when capsules are written via the scope, we do need the dists.
-      return;
-    }
-    const extensionsNamesForArtifacts = ['teambit.compilation/compiler'];
-    const artifactsFiles = flatten(
-      extensionsNamesForArtifacts.map((extName) => getArtifactFilesByExtension(this.component.extensions, extName))
-    );
-    const scope = this.scope;
-    const artifactsVinylFlattened: ArtifactVinyl[] = [];
-    await Promise.all(
-      artifactsFiles.map(async (artifactFiles) => {
-        if (!artifactFiles) return;
-        if (!(artifactFiles instanceof ArtifactFiles)) {
-          artifactFiles = deserializeArtifactFiles(artifactFiles);
-        }
-        const vinylFiles = await artifactFiles.getVinylsAndImportIfMissing(this.component.scope as string, scope);
-        artifactsVinylFlattened.push(...vinylFiles);
-      })
-    );
-    const artifactsDir = this.getArtifactsDir();
-    if (artifactsDir) {
-      artifactsVinylFlattened.forEach((a) => a.updatePaths({ newBase: artifactsDir }));
-    }
-    this.component.dataToPersist.addManyFiles(artifactsVinylFlattened);
   }
 
   private getArtifactsDir() {
