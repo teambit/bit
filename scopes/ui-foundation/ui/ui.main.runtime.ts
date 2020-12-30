@@ -290,16 +290,28 @@ export class UiMain {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
     if (hash === hashed && !force) return;
-    if (hash !== hashed)
+    if (hash !== hashed) {
       this.logger.console(
-        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}'`
+        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(
+          uiRoot.name
+        )} in target directory: ${chalk.cyan(this.publicDir)}'`
       );
-    this.logger.console(`Building UI assets for '${chalk.cyan(uiRoot.name)}'`);
+    } else {
+      this.logger.console(
+        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(this.publicDir)}`
+      );
+    }
+
     const res = await this.build(name);
+    this.clearConsole();
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
     if (res.hasErrors()) res.compilation.errors.forEach((err) => console.error(err));
     await this.cache.set(uiRoot.path, hash);
+  }
+
+  clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
   private async buildIfNoBundle(name: string, uiRoot: UIRoot) {
