@@ -366,7 +366,7 @@ export default class BitMap {
   }
 
   getAuthoredAndImportedBitIds(): BitIds {
-    return this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    return this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   }
 
   getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
