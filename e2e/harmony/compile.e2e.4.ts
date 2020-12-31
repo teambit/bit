@@ -93,7 +93,8 @@ describe('compile extension', function () {
           expect(path.join(artifactsPath, 'dist/index.js')).to.be.a.file();
           expect(path.join(artifactsPath, 'package.json')).to.be.a.file();
         });
-        it('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
+        // @todo: @gilad will handle NESTED differently by creating capsules for them
+        it.skip('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
           const nestedPath = path.join(
             helper.scopes.localPath,
             'components/.dependencies/comp2',

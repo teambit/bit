@@ -308,7 +308,7 @@ export class IsolatorMain {
     return {
       component,
       // @ts-ignore
-      bitMap: new BitMap(),
+      bitMap: new BitMap(undefined, undefined, undefined, false),
       writeToPath: '.',
       origin: 'IMPORTED',
       consumer: undefined,
