@@ -535,12 +535,16 @@ export default class Component extends BitObject {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (versionNum === VERSION_ZERO) {
+      throw new Error(`the component ${this.id()} has no versions and the head is empty.
+this is probably a component from another lane which should not be loaded in this lane.
+make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+    }
     if (isTag(versionNum) && !this.hasTag(versionNum!)) {
       throw new ShowDoctorError(
         `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersions().join(
           '\n'
-        )}, versions array.
-make sure that this component is available on your lane.`
+        )}, versions array.`
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
