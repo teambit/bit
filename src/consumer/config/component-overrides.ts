@@ -176,9 +176,7 @@ export default class ComponentOverrides {
 
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
-    return ignoredRules.filter(
-      (rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX) && !rule.startsWith(OVERRIDE_COMPONENT_PREFIX)
-    );
+    return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
   }
 
   stripOriginallySharedDir(sharedDir: string | null | undefined) {

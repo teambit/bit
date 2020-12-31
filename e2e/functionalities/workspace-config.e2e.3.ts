@@ -205,6 +205,7 @@ describe('workspace config', function () {
         helper.command.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
         helper.command.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
         helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+        helper.command.link();
         scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
         remoteScopeEmpty = helper.scopeHelper.cloneRemoteScope();
       });
@@ -304,7 +305,7 @@ describe('workspace config', function () {
             const overrides = {
               bar: {
                 dependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils.foo.foo1`]: '-',
                 },
               },
             };
