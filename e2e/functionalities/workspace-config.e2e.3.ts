@@ -84,6 +84,7 @@ describe('workspace config', function () {
         helper.command.addComponent('bar.js');
         helper.command.tagAllComponents();
         helper.command.tagScope('2.0.0');
+        helper.command.link();
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       describe('from bit.json', () => {
