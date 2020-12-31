@@ -2,19 +2,12 @@ import minimatch from 'minimatch';
 import path from 'path';
 import _ from 'lodash';
 
-import { BitId, BitIds } from '../../../../bit-id';
-import {
-  COMPONENT_ORIGINS,
-  DEPENDENCIES_FIELDS,
-  MANUALLY_ADD_DEPENDENCY,
-  MANUALLY_REMOVE_DEPENDENCY,
-  OVERRIDE_COMPONENT_PREFIX,
-} from '../../../../constants';
+import { BitId } from '../../../../bit-id';
+import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import logger from '../../../../logger/logger';
 import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
 import { PathLinux } from '../../../../utils/path';
-import hasWildcard from '../../../../utils/string/has-wildcard';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
 import { AllDependencies, FileType } from './dependencies-resolver';
