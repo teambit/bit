@@ -328,10 +328,7 @@ export default class DependencyResolver {
       DEPENDENCIES_FIELDS.forEach((fieldType) => {
         if (!packages[fieldType]) return;
         const shouldBeIncluded = (pkgVersion, pkgName) => {
-          return (
-            !this.overridesDependencies.shouldIgnoreComponentByStr(pkgName, fieldType) &&
-            !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType)
-          );
+          return !this.overridesDependencies.shouldIgnorePackageByType(pkgName, fieldType);
         };
         packages[fieldType] = R.pickBy(shouldBeIncluded, packages[fieldType]);
       });

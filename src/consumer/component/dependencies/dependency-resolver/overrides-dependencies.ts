@@ -1,4 +1,6 @@
 import minimatch from 'minimatch';
+import path from 'path';
+import _ from 'lodash';
 
 import { BitId, BitIds } from '../../../../bit-id';
 import {
@@ -10,6 +12,8 @@ import {
 } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import logger from '../../../../logger/logger';
+import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
+import { PathLinux } from '../../../../utils/path';
 import hasWildcard from '../../../../utils/string/has-wildcard';
 import ComponentMap from '../../../bit-map/component-map';
 import Component from '../../../component/consumer-component';
@@ -85,43 +89,14 @@ export default class OverridesDependencies {
 
   shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
     const componentIdStr = componentId.toStringWithoutVersion();
-    const shouldIgnore = (ids: string[]) => {
-      return ids.some((idStr) => {
-        if (hasWildcard(idStr)) {
-          // we don't support wildcards for components for now. it gets things complicated
-          // and may cause unpredicted behavior especially for imported that the originally ignored
-          // wildcards interfere with legit components
-          return null;
-        }
-        return componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr;
+    const shouldIgnore = (ids: BitId[]) => {
+      return ids.some((id) => {
+        return componentId.isEqualWithoutVersion(id) || componentId.isEqualWithoutScopeAndVersion(id);
       });
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
-    const ignoreField = this.component.overrides.getIgnoredComponents(field);
-    const ignore = shouldIgnore(ignoreField);
-    if (ignore) {
-      this._addManuallyRemovedDep(field, componentIdStr);
-    }
-    return ignore;
-  }
-
-  /**
-   * this is relevant for extensions that add packages to package.json (such as typescript compiler).
-   * we get the list of the packages to add as strings, a package-name can be a bit component
-   * (e.g. @bit/user.env.types), in this case, we don't have the component-id as BitId, only as a
-   * string. since it comes from the compiler as strings, we don't have a good way to translate it
-   * to BitId as we can't compare the id to the objects in the scope nor to the ids in bitmap.
-   * the only strategy left is to use the string as is and compare it to what user added in the
-   * overrides settings. @see envs.e2e, use-case 'overrides dynamic component dependencies'.
-   */
-  shouldIgnoreComponentByStr(componentIdStr: string, field: string): boolean {
-    if (!componentIdStr.startsWith(OVERRIDE_COMPONENT_PREFIX)) return false;
-    componentIdStr = componentIdStr.replace(OVERRIDE_COMPONENT_PREFIX, '');
-    const shouldIgnore = (ids: string[]) => {
-      return ids.some((idStr) => componentIdStr === idStr);
-    };
-    const ignoreField = this.component.overrides.getIgnoredComponents(field);
-    const ignore = shouldIgnore(ignoreField);
+    const ignoredComponents = this._getIgnoredComponentsByField(field);
+    const ignore = shouldIgnore(ignoredComponents);
     if (ignore) {
       this._addManuallyRemovedDep(field, componentIdStr);
     }
@@ -134,25 +109,14 @@ export default class OverridesDependencies {
   ): { components: Record<string, any>; packages: Record<string, any> } | null | undefined {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
-    const idsFromBitmap = this.consumer.bitMap.getAllBitIdsFromAllLanes([
-      COMPONENT_ORIGINS.AUTHORED,
-      COMPONENT_ORIGINS.IMPORTED,
-    ]);
     const components = {};
     const packages = {};
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (!overrides[depField]) return;
-      const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
-        const componentId = this._getComponentIdToAdd(
-          depField,
-          dependency,
-          dependencyValue,
-          idsFromBitmap,
-          idsFromModel
-        );
+        const componentId = this._getComponentIdToAdd(depField, dependency);
         if (componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutScopeAndVersion(componentId)
@@ -172,32 +136,21 @@ export default class OverridesDependencies {
     return { components, packages };
   }
 
-  _getComponentIdToAdd(
-    field: string,
-    dependency: string,
-    dependencyValue: string,
-    idsFromBitmap: BitIds,
-    idsFromModel: BitIds
-  ): BitId | null | undefined {
+  _getIgnoredComponentsByField(field: 'devDependencies' | 'dependencies' | 'peerDependencies'): BitId[] {
+    const ignoredPackages = this.component.overrides.getIgnoredPackages(field);
+    const ignoredComponents = ignoredPackages.map((packageName) => this._getComponentIdFromPackage(packageName));
+    return _.compact(ignoredComponents);
+  }
+
+  _getComponentIdToAdd(field: string, dependency: string): BitId | null | undefined {
     if (field === 'peerDependencies') return null;
-    // TODO: fix this, it's not relevant any more
-    // We should go to package.json and check if it's a component
-    if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return null;
-    const compIds = this.component.overrides._getComponentNamesFromPackages(dependency);
-    for (const compId of [...compIds, dependency]) {
-      const bitId = compId.replace(OVERRIDE_COMPONENT_PREFIX, '');
-      const idFromBitMap =
-        idsFromBitmap.searchStrWithoutVersion(bitId) || idsFromBitmap.searchStrWithoutScopeAndVersion(bitId);
-      const idFromModel =
-        idsFromModel.searchStrWithoutVersion(bitId) || idsFromModel.searchStrWithoutScopeAndVersion(bitId);
-      // $FlowFixMe one of them must be set (see one line above)
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const id: BitId = idFromModel || idFromBitMap;
-      if (id) {
-        return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
-      }
-    }
-    return null;
+    const packageData = this._resolvePackageData(dependency);
+    return packageData?.componentId;
+  }
+
+  _getComponentIdFromPackage(packageName: string): BitId | undefined {
+    const packageData = this._resolvePackageData(packageName);
+    return packageData?.componentId;
   }
 
   _manuallyAddPackage(
@@ -242,5 +195,17 @@ it's not an existing component, nor existing package (in a package.json)`);
     this.manuallyAddedDependencies[field]
       ? this.manuallyAddedDependencies[field].push(value)
       : (this.manuallyAddedDependencies[field] = [value]);
+  }
+
+  // TODO: maybe cache those results??
+  _resolvePackageData(packageName: string): ResolvedPackageData | undefined {
+    const rootDir: PathLinux | null | undefined = this.componentMap.rootDir;
+    const consumerPath = this.consumer.getPath();
+    const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const modulePath = resolvePackagePath(packageName, basePath, consumerPath);
+    if (!modulePath) return undefined; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
+    const packageObject = resolvePackageData(basePath, modulePath);
+    return packageObject;
   }
 }
