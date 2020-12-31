@@ -41,9 +41,14 @@ export interface ComponentFactory {
   ): Promise<Component | undefined>;
 
   /**
-   * returns many components with a group of ids.
+   * returns many components by ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  /**
+   * returns many components by their legacy representation.
+   */
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
 
   getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 

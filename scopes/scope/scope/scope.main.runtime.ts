@@ -42,6 +42,7 @@ import { Remotes } from 'bit-bin/dist/remotes';
 import { Scope } from 'bit-bin/dist/scope';
 import { Http, DEFAULT_AUTH_TYPE, AuthData } from 'bit-bin/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import { SemVer } from 'semver';
@@ -138,17 +139,20 @@ export class ScopeMain implements ComponentFactory {
    */
   onTag(tagFn: OnTag) {
     const legacyOnTagFunc: OnTagFunc = async (
-      legacyIds: BitId[],
+      legacyComponents: ConsumerComponent[],
       options?: OnTagOpts
     ): Promise<LegacyOnTagResult[]> => {
       const host = this.componentExtension.getHost();
-      const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
-      const components = await host.getMany(ids);
+      const components = await host.getManyByLegacy(legacyComponents);
       const { builderDataMap } = await tagFn(components, options);
       return this.builderDataMapToLegacyOnTagResults(builderDataMap);
     };
     this.legacyScope.onTag.push(legacyOnTagFunc);
     this.tagRegistry.register(tagFn);
+  }
+
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+    throw new Error('scope.getManyByLegacy is not implemented');
   }
 
   builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {

@@ -288,9 +288,10 @@ export default async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
-    const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
     const onTagOpts = { disableDeployPipeline, throwOnError: true };
-    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) => func(ids, onTagOpts));
+    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
+      func(allComponentsToTag, onTagOpts)
+    );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     publishedPackages.push(...getPublishedPackages(allComponentsToTag));
     addBuildStatus(consumer, allComponentsToTag, BuildStatus.Succeed);
