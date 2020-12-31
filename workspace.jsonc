@@ -203,6 +203,7 @@
         "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
+        "parse-es6-imports": "1.0.1",
         "parse-package-name": "0.1.0",
         "penpal": "^5.2.1",
         "postcss": "7.0.32",

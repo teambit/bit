@@ -7677,5 +7677,29 @@
         "exported": true,
         "lanes": []
     },
-    "version": "14.8.9-dev.239"
+    "ui/mdx-scope-context": {
+        "files": [
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "mdx-scope-context.ts",
+                "relativePath": "mdx-scope-context.ts",
+                "test": false
+            },
+            {
+                "name": "mdx-scope-provider.tsx",
+                "relativePath": "mdx-scope-provider.tsx",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/mdx-scope-context",
+        "origin": "AUTHORED",
+        "exported": false,
+        "lanes": []
+    },
+    "version": "14.8.9-dev.238"
 }
