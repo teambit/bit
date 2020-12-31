@@ -301,6 +301,15 @@ export class PkgMain {
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
+  getComponentData(component: Component): ComponentPkgExtensionData | undefined {
+    const data = this.builder.getDataByAspect(component, PkgAspect.id);
+    if (data) return data as ComponentPkgExtensionData;
+    // backward compatibility. the data used to be saved on the pkg aspect rather than on the
+    // builder aspect
+    const currentExtension = component.state.aspects.get(PkgAspect.id);
+    return currentExtension?.data as ComponentPkgExtensionData | undefined;
+  }
+
   async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
     const idWithCorrectVersion = component.id.changeVersion(tag.version.toString());
     // const state = await this.scope.getState(component.id, tag.hash);
@@ -309,8 +318,7 @@ export class PkgMain {
     if (!updatedComponent) {
       throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
     }
-    const currentExtension = updatedComponent.state.aspects.get(PkgAspect.id);
-    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const currentData = this.getComponentData(component);
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;

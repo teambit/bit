@@ -27,7 +27,7 @@ import {
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
-import { ExtensionDataList } from '../consumer/config';
+import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
@@ -94,7 +94,7 @@ export type ComponentsAndVersions = {
 
 export type LegacyOnTagResult = {
   id: BitId;
-  extensions: ExtensionDataList;
+  builderData: ExtensionDataEntry;
 };
 export type OnTagOpts = {
   disableDeployPipeline?: boolean;

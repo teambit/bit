@@ -378,15 +378,18 @@ export function updateComponentsByTagResult(components: Component[], tagResult: 
   tagResult.forEach((result) => {
     const matchingComponent = components.find((c) => c.id.isEqual(result.id));
     if (matchingComponent) {
-      matchingComponent.extensions = result.extensions;
+      const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
+      if (existingBuilder) existingBuilder.data = result.builderData.data;
+      else matchingComponent.extensions.push(result.builderData);
     }
   });
 }
 
 export function getPublishedPackages(components: Component[]): string[] {
   const publishedPackages = components.map((comp) => {
-    const pkgExt = comp.extensions.findCoreExtension(Extensions.pkg);
-    return pkgExt?.data?.publishedPackage;
+    const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
+    const pkgData = builderExt?.data?.aspectsData.find((a) => a.aspectId === Extensions.pkg);
+    return pkgData?.data?.publishedPackage;
   });
   return compact(publishedPackages);
 }

@@ -1,11 +1,11 @@
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { difference } from 'ramda';
-import type { TaskResultsList } from '@teambit/builder';
+import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { AspectList, ComponentMain, ComponentMap } from '@teambit/component';
+import type { ComponentMain, ComponentMap } from '@teambit/component';
 import {
   Component,
   ComponentAspect,
@@ -42,6 +42,7 @@ import { Remotes } from 'bit-bin/dist/remotes';
 import { Scope } from 'bit-bin/dist/scope';
 import { Http, DEFAULT_AUTH_TYPE, AuthData } from 'bit-bin/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
+import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
@@ -53,7 +54,7 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
-export type OnTagResults = { aspectListMap: ComponentMap<AspectList>; pipeResults: TaskResultsList[] };
+export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
 export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
 
 type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
@@ -143,27 +144,23 @@ export class ScopeMain implements ComponentFactory {
       const host = this.componentExtension.getHost();
       const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
       const components = await host.getMany(ids);
-      const { aspectListMap } = await tagFn(components, options);
-      return this.aspectMapToLegacyOnTagResults(aspectListMap);
+      const { builderDataMap } = await tagFn(components, options);
+      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
     };
     this.legacyScope.onTag.push(legacyOnTagFunc);
     this.tagRegistry.register(tagFn);
   }
 
-  aspectMapToLegacyOnTagResults(aspectListComponentMap: ComponentMap<AspectList>): LegacyOnTagResult[] {
-    const extensionsToLegacy = (aspectList: AspectList) => {
-      const extensionsDataList = aspectList.toLegacy();
-      extensionsDataList.forEach((extension) => {
-        if (extension.id && this.aspectLoader.isCoreAspect(extension.id.toString())) {
-          extension.name = extension.id.toString();
-          extension.extensionId = undefined;
-        }
-      });
-      return extensionsDataList;
+  builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
+    const builderDataToLegacyExtension = (component: Component, builderData: BuilderData) => {
+      const existingBuilder = component.state.aspects.get(BuilderAspect.id)?.legacy;
+      const builderExtension = existingBuilder || new ExtensionDataEntry(undefined, undefined, BuilderAspect.id);
+      builderExtension.data = builderData;
+      return builderExtension;
     };
-    return aspectListComponentMap.toArray().map(([component, aspectList]) => ({
+    return builderDataComponentMap.toArray().map(([component, builderData]) => ({
       id: component.id._legacy,
-      extensions: extensionsToLegacy(aspectList),
+      builderData: builderDataToLegacyExtension(component, builderData),
     }));
   }
 
