@@ -1,4 +1,5 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useContext } from 'react';
+import { MDXScopeContext } from '@teambit/ui.mdx-scope-context';
 import { MDXProvider, mdx } from '@mdx-js/react';
 import type { Sizes } from '@teambit/documenter.ui.heading';
 import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
@@ -39,9 +40,15 @@ function HighlightedTextSpan({ children }: { children: ReactNode }) {
   );
 }
 
+// TODO: @oded please refactor to an individual component.
 function Snippet({ children, live }: { live: string; children: string }) {
+  const components = useContext(MDXScopeContext);
+  const scope = Object.assign({}, components, {
+    mdx,
+  });
+
   if (live) {
-    return <Playground code={children} scope={{ mdx }} />;
+    return <Playground code={children} scope={scope} />;
   }
   return <CodeSnippet>{children}</CodeSnippet>;
 }
