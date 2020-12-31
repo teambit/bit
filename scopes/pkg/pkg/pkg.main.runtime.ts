@@ -301,7 +301,7 @@ export class PkgMain {
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
-  getComponentData(component: Component): ComponentPkgExtensionData | undefined {
+  private getComponentBuildData(component: Component): ComponentPkgExtensionData | undefined {
     const data = this.builder.getDataByAspect(component, PkgAspect.id);
     if (data) return data as ComponentPkgExtensionData;
     // backward compatibility. the data used to be saved on the pkg aspect rather than on the
@@ -318,7 +318,7 @@ export class PkgMain {
     if (!updatedComponent) {
       throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
     }
-    const currentData = this.getComponentData(component);
+    const currentData = this.getComponentBuildData(component);
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;
