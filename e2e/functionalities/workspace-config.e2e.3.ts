@@ -352,6 +352,7 @@ describe('workspace config', function () {
         describe('when adding the component as devDependency without removing it', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+            helper.command.link();
             helper.scopeHelper.reInitRemoteScope();
             helper.command.tagAllComponents();
             helper.command.exportAllComponents();
@@ -363,7 +364,7 @@ describe('workspace config', function () {
             const overrides = {
               bar: {
                 devDependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+',
+                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.utils.foo.foo1`]: '+',
                 },
               },
             };
