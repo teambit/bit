@@ -330,7 +330,7 @@ describe('workspace config', function () {
             const overrides = {
               bar: {
                 dependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.utils.foo.foo1`]: '-',
                 },
               },
             };
