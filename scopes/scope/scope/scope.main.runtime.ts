@@ -151,7 +151,8 @@ export class ScopeMain implements ComponentFactory {
     this.tagRegistry.register(tagFn);
   }
 
-  getManyByLegacy(_components: ConsumerComponent[]): Promise<Component[]> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
     throw new Error('scope.getManyByLegacy is not implemented');
   }
 
