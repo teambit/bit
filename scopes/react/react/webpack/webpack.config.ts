@@ -1,3 +1,4 @@
+import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { Configuration } from 'webpack';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
