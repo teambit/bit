@@ -540,6 +540,7 @@ export default class Component extends BitObject {
 this is probably a component from another lane which should not be loaded in this lane.
 make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTag(versionNum!)) {
       throw new ShowDoctorError(
         `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersions().join(
