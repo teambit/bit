@@ -625,7 +625,7 @@ describe('bit snap command', function () {
     let isTypeHead;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
 
@@ -669,7 +669,8 @@ describe('bit snap command', function () {
 
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('comp1');
+        // @todo: change to "helper.command.importComponent('comp1');". once the nested are working
+        helper.command.importComponent('*');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
         fs.outputFileSync(
