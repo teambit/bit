@@ -7,6 +7,7 @@ import logger from '../../logger/logger';
 import BitMap from './bit-map';
 
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
+const getBitmapInstance = () => BitMap.load(__dirname, path.join(__dirname, '.bit'), true);
 
 const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
@@ -33,7 +34,7 @@ describe('BitMap', function () {
     let bitMap: BitMap;
     let componentMap;
     before(() => {
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = getBitmapInstance();
       bitMap.addComponent(addComponentParamsFixture);
       const allComponents = bitMap.toObjects();
       componentMap = allComponents['is-string'];
@@ -53,7 +54,7 @@ describe('BitMap', function () {
     });
     it('should sort the components alphabetically', () => {
       const exampleComponent = { ...addComponentParamsFixture };
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = getBitmapInstance();
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
       bitMap.addComponent(exampleComponent);
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string3', version: '0.0.1' });
@@ -68,7 +69,7 @@ describe('BitMap', function () {
     });
     it('should sort the files in the component alphabetically', () => {
       const exampleComponent = { ...addComponentParamsFixture };
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = getBitmapInstance();
       exampleComponent.files = [
         { name: 'is-string1.js', relativePath: 'is-string1.js', test: false },
         { name: 'is-string3.js', relativePath: 'is-string3.js', test: false },
@@ -84,7 +85,7 @@ describe('BitMap', function () {
     });
     it('should sort the fields in the component files alphabetically', () => {
       const exampleComponent = { ...addComponentParamsFixture };
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = getBitmapInstance();
       bitMap.addComponent(exampleComponent);
       const allComponents = bitMap.toObjects();
       const files = allComponents['is-string'].files;
@@ -96,7 +97,7 @@ describe('BitMap', function () {
   });
   describe('getAuthoredExportedComponents', () => {
     it('should return an empty array when there are no authored components', () => {
-      const bitMap = BitMap.load(path.join(bitMapFixtureDir, 'only-imported'), '');
+      const bitMap = BitMap.load(path.join(bitMapFixtureDir, 'only-imported'), '', true);
       const results = bitMap.getAuthoredExportedComponents();
       expect(results).to.be.an('array');
       expect(results).to.have.lengthOf(0);

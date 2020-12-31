@@ -56,6 +56,7 @@ export default class BitMap {
     public projectRoot: string,
     private mapPath: string,
     public version: string,
+    private isLegacy: boolean,
     public workspaceLane: WorkspaceLane | null,
     private remoteLaneName?: RemoteLaneId
   ) {
@@ -73,6 +74,11 @@ export default class BitMap {
   }
 
   setComponent(bitId: BitId, componentMap: ComponentMap) {
+    if (!this.isLegacy) {
+      // for Harmony, there is no different between AUTHORED and IMPORTED. and NESTED are not saved
+      // in the .bitmap file.
+      componentMap.origin = COMPONENT_ORIGINS.AUTHORED;
+    }
     const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
       throw new ShowDoctorError(
@@ -111,12 +117,12 @@ export default class BitMap {
     return componentMap;
   }
 
-  static load(dirPath: PathOsBasedAbsolute, scopePath: string, laneName?: string | null): BitMap {
+  static load(dirPath: PathOsBasedAbsolute, scopePath: string, isLegacy: boolean, laneName?: string | null): BitMap {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
     const workspaceLane = laneName && laneName !== DEFAULT_LANE ? WorkspaceLane.load(laneName, scopePath) : null;
     if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, BIT_VERSION, workspaceLane);
+      return new BitMap(dirPath, defaultLocation, BIT_VERSION, isLegacy, workspaceLane);
     }
     let componentsJson;
     try {
@@ -131,7 +137,7 @@ export default class BitMap {
     delete componentsJson.version;
     delete componentsJson[LANE_KEY];
 
-    const bitMap = new BitMap(dirPath, currentLocation, version, workspaceLane, remoteLaneName);
+    const bitMap = new BitMap(dirPath, currentLocation, version, isLegacy, workspaceLane, remoteLaneName);
     bitMap.loadComponents(componentsJson);
     return bitMap;
   }
@@ -174,7 +180,8 @@ export default class BitMap {
       return;
     }
     try {
-      BitMap.load(dirPath, scopePath);
+      // isLegacy=true. here it doesn't really matter, it's only to re-create the file.
+      BitMap.load(dirPath, scopePath, true);
     } catch (err) {
       if (err instanceof InvalidBitMap) {
         deleteBitMapFile();
@@ -187,6 +194,9 @@ export default class BitMap {
   loadComponents(componentsJson: Record<string, any>) {
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
+      if (!this.isLegacy) {
+        componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
+      }
       const idHasScope = (): boolean => {
         if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
         if ('exported' in componentFromJson) {
@@ -356,7 +366,7 @@ export default class BitMap {
   }
 
   getAuthoredAndImportedBitIds(): BitIds {
-    return this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    return this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   }
 
   getAuthoredAndImportedBitIdsOfDefaultLane(): BitIds {
@@ -741,7 +751,7 @@ export default class BitMap {
       const idStr = id.toString();
       // @ts-ignore
       delete componentMapCloned?.id;
-      components[idStr] = componentMapCloned.toPlainObject();
+      components[idStr] = componentMapCloned.toPlainObject(this.isLegacy);
     });
 
     return sortObject(components);
