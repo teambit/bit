@@ -15,7 +15,6 @@ import { PostSign } from 'bit-bin/dist/scope/actions';
 import { ObjectList } from 'bit-bin/dist/scope/objects/object-list';
 import { Remotes } from 'bit-bin/dist/remotes';
 import { BitIds } from 'bit-bin/dist/bit-id';
-import loader from 'bit-bin/dist/cli/loader';
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -103,7 +102,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     await mapSeries(Object.keys(objectListPerScope), async (scopeName) => {
       const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
       const objectList = objectListPerScope[scopeName];
-      loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
+      this.logger.setStatusLine(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       await remote.pushMany(objectList, { persist: true });
     });
   }
@@ -117,6 +116,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
     this.logger.setStatusLine(`loading ${ids.length} components and their extensions...`);
     const components = await this.scope.loadMany(ids);
+    this.logger.clearStatusLine();
     const componentsToSign: ComponentID[] = [];
     const componentsToSkip: ComponentID[] = [];
     components.forEach((component) => {

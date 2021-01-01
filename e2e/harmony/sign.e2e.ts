@@ -14,6 +14,36 @@ describe('sign command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
+  describe('simple case with one scope', () => {
+    let signOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
+      // we run "action" command from the remote to itself to clear the cache. (needed because
+      // normally bit-sign is running from the fs but a different http service is running as well)
+      helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
+      signOutput = helper.command.sign(
+        [`${helper.scopes.remote}/comp1`, `${helper.scopes.remote}/comp2`],
+        '',
+        helper.scopes.remotePath
+      );
+    });
+    it('on the workspace, the build status should be pending', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+      expect(comp1.buildStatus).to.equal('pending');
+    });
+    it('should sign successfully', () => {
+      expect(signOutput).to.include('the following 2 component(s) were signed with build-status "succeed"');
+    });
+    it('should save updated versions on the remotes', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
+      expect(comp1.buildStatus).to.equal('succeed');
+    });
+  });
   describe('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
