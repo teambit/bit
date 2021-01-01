@@ -90,7 +90,7 @@ export class BuilderMain {
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
     if (!options.disableDeployPipeline && !envsExecutionResults.hasErrors()) {
-      const deployEnvsExecutionResults = await this.deploy(components);
+      const deployEnvsExecutionResults = await this.deploy(components, isolateOptions);
       if (options.throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
