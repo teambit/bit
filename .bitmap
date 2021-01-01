@@ -4544,6 +4544,11 @@
                 "test": false
             },
             {
+                "name": "mdx-scope-context.docs.mdx",
+                "relativePath": "mdx-scope-context.docs.mdx",
+                "test": false
+            },
+            {
                 "name": "mdx-scope-context.ts",
                 "relativePath": "mdx-scope-context.ts",
                 "test": false
@@ -7705,28 +7710,5 @@
         "exported": true,
         "lanes": []
     },
-    "ui/mdx-scope-context": {
-        "files": [
-            {
-                "name": "index.ts",
-                "relativePath": "index.ts",
-                "test": false
-            },
-            {
-                "name": "mdx-scope-context.ts",
-                "relativePath": "mdx-scope-context.ts",
-                "test": false
-            },
-            {
-                "name": "mdx-scope-provider.tsx",
-                "relativePath": "mdx-scope-provider.tsx",
-                "test": false
-            }
-        ],
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/mdx-scope-context",
-        "exported": false,
-        "lanes": []
-    },
-    "version": "14.8.9-dev.239"
+    "version": "14.8.9-dev.240"
 }
