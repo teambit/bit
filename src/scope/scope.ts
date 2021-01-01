@@ -27,7 +27,7 @@ import {
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
-import { ExtensionDataList } from '../consumer/config';
+import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
@@ -94,13 +94,13 @@ export type ComponentsAndVersions = {
 
 export type LegacyOnTagResult = {
   id: BitId;
-  extensions: ExtensionDataList;
+  builderData: ExtensionDataEntry;
 };
 export type OnTagOpts = {
   disableDeployPipeline?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
 };
-export type OnTagFunc = (ids: BitId[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
+export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;

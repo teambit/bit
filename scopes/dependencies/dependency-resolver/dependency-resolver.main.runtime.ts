@@ -70,6 +70,8 @@ import { DependencyDetector } from './dependency-detector';
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
+export type DependencyDetector = {};
+
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
@@ -565,6 +567,7 @@ export class DependencyResolverMain {
     Slot.withType<DependencyFactory>(),
     Slot.withType<PreInstallSubscriberList>(),
     Slot.withType<PostInstallSubscriberList>(),
+    Slot.withType<DependencyDetector>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
