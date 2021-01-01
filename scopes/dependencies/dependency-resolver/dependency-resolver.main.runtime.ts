@@ -552,6 +552,10 @@ export class DependencyResolverMain {
     return version;
   }
 
+  /**
+   * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
+   * mechanism to support new file extensions and types.
+   */
   registerDetector(detector: DependencyDetector) {
     DetectorHook.hooks.push(detector);
     return this;
