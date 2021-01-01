@@ -4440,6 +4440,11 @@
                 "test": false
             },
             {
+                "name": "import-specifier.ts",
+                "relativePath": "import-specifier.ts",
+                "test": false
+            },
+            {
                 "name": "index.ts",
                 "relativePath": "index.ts",
                 "test": false

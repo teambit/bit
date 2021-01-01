@@ -112,7 +112,7 @@ function precinct(content, options) {
       break;
     default:
       detector = detectorHook.getDetector(type);
-      theDetective = detector.detect.bind(detector);
+      if (detector) theDetective = detector.detect.bind(detector);
       break;
   }
 

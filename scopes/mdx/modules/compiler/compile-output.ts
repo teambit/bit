@@ -1,4 +1,5 @@
 import { VFile } from 'vfile';
+import { ImportSpecifier } from './import-specifier';
 
 /**
  * compilation output of bit-mdx format.
@@ -25,7 +26,7 @@ export class CompileOutput {
   /**
    * get all import specifiers.
    */
-  getImportSpecifiers() {
+  getImportSpecifiers(): ImportSpecifier[] {
     const data: any = this.file.data;
     return data.imports;
   }

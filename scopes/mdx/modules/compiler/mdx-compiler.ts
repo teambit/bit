@@ -6,6 +6,7 @@ import parseImports from 'parse-es6-imports';
 import yaml from 'yaml';
 import vfile from 'vfile';
 import { CompileOutput } from './compile-output';
+import { ImportSpecifier } from './import-specifier';
 
 export type MDXCompileOptions = {
   remarkPlugins: any[];
@@ -61,11 +62,11 @@ export function compile(content: string, options: Partial<MDXCompileOptions> = {
 
 export function wrapWithScopeContext() {
   return (tree, file) => {
-    const imports: any[] = file.data?.imports || [];
-    const ids = imports.reduce<string[]>((identifiers: string[], importSpecifier: any) => {
+    const imports: ImportSpecifier[] = file.data?.imports || [];
+    const ids = imports.reduce<string[]>((identifiers: string[], importSpecifier: ImportSpecifier) => {
       const newIds: string[] = [];
       if (importSpecifier.defaultImport) newIds.push(importSpecifier.defaultImport);
-      if (importSpecifier.startImport) newIds.push(importSpecifier.startImport);
+      if (importSpecifier.starImport) newIds.push(importSpecifier.starImport);
       importSpecifier.namedImports.forEach((namedImport) => {
         newIds.push(namedImport.value);
       });
