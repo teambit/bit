@@ -2,6 +2,7 @@ import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
+import type { Consumer } from '..';
 
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
@@ -11,10 +12,12 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { isDir, outputFile, pathJoinLinux, pathNormalizeToLinux, sortObject } from '../../utils';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../../utils/path';
+import { getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { ComponentFsCache } from '../component/component-fs-cache';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
+import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -117,7 +120,11 @@ export default class BitMap {
     return componentMap;
   }
 
-  static load(dirPath: PathOsBasedAbsolute, scopePath: string, isLegacy: boolean, laneName?: string | null): BitMap {
+  static async load(consumer: Consumer): Promise<BitMap> {
+    const dirPath: PathOsBasedAbsolute = consumer.getPath();
+    const scopePath: string = consumer.scope.path;
+    const isLegacy = consumer.isLegacy;
+    const laneName = consumer.scope.lanes.getCurrentLaneName();
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     const mapFileContent = BitMap.loadRawSync(dirPath);
     const workspaceLane = laneName && laneName !== DEFAULT_LANE ? WorkspaceLane.load(laneName, scopePath) : null;
@@ -139,7 +146,32 @@ export default class BitMap {
 
     const bitMap = new BitMap(dirPath, currentLocation, version, isLegacy, workspaceLane, remoteLaneName);
     bitMap.loadComponents(componentsJson);
+    await bitMap.loadFiles(consumer.componentFsCache);
     return bitMap;
+  }
+
+  async loadFiles(componentFsCache: ComponentFsCache) {
+    if (this.isLegacy) return;
+    const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
+    await Promise.all(
+      this.components.map(async (componentMap) => {
+        const idStr = componentMap.id.toString();
+        const rootDir = componentMap.rootDir;
+        if (!rootDir) return;
+        const dataFromCache = await componentFsCache.getFilePathsFromCache(idStr);
+        if (dataFromCache) {
+          const lastModified = await getLastModifiedDirTimestampMs(rootDir);
+          const wasModifiedAfterLastTrack = lastModified > dataFromCache.timestamp;
+          if (!wasModifiedAfterLastTrack) {
+            const files = JSON.parse(dataFromCache.data);
+            componentMap.files = files;
+            return;
+          }
+        }
+        componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
+        componentMap.recentlyTracked = true;
+      })
+    );
   }
 
   static loadRawSync(dirPath: PathOsBasedAbsolute): Buffer | undefined {
@@ -168,7 +200,7 @@ export default class BitMap {
    * if resetHard, delete the bitMap file.
    * Otherwise, try to load it and only if the file is corrupted then delete it.
    */
-  static reset(dirPath: PathOsBasedAbsolute, resetHard: boolean, scopePath: string): void {
+  static reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): void {
     const bitMapPath = path.join(dirPath, BIT_MAP);
     const deleteBitMapFile = () => {
       logger.info(`deleting the bitMap file at ${bitMapPath}`);
@@ -180,14 +212,11 @@ export default class BitMap {
       return;
     }
     try {
-      // isLegacy=true. here it doesn't really matter, it's only to re-create the file.
-      BitMap.load(dirPath, scopePath, true);
+      const mapFileContent = BitMap.loadRawSync(dirPath);
+      if (!mapFileContent) return;
+      json.parse(mapFileContent.toString('utf8'), undefined, true);
     } catch (err) {
-      if (err instanceof InvalidBitMap) {
-        deleteBitMapFile();
-        return;
-      }
-      throw err;
+      deleteBitMapFile();
     }
   }
 
@@ -765,9 +794,14 @@ export default class BitMap {
    */
   async write(componentFsCache: ComponentFsCache): Promise<any> {
     await Promise.all(
-      this.components.map((c) =>
-        c.recentlyTracked ? componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now()) : Promise.resolve()
-      )
+      this.components.map(async (c) => {
+        if (c.recentlyTracked) {
+          await componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now());
+          if (!this.isLegacy) {
+            await componentFsCache.saveFilePathsInCache(c.id.toString(), c.files);
+          }
+        }
+      })
     );
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');

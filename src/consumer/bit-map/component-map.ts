@@ -124,7 +124,7 @@ export default class ComponentMap {
 
   toPlainObject(isLegacy: boolean): Record<string, any> {
     let res = {
-      files: this.files.map((file) => sortObject(file)),
+      files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,

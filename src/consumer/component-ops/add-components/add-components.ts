@@ -116,6 +116,7 @@ export default class AddComponents {
   origin: ComponentOrigin;
   alternateCwd: string | null | undefined;
   addedComponents: AddResult[];
+  isLegacy: boolean;
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -135,6 +136,7 @@ export default class AddComponents {
       existInScope: [],
     };
     this.addedComponents = [];
+    this.isLegacy = context.consumer.isLegacy;
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -706,21 +708,21 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
     };
   }
 
-  async getIgnoreList(): Promise<string[]> {
+  getIgnoreList(): string[] {
     const consumerPath = this.consumer.getPath();
+    if (!this.isLegacy) return getIgnoreListHarmony(consumerPath);
     let ignoreList = retrieveIgnoreList(consumerPath);
     const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
     const distDirsOfImportedComponents = importedComponents.map((componentMap) =>
       pathJoinLinux(componentMap.rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    // the ability to track package.json is deprecated since Harmony
-    if (!this.consumer.isLegacy) ignoreList.push(PACKAGE_JSON);
+
     return ignoreList;
   }
 
   async add(): Promise<AddActionResults> {
-    this.ignoreList = await this.getIgnoreList();
+    this.ignoreList = this.getIgnoreList();
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     // check unknown test files
@@ -916,4 +918,28 @@ function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
     if (newGroupedComponents[key].length > 1) duplicateIds[key] = newGroupedComponents[key];
   });
   if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);
+}
+
+export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
+  const matches = await glob('**', {
+    cwd: path.join(consumerPath, dir),
+    nodir: true,
+  });
+  const filteredMatches = gitIgnore.filter(matches);
+  if (!filteredMatches.length) throw new EmptyDirectory();
+  return filteredMatches.map((match: PathOsBased) => {
+    return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
+  });
+}
+
+export function getGitIgnoreHarmony(consumerPath: string): any {
+  const ignoreList = getIgnoreListHarmony(consumerPath);
+  return ignore().add(ignoreList);
+}
+
+function getIgnoreListHarmony(consumerPath: string): string[] {
+  const ignoreList = retrieveIgnoreList(consumerPath);
+  // the ability to track package.json is deprecated since Harmony
+  ignoreList.push(PACKAGE_JSON);
+  return ignoreList;
 }
