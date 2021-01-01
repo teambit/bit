@@ -7697,9 +7697,8 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-scope-context",
-        "origin": "AUTHORED",
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.238"
+    "version": "14.8.9-dev.239"
 }
