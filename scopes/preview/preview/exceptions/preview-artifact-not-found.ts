@@ -1,11 +1,8 @@
+import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component';
 
-export class PreviewArtifactNotFound extends Error {
-  constructor(readonly componentId: ComponentID) {
-    super();
-  }
-
-  toString() {
-    return `preview for component ${this.componentId.toString()} was not found`;
+export class PreviewArtifactNotFound extends BitError {
+  constructor(componentId: ComponentID) {
+    super(`preview for component ${componentId.toString()} was not found`);
   }
 }
