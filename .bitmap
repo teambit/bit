@@ -4407,6 +4407,11 @@
                 "test": false
             },
             {
+                "name": "mdx.detector.ts",
+                "relativePath": "mdx.detector.ts",
+                "test": false
+            },
+            {
                 "name": "mdx.doc-reader.ts",
                 "relativePath": "mdx.doc-reader.ts",
                 "test": false
@@ -7697,9 +7702,8 @@
         ],
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-scope-context",
-        "origin": "AUTHORED",
         "exported": false,
         "lanes": []
     },
-    "version": "14.8.9-dev.238"
+    "version": "14.8.9-dev.239"
 }

@@ -23,6 +23,14 @@ export class CompileOutput {
   }
 
   /**
+   * get all import specifiers.
+   */
+  getImportSpecifiers() {
+    const data: any = this.file.data;
+    return data.imports;
+  }
+
+  /**
    * get the mdx file contents. including the renderer.
    */
   get contents() {

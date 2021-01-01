@@ -16,11 +16,14 @@ import detectiveSass from '../detectives/detective-sass';
 import detectiveScss from '../detectives/detective-scss';
 import detectiveTypeScript from '../detectives/detective-typescript';
 import detectiveVue from '../detectives/detective-vue';
+import { DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('precinct');
 
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 const natives = process.binding('natives');
+
+const detectorHook = new DetectorHook();
 
 /**
  * Finds the list of dependencies for the given file
@@ -75,6 +78,7 @@ function precinct(content, options) {
   debug('module type: ', type);
 
   let theDetective;
+  let detector;
 
   switch (type) {
     case 'commonjs':
@@ -107,6 +111,8 @@ function precinct(content, options) {
       theDetective = detectiveVue;
       break;
     default:
+      detector = detectorHook.getDetector(type);
+      theDetective = detector.detect.bind(detector);
       break;
   }
 
@@ -172,12 +178,16 @@ precinct.paperwork = function (filename, options) {
       case '.jsx':
         return 'es6';
       default:
+        if (detectorHook.isSupported(ext)) {
+          return ext;
+        }
+
         return null;
     }
   };
 
   const getDeps = () => {
-    if (SUPPORTED_EXTENSIONS.includes(ext)) return precinct(content, options);
+    if (SUPPORTED_EXTENSIONS.includes(ext) || detectorHook.isSupported(ext)) return precinct(content, options);
     debug(`skipping unsupported file ${filename}`);
     return [];
   };
