@@ -4,11 +4,6 @@
     "teambit.compilation/babel@0.0.219": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "babel.aspect.ts",
                 "relativePath": "babel.aspect.ts",
                 "test": false
@@ -16,6 +11,11 @@
             {
                 "name": "babel.compiler.ts",
                 "relativePath": "babel.compiler.ts",
+                "test": false
+            },
+            {
+                "name": "babel.docs.md",
+                "relativePath": "babel.docs.md",
                 "test": false
             },
             {
@@ -935,6 +935,11 @@
                 "test": false
             },
             {
+                "name": "graph.docs.md",
+                "relativePath": "graph.docs.md",
+                "test": false
+            },
+            {
                 "name": "graph.graphql.ts",
                 "relativePath": "graph.graphql.ts",
                 "test": false
@@ -977,11 +982,6 @@
             {
                 "name": "index.ts",
                 "relativePath": "model/graph-filters/index.ts",
-                "test": false
-            },
-            {
-                "name": "readme.md",
-                "relativePath": "readme.md",
                 "test": false
             },
             {
@@ -2133,6 +2133,11 @@
                 "test": false
             },
             {
+                "name": "dependency-resolver.docs.md",
+                "relativePath": "dependency-resolver.docs.md",
+                "test": false
+            },
+            {
                 "name": "dependency-resolver.graphql.ts",
                 "relativePath": "dependency-resolver.graphql.ts",
                 "test": false
@@ -2300,11 +2305,6 @@
             {
                 "name": "workspace-policy.ts",
                 "relativePath": "policy/workspace-policy/workspace-policy.ts",
-                "test": false
-            },
-            {
-                "name": "readme.md",
-                "relativePath": "readme.md",
                 "test": false
             },
             {
@@ -3135,11 +3135,6 @@
     "teambit.envs/envs@0.0.219": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "env-console.tsx",
                 "relativePath": "components/env-console/env-console.tsx",
                 "test": false
@@ -3212,6 +3207,11 @@
             {
                 "name": "envs.cmd.tsx",
                 "relativePath": "envs.cmd.tsx",
+                "test": false
+            },
+            {
+                "name": "envs.docs.md",
+                "relativePath": "envs.docs.md",
                 "test": false
             },
             {
@@ -4417,6 +4417,11 @@
                 "test": false
             },
             {
+                "name": "mdx.docs.md",
+                "relativePath": "mdx.docs.md",
+                "test": false
+            },
+            {
                 "name": "mdx.main.runtime.ts",
                 "relativePath": "mdx.main.runtime.ts",
                 "test": false
@@ -4936,6 +4941,11 @@
                 "test": false
             },
             {
+                "name": "pkg.docs.md",
+                "relativePath": "pkg.docs.md",
+                "test": false
+            },
+            {
                 "name": "pkg.graphql.ts",
                 "relativePath": "pkg.graphql.ts",
                 "test": false
@@ -4968,11 +4978,6 @@
             {
                 "name": "publisher.ts",
                 "relativePath": "publisher.ts",
-                "test": false
-            },
-            {
-                "name": "readme.md",
-                "relativePath": "readme.md",
                 "test": false
             }
         ],
@@ -5160,8 +5165,8 @@
     "teambit.react/babel/bit-react-transformer@0.0.4": {
         "files": [
             {
-                "name": "bit-react-tranformer.docs.mdx",
-                "relativePath": "bit-react-tranformer.docs.mdx",
+                "name": "bit-react-tranformer.docs.md",
+                "relativePath": "bit-react-tranformer.docs.md",
                 "test": false
             },
             {
@@ -5201,8 +5206,8 @@
     "teambit.react/modules/dom-to-react@0.0.4": {
         "files": [
             {
-                "name": "dom-to-react.docs.mdx",
-                "relativePath": "dom-to-react.docs.mdx",
+                "name": "dom-to-react.docs.md",
+                "relativePath": "dom-to-react.docs.md",
                 "test": false
             },
             {
@@ -5460,8 +5465,8 @@
     "teambit.react/ui/component-highlighter@0.0.4": {
         "files": [
             {
-                "name": "component-highlighter.docs.mdx",
-                "relativePath": "component-highlighter.docs.mdx",
+                "name": "component-highlighter.docs.md",
+                "relativePath": "component-highlighter.docs.md",
                 "test": false
             },
             {
@@ -7357,13 +7362,13 @@
                 "test": false
             },
             {
-                "name": "readme.md",
-                "relativePath": "readme.md",
+                "name": "variants.aspect.ts",
+                "relativePath": "variants.aspect.ts",
                 "test": false
             },
             {
-                "name": "variants.aspect.ts",
-                "relativePath": "variants.aspect.ts",
+                "name": "variants.docs.md",
+                "relativePath": "variants.docs.md",
                 "test": false
             },
             {

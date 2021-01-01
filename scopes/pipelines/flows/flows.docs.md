@@ -1,4 +1,3 @@
-# `teambit.pipelines/flows`
 
 Run tasks on components and their dependents.
 
@@ -77,7 +76,7 @@ Consult with the docs to learn more about variants.
 
 Flows API is document in [`flows.ts`](https://github.com/teambit/bit/blob/harmony/main/src/extensions/flows/flows.ts) module. Here are two examples:
 
-```javascript
+```js
 import {Flows, flattenReplaySubject} from 'teambit.pipelines/flows'
 
 const flows = new Flows(workspace)
@@ -107,7 +106,7 @@ For example:
 
 A `task` is a module which exports a default function (or `module.exports`) with the following signature:
 
-```typescript
+```ts
 export type Task = () => any | () => Promise<any>
 ```
 
