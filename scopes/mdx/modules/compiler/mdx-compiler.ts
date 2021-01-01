@@ -83,6 +83,11 @@ export function wrapWithScopeContext() {
       value: `</MDXScopeProvider>`,
     };
 
+    tree.children.unshift({
+      type: 'import',
+      value: `import { MDXScopeProvider } from '@teambit/ui.mdx-scope-context';`,
+    });
+
     tree.children.unshift(preNode);
     tree.children.push(postNode);
   };
@@ -103,7 +108,9 @@ export function compileSync(mdxContent: string, options: Partial<MDXCompileOptio
 }
 
 function createCompiler(options: Partial<MDXCompileOptions>) {
-  const mustPlugins = options.bitFlavour ? [[detectFrontmatter, ['yaml']], extractMetadata] : [];
+  const mustPlugins = options.bitFlavour
+    ? [[detectFrontmatter, ['yaml']], extractMetadata, extractImports]
+    : [extractImports];
   const mustRehypePlugins = options.bitFlavour ? [wrapWithScopeContext] : [];
 
   const compilerOpts = Object.assign(options, {
@@ -120,17 +127,17 @@ function extractMetadata() {
     visit(tree, 'yaml', (node: any) => {
       file.data.frontmatter = yaml.parse(node.value);
     });
+  };
+}
 
+function extractImports() {
+  return function transformer(tree, file) {
     visit(tree, 'import', (node: any) => {
       const imports = parseImports(node.value);
       file.data.imports = imports;
     });
 
     remove(tree, 'yaml');
-    tree.children.unshift({
-      type: 'import',
-      value: `import { MDXScopeProvider } from '@teambit/ui.mdx-scope-context';`,
-    });
   };
 }
 
