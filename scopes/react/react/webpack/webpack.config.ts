@@ -1,7 +1,11 @@
+import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { Configuration } from 'webpack';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as mdxLoader from '@teambit/modules.mdx-loader';
+// Make sure the bit-react-transformer is a dependency
+// TODO: remove it once we can set policy from component to component then set it via the component.json
+import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -16,9 +20,10 @@ const moduleFileExtensions = [
   'web.jsx',
   'jsx',
   'mdx',
+  'md',
 ];
 
-export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
+export default function (workspaceDir: string, targets: string[], envId: string, fileMapPath: string): Configuration {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -43,7 +48,16 @@ export default function (workspaceDir: string, targets: string[], envId: string)
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
             ],
-            plugins: [require.resolve('react-refresh/babel')],
+            plugins: [
+              require.resolve('react-refresh/babel'),
+              // for component highlighting in preview.
+              [
+                require.resolve('@teambit/babel.bit-react-transformer'),
+                {
+                  componentFilesPath: fileMapPath,
+                },
+              ],
+            ],
           },
         },
 
@@ -57,7 +71,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
               options: {
                 babelrc: false,
                 configFile: false,
-                presets: [require.resolve('babel-preset-react-app')],
+                presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
                 plugins: [require.resolve('react-refresh/babel')],
               },
             },
@@ -170,6 +184,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
+        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),

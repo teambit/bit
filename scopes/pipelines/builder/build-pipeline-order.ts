@@ -82,8 +82,8 @@ function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocatio
   const data = dataPerLocation.find((d) => d.location === location);
   if (!data) return;
   const sorted = data.graph.toposort();
-  sorted.forEach((taskId) => {
-    const { aspectId, name } = BuildTaskHelper.deserializeId(taskId);
+  sorted.forEach((taskNode) => {
+    const { aspectId, name } = BuildTaskHelper.deserializeId(taskNode.attr);
     data.pipelineEnvs.forEach(({ env, pipeline }) => {
       const taskIndex = pipeline.findIndex(
         (pipelineTask) => pipelineTask.aspectId === aspectId && pipelineTask.name === name

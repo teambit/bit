@@ -7,6 +7,9 @@ import TerserPlugin from 'terser-webpack-plugin';
 import webpack, { Configuration, EnvironmentPlugin } from 'webpack';
 import ManifestPlugin from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
+// Make sure the bit-react-transformer is a dependency
+// TODO: remove it once we can set policy from component to component then set it via the component.json
+import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -21,6 +24,7 @@ const moduleFileExtensions = [
   'web.jsx',
   'jsx',
   'mdx',
+  'md',
 ];
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
@@ -39,7 +43,7 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (): Configuration {
+export default function (fileMapPath: string): Configuration {
   const isEnvProduction = true;
 
   // Variable used for enabling profiling in Production
@@ -199,10 +203,10 @@ export default function (): Configuration {
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
         react: require.resolve('react'),
+        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
-        'react-refresh/runtime': require.resolve('react-refresh/runtime'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
@@ -239,6 +243,12 @@ export default function (): Configuration {
               options: {
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
                 plugins: [
+                  [
+                    require.resolve('@teambit/babel.bit-react-transformer'),
+                    {
+                      componentFilesPath: fileMapPath,
+                    },
+                  ],
                   [
                     require.resolve('babel-plugin-named-asset-import'),
                     {
@@ -284,15 +294,14 @@ export default function (): Configuration {
             // MDX support (move to the mdx aspect and extend from there)
             {
               test: /\.mdx?$/,
-              exclude: [/node_modules/, /dist/],
+              exclude: [/node_modules/],
               use: [
                 {
                   loader: require.resolve('babel-loader'),
                   options: {
                     babelrc: false,
                     configFile: false,
-                    presets: [require.resolve('babel-preset-react-app')],
-                    plugins: [require.resolve('react-refresh/babel')],
+                    presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
                   },
                 },
                 {
@@ -406,7 +415,7 @@ export default function (): Configuration {
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
+              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/],
               options: {
                 name: 'static/media/[name].[hash:8].[ext]',
               },
@@ -418,7 +427,7 @@ export default function (): Configuration {
       ],
     },
     plugins: [
-      new EnvironmentPlugin({ NODE_ENV: 'production' }),
+      new EnvironmentPlugin(['NODE_ENV', 'production']),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional

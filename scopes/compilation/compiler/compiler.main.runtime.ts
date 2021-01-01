@@ -6,6 +6,7 @@ import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
+import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import { CompilerService } from './compiler.service';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
@@ -21,7 +22,7 @@ export class CompilerMain {
     options: {
       noCache?: boolean;
       verbose?: boolean;
-    }
+    } = {}
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
@@ -60,6 +61,9 @@ export class CompilerMain {
     const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
+
+    ManyComponentsWriter.externalCompiler = compilerMain.compileOnWorkspace.bind(compilerMain);
+
     return compilerMain;
   }
 }

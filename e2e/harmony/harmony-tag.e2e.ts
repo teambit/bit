@@ -1,6 +1,4 @@
 import chai, { expect } from 'chai';
-import path from 'path';
-
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
@@ -36,16 +34,6 @@ describe('tag components on Harmony', function () {
     it('bit status should work and not show modified', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponent).to.be.empty;
-    });
-    it('should create symlink from the workspace node_modules to the component node_modules after bit link', () => {
-      // before the link, the node_modules is created for the dependencies. as such, it happens
-      // at the same time this link is generated, which causes race condition. in a real world
-      // this won't happen because "bit install" will create the node_modules dir before the link
-      // starts.
-      helper.command.link();
-      expect(
-        path.join(helper.scopes.localPath, `node_modules/@${helper.scopes.remote}/comp1/node_modules`)
-      ).to.be.a.directory();
     });
   });
 });

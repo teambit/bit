@@ -1,5 +1,9 @@
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentMap } from '@teambit/component';
+import { compact } from 'lodash';
+import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
+import type { ComponentMain } from '@teambit/component';
+import { GraphAspect } from '@teambit/graph';
+import type { GraphBuilder } from '@teambit/graph';
 import {
   DependencyResolverAspect,
   DependencyResolverMain,
@@ -7,8 +11,10 @@ import {
   WorkspacePolicy,
   InstallOptions,
 } from '@teambit/dependency-resolver';
+import legacyLogger from 'bit-bin/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import LegacyScope from 'bit-bin/dist/scope/scope';
 import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
@@ -27,6 +33,7 @@ import { IsolatorAspect } from './isolator.aspect';
 // import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
 import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
+import { Network } from './network';
 
 const CAPSULES_BASE_DIR = path.join(CACHE_ROOT, 'capsules'); // TODO: move elsewhere
 
@@ -81,9 +88,14 @@ export type IsolateComponentsOptions = {
   getExistingAsIs?: boolean;
 
   /**
-   * include all dependencies the capsule root context.
+   * place the package-manager cache on the capsule-root
    */
-  includeDeps?: boolean;
+  cachePackagesOnCapsulesRoot?: boolean;
+
+  /**
+   * do not build graph with all dependencies. isolate the seeders only.
+   */
+  seedersOnly?: boolean;
 };
 
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
@@ -95,19 +107,66 @@ const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
 
 export class IsolatorMain {
   static runtime = MainRuntime;
-  static dependencies = [DependencyResolverAspect, LoggerAspect];
+  static dependencies = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect];
   static defaultConfig = {};
-  static async provider([dependencyResolver, loggerExtension]: [
+  static async provider([dependencyResolver, loggerExtension, componentAspect, graphAspect]: [
     DependencyResolverMain,
-    LoggerMain
+    LoggerMain,
+    ComponentMain,
+    GraphBuilder
   ]): Promise<IsolatorMain> {
     const logger = loggerExtension.createLogger(IsolatorAspect.id);
-    const isolator = new IsolatorMain(dependencyResolver, logger);
+    const isolator = new IsolatorMain(dependencyResolver, logger, componentAspect, graphAspect);
     return isolator;
   }
-  constructor(private dependencyResolver: DependencyResolverMain, private logger: Logger) {}
+  constructor(
+    private dependencyResolver: DependencyResolverMain,
+    private logger: Logger,
+    private componentAspect: ComponentMain,
+    private graphBuilder: GraphBuilder
+  ) {}
 
-  public async isolateComponents(
+  // TODO: the legacy scope used for the component writer, which then decide if it need to write the artifacts and dists
+  // TODO: we should think of another way to provide it (maybe a new opts) then take the scope internally from the host
+  async isolateComponents(
+    seeders: ComponentID[],
+    opts: IsolateComponentsOptions = {},
+    legacyScope?: LegacyScope
+  ): Promise<Network> {
+    const host = this.componentAspect.getHost();
+    const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
+    legacyLogger.debug(`isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
+    const componentsToIsolate = opts.seedersOnly ? await host.getMany(seeders) : await this.createGraph(seeders);
+    opts.baseDir = opts.baseDir || host.path;
+    const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
+    longProcessLogger.end();
+    this.logger.consoleSuccess();
+    return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
+  }
+
+  async createGraph(seeders: ComponentID[]): Promise<Component[]> {
+    const host = this.componentAspect.getHost();
+    const graph = await this.graphBuilder.getGraph(seeders);
+    const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
+    const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
+    // do not ignore the version here. a component might be in .bitmap with one version and
+    // installed as a package with another version. we don't want them both.
+    const existingCompsP = compsAndDeps.map(async (c) => {
+      const existing = await host.hasId(c.id);
+      if (existing) return c;
+      return undefined;
+    });
+    return compact(await Promise.all(existingCompsP));
+  }
+
+  /**
+   * Create capsules for the provided components
+   * do not use this outside directly, use isolate components which build the entire network
+   * @param components
+   * @param opts
+   * @param legacyScope
+   */
+  private async createCapsules(
     components: Component[],
     opts: IsolateComponentsOptions,
     legacyScope?: Scope
@@ -136,7 +195,7 @@ export class IsolatorMain {
     updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
-      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.includeDeps ?? false);
+      await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
       await this.linkInCapsules(capsulesDir, capsuleList, capsulesWithPackagesData, opts.linkingOptions ?? {});
     }
 
@@ -157,11 +216,11 @@ export class IsolatorMain {
     capsulesDir: string,
     capsuleList: CapsuleList,
     isolateInstallOptions: IsolateComponentsInstallOptions,
-    includeDeps: boolean
+    cachePackagesOnCapsulesRoot: boolean
   ) {
     const installer = this.dependencyResolver.getInstaller({
       rootDir: capsulesDir,
-      cacheRootDirectory: includeDeps ? capsulesDir : undefined,
+      cacheRootDirectory: cachePackagesOnCapsulesRoot ? capsulesDir : undefined,
     });
     // When using isolator we don't want to use the policy defined in the workspace directly,
     // we only want to instal deps from components and the peer from the workspace
@@ -249,7 +308,7 @@ export class IsolatorMain {
     return {
       component,
       // @ts-ignore
-      bitMap: new BitMap(),
+      bitMap: new BitMap(undefined, undefined, undefined, false),
       writeToPath: '.',
       origin: 'IMPORTED',
       consumer: undefined,

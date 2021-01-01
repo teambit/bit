@@ -1,10 +1,12 @@
 import { BitId } from 'bit-bin/dist/bit-id';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
 
 import { Component } from './component';
 import { State } from './state';
+import { Snap } from './snap';
 
 export interface ComponentFactory {
   /**
@@ -39,14 +41,26 @@ export interface ComponentFactory {
   ): Promise<Component | undefined>;
 
   /**
-   * returns many components with a group of ids.
+   * returns many components by ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  /**
+   * returns many components by their legacy representation.
+   */
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
+
+  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
   /**
    * returns a specific state of a component by hash or semver.
    */
   getState(id: ComponentID, snapId: string): Promise<State>;
+
+  /**
+   * returns a specific snap of a component by hash.
+   */
+  getSnap(id: ComponentID, snapId: string): Promise<Snap>;
 
   /**
    * load extension.
@@ -62,6 +76,10 @@ export interface ComponentFactory {
    * list all components in the host.
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
+
+  listIds(): Promise<ComponentID[]>;
+
+  hasId(componentId: ComponentID): Promise<boolean>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.

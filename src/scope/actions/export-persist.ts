@@ -3,6 +3,7 @@ import { BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { mergeObjects } from '../component-ops/export-scope-components';
 import { Lane } from '../models';
+import { AuthData } from '../network/http/http';
 import { Action } from './action';
 
 type Options = { clientId: string };
@@ -12,7 +13,7 @@ type Options = { clientId: string };
  * once done, remove the pending-dir to free the resource.
  */
 export class ExportPersist implements Action<Options, string[]> {
-  async execute(scope: Scope, options: Options): Promise<string[]> {
+  async execute(scope: Scope, options: Options, authData?: AuthData): Promise<string[]> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
 
     logger.debugAndAddBreadCrumb('ExportPersist', `going to merge ${objectList.objects.length} objects`);
@@ -24,7 +25,7 @@ export class ExportPersist implements Action<Options, string[]> {
     await scope.removePendingDir(options.clientId);
     if (ExportPersist.onPutHook) {
       const lanes = (await objectList.toBitObjects()).getLanes();
-      ExportPersist.onPutHook(componentsIds, lanes).catch((err) => {
+      ExportPersist.onPutHook(componentsIds, lanes, authData).catch((err) => {
         logger.error('fatal: onPutHook encountered an error (this error does not stop the process)', err);
         // let the process continue. we don't want to stop it when onPutHook failed.
       });
@@ -32,5 +33,5 @@ export class ExportPersist implements Action<Options, string[]> {
     return componentsIds;
   }
 
-  static onPutHook: (ids: string[], lanes: Lane[]) => Promise<void>;
+  static onPutHook: (ids: string[], lanes: Lane[], authData?: AuthData) => Promise<void>;
 }

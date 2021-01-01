@@ -42,7 +42,7 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-module.exports = function (workspaceDir, entryFiles, title) {
+module.exports = function (workspaceDir, entryFiles, title, publicDir) {
   const isEnvProduction = true;
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
@@ -121,7 +121,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
 
     output: {
       // The build folder.
-      path: resolveWorkspacePath('public'),
+      path: resolveWorkspacePath(publicDir),
 
       filename: 'static/js/[name].[contenthash:8].js',
       // TODO: remove this when upgrading to webpack 5
@@ -131,7 +131,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.
-      publicPath: `/`,
+      publicPath: '/',
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
       globalObject: 'this',
@@ -450,7 +450,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
         )
       ),
 
-      new EnvironmentPlugin({ NODE_ENV: 'production' }),
+      new EnvironmentPlugin(['NODE_ENV', 'production']),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional
@@ -464,7 +464,7 @@ module.exports = function (workspaceDir, entryFiles, title) {
       //   can be used to reconstruct the HTML if necessary
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
-        publicPath: 'public',
+        publicPath: publicDir,
         generate: (seed, files, entrypoints) => {
           const manifestFiles = files.reduce((manifest, file) => {
             manifest[file.name] = file.path;

@@ -3,7 +3,7 @@ import React from 'react';
 import { ScopeMain } from '@teambit/scope';
 import { Text, Newline } from 'ink';
 import { Logger } from '@teambit/logger';
-import { Workspace } from '@teambit/workspace';
+import { IsolatorMain } from '@teambit/isolator';
 import { Component } from '@teambit/component';
 import { BuildPipe } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
@@ -20,6 +20,8 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
+export type BuilderServiceOptions = { seedersOnly: boolean };
+
 export type BuilderDescriptor = { tasks: string[] };
 
 export type EnvsBuildContext = { [envId: string]: BuildContext };
@@ -27,9 +29,9 @@ export type EnvsBuildContext = { [envId: string]: BuildContext };
 export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
   constructor(
     /**
-     * workspace extension.
+     * isolator extension.
      */
-    private workspace: Workspace,
+    private isolator: IsolatorMain,
 
     /**
      * logger extension.
@@ -58,7 +60,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
   /**
    * runs all tasks for all envs
    */
-  async runOnce(envsExecutionContext: ExecutionContext[]): Promise<TaskResultsList> {
+  async runOnce(envsExecutionContext: ExecutionContext[], options: BuilderServiceOptions): Promise<TaskResultsList> {
     const envs = envsExecutionContext.map((executionContext) => executionContext.envDefinition);
     const tasksQueue = calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv);
     tasksQueue.validate();
@@ -70,11 +72,15 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
     await Promise.all(
       envsExecutionContext.map(async (executionContext) => {
         const componentIds = executionContext.components.map((component) => component.id);
-        const createNetwork = this.workspace
-          ? this.workspace.createNetwork.bind(this.workspace)
-          : this.scope.createNetwork.bind(this.scope);
+        const capsuleNetwork = await this.isolator.isolateComponents(componentIds, {
+          getExistingAsIs: true,
+          seedersOnly: options.seedersOnly,
+        });
+        this.logger.console(
+          `generated graph for env "${executionContext.id}", seeders total: ${capsuleNetwork.seedersCapsules.length}, graph total: ${capsuleNetwork.graphCapsules.length}`
+        );
         const buildContext = Object.assign(executionContext, {
-          capsuleNetwork: await createNetwork(componentIds, { getExistingAsIs: true }),
+          capsuleNetwork,
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
