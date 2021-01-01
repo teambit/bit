@@ -4407,6 +4407,11 @@
                 "test": false
             },
             {
+                "name": "mdx.detector.ts",
+                "relativePath": "mdx.detector.ts",
+                "test": false
+            },
+            {
                 "name": "mdx.doc-reader.ts",
                 "relativePath": "mdx.doc-reader.ts",
                 "test": false
@@ -4432,6 +4437,11 @@
             {
                 "name": "compile-output.ts",
                 "relativePath": "compile-output.ts",
+                "test": false
+            },
+            {
+                "name": "import-specifier.ts",
+                "relativePath": "import-specifier.ts",
                 "test": false
             },
             {
@@ -4536,6 +4546,11 @@
             {
                 "name": "index.ts",
                 "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "mdx-scope-context.docs.mdx",
+                "relativePath": "mdx-scope-context.docs.mdx",
                 "test": false
             },
             {
