@@ -6,9 +6,14 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import BitMap from './bit-map';
 
+const scope = {
+  path: path.join(__dirname, '.bit'),
+  lanes: { getCurrentLaneName: () => 'master' },
+};
+
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 const getBitmapInstance = async () => {
-  const consumer = { getPath: () => __dirname, isLegacy: true, scope: { path: path.join(__dirname, '.bit') } };
+  const consumer = { getPath: () => __dirname, isLegacy: true, scope };
   // @ts-ignore
   return BitMap.load(consumer);
 };
@@ -104,7 +109,7 @@ describe('BitMap', function () {
       const consumer = {
         getPath: () => path.join(bitMapFixtureDir, 'only-imported'),
         isLegacy: true,
-        scope: { path: path.join(__dirname, '.bit') },
+        scope,
       };
       // @ts-ignore
       const bitMap = await BitMap.load(consumer);

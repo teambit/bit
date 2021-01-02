@@ -86,16 +86,22 @@ describe('packageNameToComponentId', function () {
     });
   });
   it('should parse the path correctly when a component is not in bitMap and has one dot', () => {
+    // @ts-ignore
+    consumer.bitMap = { getAllBitIdsFromAllLanes: () => new BitIds() };
     const result = packageNameToComponentId(consumer, '@bit/remote.comp', '@bit');
     expect(result.scope).to.equal('remote');
     expect(result.name).to.equal('comp');
   });
   it('should parse the path correctly when a component is not in bitMap and has two dots', () => {
+    // @ts-ignore
+    consumer.bitMap = { getAllBitIdsFromAllLanes: () => new BitIds() };
     const result = packageNameToComponentId(consumer, '@bit/remote.comp.comp2', '@bit');
     expect(result.scope).to.equal('remote.comp');
     expect(result.name).to.equal('comp2');
   });
   it('should parse the path correctly when a component is not in bitMap and has three dots', () => {
+    // @ts-ignore
+    consumer.bitMap = { getAllBitIdsFromAllLanes: () => new BitIds() };
     const result = packageNameToComponentId(consumer, '@bit/remote.comp.comp2.comp3', '@bit');
     expect(result.scope).to.equal('remote.comp');
     expect(result.name).to.equal('comp2/comp3');
