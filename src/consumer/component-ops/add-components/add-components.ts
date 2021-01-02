@@ -921,14 +921,17 @@ function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
 }
 
 export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
-  const matches = await glob('**', {
-    cwd: path.join(consumerPath, dir),
+  const matches = await glob(path.join(dir, '**'), {
+    cwd: consumerPath,
     nodir: true,
   });
   const filteredMatches = gitIgnore.filter(matches);
   if (!filteredMatches.length) throw new EmptyDirectory();
   return filteredMatches.map((match: PathOsBased) => {
-    return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
+    const normalizedPath = pathNormalizeToLinux(match);
+    // the path is relative to consumer. remove the rootDir.
+    const relativePath = normalizedPath.replace(`${dir}/`, '');
+    return { relativePath, test: false, name: path.basename(match) };
   });
 }
 
