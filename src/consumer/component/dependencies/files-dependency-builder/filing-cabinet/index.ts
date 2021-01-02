@@ -19,6 +19,7 @@ import ts from 'typescript';
 import { isRelativeImport } from '../../../../../utils';
 // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import vueLookUp from '../lookups/vue-lookup';
+import { DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('cabinet');
 
@@ -59,6 +60,7 @@ type Options = {
 };
 
 export default function cabinet(options: Options) {
+  const detectorHook = new DetectorHook();
   const { dependency, filename } = options;
   const ext = options.ext || path.extname(filename);
   debug(`working on a dependency "${dependency}" of a file "${filename}"`);
@@ -70,6 +72,17 @@ export default function cabinet(options: Options) {
     resolver = resolveDependencyPath;
   }
   if (ext === '.css' && dependency.startsWith('~')) resolver = cssPreprocessorLookup;
+
+  const detector = detectorHook.getDetector(ext);
+  if (detector) {
+    // test if the new detector API has a dependency lookup.
+    if (detector.dependencyLookup) {
+      resolver = detector.dependencyLookup;
+    } else {
+      // otherwise use TypeScript as the default resolver.
+      resolver = tsLookup;
+    }
+  }
 
   debug(`found a resolver ${resolver.name} for ${ext}`);
 
