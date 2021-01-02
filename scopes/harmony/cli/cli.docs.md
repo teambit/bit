@@ -1,4 +1,8 @@
-# Paper
+---
+description: Component-driven CLI app development.
+labels: ['cli', 'component', 'ink']
+---
+
 Paper is an extension for building modern terminal commands using React components.
 It uses [Ink](https://github.com/vadimdemedes/ink) and [commander](https://github.com/tj/commander.js/) behind the scences to deliver a unified experience for building amazing component-based CLI apps.
 

@@ -14,7 +14,10 @@ export type ComponentObjectsInput = {
   objectList: string | ObjectList;
 };
 
-export type PushOptions = { clientId: string }; // timestamp in ms when the client started the request.
+export type PushOptions = {
+  clientId?: string; // timestamp in ms when the client started the request.
+  persist?: boolean; // persist the objects immediately with no validation. (for legacy and bit-sign).
+};
 
 export default async function put(
   { path, objectList }: ComponentObjectsInput,
@@ -33,7 +36,7 @@ export default async function put(
     await scope.writeObjectsToPendingDir(objectList, pushOptions.clientId);
     return [];
   }
-  // legacy client (non-harmony)
+  // legacy client (non-harmony) or bit-sign.
   const componentsBitIds: BitIds = await exportManyBareScope(scope, objectList);
   const componentsIds: string[] = componentsBitIds.map((id) => id.toString());
   let uniqComponentsIds = componentsIds;
