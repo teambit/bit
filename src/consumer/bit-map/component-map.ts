@@ -133,7 +133,9 @@ export default class ComponentMap {
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
-      lanes: this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version })),
+      lanes: this.lanes.length
+        ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
+        : null,
       nextVersion: this.nextVersion,
     };
     const notNil = (val) => {
