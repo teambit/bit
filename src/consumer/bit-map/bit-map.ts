@@ -202,8 +202,14 @@ export default class BitMap {
         if ('exported' in componentFromJson) {
           return componentFromJson.exported;
         }
-        // backward compatibility
-        return BitId.parseObsolete(componentId).hasScope();
+        if (this.isLegacy) {
+          // backward compatibility
+          return BitId.parseObsolete(componentId).hasScope();
+        }
+        // on Harmony, if there is no "exported" we default to "true" as this is the most commonly
+        // used. so it's better to have as little as possible of these props.
+        componentFromJson.exported = true;
+        return true;
       };
       componentFromJson.id = BitId.parse(componentId, idHasScope());
       const componentMap = ComponentMap.fromJson(componentFromJson);
@@ -751,6 +757,9 @@ export default class BitMap {
       const idStr = id.toString();
       // @ts-ignore
       delete componentMapCloned?.id;
+      if (!this.isLegacy && componentMapCloned.exported) {
+        delete componentMapCloned.exported;
+      }
       components[idStr] = componentMapCloned.toPlainObject(this.isLegacy);
     });
 
