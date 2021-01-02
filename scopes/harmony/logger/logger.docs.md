@@ -1,3 +1,8 @@
+---
+description: Modern logging for component-driven applications.
+labels: ['logger', 'component-based', 'bit']
+---
+
 # Create a logger
 In your extension, add `LoggerMain` as a dependency and create a new logger by running
 ```

@@ -5,6 +5,23 @@ export type FileContext = {
   ext: string;
 };
 
+export type DependencyContext = {
+  /**
+   * path of the imported file.
+   */
+  filepath: string;
+
+  /**
+   * extension of the file.
+   */
+  ext: string;
+
+  /**
+   * content of the file.
+   */
+  content?: string;
+};
+
 export interface DependencyDetector {
   /**
    * determine whether to apply on given file.
@@ -15,6 +32,12 @@ export interface DependencyDetector {
    * detect file dependencies. list of file dependencies of the module.
    */
   detect(fileContent: string): string[];
+
+  /**
+   * resolve the imported file location
+   * @param file
+   */
+  dependencyLookup?(file: DependencyContext): string;
 }
 
 export class DetectorHook {
