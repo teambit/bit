@@ -223,8 +223,8 @@
                 "test": false
             },
             {
-                "name": "multi-compiler.docs.mdx",
-                "relativePath": "multi-compiler.docs.mdx",
+                "name": "multi-compiler.docs.md",
+                "relativePath": "multi-compiler.docs.md",
                 "test": false
             },
             {
@@ -356,6 +356,11 @@
     },
     "teambit.component/component-id@0.0.216": {
         "files": [
+            {
+                "name": "component-id.docs.mdx",
+                "relativePath": "component-id.docs.mdx",
+                "test": false
+            },
             {
                 "name": "component-id.ts",
                 "relativePath": "component-id.ts",
@@ -1163,6 +1168,11 @@
                 "test": false
             },
             {
+                "name": "isolator.docs.md",
+                "relativePath": "isolator.docs.md",
+                "test": false
+            },
+            {
                 "name": "isolator.main.runtime.ts",
                 "relativePath": "isolator.main.runtime.ts",
                 "test": false
@@ -1170,11 +1180,6 @@
             {
                 "name": "network.ts",
                 "relativePath": "network.ts",
-                "test": false
-            },
-            {
-                "name": "readme.md",
-                "relativePath": "readme.md",
                 "test": false
             },
             {
@@ -3646,11 +3651,6 @@
     "teambit.generator/generator@0.0.219": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "create.aspect.ts",
                 "relativePath": "create.aspect.ts",
                 "test": false
@@ -3673,6 +3673,11 @@
             {
                 "name": "create.ts",
                 "relativePath": "create.ts",
+                "test": false
+            },
+            {
+                "name": "generator.docs.md",
+                "relativePath": "generator.docs.md",
                 "test": false
             },
             {
@@ -3919,6 +3924,11 @@
                 "test": false
             },
             {
+                "name": "cli.docs.md",
+                "relativePath": "cli.docs.md",
+                "test": false
+            },
+            {
                 "name": "cli.main.runtime.ts",
                 "relativePath": "cli.main.runtime.ts",
                 "test": false
@@ -3951,11 +3961,6 @@
             {
                 "name": "legacy-command-adapter.ts",
                 "relativePath": "legacy-command-adapter.ts",
-                "test": false
-            },
-            {
-                "name": "readme.md",
-                "relativePath": "readme.md",
                 "test": false
             },
             {
@@ -4730,11 +4735,6 @@
     "teambit.pipelines/flows@0.0.219": {
         "files": [
             {
-                "name": "README.md",
-                "relativePath": "README.md",
-                "test": false
-            },
-            {
                 "name": "cache.ts",
                 "relativePath": "cache.ts",
                 "test": false
@@ -4757,6 +4757,11 @@
             {
                 "name": "flows.aspect.ts",
                 "relativePath": "flows.aspect.ts",
+                "test": false
+            },
+            {
+                "name": "flows.docs.md",
+                "relativePath": "flows.docs.md",
                 "test": false
             },
             {
