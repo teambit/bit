@@ -8,7 +8,7 @@
     // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/yarn",
+    "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
         "@apollo/react-common": "^3.1.4",
@@ -66,7 +66,8 @@
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "^1.0.3",
         "@teambit/documenter.routing.external-link": "1.0.3",
-        "@teambit/documenter.theme.theme-context": "^1.0.3",
+        "@teambit/documenter.theme.theme-compositions": "1.0.2",
+        "@teambit/documenter.theme.theme-context": "2.0.1",
         "@teambit/documenter.types.docs-file": "^1.0.3",
         "@teambit/documenter.ui.block-quote": "0.0.1",
         "@teambit/documenter.ui.bold": "0.0.1",
@@ -98,7 +99,7 @@
         "@teambit/evangelist.input.input": "^0.5.4",
         "@teambit/evangelist.surfaces.dropdown": "0.5.4",
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
-        "@teambit/evangelist.theme.icon-font": "^0.5.4",
+        "@teambit/evangelist.theme.icon-font": "0.5.5",
         "@teambit/harmony": "0.2.10",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",

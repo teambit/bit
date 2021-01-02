@@ -4,6 +4,7 @@ import React, { HTMLAttributes } from 'react';
 import { useQuery } from '@apollo/react-hooks';
 import { ComponentModel } from '@teambit/component';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { docsFields } from '@teambit/ui.queries.get-docs';
 import { gql } from 'apollo-boost';
@@ -76,6 +77,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
   return (
     <ThemeContext>
       <div className={classNames(styles.docsMainBlock)} {...rest}>
+        <EvaIconFont query="mxd7i0" />
         <ComponentOverview
           displayName={Content.displayName || displayName}
           version={version}
