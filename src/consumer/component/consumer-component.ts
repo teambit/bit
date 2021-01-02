@@ -1036,7 +1036,10 @@ export default class Component {
     const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
-      await componentMap.trackDirectoryChanges(consumer, id);
+      if (consumer.isLegacy) {
+        // on Harmony it tracks the changes on BitMap load.
+        await componentMap.trackDirectoryChanges(consumer, id);
+      }
       const filesToDelete = [];
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);

@@ -369,7 +369,8 @@ export default class ComponentMap {
 
   /**
    * in case new files were created in the track-dir directory, add them to the component-map
-   * so then they'll be tracked by bitmap
+   * so then they'll be tracked by bitmap.
+   * this doesn't get called on Harmony, it's for legacy only.
    */
   async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
