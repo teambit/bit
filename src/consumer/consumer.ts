@@ -862,7 +862,7 @@ export default class Consumer {
     // for this reason, we must use a package manager that supports one
     config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new Consumer({
+    const consumer = new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
@@ -870,6 +870,8 @@ export default class Consumer {
       // @ts-ignore @gilad, the config type is incorrect indeed
       config,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   static locateProjectScope(projectPath: string) {
