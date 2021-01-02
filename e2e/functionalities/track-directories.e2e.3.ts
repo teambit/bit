@@ -89,10 +89,6 @@ describe('track directories functionality', function () {
       it('bit status should indicate the missing of the mainFile', () => {
         expect(statusOutput).to.have.string('main-file was removed');
       });
-      it('should not rename the file in bitmap file', () => {
-        const files = helper.command.getComponentFiles('utils/bar');
-        expect(files).include('foo.js');
-      });
     });
     describe('tagging the component', () => {
       before(() => {

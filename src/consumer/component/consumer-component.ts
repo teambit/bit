@@ -1067,6 +1067,10 @@ export default class Component {
         componentMap.removeFiles(filesToDelete);
         bitMap.hasChanged = true;
       }
+      const filePaths = componentMap.getAllFilesPaths();
+      if (!filePaths.includes(componentMap.mainFile)) {
+        throw new MainFileRemoved(componentMap.mainFile, id.toString());
+      }
       return sourceFiles;
     };
 
