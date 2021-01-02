@@ -399,6 +399,12 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
+  getComponentFiles(id: string): string[] {
+    const output = this.runCmd(`bit show ${id} --json`);
+    const comp = JSON.parse(output);
+    return comp.find((c) => c.title === 'files').json;
+  }
+
   showComponentWithOptions(id = 'bar/foo', options: Record<string, any>) {
     const value = Object.keys(options)
       .map((key) => `-${key} ${options[key]}`)
