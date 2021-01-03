@@ -1,9 +1,15 @@
 import minimatch from 'minimatch';
 import path from 'path';
 import _ from 'lodash';
-
-import { BitId } from '../../../../bit-id';
-import { DEPENDENCIES_FIELDS, MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
+import R from 'ramda';
+import { BitId, BitIds } from '../../../../bit-id';
+import {
+  COMPONENT_ORIGINS,
+  DEPENDENCIES_FIELDS,
+  MANUALLY_ADD_DEPENDENCY,
+  MANUALLY_REMOVE_DEPENDENCY,
+  OVERRIDE_COMPONENT_PREFIX,
+} from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import logger from '../../../../logger/logger';
 import { ResolvedPackageData, resolvePackageData, resolvePackagePath } from '../../../../utils/packages';
@@ -102,6 +108,11 @@ export default class OverridesDependencies {
   ): { components: Record<string, any>; packages: Record<string, any> } | null | undefined {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
+    const idsFromBitmap = this.consumer.bitMap.getAllBitIdsFromAllLanes([
+      COMPONENT_ORIGINS.AUTHORED,
+      COMPONENT_ORIGINS.IMPORTED,
+    ]);
+    const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
     const components = {};
     const packages = {};
     DEPENDENCIES_FIELDS.forEach((depField) => {
@@ -109,7 +120,13 @@ export default class OverridesDependencies {
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
-        const componentId = this._getComponentIdToAdd(depField, dependency);
+        const componentId = this._getComponentIdToAdd(
+          depField,
+          dependency,
+          dependencyValue,
+          idsFromBitmap,
+          idsFromModel
+        );
         if (componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
             d.id.isEqualWithoutScopeAndVersion(componentId)
@@ -131,19 +148,120 @@ export default class OverridesDependencies {
 
   _getIgnoredComponentsByField(field: 'devDependencies' | 'dependencies' | 'peerDependencies'): BitId[] {
     const ignoredPackages = this.component.overrides.getIgnoredPackages(field);
-    const ignoredComponents = ignoredPackages.map((packageName) => this._getComponentIdFromPackage(packageName));
+    const idsFromBitmap = this.consumer.bitMap.getAllBitIdsFromAllLanes([
+      COMPONENT_ORIGINS.AUTHORED,
+      COMPONENT_ORIGINS.IMPORTED,
+    ]);
+    const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
+    const ignoredComponents = ignoredPackages.map((packageName) =>
+      this._getComponentIdFromPackage(packageName, idsFromBitmap, idsFromModel)
+    );
     return _.compact(ignoredComponents);
   }
 
-  _getComponentIdToAdd(field: string, dependency: string): BitId | null | undefined {
-    if (field === 'peerDependencies') return null;
+  _getComponentIdToAdd(
+    field: string,
+    dependency: string,
+    dependencyValue: string,
+    idsFromBitmap: BitIds,
+    idsFromModel: BitIds
+  ): BitId | undefined {
+    if (field === 'peerDependencies') return undefined;
+    if (this.consumer.isLegacy && dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
+      return this._getComponentIdToAddForLegacyWs(field, dependency, dependencyValue, idsFromBitmap, idsFromModel);
+    }
     const packageData = this._resolvePackageData(dependency);
     return packageData?.componentId;
   }
 
-  _getComponentIdFromPackage(packageName: string): BitId | undefined {
+  _getComponentIdFromPackage(packageName: string, idsFromBitmap: BitIds, idsFromModel: BitIds): BitId | undefined {
+    // backward compatibility
+    if (this.consumer.isLegacy && packageName.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
+      const existing = this._getExistingComponentIdFromLegacyPackageName(packageName, idsFromBitmap, idsFromModel);
+      return existing;
+    }
     const packageData = this._resolvePackageData(packageName);
     return packageData?.componentId;
+  }
+
+  /**
+   * This is used to support legacy projects (before harmony were components used @bit as prefix)
+   * @param field
+   * @param dependency
+   * @param dependencyValue
+   * @param idsFromBitmap
+   * @param idsFromModel
+   */
+  _getComponentIdToAddForLegacyWs(
+    field: string,
+    dependency: string,
+    dependencyValue: string,
+    idsFromBitmap: BitIds,
+    idsFromModel: BitIds
+  ): BitId | undefined {
+    if (field === 'peerDependencies') return undefined;
+    if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return undefined;
+    const id = this._getExistingComponentIdFromLegacyPackageName(dependency, idsFromBitmap, idsFromModel);
+    if (id) {
+      return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
+    }
+    return undefined;
+  }
+
+  /**
+   * For legacy use only, do not use it on harmony projects
+   * This will parse the package name and look for the parsed result in the bitmap / ids from model and return the matched id if exist
+   * @param dependency
+   * @param idsFromBitmap
+   * @param idsFromModel
+   */
+  _getExistingComponentIdFromLegacyPackageName(
+    dependency: string,
+    idsFromBitmap: BitIds,
+    idsFromModel: BitIds
+  ): BitId | undefined {
+    let result: BitId | undefined;
+    if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return undefined;
+    const compIds = this._getComponentIdFromLegacyPackageName(dependency);
+    for (const compId of [...compIds, dependency]) {
+      const bitId = compId.replace(OVERRIDE_COMPONENT_PREFIX, '');
+      const idFromBitMap =
+        idsFromBitmap.searchStrWithoutVersion(bitId) || idsFromBitmap.searchStrWithoutScopeAndVersion(bitId);
+      const idFromModel =
+        idsFromModel.searchStrWithoutVersion(bitId) || idsFromModel.searchStrWithoutScopeAndVersion(bitId);
+      // $FlowFixMe one of them must be set (see one line above)
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const id: BitId = idFromModel || idFromBitMap;
+      if (id) {
+        result = id;
+      }
+    }
+    return result;
+  }
+
+  // This strategy is used only for legacy projects (backward computability)
+  // This strategy should be stopped using since harmony, because a package name
+  // might be completely different than a component id
+  // instead we should go to the package.json and check the component name there
+  // Like we do in resolvePackageData()
+  /**
+   * it is possible that a user added the component into the overrides as a package.
+   * e.g. `@bit/david.utils.is-string` instead of `@bit/david.utils/is-string`
+   * or, if not using bit.dev, `@bit/utils.is-string` instead of `@bit/utils/is-string`
+   */
+  _getComponentIdFromLegacyPackageName(idStr: string): string[] {
+    const idSplitByDot = idStr.split('.');
+    const numberOfDots = idSplitByDot.length - 1;
+    if (numberOfDots === 0) return []; // nothing to do. it wasn't entered as a package
+    const localScopeComponent = idSplitByDot.join('/'); // convert all dots to slashes
+    if (numberOfDots === 1) {
+      // it can't be from bit.dev, it must be locally
+      return [localScopeComponent];
+    }
+    // there are two dots or more. it can be from bit.dev and it can be locally
+    // for a remoteScopeComponent, leave the first dot and convert only the rest to a slash
+    const remoteScopeComponent = `${R.head(idSplitByDot)}.${R.tail(idSplitByDot).join('/')}`;
+    return [localScopeComponent, remoteScopeComponent];
   }
 
   _manuallyAddPackage(

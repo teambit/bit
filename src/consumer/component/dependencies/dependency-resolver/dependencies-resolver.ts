@@ -831,6 +831,8 @@ either, use the ignore file syntax or change the require statement to have a mod
         this.component.bindingPrefix
       );
       if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
+      // In case the component it missing, it might consider as a package sometime, check if we should ignore it by the package name
+      if (this.overridesDependencies.shouldIgnorePackage(missingBit, fileType)) return;
       // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
       if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
         this._pushToMissingLinksIssues(originFile, componentId);
