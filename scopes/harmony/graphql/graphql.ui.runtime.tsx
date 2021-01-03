@@ -3,12 +3,12 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
 import { isBrowser } from '@teambit/ui.is-browser';
-import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
-import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
-import { ApolloLink } from 'apollo-link';
-import { onError } from 'apollo-link-error';
-import { HttpLink, createHttpLink } from 'apollo-link-http';
-import { WebSocketLink } from 'apollo-link-ws';
+
+import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import type { IdGetterObj, NormalizedCacheObject, ApolloQueryResult, QueryOptions } from '@apollo/client';
+import { WebSocketLink } from '@apollo/client/link/ws';
+import { onError } from '@apollo/client/link/error';
+
 import crossFetch from 'cross-fetch';
 import objectHash from 'object-hash';
 

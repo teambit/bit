@@ -1,11 +1,11 @@
 import React, { ReactNode } from 'react';
-import { getDataFromTree } from '@apollo/react-ssr';
+import { getDataFromTree } from '@apollo/client/react/ssr';
+import { NormalizedCacheObject } from '@apollo/client';
 
 import { isBrowser } from '@teambit/ui.is-browser';
 import type { BrowserData, RenderLifecycle } from '@teambit/ui';
-import type { NormalizedCacheObject } from 'apollo-cache-inmemory';
-import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 
+import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
 import { GraphQLProvider } from './graphql-provider';
 
 type RenderContext = {

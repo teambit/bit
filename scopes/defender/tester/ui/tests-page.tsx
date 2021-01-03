@@ -1,11 +1,10 @@
-import { useSubscription, useQuery } from '@apollo/react-hooks';
+import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
-import { gql } from 'apollo-boost';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 
