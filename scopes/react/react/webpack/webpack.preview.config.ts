@@ -204,6 +204,7 @@ export default function (fileMapPath: string): Configuration {
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
         react: require.resolve('react'),
         '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
