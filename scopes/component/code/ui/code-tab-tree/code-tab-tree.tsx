@@ -4,6 +4,7 @@ import { getIconForFile } from 'vscode-icons-js';
 import { FileTree } from '@teambit/tree.file-tree';
 import { DrawerUI } from '@teambit/tree.drawer';
 import { TreeNode as Node } from '@teambit/tree.tree-node';
+// import { LabelList } from '@teambit/documenter.ui.label-list';
 
 import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
 import { DependencyTree, Dependencies } from '../dependency-tree';
@@ -14,9 +15,10 @@ export type CodeTabTreeProps = {
   fileTree: any[];
   dependencies?: Dependencies;
   currentFile: string;
+  devFiles?: string[];
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeTabTree({ className, fileTree, dependencies, currentFile }: CodeTabTreeProps) {
+export function CodeTabTree({ className, fileTree, dependencies, currentFile, devFiles }: CodeTabTreeProps) {
   const [openDrawerList, onToggleDrawer] = useState(['FILES', 'DEPENDENCIES']);
 
   const handleDrawerToggle = (id: string) => {
@@ -28,14 +30,20 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile }: 
     onToggleDrawer((list) => list.concat(id));
   };
 
+  // TODO - handle labels for main file or dev
+  const widgets = [];
+
   const TreeNodeRenderer = useCallback(
     function TreeNode(props: any) {
       const children = props.node.children;
-      if (!children) return <Node {...props} isActive={props.node.id === currentFile} icon={getIcon(props.node.id)} />;
+      if (!children)
+        return (
+          <Node {...props} isActive={props.node.id === currentFile} icon={getIcon(props.node.id)} widgets={widgets} />
+        );
 
       return <FolderTreeNode {...props} />;
     },
-    [currentFile]
+    [currentFile, widgets]
   );
 
   const fileDrawer = useMemo(() => {

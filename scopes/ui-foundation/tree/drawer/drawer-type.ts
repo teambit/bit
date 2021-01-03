@@ -1,10 +1,10 @@
-import { ComponentType } from 'react';
+import { ReactNode, ComponentType } from 'react';
 
 export type DrawerType = {
   /**
    * name of the drawer.
    */
-  name: string;
+  name: ReactNode; // TODO - make sure componentType makes sence here
 
   /**
    * tooltip for the drawer.

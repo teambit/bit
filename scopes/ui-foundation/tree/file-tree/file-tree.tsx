@@ -1,45 +1,29 @@
-// import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
-// import { ComponentTreeContextProvider } from './component-tree-context';
-import { inflateToTree /* , attachPayload */ } from '@teambit/base-ui.graph.tree.inflate-paths';
+import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
-// import { PayloadType, ScopePayload } from './payload-type';
-// import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
 import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
-import { TreeNodeContext } from '@teambit/base-ui.graph.tree.recursive-tree';
-// import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
+import { TreeNodeContext, TreeNodeRenderer } from '@teambit/base-ui.graph.tree.recursive-tree';
 
 type FileTreeProps = {
-  // onSelect?: (id: string, event?: React.MouseEvent) => void;
-  // selected?: string;
+  onSelect?: (id: string, event?: React.MouseEvent) => void;
+  selected?: string;
   files: string[];
-  TreeNode?: any; //TreeNodeRenderer<PayloadType>;
+  TreeNode?: any; //TreeNodeRenderer<PayloadType>; - what do we want here?
 };
 
-export function FileTree({
-  files,
-  // onSelect,
-  // selected,
-  TreeNode,
-}: FileTreeProps) {
-  // console.log("filres", files)
+export function FileTree({ files, onSelect, selected, TreeNode }: FileTreeProps) {
   const rootNode = useMemo(() => {
     const tree = inflateToTree(files, (c) => c);
-    // console.log("tree", tree)
-    // const payloadMap = calcPayload(files);
-
-    // attachPayload(tree, payloadMap);
-
     return tree;
   }, [files]);
-  // console.log("rootNode", rootNode)
+
   return (
     <div style={indentStyle(1)}>
       <TreeNodeContext.Provider value={TreeNode}>
-        {/* <ComponentTreeContextProvider onSelect={onSelect} selected={selected}> */}
-        <RootNode node={rootNode} depth={1} />
-        {/* </ComponentTreeContextProvider> */}
+        <TreeContextProvider onSelect={onSelect} selected={selected}>
+          <RootNode node={rootNode} depth={1} />
+        </TreeContextProvider>
       </TreeNodeContext.Provider>
     </div>
   );

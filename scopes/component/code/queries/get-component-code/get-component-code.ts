@@ -8,6 +8,7 @@ const getDocs = gql`
       get(id: $id) {
         fs
         mainFile
+        devFiles
         dependencies {
           id
           version
@@ -43,6 +44,7 @@ type DocsResults = {
       fs?: string[];
       mainFile?: string;
       dependencies: Dependency[];
+      devFiles: string[];
     };
   };
 };
@@ -62,9 +64,10 @@ export function useCode(componentId: ComponentID) {
 
   const fileTree = data?.getHost?.get.fs;
   const mainFile = data?.getHost?.get.mainFile;
+  const devFiles = data?.getHost?.get.devFiles;
   const dependencies = buildDependencyTree(data?.getHost?.get.dependencies);
 
-  return { fileTree, mainFile, dependencies };
+  return { fileTree, mainFile, dependencies, devFiles };
 }
 
 export function useFileContent(componentId: ComponentID, filePath: string) {

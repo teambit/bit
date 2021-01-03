@@ -74,6 +74,7 @@ $panelBg: #fafafa;
 .dependencyDrawerContainer {
   .dependencyDrawer {
     > div:first-child {
+      font-size: 14px;
       border: unset;
       padding-left: 16px;
     }
@@ -85,7 +86,7 @@ $panelBg: #fafafa;
     align-items: center;
     // justify-content: space-between;
     padding: 0 8px;
-    padding-left: 24px;
+    padding-left: 32px;
     font-size: inherit;
     font-size: var(--p-xs);
     text-decoration: none;

@@ -19,7 +19,7 @@ type CodePageProps = {} & HTMLAttributes<HTMLDivElement>;
 export function CodePage({ className }: CodePageProps) {
   const component = useContext(ComponentContext);
   const location = useLocation();
-  const { mainFile, fileTree = [], dependencies = {} } = useCode(component.id);
+  const { mainFile, fileTree = [], dependencies = {}, devFiles } = useCode(component.id);
   const currentFile = useMemo(() => (location.hash || mainFile)?.replace('#', '') || '', [location.hash, mainFile]); // because hash returns with # and mainFile without
   const fileContent = useFileContent(component.id, currentFile);
 
@@ -57,7 +57,7 @@ export function CodePage({ className }: CodePageProps) {
           />
         </HoverSplitter>
         <Pane className={styles.right}>
-          <CodeTabTree currentFile={currentFile} dependencies={dependencies} fileTree={fileTree} />
+          <CodeTabTree currentFile={currentFile} dependencies={dependencies} fileTree={fileTree} devFiles={devFiles} />
         </Pane>
       </SplitPane>
     </ThemeContext>

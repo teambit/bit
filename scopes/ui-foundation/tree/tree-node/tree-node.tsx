@@ -1,43 +1,24 @@
-// import { ComponentTreeSlot } from '@teambit/component-tree';
 import { NavLink } from '@teambit/ui.react-router.nav-link';
-// import { EnvIcon } from '@teambit/ui.env-icon';
-// import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
-// import React, { useCallback, useContext } from 'react';
-import React from 'react';
-// import { Icon } from '@teambit/evangelist.elements.icon';
-// import ReactTooltip from 'react-tooltip';
-// import { ComponentModel } from '@teambit/component';
+import React, { ComponentType } from 'react';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
-import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
-// import { ComponentTreeContext } from '../component-tree-context';
-// import { PayloadType } from '../payload-type';
-// import { getName } from '../utils/get-name';
+import { TreeNodeProps, TreeNode as TreeNodeType } from '@teambit/base-ui.graph.tree.recursive-tree';
 import styles from './tree-node.module.scss';
 
+export type WidgetProps<Payload> = {
+  node: TreeNodeType<Payload>;
+};
+
 export type TreeNodeComponentProps<Payload = any> = {
-  treeNodeSlot?: any; // TODO - decide how we want to pass the right icons and if we can merge this with ComponentView
+  widgets?: ComponentType<WidgetProps<Payload>>[];
   isActive?: boolean;
   icon?: string;
+  onClick?: (e: React.MouseEvent) => void;
 } & TreeNodeProps<Payload>;
 
 export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
-  const { node, isActive = false, icon } = props;
-  const component = node.payload;
-
-  // const { onSelect } = useContext(ComponentTreeContext);
-
-  // const handleClick = useCallback(
-  //   (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-  //     onSelect && onSelect(node.id, event);
-  //   },
-  //   [onSelect, node.id]
-  // );
-
-  // if (!(component instanceof ComponentModel)) return null;
-  // console.log('component node', props.node.id, isActive)
-  // const icon = '';
+  const { node, isActive = false, icon, onClick, widgets } = props;
   return (
     <NavLink
       href={`#${props.node.id}`}
@@ -46,7 +27,7 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
       strict
       className={classNames(indentClass, clickable, styles.fileNode)}
       activeClassName={styles.active}
-      // onClick={handleClick}
+      onClick={onClick}
     >
       <div className={styles.left}>
         <img className={styles.icon} src={icon} />
@@ -54,8 +35,9 @@ export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
       </div>
 
       <div className={styles.right}>
-        {props.treeNodeSlot &&
-          props.treeNodeSlot.toArray().map(([id, treeNode]) => <treeNode.widget key={id} component={component} />)}
+        {widgets?.map((Widget, index) => (
+          <Widget key={index} node={node} />
+        ))}
       </div>
     </NavLink>
   );
