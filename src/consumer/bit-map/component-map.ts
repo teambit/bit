@@ -124,7 +124,7 @@ export default class ComponentMap {
 
   toPlainObject(isLegacy: boolean): Record<string, any> {
     let res = {
-      files: this.files.map((file) => sortObject(file)),
+      files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
@@ -133,7 +133,9 @@ export default class ComponentMap {
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
-      lanes: this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version })),
+      lanes: this.lanes.length
+        ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
+        : null,
       nextVersion: this.nextVersion,
     };
     const notNil = (val) => {
@@ -369,7 +371,8 @@ export default class ComponentMap {
 
   /**
    * in case new files were created in the track-dir directory, add them to the component-map
-   * so then they'll be tracked by bitmap
+   * so then they'll be tracked by bitmap.
+   * this doesn't get called on Harmony, it's for legacy only.
    */
   async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();

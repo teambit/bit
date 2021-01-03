@@ -1,8 +1,13 @@
-# `extension teambit.pkg/pkg`
+---
+description: Bit Component package automation, packing and publishing.
+labels: ['packages', 'aspect', 'pkg']
+---
+
+Pkg aspect automates the creation, packing and publishing of packages of Bit components.
 
 1. allows users to change (add) properties in the component's package.json
 2. allows other extensions to add new properties to the component's package.json
-3. allows an env to add new properties to the component's package.json
+3. allows an env to add new properxties to the component's package.json
 4. exposes a pack command to pack a component into a tar suitable for an npm registry
 5. exposes a publish command to publish components to a private registry
 6. utilizes PostTag hook to auto publish components after tag
@@ -87,13 +92,14 @@ This used mainly for this cases:
 
 ## API Usage
 
-### slots
+### Slots
 This extension provide an api for other extensions to add properties to the package json - `registerPackageJsonNewProps`;
-This method gets an object of key<>value that represents the new props and their values.
+This method gets an object of key -> value that represents the new props and their values.
 The extension will apply those changes to the package.json only if the extension that register it is applied on the component via the variants.
 
-### methods
+### Methods
 A function to pack a component and generate a tarball suitable for npm registry
+
 ```js
 async packComponent(
     componentId: string,

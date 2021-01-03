@@ -266,6 +266,7 @@ export class AspectLoaderMain {
         }
         const error = errAfterReLoad || e;
         if (throwOnError) {
+          this.logger.console(error);
           throw new CannotLoadExtension(idStr, error);
         }
         if (this.logger.isLoaderStarted) {

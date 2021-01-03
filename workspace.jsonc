@@ -203,6 +203,7 @@
         "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
+        "parse-es6-imports": "1.0.1",
         "parse-package-name": "0.1.0",
         "penpal": "^5.2.1",
         "postcss": "7.0.32",
@@ -261,7 +262,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.239",
+        "bit-bin": "14.8.9-dev.246",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -317,7 +318,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.239",
+            "bit-bin": "14.8.9-dev.246",
             "react-dom": "^16.13.1"
           }
         }
@@ -446,7 +447,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.239",
+            "bit-bin": "14.8.9-dev.246",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
@@ -508,6 +509,13 @@ export class Workspace implements ComponentFactory {
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+    return mapSeries(components, async (component) => {
+      const id = await this.resolveComponentId(component.id);
+      return this.get(id, undefined, component);
+    });
   }
 
   /**

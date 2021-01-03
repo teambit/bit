@@ -13,6 +13,7 @@ import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { DetectorHook } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -64,6 +65,7 @@ import {
 } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
 import { dependencyResolverSchema } from './dependency-resolver.graphql';
+import { DependencyDetector } from './dependency-detector';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -548,7 +550,14 @@ export class DependencyResolverMain {
     return version;
   }
 
-  registerDetector() {}
+  /**
+   * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
+   * mechanism to support new file extensions and types.
+   */
+  registerDetector(detector: DependencyDetector) {
+    DetectorHook.hooks.push(detector);
+    return this;
+  }
 
   static runtime = MainRuntime;
   static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect, GraphqlAspect];
@@ -560,6 +569,7 @@ export class DependencyResolverMain {
     Slot.withType<DependencyFactory>(),
     Slot.withType<PreInstallSubscriberList>(),
     Slot.withType<PostInstallSubscriberList>(),
+    Slot.withType<DependencyDetector>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
