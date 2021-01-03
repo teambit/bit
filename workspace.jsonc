@@ -72,7 +72,7 @@
         "@teambit/documenter.code.react-playground": "^1.0.3",
         "@teambit/documenter.routing.external-link": "1.0.3",
         "@teambit/documenter.theme.theme-compositions": "1.0.2",
-        "@teambit/documenter.theme.theme-context": "2.0.1",
+        "@teambit/documenter.theme.theme-context": "2.0.2",
         "@teambit/documenter.types.docs-file": "^1.0.3",
         "@teambit/documenter.ui.block-quote": "0.0.1",
         "@teambit/documenter.ui.bold": "0.0.1",
