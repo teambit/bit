@@ -95,7 +95,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       // Enable hot reloading
       hot: true,
 
-      allowedHosts: ['sym.bit.dev'],
       host,
 
       historyApiFallback: {
