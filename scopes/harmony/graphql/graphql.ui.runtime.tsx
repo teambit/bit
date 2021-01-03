@@ -19,10 +19,6 @@ import { GraphqlRenderLifecycle } from './render-lifecycle';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
-type RenderContext = {
-  client: ApolloClient<any>;
-};
-
 type ClientOptions = { state?: NormalizedCacheObject };
 
 export class GraphqlUI {

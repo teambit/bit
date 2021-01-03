@@ -39,7 +39,7 @@ const lessModuleRegex = /\.module\.less$/;
 export default function createWebpackConfig(
   workspaceDir: string,
   entryFiles: string[],
-  publicDir: string = 'public'
+  publicDir = 'public'
 ): Configuration {
   const isEnvProduction = true;
 
