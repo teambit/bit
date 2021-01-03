@@ -467,7 +467,8 @@ describe('workspace config', function () {
         it('should show the component as ignored', () => {
           expect(showBar).to.have.property('manuallyRemovedDependencies');
           expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bit.utils/is-string');
+          // expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bit.utils/is-string');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('@bit/bit.utils.is-string');
         });
       });
       describe('ignoring an existing component required as a package', () => {
