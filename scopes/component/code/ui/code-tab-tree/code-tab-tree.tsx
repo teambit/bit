@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo, HTMLAttributes } from 'react';
-
+import classNames from 'classnames';
 import { getIconForFile } from 'vscode-icons-js';
 import { FileTree } from '@teambit/tree.file-tree';
 import { DrawerUI } from '@teambit/tree.drawer';
@@ -7,6 +7,8 @@ import { TreeNode as Node } from '@teambit/tree.tree-node';
 
 import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
 import { DependencyTree, Dependencies } from '../dependency-tree';
+
+import styles from './code-tab-tree.module.scss';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
@@ -29,7 +31,6 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile }: 
   const TreeNodeRenderer = useCallback(
     function TreeNode(props: any) {
       const children = props.node.children;
-      // console.log(" tree props", props)
       if (!children) return <Node {...props} isActive={props.node.id === currentFile} icon={getIcon(props.node.id)} />;
 
       return <FolderTreeNode {...props} />;
@@ -54,16 +55,18 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile }: 
   }, [dependencies]);
 
   return (
-    <div className={className}>
+    <div className={classNames(styles.codeTabTree, className)}>
       <DrawerUI
         isOpen={openDrawerList.includes(fileDrawer.name)}
         onToggle={() => handleDrawerToggle(fileDrawer.name)}
         drawer={fileDrawer}
+        className={classNames(styles.codeTabDrawer)}
       />
       <DrawerUI
         isOpen={openDrawerList.includes(dependencyDrawer.name)}
         onToggle={() => handleDrawerToggle(dependencyDrawer.name)}
         drawer={dependencyDrawer}
+        className={classNames(styles.codeTabDrawer)}
       />
     </div>
   );
