@@ -19,7 +19,7 @@ function createSsrConfig(workspaceDir: string) {
     devtool: 'cheap-eval-source-map', // TODO
 
     output: {
-      path: path.resolve(workspaceDir, 'public/ssr'),
+      path: path.resolve(workspaceDir, 'public', 'ssr'),
       publicPath: '/public/ssr/',
       libraryTarget: 'commonjs',
       filename: 'index.js',

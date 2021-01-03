@@ -47,7 +47,7 @@ export class GraphqlUI {
   ) {
     const client = new ApolloClient({
       link: this.createApolloLink(host),
-      cache: this.getCache({ state }),
+      cache: this.createCache({ state }),
     });
 
     return client;
@@ -66,7 +66,7 @@ export class GraphqlUI {
     const client = new ApolloClient({
       ssrMode: true,
       link,
-      cache: this.getCache(),
+      cache: this.createCache(),
     });
 
     return client;
@@ -91,7 +91,7 @@ export class GraphqlUI {
     ]);
   }
 
-  private getCache({ state }: { state?: NormalizedCacheObject } = {}) {
+  private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache({
       dataIdFromObject: getIdFromObject,
     });
