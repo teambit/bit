@@ -19,7 +19,9 @@ $panelBg: #fafafa;
   position: relative;
   background: $panelBg;
   overflow-y: auto;
+  // this is to fix the right panel when it gets too big or too small
   min-width: 200px;
+  max-width: calc(100% - 200px);
 }
 
 .splitter {
