@@ -3,6 +3,9 @@ labels: ['react', 'typescript', 'contributor', 'avatar']
 description: 'contributors component'
 ---
 
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { Contributors} from './index';
+
 ### Overview
 
 Component for displaying contributors in Bit, as follows:
@@ -10,7 +13,11 @@ Component for displaying contributors in Bit, as follows:
 2. Two contributors - displays two icons, then both names, then contribution message
 3. Three or more contributors - displays all icons, then name of first contributor, then "and x others", then contribution message
 
-import { Contributors} from './index';
+
+
+Contributors example: Remove items from the data to see how 1 and 2 contributors looks:
+```js live
+() => {
 const contributors = [
     {
         name: 'Should Not Appear', 
@@ -29,13 +36,11 @@ const contributors = [
     },
 ];
 const timestamp = 'Thu Dec 24 2020 20:53:10 GMT+0200 (Israel Standard Time)';
-export const examples = [
-  {
-    scope: {
-      Contributors
-    },
-    title: 'Contributor example',
-    description: 'Remove items from the data to see how 1 and 2 contributors looks',
-    jsx: <Contributors contributors={contributors} timestamp={timestamp}/>,
-  }
-];
+ return (
+  <ThemeCompositions style={{ minHeight: 90 }}>
+    <Contributors contributors={contributors} timestamp={timestamp}/>
+  </ThemeCompositions>
+ )
+}
+
+```
