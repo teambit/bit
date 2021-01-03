@@ -52,6 +52,12 @@ export type UIConfig = {
    * host for the UI root
    */
   host: string;
+
+  /**
+   * directory in workspace to use for public assets.
+   * always relative to the workspace root directory.
+   */
+  publicDir: string;
 };
 
 export type RuntimeOptions = {
@@ -126,6 +132,14 @@ export class UiMain {
     private logger: Logger
   ) {}
 
+  get publicDir() {
+    if (this.config.publicDir.startsWith('/')) {
+      return this.config.publicDir.substring(1);
+    }
+
+    return this.config.publicDir;
+  }
+
   /**
    * create a build of the given UI root.
    */
@@ -135,8 +149,8 @@ export class UiMain {
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
 
-    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name);
-    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry]);
+    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, this.publicDir);
+    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], this.publicDir);
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
 
@@ -158,6 +172,7 @@ export class UiMain {
       uiRootExtension: name,
       ui: this,
       logger: this.logger,
+      publicDir: this.publicDir,
     });
 
     const targetPort = await this.getPort(port);
@@ -277,23 +292,36 @@ export class UiMain {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
     if (hash === hashed && !force) return;
-    if (hash !== hashed)
+    if (hash !== hashed) {
       this.logger.console(
-        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(uiRoot.name)}'`
+        `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(
+          uiRoot.name
+        )} in target directory: ${chalk.cyan(this.publicDir)}'`
       );
-    this.logger.console(`Building UI assets for '${chalk.cyan(uiRoot.name)}'`);
+    } else {
+      this.logger.console(
+        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(this.publicDir)}`
+      );
+    }
+
     const res = await this.build(name);
+    this.clearConsole();
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
     if (res.hasErrors()) res.stats.forEach((stats) => stats.compilation.errors.forEach((err) => console.error(err)));
     await this.cache.set(uiRoot.path, hash);
   }
 
+  clearConsole() {
+    process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
+  }
+
   private async buildIfNoBundle(name: string, uiRoot: UIRoot) {
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name
+      uiRoot.name,
+      this.publicDir
     );
     if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
@@ -307,6 +335,7 @@ export class UiMain {
   }
 
   static defaultConfig = {
+    publicDir: 'public/bit',
     portRange: [3000, 3100],
     host: 'localhost',
   };

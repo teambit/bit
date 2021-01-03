@@ -316,12 +316,7 @@ describe('bit lane command', function () {
         const result = helper.command.runCmd('node app.js');
         expect(result.trim()).to.equal(appOutput);
       });
-      // @todo: Fix!
-      // this is failing because the import puts node-modules inside the components/comp1 dir.
-      // and the dependency-resolver is unable to locate the package.json there. deleting the
-      // node-modules fixed the issue by using the package.json inside the root node-modules
-      // which has the correct package.json file.
-      it.skip('bit status should show clean state', () => {
+      it('bit status should show clean state', () => {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });

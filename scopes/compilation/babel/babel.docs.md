@@ -1,4 +1,7 @@
-# Babel Compiler
+---
+description: Babel compilation for Bit components.
+labels: ['babel', 'compiler', 'bit', 'extension', 'aspect']
+---
 
 This compiler utilizes the programmatic API of Babel to transpile files. See the compiler-options.ts for more data how to pass Babel options to the compiler.
 

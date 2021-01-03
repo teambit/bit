@@ -1,7 +1,11 @@
+import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { Configuration } from 'webpack';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as mdxLoader from '@teambit/modules.mdx-loader';
+// Make sure the bit-react-transformer is a dependency
+// TODO: remove it once we can set policy from component to component then set it via the component.json
+import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -180,8 +184,9 @@ export default function (workspaceDir: string, targets: string[], envId: string,
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
-        'react-dom/server': require.resolve('react-dom/server'),
+        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
         'react-dom': require.resolve('react-dom'),
+        'react-dom/server': require.resolve('react-dom/server'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },

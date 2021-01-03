@@ -11,21 +11,26 @@ import createBaseConfig from './webpack.base.config';
 
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
-export default function createWebpackConfig(workspaceDir: string, entryFiles: string[], title: string): Configuration {
+export default function createWebpackConfig(
+  workspaceDir: string,
+  entryFiles: string[],
+  title: string,
+  publicDir: string
+): Configuration {
   const baseConfig = createBaseConfig(workspaceDir, entryFiles);
-  const browserConfig = createBrowserConfig(workspaceDir, title);
+  const browserConfig = createBrowserConfig(workspaceDir, title, publicDir);
 
   const combined = merge(baseConfig, browserConfig);
 
   return combined;
 }
 
-function createBrowserConfig(workspaceDir: string, title: string) {
+function createBrowserConfig(workspaceDir: string, title: string, publicDir: string) {
   const browserConfig: Configuration = {
     // target: 'web', // already default
 
     output: {
-      path: path.resolve(workspaceDir, 'public'),
+      path: path.resolve(workspaceDir, publicDir),
       // webpack uses `publicPath` to determine where the app is being served from.
       // It requires a trailing slash, or the file assets will get an incorrect path.
       // We inferred the "public path" (such as / or /my-project) from homepage.

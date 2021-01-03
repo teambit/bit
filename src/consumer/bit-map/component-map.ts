@@ -122,18 +122,20 @@ export default class ComponentMap {
     return new ComponentMap(componentMapParams);
   }
 
-  toPlainObject(): Record<string, any> {
+  toPlainObject(isLegacy: boolean): Record<string, any> {
     let res = {
-      files: this.files.map((file) => sortObject(file)),
+      files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      origin: this.origin,
+      origin: isLegacy ? this.origin : undefined,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
-      lanes: this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version })),
+      lanes: this.lanes.length
+        ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
+        : null,
       nextVersion: this.nextVersion,
     };
     const notNil = (val) => {
@@ -369,7 +371,8 @@ export default class ComponentMap {
 
   /**
    * in case new files were created in the track-dir directory, add them to the component-map
-   * so then they'll be tracked by bitmap
+   * so then they'll be tracked by bitmap.
+   * this doesn't get called on Harmony, it's for legacy only.
    */
   async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
@@ -458,11 +461,13 @@ export default class ComponentMap {
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(
-        `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
-      );
-    }
+    // commented out because when importing a legacy component into Harmony it may have originallySharedDir
+    // and on Harmony all components are Authored.
+    // if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
+    //   throw new ValidationError(
+    //     `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
+    //   );
+    // }
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }

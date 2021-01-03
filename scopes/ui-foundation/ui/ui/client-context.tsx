@@ -11,7 +11,7 @@ export function ClientContext({ children }: { children: ReactNode }) {
     <React.StrictMode>
       {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
-        <EvaIconFont query="av92bs" />
+        <EvaIconFont query="mxd7i0" />
         <Theme>
           <LoaderRibbon active={isLoading} />
           {children}

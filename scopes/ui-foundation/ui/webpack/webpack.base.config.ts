@@ -36,7 +36,11 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function createWebpackConfig(workspaceDir: string, entryFiles: string[]): Configuration {
+export default function createWebpackConfig(
+  workspaceDir: string,
+  entryFiles: string[],
+  publicDir: string = 'public'
+): Configuration {
   const isEnvProduction = true;
 
   // Variable used for enabling profiling in Production
@@ -113,7 +117,7 @@ export default function createWebpackConfig(workspaceDir: string, entryFiles: st
 
     output: {
       // The build folder.
-      path: path.join(workspaceDir, 'public'), // default value
+      path: path.join(workspaceDir, publicDir), // default value
 
       filename: 'static/js/[name].[contenthash:8].js',
       // TODO: remove this when upgrading to webpack 5

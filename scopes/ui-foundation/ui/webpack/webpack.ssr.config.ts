@@ -4,22 +4,26 @@ import merge from 'webpack-merge';
 
 import createBaseConfig from './webpack.base.config';
 
-export default function createWebpackConfig(workspaceDir: string, entryFiles: string[]): Configuration {
+export default function createWebpackConfig(
+  workspaceDir: string,
+  entryFiles: string[],
+  publicDir: string
+): Configuration {
   const baseConfig = createBaseConfig(workspaceDir, entryFiles);
-  const ssrConfig = createSsrConfig(workspaceDir);
+  const ssrConfig = createSsrConfig(workspaceDir, publicDir);
 
   const combined = merge(baseConfig, ssrConfig);
 
   return combined;
 }
 
-function createSsrConfig(workspaceDir: string) {
+function createSsrConfig(workspaceDir: string, publicDir: string) {
   const ssrConfig: Configuration = {
     target: 'node',
     devtool: 'cheap-eval-source-map', // TODO
 
     output: {
-      path: path.resolve(workspaceDir, 'public', 'ssr'),
+      path: path.resolve(workspaceDir, publicDir, 'ssr'),
       publicPath: '/public/ssr/',
       libraryTarget: 'commonjs',
       filename: 'index.js',

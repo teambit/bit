@@ -1,4 +1,7 @@
-# `teambit.dependencies/dependency-resolver`
+---
+description: Dependency management for Bit components.
+labels: ['dependency', 'dependencies', 'component', 'bit']
+---
 
 This extension is responsible for:
 1. detecting dependencies of components by static code analysis

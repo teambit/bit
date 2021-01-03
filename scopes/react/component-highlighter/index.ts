@@ -1,1 +1,1 @@
-export { initiate } from './component-highlighter';
+export { highlightComponents } from './component-highlighter';

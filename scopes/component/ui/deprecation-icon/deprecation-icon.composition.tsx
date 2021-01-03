@@ -1,6 +1,6 @@
 import React from 'react';
 import { ComponentModel } from '@teambit/component';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { DeprecationIcon } from './deprecation-icon';
 
 export const DeprecationIconIsDeprecate = () => {
@@ -10,9 +10,9 @@ export const DeprecationIconIsDeprecate = () => {
   // @ts-ignore
   const component = new ComponentModel(null, null, null, null, null, null, null, null, deprecation, null, null);
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <DeprecationIcon component={component} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
@@ -22,9 +22,9 @@ export const DeprecationIconIsNotDeprecate = () => {
   };
   // @ts-ignore
   const component = new ComponentModel(null, null, null, null, null, null, null, null, deprecation, null, null);
-  return (
-    <ThemeContext>
-      <DeprecationIcon component={component} />
-    </ThemeContext>
-  );
+  return <DeprecationIcon component={component} />;
+};
+
+DeprecationIconIsDeprecate.canvas = {
+  height: 90,
 };
