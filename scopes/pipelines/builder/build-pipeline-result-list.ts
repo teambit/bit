@@ -16,6 +16,11 @@ export type PipelineReport = {
   warnings?: string[];
 };
 
+export type AspectData = {
+  aspectId: string;
+  data: Serializable;
+};
+
 /**
  * Helper to get the data and artifacts from the TasksResultsList before saving during the tag
  */
@@ -65,6 +70,14 @@ export class BuildPipelineResultList {
       return pipelineReport;
     });
     return compact(compResults);
+  }
+
+  public getDataOfComponent(componentId: ComponentID): AspectData[] {
+    const tasksData = this.getMetadataFromTaskResults(componentId);
+    return Object.keys(tasksData).map((taskId) => ({
+      aspectId: taskId,
+      data: tasksData[taskId],
+    }));
   }
 
   public getArtifactsDataOfComponent(componentId: ComponentID): ArtifactObject[] | undefined {

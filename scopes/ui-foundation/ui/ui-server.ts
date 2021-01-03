@@ -21,6 +21,7 @@ export type UIServerProps = {
   uiRoot: UIRoot;
   uiRootExtension: string;
   logger: Logger;
+  publicDir: string;
 };
 
 export type StartOptions = {
@@ -37,7 +38,8 @@ export class UIServer {
     private ui: UiMain,
     private uiRoot: UIRoot,
     private uiRootExtension: string,
-    private logger: Logger
+    private logger: Logger,
+    private publicDir: string
   ) {}
 
   getName() {
@@ -72,7 +74,8 @@ export class UIServer {
     const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
-    const root = join(this.uiRoot.path, '/public');
+    const publicDir = `/${this.publicDir}`;
+    const root = join(this.uiRoot.path, publicDir);
     const server = await this.graphql.createServer({ app });
 
     await this.configureProxy(app, server);
@@ -151,6 +154,14 @@ export class UIServer {
   }
 
   static create(props: UIServerProps) {
-    return new UIServer(props.graphql, props.express, props.ui, props.uiRoot, props.uiRootExtension, props.logger);
+    return new UIServer(
+      props.graphql,
+      props.express,
+      props.ui,
+      props.uiRoot,
+      props.uiRootExtension,
+      props.logger,
+      props.publicDir
+    );
   }
 }

@@ -27,7 +27,7 @@ import {
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
-import { ExtensionDataList } from '../consumer/config';
+import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
@@ -94,13 +94,13 @@ export type ComponentsAndVersions = {
 
 export type LegacyOnTagResult = {
   id: BitId;
-  extensions: ExtensionDataList;
+  builderData: ExtensionDataEntry;
 };
 export type OnTagOpts = {
   disableDeployPipeline?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
 };
-export type OnTagFunc = (ids: BitId[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
+export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -128,7 +128,7 @@ export default class Scope {
   }
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
-  public onPostExport: Function[] = []; // enable extensions to hook after the export process
+  static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   /**
    * import components to the `Scope.
@@ -236,13 +236,16 @@ export default class Scope {
     );
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
-    // Add the new / updated objects
-    this.objects.addMany(resultObjects.newObjects);
-    // Remove old objects
-    this.objects.removeManyObjects(resultObjects.refsToRemove);
-    // Persists new / remove objects
-    const validateBeforePersist = false;
-    await this.objects.persist(validateBeforePersist);
+    if (!R.isEmpty(resultObjects.newObjects) || !R.isEmpty(resultObjects.refsToRemove)) {
+      // Add the new / updated objects
+      this.objects.addMany(resultObjects.newObjects);
+      // Remove old objects
+      this.objects.removeManyObjects(resultObjects.refsToRemove);
+      // Persists new / remove objects
+      const validateBeforePersist = false;
+      await this.objects.persist(validateBeforePersist);
+    }
+
     // Update the scope version
     this.scopeJson.set('version', BIT_VERSION);
     logger.debugAndAddBreadCrumb('scope.migrate', `updating scope version to version ${BIT_VERSION}`);

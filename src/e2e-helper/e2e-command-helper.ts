@@ -117,6 +117,9 @@ export default class CommandHelper {
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
+  sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
+  }
   getConfig(configName: string) {
     return this.runCmd(`bit config get ${configName}`);
   }
@@ -394,6 +397,12 @@ export default class CommandHelper {
   showComponentParsed(id = 'bar/foo') {
     const output = this.runCmd(`bit show ${id} --json --legacy`);
     return JSON.parse(output);
+  }
+
+  getComponentFiles(id: string): string[] {
+    const output = this.runCmd(`bit show ${id} --json`);
+    const comp = JSON.parse(output);
+    return comp.find((c) => c.title === 'files').json;
   }
 
   showComponentWithOptions(id = 'bar/foo', options: Record<string, any>) {

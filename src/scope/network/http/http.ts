@@ -25,6 +25,13 @@ export enum Verb {
   READ = 'read',
 }
 
+/**
+ * fetched from HTTP Authorization header.
+ * (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization)
+ */
+export type AuthData = { type: string; credentials: string };
+export const DEFAULT_AUTH_TYPE = 'Bearer';
+
 export class Http implements Network {
   constructor(
     private graphClient: GraphQLClient,
@@ -313,6 +320,17 @@ export class Http implements Network {
 
 function getAuthHeader(token: string) {
   return {
-    Authorization: `Bearer ${token}`,
+    Authorization: `${DEFAULT_AUTH_TYPE} ${token}`,
   };
+}
+
+export function getAuthDataFromHeader(authorizationHeader: string | undefined): AuthData | undefined {
+  if (!authorizationHeader) return undefined;
+  const authorizationSplit = authorizationHeader.split(' ');
+  if (authorizationSplit.length !== 2) {
+    throw new Error(
+      `fatal: HTTP Authorization header "${authorizationHeader}" is invalid. it should have exactly one space`
+    );
+  }
+  return { type: authorizationSplit[0], credentials: authorizationSplit[1] };
 }

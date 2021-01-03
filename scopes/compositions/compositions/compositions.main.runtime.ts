@@ -100,7 +100,7 @@ export class CompositionsMain {
   }
 
   static defaultConfig = {
-    compositionFilePattern: ['*.composition.*', '*.compositions.*'],
+    compositionFilePattern: ['**/*.composition.*', '**/*.compositions.*'],
   };
 
   static runtime = MainRuntime;

@@ -42,7 +42,7 @@ export {
   VariantPolicy,
   VariantPolicyFactory,
   SerializedVariantPolicy,
- } from './policy';
+} from './policy';
 export {
   CoreAspectLinkResult,
   LinkDetail,
@@ -52,3 +52,4 @@ export {
   NestedNMDepsLinksResult,
 } from './dependency-linker';
 export { InstallOptions } from './dependency-installer';
+export { DependencyDetector, FileContext } from './dependency-detector';

@@ -1,5 +1,13 @@
-# Isolator
-The component isolator manages networks of capsules, which are isolated component environments.
+---
+description: Isolate components for build, debugging, development and testing.
+labels: ['isolation', 'component']
+---
+
+## Isolate a component
+
+```bash
+$ bit create-capsule ui/button
+```
 
 ## Entities
 

@@ -288,9 +288,10 @@ export default async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
-    const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
     const onTagOpts = { disableDeployPipeline, throwOnError: true };
-    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) => func(ids, onTagOpts));
+    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
+      func(allComponentsToTag, onTagOpts)
+    );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
     publishedPackages.push(...getPublishedPackages(allComponentsToTag));
     addBuildStatus(consumer, allComponentsToTag, BuildStatus.Succeed);
@@ -378,15 +379,18 @@ export function updateComponentsByTagResult(components: Component[], tagResult: 
   tagResult.forEach((result) => {
     const matchingComponent = components.find((c) => c.id.isEqual(result.id));
     if (matchingComponent) {
-      matchingComponent.extensions = result.extensions;
+      const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
+      if (existingBuilder) existingBuilder.data = result.builderData.data;
+      else matchingComponent.extensions.push(result.builderData);
     }
   });
 }
 
 export function getPublishedPackages(components: Component[]): string[] {
   const publishedPackages = components.map((comp) => {
-    const pkgExt = comp.extensions.findCoreExtension(Extensions.pkg);
-    return pkgExt?.data?.publishedPackage;
+    const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
+    const pkgData = builderExt?.data?.aspectsData.find((a) => a.aspectId === Extensions.pkg);
+    return pkgData?.data?.publishedPackage;
   });
   return compact(publishedPackages);
 }
