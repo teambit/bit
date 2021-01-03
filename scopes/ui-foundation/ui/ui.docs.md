@@ -1,3 +1,5 @@
+## Server-side rendering
+
 Server side rendering (or SSR) is done in the following form:
 
 ```tsx
@@ -9,8 +11,8 @@ const html = ReactDom.renderStaticMarkup(<Html assets={assets}>{dom}</Html>);
 send(html);
 
 /** at client: */
- // or .hydrate()
 ReactDom.render(app, mountPoint);
+ // or .hydrate()
 ```
 
 We can then enrich the page with hooks:
@@ -49,55 +51,58 @@ hooks.onHydrate(ref, context);
 
 The rendering flow will ensure that the rendering Context will be unique per request, and separate between aspects.
 
-## Hiding elements before JS execution
+### Hiding elements before JS execution
 
-Certain items look badly in the static HTML, and only get decent after JS executes. Tooltips are a notable example. They take up space in the DOM and only hide once their react code runs.
+Certain items look bad in the static HTML, and only get decent after JS executes. Tooltips are a notable example. They take up space in the DOM and only hide once their react code runs.  
+For these cases, use the convenience class `--ssr-hidden`. Add this to any misbehaving elements, and it will hide them using `display: none` until reactDom.render() is complete.
 
-For this, I added a convenience class `--ssr-hidden`. Add this to any misbehaving elements, and it will hide them using `display: none` until reactDom.render() is complete.
-
-## .rehydrate vs .render()
+### .rehydrate vs .render()
 
 .rehydrate() attach a React virtual dom to a mount point, without asserting the virtual-dom matches the actual dom.  
 .render() updates the mount point to match the react virtual dom.
 
 On paper, `.rehydrate()` should be the preferred option, with better performance.  
-In practice, `.render()` is backward compatible to React 15, and will know to "hydrate" according to the `data-reactroot` attribute on the mount point, with similar performance and without revalidating the DOM.  
+In practice, `.render()` is backward compatible to React 15, and will know to "hydrate" according to the `data-reactroot` attribute on the mount point, with similar performance, and without revalidating the DOM.  
 ReactDOM will also show warnings in dev mode about mismatch between ssr dom and the client side dom.
 
-## Best practices
+### Best practices
 
-- Add a ReactContext instead of mutating `App`.
+- Use ReactContext instead of trying to mutate `App`.
 - Use existing context object.
 - Do not use other Aspects' context object.
 - Try to keep process symmetrical between server and client;
 
-## Examples
+#### Example: Server side GraphQL
 
-### Graphql:
 Graphql adds extra instructions to pre-fetch queries on the server:
 
 ```tsx
  // .registerRenderHooks() ?
 .registerRenderLifecycle({
-	init: (request) => {
-		return { client: new Client(request) };
+	serverInit: ({ browser }) => {
+		const { cookie } = browser;
+		return { client: new Client(GQL_INTERNAL, { cookie }) };
 	},
-	beforeRender: (app, { client }) => {
-		getDataFromTree(app);
+	beforeRender: ({ client }, app) => {
+		await getDataFromTree(app);
 	},
-	serialize: (app, { client }) => {
-		return { json: client.extract(); };
+	serialize: ({ client }, app) => {
+		return { json: JSON.stringify(client.extract()) };
 	},
-	deserialize: (ref, { json }) => {
-		return { client: new Client(json) };
+	deserialize: (raw) => {
+		return { state: JSON.parse(raw) };
+	},
+	browserInit: ({ state }) => {
+		return { client: new GraphqlClient(GQL_EXTERNAL, { cache: state })}
 	},
 	ReactContext: ({state, children}) =>
 		<GqlContext client={state.client}>{children}</GqlContext>
 });
 ```
 
-### Styled-components
-StyledComponents can extract css from page and adds it to the `<head/>`:
+#### Example: Server side Styled-components
+
+StyledComponents extracts css from page, and adds it to the `<head/>`:
 
 ```tsx
 .registerRenderLifecycle({

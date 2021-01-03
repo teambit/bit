@@ -1,10 +1,9 @@
 import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime, BrowserData, RenderLifecycle } from '@teambit/ui';
+import { UIRuntime /* BrowserData, RenderLifecycle */ } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
 import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
-import { getDataFromTree } from '@apollo/react-ssr';
 import { ApolloLink } from 'apollo-link';
 import { onError } from 'apollo-link-error';
 import { HttpLink, createHttpLink } from 'apollo-link-http';
@@ -15,6 +14,7 @@ import { createLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphQLServer } from './graphql-server';
 import { GraphqlAspect } from './graphql.aspect';
+import { GraphqlRenderLifecycle } from './render-lifecycle';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 
@@ -27,7 +27,7 @@ type ClientOptions = { state?: NormalizedCacheObject };
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
 
-  private _client: ApolloClient<any> | undefined;
+  private _client?: ApolloClient<any>;
 
   get client() {
     if (!this._client) {
@@ -35,6 +35,11 @@ export class GraphqlUI {
     }
 
     return this._client;
+  }
+
+  /** internal. Sets the global gql client */
+  _setClient(client: ApolloClient<any>) {
+    this._client = client;
   }
 
   async query(options: QueryOptions): Promise<ApolloQueryResult<any>> {
@@ -132,80 +137,11 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  Provider = ({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) => {
-    const client = renderCtx?.client || this.client;
+  getProvider = ({ client = this.client, children }: { client?: ApolloClient<any>; children: ReactNode }) => {
     return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
 
-  SsrProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {
-    if (!renderCtx?.client) throw new TypeError('Gql client is has not been initialized during SSR');
-    const { client } = renderCtx;
-    return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
-  }
-
-  renderHooks: RenderLifecycle<RenderContext, { state?: NormalizedCacheObject }> = {
-    serverInit: this.serverInit.bind(this),
-    onBeforeRender: this.prePopulate.bind(this),
-    serialize: this.serialize.bind(this),
-    deserialize: this.deserialize.bind(this),
-    browserInit: this.browserInit.bind(this),
-    reactContext: typeof window !== 'undefined' ? this.Provider : this.SsrProvider,
-  };
-
-  private serverInit({ browser, server }: { browser?: BrowserData; server?: { port: number } } = {}) {
-    if (!browser) return undefined;
-
-    const port = server?.port || 3000;
-    const serverUrl = `http://localhost:${port}/graphql`;
-
-    const client = this.createSsrClient({ serverUrl, cookie: browser?.cookie });
-
-    const ctx: RenderContext = { client };
-    return ctx;
-  }
-
-  private browserInit({ state }: { state?: NormalizedCacheObject } = {}) {
-    const client = this.createClient(undefined, { state });
-    this._client = client;
-
-    return { client };
-  }
-
-  /**
-   * Eagerly and recursively execute all gql queries in the app.
-   * Data will be available in gqlClient.extract()
-   */
-  private async prePopulate(ctx: RenderContext, app: ReactNode) {
-    await getDataFromTree(app);
-  }
-
-  /**
-   * stringify gql cache
-   */
-  private serialize(ctx?: RenderContext) {
-    const client = ctx?.client;
-    if (!client) return undefined;
-
-    return {
-      json: JSON.stringify(client.extract()),
-    };
-  }
-
-  /**
-   * parse raw gql cache to an object
-   */
-  private deserialize(raw?: string) {
-    if (!raw) return { state: undefined };
-    let state: NormalizedCacheObject | undefined;
-    try {
-      state = JSON.parse(raw);
-    } catch (e) {
-      // eslint-disable-next-line no-console
-      console.error('[GraphQL] failed deserializing state from DOM', e);
-    }
-
-    return { state };
-  }
+  renderHooks = new GraphqlRenderLifecycle(this);
 
   static dependencies = [];
 
