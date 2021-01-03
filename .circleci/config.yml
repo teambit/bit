@@ -556,13 +556,13 @@ jobs:
       - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
 
       - run: cd bit && bit status
-      # - run:
-      #     name: soft
-      #     command: cd bit && node scripts/soft-tag-scope-teambit.js
+      - run:
+          name: soft
+          command: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          command: cd bit && bit tag --all --ignore-newest-version
-          # command: cd bit && bit tag --persist --ignore-newest-version
+          # command: cd bit && bit tag --all --ignore-newest-version
+          command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
       - run:
           name: backup bit objects (before export)
