@@ -598,5 +598,25 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "tree/drawer": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/tree/drawer",
+        "exported": false
+    },
+    "tree/file-tree": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/tree/file-tree",
+        "exported": false
+    },
+    "tree/folder-tree-node": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/tree/folder-tree-node",
+        "exported": false
+    },
+    "tree/tree-node": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/tree/tree-node",
+        "exported": false
+    },
     "version": "14.8.9-dev.246"
 }
