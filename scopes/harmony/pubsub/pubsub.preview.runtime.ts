@@ -7,6 +7,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 
 import { PreviewRuntime } from '@teambit/preview';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 import { connectToParent } from 'penpal';
 
@@ -53,7 +54,7 @@ export class PubsubPreview {
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
-    if (typeof window !== 'undefined') {
+    if (isBrowser) {
       pubsubPreview.init();
     }
 

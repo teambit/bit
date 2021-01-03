@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime /* BrowserData, RenderLifecycle */ } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
+import { isBrowser } from '@teambit/ui.is-browser';
 import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
 import { ApolloLink } from 'apollo-link';
@@ -46,10 +47,7 @@ export class GraphqlUI {
     return this.client.query(options);
   }
 
-  createClient(
-    host: string = typeof window !== 'undefined' ? window.location.host : '/',
-    { state }: ClientOptions = {}
-  ) {
+  createClient(host: string = isBrowser ? window.location.host : '/', { state }: ClientOptions = {}) {
     const client = new ApolloClient({
       link: this.createApolloLink(host),
       cache: this.createCache({ state }),

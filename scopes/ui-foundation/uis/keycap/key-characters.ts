@@ -1,3 +1,5 @@
+import { isBrowser } from '@teambit/ui.is-browser';
+
 const macKeySymbols = {
   // modifiers
   shift: '⇧',
@@ -65,7 +67,7 @@ export function prettifyKey(key: string | any) {
   if (typeof key !== 'string') return key;
 
   // consider using getLocation() from routing
-  const isMac = typeof window === 'undefined' || macRegex.test(window.navigator.platform);
+  const isMac = !isBrowser || macRegex.test(window.navigator.platform);
   const lib = isMac ? macKeySymbols : winKeySymbols;
 
   return key in lib ? lib[key] : key;

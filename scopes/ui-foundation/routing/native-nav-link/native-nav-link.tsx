@@ -3,6 +3,7 @@ import classnames from 'classnames';
 
 import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
 import { compareUrl } from '@teambit/ui.routing.compare-url';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 export type NavLinkProps = LinkProps & {
   /** class name to apply when active */
@@ -29,7 +30,7 @@ export function NativeNavLink({
   ...rest
 }: NavLinkProps) {
   // TODO - consider using getLocation()
-  const activeHref = typeof window !== 'undefined' ? window.location.href : '/';
+  const activeHref = isBrowser ? window.location.href : '/';
 
   const isActive = useMemo(() => rest.href && compareUrl(activeHref, rest.href), [
     exact,

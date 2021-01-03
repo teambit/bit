@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { getDataFromTree } from '@apollo/react-ssr';
 
+import { isBrowser } from '@teambit/ui.is-browser';
 import type { BrowserData, RenderLifecycle } from '@teambit/ui';
 import type { NormalizedCacheObject } from 'apollo-cache-inmemory';
 import type ApolloClient from 'apollo-client';
@@ -69,7 +70,7 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
     return <this.graphqlUI.getProvider client={renderCtx?.client}>{children}</this.graphqlUI.getProvider>;
   };
 
-  reactContext = typeof window !== 'undefined' ? this.BrowserGqlProvider : ServerGqlProvider;
+  reactContext = isBrowser ? this.BrowserGqlProvider : ServerGqlProvider;
 }
 
 function ServerGqlProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {

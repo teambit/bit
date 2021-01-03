@@ -1,6 +1,7 @@
 import React, { createContext, ReactNode, useContext, ComponentType } from 'react';
 import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
 import { NativeNavLink, NavLinkProps } from '@teambit/ui.routing.native-nav-link';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 export type Location<State = any> = {
   pathname: string;
@@ -23,7 +24,7 @@ const defaultLocation = { pathname: '/', search: '', hash: '' };
 const defaultRouting: Routing = {
   Link: NativeLink,
   NavLink: NativeNavLink,
-  useLocation: () => (typeof window !== 'undefined' ? window.location : defaultLocation),
+  useLocation: () => (isBrowser ? window.location : defaultLocation),
 };
 
 const RoutingContext = createContext<Routing>(defaultRouting);

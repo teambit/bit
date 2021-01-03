@@ -4,6 +4,7 @@ import { History, UnregisterCallback, LocationListener, LocationDescriptor, Acti
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui.react-router.slot-router';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
@@ -16,7 +17,7 @@ type RenderRoutesOptions = {
 
 export class ReactRouterUI {
   private routerHistory?: History;
-  private routingMode = typeof window !== 'undefined' ? Routing.url : Routing.static;
+  private routingMode = isBrowser ? Routing.url : Routing.static;
 
   constructor(
     /**

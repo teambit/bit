@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-this-alias */
 
 import { UIRuntime } from '@teambit/ui';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 import { connectToChild } from 'penpal';
 import MutationObserver from 'mutation-observer';
@@ -77,7 +78,7 @@ export class PubsubUI {
 
   static async provider() {
     const pubsubUI = new PubsubUI();
-    if (typeof window !== 'undefined') {
+    if (isBrowser) {
       await pubsubUI.updateConnectionListWithRetry();
     }
     return pubsubUI;
