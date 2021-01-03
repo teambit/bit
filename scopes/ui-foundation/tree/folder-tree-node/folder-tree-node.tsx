@@ -4,8 +4,8 @@ import classNames from 'classnames';
 import React, { useState } from 'react';
 import AnimateHeight from 'react-animate-height';
 
-import { TreeLayer, TreeNodeProps } from '@teambit/tree.recursive-tree';
-import { indentClass, indentStyle } from '@teambit/tree.indent';
+import { TreeLayer, TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import styles from './folder-tree-node.module.scss';
 
 export function FolderTreeNode<T>({ node, depth }: TreeNodeProps<T>) {

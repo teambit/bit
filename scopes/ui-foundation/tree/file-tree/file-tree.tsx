@@ -1,12 +1,12 @@
 // import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
 // import { ComponentTreeContextProvider } from './component-tree-context';
-import { inflateToTree /* , attachPayload */ } from '@teambit/tree.inflate-paths';
-import { indentStyle } from '@teambit/tree.indent';
+import { inflateToTree /* , attachPayload */ } from '@teambit/base-ui.graph.tree.inflate-paths';
+import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 // import { PayloadType, ScopePayload } from './payload-type';
 // import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
-import { RootNode } from '@teambit/tree.root-node';
-import { TreeNodeContext } from '@teambit/tree.recursive-tree';
+import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
+import { TreeNodeContext } from '@teambit/base-ui.graph.tree.recursive-tree';
 // import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type FileTreeProps = {

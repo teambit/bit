@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { indentClass, indentStyle } from '@teambit/tree.indent';
+import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import { TreeLayer } from './tree-layer';
 import { TreeNodeProps } from './tree-types';
 

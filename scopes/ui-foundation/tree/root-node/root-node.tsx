@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import { TreeNodeProps, TreeNodeContext } from '@teambit/tree.recursive-tree';
+import { TreeNodeProps, TreeNodeContext } from '@teambit/base-ui.graph.tree.recursive-tree';
 
 export function RootNode<T>({ node, depth = 0 }: TreeNodeProps<T>) {
   const TreeNodeRenderer = useContext(TreeNodeContext);
