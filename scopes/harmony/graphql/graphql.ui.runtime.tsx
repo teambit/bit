@@ -152,17 +152,15 @@ export class GraphqlUI {
     reactContext: typeof window !== 'undefined' ? this.Provider : this.SsrProvider,
   };
 
-  private serverInit(browser?: BrowserData) {
+  private serverInit({ browser, server }: { browser?: BrowserData; server?: { port: number } } = {}) {
     if (!browser) return undefined;
 
-    // maybe we should use internal url?
-    const serverUrl = browser.location.origin ? `${browser?.location.origin}/graphql` : 'http://localhost:3000/graphql';
+    const port = server?.port || 3000;
+    const serverUrl = `http://localhost:${port}/graphql`;
 
     const client = this.createSsrClient({ serverUrl, cookie: browser?.cookie });
 
-    const ctx: RenderContext = {
-      client,
-    };
+    const ctx: RenderContext = { client };
     return ctx;
   }
 

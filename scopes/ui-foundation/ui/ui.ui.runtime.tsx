@@ -17,15 +17,17 @@ import { ClientContext } from './ui/client-context';
 import { Html, MountPoint, Assets } from './ssr/html';
 import type { SsrContent } from './ssr/ssr-content';
 import type { BrowserData } from './ssr/request-browser';
+import type { RequestServer } from './ssr/request-server';
 
 export type RenderLifecycle<RenderCtx = any, Serialized = any> = {
   /**
    * Initialize a context state for this specific rendering.
    * Context state will only be available to the current Aspect, in the other hooks, as well as a prop to the react context component.
    */
-  serverInit?: (
-    browser: BrowserData | undefined
-  ) => RenderCtx | void | undefined | Promise<RenderCtx | void | undefined>;
+  serverInit?: (state: {
+    browser?: BrowserData;
+    server?: RequestServer;
+  }) => RenderCtx | void | undefined | Promise<RenderCtx | void | undefined>;
   /**
    * Executes before running ReactDOM.renderToString(). Return value will replace the existing context state.
    */
@@ -130,7 +132,7 @@ export class UiUI {
     document.getElementById('before-hydrate-styles')?.remove();
   }
 
-  async renderSsr(rootExtension: string, { assets, browser }: SsrContent = {}) {
+  async renderSsr(rootExtension: string, { assets, browser, server }: SsrContent = {}) {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
 
@@ -142,7 +144,7 @@ export class UiUI {
     const lifecycleHooks = this.lifecycleSlot.toArray();
 
     // (1) init
-    let renderContexts = await Promise.all(lifecycleHooks.map(([, hooks]) => hooks.serverInit?.(browser)));
+    let renderContexts = await Promise.all(lifecycleHooks.map(([, hooks]) => hooks.serverInit?.({ browser, server })));
     const reactContexts = this.getReactContexts(lifecycleHooks, renderContexts);
 
     // (2) make (virtual) dom
