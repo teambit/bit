@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
 import { MenuSection } from '@teambit/ui.surfaces.menu.section';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
-import { DrawerUI } from '../drawer';
+import { DrawerUI } from '@teambit/tree.drawer';
 import styles from './side-bar.module.scss';
 
 export type SideBarProps = {
