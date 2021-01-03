@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRuntime /* BrowserData, RenderLifecycle */ } from '@teambit/ui';
+import { UIRuntime } from '@teambit/ui';
 import { ComponentID } from '@teambit/component';
 import { isBrowser } from '@teambit/ui.is-browser';
 import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
