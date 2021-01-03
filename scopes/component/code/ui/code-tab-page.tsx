@@ -20,7 +20,7 @@ export function CodePage({ className }: CodePageProps) {
   const component = useContext(ComponentContext);
   const location = useLocation();
   const { mainFile, fileTree = [], dependencies = {} } = useCode(component.id);
-  const currentFile = useMemo(() => (location.hash || mainFile)?.replace('#', '') || '', [location.hash]); // because hash returns with # and mainFile without
+  const currentFile = useMemo(() => (location.hash || mainFile)?.replace('#', '') || '', [location.hash, mainFile]); // because hash returns with # and mainFile without
   const fileContent = useFileContent(component.id, currentFile);
 
   const [isSidebarOpen, setSidebarOpenness] = useState(true);
