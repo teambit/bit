@@ -110,7 +110,8 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
           expect(componentMap).to.not.have.property('trackDir');
           expect(componentMap).to.have.property('rootDir');
           expect(componentMap.rootDir).to.equal('src');
-          expect(componentMap.files[0].relativePath).to.equal('foo.js');
+          const files = helper.command.getComponentFiles('foo@0.0.1');
+          expect(files).to.include('foo.js');
         });
       });
     });
