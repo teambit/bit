@@ -2,13 +2,14 @@ import { Drawer } from '@teambit/sidebar';
 import { FullLoader } from '@teambit/ui.full-loader';
 import {
   ComponentTree,
-  TreeNodeProps,
   PayloadType,
   ComponentView,
   ScopeTreeNode,
   NamespaceTreeNode,
   ScopePayload,
 } from '@teambit/ui.side-bar';
+
+import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 
 import React, { useCallback, useContext } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';

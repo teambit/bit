@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 // import { ComponentTreeContextProvider } from './component-tree-context';
 import { inflateToTree /* , attachPayload */ } from '@teambit/base-ui.graph.tree.inflate-paths';
+import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
 // import { PayloadType, ScopePayload } from './payload-type';
 // import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
