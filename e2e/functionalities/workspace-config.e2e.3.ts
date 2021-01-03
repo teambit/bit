@@ -453,7 +453,7 @@ describe('workspace config', function () {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}bit.utils/is-string`]: '-',
+                [`${OVERRIDE_COMPONENT_PREFIX}bit.utils.is-string`]: '-',
               },
             },
           };
