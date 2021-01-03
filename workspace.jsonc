@@ -272,7 +272,6 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": ["*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
