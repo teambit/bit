@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
@@ -261,7 +262,6 @@ export class Workspace implements ComponentFactory {
    */
   async list(filter?: { offset: number; limit: number }): Promise<Component[]> {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
-
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
   }
@@ -319,7 +319,7 @@ export class Workspace implements ComponentFactory {
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
-    if (!ids || ids.length < 1) ids = (await this.listIds())
+    if (!ids || ids.length < 1) ids = await this.listIds();
 
     const legacyIds = ids.map((id) => id._legacy);
 
@@ -452,6 +452,10 @@ export class Workspace implements ComponentFactory {
     return this.scope.getState(id, hash);
   }
 
+  getSnap(id: ComponentID, hash: string) {
+    return this.scope.getSnap(id, hash);
+  }
+
   getDefaultExtensions(): ExtensionDataList {
     if (!this.config.extensions) {
       return new ExtensionDataList();
@@ -505,6 +509,13 @@ export class Workspace implements ComponentFactory {
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     return this.componentLoader.getMany(ids, forCapsule);
+  }
+
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+    return mapSeries(components, async (component) => {
+      const id = await this.resolveComponentId(component.id);
+      return this.get(id, undefined, component);
+    });
   }
 
   /**

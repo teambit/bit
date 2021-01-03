@@ -288,16 +288,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
   async enrichSource(consumerComponent: ConsumerComponent) {
     const objectRepo = this.objects();
+    const objects = await this.getObjectsToEnrichSource(consumerComponent);
+    objects.forEach((obj) => objectRepo.add(obj));
+    return consumerComponent;
+  }
+
+  async getObjectsToEnrichSource(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
     const component = await this.findOrAddComponent(consumerComponent);
-    const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
+    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects());
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
     version.buildStatus = consumerComponent.buildStatus;
-    artifacts.forEach((file) => objectRepo.add(file.source));
-    objectRepo.add(version);
-
-    return consumerComponent;
+    const artifactObjects = artifacts.map((file) => file.source);
+    return [version, ...artifactObjects];
   }
 
   async addSource({

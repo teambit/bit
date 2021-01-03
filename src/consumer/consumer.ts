@@ -75,7 +75,6 @@ type ConsumerProps = {
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
-  bitMap: BitMap;
   addedGitHooks?: string[] | undefined;
   existingGitHooks: string[] | undefined;
 };
@@ -106,7 +105,6 @@ export default class Consumer {
     scope,
     created = false,
     isolated = false,
-    bitMap,
     addedGitHooks,
     existingGitHooks,
   }: ConsumerProps) {
@@ -115,12 +113,14 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.componentLoader = ComponentLoader.getInstance(this);
     this.componentStatusLoader = new ComponentStatusLoader(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
+  }
+  async setBitMap() {
+    this.bitMap = await BitMap.load(this);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get compiler(): Promise<CompilerExtension | undefined> {
@@ -828,17 +828,18 @@ export default class Consumer {
     let existingGitHooks;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
+
     const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
-    const bitMap = BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
-    return new Consumer({
+    const consumer = new Consumer({
       projectPath,
       created: true,
       scope,
       config,
-      bitMap,
       existingGitHooks,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   /**
@@ -847,7 +848,7 @@ export default class Consumer {
    */
   static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
-    BitMap.reset(projectPath, resetHard, resolvedScopePath);
+    BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
     const configP = WorkspaceConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, configP]);
@@ -861,7 +862,7 @@ export default class Consumer {
     // for this reason, we must use a package manager that supports one
     config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new Consumer({
+    const consumer = new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
@@ -869,6 +870,8 @@ export default class Consumer {
       // @ts-ignore @gilad, the config type is incorrect indeed
       config,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   static locateProjectScope(projectPath: string) {
@@ -894,13 +897,14 @@ export default class Consumer {
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     const scope = await Scope.load(scopePath as string);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new Consumer({
+    consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config,
       scope,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   /**

@@ -6,6 +6,7 @@ import { ComponentID } from '@teambit/component-id';
 
 import { Component } from './component';
 import { State } from './state';
+import { Snap } from './snap';
 
 export interface ComponentFactory {
   /**
@@ -40,9 +41,14 @@ export interface ComponentFactory {
   ): Promise<Component | undefined>;
 
   /**
-   * returns many components with a group of ids.
+   * returns many components by ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  /**
+   * returns many components by their legacy representation.
+   */
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
 
   getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
@@ -50,6 +56,11 @@ export interface ComponentFactory {
    * returns a specific state of a component by hash or semver.
    */
   getState(id: ComponentID, snapId: string): Promise<State>;
+
+  /**
+   * returns a specific snap of a component by hash.
+   */
+  getSnap(id: ComponentID, snapId: string): Promise<Snap>;
 
   /**
    * load extension.

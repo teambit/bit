@@ -28,7 +28,7 @@ export class ComponentGraph extends Graph<Component, Dependency> {
         const notLatestVersions = versions.allVersionNodes.filter((version) => version !== versions.latestVersionNode);
         notLatestVersions.forEach((version) => {
           const predecessors = this.predecessorsSubgraph(version);
-          const immediatePredecessors = this.predecessors(version).map(predecessor => predecessor.id);
+          const immediatePredecessors = this.predecessors(version).map((predecessor) => predecessor.id);
           const subGraph = this.buildFromCleargraph(predecessors);
           const versionSubgraph: VersionSubgraph = {
             versionId: version,
@@ -52,18 +52,18 @@ export class ComponentGraph extends Graph<Component, Dependency> {
     // this.create(graph.nodes, graph.edges)
 
     const newGraph = new ComponentGraph();
-    const newGraphNodes: Node[] = graph.nodes.map(node => {
+    const newGraphNodes: Node[] = graph.nodes.map((node) => {
       return {
         id: node.id,
         node: node.attr,
-      }
+      };
     });
-    const newGraphEdges: Edge[] = graph.edges.map(edge => {
+    const newGraphEdges: Edge[] = graph.edges.map((edge) => {
       return {
         sourceId: edge.sourceId,
         targetId: edge.targetId,
         edge: edge.attr,
-      }
+      };
     });
     newGraph.setNodes(newGraphNodes);
     newGraph.setEdges(newGraphEdges);

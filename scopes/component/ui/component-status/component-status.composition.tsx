@@ -1,35 +1,39 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { ComponentStatus } from './component-status';
 
 export const ErrorComponentStatus = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <ComponentStatus status="error" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const ModifiedComponentStatus = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <ComponentStatus status="modified" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const NewComponentStatus = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <ComponentStatus status="new" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const StagedComponentStatus = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <ComponentStatus status="staged" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
+
+const compositions = [ErrorComponentStatus, ModifiedComponentStatus, NewComponentStatus, StagedComponentStatus];
+// @ts-ignore
+compositions.map((comp) => (comp.canvas = { height: 90 }));

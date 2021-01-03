@@ -10,7 +10,7 @@ export function ClientContext({ children }: { children: ReactNode }) {
   return (
     <React.StrictMode>
       <LoaderContext.Provider value={loaderApi}>
-        <EvaIconFont query="av92bs" />
+        <EvaIconFont query="mxd7i0" />
         <Theme>
           <LoaderRibbon active={isLoading} />
           {children}
