@@ -269,7 +269,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.246",
+        "bit-bin": "14.8.9-dev.248",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -278,14 +278,15 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": ["*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -321,7 +322,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.246",
+            "bit-bin": "14.8.9-dev.248",
             "react-dom": "^16.13.1"
           }
         }
@@ -436,7 +437,9 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": ["--access public"],
+          "packageManagerPublishArgs": [
+            "--access public"
+          ],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -448,7 +451,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.246",
+            "bit-bin": "14.8.9-dev.248",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
