@@ -1,7 +1,7 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import BluebirdPromise from 'bluebird';
+import mapSeries from 'p-map-series';
 import { compact } from 'ramda-adjunct';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
@@ -29,7 +29,7 @@ export class WorkspaceComponentLoader {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
-    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, forCapsule).catch((err) => {
         if (this.isComponentNotExistsError(err)) {
