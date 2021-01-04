@@ -14,6 +14,7 @@ export function buildDependencyTree(deps?: DependencyType[]) {
       return;
     }
     dependencies.push(dep);
+    return;
   });
   return {
     dependencies,

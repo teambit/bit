@@ -1,12 +1,12 @@
-import React, { useState, useCallback, useMemo, HTMLAttributes } from 'react';
+import React, { useState, useCallback, HTMLAttributes } from 'react';
 import classNames from 'classnames';
 import { FileTree } from '@teambit/tree.file-tree';
 import { DrawerUI } from '@teambit/tree.drawer';
 import { TreeNode as Node } from '@teambit/tree.tree-node';
+import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
 // import { Label } from '@teambit/documenter.ui.label';
 import { getIcon } from '@teambit/ui.get-icon-from-file-name';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
-import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
 import { DependencyTree } from '../dependency-tree';
 
 import styles from './code-tab-tree.module.scss';
@@ -46,36 +46,24 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile = '
     [currentFile, widgets]
   );
 
-  const fileDrawer = useMemo(() => {
-    const Tree = () => <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} />;
-    return {
-      name: 'FILES',
-      render: Tree,
-    };
-  }, [fileTree, currentFile]);
-
-  const dependencyDrawer = useMemo(() => {
-    const Tree = () => <DependencyTree dependenciesArray={dependencies} />;
-    return {
-      name: 'DEPENDENCIES',
-      render: Tree,
-    };
-  }, [dependencies]);
-
   return (
     <div className={classNames(styles.codeTabTree, className)}>
       <DrawerUI
-        isOpen={openDrawerList.includes(fileDrawer.name)}
-        onToggle={() => handleDrawerToggle(fileDrawer.name)}
-        drawer={fileDrawer}
+        isOpen={openDrawerList.includes('FILES')}
+        onToggle={() => handleDrawerToggle('FILES')}
+        name="FILES"
         className={classNames(styles.codeTabDrawer)}
-      />
+      >
+        <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} />
+      </DrawerUI>
       <DrawerUI
-        isOpen={openDrawerList.includes(dependencyDrawer.name)}
-        onToggle={() => handleDrawerToggle(dependencyDrawer.name)}
-        drawer={dependencyDrawer}
+        isOpen={openDrawerList.includes('DEPENDENCIES')}
+        onToggle={() => handleDrawerToggle('DEPENDENCIES')}
         className={classNames(styles.codeTabDrawer)}
-      />
+        name="DEPENDENCIES"
+      >
+        <DependencyTree dependenciesArray={dependencies} />
+      </DrawerUI>
     </div>
   );
 }

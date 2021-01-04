@@ -40,8 +40,10 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
             isOpen={openDrawerList.includes(id)}
             onToggle={() => handleDrawerToggle(id)}
             key={id}
-            drawer={drawer}
-          />
+            name={drawer.name}
+          >
+            <drawer.render />
+          </DrawerUI>
         );
       })}
     </div>

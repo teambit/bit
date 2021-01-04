@@ -9,7 +9,7 @@ type FileTreeProps = {
   onSelect?: (id: string, event?: React.MouseEvent) => void;
   selected?: string;
   files: string[];
-  TreeNode?: any; //TreeNodeRenderer<PayloadType>; - what do we want here?
+  TreeNode: TreeNodeRenderer<any>; // - is this ok?
 };
 
 export function FileTree({ files, onSelect, selected, TreeNode }: FileTreeProps) {

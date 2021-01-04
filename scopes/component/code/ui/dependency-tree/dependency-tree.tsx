@@ -16,21 +16,26 @@ export function DependencyTree({ dependenciesArray }: { dependenciesArray?: Depe
       <DrawerUI
         isOpen={isDependenciesOpen}
         onToggle={() => toggleDependencies(!isDependenciesOpen)}
-        drawer={{ name: 'dependencies', render: () => DependencyList(dependencies) }}
+        name="dependencies"
         className={styles.dependencyDrawer}
-      />
+      >
+        <DependencyList deps={dependencies} />
+      </DrawerUI>
       <DrawerUI
         isOpen={isDevDependenciesOpen}
         onToggle={() => toggleDevDependencies(!isDevDependenciesOpen)}
-        drawer={{ name: 'devDependencies', render: () => DependencyList(devDependencies) }}
+        // drawer={{ name: 'devDependencies', render: () => DependencyList(devDependencies) }}
+        name="devDependencies"
         className={styles.dependencyDrawer}
-      />
+      >
+        <DependencyList deps={devDependencies} />
+      </DrawerUI>
     </div>
   );
 }
 
 // TODO - add type. currently causes issues
-function DependencyList(deps) {
+function DependencyList({ deps }: { deps: any }) {
   if (!deps) return null;
   return deps.map((dep: DependencyType) => {
     const dependency = getDependencyLink(dep);
