@@ -10,6 +10,7 @@ import { onError } from 'apollo-link-error';
 import { HttpLink, createHttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import crossFetch from 'cross-fetch';
+import objectHash from 'object-hash';
 
 import { createLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
@@ -157,15 +158,24 @@ GraphqlAspect.addRuntime(GraphqlUI);
 function getIdFromObject(o: IdGetterObj) {
   switch (o.__typename) {
     case 'Component':
-      return ComponentID.fromObject(o.id).toString();
+      return `${o.__typename}_${ComponentID.fromObject(o.id).toString()}`;
     case 'ComponentHost':
       return 'ComponentHost';
     case 'ComponentID':
-      return `id__${ComponentID.fromObject(o).toString()}`;
-    case 'ReactDocs':
-      return null;
+      return `${o.__typename}_${ComponentID.fromObject(o).toString()}`;
     default:
       // @ts-ignore
-      return o.__id || o.id || null;
+      if (typeof o.__id === 'string') return o.__id;
+
+      if (typeof o.id === 'string') return `${o.__typename}_${o.id}`;
+      if (typeof o.id === 'object') {
+        try {
+          // fallback until we will get dedicated string ids:
+          return `${o.__typename}_${objectHash(o.id)}`;
+        } catch {
+          return null;
+        }
+      }
+      return null;
   }
 }
