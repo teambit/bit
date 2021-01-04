@@ -1,4 +1,4 @@
-module.exports = function html(title, withDevTools) {
+export default function html(title: string, withDevTools?: boolean) {
   return () => `
   <!DOCTYPE html>
   <html lang="en">

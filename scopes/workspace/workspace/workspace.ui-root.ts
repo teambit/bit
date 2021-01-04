@@ -38,6 +38,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.getServers();
   }
 
+  buildOptions = {
+    ssr: false,
+  };
+
   async resolveAspects(runtimeName: string) {
     return this.workspace.resolveAspects(runtimeName);
   }
