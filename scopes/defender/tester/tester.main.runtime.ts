@@ -139,7 +139,7 @@ export class TesterMain {
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
     const isModified = await component.isModified();
     if ((entry || data) && !isModified) {
-      return { testsResults: entry?.data.tests || data?.tests, loading: false };
+      return { testsResults: data?.tests || entry?.data.tests, loading: false };
     }
     return this.getTestsResultsFromState(component);
   }
