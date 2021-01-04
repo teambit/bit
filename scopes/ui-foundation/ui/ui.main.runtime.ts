@@ -311,7 +311,7 @@ export class UiMain {
   }
 
   private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
-    const hash = this.buildIfChanged(name, uiRoot, rebuild);
+    const hash = await this.buildIfChanged(name, uiRoot, rebuild);
     await this.buildIfNoBundle(name, uiRoot);
     return hash;
   }
