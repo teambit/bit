@@ -15,15 +15,18 @@ export function StatusTooltip({ status, name, issuesCount }: any) {
   const { isNew, isStaged, modifyInfo = {} } = status;
   const { hasModifiedDependencies, hasModifiedFiles } = modifyInfo;
   if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles) return null;
+
   return (
-    <ReactTooltip place="right" id={name} effect="solid">
-      <ul className={styles.list}>
-        {isNew && <li>New component</li>}
-        {isStaged && <li>Staged component</li>}
-        {hasModifiedFiles && <li>Modified files</li>}
-        {hasModifiedDependencies && <li>Modified dependencies</li>}
-        {issuesCount > 0 && <li>{`${issuesCount} issue${issuesCount > 1 ? `s` : ''} found`}</li>}
-      </ul>
-    </ReactTooltip>
+    <div className="--ssr-hidden">
+      <ReactTooltip place="right" id={name} effect="solid">
+        <ul className={styles.list}>
+          {isNew && <li>New component</li>}
+          {isStaged && <li>Staged component</li>}
+          {hasModifiedFiles && <li>Modified files</li>}
+          {hasModifiedDependencies && <li>Modified dependencies</li>}
+          {issuesCount > 0 && <li>{`${issuesCount} issue${issuesCount > 1 ? `s` : ''} found`}</li>}
+        </ul>
+      </ReactTooltip>
+    </div>
   );
 }

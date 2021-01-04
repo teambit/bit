@@ -44,12 +44,14 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       <div className={styles.left}>
         <EnvIcon component={component} className={styles.envIcon} data-tip="" data-for={componentId} />
         <span>{getName(node.id)}</span>
-        <ReactTooltip place="bottom" id={componentId} effect="solid">
-          <div className={styles.componentEnvTooltip}>
-            <div className={styles.componentEnvTitle}>Environment</div>
-            <div className={styles.componentEnv}>{component.environment?.id}</div>
-          </div>
-        </ReactTooltip>
+        <div className="--ssr-hidden">
+          <ReactTooltip place="bottom" id={componentId} effect="solid">
+            <div className={styles.componentEnvTooltip}>
+              <div className={styles.componentEnvTitle}>Environment</div>
+              <div className={styles.componentEnv}>{component.environment?.id}</div>
+            </div>
+          </ReactTooltip>
+        </div>
       </div>
 
       <div className={styles.right}>

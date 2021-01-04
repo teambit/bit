@@ -27,6 +27,10 @@ export interface UIRoot extends ComponentDir {
    */
   devServers: Promise<ComponentServer[]>;
 
+  buildOptions?: {
+    ssr?: boolean;
+  };
+
   /**
    * resolve all aspects in the UI root.
    */

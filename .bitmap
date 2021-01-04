@@ -631,6 +631,10 @@
     "ui/queries/get-file-content": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-file-content",
+    },
+    "ui/is-browser": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/is-browser",
         "exported": false
     },
     "version": "14.8.9-dev.248"

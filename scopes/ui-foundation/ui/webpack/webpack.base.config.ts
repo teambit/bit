@@ -1,16 +1,10 @@
-const webpack = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const safePostCssParser = require('postcss-safe-parser');
-const ManifestPlugin = require('webpack-manifest-plugin');
-const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
-const getCSSModuleLocalIdent = require('react-dev-utils/getCSSModuleLocalIdent');
-const path = require('path');
-const postcssNormalize = require('postcss-normalize');
-const { EnvironmentPlugin } = require('webpack');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const html = require('./html');
+import webpack, { EnvironmentPlugin, Configuration } from 'webpack';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
+import ManifestPlugin from 'webpack-manifest-plugin';
+import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
+import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
+import path from 'path';
+import postcssNormalize from 'postcss-normalize';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -42,9 +36,12 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-module.exports = function (workspaceDir, entryFiles, title, publicDir) {
+export default function createWebpackConfig(
+  workspaceDir: string,
+  entryFiles: string[],
+  publicDir = 'public'
+): Configuration {
   const isEnvProduction = true;
-  const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
@@ -57,7 +54,7 @@ module.exports = function (workspaceDir, entryFiles, title, publicDir) {
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
   // common function to get style loaders
-  const getStyleLoaders = (cssOptions, preProcessor) => {
+  const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
     const loaders = [
       {
         loader: MiniCssExtractPlugin.loader,
@@ -116,102 +113,22 @@ module.exports = function (workspaceDir, entryFiles, title, publicDir) {
   return {
     entry: {
       main: entryFiles,
-      // preview: entryFiles.map(filePath => resolveWorkspacePath(filePath))
     },
 
     output: {
       // The build folder.
-      path: resolveWorkspacePath(publicDir),
+      path: path.join(workspaceDir, publicDir), // default value
 
       filename: 'static/js/[name].[contenthash:8].js',
       // TODO: remove this when upgrading to webpack 5
       futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
-      // webpack uses `publicPath` to determine where the app is being served from.
-      // It requires a trailing slash, or the file assets will get an incorrect path.
-      // We inferred the "public path" (such as / or /my-project) from homepage.
-      publicPath: '/',
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
       globalObject: 'this',
     },
 
-    optimization: {
-      minimize: true,
-      minimizer: [
-        // This is only used in production mode
-        new TerserPlugin({
-          terserOptions: {
-            parse: {
-              // We want terser to parse ecma 8 code. However, we don't want it
-              // to apply any minification steps that turns valid ecma 5 code
-              // into invalid ecma 5 code. This is why the 'compress' and 'output'
-              // sections only apply transformations that are ecma 5 safe
-              // https://github.com/facebook/create-react-app/pull/4234
-              ecma: 8,
-            },
-            compress: {
-              ecma: 5,
-              warnings: false,
-              // Disabled because of an issue with Uglify breaking seemingly valid code:
-              // https://github.com/facebook/create-react-app/issues/2376
-              // Pending further investigation:
-              // https://github.com/mishoo/UglifyJS2/issues/2011
-              comparisons: false,
-              // Disabled because of an issue with Terser breaking valid code:
-              // https://github.com/facebook/create-react-app/issues/5250
-              // Pending further investigation:
-              // https://github.com/terser-js/terser/issues/120
-              inline: 2,
-            },
-            mangle: {
-              safari10: true,
-            },
-            output: {
-              ecma: 5,
-              comments: false,
-              // Turned on because emoji and regex is not minified properly using default
-              // https://github.com/facebook/create-react-app/issues/2488
-              ascii_only: true,
-            },
-          },
-          sourceMap: shouldUseSourceMap,
-        }),
-        // This is only used in production mode
-        new OptimizeCSSAssetsPlugin({
-          cssProcessorOptions: {
-            parser: safePostCssParser,
-            map: shouldUseSourceMap
-              ? {
-                  // `inline: false` forces the sourcemap to be output into a
-                  // separate file
-                  inline: false,
-                  // `annotation: true` appends the sourceMappingURL to the end of
-                  // the css file, helping the browser find the sourcemap
-                  annotation: true,
-                }
-              : false,
-          },
-          cssProcessorPluginOptions: {
-            preset: ['default', { minifyFontValues: { removeQuotes: false } }],
-          },
-        }),
-      ],
-      // Automatically split vendor and commons
-      // https://twitter.com/wSokra/status/969633336732905474
-      // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
-      splitChunks: {
-        chunks: 'all',
-        name: false,
-      },
-      // Keep the runtime chunk separated to enable long term caching
-      // https://twitter.com/wSokra/status/969679223278505985
-      // https://github.com/facebook/create-react-app/issues/5358
-      runtimeChunk: {
-        name: (entrypoint) => `runtime-${entrypoint.name}`,
-      },
-    },
     resolve: {
       // These are the reasonable defaults supported by the Node ecosystem.
       // We also include JSX as a common component filename extension to support
@@ -226,6 +143,7 @@ module.exports = function (workspaceDir, entryFiles, title, publicDir) {
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
         react: require.resolve('react'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         'react-native': require.resolve('react-native-web'),
         // Allows for better profiling with ReactDevTools
@@ -426,30 +344,6 @@ module.exports = function (workspaceDir, entryFiles, title, publicDir) {
       ],
     },
     plugins: [
-      new HtmlWebpackPlugin(
-        Object.assign(
-          {},
-          {
-            inject: true,
-            templateContent: html(title),
-          },
-          {
-            minify: {
-              removeComments: true,
-              collapseWhitespace: true,
-              removeRedundantAttributes: true,
-              useShortDoctype: true,
-              removeEmptyAttributes: true,
-              removeStyleLinkTypeAttributes: true,
-              keepClosingSlash: true,
-              minifyJS: true,
-              minifyCSS: true,
-              minifyURLs: true,
-            },
-          }
-        )
-      ),
-
       new EnvironmentPlugin(['NODE_ENV', 'production']),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
@@ -464,7 +358,6 @@ module.exports = function (workspaceDir, entryFiles, title, publicDir) {
       //   can be used to reconstruct the HTML if necessary
       new ManifestPlugin({
         fileName: 'asset-manifest.json',
-        publicPath: publicDir,
         generate: (seed, files, entrypoints) => {
           const manifestFiles = files.reduce((manifest, file) => {
             manifest[file.name] = file.path;
@@ -519,4 +412,4 @@ module.exports = function (workspaceDir, entryFiles, title, publicDir) {
     // our own hints via the FileSizeReporter
     performance: false,
   };
-};
+}
