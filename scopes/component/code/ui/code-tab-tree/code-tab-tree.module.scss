@@ -14,7 +14,7 @@
   }
   > div:last-child {
     border-color: #fafafa;
-    border-bottom: 1px solid #ededed;
+    border-bottom: 1px solid var(--border-color);
     border-radius: 0;
   }
 }

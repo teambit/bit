@@ -1,0 +1,26 @@
+.codeView {
+  padding: 24px 40px;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  .codeSnippetWrapper {
+    width: 100%;
+    max-width: 100%;
+    .codeSnippet {
+      display: block;
+      overflow: auto;
+      height: calc(100vh - 200px);
+    }
+  }
+}
+
+.img {
+  width: 20px;
+  margin-right: 10px;
+}
+
+.fileName {
+  display: flex;
+  align-items: center;
+}

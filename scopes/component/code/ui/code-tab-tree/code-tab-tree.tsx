@@ -1,24 +1,24 @@
 import React, { useState, useCallback, useMemo, HTMLAttributes } from 'react';
 import classNames from 'classnames';
-import { getIconForFile } from 'vscode-icons-js';
 import { FileTree } from '@teambit/tree.file-tree';
 import { DrawerUI } from '@teambit/tree.drawer';
 import { TreeNode as Node } from '@teambit/tree.tree-node';
-// import { LabelList } from '@teambit/documenter.ui.label-list';
-
+// import { Label } from '@teambit/documenter.ui.label';
+import { getIcon } from '@teambit/ui.get-icon-from-file-name';
+import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
-import { DependencyTree, Dependencies } from '../dependency-tree';
+import { DependencyTree } from '../dependency-tree';
 
 import styles from './code-tab-tree.module.scss';
 
 export type CodeTabTreeProps = {
   fileTree: any[];
-  dependencies?: Dependencies;
-  currentFile: string;
+  dependencies?: DependencyType[];
+  currentFile?: string;
   devFiles?: string[];
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeTabTree({ className, fileTree, dependencies, currentFile, devFiles }: CodeTabTreeProps) {
+export function CodeTabTree({ className, fileTree, dependencies, currentFile = '', devFiles }: CodeTabTreeProps) {
   const [openDrawerList, onToggleDrawer] = useState(['FILES', 'DEPENDENCIES']);
 
   const handleDrawerToggle = (id: string) => {
@@ -36,11 +36,11 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile, de
   const TreeNodeRenderer = useCallback(
     function TreeNode(props: any) {
       const children = props.node.children;
-      if (!children)
+      if (!children) {
         return (
           <Node {...props} isActive={props.node.id === currentFile} icon={getIcon(props.node.id)} widgets={widgets} />
         );
-
+      }
       return <FolderTreeNode {...props} />;
     },
     [currentFile, widgets]
@@ -55,7 +55,7 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile, de
   }, [fileTree, currentFile]);
 
   const dependencyDrawer = useMemo(() => {
-    const Tree = () => <DependencyTree dependencies={dependencies} />;
+    const Tree = () => <DependencyTree dependenciesArray={dependencies} />;
     return {
       name: 'DEPENDENCIES',
       render: Tree,
@@ -78,11 +78,4 @@ export function CodeTabTree({ className, fileTree, dependencies, currentFile, de
       />
     </div>
   );
-}
-
-function getIcon(fileName?: string) {
-  if (!fileName) return '';
-  const iconName = getIconForFile(fileName);
-  const storageLink = 'https://static.bit.dev/file-icons/';
-  return `${storageLink}${iconName}`;
 }

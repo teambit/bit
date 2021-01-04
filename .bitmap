@@ -618,5 +618,20 @@
         "rootDir": "scopes/ui-foundation/tree/tree-node",
         "exported": false
     },
+    "ui/get-icon-from-file-name": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/get-icon-from-file-name",
+        "exported": false
+    },
+    "ui/queries/get-component-code": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/queries/get-component-code",
+        "exported": false
+    },
+    "ui/queries/get-file-content": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/queries/get-file-content",
+        "exported": false
+    },
     "version": "14.8.9-dev.248"
 }
