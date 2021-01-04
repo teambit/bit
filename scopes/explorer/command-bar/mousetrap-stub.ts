@@ -17,4 +17,4 @@ export class MousetrapStub implements MousetrapInstance {
   reset() {
     return this;
   }
-};
+}

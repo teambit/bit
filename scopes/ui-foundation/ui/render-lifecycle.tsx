@@ -3,7 +3,6 @@ import { BrowserData } from './ssr/request-browser';
 import { RequestServer } from './ssr/request-server';
 import { ContextProps } from './ui.ui.runtime';
 
-
 export type RenderLifecycle<RenderCtx = any, Serialized = any> = {
   /**
    * Initialize a context state for this specific rendering.
@@ -26,7 +25,7 @@ export type RenderLifecycle<RenderCtx = any, Serialized = any> = {
    * json: will be rendered to the dom as a `<script type="json"/>`.
    * More assets will be available in the future.
    */
-  serialize?: (ctx: RenderCtx, app: ReactNode) => { json: string; } | Promise<{ json: string; }> | undefined;
+  serialize?: (ctx: RenderCtx, app: ReactNode) => { json: string } | Promise<{ json: string }> | undefined;
   /**
    * Converts serialized data from raw string back to structured data.
    * @example deserialize: (data) => { const parsed = JSON.parse(data); return { analytics: new AnalyticsService(parsed); } }
