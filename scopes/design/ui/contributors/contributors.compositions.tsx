@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { AccountTypes } from '@teambit/ui.avatar';
 
 import { Contributors } from './index';
@@ -22,13 +23,25 @@ const mockContributors = [
 ];
 
 export const SingleContributorExample = () => {
-  return <Contributors contributors={[mockContributors[0]]} timestamp={Date().toString()} />;
+  return (
+    <ThemeCompositions>
+      <Contributors contributors={[mockContributors[0]]} timestamp={Date().toString()} />
+    </ThemeCompositions>
+  );
 };
 
 export const DoubleContributorExample = () => {
-  return <Contributors contributors={[mockContributors[0], mockContributors[1]]} timestamp={Date().toString()} />;
+  return (
+    <ThemeCompositions>
+      <Contributors contributors={[mockContributors[0], mockContributors[1]]} timestamp={Date().toString()} />
+    </ThemeCompositions>
+  );
 };
 
 export const TripleContributorExample = () => {
-  return <Contributors contributors={mockContributors} timestamp={Date().toString()} />;
+  return (
+    <ThemeCompositions>
+      <Contributors contributors={mockContributors} timestamp={Date().toString()} />
+    </ThemeCompositions>
+  );
 };
