@@ -51,11 +51,11 @@ function getDependencyLink(dep: DependencyType) {
   if (dep.packageName) {
     return {
       name: dep.packageName,
-      link: `${linkPrefix}${dep.id.replace('.', '/').split('@')[0]}?version=${dep.version}`,
+      link: `${linkPrefix}${dep.id.replace('.', '/').split('@')[0]}?version=${version}`,
     };
   }
   return {
     name: dep.id,
-    link: `${linkPrefix}${dep.id}/v/${dep.version.replace('^', '')}`,
+    link: `${linkPrefix}${dep.id}/v/${version}`,
   };
 }
