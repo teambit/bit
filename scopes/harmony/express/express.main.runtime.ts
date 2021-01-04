@@ -12,6 +12,7 @@ import { MiddlewareManifest } from './middleware-manifest';
 export type ExpressConfig = {
   port: number;
   namespace: string;
+  loggerIgnorePath: string[];
 };
 
 export type MiddlewareSlot = SlotRegistry<MiddlewareManifest[]>;
@@ -83,6 +84,7 @@ export class ExpressMain {
     const allRoutes = concat(routes, internalRoutes);
     const app = expressApp || express();
     app.use((req, res, next) => {
+      if (this.config.loggerIgnorePath.includes(req.url)) return next();
       this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
       next();
     });
@@ -138,6 +140,7 @@ export class ExpressMain {
   static defaultConfig = {
     port: 4001,
     namespace: 'api',
+    loggerIgnorePath: ['/api/_health'],
   };
 
   static async provider(
