@@ -65,7 +65,19 @@ export const DEFAULT_INDEX_NAME = 'index';
 
 export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass'];
 
-export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
+export const SUPPORTED_EXTENSIONS = [
+  '.js',
+  '.ts',
+  '.jsx',
+  '.tsx',
+  '.css',
+  '.scss',
+  '.less',
+  '.sass',
+  '.vue',
+  '.styl',
+  '.coffee',
+];
 
 export const NO_PLUGIN_TYPE = 'none';
 

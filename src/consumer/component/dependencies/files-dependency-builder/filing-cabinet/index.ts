@@ -3,6 +3,8 @@
 /**
  * this file had been forked from https://github.com/dependents/node-filing-cabinet
  */
+import CoffeeScript from 'coffeescript';
+import fs from 'fs';
 import appModulePath from 'app-module-path';
 import webpackResolve from 'enhanced-resolve';
 import isRelative from 'is-relative-path';
@@ -26,6 +28,7 @@ const debug = require('debug')('cabinet');
 const defaultLookups = {
   '.js': jsLookup,
   '.jsx': jsLookup,
+  '.coffee': jsLookup,
   '.ts': tsLookup,
   '.tsx': tsLookup,
   '.scss': cssPreprocessorLookup,
@@ -59,10 +62,36 @@ type Options = {
   wasCustomResolveUsed?: boolean;
 };
 
+function getDependencyPath(dep, filename, directory) {
+  if (isRelative(dep)) {
+    return path.resolve(path.dirname(filename), dep);
+  }
+
+  return path.resolve(directory, dep);
+}
+
+function getExtension(options: Record<string, any> = {}) {
+  const { dependency, filename, directory } = options;
+  if (!dependency) {
+    throw new Error('dependency path not given');
+  }
+  if (!filename) {
+    throw new Error('filename not given');
+  }
+  if (!directory) {
+    throw new Error('directory not given');
+  }
+
+  const filepath = getDependencyPath(dependency, filename, directory);
+  const rightExtension = ['.js', '.coffee'].find((ext) => fs.existsSync(`${filepath}${ext}`));
+
+  return rightExtension || path.extname(filename);
+}
+
 export default function cabinet(options: Options) {
   const detectorHook = new DetectorHook();
   const { dependency, filename } = options;
-  const ext = options.ext || path.extname(filename);
+  const ext = options.ext || getExtension(options);
   debug(`working on a dependency "${dependency}" of a file "${filename}"`);
 
   let resolver = defaultLookups[ext];
@@ -125,6 +154,15 @@ module.exports.register = function (extension, lookupStrategy) {
   }
 };
 
+function coffeeToJs(src) {
+  const coffeeStr = CoffeeScript.compile(src);
+  const splitted = coffeeStr.split('\n');
+  splitted.pop();
+  splitted.pop();
+  splitted.shift();
+  return splitted.join('\n');
+}
+
 /**
  * Exposed for testing
  *
@@ -145,6 +183,12 @@ function _getJSType(options) {
 
   if (options.webpackConfig) {
     return 'webpack';
+  }
+
+  const ext = path.extname(options.filename);
+  if (ext === '.coffee') {
+    const fileSource = fs.readFileSync(options.filename, 'utf8');
+    options.ast = coffeeToJs(fileSource);
   }
 
   const ast = options.ast || options.content;

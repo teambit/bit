@@ -16,6 +16,7 @@ import detectiveSass from '../detectives/detective-sass';
 import detectiveScss from '../detectives/detective-scss';
 import detectiveTypeScript from '../detectives/detective-typescript';
 import detectiveVue from '../detectives/detective-vue';
+import detectiveCoffeeScript from '../detectives/detective-coffee';
 import { DetectorHook } from '../detector-hook';
 
 const debug = require('debug')('precinct');
@@ -110,6 +111,9 @@ function precinct(content, options) {
     case 'vue':
       theDetective = detectiveVue;
       break;
+    case 'coffeescript':
+      theDetective = detectiveCoffeeScript;
+      break;
     default:
       detector = detectorHook.getDetector(type);
       if (detector) theDetective = detector.detect.bind(detector);
@@ -177,6 +181,8 @@ precinct.paperwork = function (filename, options) {
         return 'ts';
       case '.jsx':
         return 'es6';
+      case '.coffee':
+        return 'coffeescript';
       default:
         if (detectorHook.isSupported(ext)) {
           return ext;

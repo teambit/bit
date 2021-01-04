@@ -248,6 +248,7 @@
     "chai-arrays": "^1.0.0",
     "chai-fs": "^1.0.0",
     "chai-string": "^1.4.0",
+    "coffeescript": "^2.5.1",
     "eslint": "^7.11.0",
     "eslint-config-prettier": "^6.10.0",
     "eslint-plugin-import": "^2.20.1",
