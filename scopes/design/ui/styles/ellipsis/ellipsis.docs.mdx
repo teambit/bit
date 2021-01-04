@@ -3,16 +3,17 @@ labels: ['react', 'typescript', 'ellipsis', 'text']
 description: 'An ellipsis-enabled div element'
 ---
 
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Ellipsis } from './index';
 
 ### Overview
 
-An Ellipsis div, which dislays cut off text with an ellipsis (...) if it doesnt fit into the element's width
-
+An Ellipsis div, which displays cut off text with an ellipsis (...) if it doesn't fit into the element's width.
 
 long string with ellipsis displayed:
+
 ```js live
-  <ThemeCompositions style={{ minHeight: 90 }}>
-    <Ellipsis style={{ width: 100 }}>Looooooooooooooong string</Ellipsis>
-  </ThemeCompositions>
+<ThemeCompositions style={{ minHeight: 90 }}>
+  <Ellipsis style={{ width: 100 }}>Looooooooooooooong string</Ellipsis>
+</ThemeCompositions>
 ```

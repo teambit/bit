@@ -45,3 +45,7 @@ export const TripleContributorExample = () => {
     </ThemeCompositions>
   );
 };
+
+const compositions = [SingleContributorExample, DoubleContributorExample, TripleContributorExample];
+// @ts-ignore
+compositions.map((comp) => (comp.canvas = { height: 90 }));

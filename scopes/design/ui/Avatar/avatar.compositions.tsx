@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { DefaultAvatar, OrgAvatar, UserAvatar } from './index';
 
 const accounts = {
@@ -9,14 +10,49 @@ const accounts = {
   noPicUserAccount: { name: 'defaultAccount', type: 'user' },
 };
 
-export const DefaultAvatarExample = () => <DefaultAvatar size={32} account={accounts.defAccount} />;
+export const DefaultAvatarExample = () => (
+  <ThemeCompositions>
+    <DefaultAvatar size={32} account={accounts.defAccount} />
+  </ThemeCompositions>
+);
 
-export const OrganizationAvatarExample = () => <OrgAvatar size={32} account={accounts.orgAccount} />;
+export const OrganizationAvatarExample = () => (
+  <ThemeCompositions>
+    <OrgAvatar size={32} account={accounts.orgAccount} />
+  </ThemeCompositions>
+);
 
-export const UserAvatarExample = () => <UserAvatar size={32} account={accounts.userAccount} />;
+export const UserAvatarExample = () => (
+  <ThemeCompositions>
+    <UserAvatar size={32} account={accounts.userAccount} />
+  </ThemeCompositions>
+);
 
-export const LargeAvatarExample = () => <OrgAvatar size={100} account={accounts.orgAccount} />;
+export const LargeAvatarExample = () => (
+  <ThemeCompositions>
+    <OrgAvatar size={100} account={accounts.orgAccount} />
+  </ThemeCompositions>
+);
 
-export const NoSetIconOrgAvatar = () => <OrgAvatar size={32} account={accounts.noPicOrgAccount} />;
+export const NoSetIconOrgAvatar = () => (
+  <ThemeCompositions>
+    <OrgAvatar size={32} account={accounts.noPicOrgAccount} />
+  </ThemeCompositions>
+);
 
-export const NoSetIconUserAvatar = () => <UserAvatar size={32} account={accounts.noPicUserAccount} />;
+export const NoSetIconUserAvatar = () => (
+  <ThemeCompositions>
+    <UserAvatar size={32} account={accounts.noPicUserAccount} />
+  </ThemeCompositions>
+);
+
+const compositions = [
+  DefaultAvatarExample,
+  OrganizationAvatarExample,
+  UserAvatarExample,
+  LargeAvatarExample,
+  NoSetIconOrgAvatar,
+  NoSetIconUserAvatar,
+];
+// @ts-ignore
+compositions.map((comp) => (comp.canvas = { height: 120 }));
