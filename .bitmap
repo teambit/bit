@@ -631,6 +631,7 @@
     "ui/queries/get-file-content": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-file-content",
+        "exported": false
     },
     "ui/is-browser": {
         "mainFile": "index.ts",
