@@ -26,7 +26,8 @@ import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
-import createWebpackConfig from './webpack/webpack.config';
+import createWebpackConfig from './webpack/webpack.browser.config';
+import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -145,12 +146,13 @@ export class UiMain {
   async build(uiRootName?: string) {
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = createWebpackConfig(
-      uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name,
-      this.publicDir
-    );
+    const ssr = uiRoot.buildOptions?.ssr || false;
+    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
+
+    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, this.publicDir);
+    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], this.publicDir);
+
+    const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
 
     const compiler = webpack(config);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -306,7 +308,7 @@ export class UiMain {
     this.clearConsole();
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
-    if (res.hasErrors()) res.compilation.errors.forEach((err) => console.error(err));
+    if (res.hasErrors()) res.stats.forEach((stats) => stats.compilation.errors.forEach((err) => console.error(err)));
     await this.cache.set(uiRoot.path, hash);
   }
 
@@ -321,7 +323,7 @@ export class UiMain {
       uiRoot.name,
       this.publicDir
     );
-    if (fs.pathExistsSync(config.output.path)) return;
+    if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);

@@ -44,9 +44,11 @@ export function Collapser({
           <Icon of={icon} />
         </div>
       </div>
-      <ReactTooltip place="top" id={id} effect="solid">
-        {tooltipContent}
-      </ReactTooltip>
+      <div className="--ssr-hidden">
+        <ReactTooltip place="top" id={id} effect="solid">
+          {tooltipContent}
+        </ReactTooltip>
+      </div>
     </div>
   );
 }

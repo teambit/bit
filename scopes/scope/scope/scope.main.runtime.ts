@@ -244,7 +244,6 @@ export class ScopeMain implements ComponentFactory {
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
-
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
