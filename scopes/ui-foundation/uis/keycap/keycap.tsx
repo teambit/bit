@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import styles from './key.module.scss';
-import { keySymbols } from './key-characters';
+import { prettifyKey } from './key-characters';
 
 export type KeySequenceProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
 export type KeyComboProps = { children?: string } & React.HTMLAttributes<HTMLDivElement>;
@@ -47,7 +47,7 @@ export function KeyCombo({ children, className, ...rest }: KeyComboProps) {
 
 /** renders children as a physical key */
 export function Keycap({ className, children, ...rest }: KeycapProps) {
-  const prettyKey = children in keySymbols ? keySymbols[children] : children;
+  const prettyKey = prettifyKey(children);
 
   return (
     <kbd {...rest} className={classnames(className, styles.keycap)}>
