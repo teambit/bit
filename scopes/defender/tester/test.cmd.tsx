@@ -52,12 +52,12 @@ export class TestCmd implements Command {
         env: env as string | undefined,
       });
     } else {
-      const results = await this.tester.test(components, {
+      const tests = await this.tester.test(components, {
         watch: Boolean(watch),
         debug: Boolean(debug),
         env: env as string | undefined,
       });
-      if (results.errors?.length) code = 1;
+      tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
     }
     const { seconds } = timer.stop();
 

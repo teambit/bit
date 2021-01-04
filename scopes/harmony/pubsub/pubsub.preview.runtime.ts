@@ -29,7 +29,6 @@ export class PubsubPreview {
 
   public init = () => {
     window.addEventListener('load', () => {
-
       // Making sure parent call connect-to-child before the child call connect-to-parent
       // (not sure if its needed anymore)
       setTimeout(() => {

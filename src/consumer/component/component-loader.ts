@@ -1,4 +1,3 @@
-import BluebirdPromise from 'bluebird';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 
@@ -188,7 +187,7 @@ export default class ComponentLoader {
     };
 
     const runOnComponentLoadEvent = async () => {
-      return BluebirdPromise.mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
+      return mapSeries(ComponentLoader.onComponentLoadSubscribers, async (subscriber) => {
         component = await subscriber(component);
       });
     };

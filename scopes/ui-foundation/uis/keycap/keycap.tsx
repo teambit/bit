@@ -47,7 +47,7 @@ export function KeyCombo({ children, className, ...rest }: KeyComboProps) {
 
 /** renders children as a physical key */
 export function Keycap({ className, children, ...rest }: KeycapProps) {
-  const prettyKey = prettifyKey(children)
+  const prettyKey = prettifyKey(children);
 
   return (
     <kbd {...rest} className={classnames(className, styles.keycap)}>
