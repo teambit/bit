@@ -1,10 +1,14 @@
 import type { Component, ComponentID } from '@teambit/component';
 import { normalize } from 'path';
+import { BitId } from '@teambit/legacy-bit-id';
 import { Capsule } from './capsule';
 
 export default class CapsuleList extends Array<Capsule> {
   getCapsule(id: ComponentID): Capsule | undefined {
     return this.find((capsule) => capsule.component.id.isEqual(id));
+  }
+  getCapsuleByLegacyId(id: BitId): Capsule | undefined {
+    return this.find((capsule) => capsule.component.id._legacy.isEqual(id));
   }
   getCapsuleIgnoreVersion(id: ComponentID): Capsule | undefined {
     return this.find((capsule) => capsule.component.id._legacy.isEqualWithoutVersion(id._legacy));

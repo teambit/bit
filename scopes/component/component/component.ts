@@ -156,6 +156,9 @@ export class Component {
     const snapToStart = snapId || this.head?.hash;
     let nextSnaps = [snapToStart];
     let done;
+    if (!snapToStart) {
+      done = true;
+    }
 
     const iterator: AsyncIterator<Snap> = {
       next: async () => {
@@ -173,8 +176,7 @@ export class Component {
         }
         if (!nextSnaps.length) {
           done = true;
-        }
-        if (options.stopFn) {
+        } else if (options.stopFn) {
           done = await options.stopFn(snap);
         }
         return { value: snap, done: undefined };
