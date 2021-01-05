@@ -155,7 +155,7 @@ export class IsolatorMain {
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
   }
 
-  async createGraph(seeders: ComponentID[]): Promise<Component[]> {
+  private async createGraph(seeders: ComponentID[]): Promise<Component[]> {
     const host = this.componentAspect.getHost();
     const graph = await this.graphBuilder.getGraph(seeders);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
