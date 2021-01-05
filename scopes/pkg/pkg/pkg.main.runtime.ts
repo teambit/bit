@@ -318,7 +318,7 @@ export class PkgMain {
     if (!updatedComponent) {
       throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
     }
-    const currentData = this.getComponentBuildData(component);
+    const currentData = this.getComponentBuildData(updatedComponent);
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;

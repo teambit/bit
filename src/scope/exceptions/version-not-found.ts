@@ -1,7 +1,12 @@
-import AbstractError from '../../error/abstract-error';
+import { BitError } from '@teambit/bit-error';
+import chalk from 'chalk';
 
-export default class VersionNotFound extends AbstractError {
+export default class VersionNotFound extends BitError {
   constructor(public version: string, public componentId: string) {
-    super();
+    super(
+      `error: version "${chalk.bold(version)}"${
+        componentId ? ` of component ${chalk.bold(componentId)}` : ''
+      } was not found.`
+    );
   }
 }

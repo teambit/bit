@@ -1,23 +1,36 @@
+import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ComponentID } from '@teambit/component';
+import { isBrowser } from '@teambit/ui.is-browser';
+import { InMemoryCache, IdGetterObj, NormalizedCacheObject } from 'apollo-cache-inmemory';
 import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
 import { ApolloLink } from 'apollo-link';
 import { onError } from 'apollo-link-error';
-import { HttpLink } from 'apollo-link-http';
+import { HttpLink, createHttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
-import React from 'react';
+import crossFetch from 'cross-fetch';
+import objectHash from 'object-hash';
+
 import { createLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphQLServer } from './graphql-server';
 import { GraphqlAspect } from './graphql.aspect';
+import { GraphqlRenderLifecycle } from './render-lifecycle';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
+/**
+ * Type of gql client.
+ * Used to abstract Apollo client, so consumers could import the type from graphql.ui, and not have to depend on @apollo/client directly
+ * */
+export type GraphQLClient<T> = ApolloClient<T>;
+
+type ClientOptions = { state?: NormalizedCacheObject };
 
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
 
-  private _client: ApolloClient<any> | undefined;
+  private _client?: GraphQLClient<any>;
 
   get client() {
     if (!this._client) {
@@ -27,14 +40,38 @@ export class GraphqlUI {
     return this._client;
   }
 
+  /** internal. Sets the global gql client */
+  _setClient(client: GraphQLClient<any>) {
+    this._client = client;
+  }
+
   async query(options: QueryOptions): Promise<ApolloQueryResult<any>> {
     return this.client.query(options);
   }
 
-  createClient(host: string = window.location.host) {
+  createClient(host: string = isBrowser ? window.location.host : '/', { state }: ClientOptions = {}) {
     const client = new ApolloClient({
       link: this.createApolloLink(host),
-      cache: this.getCache(),
+      cache: this.createCache({ state }),
+    });
+
+    return client;
+  }
+
+  createSsrClient({ serverUrl, cookie }: { serverUrl: string; cookie?: any }) {
+    const link = createHttpLink({
+      credentials: 'same-origin',
+      uri: serverUrl,
+      headers: {
+        cookie,
+      },
+      fetch: crossFetch,
+    });
+
+    const client = new ApolloClient({
+      ssrMode: true,
+      link,
+      cache: this.createCache(),
     });
 
     return client;
@@ -59,11 +96,14 @@ export class GraphqlUI {
     ]);
   }
 
-  private getCache() {
-    return new InMemoryCache({
-      // @ts-ignore TODO: @uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
-      dataIdFromObject: (o) => (o._id ? `${o.__typename}:${o._id}` : null),
+  private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
+    const cache = new InMemoryCache({
+      dataIdFromObject: getIdFromObject,
     });
+
+    if (state) cache.restore(state);
+
+    return cache;
   }
 
   createLinks() {
@@ -97,17 +137,50 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  getProvider = ({ children }: { children: JSX.Element }) => {
-    return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
+  getProvider = ({ client = this.client, children }: { client?: GraphQLClient<any>; children: ReactNode }) => {
+    return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
+
+  renderHooks = new GraphqlRenderLifecycle(this);
+
+  static dependencies = [];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<GraphQLServer>()];
 
   static async provider(deps, config, [serverSlot]: [GraphQLServerSlot]) {
-    return new GraphqlUI(serverSlot);
+    const graphqlUI = new GraphqlUI(serverSlot);
+
+    return graphqlUI;
   }
 }
 
 GraphqlAspect.addRuntime(GraphqlUI);
+
+// good enough for now.
+// generate unique id for each gql object, in order for cache to work.
+function getIdFromObject(o: IdGetterObj) {
+  switch (o.__typename) {
+    case 'Component':
+      return `${o.__typename}_${ComponentID.fromObject(o.id).toString()}`;
+    case 'ComponentHost':
+      return 'ComponentHost';
+    case 'ComponentID':
+      return `${o.__typename}_${ComponentID.fromObject(o).toString()}`;
+    default:
+      // @ts-ignore
+      if (typeof o.__id === 'string') return o.__id;
+
+      if (typeof o.id === 'string') return `${o.__typename}_${o.id}`;
+      if (typeof o.id === 'object') {
+        try {
+          // fallback until we will get dedicated string ids:
+          return `${o.__typename}_${objectHash(o.id)}`;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+  }
+}

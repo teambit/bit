@@ -26,7 +26,8 @@ import { UIRoot } from './ui-root';
 import { UIServer } from './ui-server';
 import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
-import createWebpackConfig from './webpack/webpack.config';
+import createWebpackConfig from './webpack/webpack.browser.config';
+import createSsrWebpackConfig from './webpack/webpack.ssr.config';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
@@ -34,7 +35,11 @@ export type UIRootRegistry = SlotRegistry<UIRoot>;
 
 export type OnStart = () => void;
 
+export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
+
 export type OnStartSlot = SlotRegistry<OnStart>;
+
+export type PublicDirOverwriteSlot = SlotRegistry<PublicDirOverwrite>;
 
 export type UIConfig = {
   /**
@@ -116,6 +121,11 @@ export class UiMain {
     private onStartSlot: OnStartSlot,
 
     /**
+     * Overwrite the public dir Slot
+     */
+    private publicDirOverwriteSlot: PublicDirOverwriteSlot,
+
+    /**
      * component extension.
      */
     private componentExtension: ComponentMain,
@@ -131,7 +141,13 @@ export class UiMain {
     private logger: Logger
   ) {}
 
-  get publicDir() {
+  async publicDir(uiRoot: UIRoot) {
+    const overwriteFn = this.getOverwritePublic();
+    if (overwriteFn) {
+      const hasDir = await overwriteFn(uiRoot);
+      if (hasDir) return hasDir;
+    }
+
     if (this.config.publicDir.startsWith('/')) {
       return this.config.publicDir.substring(1);
     }
@@ -145,12 +161,13 @@ export class UiMain {
   async build(uiRootName?: string) {
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
-    const config = createWebpackConfig(
-      uiRoot.path,
-      [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
-      uiRoot.name,
-      this.publicDir
-    );
+    const ssr = uiRoot.buildOptions?.ssr || false;
+    const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
+
+    const browserConfig = createWebpackConfig(uiRoot.path, [mainEntry], uiRoot.name, await this.publicDir(uiRoot));
+    const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
+
+    const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
 
     const compiler = webpack(config);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -170,7 +187,7 @@ export class UiMain {
       uiRootExtension: name,
       ui: this,
       logger: this.logger,
-      publicDir: this.publicDir,
+      publicDir: await this.publicDir(uiRoot),
     });
 
     const targetPort = await this.getPort(port);
@@ -178,8 +195,7 @@ export class UiMain {
     if (dev) {
       await uiServer.dev({ port: targetPort });
     } else {
-      await this.buildIfChanged(name, uiRoot, rebuild);
-      await this.buildIfNoBundle(name, uiRoot);
+      await this.buildUI(name, uiRoot, rebuild);
       await uiServer.start({ port: targetPort });
     }
 
@@ -209,6 +225,23 @@ export class UiMain {
   registerOnStart(onStartFn: OnStart) {
     this.onStartSlot.register(onStartFn);
     return this;
+  }
+
+  /**
+   * overwrite the build ui function
+   */
+  registerPublicDirOverwrite(fn: PublicDirOverwrite) {
+    this.publicDirOverwriteSlot.register(fn);
+    return this;
+  }
+
+  private getOverwritePublic() {
+    const overwritePublic = this.publicDirOverwriteSlot.toArray();
+    if (overwritePublic[0]) {
+      const [, fn] = overwritePublic[0];
+      return fn;
+    }
+    return undefined;
   }
 
   private async invokeOnStart(): Promise<void> {
@@ -277,7 +310,13 @@ export class UiMain {
     return getPort({ port: getPort.makeRange(from, to) });
   }
 
-  private async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+  private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
+    const hash = await this.buildIfChanged(name, uiRoot, rebuild);
+    await this.buildIfNoBundle(name, uiRoot);
+    return hash;
+  }
+
+  public async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
     aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
     const hash = aspects.map((aspect) => {
@@ -286,19 +325,21 @@ export class UiMain {
     return sha1(hash.join(''));
   }
 
-  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined) {
+  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed && !force) return;
+    if (hash === hashed && !force) return hash;
     if (hash !== hashed) {
       this.logger.console(
         `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(
           uiRoot.name
-        )} in target directory: ${chalk.cyan(this.publicDir)}'`
+        )} in target directory: ${chalk.cyan(await this.publicDir(uiRoot))}'`
       );
     } else {
       this.logger.console(
-        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(this.publicDir)}`
+        `Building UI assets for '${chalk.cyan(uiRoot.name)}' in target directory: ${chalk.cyan(
+          await this.publicDir(uiRoot)
+        )}`
       );
     }
 
@@ -306,8 +347,9 @@ export class UiMain {
     this.clearConsole();
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
-    if (res.hasErrors()) res.compilation.errors.forEach((err) => console.error(err));
+    if (res.hasErrors()) res.stats.forEach((stats) => stats.compilation.errors.forEach((err) => console.error(err)));
     await this.cache.set(uiRoot.path, hash);
+    return hash;
   }
 
   clearConsole() {
@@ -319,9 +361,9 @@ export class UiMain {
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
       uiRoot.name,
-      this.publicDir
+      await this.publicDir(uiRoot)
     );
-    if (fs.pathExistsSync(config.output.path)) return;
+    if (config.output?.path && fs.pathExistsSync(config.output.path)) return;
     const hash = await this.buildUiHash(uiRoot);
     await this.build(name);
     await this.cache.set(uiRoot.path, hash);
@@ -349,17 +391,28 @@ export class UiMain {
     LoggerAspect,
   ];
 
-  static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>()];
+  static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>(), Slot.withType<PublicDirOverwriteSlot>()];
 
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
-    [uiRootSlot, onStartSlot]: [UIRootRegistry, OnStartSlot]
+    [uiRootSlot, onStartSlot, publicDirOverwriteSlot]: [UIRootRegistry, OnStartSlot, PublicDirOverwriteSlot]
   ) {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerMain.createLogger(UIAspect.id);
 
-    const ui = new UiMain(pubsub, config, graphql, uiRootSlot, express, onStartSlot, componentExtension, cache, logger);
+    const ui = new UiMain(
+      pubsub,
+      config,
+      graphql,
+      uiRootSlot,
+      express,
+      onStartSlot,
+      publicDirOverwriteSlot,
+      componentExtension,
+      cache,
+      logger
+    );
     cli.register(new StartCmd(ui, logger, pubsub));
     cli.register(new UIBuildCmd(ui));
     return ui;

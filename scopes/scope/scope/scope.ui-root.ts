@@ -26,6 +26,10 @@ export class ScopeUIRoot implements UIRoot {
     return Promise.resolve([]);
   }
 
+  buildOptions = {
+    ssr: true,
+  };
+
   resolveAspects(runtime: string) {
     return this.scope.resolveAspects(runtime);
   }
