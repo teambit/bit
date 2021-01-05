@@ -8,12 +8,19 @@ import styles from './code-view.module.scss';
 export type CodeViewProps = {
   fileContent?: string;
   currentFile?: string;
-  icon: string;
+  icon?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeView({ className, fileContent, currentFile, icon }: CodeViewProps) {
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
-  const lang = useMemo(() => currentFile?.split('.').pop(), [currentFile]);
+  const lang = useMemo(() => {
+    const langFromFileEnding = currentFile?.split('.').pop();
+
+    // for some reason, SyntaxHighlighter doesnt support scss or sass highlighting, only css. I need to check how to fix this properly
+    if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
+    return langFromFileEnding;
+  }, [fileContent]);
+
   if (!fileContent) return null; // is there a state where the is no file content? what should be presented then?
   return (
     <div className={classNames(styles.codeView, className)}>

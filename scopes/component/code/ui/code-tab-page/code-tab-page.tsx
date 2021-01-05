@@ -1,22 +1,24 @@
 import { ComponentContext } from '@teambit/component';
 import classNames from 'classnames';
 import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
-import { getIcon } from '@teambit/ui.get-icon-from-file-name';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui.side-bar';
 import { useLocation } from '@teambit/ui.routing.provider';
 import { useCode } from '@teambit/ui.queries.get-component-code';
 import { useFileContent } from '@teambit/ui.queries.get-file-content';
+import { getFileIcon } from '@teambit/code.utils.get-file-icon';
 import styles from './code-tab-page.module.scss';
-import { CodeTabTree } from './code-tab-tree';
-import { CodeView } from './code-view';
+import { CodeTabTree } from '../code-tab-tree';
+import { CodeView } from '../code-view';
 
-type CodePageProps = {} & HTMLAttributes<HTMLDivElement>;
+type CodePageProps = {
+  fileIconSlot?: any;
+} & HTMLAttributes<HTMLDivElement>;
 
 // should we move this file to code-tab-page folder?
 
-export function CodePage({ className }: CodePageProps) {
+export function CodePage({ className, fileIconSlot }: CodePageProps) {
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
   const location = useLocation();
@@ -27,11 +29,12 @@ export function CodePage({ className }: CodePageProps) {
 
   const [isSidebarOpen, setSidebarOpenness] = useState(true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
+  const icon = getFileIcon(fileIconSlot, currentFile);
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={classNames(styles.codePage, className)}>
       <Pane className={styles.left}>
-        <CodeView fileContent={fileContent} currentFile={currentFile} icon={getIcon(currentFile)} />
+        <CodeView fileContent={fileContent} currentFile={currentFile} icon={icon} />
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
@@ -45,7 +48,14 @@ export function CodePage({ className }: CodePageProps) {
         />
       </HoverSplitter>
       <Pane className={styles.right}>
-        <CodeTabTree currentFile={currentFile} dependencies={dependencies} fileTree={fileTree} devFiles={devFiles} />
+        <CodeTabTree
+          currentFile={currentFile}
+          dependencies={dependencies}
+          fileTree={fileTree}
+          devFiles={devFiles}
+          mainFile={mainFile}
+          fileIconSlot={fileIconSlot}
+        />
       </Pane>
     </SplitPane>
   );

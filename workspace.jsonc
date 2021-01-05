@@ -78,7 +78,7 @@
         "@teambit/documenter.types.docs-file": "^1.0.3",
         "@teambit/documenter.ui.block-quote": "0.0.1",
         "@teambit/documenter.ui.bold": "0.0.1",
-        "@teambit/documenter.ui.code-snippet": "^1.0.3",
+        "@teambit/documenter.ui.code-snippet": "^3.0.2",
         "@teambit/documenter.ui.consumable-link": "^1.0.3",
         "@teambit/documenter.ui.heading": "^1.0.3",
         "@teambit/documenter.ui.highlighted-text": "^1.0.3",

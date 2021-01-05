@@ -6,6 +6,11 @@
         "rootDir": "scopes/component/code",
         "exported": false
     },
+    "code/utils/get-file-icon": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/utils/get-file-icon",
+        "exported": false
+    },
     "teambit.compilation/babel@0.0.231": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/babel"
@@ -627,6 +632,11 @@
         "rootDir": "scopes/ui-foundation/get-icon-from-file-name",
         "exported": false
     },
+    "ui/is-browser": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/is-browser",
+        "exported": false
+    },
     "ui/queries/get-component-code": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-component-code",
@@ -635,11 +645,6 @@
     "ui/queries/get-file-content": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-file-content",
-        "exported": false
-    },
-    "ui/is-browser": {
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/is-browser",
         "exported": false
     },
     "version": "14.8.9-dev.251"

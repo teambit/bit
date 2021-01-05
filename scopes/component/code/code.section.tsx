@@ -2,12 +2,13 @@ import { Section } from '@teambit/component';
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import styles from './code.module.scss';
-import { CodePage } from './ui/code-tab-page';
+import type { CodeUI } from './code.ui.runtime';
 
 export class CodeSection implements Section {
+  constructor(private codeUI: CodeUI) {}
   route = {
     path: '~code',
-    children: <CodePage className={styles.code} />,
+    children: this.codeUI.getCodePage(),
   };
   navigationLink = {
     href: '~code',
