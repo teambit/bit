@@ -3,7 +3,6 @@ import { MainRuntime } from '@teambit/cli';
 import { Compiler } from '@teambit/compiler';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
-import { CodeUI, CodeAspect } from '@teambit/code';
 import { TypeScriptExtractor } from './typescript.extractor';
 import { TypeScriptCompilerOptions } from './compiler-options';
 import { TypescriptAspect } from './typescript.aspect';
@@ -38,13 +37,11 @@ export class TypescriptMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [SchemaAspect, LoggerAspect, CodeAspect];
+  static dependencies = [SchemaAspect, LoggerAspect];
 
   static async provider([schema, loggerExt]: [SchemaMain, LoggerMain]) {
     schema.registerParser(new TypeScriptParser());
     const logger = loggerExt.createLogger(TypescriptAspect.id);
-    const ui = new CodeUI();
-    ui.registerEnvFileIcon([{ icon: 'https://static.bit.dev/bit-logo.svg', match: (file) => file.endsWith('.ts') }]);
 
     return new TypescriptMain(logger);
   }
