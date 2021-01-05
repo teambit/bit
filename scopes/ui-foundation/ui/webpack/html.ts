@@ -15,4 +15,4 @@ export default function html(title: string, withDevTools?: boolean) {
     </body>
   </html>  
   `;
-};
+}

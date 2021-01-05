@@ -48,7 +48,6 @@ import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-
 import { pathIsInside } from 'bit-bin/dist/utils';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
-import BluebirdPromise from 'bluebird';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { slice, groupBy, uniqBy } from 'lodash';
@@ -415,7 +414,7 @@ export class Workspace implements ComponentFactory {
     await this.consumer.bitMap.write(this.consumer.componentFsCache);
     const onChangeEntries = this.onComponentChangeSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
-    await BluebirdPromise.mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
+    await mapSeries(onChangeEntries, async ([extension, onChangeFunc]) => {
       const onChangeResult = await onChangeFunc(component);
       // TODO: find way to standardize event names.
       await this.graphql.pubsub.publish(ComponentChanged, { componentChanged: { component } });
@@ -429,7 +428,7 @@ export class Workspace implements ComponentFactory {
     const component = await this.get(id);
     const onAddEntries = this.onComponentAddSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
-    await BluebirdPromise.mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
+    await mapSeries(onAddEntries, async ([extension, onAddFunc]) => {
       const onAddResult = await onAddFunc(component);
       await this.graphql.pubsub.publish(ComponentAdded, { componentAdded: { component } });
       results.push({ extensionId: extension, results: onAddResult });
@@ -441,7 +440,7 @@ export class Workspace implements ComponentFactory {
   async triggerOnComponentRemove(id: ComponentID): Promise<OnComponentEventResult[]> {
     const onRemoveEntries = this.onComponentRemoveSlot.toArray(); // e.g. [ [ 'teambit.bit/compiler', [Function: bound onComponentChange] ] ]
     const results: Array<{ extensionId: string; results: SerializableResults }> = [];
-    await BluebirdPromise.mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
+    await mapSeries(onRemoveEntries, async ([extension, onRemoveFunc]) => {
       const onRemoveResult = await onRemoveFunc(id);
       results.push({ extensionId: extension, results: onRemoveResult });
     });
