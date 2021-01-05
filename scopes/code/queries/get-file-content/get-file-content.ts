@@ -22,11 +22,12 @@ type FileResult = {
 
 export function useFileContent(componentId: ComponentID, filePath?: string) {
   const id = componentId._legacy.name;
-  const { data } = useDataQuery<FileResult>(getFile, {
+  const { data, ...rest } = useDataQuery<FileResult>(getFile, {
     variables: { id, path: filePath },
+    skip: filePath === undefined,
   });
 
   const fileContent = data?.getHost?.get.getFile;
 
-  return fileContent;
+  return { fileContent, ...rest };
 }

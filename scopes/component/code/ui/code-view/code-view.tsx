@@ -2,16 +2,18 @@ import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-
+import { useFileContent } from '@teambit/ui.queries.get-file-content';
+import { ComponentID } from '@teambit/component';
 import styles from './code-view.module.scss';
 
 export type CodeViewProps = {
-  fileContent?: string;
+  componentId: ComponentID;
   currentFile?: string;
   icon?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
-export function CodeView({ className, fileContent, currentFile, icon }: CodeViewProps) {
+export function CodeView({ className, componentId, currentFile, icon }: CodeViewProps) {
+  const { fileContent, loading } = useFileContent(componentId, currentFile);
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
   const lang = useMemo(() => {
     const langFromFileEnding = currentFile?.split('.').pop();

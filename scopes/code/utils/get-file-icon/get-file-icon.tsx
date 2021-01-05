@@ -1,15 +1,17 @@
-import { flatten } from 'lodash';
 import { getIcon } from '@teambit/ui.get-icon-from-file-name';
 
-// TODO - add fileSlot type. but where should we keep it?
-export function getFileIcon(slot: any, fileName?: string): string | undefined {
-  if (!fileName) return;
-  const fileSlot = flatten(slot?.values());
-  const matchSlot: any = fileSlot.find((iconSlot: any) => {
-    if (iconSlot.match instanceof RegExp) {
-      return iconSlot.match.test(fileName);
-    }
-    return iconSlot.match(fileName);
-  });
-  return matchSlot?.icon || getIcon(fileName);
+export type FileIconMatch = (file: string) => string | undefined;
+
+export function getFileIcon(matchers?: FileIconMatch[], fileName?: string): string | undefined {
+  if (!fileName) return undefined;
+  if (!matchers) return getIcon(fileName);
+
+  for (const matcher of matchers) {
+    const icon = matcher(fileName);
+    console.log('icin', icon);
+    if (icon) return icon;
+  }
+
+  // default icons
+  return getIcon(fileName);
 }

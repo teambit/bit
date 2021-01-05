@@ -4,7 +4,7 @@ import { FileTree } from '@teambit/tree.file-tree';
 import { DrawerUI } from '@teambit/tree.drawer';
 import { TreeNode as Node } from '@teambit/tree.tree-node';
 import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
-import { getFileIcon } from '@teambit/code.utils.get-file-icon';
+import { getFileIcon, FileIconMatch } from '@teambit/code.utils.get-file-icon';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { DependencyTree } from '../dependency-tree';
@@ -17,7 +17,7 @@ export type CodeTabTreeProps = {
   currentFile?: string;
   devFiles?: string[];
   mainFile?: string;
-  fileIconSlot?: any;
+  fileIconMatchers?: FileIconMatch[];
 } & HTMLAttributes<HTMLDivElement>;
 
 export function CodeTabTree({
@@ -27,7 +27,7 @@ export function CodeTabTree({
   currentFile = '',
   devFiles,
   mainFile,
-  fileIconSlot,
+  fileIconMatchers,
 }: CodeTabTreeProps) {
   const [openDrawerList, onToggleDrawer] = useState(['FILES' /* , 'DEPENDENCIES' */]);
 
@@ -50,7 +50,7 @@ export function CodeTabTree({
           <Node
             {...props}
             isActive={props.node.id === currentFile}
-            icon={getFileIcon(fileIconSlot, props.node.id)}
+            icon={getFileIcon(fileIconMatchers, props.node.id)}
             widgets={widgets}
           />
         );
