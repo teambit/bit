@@ -14,7 +14,11 @@ import { Component } from '@teambit/component';
  * In case the component is new the result will be: 0.0.0
  * @param component
  */
-export async function getComponentPackageVersion(component: Component, laneName = 'main', snapId?: string): string {
+export async function getComponentPackageVersion(
+  component: Component,
+  laneName = 'main',
+  snapId?: string
+): Promise<string> {
   const actualSnapId = snapId || component.head?.hash;
   if (!actualSnapId) {
     return '0.0.0';
