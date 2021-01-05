@@ -10,6 +10,7 @@ import { onError } from 'apollo-link-error';
 import { HttpLink, createHttpLink } from 'apollo-link-http';
 import { WebSocketLink } from 'apollo-link-ws';
 import crossFetch from 'cross-fetch';
+import objectHash from 'object-hash';
 
 import { createLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
@@ -18,13 +19,18 @@ import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderLifecycle } from './render-lifecycle';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
+/**
+ * Type of gql client.
+ * Used to abstract Apollo client, so consumers could import the type from graphql.ui, and not have to depend on @apollo/client directly
+ * */
+export type GraphQLClient<T> = ApolloClient<T>;
 
 type ClientOptions = { state?: NormalizedCacheObject };
 
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
 
-  private _client?: ApolloClient<any>;
+  private _client?: GraphQLClient<any>;
 
   get client() {
     if (!this._client) {
@@ -35,7 +41,7 @@ export class GraphqlUI {
   }
 
   /** internal. Sets the global gql client */
-  _setClient(client: ApolloClient<any>) {
+  _setClient(client: GraphQLClient<any>) {
     this._client = client;
   }
 
@@ -131,7 +137,7 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  getProvider = ({ client = this.client, children }: { client?: ApolloClient<any>; children: ReactNode }) => {
+  getProvider = ({ client = this.client, children }: { client?: GraphQLClient<any>; children: ReactNode }) => {
     return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
 
@@ -157,15 +163,24 @@ GraphqlAspect.addRuntime(GraphqlUI);
 function getIdFromObject(o: IdGetterObj) {
   switch (o.__typename) {
     case 'Component':
-      return ComponentID.fromObject(o.id).toString();
+      return `${o.__typename}_${ComponentID.fromObject(o.id).toString()}`;
     case 'ComponentHost':
       return 'ComponentHost';
     case 'ComponentID':
-      return `id__${ComponentID.fromObject(o).toString()}`;
-    case 'ReactDocs':
-      return null;
+      return `${o.__typename}_${ComponentID.fromObject(o).toString()}`;
     default:
       // @ts-ignore
-      return o.__id || o.id || null;
+      if (typeof o.__id === 'string') return o.__id;
+
+      if (typeof o.id === 'string') return `${o.__typename}_${o.id}`;
+      if (typeof o.id === 'object') {
+        try {
+          // fallback until we will get dedicated string ids:
+          return `${o.__typename}_${objectHash(o.id)}`;
+        } catch {
+          return null;
+        }
+      }
+      return null;
   }
 }

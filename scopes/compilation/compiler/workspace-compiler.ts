@@ -1,9 +1,9 @@
 /* eslint-disable max-classes-per-file */
+import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
-import BluebirdPromise from 'bluebird';
 import path from 'path';
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
@@ -180,9 +180,8 @@ export class WorkspaceCompiler {
         );
       }
     });
-    const newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
-      componentsAndNewCompilers,
-      (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
+    const newCompilersResultOnWorkspace = await mapSeries(componentsAndNewCompilers, (componentAndNewCompilers) =>
+      componentAndNewCompilers.compile(noThrow)
     );
 
     return newCompilersResultOnWorkspace;

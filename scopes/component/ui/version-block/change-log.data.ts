@@ -1,3 +1,5 @@
+import { AccountObj } from '@teambit/ui.avatar';
+
 type SemVer = string;
 type TimeStamp = string;
 type ComponentID = string;
@@ -27,16 +29,3 @@ export type Version = {
   message: string;
   contributors: AccountObj[];
 };
-
-export type AccountObj = {
-  name?: string;
-  accountType?: AccountTypes;
-  displayName?: string;
-  profileImage?: string;
-};
-
-export enum AccountTypes {
-  org = 'organization',
-  user = 'user',
-  default = 'default',
-}

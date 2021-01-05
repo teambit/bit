@@ -133,9 +133,9 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
     const tagExplanationPersist = `\n(use "bit export [collection]" to push these components to a remote")
-(use "bit untag (--persisted)" to unstage versions)\n`;
+(use "bit untag" to unstage versions)\n`;
     const tagExplanationSoft = `\n(use "bit tag --persist" to persist the changes")
-(use "bit untag" to remove the soft-tags)\n`;
+(use "bit untag --soft" to remove the soft-tags)\n`;
 
     const tagExplanation = results.isSoftTag ? tagExplanationSoft : tagExplanationPersist;
 

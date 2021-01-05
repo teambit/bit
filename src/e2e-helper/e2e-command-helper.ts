@@ -228,10 +228,10 @@ export default class CommandHelper {
     return artifacts;
   }
   untag(id: string) {
-    return this.runCmd(`bit untag ${id} --persisted`);
+    return this.runCmd(`bit untag ${id}`);
   }
   untagSoft(id: string) {
-    return this.runCmd(`bit untag ${id}`);
+    return this.runCmd(`bit untag ${id} --soft`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
     const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
