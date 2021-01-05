@@ -151,9 +151,8 @@ export class ScopeMain implements ComponentFactory {
     this.tagRegistry.register(tagFn);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
-    throw new Error('scope.getManyByLegacy is not implemented');
+    return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
   }
 
   builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
@@ -391,6 +390,21 @@ export class ScopeMain implements ComponentFactory {
     const tagMap = await this.getTagMap(modelComponent);
 
     return new Component(newId, snap, state, tagMap, this);
+  }
+
+  async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
+    const legacyId = consumerComponent.id;
+    const modelComponent = await this.legacyScope.getModelComponent(legacyId);
+    // :TODO move to head snap once we have it merged, for now using `latest`.
+    const id = await this.resolveComponentId(legacyId);
+    const version =
+      consumerComponent.pendingVersion ||
+      (await modelComponent.loadVersion(legacyId.version as string, this.legacyScope.objects));
+    const snap = this.createSnapFromVersion(version);
+    const state = await this.createStateFromVersion(id, version);
+    const tagMap = await this.getTagMap(modelComponent);
+
+    return new Component(id, snap, state, tagMap, this);
   }
 
   /**
