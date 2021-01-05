@@ -86,7 +86,7 @@ export class ExpressMain {
     app.use((req, res, next) => {
       if (this.config.loggerIgnorePath.includes(req.url)) return next();
       this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
-      next();
+      return next();
     });
     app.use(bodyParser.text({ limit: '5000mb' }));
     app.use(bodyParser.json({ limit: '5000mb' }));
