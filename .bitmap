@@ -593,10 +593,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
-    "ui/is-browser": {
+    "teambit.ui-foundation/ui/is-browser@0.0.228": {
         "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/is-browser",
-        "exported": false
+        "rootDir": "scopes/ui-foundation/uis/is-browser"
     },
     "version": "14.8.9-dev.248"
 }
