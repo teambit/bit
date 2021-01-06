@@ -647,5 +647,10 @@
         "rootDir": "scopes/ui-foundation/uis/hooks/use-data-query",
         "exported": false
     },
+    "update-dependencies": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/update-dependencies",
+        "exported": false
+    },
     "version": "14.8.9-dev.252"
 }
