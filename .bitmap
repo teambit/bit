@@ -637,11 +637,6 @@
         "rootDir": "scopes/ui-foundation/get-icon-from-file-name",
         "exported": false
     },
-    "ui/is-browser": {
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/uis/is-browser",
-        "exported": false
-    },
     "ui/queries/get-component-code": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-component-code",
