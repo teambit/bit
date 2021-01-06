@@ -8,7 +8,6 @@ export function getFileIcon(matchers?: FileIconMatch[], fileName?: string): stri
 
   for (const matcher of matchers) {
     const icon = matcher(fileName);
-    console.log('icin', icon);
     if (icon) return icon;
   }
 
