@@ -1,12 +1,7 @@
 import React, { useCallback } from 'react';
-import {
-  ComponentTree,
-  ComponentView,
-  NamespaceTreeNode,
-  PayloadType,
-  TreeNodeProps,
-  ScopePayload,
-} from '@teambit/ui.side-bar';
+import { ComponentTree, ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui.side-bar';
+import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+
 import { FullLoader } from '@teambit/ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Drawer } from '@teambit/sidebar';
