@@ -13,11 +13,11 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { BuildStatus } from 'bit-bin/dist/constants';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { PostSign } from 'bit-bin/dist/scope/actions';
-import { ObjectList } from 'bit-bin/dist/scope/objects/object-list';
 import { Remotes } from 'bit-bin/dist/remotes';
 import { BitIds, BitId } from 'bit-bin/dist/bit-id';
 import { getValidVersionOrReleaseType } from 'bit-bin/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+import { exportMany } from 'bit-bin/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
@@ -85,12 +85,12 @@ export class UpdateDependenciesMain {
     const publishedPackages = getPublishedPackages(this.legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
-    await this.saveExtensionsDataIntoScope(buildStatus);
-    // if (isMultiple) {
-    //   await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
-    // } else {
-    // }
-    await this.clearScopesCaches();
+    await this.saveDataIntoLocalScope(buildStatus);
+    if (updateDepsOptions.multiple) {
+      await this.export();
+    } else {
+      await this.clearScopesCaches();
+    }
 
     return {
       components: this.components,
@@ -235,7 +235,7 @@ export class UpdateDependenciesMain {
     );
   }
 
-  private async saveExtensionsDataIntoScope(buildStatus: BuildStatus) {
+  private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
     await mapSeries(this.legacyComponents, async (component) => {
       component.buildStatus = buildStatus;
       await this.scope.legacyScope.sources.enrichSource(component);
@@ -243,25 +243,18 @@ export class UpdateDependenciesMain {
     await this.scope.legacyScope.objects.persist();
   }
 
-  private async exportExtensionsDataIntoScopes(components: ConsumerComponent[], buildStatus: BuildStatus) {
-    const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
-    const objectListPerScope: { [scopeName: string]: ObjectList } = {};
-    await mapSeries(components, async (component) => {
-      component.buildStatus = buildStatus;
-      const objects = await this.scope.legacyScope.sources.getObjectsToEnrichSource(component);
-      const scopeName = component.scope as string;
-      const objectList = await ObjectList.fromBitObjects(objects);
-      if (objectListPerScope[scopeName]) {
-        objectListPerScope[scopeName].mergeObjectList(objectList);
-      } else {
-        objectListPerScope[scopeName] = objectList;
-      }
-    });
-    await mapSeries(Object.keys(objectListPerScope), async (scopeName) => {
-      const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
-      const objectList = objectListPerScope[scopeName];
-      this.logger.setStatusLine(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
-      await remote.pushMany(objectList, { persist: true });
+  private async export() {
+    const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
+    await exportMany({
+      scope: this.scope.legacyScope,
+      isLegacy: false,
+      ids,
+      codemod: false,
+      changeLocallyAlthoughRemoteIsDifferent: false,
+      includeDependencies: false,
+      remoteName: null,
+      idsWithFutureScope: ids,
+      allVersions: false,
     });
   }
 

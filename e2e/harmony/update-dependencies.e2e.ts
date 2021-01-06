@@ -29,6 +29,7 @@ describe('update-dependencies command', function () {
     let scopeWithoutOwner: string;
     let secondRemotePath: string;
     let secondRemoteName: string;
+    let secondScopeBeforeUpdate: string;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
@@ -54,6 +55,7 @@ describe('update-dependencies command', function () {
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagComponent('comp1', undefined, '--skip-auto-tag');
       helper.command.export();
+      secondScopeBeforeUpdate = helper.scopeHelper.cloneScope(secondRemotePath);
     });
     after(() => {
       npmCiRegistry.destroy();
@@ -72,6 +74,28 @@ describe('update-dependencies command', function () {
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--tag', secondRemotePath);
+      });
+      it('should succeed', () => {
+        expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
+      });
+      it('should tag the component with the updated version', () => {
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.2`, secondRemotePath);
+        expect(compB.dependencies[0].id.version).to.equal('0.0.2');
+      });
+    });
+    describe('running from a new bare scope', () => {
+      let updateDepsOutput: string;
+      before(() => {
+        helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
+        const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemote.scopePath);
+        const data = [
+          {
+            componentId: `${secondRemoteName}/comp-b`,
+            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@0.0.2`],
+          },
+        ];
+        updateDepsOutput = helper.command.updateDependencies(data, '--tag --multiple', updateRemote.scopePath);
       });
       it('should succeed', () => {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
