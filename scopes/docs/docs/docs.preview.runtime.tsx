@@ -19,7 +19,7 @@ export class DocsPreview {
   render = (componentId: string, modules: PreviewModule, [compositions]: [any]) => {
     const docsModule = this.selectPreviewModel(componentId, modules);
 
-    modules.mainModule.default(this.graphql.getProvider, componentId, docsModule, compositions);
+    modules.mainModule.default(this.graphql.getProvider, componentId, docsModule, compositions, context);
   };
 
   selectPreviewModel(componentId: string, modules: PreviewModule) {
