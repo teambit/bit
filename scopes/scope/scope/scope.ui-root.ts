@@ -27,7 +27,7 @@ export class ScopeUIRoot implements UIRoot {
   }
 
   buildOptions = {
-    ssr: false,
+    ssr: true,
   };
 
   resolveAspects(runtime: string) {
