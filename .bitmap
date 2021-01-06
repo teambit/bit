@@ -637,5 +637,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "update-dependencies": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/scope/update-dependencies",
+        "exported": false
+    },
     "version": "14.8.9-dev.252"
 }
