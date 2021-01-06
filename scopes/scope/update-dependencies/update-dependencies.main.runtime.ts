@@ -39,9 +39,9 @@ export type DepUpdateItemRaw = {
 };
 
 export type DepUpdateItem = {
-  component: Component; // ids always have scope, so it's safe to parse them from string
-  dependencies: ComponentID[]; // e.g. [@teambit/compiler@~1.0.0, @teambit/tester@^1.0.0]
-  versionToTag?: string; // specific version or semver. e.g. '1.0.0', 'minor',
+  component: Component;
+  dependencies: ComponentID[];
+  versionToTag?: string;
 };
 
 export type SignResult = {

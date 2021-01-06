@@ -7,7 +7,15 @@ import { UpdateDependenciesMain, UpdateDepsOptions, DepUpdateItemRaw } from './u
 
 export class UpdateDependenciesCmd implements Command {
   name = 'update-dependencies <data>';
-  description = 'update dependencies for components and tag/snap the results';
+  description = `update dependencies for components and tag/snap the results.
+the input data is a stringified JSON of an array of the following object.
+{
+  componentId: string; // ids always have scope, so it's safe to parse them from string
+  dependencies: string[]; // e.g. [teambit/compiler@1.0.0, teambit/tester@1.0.0]
+  versionToTag?: string; // specific version (e.g. '1.0.0') or semver (e.g. 'minor', 'patch')
+}
+an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies":["ci.remote/comp1@0.0.2"]}]'
+`;
   alias = '';
   group = 'component';
   options = [

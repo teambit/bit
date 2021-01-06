@@ -93,6 +93,7 @@ describe('update-dependencies command', function () {
           {
             componentId: `${secondRemoteName}/comp-b`,
             dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@0.0.2`],
+            versionToTag: '0.0.3', // 0.0.2 was taken by previews test
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--tag --multiple', updateRemote.scopePath);
@@ -101,7 +102,7 @@ describe('update-dependencies command', function () {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
       });
       it('should tag the component with the updated version', () => {
-        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.2`, secondRemotePath);
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.3`, secondRemotePath);
         expect(compB.dependencies[0].id.version).to.equal('0.0.2');
       });
     });
