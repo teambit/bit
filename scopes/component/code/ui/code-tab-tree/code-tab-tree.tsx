@@ -1,10 +1,11 @@
-import React, { useState, useCallback, HTMLAttributes } from 'react';
+import React, { useState, useCallback, HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
 import { FileTree } from '@teambit/tree.file-tree';
 import { DrawerUI } from '@teambit/tree.drawer';
 import { TreeNode as Node } from '@teambit/tree.tree-node';
 import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/code.utils.get-file-icon';
+import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { DependencyTree } from '../dependency-tree';
@@ -43,13 +44,14 @@ export function CodeTabTree({
   const TreeNodeRenderer = useCallback(
     function TreeNode(props: any) {
       const children = props.node.children;
+      const { selected } = useContext(TreeContext);
 
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
           <Node
             {...props}
-            isActive={props.node.id === currentFile}
+            isActive={props.node.id === selected}
             icon={getFileIcon(fileIconMatchers, props.node.id)}
             widgets={widgets}
           />
@@ -57,7 +59,7 @@ export function CodeTabTree({
       }
       return <FolderTreeNode {...props} />;
     },
-    [currentFile]
+    [fileIconMatchers]
   );
 
   return (
@@ -68,7 +70,7 @@ export function CodeTabTree({
         name="FILES"
         className={classNames(styles.codeTabDrawer)}
       >
-        <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} />
+        <FileTree TreeNode={TreeNodeRenderer} files={fileTree || ['']} selected={currentFile} />
       </DrawerUI>
       <DrawerUI
         isOpen={openDrawerList.includes('DEPENDENCIES')}
