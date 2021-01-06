@@ -1,5 +1,5 @@
 import React, { useEffect, ReactNode } from 'react';
-import { BrowserRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
+import { BrowserRouter, StaticRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RoutingProvider } from '@teambit/ui.routing.provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { ReactRouterUI } from './react-router.ui.runtime';
@@ -12,6 +12,7 @@ type RouterContextProps = {
   reactRouterUi: ReactRouterUI;
   routing?: Routing;
   children: ReactNode;
+  location?: string;
 };
 
 type RootRouteProps = {
@@ -22,10 +23,10 @@ type RootRouteProps = {
 /**
  * Setup context needed for routing.
  */
-export function RouteContext({ reactRouterUi, routing = Routing.url, children }: RouterContextProps) {
+export function RouteContext({ reactRouterUi, routing = Routing.url, children, location }: RouterContextProps) {
   return (
     // {/* set up the virtual router (browser, inMemory, etc) */}
-    <Router type={routing}>
+    <Router type={routing} location={location}>
       {/* injects History object back to reactRouterUi */}
       <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
       {/* injects react-router Link into context  */}
@@ -42,11 +43,13 @@ export function RootRoute({ rootRoutes, routeSlot }: RootRouteProps) {
 }
 
 /** provides the router engine (browser, inMemory, etc) */
-function Router({ type, children }: { type: Routing; children: ReactNode }) {
+function Router({ type, children, location }: { type: Routing; children: ReactNode; location?: string }) {
   switch (type) {
+    case Routing.static:
+      return <StaticRouter location={location}>{children}</StaticRouter>;
     case Routing.inMemory:
       return (
-        <MemoryRouter initialEntries={[window.location]} initialIndex={1}>
+        <MemoryRouter initialEntries={[location || '/']} initialIndex={1}>
           {children}
         </MemoryRouter>
       );

@@ -65,6 +65,7 @@ module.exports = function () {
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
       },
     },

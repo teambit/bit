@@ -179,6 +179,9 @@ function _stripArgs(args) {
   if (res.componentObjects) {
     res.componentObjects = res.componentObjects.length;
   }
+  if (res.objectList) {
+    res.objectList = res.objectList.count ? res.objectList.count() : undefined;
+  }
   return res;
 }
 

@@ -28,9 +28,14 @@ JSON format is available as well. To use it, run  `bit config set log_json_forma
 
 It's possible to have the console as an extra layer so these messages will be printed to the screen as well, see below.
 
+## Log stack trace
+Normally, there is no need to log the Error object because it being caught by the end of the process and gets logged by Bit. Sometimes though it is needed to locally catch the error and continue, which can be useful to log the entire error object include the stack trace. In which case, pass the error object as the second parameter. e.g. `catch(err) { logger.error('got an error during component-load', err); }`
+
 ## Log also to the console
 
-To see the same massages above printed into the screen, use the global flag `--log [level]`. For example, `bit status --log=error`. Alternatively, you can set an environment variable `BIT_LOG` with the desired level.
+To see the same massages above printed into the screen, use the global flag `--log [level]`. For example, `bit status --log=error`. If the level was not entered, it defaults to `info`.
+
+Alternatively, you can set an environment variable `BIT_LOG` with the desired level.
 
 The format of the message logged to the console is **"MSG [META]"** The "[META]" part is the same as above.
 

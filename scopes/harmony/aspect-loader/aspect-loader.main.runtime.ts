@@ -293,7 +293,7 @@ export class AspectLoaderMain {
     return manifests.map((manifest: any) => {
       if (this.isAspect(manifest)) return manifest;
       manifest.runtime = MainRuntime;
-      if (!manifest.id) throw new Error();
+      if (!manifest.id) throw new Error('manifest must have static id');
       const aspect = Aspect.create({
         id: manifest.id,
       });

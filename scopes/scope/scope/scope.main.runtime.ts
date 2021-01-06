@@ -1,3 +1,4 @@
+import mapSeries from 'p-map-series';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
@@ -35,7 +36,6 @@ import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
 import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
-import BluebirdPromise from 'bluebird';
 import { ExportPersist, PostSign } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
@@ -244,7 +244,6 @@ export class ScopeMain implements ComponentFactory {
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
-
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
     const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
@@ -441,7 +440,7 @@ export class ScopeMain implements ComponentFactory {
 
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
-    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       return this.get(id);
     });
     const components = await componentsP;
@@ -522,7 +521,7 @@ export class ScopeMain implements ComponentFactory {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    await BluebirdPromise.mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
+    await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
       const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
       // TODO: what to return if no version in objects
       if (version) {

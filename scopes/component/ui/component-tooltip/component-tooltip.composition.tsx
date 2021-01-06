@@ -1,8 +1,7 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import { StatusTooltip } from './component-tooltip';
-import { Center } from './component-tooltip.docs';
 
 let id = 0;
 const getCompId = () => {
@@ -34,14 +33,12 @@ export const ComponentTooltipWithNewStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeContext>
-      <Center>
-        <div data-tip="" data-for={compName}>
-          N
-          <StatusTooltip status={compStatus} name={compName} />
-        </div>
-      </Center>
-    </ThemeContext>
+    <ThemeCompositions>
+      <div data-tip="" data-for={compName}>
+        N
+        <StatusTooltip status={compStatus} name={compName} />
+      </div>
+    </ThemeCompositions>
   );
 };
 
@@ -51,14 +48,12 @@ export const ComponentTooltipWithStagedStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeContext>
-      <Center>
-        <div data-tip="" data-for={compName}>
-          S
-          <StatusTooltip status={compStatus} name={compName} />
-        </div>
-      </Center>
-    </ThemeContext>
+    <ThemeCompositions>
+      <div data-tip="" data-for={compName}>
+        S
+        <StatusTooltip status={compStatus} name={compName} />
+      </div>
+    </ThemeCompositions>
   );
 };
 
@@ -69,14 +64,12 @@ export const ComponentTooltipWithModifiedFilesAndDependenciesStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeContext>
-      <Center>
-        <div data-tip="" data-for={compName}>
-          M
-          <StatusTooltip status={compStatus} name={compName} />
-        </div>
-      </Center>
-    </ThemeContext>
+    <ThemeCompositions>
+      <div data-tip="" data-for={compName}>
+        M
+        <StatusTooltip status={compStatus} name={compName} />
+      </div>
+    </ThemeCompositions>
   );
 };
 
@@ -86,13 +79,20 @@ export const ComponentTooltipWithModifiedFilesStatusAndIssues = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeContext>
-      <Center>
-        <div data-tip="" data-for={compName}>
-          M
-          <StatusTooltip status={compStatus} name={compName} issuesCount={2} />
-        </div>
-      </Center>
-    </ThemeContext>
+    <ThemeCompositions>
+      <div data-tip="" data-for={compName}>
+        M
+        <StatusTooltip status={compStatus} name={compName} issuesCount={2} />
+      </div>
+    </ThemeCompositions>
   );
 };
+
+const compositions = [
+  ComponentTooltipWithNewStatus,
+  ComponentTooltipWithStagedStatus,
+  ComponentTooltipWithModifiedFilesAndDependenciesStatus,
+  ComponentTooltipWithModifiedFilesStatusAndIssues,
+];
+// @ts-ignore
+compositions.map((comp) => (comp.canvas = { height: 90 }));

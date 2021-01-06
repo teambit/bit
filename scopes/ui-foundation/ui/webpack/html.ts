@@ -1,4 +1,4 @@
-module.exports = function html(title, withDevTools) {
+export default function html(title: string, withDevTools?: boolean) {
   return () => `
   <!DOCTYPE html>
   <html lang="en">
@@ -7,7 +7,11 @@ module.exports = function html(title, withDevTools) {
       <title>${title}</title>
       <script>
       // Allow to use react dev-tools inside the examples
-      ${withDevTools ? '' : 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;'}
+      ${
+        withDevTools
+          ? ''
+          : 'try { window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__; } catch {}'
+      }
       </script>
     </head>
     <body>
@@ -15,4 +19,4 @@ module.exports = function html(title, withDevTools) {
     </body>
   </html>  
   `;
-};
+}
