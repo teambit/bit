@@ -19,13 +19,18 @@ import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderLifecycle } from './render-lifecycle';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
+/**
+ * Type of gql client.
+ * Used to abstract Apollo client, so consumers could import the type from graphql.ui, and not have to depend on @apollo/client directly
+ * */
+export type GraphQLClient<T> = ApolloClient<T>;
 
 type ClientOptions = { state?: NormalizedCacheObject };
 
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
 
-  private _client?: ApolloClient<any>;
+  private _client?: GraphQLClient<any>;
 
   get client() {
     if (!this._client) {
@@ -36,7 +41,7 @@ export class GraphqlUI {
   }
 
   /** internal. Sets the global gql client */
-  _setClient(client: ApolloClient<any>) {
+  _setClient(client: GraphQLClient<any>) {
     this._client = client;
   }
 
@@ -132,7 +137,7 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  getProvider = ({ client = this.client, children }: { client?: ApolloClient<any>; children: ReactNode }) => {
+  getProvider = ({ client = this.client, children }: { client?: GraphQLClient<any>; children: ReactNode }) => {
     return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
 

@@ -66,11 +66,12 @@ async function loadRuntime(root: string, { logger }: { logger: Logger }) {
 
   try {
     const entryFilepath = path.join(root, 'ssr', 'index.js');
-    const manifestFilepath = path.join(root, 'asset-manifest.json');
     if (!fs.existsSync(entryFilepath)) {
-      logger.warn('[ssr] - Failed finding ssr/index.js. Skipping setup.');
+      logger.warn(`[ssr] - Skipping setup - failed finding ssr bundle at "${entryFilepath}"`);
       return undefined;
     }
+
+    const manifestFilepath = path.join(root, 'asset-manifest.json');
     if (!fs.existsSync(manifestFilepath)) {
       logger.warn('[ssr] - Failed finding asset manifest file. Skipping setup.');
       return undefined;
