@@ -3,19 +3,19 @@ import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions'
 import { ErrorPage } from './error-page';
 
 export const Error404 = () => (
-  <ThemeCompositions>
+  <ThemeCompositions style={{ minHeight: 400 }}>
     <ErrorPage code={404} title="This is a 404 error page" />
   </ThemeCompositions>
 );
 
 export const Error500 = () => (
-  <ThemeCompositions>
+  <ThemeCompositions style={{ minHeight: 400 }}>
     <ErrorPage code={500} title="This is a 500 error page title. So just a general error" />
   </ThemeCompositions>
 );
 
 export const ErrorUnknown = () => (
-  <ThemeCompositions>
+  <ThemeCompositions style={{ minHeight: 400 }}>
     <ErrorPage code="NotARealError" title="This is what you get if there's no such error page image available" />
   </ThemeCompositions>
 );
