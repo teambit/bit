@@ -45,7 +45,7 @@ import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/c
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
-import { SemVer } from 'semver';
+import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
@@ -351,7 +351,7 @@ export class ScopeMain implements ComponentFactory {
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[]) {
+  async import(ids: ComponentID[], useCache = true) {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
@@ -361,7 +361,7 @@ export class ScopeMain implements ComponentFactory {
     const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
       return id.scope !== this.name && id.hasScope();
     });
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals));
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
 
     // TODO: return a much better output based on legacy version-dependencies
     return this.getMany(ids);
@@ -531,6 +531,12 @@ export class ScopeMain implements ComponentFactory {
 
   async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
+  }
+
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+    const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
+    const versions = modelComponent.listVersions();
+    return semver.maxSatisfying(versions, range);
   }
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {

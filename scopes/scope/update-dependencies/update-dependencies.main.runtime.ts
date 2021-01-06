@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { flatten } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, ComponentNotFound } from '@teambit/scope';
@@ -10,7 +11,7 @@ import {
   addFlattenedDependenciesToComponents,
 } from 'bit-bin/dist/scope/component-ops/tag-model-component';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { BuildStatus } from 'bit-bin/dist/constants';
+import { BuildStatus, LATEST } from 'bit-bin/dist/constants';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { PostSign } from 'bit-bin/dist/scope/actions';
 import { Remotes } from 'bit-bin/dist/remotes';
@@ -60,13 +61,12 @@ export class UpdateDependenciesMain {
     private dependencyResolver: DependencyResolverMain
   ) {}
 
-  async updateDependencies(
+  async updateDependenciesVersions(
     depsUpdateItemsRaw: DepUpdateItemRaw[],
     updateDepsOptions: UpdateDepsOptions
   ): Promise<SignResult> {
     this.updateDepsOptions = updateDepsOptions;
-    const componentIds = depsUpdateItemsRaw.map((d) => ComponentID.fromString(d.componentId));
-    if (updateDepsOptions.multiple) await this.scope.import(componentIds);
+    await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
     await this.updateFutureVersion();
     await this.updateAllDeps();
@@ -104,6 +104,18 @@ export class UpdateDependenciesMain {
   }
   get components(): Component[] {
     return this.depsUpdateItems.map((d) => d.component);
+  }
+
+  private async importAllMissing(depsUpdateItemsRaw: DepUpdateItemRaw[]) {
+    const componentIds = depsUpdateItemsRaw.map((d) => ComponentID.fromString(d.componentId));
+    const dependenciesIds = depsUpdateItemsRaw.map((item) =>
+      item.dependencies.map((dep) => ComponentID.fromString(dep)).map((id) => id.changeVersion(LATEST))
+    );
+    const idsToImport = flatten(dependenciesIds);
+    if (this.updateDepsOptions.multiple) idsToImport.push(...componentIds);
+    // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
+    // in order to match the semver later.
+    await this.scope.import(idsToImport, false);
   }
 
   private async addComponentsToScope() {
@@ -151,11 +163,22 @@ export class UpdateDependenciesMain {
       const componentId = ComponentID.fromString(depUpdateItemRaw.componentId);
       const component = await this.scope.get(componentId);
       if (!component) throw new ComponentNotFound(componentId);
-      // it's probably better not to use `this.scope.resolveComponentId` as the dependency might not
-      // be in the scope.
-      const dependencies = depUpdateItemRaw.dependencies.map((d) => ComponentID.fromString(d));
+      const dependencies = await Promise.all(
+        depUpdateItemRaw.dependencies.map((dep) => this.getDependencyWithExactVersion(dep))
+      );
       return { component, dependencies, versionToTag: depUpdateItemRaw.versionToTag };
     });
+  }
+
+  private async getDependencyWithExactVersion(depStr: string): Promise<ComponentID> {
+    const compId = ComponentID.fromString(depStr);
+    const range = compId.version || '*'; // if not version specified, assume the latest
+    const id = compId.changeVersion(undefined);
+    const exactVersion = await this.scope.getExactVersionBySemverRange(id, range);
+    if (!exactVersion) {
+      throw new Error(`unable to find a version that satisfies "${range}" of "${depStr}"`);
+    }
+    return compId.changeVersion(exactVersion);
   }
 
   private async updateFutureVersion() {

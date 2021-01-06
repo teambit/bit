@@ -53,7 +53,9 @@ describe('update-dependencies command', function () {
       helper.command.tagAllComponents();
       helper.command.export();
       helper.fixtures.populateComponents(1, undefined, ' v2');
-      helper.command.tagComponent('comp1', undefined, '--skip-auto-tag');
+      helper.command.tagComponent('comp1', undefined, '1.0.5 --skip-auto-tag');
+      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.command.tagComponent('comp1', undefined, '1.1.0 --skip-auto-tag');
       helper.command.export();
       secondScopeBeforeUpdate = helper.scopeHelper.cloneScope(secondRemotePath);
     });
@@ -70,7 +72,7 @@ describe('update-dependencies command', function () {
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@0.0.2`],
+            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@~1.0.0`],
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--tag', secondRemotePath);
@@ -80,7 +82,7 @@ describe('update-dependencies command', function () {
       });
       it('should tag the component with the updated version', () => {
         const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.2`, secondRemotePath);
-        expect(compB.dependencies[0].id.version).to.equal('0.0.2');
+        expect(compB.dependencies[0].id.version).to.equal('1.0.5');
       });
     });
     describe('running from a new bare scope', () => {
@@ -92,8 +94,8 @@ describe('update-dependencies command', function () {
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@0.0.2`],
-            versionToTag: '0.0.3', // 0.0.2 was taken by previews test
+            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@^1.0.0`],
+            versionToTag: '3.0.0',
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--tag --multiple', updateRemote.scopePath);
@@ -102,8 +104,8 @@ describe('update-dependencies command', function () {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
       });
       it('should tag the component with the updated version', () => {
-        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.3`, secondRemotePath);
-        expect(compB.dependencies[0].id.version).to.equal('0.0.2');
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@3.0.0`, secondRemotePath);
+        expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });
   });

@@ -36,7 +36,7 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
 
   async report([data]: [string], updateDepsOptions: UpdateDepsOptions) {
     const depsUpdateItems = this.parseData(data);
-    const results = await this.updateDependenciesMain.updateDependencies(depsUpdateItems, updateDepsOptions);
+    const results = await this.updateDependenciesMain.updateDependenciesVersions(depsUpdateItems, updateDepsOptions);
     const status = results.error ? BuildStatus.Failed : BuildStatus.Succeed;
     const error = results.error ? `${results.error}\n\n` : '';
     const color = error ? 'red' : 'green';
