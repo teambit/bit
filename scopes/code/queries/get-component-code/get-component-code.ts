@@ -42,7 +42,7 @@ type CodeResults = {
 
 export function useCode(componentId: ComponentID) {
   const id = componentId._legacy.name;
-  const { data } = useDataQuery<CodeResults>(getCode, {
+  const { data, ...rest } = useDataQuery<CodeResults>(getCode, {
     variables: { id },
   });
 
@@ -51,5 +51,5 @@ export function useCode(componentId: ComponentID) {
   const devFiles = data?.getHost?.get.devFiles;
   const dependencies = data?.getHost?.get.dependencies;
 
-  return { fileTree, mainFile, dependencies, devFiles };
+  return { fileTree, mainFile, dependencies, devFiles, ...rest };
 }
