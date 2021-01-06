@@ -1,8 +1,9 @@
 import { getIconForFile } from 'vscode-icons-js';
+import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 
 export function getIcon(fileName?: string) {
   if (!fileName) return '';
   const iconName = getIconForFile(fileName);
-  const storageLink = 'https://static.bit.dev/file-icons/';
+  const storageLink = `${staticStorageUrl}/file-icons/`;
   return `${storageLink}${iconName}`;
 }

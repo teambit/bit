@@ -3,6 +3,8 @@ import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { useFileContent } from '@teambit/ui.queries.get-file-content';
+import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
+import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import { ComponentID } from '@teambit/component';
 import styles from './code-view.module.scss';
 
@@ -12,6 +14,8 @@ export type CodeViewProps = {
   icon?: string;
 } & HTMLAttributes<HTMLDivElement>;
 
+SyntaxHighlighter.registerLanguage('md', markDownSyntax);
+
 export function CodeView({ className, componentId, currentFile, icon }: CodeViewProps) {
   const { fileContent, loading } = useFileContent(componentId, currentFile);
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
@@ -20,6 +24,7 @@ export function CodeView({ className, componentId, currentFile, icon }: CodeView
 
     // for some reason, SyntaxHighlighter doesnt support scss or sass highlighting, only css. I need to check how to fix this properly
     if (langFromFileEnding === 'scss' || langFromFileEnding === 'sass') return 'css';
+    if (langFromFileEnding === 'mdx') return 'md';
     return langFromFileEnding;
   }, [fileContent]);
 

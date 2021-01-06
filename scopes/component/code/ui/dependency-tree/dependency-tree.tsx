@@ -51,7 +51,7 @@ function DependencyList({ deps }: { deps: any }) {
 
 // remove this once the links are calculated in the dependency resolver
 function getDependencyLink(dep: DependencyType) {
-  const version = dep.version.replace('^', '');
+  const version = dep.version.replace('^', '').replace('~', '');
   const linkPrefix = dep.__typename === 'ComponentDependency' ? 'https://bit.dev/' : 'https://npmjs.com/package/';
   if (dep.packageName) {
     return {
