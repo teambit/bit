@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Snap, Tag } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
