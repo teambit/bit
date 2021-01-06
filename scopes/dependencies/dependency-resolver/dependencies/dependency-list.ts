@@ -19,6 +19,13 @@ export class DependencyList {
     return this._dependencies;
   }
 
+  /**
+   * @param componentIdStr complete string include the scope and the version
+   */
+  findDependency(componentIdStr: string): Dependency | undefined {
+    return this.dependencies.find((dep) => dep.id === componentIdStr);
+  }
+
   forEach(predicate: (dep: Dependency, index?: number) => void): void {
     this.dependencies.forEach(predicate);
   }

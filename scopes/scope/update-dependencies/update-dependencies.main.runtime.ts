@@ -141,7 +141,7 @@ export class UpdateDependenciesMain {
     // tagged/snapped component.
     const currentBitIds = components.map((c) => c.id._legacy);
     await mapSeries(this.depsUpdateItems, async ({ component, dependencies }) => {
-      this.updateDependenciesOfComponent(component, dependencies, currentBitIds);
+      await this.updateDependenciesVersionsOfComponent(component, dependencies, currentBitIds);
       await this.updateDependencyResolver(component);
     });
   }
@@ -185,19 +185,30 @@ export class UpdateDependenciesMain {
     component.state._consumer.extensions.push(extension);
   }
 
-  private updateDependenciesOfComponent(component: Component, dependencies: ComponentID[], currentBitIds: BitId[]) {
+  private async updateDependenciesVersionsOfComponent(
+    component: Component,
+    dependencies: ComponentID[],
+    currentBitIds: BitId[]
+  ) {
     const depsBitIds = dependencies.map((d) => d._legacy);
     const updatedIds = BitIds.fromArray([...currentBitIds, ...depsBitIds]);
     const componentIdStr = component.id.toString();
     const legacyComponent: ConsumerComponent = component.state._consumer;
     const deps = [...legacyComponent.dependencies.get(), ...legacyComponent.devDependencies.get()];
+    const dependenciesList = await this.dependencyResolver.getDependencies(component);
     deps.forEach((dep) => {
       const updatedBitId = updatedIds.searchWithoutVersion(dep.id);
       if (updatedBitId) {
-        this.logger.debug(
-          `updating "${componentIdStr}", dependency ${dep.id.toString()} to version ${updatedBitId.version}}`
-        );
+        const depIdStr = dep.id.toString();
+        const packageName = dependenciesList.findDependency(depIdStr)?.getPackageName?.();
+        if (!packageName) {
+          throw new Error(
+            `unable to find the package-name of "${depIdStr}" dependency inside the dependency-resolver data of "${componentIdStr}"`
+          );
+        }
+        this.logger.debug(`updating "${componentIdStr}", dependency ${depIdStr} to version ${updatedBitId.version}}`);
         dep.id = updatedBitId;
+        dep.packageName = packageName;
       }
     });
     legacyComponent.extensions.forEach((ext) => {
@@ -252,28 +263,6 @@ export class UpdateDependenciesMain {
       this.logger.setStatusLine(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       await remote.pushMany(objectList, { persist: true });
     });
-  }
-
-  private async getComponentIdsToSign(
-    ids: ComponentID[]
-  ): Promise<{
-    componentsToSkip: ComponentID[];
-    componentsToSign: ComponentID[];
-  }> {
-    // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
-    this.logger.setStatusLine(`loading ${ids.length} components and their extensions...`);
-    const components = await this.scope.loadMany(ids);
-    this.logger.clearStatusLine();
-    const componentsToSign: ComponentID[] = [];
-    const componentsToSkip: ComponentID[] = [];
-    components.forEach((component) => {
-      if (component.state._consumer.buildStatus === BuildStatus.Succeed) {
-        componentsToSkip.push(component.id);
-      } else {
-        componentsToSign.push(component.id);
-      }
-    });
-    return { componentsToSkip, componentsToSign };
   }
 
   static runtime = MainRuntime;
