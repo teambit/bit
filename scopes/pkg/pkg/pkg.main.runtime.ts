@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Tag } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, Snap, Tag } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -275,10 +275,8 @@ export class PkgMain {
     const distTags = {
       latest: latestVersion,
     };
-    const versionsP = component.tags.toArray().map((tag: Tag) => {
-      return this.getVersionManifest(component, tag);
-    });
-    const versions = await Promise.all(versionsP);
+
+    const versions = await this.getAllSnapsManifests(component);
     const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
     const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
@@ -287,6 +285,18 @@ export class PkgMain {
       externalRegistry,
       versions: versionsWithoutEmpty,
     };
+  }
+
+  private async getAllSnapsManifests(component: Component): Promise<VersionPackageManifest[]> {
+    const iterable = component.snapsIterable();
+    const result: VersionPackageManifest[] = [];
+    for await (const snap of iterable) {
+      const manifest = await this.getSnapManifest(component, snap);
+      if (manifest) {
+        result.push(manifest);
+      }
+    }
+    return result;
   }
 
   /**
@@ -310,13 +320,13 @@ export class PkgMain {
     return currentExtension?.data as ComponentPkgExtensionData | undefined;
   }
 
-  async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
-    const idWithCorrectVersion = component.id.changeVersion(tag.version.toString());
+  async getSnapManifest(component: Component, snap: Snap): Promise<VersionPackageManifest | undefined> {
+    const idWithCorrectVersion = component.id.changeVersion(snap.hash);
     // const state = await this.scope.getState(component.id, tag.hash);
     // const currentExtension = state.aspects.get(PkgAspect.id);
     const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
     if (!updatedComponent) {
-      throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
+      throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
     }
     const currentData = this.getComponentBuildData(updatedComponent);
     // If for some reason the version has no package.json manifest, return undefined
