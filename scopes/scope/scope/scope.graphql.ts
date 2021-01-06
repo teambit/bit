@@ -105,9 +105,8 @@ export function scopeSchema(scopeMain: ScopeMain) {
           return JSON.parse(logs);
         },
 
-        getMany: async (scope: ScopeMain, { idStrings }: { idStrings: string[] }) => {
-          const ids = idStrings.map((str) => ComponentID.fromString(str));
-          return scope.getMany(ids);
+        getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {
+          return scope.getMany(ids.map((str) => ComponentID.fromString(str)));
         },
         // delete: async (scope: ScopeMain, props: {  }) => {
 
