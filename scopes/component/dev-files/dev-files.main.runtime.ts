@@ -6,9 +6,11 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
 import { DevFiles } from './dev-files';
 import { DevFilesFragment } from './dev-files.fragment';
+import { devFilesSchema } from './dev-files.graphql';
 
 /**
  * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
@@ -122,10 +124,10 @@ export class DevFilesMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect];
+  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect];
 
   static async provider(
-    [envs, workspace, componentAspect]: [EnvsMain, Workspace, ComponentMain],
+    [envs, workspace, componentAspect, graphql]: [EnvsMain, Workspace, ComponentMain, GraphqlMain],
     config: DevFilesConfig,
     [devPatternSlot]: [DevPatternSlot]
   ) {
@@ -149,6 +151,7 @@ export class DevFilesMain {
       };
     }
 
+    graphql.register(devFilesSchema(devFiles));
     return devFiles;
   }
 }

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 
-import { StatusTypes } from '@teambit/ui.side-bar';
+import type { StatusTypes } from '@teambit/base-ui.graph.tree.recursive-tree';
 import styles from './component-status.module.scss';
 
 export type ComponentStatusProps = {
