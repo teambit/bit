@@ -18,7 +18,7 @@ export type CodeViewProps = {
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
 
 export function CodeView({ className, componentId, currentFile, icon }: CodeViewProps) {
-  const { fileContent } = useFileContent(componentId, currentFile);
+  const { fileContent, loading } = useFileContent(componentId, currentFile);
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
   const lang = useMemo(() => {
     const langFromFileEnding = currentFile?.split('.').pop();
@@ -29,7 +29,7 @@ export function CodeView({ className, componentId, currentFile, icon }: CodeView
     return langFromFileEnding;
   }, [fileContent]);
 
-  if (!fileContent) return <EmptyCodeView />;
+  if (!fileContent && !loading && currentFile) return <EmptyCodeView />;
   return (
     <div className={classNames(styles.codeView, className)}>
       <H1 size="sm" className={styles.fileName}>
