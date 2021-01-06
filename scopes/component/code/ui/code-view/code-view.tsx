@@ -5,6 +5,7 @@ import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { useFileContent } from '@teambit/ui.queries.get-file-content';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
+import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { ComponentID } from '@teambit/component';
 import styles from './code-view.module.scss';
 
@@ -28,7 +29,7 @@ export function CodeView({ className, componentId, currentFile, icon }: CodeView
     return langFromFileEnding;
   }, [fileContent]);
 
-  if (!fileContent) return null; // is there a state where the is no file content? what should be presented then?
+  if (!fileContent) return <EmptyCodeView />;
   return (
     <div className={classNames(styles.codeView, className)}>
       <H1 size="sm" className={styles.fileName}>
@@ -43,6 +44,15 @@ export function CodeView({ className, componentId, currentFile, icon }: CodeView
       >
         {fileContent || ''}
       </CodeSnippet>
+    </div>
+  );
+}
+
+function EmptyCodeView() {
+  return (
+    <div className={styles.emptyCodeView}>
+      <img src={`${staticStorageUrl}/harmony/empty-code-view.svg`} />
+      <div>Preview isn't available</div>
     </div>
   );
 }
