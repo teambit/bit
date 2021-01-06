@@ -2,6 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import { compact } from 'lodash';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
+import { getComponentPackageVersion } from '@teambit/component-package-version';
 import { GraphAspect } from '@teambit/graph';
 import type { GraphBuilder } from '@teambit/graph';
 import {
@@ -10,15 +11,17 @@ import {
   LinkingOptions,
   WorkspacePolicy,
   InstallOptions,
+  DependencyList,
+  ComponentDependency,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
 import legacyLogger from 'bit-bin/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import { BitIds } from 'bit-bin/dist/bit-id';
 import LegacyScope from 'bit-bin/dist/scope/scope';
 import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
 import { Scope } from 'bit-bin/dist/scope';
 import fs from 'fs-extra';
@@ -98,6 +101,12 @@ export type IsolateComponentsOptions = {
   seedersOnly?: boolean;
 };
 
+type CapsulePackageJsonData = {
+  capsule: Capsule;
+  currentPackageJson?: Record<string, any>;
+  previousPackageJson: Record<string, any> | null;
+};
+
 const DEFAULT_ISOLATE_INSTALL_OPTIONS: IsolateComponentsInstallOptions = {
   installPackages: true,
   dedupe: true,
@@ -109,6 +118,8 @@ export class IsolatorMain {
   static runtime = MainRuntime;
   static dependencies = [DependencyResolverAspect, LoggerAspect, ComponentAspect, GraphAspect];
   static defaultConfig = {};
+  _componentsPackagesVersionCache: { [idStr: string]: string } = {}; // cache packages versions of components
+
   static async provider([dependencyResolver, loggerExtension, componentAspect, graphAspect]: [
     DependencyResolverMain,
     LoggerMain,
@@ -144,7 +155,7 @@ export class IsolatorMain {
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
   }
 
-  async createGraph(seeders: ComponentID[]): Promise<Component[]> {
+  private async createGraph(seeders: ComponentID[]): Promise<Component[]> {
     const host = this.componentAspect.getHost();
     const graph = await this.graphBuilder.getGraph(seeders);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
@@ -176,7 +187,7 @@ export class IsolatorMain {
     if (opts.emptyRootDir) {
       await fs.emptyDir(capsulesDir);
     }
-    const capsules = await createCapsulesFromComponents(components, capsulesDir, config);
+    const capsules = await this.createCapsulesFromComponents(components, capsulesDir, config);
     const capsuleList = CapsuleList.fromArray(capsules);
     if (opts.getExistingAsIs) {
       return capsuleList;
@@ -189,10 +200,10 @@ export class IsolatorMain {
 
       if (existingCapsules.length === capsuleList.length) return existingCapsules;
     }
-    const capsulesWithPackagesData = await getCapsulesPreviousPackageJson(capsules);
+    const capsulesWithPackagesData = await this.getCapsulesPreviousPackageJson(capsules);
 
     await this.writeComponentsInCapsules(components, capsuleList, legacyScope);
-    updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsules);
+    await this.updateWithCurrentPackageJsonData(capsulesWithPackagesData, capsuleList);
     const installOptions = Object.assign({}, DEFAULT_ISOLATE_INSTALL_OPTIONS, opts.installOptions || {});
     if (installOptions.installPackages) {
       await this.installInCapsules(capsulesDir, capsuleList, installOptions, opts.cachePackagesOnCapsulesRoot ?? false);
@@ -270,7 +281,7 @@ export class IsolatorMain {
   private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {
     const capsulesWithModifiedPackageJson: Capsule[] = capsulesWithPackagesData
       .filter((capsuleWithPackageData) => {
-        const packageJsonHasChanged = wereDependenciesInPackageJsonChanged(capsuleWithPackageData);
+        const packageJsonHasChanged = this.wereDependenciesInPackageJsonChanged(capsuleWithPackageData);
         // @todo: when a component is tagged, it changes all package-json of its dependents, but it
         // should not trigger any "npm install" because they dependencies are symlinked by us
         return packageJsonHasChanged;
@@ -350,98 +361,111 @@ export class IsolatorMain {
   getCapsulesRootDir(baseDir: string): PathOsBasedAbsolute {
     return path.join(CAPSULES_BASE_DIR, hash(baseDir));
   }
-}
 
-async function createCapsulesFromComponents(
-  components: Component[],
-  baseDir: string,
-  opts: IsolateComponentsOptions
-): Promise<Capsule[]> {
-  const capsules: Capsule[] = await Promise.all(
-    map((component: Component) => {
-      return Capsule.createFromComponent(component, baseDir, opts);
-    }, components)
-  );
-  return capsules;
-}
+  private async createCapsulesFromComponents(
+    components: Component[],
+    baseDir: string,
+    opts: IsolateComponentsOptions
+  ): Promise<Capsule[]> {
+    const capsules: Capsule[] = await Promise.all(
+      map((component: Component) => {
+        return Capsule.createFromComponent(component, baseDir, opts);
+      }, components)
+    );
+    return capsules;
+  }
 
-type CapsulePackageJsonData = {
-  capsule: Capsule;
-  currentPackageJson?: Record<string, any>;
-  previousPackageJson: Record<string, any> | null;
-};
+  private wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
+    const { previousPackageJson, currentPackageJson } = capsuleWithPackageData;
+    if (!previousPackageJson) return true;
+    // @ts-ignore at this point, currentPackageJson is set
+    return DEPENDENCIES_FIELDS.some((field) => !equals(previousPackageJson[field], currentPackageJson[field]));
+  }
 
-function wereDependenciesInPackageJsonChanged(capsuleWithPackageData: CapsulePackageJsonData): boolean {
-  const { previousPackageJson, currentPackageJson } = capsuleWithPackageData;
-  if (!previousPackageJson) return true;
-  // @ts-ignore at this point, currentPackageJson is set
-  return DEPENDENCIES_FIELDS.some((field) => !equals(previousPackageJson[field], currentPackageJson[field]));
-}
+  private async getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
+    return Promise.all(
+      capsules.map(async (capsule) => {
+        const packageJsonPath = path.join(capsule.path, 'package.json');
+        let previousPackageJson: any = null;
+        try {
+          const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
+          previousPackageJson = JSON.parse(previousPackageJsonRaw);
+        } catch (e) {
+          // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
+        }
+        return {
+          capsule,
+          previousPackageJson,
+        };
+      })
+    );
+  }
 
-async function getCapsulesPreviousPackageJson(capsules: Capsule[]): Promise<CapsulePackageJsonData[]> {
-  return Promise.all(
-    capsules.map(async (capsule) => {
-      const packageJsonPath = path.join(capsule.path, 'package.json');
-      let previousPackageJson: any = null;
-      try {
-        const previousPackageJsonRaw = await capsule.fs.promises.readFile(packageJsonPath, { encoding: 'utf8' });
-        previousPackageJson = JSON.parse(previousPackageJsonRaw);
-      } catch (e) {
-        // package-json doesn't exist in the capsule, that's fine, it'll be considered as a cache miss
-      }
-      return {
-        capsule,
-        previousPackageJson,
-      };
-    })
-  );
-}
-
-function updateWithCurrentPackageJsonData(capsulesWithPackagesData: CapsulePackageJsonData[], capsules: Capsule[]) {
-  capsules.forEach((capsule) => {
-    const packageJson = getCurrentPackageJson(capsule);
-    const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
-    if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
-    found.currentPackageJson = packageJson.packageJsonObject;
-  });
-}
-
-function getCurrentPackageJson(capsule: Capsule): PackageJsonFile {
-  const component: Component = capsule.component;
-  const consumerComponent: ConsumerComponent = component.state._consumer;
-  const newVersion = '0.0.1-new';
-  const getBitDependencies = (dependencies: BitIds) => {
-    return dependencies.reduce((acc, depId: BitId) => {
-      const packageDependency = depId.hasVersion() ? depId.version : newVersion;
-      const packageName = componentIdToPackageName({
-        ...consumerComponent,
-        id: depId,
-        isDependency: true,
-      });
-      acc[packageName] = packageDependency;
-      return acc;
-    }, {});
-  };
-  const bitDependencies = getBitDependencies(consumerComponent.dependencies.getAllIds());
-  const bitDevDependencies = getBitDependencies(consumerComponent.devDependencies.getAllIds());
-  const bitExtensionDependencies = getBitDependencies(consumerComponent.extensions.extensionsBitIds);
-
-  // unfortunately, component.packageJsonFile is not available here.
-  // the reason is that `writeComponentsToCapsules` clones the component before writing them
-  // also, don't use `PackageJsonFile.createFromComponent`, as it looses the intermediate changes
-  // such as postInstall scripts for custom-module-resolution.
-  const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
-
-  const addDependencies = (packageJsonFile: PackageJsonFile) => {
-    packageJsonFile.addDependencies(bitDependencies);
-    packageJsonFile.addDevDependencies({
-      ...bitDevDependencies,
-      ...bitExtensionDependencies,
+  private async updateWithCurrentPackageJsonData(
+    capsulesWithPackagesData: CapsulePackageJsonData[],
+    capsules: CapsuleList
+  ) {
+    const updateP = capsules.map(async (capsule) => {
+      const packageJson = await this.getCurrentPackageJson(capsule, capsules);
+      const found = capsulesWithPackagesData.find((c) => c.capsule.component.id.isEqual(capsule.component.id));
+      if (!found) throw new Error(`updateWithCurrentPackageJsonData unable to find ${capsule.component.id}`);
+      found.currentPackageJson = packageJson.packageJsonObject;
     });
-  };
-  addDependencies(packageJson);
-  packageJson.addOrUpdateProperty('version', component.id.hasVersion() ? component.id.version : newVersion);
-  return packageJson;
+    return Promise.all(updateP);
+  }
+
+  private async getCurrentPackageJson(capsule: Capsule, capsules: CapsuleList): Promise<PackageJsonFile> {
+    const component: Component = capsule.component;
+    const currentVersion = await this.getComponentPackageVersionWithCache(component);
+    // const newVersion = '0.0.1-new';
+    const getComponentDepsManifest = async (dependencies: DependencyList) => {
+      const manifest = {
+        dependencies: {},
+        devDependencies: {},
+      };
+      const compDeps = dependencies.toTypeArray<ComponentDependency>('component');
+      const promises = compDeps.map(async (dep) => {
+        const depCapsule = capsules.getCapsule(dep.componentId);
+        let version = dep.version;
+        if (depCapsule) {
+          version = await this.getComponentPackageVersionWithCache(depCapsule?.component);
+        }
+        const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycle];
+        const entry = dep.toManifest();
+        if (entry) {
+          manifest[keyName][entry.packageName] = version;
+        }
+      });
+      await Promise.all(promises);
+      return manifest;
+    };
+    const deps = await this.dependencyResolver.getDependencies(component);
+    const manifest = await getComponentDepsManifest(deps);
+
+    // unfortunately, component.packageJsonFile is not available here.
+    // the reason is that `writeComponentsToCapsules` clones the component before writing them
+    // also, don't use `PackageJsonFile.createFromComponent`, as it looses the intermediate changes
+    // such as postInstall scripts for custom-module-resolution.
+    const packageJson = PackageJsonFile.loadFromCapsuleSync(capsule.path);
+
+    const addDependencies = (packageJsonFile: PackageJsonFile) => {
+      packageJsonFile.addDependencies(manifest.dependencies);
+      packageJsonFile.addDevDependencies(manifest.devDependencies);
+    };
+    addDependencies(packageJson);
+    packageJson.addOrUpdateProperty('version', currentVersion);
+    return packageJson;
+  }
+
+  private async getComponentPackageVersionWithCache(component: Component): Promise<string> {
+    const idStr = component.id.toString();
+    if (this._componentsPackagesVersionCache[idStr]) {
+      return this._componentsPackagesVersionCache[idStr];
+    }
+    const version = await getComponentPackageVersion(component);
+    this._componentsPackagesVersionCache[idStr] = version;
+    return version;
+  }
 }
 
 IsolatorAspect.addRuntime(IsolatorMain);
