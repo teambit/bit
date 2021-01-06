@@ -5,8 +5,8 @@ import React, { useState } from 'react';
 import AnimateHeight from 'react-animate-height';
 
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
-import { PayloadType } from '../payload-type';
 import { TreeLayer, TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './scope-tree-node.module.scss';
 

@@ -8,14 +8,16 @@ export function buildDependencyTree(deps?: DependencyType[]) {
       dependencies,
       devDependencies,
     };
+
   deps.map((dep) => {
     if (dep.lifecycle === 'dev') {
       devDependencies.push(dep);
-      return;
+      return undefined;
     }
     dependencies.push(dep);
-    return;
+    return undefined;
   });
+
   return {
     dependencies,
     devDependencies,

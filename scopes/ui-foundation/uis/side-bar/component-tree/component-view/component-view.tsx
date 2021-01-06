@@ -9,8 +9,8 @@ import ReactTooltip from 'react-tooltip';
 import { ComponentModel } from '@teambit/component';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
-import { PayloadType } from '../payload-type';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { PayloadType } from '../payload-type';
 import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
 

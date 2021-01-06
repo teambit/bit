@@ -18,7 +18,7 @@ export type CodeViewProps = {
 SyntaxHighlighter.registerLanguage('md', markDownSyntax);
 
 export function CodeView({ className, componentId, currentFile, icon }: CodeViewProps) {
-  const { fileContent, loading } = useFileContent(componentId, currentFile);
+  const { fileContent } = useFileContent(componentId, currentFile);
   const title = useMemo(() => currentFile?.split('/').pop(), [currentFile]);
   const lang = useMemo(() => {
     const langFromFileEnding = currentFile?.split('.').pop();
