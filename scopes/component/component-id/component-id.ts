@@ -73,7 +73,7 @@ export class ComponentID {
     return ComponentID.fromLegacy(legacyId);
   }
 
-  changeVersion(version: string) {
+  changeVersion(version: string | undefined) {
     const legacyId = this._legacy.changeVersion(version);
     return ComponentID.fromLegacy(legacyId, this.scope);
   }
