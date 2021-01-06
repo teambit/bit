@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useDataQuery } from '@teambit/ui';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import gql from 'graphql-tag';
 
 import { Workspace } from './workspace-model';

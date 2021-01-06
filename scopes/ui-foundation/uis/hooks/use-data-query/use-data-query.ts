@@ -1,11 +1,12 @@
-import { OperationVariables, QueryResult } from '@apollo/react-common';
-import { QueryHookOptions, useQuery } from '@apollo/react-hooks';
-import { NotificationContext } from '@teambit/ui.notifications.notification-context';
-import { ApolloError } from 'apollo-client';
-import { DocumentNode } from 'graphql';
 import { useContext } from 'react';
+import type { DocumentNode } from 'graphql';
+import type { ApolloError } from 'apollo-client';
+import type { OperationVariables, QueryResult } from '@apollo/react-common';
+import { QueryHookOptions, useQuery } from '@apollo/react-hooks';
 
-import { useLoader } from '../global-loader';
+import { NotificationContext } from '@teambit/ui.notifications.notification-context';
+
+import { useLoader } from '@teambit/ui.global-loader';
 
 // @TODO derive props from useQuery
 // (couldn't figure out how to use Parameters<typeof useQuery<..>>)

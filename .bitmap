@@ -602,5 +602,15 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "ui/global-loader": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/global-loader",
+        "exported": false
+    },
+    "ui/hooks/use-data-query": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/hooks/use-data-query",
+        "exported": false
+    },
     "version": "14.8.9-dev.252"
 }
