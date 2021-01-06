@@ -51,6 +51,7 @@
         "@teambit/base-ui.layout.breakpoints": "^0.5.9",
         "@teambit/base-ui.layout.grid-component": "^0.5.9",
         "@teambit/base-ui.layout.page-frame": "^0.5.9",
+        "@teambit/base-ui.loaders.loader-ribbon": "0.0.2",
         "@teambit/base-ui.surfaces.card": "^0.5.9",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "^0.5.9",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "^0.5.9",
