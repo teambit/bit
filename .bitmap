@@ -637,6 +637,16 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "ui/global-loader": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/global-loader",
+        "exported": false
+    },
+    "ui/hooks/use-data-query": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/hooks/use-data-query",
+        "exported": false
+    },
     "update-dependencies": {
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/update-dependencies",
