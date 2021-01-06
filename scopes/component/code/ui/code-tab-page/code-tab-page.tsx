@@ -8,12 +8,13 @@ import { Collapser } from '@teambit/ui.side-bar';
 import { useLocation } from '@teambit/ui.routing.provider';
 import { useCode } from '@teambit/ui.queries.get-component-code';
 import { getFileIcon, FileIconMatch } from '@teambit/code.utils.get-file-icon';
+import type { FileIconSlot } from '@teambit/code';
 import styles from './code-tab-page.module.scss';
 import { CodeTabTree } from '../code-tab-tree';
 import { CodeView } from '../code-view';
 
 type CodePageProps = {
-  fileIconSlot?: any;
+  fileIconSlot?: FileIconSlot;
 } & HTMLAttributes<HTMLDivElement>;
 
 // should we move this file to code-tab-page folder?
@@ -27,7 +28,7 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
 
   const [isSidebarOpen, setSidebarOpenness] = useState(true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-  const fileIconMatchers: FileIconMatch[] = flatten(fileIconSlot?.values());
+  const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);
 
   return (

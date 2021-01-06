@@ -1,8 +1,9 @@
 import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
-import React, { ComponentType } from 'react';
+import React from 'react';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/code.utils.get-file-icon';
+import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
 import { CodePage } from './ui/code-tab-page';
@@ -10,7 +11,6 @@ import { CodePage } from './ui/code-tab-page';
 const isTsx = /\.tsx$/;
 
 export type FileIconSlot = SlotRegistry<FileIconMatch[]>;
-export type DrawerSlot = SlotRegistry<ComponentType>;
 export class CodeUI {
   constructor(
     /**
@@ -37,7 +37,7 @@ export class CodeUI {
 
     // overrides the default tsx react icon with the typescript icon
     ui.registerEnvFileIcon([
-      (fileName) => (isTsx.test(fileName) ? 'https://static.bit.dev/file-icons/file_type_typescript.svg' : undefined),
+      (fileName) => (isTsx.test(fileName) ? `${staticStorageUrl}/file-icons/file_type_typescript.svg` : undefined),
     ]);
     component.registerRoute(section.route);
     component.registerWidget(section.navigationLink, section.order);
