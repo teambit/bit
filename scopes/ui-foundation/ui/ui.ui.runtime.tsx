@@ -47,9 +47,8 @@ export class UiUI {
     const rootFactory = this.getRoot(rootExtension);
     if (!rootFactory) throw new Error(`root: ${rootExtension} was not found`);
     const uiRoot = rootFactory();
-    const routes = this.router.renderRoutes(uiRoot.routes, {
-      initialLocation: `${window.location.pathname}${window.location.search.search}${window.location.hash}`,
-    });
+    const initialLocation = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const routes = this.router.renderRoutes(uiRoot.routes, { initialLocation });
     const hudItems = this.hudSlot.values();
 
     const lifecycleHooks = this.lifecycleSlot.toArray();
