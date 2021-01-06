@@ -23,6 +23,10 @@ export class DependencyList {
     this.dependencies.forEach(predicate);
   }
 
+  map(predicate: (dep: Dependency, index?: number) => any) {
+    return this.dependencies.map(predicate);
+  }
+
   filter(predicate: (dep: Dependency, index?: number) => boolean): DependencyList {
     const filtered = this.dependencies.filter(predicate);
     return DependencyList.fromArray(filtered);

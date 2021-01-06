@@ -161,6 +161,8 @@ GraphqlAspect.addRuntime(GraphqlUI);
 // good enough for now.
 // generate unique id for each gql object, in order for cache to work.
 function getIdFromObject(o: IdGetterObj) {
+  return null;
+
   switch (o.__typename) {
     case 'Component':
       return `${o.__typename}_${ComponentID.fromObject(o.id).toString()}`;
