@@ -13,8 +13,8 @@ export type PreviewSlot = SlotRegistry<PreviewType>;
 
 const PREVIEW_MODULES: Record<string, PreviewModule> = {};
 
-export type RenderingContextMap = { [key: string]: any };
-export type RenderingContextSlot = SlotRegistry<RenderingContextMap>;
+export type RenderingContextProvider = () => { [key: string]: any };
+export type RenderingContextSlot = SlotRegistry<RenderingContextProvider>;
 
 export class PreviewPreview {
   constructor(
@@ -61,7 +61,7 @@ export class PreviewPreview {
       })
       .filter((module) => !!module);
 
-    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes, this.getRenderContext());
+    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes, this.getRenderingContext());
   };
 
   /**
@@ -75,7 +75,7 @@ export class PreviewPreview {
   /**
    * get the preview rendering context.
    */
-  getRenderContext() {
+  getRenderingContext() {
     return new RenderingContext(this.renderingContextSlot);
   }
 
@@ -83,7 +83,7 @@ export class PreviewPreview {
    * allows aspects to add rendering contexts.
    * render context is available through all preview definitions.
    */
-  registerRenderContext(renderContext: RenderingContextMap) {
+  registerRenderContext(renderContext: RenderingContextProvider) {
     this.renderingContextSlot.register(renderContext);
     return this;
   }
@@ -121,7 +121,7 @@ export class PreviewPreview {
 
   static dependencies = [PubsubAspect];
 
-  static slots = [Slot.withType<PreviewType>(), Slot.withType<RenderingContextMap>()];
+  static slots = [Slot.withType<PreviewType>(), Slot.withType<RenderingContextProvider>()];
 
   static async provider(
     [pubsub]: [PubsubPreview],

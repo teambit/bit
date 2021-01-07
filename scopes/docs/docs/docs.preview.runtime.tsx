@@ -1,5 +1,5 @@
 import { GraphqlAspect, GraphqlUI } from '@teambit/graphql';
-import { PreviewAspect, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
+import { PreviewAspect, RenderingContext, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
 
 import { DocsAspect } from './docs.aspect';
 
@@ -16,7 +16,7 @@ export class DocsPreview {
     private graphql: GraphqlUI
   ) {}
 
-  render = (componentId: string, modules: PreviewModule, [compositions]: [any]) => {
+  render = (componentId: string, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
     const docsModule = this.selectPreviewModel(componentId, modules);
 
     modules.mainModule.default(this.graphql.getProvider, componentId, docsModule, compositions, context);

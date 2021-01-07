@@ -1,5 +1,6 @@
 import React, { ComponentType, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
+import { RenderingContext } from '@teambit/preview';
 import { StandaloneNotFoundPage } from '@teambit/ui.pages.standalone-not-found-page';
 import { ReactAspect } from './react.aspect';
 
@@ -26,7 +27,7 @@ function withProviders(providers: ComponentType[] = []) {
       if (!MainProvider) return wrap(Provider);
       return wrap(Provider, MainProvider);
     },
-    () => <div></div>
+    ({ children }) => <div>{children}</div>
   );
 }
 
@@ -35,9 +36,14 @@ function withProviders(providers: ComponentType[] = []) {
  * this function can be overridden through ReactAspect.overrideCompositionsMounter() API
  * to apply custom logic for component DOM mounting.
  */
-export default (Composition: React.ComponentType = StandaloneNotFoundPage, previewContext: any) => {
-  // const reactContext = previewContext.get(ReactAspect.id);
-  // const Provider = withProviders(reactContext?.providers);
-  // ReactDOM.render(<Provider><Composition /></Provider>, document.getElementById('root'));
-  ReactDOM.render(<Composition />, document.getElementById('root'));
+export default (Composition: React.ComponentType = StandaloneNotFoundPage, previewContext: RenderingContext) => {
+  const reactContext = previewContext.get(ReactAspect.id);
+  const Provider = withProviders(reactContext?.providers);
+  ReactDOM.render(
+    <Provider>
+      <Composition />
+    </Provider>,
+    document.getElementById('root')
+  );
+  // ReactDOM.render(<Composition />, document.getElementById('root'));
 };

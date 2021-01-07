@@ -7,6 +7,6 @@ export class RenderingContext {
    * obtain rendering context of a specific aspect.
    */
   get(aspectId: string) {
-    return this.contexts.get(aspectId);
+    return this.contexts.get(aspectId)?.();
   }
 }
