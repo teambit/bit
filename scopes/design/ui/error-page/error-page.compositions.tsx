@@ -16,6 +16,6 @@ export const Error500 = () => (
 
 export const ErrorUnknown = () => (
   <ThemeCompositions style={{ minHeight: 400 }}>
-    <ErrorPage code="NotARealError" title="This is what you get if there's no such error page image available" />
+    <ErrorPage code={12345} title="This is what you get if there's no such error page image available" />
   </ThemeCompositions>
 );
