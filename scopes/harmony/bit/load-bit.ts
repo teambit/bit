@@ -84,7 +84,8 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
     let newAspectEntry = aspectId;
     // In case the id already has a version we don't want to get it from the bitmap
-    if (!aspectId.includes(VERSION_DELIMITER)) {
+    // We also don't want to add versions for core aspects
+    if (!aspectId.includes(VERSION_DELIMITER) && !manifestsMap[aspectId]) {
       const versionFromBitmap = getVersionFromBitMapIds(allBitmapIds, aspectId);
       if (versionFromBitmap) {
         newAspectEntry = `${aspectId}${VERSION_DELIMITER}${versionFromBitmap}`;
