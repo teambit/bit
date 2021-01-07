@@ -17,6 +17,7 @@ import {
   getCoreAspectPackageName,
   getCoreAspectName,
 } from '@teambit/aspect-loader';
+import json from 'comment-json';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { ConfigAspect, ConfigRuntime } from '@teambit/config';
 import { Harmony, RuntimeDefinition } from '@teambit/harmony';
@@ -24,8 +25,11 @@ import { Extension } from '@teambit/harmony/dist/extension';
 import { Config } from '@teambit/harmony/dist/harmony-config';
 // TODO: expose this type from harmony
 import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
+import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { getConsumerInfo } from 'bit-bin/dist/consumer';
+import { ConsumerInfo } from 'bit-bin/dist/consumer/consumer-locator';
+import BitMap from 'bit-bin/dist/consumer/bit-map';
 import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
@@ -51,7 +55,8 @@ async function getConfig(cwd = process.cwd()) {
   };
 
   if (consumerInfo) {
-    return Config.load('workspace.jsonc', configOpts);
+    const config = Config.load('workspace.jsonc', configOpts);
+    return attachVersionsFromBitmap(config, consumerInfo);
   }
 
   if (scopePath && !consumerInfo) {
@@ -59,6 +64,64 @@ async function getConfig(cwd = process.cwd()) {
   }
 
   return Config.loadGlobal(globalConfigOpts);
+}
+
+/**
+ * This will attach versions of aspects configured in the config without version by resolves them from the bitmap file
+ * It's required in order to support a usecase which you develop a local aspect and configure it in your workspace.jsonc
+ * in that case you always want the workspace.jsonc config to be linked to your local aspect
+ * but you don't want to change your workspace.jsonc version after each tag of the aspect
+ * @param config
+ */
+function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): Config {
+  if (!consumerInfo || !consumerInfo.hasBitMap) {
+    return config;
+  }
+  const rawConfig = config.toObject();
+  const rawBitmap = BitMap.loadRawSync(consumerInfo.path);
+  let parsedBitMap = {};
+  try {
+    parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
+    // Do nothing here, invalid bitmaps will be handled later
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
+  const allBitmapIds = Object.keys(parsedBitMap);
+  const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
+    let newAspectEntry = aspectId;
+    // In case the id already has a version we don't want to get it from the bitmap
+    // We also don't want to add versions for core aspects
+    if (!aspectId.includes(VERSION_DELIMITER) && !manifestsMap[aspectId]) {
+      const versionFromBitmap = getVersionFromBitMapIds(allBitmapIds, aspectId);
+      if (versionFromBitmap) {
+        newAspectEntry = `${aspectId}${VERSION_DELIMITER}${versionFromBitmap}`;
+      }
+    }
+    acc[newAspectEntry] = aspectConfig;
+    return acc;
+  }, {});
+  return new Config(result);
+}
+
+function getVersionFromBitMapIds(allBitmapIds: string[], aspectId: string): string | undefined {
+  // Start by searching id in the bitmap with exact match (including scope name)
+  const exactMatch = allBitmapIds.find((id: string) => {
+    const idWithoutVersion = id.split(VERSION_DELIMITER)[0];
+    return idWithoutVersion === aspectId;
+  });
+  if (exactMatch) {
+    return exactMatch.split(VERSION_DELIMITER)[1];
+  }
+
+  // In case the aspect is not exported yet, it will be in the bitmap without a scope, while in the aspect id it will have the default scope
+  const withoutScopeMatch = allBitmapIds.find((id: string) => {
+    const idWithoutVersion = id.split(VERSION_DELIMITER)[0];
+    const aspectWithoutScope = id.substring(id.indexOf('/') + 1);
+    return idWithoutVersion === aspectWithoutScope;
+  });
+  if (withoutScopeMatch) {
+    return withoutScopeMatch.split(VERSION_DELIMITER)[1];
+  }
+  return undefined;
 }
 
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
