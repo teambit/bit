@@ -1,7 +1,6 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ScopeMain } from '@teambit/scope';
-import { BuildStatus } from 'bit-bin/dist/constants';
 import { Logger } from '@teambit/logger';
 import {
   UpdateDependenciesMain,
