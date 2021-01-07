@@ -11,6 +11,8 @@ import {
 
 export class UpdateDependenciesCmd implements Command {
   name = 'update-dependencies <data>';
+  private = true;
+  shortDescription = 'update dependencies for components and tag/snap the results';
   description = `update dependencies for components and tag/snap the results.
 the input data is a stringified JSON of an array of the following object.
 {
