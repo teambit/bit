@@ -56,6 +56,7 @@
         "@teambit/base-ui.layout.breakpoints": "^0.5.9",
         "@teambit/base-ui.layout.grid-component": "^0.5.9",
         "@teambit/base-ui.layout.page-frame": "^0.5.9",
+        "@teambit/base-ui.loaders.loader-ribbon": "0.0.2",
         "@teambit/base-ui.surfaces.card": "^0.5.9",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "^0.5.9",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "0.6.1",
@@ -217,7 +218,6 @@
         "mutation-observer": "1.0.3",
         "nerf-dart": "1.0.0",
         "node-fetch": "2.6.0",
-        "object-hash": "2.1.1",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
         "parse-es6-imports": "1.0.1",
@@ -281,7 +281,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.252",
+        "bit-bin": "14.8.9-dev.253",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -334,7 +334,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.252",
+            "bit-bin": "14.8.9-dev.253",
             "react-dom": "^16.13.1"
           }
         }
@@ -463,7 +463,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.252",
+            "bit-bin": "14.8.9-dev.253",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
