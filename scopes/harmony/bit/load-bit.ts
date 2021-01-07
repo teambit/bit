@@ -82,10 +82,13 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   const parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
   const allBitmapIds = Object.keys(parsedBitMap);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
-    const versionFromBitmap = getVersionFromBitMapIds(allBitmapIds, aspectId);
     let newAspectEntry = aspectId;
-    if (versionFromBitmap) {
-      newAspectEntry = `${aspectId}${VERSION_DELIMITER}${versionFromBitmap}`;
+    // In case the id already has a version we don't want to get it from the bitmap
+    if (!aspectId.includes(VERSION_DELIMITER)) {
+      const versionFromBitmap = getVersionFromBitMapIds(allBitmapIds, aspectId);
+      if (versionFromBitmap) {
+        newAspectEntry = `${aspectId}${VERSION_DELIMITER}${versionFromBitmap}`;
+      }
     }
     acc[newAspectEntry] = aspectConfig;
     return acc;
