@@ -93,7 +93,7 @@ describe('multiple compilers - babel and typescript', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.disablePreview();
       helper.bitJsonc.addDefaultScope();
-      helper.fixtures.populateComponentsTS(4, undefined, true);
+      helper.fixtures.populateComponentsTS(4);
       const babelEnv = helper.env.setBabelWithTsHarmony();
       helper.extensions.addExtensionToVariant('comp1', `my-scope/${babelEnv}`);
       helper.extensions.addExtensionToVariant('comp2', 'teambit.react/react');

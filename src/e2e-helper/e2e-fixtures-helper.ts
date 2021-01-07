@@ -236,7 +236,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     // this.npm.installNpmPackage('@teambit/harmony');
   }
 
-  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = false): string {
+  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = true): string {
     let nmPathPrefix = `${owner}/${this.scopes.remote}.`;
     if (isHarmony) {
       const remoteSplit = this.scopes.remote.split('.');

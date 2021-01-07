@@ -27,7 +27,7 @@ describe('compile extension', function () {
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
+      appOutput = helper.fixtures.populateComponentsTS(3);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
@@ -151,7 +151,7 @@ describe('compile extension', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      helper.fixtures.populateComponentsTS(1, undefined, true);
+      helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');
       helper.command.runCmd('bit compile');
