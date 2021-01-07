@@ -1,5 +1,5 @@
-import * as simulations from './label.simulation';
+import * as compositions from './label.composition';
 
-export { simulations };
+export { compositions };
 
 export * from './label';
