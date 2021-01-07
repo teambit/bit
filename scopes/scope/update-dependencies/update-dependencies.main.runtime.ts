@@ -45,8 +45,8 @@ export type DepUpdateItem = {
   versionToTag?: string;
 };
 
-export type SignResult = {
-  components: Component[];
+export type UpdateDepsResult = {
+  depsUpdateItems: DepUpdateItem[];
   publishedPackages: string[];
   error: string | null;
 };
@@ -64,7 +64,7 @@ export class UpdateDependenciesMain {
   async updateDependenciesVersions(
     depsUpdateItemsRaw: DepUpdateItemRaw[],
     updateDepsOptions: UpdateDepsOptions
-  ): Promise<SignResult> {
+  ): Promise<UpdateDepsResult> {
     this.updateDepsOptions = updateDepsOptions;
     await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
@@ -93,7 +93,7 @@ export class UpdateDependenciesMain {
     }
 
     return {
-      components: this.components,
+      depsUpdateItems: this.depsUpdateItems,
       publishedPackages,
       error: pipeWithError ? pipeWithError.getErrorMessageFormatted() : null,
     };
