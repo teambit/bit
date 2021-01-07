@@ -79,7 +79,12 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   }
   const rawConfig = config.toObject();
   const rawBitmap = BitMap.loadRawSync(consumerInfo.path);
-  const parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
+  let parsedBitMap = {};
+  try {
+    parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
+    // Do nothing here, invalid bitmaps will be handled later
+    // eslint-disable-next-line no-empty
+  } catch (e) {}
   const allBitmapIds = Object.keys(parsedBitMap);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
     let newAspectEntry = aspectId;
