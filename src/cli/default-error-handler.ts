@@ -266,7 +266,8 @@ the cache is deleted and will be rebuilt on the next command. please re-run the 
   [CyclicDependencies, (err) => `${err.msg.toString().toLocaleLowerCase()}`],
   [
     UnexpectedNetworkError,
-    (err) => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`,
+    (err) => `unexpected network error has occurred.
+${err.message ? `server responded with: "${err.message}"` : ''}`,
   ],
   [
     RemoteResolverError,
