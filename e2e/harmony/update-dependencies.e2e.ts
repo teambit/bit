@@ -108,5 +108,31 @@ describe('update-dependencies command', function () {
         expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });
+    describe('running from a new bare scope using --snap flag', () => {
+      let updateDepsOutput: string;
+      before(() => {
+        helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
+        const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemote.scopePath);
+        const data = [
+          {
+            componentId: `${secondRemoteName}/comp-b`,
+            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@^1.0.0`],
+          },
+        ];
+        updateDepsOutput = helper.command.updateDependencies(data, '--snap --multiple', updateRemote.scopePath);
+      });
+      it('should succeed', () => {
+        expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
+      });
+      it('should not tag', () => {
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b`, secondRemotePath);
+        expect(Object.keys(compB.versions)).to.have.lengthOf(1);
+      });
+      it('should snap the component with the updated version', () => {
+        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@latest`, secondRemotePath);
+        expect(compB.dependencies[0].id.version).to.equal('1.1.0');
+      });
+    });
   });
 });

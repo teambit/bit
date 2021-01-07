@@ -502,7 +502,7 @@ jobs:
       # run second time until we do real bit export
       - run:
           name: 'bit status'
-          command: 'cd bit && bit status'
+          command: 'cd bit && ./scripts/bit-status.sh'
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'

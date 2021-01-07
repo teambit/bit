@@ -1,9 +1,13 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ScopeMain } from '@teambit/scope';
-import { BuildStatus } from 'bit-bin/dist/constants';
 import { Logger } from '@teambit/logger';
-import { UpdateDependenciesMain, UpdateDepsOptions, DepUpdateItemRaw } from './update-dependencies.main.runtime';
+import {
+  UpdateDependenciesMain,
+  UpdateDepsOptions,
+  DepUpdateItemRaw,
+  DepUpdateItem,
+} from './update-dependencies.main.runtime';
 
 export class UpdateDependenciesCmd implements Command {
   name = 'update-dependencies <data>';
@@ -39,15 +43,13 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   async report([data]: [string], updateDepsOptions: UpdateDepsOptions) {
     const depsUpdateItems = this.parseData(data);
     const results = await this.updateDependenciesMain.updateDependenciesVersions(depsUpdateItems, updateDepsOptions);
-    const status = results.error ? BuildStatus.Failed : BuildStatus.Succeed;
-    const error = results.error ? `${results.error}\n\n` : '';
-    const color = error ? 'red' : 'green';
-    const signed = `the following ${results.components.length} component(s) were updated with build-status "${status}"
-${results.components.map((c) => c.id.toString()).join('\n')}`;
-    return {
-      data: error + chalk.bold[color](signed),
-      code: error ? 1 : 0,
+    const componentOutput = (depUpdateItem: DepUpdateItem) => {
+      const title = chalk.bold(depUpdateItem.component.id.toString());
+      const dependencies = depUpdateItem.dependencies.map((dep) => `\t${dep.toString()}`).join('\n');
+      return `${title}\n${dependencies}`;
     };
+    return `the following ${results.depsUpdateItems.length} component(s) were updated:
+${results.depsUpdateItems.map((d) => componentOutput(d)).join('\n\n')}`;
   }
 
   private parseData(data: string): DepUpdateItemRaw[] {
