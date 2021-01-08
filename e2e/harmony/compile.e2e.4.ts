@@ -128,7 +128,7 @@ describe('compile extension', function () {
         helper.fs.outputFile('bar/foo.js');
         helper.command.addComponent('bar');
         helper.bitJsonc.setVariant(undefined, 'bar', {});
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
+        helper.bitJsonc.addToVariant('bar', 'propagate', false);
         output = helper.command.tagAllComponents();
       });
       // a guard for Flows bug that exits unexpectedly
