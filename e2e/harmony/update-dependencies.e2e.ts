@@ -53,30 +53,37 @@ describe('update-dependencies command', function () {
     after(() => {
       npmCiRegistry.destroy();
     });
-    describe('running from the remote scope', () => {
+    describe('running from a new bare scope', () => {
       let updateDepsOutput: string;
+      let headBefore: string;
+      let updateRemotePath: string;
       before(() => {
-        // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
-        // we run "action" command from the remote to itself to clear the cache. (needed because
-        // normally update-dependencies is running from the fs but a different http service is running as well)
-        helper.scopeHelper.addRemoteScope(secondRemotePath, secondRemotePath);
+        helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
+        headBefore = helper.command.getHead(`${secondRemoteName}/comp-b`, secondRemotePath);
+        const updateRemote = helper.scopeHelper.getNewBareScope('-remote-update');
+        updateRemotePath = updateRemote.scopePath;
+        helper.scopeHelper.addRemoteScope(secondRemotePath, updateRemotePath);
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@~1.0.0`],
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
           },
         ];
-        updateDepsOutput = helper.command.updateDependencies(data, '--tag', secondRemotePath);
+        updateDepsOutput = helper.command.updateDependencies(data, undefined, updateRemotePath);
       });
       it('should succeed', () => {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
       });
-      it('should tag the component with the updated version', () => {
-        const compB = helper.command.catComponent(`${secondRemoteName}/comp-b@0.0.2`, secondRemotePath);
-        expect(compB.dependencies[0].id.version).to.equal('1.0.5');
+      it('should save the data locally as a new snap', () => {
+        const currentHeadLocally = helper.command.getHead(`${secondRemoteName}/comp-b`, updateRemotePath);
+        expect(headBefore).to.not.equal(currentHeadLocally);
+      });
+      it('should not export the results to the remote scope', () => {
+        const currentHeadOnRemote = helper.command.getHead(`${secondRemoteName}/comp-b`, secondRemotePath);
+        expect(headBefore).to.equal(currentHeadOnRemote);
       });
     });
-    describe('running from a new bare scope', () => {
+    describe('running from a new bare scope using --tag flag', () => {
       let updateDepsOutput: string;
       before(() => {
         helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
@@ -89,7 +96,7 @@ describe('update-dependencies command', function () {
             versionToTag: '3.0.0',
           },
         ];
-        updateDepsOutput = helper.command.updateDependencies(data, '--tag --multiple', updateRemote.scopePath);
+        updateDepsOutput = helper.command.updateDependencies(data, '--tag', updateRemote.scopePath);
       });
       it('should succeed', () => {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
@@ -111,7 +118,7 @@ describe('update-dependencies command', function () {
             dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
           },
         ];
-        updateDepsOutput = helper.command.updateDependencies(data, '--snap --multiple', updateRemote.scopePath);
+        updateDepsOutput = helper.command.updateDependencies(data, '--snap', updateRemote.scopePath);
       });
       it('should succeed', () => {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
