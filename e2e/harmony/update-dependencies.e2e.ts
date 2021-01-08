@@ -1,25 +1,18 @@
 import chai, { expect } from 'chai';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
-
-const defaultOwner = 'ci';
 
 describe('update-dependencies command', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
-    const helperOptions: HelperOptions = {
-      scopesOptions: {
-        remoteScopeWithDot: true,
-        remoteScopePrefix: defaultOwner,
-      },
-    };
-    helper = new Helper(helperOptions);
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
@@ -34,12 +27,10 @@ describe('update-dependencies command', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
-      const remoteScopeParts = helper.scopes.remote.split('.');
-      scopeWithoutOwner = remoteScopeParts[1];
+      scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       helper.fixtures.populateComponents(1);
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.scopeHelper.reInitRemoteScope();
-      npmCiRegistry.setCiScopeInBitJson();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
       helper.command.tagAllComponents();
@@ -47,9 +38,9 @@ describe('update-dependencies command', function () {
       secondRemotePath = secondRemote.scopePath;
       secondRemoteName = secondRemote.scopeName;
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
-      helper.fs.outputFile('comp-b/index.js', `require('@${defaultOwner}/${scopeWithoutOwner}.comp1');`);
+      helper.fs.outputFile('comp-b/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1');`);
       helper.command.addComponent('comp-b');
-      helper.bitJsonc.addToVariant(undefined, 'comp-b', 'defaultScope', secondRemote.scopeName);
+      helper.bitJsonc.addToVariant('comp-b', 'defaultScope', secondRemote.scopeName);
       helper.command.tagAllComponents();
       helper.command.export();
       helper.fixtures.populateComponents(1, undefined, ' v2');
@@ -72,7 +63,7 @@ describe('update-dependencies command', function () {
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@~1.0.0`],
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@~1.0.0`],
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--tag', secondRemotePath);
@@ -94,7 +85,7 @@ describe('update-dependencies command', function () {
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@^1.0.0`],
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
             versionToTag: '3.0.0',
           },
         ];
@@ -117,7 +108,7 @@ describe('update-dependencies command', function () {
         const data = [
           {
             componentId: `${secondRemoteName}/comp-b`,
-            dependencies: [`${defaultOwner}.${scopeWithoutOwner}/comp1@^1.0.0`],
+            dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
           },
         ];
         updateDepsOutput = helper.command.updateDependencies(data, '--snap --multiple', updateRemote.scopePath);
