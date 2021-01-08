@@ -213,8 +213,8 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed.lanes[0];
   }
-  getHead(id: string) {
-    const comp = this.catComponent(id);
+  getHead(id: string, cwd?: string) {
+    const comp = this.catComponent(id, cwd);
     return comp.head;
   }
   getHeadOfLane(laneName: string, componentName: string) {
