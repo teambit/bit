@@ -10,7 +10,7 @@ import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import CommandHelper from './e2e-command-helper';
 import FsHelper from './e2e-fs-helper';
 import NpmHelper from './e2e-npm-helper';
-import ScopesData from './e2e-scopes';
+import ScopesData, { DEFAULT_OWNER } from './e2e-scopes';
 
 export default class ScopeHelper {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -191,14 +191,15 @@ export default class ScopeHelper {
     return this.command.runCmd('bit init --bare', this.scopes.envPath);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  getNewBareScope(scopeNameSuffix? = '-remote2') {
-    const scopeName = generateRandomStr() + scopeNameSuffix;
+  getNewBareScope(scopeNameSuffix = '-remote2', addOwnerPrefix = false) {
+    const prefix = addOwnerPrefix ? `${DEFAULT_OWNER}.` : '';
+    const scopeName = prefix + generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.scopes.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
     this.command.runCmd('bit init --bare', scopePath);
     this.addRemoteScope(this.scopes.remotePath, scopePath);
-    return { scopeName, scopePath };
+    const scopeWithoutOwner = scopeName.replace(prefix, '');
+    return { scopeName, scopePath, scopeWithoutOwner };
   }
   /**
    * Sometimes many tests need to do the exact same steps to init the local-scope, such as importing compiler/tester.

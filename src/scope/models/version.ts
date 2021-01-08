@@ -56,7 +56,7 @@ export type VersionProps = {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   dists?: Array<DistFileModel> | undefined;
-  mainDistFile: PathLinux | undefined;
+  mainDistFile?: PathLinux | undefined;
   compiler?: CompilerExtensionModel | undefined;
   tester?: TesterExtensionModel | undefined;
   log: Log;
@@ -583,8 +583,8 @@ export default class Version extends BitObject {
   }: {
     component: ConsumerComponent;
     files: Array<SourceFileModel>;
-    dists: Array<DistFileModel> | undefined;
-    mainDistFile: PathLinuxRelative;
+    dists?: Array<DistFileModel> | undefined;
+    mainDistFile?: PathLinuxRelative;
   }) {
     const parseFile = (file) => {
       return {

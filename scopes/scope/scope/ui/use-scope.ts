@@ -1,4 +1,4 @@
-import { useDataQuery } from '@teambit/ui';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import gql from 'graphql-tag';
 
 import { ScopeModel } from './scope-model';

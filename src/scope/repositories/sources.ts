@@ -209,8 +209,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }: {
     readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
-    force?: boolean;
-    verbose?: boolean;
   }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
@@ -286,6 +284,28 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return { version, files, dists, compilerFiles, testerFiles };
   }
 
+  async consumerComponentToVersionHarmony(
+    consumerComponent: ConsumerComponent
+  ): Promise<{ version: Version; files: any }> {
+    const clonedComponent: ConsumerComponent = consumerComponent.clone();
+    const files = consumerComponent.files.map((file) => {
+      return {
+        name: file.basename,
+        relativePath: file.relative,
+        file: file.toSourceAsLinuxEOL(),
+        test: file.test,
+      };
+    });
+    const version: Version = Version.fromComponent({
+      component: clonedComponent,
+      files: files as any,
+    });
+    // $FlowFixMe it's ok to override the pendingVersion attribute
+    consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
+
+    return { version, files };
+  }
+
   async enrichSource(consumerComponent: ConsumerComponent) {
     const objectRepo = this.objects();
     const objects = await this.getObjectsToEnrichSource(consumerComponent);
@@ -351,6 +371,22 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (testerFiles) testerFiles.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
 
+    return component;
+  }
+
+  async addSourceFromScope(source: ConsumerComponent): Promise<ModelComponent> {
+    const objectRepo = this.objects();
+    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
+    const component = await this.findOrAddComponent(source);
+    const artifactFiles = getArtifactsFiles(source.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
+    const { version, files } = await this.consumerComponentToVersionHarmony(source);
+    objectRepo.add(version);
+    if (!source.version) throw new Error(`addSource expects source.version to be set`);
+    component.addVersion(version, source.version, null, objectRepo);
+    objectRepo.add(component);
+    files.forEach((file) => objectRepo.add(file.file));
+    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
     return component;
   }
 

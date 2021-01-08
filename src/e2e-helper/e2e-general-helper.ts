@@ -84,7 +84,7 @@ export default class GeneralHelper {
     expect(GeneralHelper.alignOutput(output)).to.have.string(GeneralHelper.alignOutput(errorString) as string);
   }
 
-  isProjectNew() {
+  isHarmonyProject() {
     return fs.existsSync(path.join(this.scopes.localPath, WORKSPACE_JSONC));
   }
 

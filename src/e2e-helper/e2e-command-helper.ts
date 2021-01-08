@@ -120,6 +120,9 @@ export default class CommandHelper {
   sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
     return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
   }
+  updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
+  }
   getConfig(configName: string) {
     return this.runCmd(`bit config get ${configName}`);
   }

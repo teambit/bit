@@ -8,6 +8,7 @@ import { SignMain } from './sign.main.runtime';
 
 export class SignCmd implements Command {
   name = 'sign <component...>';
+  private = true;
   description = 'complete the build process for components';
   alias = '';
   group = 'component';
