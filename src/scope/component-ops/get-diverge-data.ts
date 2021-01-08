@@ -1,6 +1,7 @@
 import R from 'ramda';
 
 import { ParentNotFound } from '../exceptions';
+import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
 import { DivergeData } from './diverge-data';
@@ -80,10 +81,7 @@ export async function getDivergeData(
   }
 
   // @ts-ignore
-  if (!commonSnapBeforeDiverge)
-    throw new Error(
-      `fatal: local and remote of ${modelComponent.id()} could not possibly diverged as they don't have any snap in common`
-    );
+  if (!commonSnapBeforeDiverge) throw new NoCommonSnap(modelComponent.id());
   return new DivergeData(
     R.difference(snapsOnLocal, snapsOnRemote),
     R.difference(snapsOnRemote, snapsOnLocal),
