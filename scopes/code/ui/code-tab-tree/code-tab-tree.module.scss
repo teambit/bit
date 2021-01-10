@@ -9,13 +9,15 @@
 .codeTabDrawer {
   > div:first-child {
     border: none;
-    box-shadow: var(--shadow-faint);
-    z-index: 1;
+    // box-shadow: var(--shadow-faint);
+    // z-index: 1;
+
+    border-bottom: 1px solid var(--border-color);
   }
   > div:last-child {
-    border-color: #fafafa;
+    // border-color: #fafafa;
     border-bottom: 1px solid var(--border-color);
-    border-radius: 0;
+    // border-radius: 0;
   }
 }
 

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { DrawerUI } from '@teambit/tree.drawer';
+import { DrawerUI } from '@teambit/ui.tree.drawer';
 import { Link } from '@teambit/ui.routing.link';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { buildDependencyTree } from './build-depndency-tree';

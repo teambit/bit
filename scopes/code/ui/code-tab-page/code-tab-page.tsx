@@ -7,11 +7,11 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { Collapser } from '@teambit/ui.side-bar';
 import { useLocation } from '@teambit/ui.routing.provider';
 import { useCode } from '@teambit/ui.queries.get-component-code';
-import { getFileIcon, FileIconMatch } from '@teambit/code.utils.get-file-icon';
+import { getFileIcon, FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import type { FileIconSlot } from '@teambit/code';
+import { CodeView } from '@teambit/ui.code-view';
+import { CodeTabTree } from '@teambit/ui.code-tab-tree';
 import styles from './code-tab-page.module.scss';
-import { CodeTabTree } from '../code-tab-tree';
-import { CodeView } from '../code-view';
 
 type CodePageProps = {
   fileIconSlot?: FileIconSlot;
