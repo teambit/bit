@@ -2,15 +2,20 @@ import { ComponentAspect, ComponentUI } from '@teambit/component';
 import { UIRuntime } from '@teambit/ui';
 import React from 'react';
 import { SlotRegistry, Slot } from '@teambit/harmony';
-import type { FileIconMatch } from '@teambit/code.utils.get-file-icon';
+import type { FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
+import { CodePage } from '@teambit/ui.code-tab-page';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
-import { CodePage } from './ui/code-tab-page';
 
 const isTsx = /\.tsx$/;
 
 export type FileIconSlot = SlotRegistry<FileIconMatch[]>;
+
+/**
+ * Component code tab aspect. Presents the code tab page and allows to control the code tab and register specific icons for each file type.
+ *  @example CodeUI.registerEnvFileIcon([(fileName) => (/your-regexp/.test(fileName) ? 'your.icon.url' : undefined)])
+ */
 export class CodeUI {
   constructor(
     /**
