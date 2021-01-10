@@ -156,7 +156,6 @@
         "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
-        "babel-polyfill": "^6.26.0",
         "babel-preset-jest": "^26.3.0",
         "body-parser": "1.19.0",
         "camelcase": "^6.0.0",

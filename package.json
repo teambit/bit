@@ -105,7 +105,6 @@
     "ajv": "^6.11.0",
     "app-module-path": "^2.2.0",
     "array-difference": "^0.0.1",
-    "babel-runtime": "^6.23.0",
     "bluebird": "^3.7.2",
     "cacache": "^15.0.5",
     "chalk": "^2.4.1",
