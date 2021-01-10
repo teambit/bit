@@ -37,6 +37,7 @@ export type GraphQLServerOptions = {
   app?: Express;
   graphiql?: boolean;
   remoteSchemas?: GraphQLServer[];
+  subscriptionsPortRange?: number[];
 };
 
 export class GraphqlMain {
@@ -84,7 +85,15 @@ export class GraphqlMain {
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
     // @ts-ignore todo: it's not clear what's the issue.
-    app.use(cors());
+    app.use(
+      cors({
+        origin(origin, callback) {
+          callback(null, true);
+        },
+        credentials: true,
+      })
+    );
+
     app.use(
       '/graphql',
       graphqlHTTP((request, res, params) => ({
@@ -100,7 +109,8 @@ export class GraphqlMain {
     );
 
     const server = createServer(app);
-    const subscriptionServerPort = await this.getPort(this.config.subscriptionsPortRange);
+    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
+    const subscriptionServerPort = await this.getPort(subscriptionsPort);
     const { port } = this.createSubscription(options, subscriptionServerPort);
     this.proxySubscription(server, port);
 

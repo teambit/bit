@@ -1,3 +1,4 @@
+import { RenderingContext } from './rendering-context';
 import { PreviewModule } from './types/preview-module';
 
 export interface PreviewType {
@@ -10,7 +11,12 @@ export interface PreviewType {
    * preview render method.
    * :TODO @uri type this properly
    */
-  render(componentId: string, linkedModules: { [key: string]: any }, includedPreviews: any[]): void;
+  render(
+    componentId: string,
+    linkedModules: { [key: string]: any },
+    includedPreviews: any[],
+    renderingContext: RenderingContext
+  ): void;
 
   /**
    * determine if this will be the default preview to render.
