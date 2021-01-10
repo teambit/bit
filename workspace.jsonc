@@ -128,7 +128,6 @@
         "@types/mdx-js__react": "1.5.3",
         "@types/mousetrap": "^1.6.3",
         "@types/node": "14.14.13",
-        "@types/node-fetch": "2.5.7",
         "@types/proper-lockfile": "^4.1.1",
         "@types/puppeteer": "^3.0.1",
         "@types/react": "16.9.43",
@@ -157,7 +156,6 @@
         "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
-        "babel-polyfill": "^6.26.0",
         "babel-preset-jest": "^26.3.0",
         "body-parser": "1.19.0",
         "camelcase": "^6.0.0",
@@ -217,7 +215,6 @@
         "mousetrap": "^1.6.5",
         "mutation-observer": "1.0.3",
         "nerf-dart": "1.0.0",
-        "node-fetch": "2.6.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
         "parse-es6-imports": "1.0.1",
@@ -281,7 +278,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.254",
+        "bit-bin": "14.8.9-dev.255",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -334,7 +331,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.254",
+            "bit-bin": "14.8.9-dev.255",
             "react-dom": "^16.13.1"
           }
         }
@@ -463,7 +460,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.254",
+            "bit-bin": "14.8.9-dev.255",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
