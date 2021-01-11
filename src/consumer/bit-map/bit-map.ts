@@ -1,6 +1,7 @@
 import json from 'comment-json';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { compact, uniq } from 'lodash';
 import R from 'ramda';
 import type { Consumer } from '..';
 
@@ -18,6 +19,7 @@ import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './c
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
+import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -220,7 +222,23 @@ export default class BitMap {
     }
   }
 
+  private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {
+    const rootDirs = compact(Object.keys(componentsJson).map((c) => componentsJson[c].rootDir));
+    if (uniq(rootDirs).length === rootDirs.length) {
+      return; // no duplications
+    }
+    Object.keys(componentsJson).forEach((componentId) => {
+      const rootDir = componentsJson[componentId].rootDir;
+      if (!rootDir) return;
+      const idsWithSameRootDir = Object.keys(componentsJson).filter((id) => componentsJson[id].rootDir === rootDir);
+      if (idsWithSameRootDir.length > 1) {
+        throw new DuplicateRootDir(rootDir, idsWithSameRootDir);
+      }
+    });
+  }
+
   loadComponents(componentsJson: Record<string, any>) {
+    this.throwForDuplicateRootDirs(componentsJson);
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
       if (!this.isLegacy) {
