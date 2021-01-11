@@ -12,6 +12,10 @@ type FileTreeProps = {
   TreeNode: TreeNodeRenderer<any>; // - is this ok?
 };
 
+/**
+ *
+ * Renders a tree of folders and files from an array of file path's
+ */
 export function FileTree({ files, onSelect, selected, TreeNode }: FileTreeProps) {
   const rootNode = useMemo(() => {
     const tree = inflateToTree(files, (c) => c);
