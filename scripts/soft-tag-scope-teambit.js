@@ -9,7 +9,7 @@ const nextTeambitVersion = nextTeambitSevVer.version;
 console.log('nextTeambitSemVer', nextTeambitVersion);
 
 try {
-  const output = execSync(`bit tag -a -s ${nextTeambitVersion} --soft --ignore-newest-version`);
+  const output = execSync(`bit tag -a -s ${nextTeambitVersion} --soft`);
   console.log(output.toString());
 } catch (err) {
   console.log(err);
