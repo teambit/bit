@@ -1,15 +1,14 @@
 ---
 labels: ['react', 'typescript', 'ui', 'text', 'highlighted']
-description: ''
+description: 'Text highlighter.'
 ---
 
 import { HighlightedTextSpan } from './highlighted-text-span';
 
 ### Overview
 
-...
-
-H1 size example:
+An inline text highlighter.  
+Example:
 
 ```js live
 <HighlightedTextSpan>Highlighted Text</HighlightedTextSpan>

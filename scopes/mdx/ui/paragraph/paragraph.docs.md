@@ -1,16 +1,12 @@
 ---
 labels: ['react', 'typescript', 'ui', 'paragraph']
-description: ''
+description: 'A paragraph element'
 ---
 
 import { P } from './paragraph';
 
-### Overview
-
-...
-
-example:
+Example:
 
 ```js live
-<P data-testid="test-p">p element</P>
+<P>p element</P>
 ```

@@ -1,13 +1,13 @@
 ---
 labels: ['react', 'typescript', 'ui', 'title', 'heading']
-description: ''
+description: 'A function that returns a heading component with a specific size'
 ---
 
 import { createHeading } from './create-heading';
 
 ### Overview
 
-This is a wrapper function that envelope all the Heading element with seven different sizes:  
+A function that returns [Documenter’s Heading component](https://bit.dev/teambit/documenter/ui/heading) with a specific one of these sizes:  
 `"xxs" | "xs" | "sm" | "md" | "lg" | "xl" | "xxl"`
 
 H1 size example:
