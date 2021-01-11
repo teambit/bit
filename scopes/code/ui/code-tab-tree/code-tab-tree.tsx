@@ -6,6 +6,7 @@ import { TreeNode as Node } from '@teambit/ui.tree.tree-node';
 import { FolderTreeNode } from '@teambit/ui.tree.folder-tree-node';
 import { getFileIcon, FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
+import { useRouteMatch } from 'react-router-dom';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { DependencyTree } from '@teambit/ui.dependency-tree';
@@ -32,6 +33,8 @@ export function CodeTabTree({
 }: CodeTabTreeProps) {
   const [openDrawerList, onToggleDrawer] = useState(['FILES' /* , 'DEPENDENCIES' */]);
 
+  const { url } = useRouteMatch();
+
   const handleDrawerToggle = (id: string) => {
     const isDrawerOpen = openDrawerList.includes(id);
     if (isDrawerOpen) {
@@ -45,11 +48,12 @@ export function CodeTabTree({
     function TreeNode(props: any) {
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-
+      const href = `${url}/${props.node.id}`;
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
           <Node
+            href={href}
             {...props}
             isActive={props.node.id === selected}
             icon={getFileIcon(fileIconMatchers, props.node.id)}

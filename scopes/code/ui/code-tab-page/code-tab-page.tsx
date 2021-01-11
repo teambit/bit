@@ -23,8 +23,12 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
   const location = useLocation();
-  const fileFromHash = useMemo(() => location.hash.replace('#', ''), [location.hash]);
-  const currentFile = fileFromHash || mainFile;
+  const fileFromUrl = useMemo(() => {
+    const fileName = location.pathname.split('~code/').pop();
+    return fileName?.endsWith('~code') ? undefined : fileName;
+  }, [location.pathname]);
+
+  const currentFile = fileFromUrl || mainFile;
 
   const [isSidebarOpen, setSidebarOpenness] = useState(true);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
