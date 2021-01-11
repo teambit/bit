@@ -1,7 +1,5 @@
 import React, { ReactNode } from 'react';
 import { MDXProvider } from '@mdx-js/react';
-import { Paragraph } from '@teambit/documenter.ui.paragraph';
-import { ExternalLink, ExternalLinkProps } from '@teambit/documenter.routing.external-link';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { Bold } from '@teambit/documenter.ui.bold';
 import { Italic } from '@teambit/documenter.ui.italic';
@@ -16,20 +14,8 @@ import { BlockQuote } from '@teambit/documenter.ui.block-quote';
 import { createHeading } from '@teambit/ui.docs.create-heading';
 import { HighlightedTextSpan } from '@teambit/ui.docs.highlighted-text-span';
 import { Snippet } from '@teambit/ui.docs.snippet';
-
-import styles from './mdx.module.scss';
-
-function Link(props: ExternalLinkProps) {
-  return <ExternalLink {...props} className={styles.link} />;
-}
-
-function P({ children }: { children: ReactNode }) {
-  return (
-    <Paragraph size="xs" className={styles.mdxParagraph}>
-      {children}
-    </Paragraph>
-  );
-}
+import { Link } from '@teambit/ui.docs.link';
+import { P } from '@teambit/ui.docs.paragraph';
 
 const defaultMdxComponents = {
   h1: createHeading('lg'),

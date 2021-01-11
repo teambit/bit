@@ -659,6 +659,16 @@
         "rootDir": "scopes/mdx/ui/highlighted-text-span",
         "exported": false
     },
+    "ui/docs/link": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/link",
+        "exported": false
+    },
+    "ui/docs/paragraph": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/paragraph",
+        "exported": false
+    },
     "ui/docs/snippet": {
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/snippet",
