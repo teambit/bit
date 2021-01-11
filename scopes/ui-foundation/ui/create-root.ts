@@ -18,7 +18,7 @@ export async function createRoot(
 ${createImports(aspectDefs)}
 
 const isBrowser = typeof window !== "undefined";
-const config = JSON.parse('${JSON.stringify(config)}');
+const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
 
 export function render(...props){
   return Harmony.load([${getIdentifiers(
