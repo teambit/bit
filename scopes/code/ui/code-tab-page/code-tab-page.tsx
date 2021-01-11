@@ -5,28 +5,26 @@ import { flatten } from 'lodash';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { Collapser } from '@teambit/ui.side-bar';
-import { useLocation } from '@teambit/ui.routing.provider';
 import { useCode } from '@teambit/ui.queries.get-component-code';
 import { getFileIcon, FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/ui.code-view';
 import { CodeTabTree } from '@teambit/ui.code-tab-tree';
+import { useCodeParams } from '@teambit/ui.hooks.use-code-params';
 import styles from './code-tab-page.module.scss';
 
 type CodePageProps = {
   fileIconSlot?: FileIconSlot;
 } & HTMLAttributes<HTMLDivElement>;
 
-// should we move this file to code-tab-page folder?
-
 export function CodePage({ className, fileIconSlot }: CodePageProps) {
+  const fileName = useCodeParams();
   const component = useContext(ComponentContext);
   const { mainFile, fileTree = [], dependencies, devFiles } = useCode(component.id);
-  const location = useLocation();
+
   const fileFromUrl = useMemo(() => {
-    const fileName = location.pathname.split('~code/').pop();
-    return fileName?.endsWith('~code') ? undefined : fileName;
-  }, [location.pathname]);
+    return fileName.file;
+  }, [fileName]);
 
   const currentFile = fileFromUrl || mainFile;
 
