@@ -649,5 +649,15 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "ui/docs/create-heading": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/create-heading",
+        "exported": false
+    },
+    "ui/docs/highlighted-text-span": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/highlighted-text-span",
+        "exported": false
+    },
     "version": "14.8.9-dev.256"
 }
