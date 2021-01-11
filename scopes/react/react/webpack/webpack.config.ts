@@ -8,12 +8,12 @@ import * as mdxLoader from '@teambit/modules.mdx-loader';
 import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
-  'web.mjs',
-  'mjs',
   'web.js',
   'js',
   'web.ts',
   'ts',
+  'web.mjs',
+  'mjs',
   'web.tsx',
   'tsx',
   'json',
@@ -30,6 +30,12 @@ export default function (workspaceDir: string, targets: string[], envId: string,
     },
     module: {
       rules: [
+        {
+          // support packages with `*.mjs`, namely, 'graphql'
+          test: /\.mjs$/,
+          include: /node_modules/,
+          type: 'javascript/auto',
+        },
         {
           test: /\.js$/,
           enforce: 'pre',
