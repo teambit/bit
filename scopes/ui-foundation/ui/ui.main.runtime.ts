@@ -8,7 +8,7 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { sha1 } from 'bit-bin/dist/utils';
@@ -147,7 +147,9 @@ export class UiMain {
     /**
      * ui logger instance.
      */
-    private logger: Logger
+    private logger: Logger,
+
+    private harmony: Harmony
   ) {}
 
   async publicDir(uiRoot: UIRoot) {
@@ -324,7 +326,13 @@ export class UiMain {
     runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id
   ) {
-    const contents = await createRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
+    const contents = await createRoot(
+      aspectDefs,
+      rootExtensionName,
+      rootAspect,
+      runtimeName,
+      this.harmony.config.toObject()
+    );
     const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
@@ -434,7 +442,8 @@ export class UiMain {
       OnStartSlot,
       PublicDirOverwriteSlot,
       BuildMethodOverwriteSlot
-    ]
+    ],
+    harmony: Harmony
   ) {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerMain.createLogger(UIAspect.id);
@@ -450,7 +459,8 @@ export class UiMain {
       buildMethodOverwriteSlot,
       componentExtension,
       cache,
-      logger
+      logger,
+      harmony
     );
     cli.register(new StartCmd(ui, logger, pubsub));
     cli.register(new UIBuildCmd(ui));
