@@ -1,11 +1,3 @@
-.link {
-  color: var(--base-color);
-  &:hover {
-    color: var(--base-highlight);
-    text-decoration: underline;
-  }
-}
-
 .mdxLinkedHeading {
   padding-top: 40px;
   border-bottom: 1px solid #ededed;
@@ -19,9 +11,4 @@
   &:first-child {
     padding-top: 0;
   }
-}
-
-.mdxParagraph {
-  margin-bottom: 16px;
-  line-height: 1.7em;
 }
