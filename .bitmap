@@ -659,5 +659,10 @@
         "rootDir": "scopes/mdx/ui/highlighted-text-span",
         "exported": false
     },
+    "ui/docs/snippet": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/snippet",
+        "exported": false
+    },
     "version": "14.8.9-dev.256"
 }

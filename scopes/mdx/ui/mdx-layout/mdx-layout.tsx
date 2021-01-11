@@ -1,11 +1,8 @@
-import React, { ReactNode, useContext } from 'react';
-import { MDXScopeContext } from '@teambit/ui.mdx-scope-context';
-import { MDXProvider, mdx } from '@mdx-js/react';
+import React, { ReactNode } from 'react';
+import { MDXProvider } from '@mdx-js/react';
 import { Paragraph } from '@teambit/documenter.ui.paragraph';
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { ExternalLink, ExternalLinkProps } from '@teambit/documenter.routing.external-link';
 import { Separator } from '@teambit/documenter.ui.separator';
-import { Playground } from '@teambit/documenter.code.react-playground';
 import { Bold } from '@teambit/documenter.ui.bold';
 import { Italic } from '@teambit/documenter.ui.italic';
 import { Sup } from '@teambit/documenter.ui.sup';
@@ -18,21 +15,9 @@ import { Image } from '@teambit/documenter.ui.image';
 import { BlockQuote } from '@teambit/documenter.ui.block-quote';
 import { createHeading } from '@teambit/ui.docs.create-heading';
 import { HighlightedTextSpan } from '@teambit/ui.docs.highlighted-text-span';
+import { Snippet } from '@teambit/ui.docs.snippet';
 
 import styles from './mdx.module.scss';
-
-// TODO: @oded please refactor to an individual component.
-function Snippet({ children, live }: { live: string; children: string }) {
-  const components = useContext(MDXScopeContext);
-  const scope = Object.assign({}, components, {
-    mdx,
-  });
-
-  if (live) {
-    return <Playground code={children} scope={scope} />;
-  }
-  return <CodeSnippet>{children}</CodeSnippet>;
-}
 
 function Link(props: ExternalLinkProps) {
   return <ExternalLink {...props} className={styles.link} />;

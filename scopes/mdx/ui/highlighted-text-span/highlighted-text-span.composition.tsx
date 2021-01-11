@@ -1,6 +1,6 @@
 import React from 'react';
-import { HighlightedTextSpan } from './highlighted-text-span';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { HighlightedTextSpan } from './highlighted-text-span';
 
 export const HighlightedTextSpanExample = () => {
   return (

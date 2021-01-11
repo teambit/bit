@@ -1,6 +1,6 @@
 import React from 'react';
-import { createHeading } from './create-heading';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { createHeading } from './create-heading';
 
 export const CreateH1Example = () => {
   const Heading = createHeading('lg');
