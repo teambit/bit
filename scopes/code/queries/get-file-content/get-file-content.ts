@@ -1,5 +1,5 @@
-import { useDataQuery } from '@teambit/ui';
-import { gql } from 'apollo-boost';
+import { gql } from '@apollo/client';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { ComponentID } from '@teambit/component';
 
 const getFile = gql`
