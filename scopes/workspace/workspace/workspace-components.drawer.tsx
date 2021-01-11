@@ -1,4 +1,4 @@
-import { DrawerType } from '@teambit/ui.tree.drawer';
+import type { DrawerType } from '@teambit/ui.tree.drawer';
 import { FullLoader } from '@teambit/ui.full-loader';
 import {
   ComponentTree,
