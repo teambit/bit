@@ -231,7 +231,7 @@ export class Http implements Network {
       }
     `;
     const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, 'write', {
-      ids,
+      bitIds: ids,
     });
 
     return res;
@@ -244,7 +244,7 @@ export class Http implements Network {
       }
     `;
     const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.READ, {
-      ids,
+      bitIds: ids,
     });
 
     return res;
