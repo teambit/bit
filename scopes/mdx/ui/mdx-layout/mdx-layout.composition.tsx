@@ -1,8 +1,10 @@
 import React from 'react';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MDXLayout } from './mdx-layout';
-import MdxContentDefault from './mdx-layout.docs.mdx';
-import MdxContentExample from './mdx-example.mdx';
+// @ts-ignore
+import MdxContentDefault from './mdx-layout.docs.md';
+// @ts-ignore
+import MdxContentExample from './md-example.md';
 
 export const MDXLayoutExample = () => (
   <ThemeCompositions>
