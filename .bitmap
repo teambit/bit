@@ -641,6 +641,11 @@
         "rootDir": "scopes/code/ui/dependency-tree",
         "exported": false
     },
+    "ui/hooks/use-code-params": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/code/hooks/use-code-params",
+        "exported": false
+    },
     "ui/queries/get-component-code": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/queries/get-component-code",
