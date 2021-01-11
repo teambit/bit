@@ -9,7 +9,6 @@ import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 
 import crossFetch from 'cross-fetch';
-import objectHash from 'object-hash';
 
 import { createLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
