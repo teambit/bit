@@ -1,4 +1,4 @@
-import { NavLink } from '@teambit/ui.react-router.nav-link';
+import { NavLink } from '@teambit/ui.routing.nav-link';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { ComponentType } from 'react';
