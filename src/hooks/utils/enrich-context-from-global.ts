@@ -1,4 +1,4 @@
-import gitconfig from '@teambit/gitconfig';
+import gitconfig from 'gitconfig';
 import fs from 'fs-extra';
 import yn from 'yn';
 
@@ -29,7 +29,7 @@ export default function enrichContextFromGlobal(context: Record<string, any> = {
       const pubSshKeyFile = sshKeyFile ? `${sshKeyFile}.pub` : undefined;
       const pubSshKey = _getSshPubKey(pubSshKeyFile);
       const repo = yn(globalConfig.getSync(CFG_REPOSITORY_REPORTING_KEY), { default: true })
-        ? gitconfig.getUrl()
+        ? gitconfig.fetchRepo()
         : undefined;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       enrichContextFromGlobal.context = { username, email, pubSshKey, token, repo };
