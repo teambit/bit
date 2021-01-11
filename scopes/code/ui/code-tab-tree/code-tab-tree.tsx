@@ -62,7 +62,7 @@ export function CodeTabTree({
       }
       return <FolderTreeNode {...props} />;
     },
-    [fileIconMatchers]
+    [fileIconMatchers, devFiles]
   );
 
   return (
