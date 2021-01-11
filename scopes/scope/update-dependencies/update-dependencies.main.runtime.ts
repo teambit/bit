@@ -12,9 +12,6 @@ import {
 } from 'bit-bin/dist/scope/component-ops/tag-model-component';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { BuildStatus, LATEST } from 'bit-bin/dist/constants';
-import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
-import { PostSign } from 'bit-bin/dist/scope/actions';
-import { Remotes } from 'bit-bin/dist/remotes';
 import { BitIds, BitId } from 'bit-bin/dist/bit-id';
 import { getValidVersionOrReleaseType } from 'bit-bin/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -27,7 +24,6 @@ export type UpdateDepsOptions = {
   tag?: boolean;
   snap?: boolean;
   output?: string;
-  multiple?: boolean;
   message?: string;
   username?: string;
   email?: string;
@@ -45,8 +41,8 @@ export type DepUpdateItem = {
   versionToTag?: string;
 };
 
-export type SignResult = {
-  components: Component[];
+export type UpdateDepsResult = {
+  depsUpdateItems: DepUpdateItem[];
   publishedPackages: string[];
   error: string | null;
 };
@@ -61,10 +57,17 @@ export class UpdateDependenciesMain {
     private dependencyResolver: DependencyResolverMain
   ) {}
 
+  /**
+   * we assume this is running from a new bare scope. so we import everything and then start working.
+   * we don't want this to be running from the original scope (like bit-sign). this command tags or
+   * snaps the results, a process that takes some time due to the build pipeline. if we start the
+   * tag on the original scope, build and then save the tag to the filesystem, we might get another
+   * tag during the process and our tag could override it.
+   */
   async updateDependenciesVersions(
     depsUpdateItemsRaw: DepUpdateItemRaw[],
     updateDepsOptions: UpdateDepsOptions
-  ): Promise<SignResult> {
+  ): Promise<UpdateDepsResult> {
     this.updateDepsOptions = updateDepsOptions;
     await this.importAllMissing(depsUpdateItemsRaw);
     this.depsUpdateItems = await this.parseDevUpdatesItems(depsUpdateItemsRaw);
@@ -86,14 +89,10 @@ export class UpdateDependenciesMain {
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
-    if (updateDepsOptions.multiple) {
-      await this.export();
-    } else {
-      await this.clearScopesCaches();
-    }
+    await this.export();
 
     return {
-      components: this.components,
+      depsUpdateItems: this.depsUpdateItems,
       publishedPackages,
       error: pipeWithError ? pipeWithError.getErrorMessageFormatted() : null,
     };
@@ -111,8 +110,7 @@ export class UpdateDependenciesMain {
     const dependenciesIds = depsUpdateItemsRaw.map((item) =>
       item.dependencies.map((dep) => ComponentID.fromString(dep)).map((id) => id.changeVersion(LATEST))
     );
-    const idsToImport = flatten(dependenciesIds);
-    if (this.updateDepsOptions.multiple) idsToImport.push(...componentIds);
+    const idsToImport = [...flatten(dependenciesIds), ...componentIds];
     // do not use cache. for dependencies we must fetch the latest ModelComponent from the remote
     // in order to match the semver later.
     await this.scope.import(idsToImport, false);
@@ -189,6 +187,7 @@ export class UpdateDependenciesMain {
         const { releaseType, exactVersion } = getValidVersionOrReleaseType(depUpdateItem.versionToTag || 'patch');
         legacyComp.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       } else {
+        // snap is the default. When the "--snap" flag wasn't used it still should snap but not export.
         legacyComp.version = modelComponent.getSnapToAdd();
       }
     });
@@ -246,18 +245,6 @@ export class UpdateDependenciesMain {
     });
   }
 
-  private async clearScopesCaches() {
-    const bitIds = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
-    const idsGroupedByScope = bitIds.toGroupByScopeName(new BitIds());
-    const scopeRemotes: Remotes = await getScopeRemotes(this.scope.legacyScope);
-    await Promise.all(
-      Object.keys(idsGroupedByScope).map(async (scopeName) => {
-        const remote = await scopeRemotes.resolve(scopeName, this.scope.legacyScope);
-        return remote.action(PostSign.name, { ids: idsGroupedByScope[scopeName].map((id) => id.toString()) });
-      })
-    );
-  }
-
   private async saveDataIntoLocalScope(buildStatus: BuildStatus) {
     await mapSeries(this.legacyComponents, async (component) => {
       component.buildStatus = buildStatus;
@@ -267,6 +254,8 @@ export class UpdateDependenciesMain {
   }
 
   private async export() {
+    const shouldExport = this.updateDepsOptions.tag || this.updateDepsOptions.snap;
+    if (!shouldExport) return;
     const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
     await exportMany({
       scope: this.scope.legacyScope,

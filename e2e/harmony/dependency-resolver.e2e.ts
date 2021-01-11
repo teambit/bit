@@ -144,7 +144,7 @@ describe('dependency-resolver extension', function () {
           name,
         },
       };
-      helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
+      helper.bitJsonc.addToVariant('*', Extensions.pkg, pkg);
 
       await npmCiRegistry.init();
 

@@ -33,7 +33,7 @@ export default class ExtensionsHelper {
   }
 
   addExtensionToVariant(variant: string, extName: string, extConfig = {}) {
-    this.bitJsonc.addToVariant(this.scopes.localPath, variant, extName, extConfig);
+    this.bitJsonc.addToVariant(variant, extName, extConfig);
   }
 
   removeAllExtensionsFromVariant(variant: string) {

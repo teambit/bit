@@ -55,7 +55,7 @@ describe('sign command', function () {
       helper.fs.outputFile('comp2/index.js', `require('@${helper.scopes.remote}/comp1');`);
       helper.command.addComponent('comp1');
       helper.command.addComponent('comp2');
-      helper.bitJsonc.addToVariant(undefined, 'comp2', 'defaultScope', secondRemote.scopeName);
+      helper.bitJsonc.addToVariant('comp2', 'defaultScope', secondRemote.scopeName);
       helper.command.linkAndCompile();
       helper.command.tagAllWithoutBuild();
       helper.command.export();

@@ -1,13 +1,20 @@
 import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ScopeMain } from '@teambit/scope';
-import { BuildStatus } from 'bit-bin/dist/constants';
 import { Logger } from '@teambit/logger';
-import { UpdateDependenciesMain, UpdateDepsOptions, DepUpdateItemRaw } from './update-dependencies.main.runtime';
+import {
+  UpdateDependenciesMain,
+  UpdateDepsOptions,
+  DepUpdateItemRaw,
+  DepUpdateItem,
+} from './update-dependencies.main.runtime';
 
 export class UpdateDependenciesCmd implements Command {
   name = 'update-dependencies <data>';
-  description = `update dependencies for components and tag/snap the results.
+  private = true;
+  shortDescription = 'update dependencies for components and tag/snap the results';
+  description = `update versions dependencies for components and optionally tag/snap the results.
+this command should be running from a new bare scope, it first imports the components it needs and then processes the update.
 the input data is a stringified JSON of an array of the following object.
 {
   componentId: string; // ids always have scope, so it's safe to parse them from string
@@ -19,10 +26,8 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   alias = '';
   group = 'component';
   options = [
-    ['', 'tag', 'tag once the build is completed'],
-    ['', 'snap', 'snap once the build is completed'],
-    ['', 'output <dir>', 'save the updated objects to the given dir'],
-    ['', 'multiple', 'components are from different scopes'],
+    ['', 'tag', 'tag once the build is completed and export to the remote scopes'],
+    ['', 'snap', 'snap once the build is completed and export to the remote scopes'],
     ['', 'message <string>', 'message to be saved as part of the version log'],
     ['', 'username <string>', 'username to be saved as part of the version log'],
     ['', 'email <string>', 'email to be saved as part of the version log'],
@@ -37,15 +42,13 @@ an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies
   async report([data]: [string], updateDepsOptions: UpdateDepsOptions) {
     const depsUpdateItems = this.parseData(data);
     const results = await this.updateDependenciesMain.updateDependenciesVersions(depsUpdateItems, updateDepsOptions);
-    const status = results.error ? BuildStatus.Failed : BuildStatus.Succeed;
-    const error = results.error ? `${results.error}\n\n` : '';
-    const color = error ? 'red' : 'green';
-    const signed = `the following ${results.components.length} component(s) were updated with build-status "${status}"
-${results.components.map((c) => c.id.toString()).join('\n')}`;
-    return {
-      data: error + chalk.bold[color](signed),
-      code: error ? 1 : 0,
+    const componentOutput = (depUpdateItem: DepUpdateItem) => {
+      const title = chalk.bold(depUpdateItem.component.id.toString());
+      const dependencies = depUpdateItem.dependencies.map((dep) => `\t${dep.toString()}`).join('\n');
+      return `${title}\n${dependencies}`;
     };
+    return `the following ${results.depsUpdateItems.length} component(s) were updated:
+${results.depsUpdateItems.map((d) => componentOutput(d)).join('\n\n')}`;
   }
 
   private parseData(data: string): DepUpdateItemRaw[] {

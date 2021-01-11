@@ -502,7 +502,7 @@ jobs:
       # run second time until we do real bit export
       - run:
           name: 'bit status'
-          command: 'cd bit && bit status'
+          command: 'cd bit && ./scripts/bit-status.sh'
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
@@ -544,17 +544,7 @@ jobs:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
-      # - run:
-      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
-      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
-      # - run: mkdir -p ~/.ssh
-      # - run: SCAN=$(ssh-keyscan github.com )
-      # - run: echo $SCAN >> ~/.ssh/known_hosts
       - run: cd bit && node scripts/bump-bit-bin-ver.js
-      - run: cd bit && git remote rm origin
-      # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
-      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
-
       - run: cd bit && bit status
       - run:
           name: soft
@@ -610,13 +600,17 @@ jobs:
       - run:
           name: backup bit objects (after export)
           command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
-      - run: cd bit && git commit -am "bump teambit version [skip ci]"
+      - run: cd bit && git commit -am "bump teambit version to `npm show @teambit/bit version` [skip ci]"
+      # git pull first in case another commit entered to master so then the push could work with no errors.
+      - run: cd bit && git pull origin master
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
           path: bit/objects-after-export.tar
+      - store_artifacts:
+          path: bit/.bitmap
 
   harmony_deploy_approval_job:
     <<: *defaults
