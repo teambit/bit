@@ -18,10 +18,7 @@
   font-weight: bold;
   padding: 0 8px;
 
-  border-width: 1px;
-  border-style: solid;
-  border-color: var(--bg-color);
-  border-bottom-color: #ededed;
+  border-bottom: 1px solid #ededed;
   transition: background-color 300ms, border-color 300ms ease-in-out;
   &:hover {
     border-color: var(--bg-topping-highlight);

@@ -25,9 +25,9 @@ import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
 
 export type DependenciesOverridesData = {
-  dependencies?: Record<string, any>;
-  devDependencies?: Record<string, any>;
-  peerDependencies?: Record<string, any>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 };
 
 export type ComponentOverridesData = DependenciesOverridesData & {

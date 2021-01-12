@@ -1,14 +1,15 @@
 import React, { useState, useCallback, HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
-import { FileTree } from '@teambit/tree.file-tree';
-import { DrawerUI } from '@teambit/tree.drawer';
-import { TreeNode as Node } from '@teambit/tree.tree-node';
-import { FolderTreeNode } from '@teambit/tree.folder-tree-node';
-import { getFileIcon, FileIconMatch } from '@teambit/code.utils.get-file-icon';
+import { FileTree } from '@teambit/ui.tree.file-tree';
+import { DrawerUI } from '@teambit/ui.tree.drawer';
+import { TreeNode as Node } from '@teambit/ui.tree.tree-node';
+import { FolderTreeNode } from '@teambit/ui.tree.folder-tree-node';
+import { getFileIcon, FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
+import { useCodeParams } from '@teambit/ui.hooks.use-code-params';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
-import { DependencyTree } from '../dependency-tree';
+import { DependencyTree } from '@teambit/ui.dependency-tree';
 
 import styles from './code-tab-tree.module.scss';
 
@@ -43,13 +44,15 @@ export function CodeTabTree({
 
   const TreeNodeRenderer = useCallback(
     function TreeNode(props: any) {
+      const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-
+      const href = `/${urlParams.componentId}/~code/${props.node.id}`;
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
           <Node
+            href={href}
             {...props}
             isActive={props.node.id === selected}
             icon={getFileIcon(fileIconMatchers, props.node.id)}
@@ -59,7 +62,7 @@ export function CodeTabTree({
       }
       return <FolderTreeNode {...props} />;
     },
-    [fileIconMatchers]
+    [fileIconMatchers, devFiles]
   );
 
   return (

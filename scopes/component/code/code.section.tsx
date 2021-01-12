@@ -7,7 +7,7 @@ import type { CodeUI } from './code.ui.runtime';
 export class CodeSection implements Section {
   constructor(private codeUI: CodeUI) {}
   route = {
-    path: '~code',
+    path: '~code/:file*',
     children: this.codeUI.getCodePage(),
   };
   navigationLink = {
