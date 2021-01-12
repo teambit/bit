@@ -413,6 +413,9 @@
     "scopes/component": {
       "defaultScope": "teambit.component"
     },
+    "scopes/code": {
+      "defaultScope": "teambit.code"
+    },
     "scopes/component/component-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"

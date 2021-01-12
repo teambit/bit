@@ -3,6 +3,7 @@ import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 export function buildDependencyTree(deps?: DependencyType[]) {
   const devDependencies: DependencyType[] = [];
   const dependencies: DependencyType[] = [];
+  const peerDependencies: DependencyType[] = [];
   if (!deps)
     return {
       dependencies,
@@ -14,6 +15,10 @@ export function buildDependencyTree(deps?: DependencyType[]) {
       devDependencies.push(dep);
       return undefined;
     }
+    if (dep.lifecycle === 'peer') {
+      peerDependencies.push(dep);
+      return undefined;
+    }
     dependencies.push(dep);
     return undefined;
   });
@@ -21,5 +26,6 @@ export function buildDependencyTree(deps?: DependencyType[]) {
   return {
     dependencies,
     devDependencies,
+    peerDependencies,
   };
 }
