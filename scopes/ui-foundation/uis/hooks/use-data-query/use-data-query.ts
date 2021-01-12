@@ -1,6 +1,6 @@
 import { useContext } from 'react';
-import { OperationVariables, QueryResult, ApolloError } from '@apollo/client';
-import { QueryHookOptions, useQuery, DocumentNode } from '@apollo/client';
+import { useQuery } from '@apollo/client';
+import type { OperationVariables, QueryResult, QueryHookOptions, DocumentNode, ApolloError } from '@apollo/client';
 
 import { NotificationContext } from '@teambit/ui.notifications.notification-context';
 
