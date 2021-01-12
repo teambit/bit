@@ -507,26 +507,6 @@ jobs:
           name: 'bit build'
           command: 'cd bit && bit build'
 
-  bump_bit_bin:
-    <<: *defaults
-    environment:
-      # change the npm config to avoid using sudo
-      NPM_CONFIG_PREFIX: ~/.npm-global
-    steps:
-      - attach_workspace:
-          at: ./
-      - restore_cache:
-          key: bitsrc-ssh-key3
-      - restore_cache:
-          key: bitsrc-registry8
-      - update_ssh_agent
-      - set_git_credentials
-      - run: cd bit && node scripts/bump-bit-bin-ver.js
-      - persist_to_workspace:
-          root: .
-          paths:
-            - bit
-
   bit_tag:
     <<: *defaults
     environment:
