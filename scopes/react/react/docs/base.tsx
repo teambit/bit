@@ -96,7 +96,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
           <Content />
         )}
 
-        <CompositionsSummary compositions={compositions} />
+        <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
 
         <ExamplesOverview examples={Content.examples || examples} />
 
