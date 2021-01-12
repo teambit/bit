@@ -58,7 +58,7 @@ export class GraphqlUI {
 
   createSsrClient({ serverUrl, cookie }: { serverUrl: string; cookie?: any }) {
     const link = createHttpLink({
-      credentials: 'same-origin',
+      credentials: 'include',
       uri: serverUrl,
       headers: {
         cookie,
