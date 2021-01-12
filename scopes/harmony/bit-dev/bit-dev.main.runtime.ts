@@ -26,13 +26,18 @@ export class BitDev {
     const onExportMain = new BitDev();
     scope.registerOnPostExport(async ({ ids }, { auth }) => {
       logger.info(`export completed, reporting to: ${config.hub}`);
-      const graphClient = new GraphQLClient(`${config.hub}/graphql`, { headers: onExportMain.getAuthHeader(auth) });
-      const EXPORT_COMPLETED = gql`
-        mutation export_completed($bitIds: [String!]!) {
-          export_completed(bitIds: $bitIds)
-        }
-      `;
-      await graphClient.request(EXPORT_COMPLETED, { bitIds: ids });
+      try {
+        const graphClient = new GraphQLClient(`${config.hub}/graphql`, { headers: onExportMain.getAuthHeader(auth) });
+        const EXPORT_COMPLETED = gql`
+          mutation export_completed($bitIds: [String!]!) {
+            export_completed(bitIds: $bitIds)
+          }
+        `;
+        const bitIds = ids.map((id) => id.toString());
+        await graphClient.request(EXPORT_COMPLETED, { bitIds });
+      } catch (error) {
+        logger.error(`failed to report`, error);
+      }
     });
 
     return onExportMain;
