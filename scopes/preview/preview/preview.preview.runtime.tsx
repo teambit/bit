@@ -7,10 +7,14 @@ import { PreviewType } from './preview-type';
 import { PreviewAspect, PreviewRuntime } from './preview.aspect';
 import { ClickInsideAnIframeEvent } from './events';
 import { PreviewModule } from './types/preview-module';
+import { RenderingContext } from './rendering-context';
 
 export type PreviewSlot = SlotRegistry<PreviewType>;
 
 const PREVIEW_MODULES: Record<string, PreviewModule> = {};
+
+export type RenderingContextProvider = () => { [key: string]: any };
+export type RenderingContextSlot = SlotRegistry<RenderingContextProvider>;
 
 export class PreviewPreview {
   constructor(
@@ -22,7 +26,9 @@ export class PreviewPreview {
     /**
      * preview slot.
      */
-    private previewSlot: PreviewSlot
+    private previewSlot: PreviewSlot,
+
+    private renderingContextSlot: RenderingContextSlot
   ) {
     this.registerClickPubSub();
   }
@@ -55,7 +61,7 @@ export class PreviewPreview {
       })
       .filter((module) => !!module);
 
-    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes);
+    return preview.render(componentId.fullName, PREVIEW_MODULES[name], includes, this.getRenderingContext());
   };
 
   /**
@@ -63,6 +69,22 @@ export class PreviewPreview {
    */
   registerPreview(preview: PreviewType) {
     this.previewSlot.register(preview);
+    return this;
+  }
+
+  /**
+   * get the preview rendering context.
+   */
+  getRenderingContext() {
+    return new RenderingContext(this.renderingContextSlot);
+  }
+
+  /**
+   * allows aspects to add rendering contexts.
+   * render context is available through all preview definitions.
+   */
+  registerRenderContext(renderContext: RenderingContextProvider) {
+    this.renderingContextSlot.register(renderContext);
     return this;
   }
 
@@ -99,10 +121,14 @@ export class PreviewPreview {
 
   static dependencies = [PubsubAspect];
 
-  static slots = [Slot.withType<PreviewType>()];
+  static slots = [Slot.withType<PreviewType>(), Slot.withType<RenderingContextProvider>()];
 
-  static async provider([pubsub]: [PubsubPreview], config, [previewSlot]: [PreviewSlot]) {
-    const preview = new PreviewPreview(pubsub, previewSlot);
+  static async provider(
+    [pubsub]: [PubsubPreview],
+    config,
+    [previewSlot, renderingContextSlot]: [PreviewSlot, RenderingContextSlot]
+  ) {
+    const preview = new PreviewPreview(pubsub, previewSlot, renderingContextSlot);
 
     window.addEventListener('hashchange', () => {
       preview.render();

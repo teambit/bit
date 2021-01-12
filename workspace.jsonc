@@ -72,7 +72,7 @@
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "^1.0.3",
         "@teambit/documenter.routing.external-link": "1.0.3",
-        "@teambit/documenter.theme.theme-compositions": "1.0.2",
+        "@teambit/documenter.theme.theme-compositions": "2.0.3",
         "@teambit/documenter.theme.theme-context": "2.0.2",
         "@teambit/documenter.types.docs-file": "^1.0.3",
         "@teambit/documenter.ui.block-quote": "0.0.1",
@@ -107,7 +107,7 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.4",
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
         "@teambit/evangelist.theme.icon-font": "0.5.5",
-        "@teambit/harmony": "0.2.10",
+        "@teambit/harmony": "0.2.11",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/classnames": "^2.2.10",
@@ -115,8 +115,8 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
-        "@types/express": "4.17.9",
         "@types/eslint": "7.2.4",
+        "@types/express": "4.17.9",
         "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
@@ -195,6 +195,7 @@
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
         "loader-utils": "2.0.0",
+        "lodash": "4.17.20",
         "lodash.compact": "3.0.1",
         "lodash.head": "^4.0.1",
         "memoize-one": "5.1.1",
@@ -268,7 +269,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.255",
+        "bit-bin": "14.8.9-dev.256",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -277,15 +278,14 @@
       }
     },
     "packageManagerArgs": [],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -321,7 +321,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.255",
+            "bit-bin": "14.8.9-dev.256",
             "react-dom": "^16.13.1"
           }
         }
@@ -436,9 +436,7 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": [
-            "--access public"
-          ],
+          "packageManagerPublishArgs": ["--access public"],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -450,7 +448,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.255",
+            "bit-bin": "14.8.9-dev.256",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

@@ -9,7 +9,8 @@ export async function createRoot(
   aspectDefs: AspectDefinition[],
   rootExtensionName?: string,
   rootAspect = UIAspect.id,
-  runtime = 'ui'
+  runtime = 'ui',
+  config = {}
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
 
@@ -17,12 +18,13 @@ export async function createRoot(
 ${createImports(aspectDefs)}
 
 const isBrowser = typeof window !== "undefined";
+const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
 
 export function render(...props){
   return Harmony.load([${getIdentifiers(
     aspectDefs.map((def) => def.aspectPath),
     'Aspect'
-  )}], '${runtime}', {})
+  )}], '${runtime}', config)
     .then((harmony) => {
       return harmony
       .run()

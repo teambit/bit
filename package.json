@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.255",
+  "version": "14.8.9-dev.256",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -98,7 +98,7 @@
   "dependencies": {
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
-    "@teambit/gitconfig": "^2.0.6",
+    "gitconfig": "^2.0.8",
     "@typescript-eslint/typescript-estree": "^4.8.2",
     "@vuedoc/parser": "^2.3.0",
     "acorn": "^6.0.0",
