@@ -1091,14 +1091,9 @@ workflows:
           requires:
             - set_npm_registries
             - checkout_code
-      - bump_bit_bin:
-          <<: *master_only_filter
-          requires:
-            - setup_harmony
       - bit_tag:
           <<: *master_only_filter
           requires:
-            - bump_bit_bin
             - setup_harmony
       - bit_export:
           <<: *master_only_filter
@@ -1131,15 +1126,9 @@ workflows:
             - harmony_deploy_approval_job
             - set_npm_registries
             - checkout_code
-      - bump_bit_bin:
-          <<: *master_only_filter
-          requires:
-            - harmony_deploy_approval_job
-            - setup_harmony
       - bit_tag:
           <<: *master_only_filter
           requires:
-            - bump_bit_bin
             - harmony_deploy_approval_job
             - setup_harmony
       - bit_export:
