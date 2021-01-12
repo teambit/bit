@@ -1,6 +1,7 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import { Configuration } from 'webpack';
+import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as mdxLoader from '@teambit/modules.mdx-loader';
 // Make sure the bit-react-transformer is a dependency
@@ -23,7 +24,12 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (workspaceDir: string, targets: string[], envId: string, fileMapPath: string): Configuration {
+export default function (
+  workspaceDir: string,
+  targets: string[],
+  envId: string,
+  fileMapPath: string
+): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
