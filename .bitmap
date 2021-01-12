@@ -362,6 +362,26 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/modules/loader"
     },
+    "teambit.mdx/ui/docs/create-heading@0.0.242": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/create-heading"
+    },
+    "teambit.mdx/ui/docs/highlighted-text-span@0.0.242": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/highlighted-text-span"
+    },
+    "teambit.mdx/ui/docs/link@0.0.242": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/link"
+    },
+    "teambit.mdx/ui/docs/paragraph@0.0.242": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/paragraph"
+    },
+    "teambit.mdx/ui/docs/snippet@0.0.242": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/snippet"
+    },
     "teambit.mdx/ui/mdx-layout@0.0.240": {
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-layout"
