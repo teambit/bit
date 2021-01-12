@@ -1,5 +1,4 @@
-import { useQuery } from '@apollo/react-hooks';
-import { gql } from 'apollo-boost';
+import { useQuery, gql } from '@apollo/client';
 import { ComponentID } from '@teambit/component';
 
 export const docsFields = gql`
@@ -20,6 +19,7 @@ export const docsFields = gql`
 const getProperties = gql`
   query($id: String!) {
     getHost {
+      id # used for GQL caching
       getDocs(id: $id) {
         ...docsFields
       }
@@ -30,6 +30,7 @@ const getProperties = gql`
 
 type PropertiesResult = {
   getHost: {
+    id: string;
     getDocs: {
       abstract?: string;
       filePath?: string;

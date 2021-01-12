@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { ApolloProvider } from '@apollo/react-hooks';
+import { ApolloProvider } from '@apollo/client';
 import type { GraphQLClient } from '../graphql.ui.runtime';
 
 export type GraphQLProviderProps = {
