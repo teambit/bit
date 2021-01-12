@@ -26,6 +26,7 @@ export type DocsSectionProps = {
 const GET_COMPONENT = gql`
   query($id: String!) {
     getHost {
+      id # used for GQL caching
       get(id: $id) {
         id {
           name

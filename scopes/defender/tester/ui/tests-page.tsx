@@ -39,6 +39,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
 const GET_COMPONENT = gql`
   query($id: String!) {
     getHost {
+      id # for GQL caching
       getTests(id: $id) {
         loading
         testsResults {

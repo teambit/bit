@@ -5,7 +5,14 @@ import { ComponentID } from '@teambit/component';
 const getCode = gql`
   query getCode($id: String!) {
     getHost {
+      id # used for GQL caching
       get(id: $id) {
+        id {
+          # used for GQL caching
+          name
+          version
+          scope
+        }
         fs
         mainFile
         devFiles
@@ -31,6 +38,7 @@ export type DependencyType = {
 
 type CodeResults = {
   getHost: {
+    id: string;
     get: {
       fs?: string[];
       mainFile?: string;

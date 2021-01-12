@@ -19,6 +19,7 @@ export const docsFields = gql`
 const getProperties = gql`
   query($id: String!) {
     getHost {
+      id # used for GQL caching
       getDocs(id: $id) {
         ...docsFields
       }
@@ -29,6 +30,7 @@ const getProperties = gql`
 
 type PropertiesResult = {
   getHost: {
+    id: string;
     getDocs: {
       abstract?: string;
       filePath?: string;

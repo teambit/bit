@@ -39,6 +39,7 @@ const componentFields = gql`
 const GET_COMPONENT = gql`
   query Component($id: String!, $extensionId: String!) {
     getHost(id: $extensionId) {
+      id # used for GQL caching
       get(id: $id) {
         ...componentFields
       }
