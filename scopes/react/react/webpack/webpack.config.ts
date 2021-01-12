@@ -9,12 +9,12 @@ import * as mdxLoader from '@teambit/modules.mdx-loader';
 import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
-  'web.mjs',
-  'mjs',
   'web.js',
   'js',
   'web.ts',
   'ts',
+  'web.mjs',
+  'mjs',
   'web.tsx',
   'tsx',
   'json',
@@ -37,13 +37,19 @@ export default function (
     module: {
       rules: [
         {
+          // support packages with `*.mjs`, namely, 'graphql'
+          test: /\.mjs$/,
+          include: /node_modules/,
+          type: 'javascript/auto',
+        },
+        {
           test: /\.js$/,
           enforce: 'pre',
           exclude: /node_modules/,
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: /\.(js|jsx|tsx|ts)$/,
+          test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
           loader: require.resolve('babel-loader'),

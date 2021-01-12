@@ -1,11 +1,12 @@
 import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
-import gql from 'graphql-tag';
+import { gql } from '@apollo/client';
 
 import { ComponentHostModel } from './component-host-model';
 
 const COMPONENT_HOST = gql`
   {
     getHost {
+      id # used for GQL caching
       name
       list {
         id {

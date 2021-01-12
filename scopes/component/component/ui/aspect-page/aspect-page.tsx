@@ -1,8 +1,8 @@
 import { AspectBox } from '@teambit/ui.aspect-box';
 import { ComponentContext } from '@teambit/component';
 import React, { useContext } from 'react';
-import { useQuery } from '@apollo/react-hooks';
-import { gql } from 'apollo-boost';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
@@ -25,7 +25,7 @@ const GET_COMPONENT = gql`
 
 export function AspectPage() {
   const component = useContext(ComponentContext);
-  const { data } = useQuery(GET_COMPONENT, {
+  const { data } = useDataQuery(GET_COMPONENT, {
     variables: { id: component.id._legacy.name },
   });
   const aspectList = data?.getHost?.get?.aspects;
