@@ -1,0 +1,14 @@
+.mdxLinkedHeading {
+  padding-top: 40px;
+  border-bottom: 1px solid #ededed;
+  padding-bottom: 8px;
+  width: 100%;
+
+  // if after hr dont add padding
+  hr + & {
+    padding-top: 0;
+  }
+  &:first-child {
+    padding-top: 0;
+  }
+}

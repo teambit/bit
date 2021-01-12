@@ -8,7 +8,7 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import chalk from 'chalk';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { sha1 } from 'bit-bin/dist/utils';
@@ -37,9 +37,13 @@ export type OnStart = () => void;
 
 export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
 
+export type BuildMethodOverwrite = (name: string, uiRoot: UIRoot, rebuild?: boolean) => Promise<string>;
+
 export type OnStartSlot = SlotRegistry<OnStart>;
 
 export type PublicDirOverwriteSlot = SlotRegistry<PublicDirOverwrite>;
+
+export type BuildMethodOverwriteSlot = SlotRegistry<BuildMethodOverwrite>;
 
 export type UIConfig = {
   /**
@@ -126,6 +130,11 @@ export class UiMain {
     private publicDirOverwriteSlot: PublicDirOverwriteSlot,
 
     /**
+     * Overwrite the build ui method
+     */
+    private buildMethodOverwriteSlot: BuildMethodOverwriteSlot,
+
+    /**
      * component extension.
      */
     private componentExtension: ComponentMain,
@@ -138,7 +147,9 @@ export class UiMain {
     /**
      * ui logger instance.
      */
-    private logger: Logger
+    private logger: Logger,
+
+    private harmony: Harmony
   ) {}
 
   async publicDir(uiRoot: UIRoot) {
@@ -230,9 +241,26 @@ export class UiMain {
   /**
    * overwrite the build ui function
    */
+  registerBuildUIOverwrite(fn: BuildMethodOverwrite) {
+    this.buildMethodOverwriteSlot.register(fn);
+    return this;
+  }
+
+  /**
+   * overwrite the build ui function
+   */
   registerPublicDirOverwrite(fn: PublicDirOverwrite) {
     this.publicDirOverwriteSlot.register(fn);
     return this;
+  }
+
+  private getOverwriteBuildFn() {
+    const buildMethodOverwrite = this.buildMethodOverwriteSlot.toArray();
+    if (buildMethodOverwrite[0]) {
+      const [, fn] = buildMethodOverwrite[0];
+      return fn;
+    }
+    return undefined;
   }
 
   private getOverwritePublic() {
@@ -298,7 +326,13 @@ export class UiMain {
     runtimeName = UIRuntime.name,
     rootAspect = UIAspect.id
   ) {
-    const contents = await createRoot(aspectDefs, rootExtensionName, rootAspect, runtimeName);
+    const contents = await createRoot(
+      aspectDefs,
+      rootExtensionName,
+      rootAspect,
+      runtimeName,
+      this.harmony.config.toObject()
+    );
     const filepath = resolve(join(__dirname, `${runtimeName}.root${sha1(contents)}.js`));
     if (fs.existsSync(filepath)) return filepath;
     fs.outputFileSync(filepath, contents);
@@ -311,12 +345,14 @@ export class UiMain {
   }
 
   private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
+    const overwrite = this.getOverwriteBuildFn();
+    if (overwrite) return overwrite(name, uiRoot, rebuild);
     const hash = await this.buildIfChanged(name, uiRoot, rebuild);
     await this.buildIfNoBundle(name, uiRoot);
     return hash;
   }
 
-  public async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
+  async buildUiHash(uiRoot: UIRoot, runtime = 'ui'): Promise<string> {
     const aspects = await uiRoot.resolveAspects(runtime);
     aspects.sort((a, b) => (a.aspectPath > b.aspectPath ? 1 : -1));
     const hash = aspects.map((aspect) => {
@@ -325,7 +361,7 @@ export class UiMain {
     return sha1(hash.join(''));
   }
 
-  private async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
+  async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
     if (hash === hashed && !force) return hash;
@@ -356,7 +392,7 @@ export class UiMain {
     process.stdout.write(process.platform === 'win32' ? '\x1B[2J\x1B[0f' : '\x1B[2J\x1B[3J\x1B[H');
   }
 
-  private async buildIfNoBundle(name: string, uiRoot: UIRoot) {
+  async buildIfNoBundle(name: string, uiRoot: UIRoot) {
     const config = createWebpackConfig(
       uiRoot.path,
       [await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name)],
@@ -391,12 +427,23 @@ export class UiMain {
     LoggerAspect,
   ];
 
-  static slots = [Slot.withType<UIRoot>(), Slot.withType<OnStart>(), Slot.withType<PublicDirOverwriteSlot>()];
+  static slots = [
+    Slot.withType<UIRoot>(),
+    Slot.withType<OnStart>(),
+    Slot.withType<PublicDirOverwriteSlot>(),
+    Slot.withType<BuildMethodOverwriteSlot>(),
+  ];
 
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
-    [uiRootSlot, onStartSlot, publicDirOverwriteSlot]: [UIRootRegistry, OnStartSlot, PublicDirOverwriteSlot]
+    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot]: [
+      UIRootRegistry,
+      OnStartSlot,
+      PublicDirOverwriteSlot,
+      BuildMethodOverwriteSlot
+    ],
+    harmony: Harmony
   ) {
     // aspectExtension.registerRuntime(new RuntimeDefinition('ui', []))
     const logger = loggerMain.createLogger(UIAspect.id);
@@ -409,9 +456,11 @@ export class UiMain {
       express,
       onStartSlot,
       publicDirOverwriteSlot,
+      buildMethodOverwriteSlot,
       componentExtension,
       cache,
-      logger
+      logger,
+      harmony
     );
     cli.register(new StartCmd(ui, logger, pubsub));
     cli.register(new UIBuildCmd(ui));

@@ -14,6 +14,8 @@ export type NavLinkProps = LinkProps & {
   exact?: boolean;
   /** take in consideration trailing slash on the location pathname */
   strict?: boolean;
+  /** explicit active state override */
+  isActive?: (() => boolean) | undefined;
 };
 
 /**
@@ -23,6 +25,7 @@ export type NavLinkProps = LinkProps & {
 export function NativeNavLink({
   activeClassName,
   activeStyle,
+  isActive,
   exact,
   strict,
   style,
@@ -32,17 +35,21 @@ export function NativeNavLink({
   // TODO - consider using getLocation()
   const activeHref = isBrowser ? window.location.href : '/';
 
-  const isActive = useMemo(() => rest.href && compareUrl(activeHref, rest.href), [
+  const isDefaultActive = useMemo(() => rest.href && compareUrl(activeHref, rest.href), [
     exact,
     strict,
     activeHref,
     rest.href,
   ]);
 
-  const combinedStyles = useMemo(() => (isActive && activeStyle ? { ...style, ...activeStyle } : style), [
-    isActive,
+  const calcIsActive = isActive?.() || isDefaultActive;
+
+  const combinedStyles = useMemo(() => (calcIsActive && activeStyle ? { ...style, ...activeStyle } : style), [
+    calcIsActive,
     style,
   ]);
 
-  return <NativeLink {...rest} style={combinedStyles} className={classnames(className, isActive && activeClassName)} />;
+  return (
+    <NativeLink {...rest} style={combinedStyles} className={classnames(className, calcIsActive && activeClassName)} />
+  );
 }

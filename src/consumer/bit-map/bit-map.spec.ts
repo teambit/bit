@@ -5,6 +5,7 @@ import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import BitMap from './bit-map';
+import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 const scope = {
   path: path.join(__dirname, '.bit'),
@@ -102,6 +103,25 @@ describe('BitMap', function () {
       expect(fields[0]).to.equal('name');
       expect(fields[1]).to.equal('relativePath');
       expect(fields[2]).to.equal('test');
+    });
+  });
+  describe('loadComponents', () => {
+    let bitMap: BitMap;
+    before(async () => {
+      bitMap = await getBitmapInstance();
+    });
+    it('should throw DuplicateRootDir error when multiple ids have the same rootDir', () => {
+      const invalidBitMap = {
+        comp1: {
+          mainFile: 'index.js',
+          rootDir: 'comp1',
+        },
+        comp2: {
+          mainFile: 'index.js',
+          rootDir: 'comp1',
+        },
+      };
+      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(DuplicateRootDir);
     });
   });
   describe('getAuthoredExportedComponents', async () => {

@@ -29,6 +29,7 @@ export {
   SemverVersion,
   DependenciesManifest,
   ComponentDependency,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
 } from './dependencies';
 export {
   WorkspacePolicyEntry,

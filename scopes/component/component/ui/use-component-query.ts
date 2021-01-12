@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { useDataQuery } from '@teambit/ui';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { gql } from 'apollo-boost';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';

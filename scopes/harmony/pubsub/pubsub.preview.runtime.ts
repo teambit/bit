@@ -17,7 +17,16 @@ import { PubsubAspect } from './pubsub.aspect';
 export class PubsubPreview {
   private _parentPubsub;
 
+  inIframe() {
+    try {
+      return window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
+  }
+
   public async updateParentPubsub() {
+    if (!this.inIframe()) return undefined;
     return connectToParent({ timeout: 300 })
       .promise.then((parentPubsub) => {
         this._parentPubsub = parentPubsub;

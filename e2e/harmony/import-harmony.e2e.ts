@@ -1,25 +1,18 @@
 import chai, { expect } from 'chai';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
-
-const defaultOwner = 'ci';
 
 describe('import functionality on Harmony', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
-    const helperOptions: HelperOptions = {
-      scopesOptions: {
-        remoteScopeWithDot: true,
-        remoteScopePrefix: defaultOwner,
-      },
-    };
-    helper = new Helper(helperOptions);
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
@@ -29,15 +22,10 @@ describe('import functionality on Harmony', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
-      const remoteScopeParts = helper.scopes.remote.split('.');
-      scopeWithoutOwner = remoteScopeParts[1];
-      helper.fixtures.populateComponentsTS(3, undefined, true);
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.bitJsonc.setupDefault();
+      scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+      helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.reInitRemoteScope();
-      npmCiRegistry.setCiScopeInBitJson();
       npmCiRegistry.configureCiInPackageJsonHarmony();
     });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('tag and export', () => {
@@ -55,10 +43,10 @@ describe('import functionality on Harmony', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.npm.initNpm();
-          helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '0.0.1');
+          helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1');
           helper.fs.outputFile(
             'bar/app.js',
-            `const comp1 = require('@${defaultOwner}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
+            `const comp1 = require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
           );
           helper.command.addComponent('bar');
           // as an intermediate step, make sure the scope is empty.
@@ -79,7 +67,6 @@ describe('import functionality on Harmony', function () {
       describe('importing the components', () => {
         before(() => {
           helper.scopeHelper.reInitLocalScopeHarmony();
-          npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
           helper.command.importComponent('comp1');
         });

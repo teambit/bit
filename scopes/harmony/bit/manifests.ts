@@ -44,6 +44,7 @@ import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from '@teambit/linter';
 import { ChangelogAspect } from '@teambit/changelog';
+import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
 import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
@@ -53,6 +54,7 @@ import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
+import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -106,10 +108,12 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  [CodeAspect.id]: CodeAspect,
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
   [SignAspect.id]: SignAspect,
+  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
 };
 
 export function isCoreAspect(id: string) {
