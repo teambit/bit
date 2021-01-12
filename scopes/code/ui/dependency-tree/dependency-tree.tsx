@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { DrawerUI } from '@teambit/tree.drawer';
+import { DrawerUI } from '@teambit/ui.tree.drawer';
 import { Link } from '@teambit/ui.routing.link';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { buildDependencyTree } from './build-depndency-tree';
@@ -7,10 +7,13 @@ import styles from './dependency-tree.module.scss';
 
 export function DependencyTree({ dependenciesArray }: { dependenciesArray?: DependencyType[] }) {
   if (!dependenciesArray) return null;
-  const { dependencies, devDependencies } = useMemo(() => buildDependencyTree(dependenciesArray), [dependenciesArray]);
+  const { dependencies, devDependencies, peerDependencies } = useMemo(() => buildDependencyTree(dependenciesArray), [
+    dependenciesArray,
+  ]);
 
   const [isDependenciesOpen, toggleDependencies] = useState(true);
   const [isDevDependenciesOpen, toggleDevDependencies] = useState(true);
+  const [isPeerDependenciesOpen, togglePeerDependencies] = useState(true);
   return (
     <div className={styles.dependencyDrawerContainer}>
       <DrawerUI
@@ -24,11 +27,18 @@ export function DependencyTree({ dependenciesArray }: { dependenciesArray?: Depe
       <DrawerUI
         isOpen={isDevDependenciesOpen}
         onToggle={() => toggleDevDependencies(!isDevDependenciesOpen)}
-        // drawer={{ name: 'devDependencies', render: () => DependencyList(devDependencies) }}
         name="devDependencies"
         className={styles.dependencyDrawer}
       >
         <DependencyList deps={devDependencies} />
+      </DrawerUI>
+      <DrawerUI
+        isOpen={isPeerDependenciesOpen}
+        onToggle={() => togglePeerDependencies(!isPeerDependenciesOpen)}
+        name="peerDependencies"
+        className={styles.dependencyDrawer}
+      >
+        <DependencyList deps={peerDependencies} />
       </DrawerUI>
     </div>
   );

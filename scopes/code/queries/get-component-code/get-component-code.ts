@@ -41,7 +41,7 @@ type CodeResults = {
 };
 
 export function useCode(componentId: ComponentID) {
-  const id = componentId._legacy.name;
+  const id = componentId.toString();
   const { data, ...rest } = useDataQuery<CodeResults>(getCode, {
     variables: { id },
   });

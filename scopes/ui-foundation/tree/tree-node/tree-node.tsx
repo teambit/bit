@@ -1,4 +1,4 @@
-import { NavLink } from '@teambit/ui.react-router.nav-link';
+import { NavLink } from '@teambit/ui.routing.nav-link';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { ComponentType } from 'react';
@@ -15,13 +15,18 @@ export type TreeNodeComponentProps<Payload = any> = {
   isActive?: boolean;
   icon?: string;
   onClick?: (e: React.MouseEvent) => void;
+  href?: string;
 } & TreeNodeProps<Payload>;
 
+/**
+ *
+ * Renders a file node in the file tree
+ */
 export function TreeNode<T>(props: TreeNodeComponentProps<T>) {
-  const { node, isActive = false, icon, onClick, widgets } = props;
+  const { node, isActive = false, icon, onClick, widgets, href } = props;
   return (
     <NavLink
-      href={`#${props.node.id}`}
+      href={href || node.id}
       isActive={() => isActive}
       exact
       strict
