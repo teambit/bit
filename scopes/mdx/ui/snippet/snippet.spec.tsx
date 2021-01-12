@@ -1,7 +1,7 @@
-import React from 'react';
-import { render } from '@testing-library/react';
+// import React from 'react';
+// import { render } from '@testing-library/react';
 import { expect } from 'chai';
-import { SnippetExample, SnippetLiveExample } from './snippet.composition';
+// import { SnippetExample, SnippetLiveExample } from './snippet.composition';
 
 it('should render one pre element', () => {
   // const { container } = render(<SnippetExample />);
