@@ -24,21 +24,22 @@ export class BitDev {
   static async provider([scope, loggerMain]: [ScopeMain, LoggerMain], config: Config) {
     const logger = loggerMain.createLogger(ScopeAspect.id);
     const bitDev = new BitDev();
-    scope.registerOnPostExport(async ({ ids }, { auth }) => {
-      logger.info(`export completed, reporting to: ${config.hub}`);
-      try {
-        const graphClient = new GraphQLClient(`${config.hub}/graphql`, { headers: bitDev.getAuthHeader(auth) });
-        const EXPORT_COMPLETED = gql`
-          mutation export_completed($componentIds: [String!]!) {
-            exportCompleted(componentIds: $componentIds)
-          }
-        `;
-        const componentIds = ids.map((id) => id.toString());
-        await graphClient.request(EXPORT_COMPLETED, { componentIds });
-      } catch (error) {
-        logger.error(`failed to report`, error);
-      }
-    });
+    scope &&
+      scope.registerOnPostExport(async ({ ids }, { auth }) => {
+        logger.info(`export completed, reporting to: ${config.hub}`);
+        try {
+          const graphClient = new GraphQLClient(`${config.hub}/graphql`, { headers: bitDev.getAuthHeader(auth) });
+          const EXPORT_COMPLETED = gql`
+            mutation export_completed($componentIds: [String!]!) {
+              exportCompleted(componentIds: $componentIds)
+            }
+          `;
+          const componentIds = ids.map((id) => id.toString());
+          await graphClient.request(EXPORT_COMPLETED, { componentIds });
+        } catch (error) {
+          logger.error(`failed to report`, error);
+        }
+      });
 
     return bitDev;
   }
