@@ -43,7 +43,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: /\.(js|jsx|tsx|ts)$/,
+          test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
           loader: require.resolve('babel-loader'),
