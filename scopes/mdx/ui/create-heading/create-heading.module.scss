@@ -1,6 +1,17 @@
 .mdxLinkedHeading {
   margin-top: 40px;
   width: 100%;
+  // lets the user decide how he wants to align the text
+  justify-content: start;
+  &[align='center'] {
+    justify-content: center;
+  }
+  &[align='left'] {
+    justify-content: start;
+  }
+  &[align='right'] {
+    justify-content: flex-end;
+  }
 
   &.mainHeadingStyles {
     border-bottom: 1px solid var(--border-color);
