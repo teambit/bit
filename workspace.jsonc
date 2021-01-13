@@ -257,7 +257,7 @@
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "^0.9.16",
         "supi": "0.42.0",
-        "terser-webpack-plugin": "^4.1.0",
+        "terser-webpack-plugin": "^5.1.1",
         "typedoc": "0.18.0",
         "typescript-language-server": "0.4.0",
         "unist-util-remove": "2.0.1",
