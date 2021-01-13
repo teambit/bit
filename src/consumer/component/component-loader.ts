@@ -230,6 +230,18 @@ export default class ComponentLoader {
         newId = currentId.changeVersion(undefined);
       }
     }
+    if (!componentFromModel && !currentId.hasVersion() && component.defaultScope) {
+      // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
+      // there is nothing in the scope, we can check if there is a component with the same
+      // default-scope in the objects
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(
+        currentId.changeScope(component.defaultScope)
+      );
+      if (modelComponent) {
+        newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
+        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
+      }
+    }
 
     if (newId) {
       component.version = newId.version;
