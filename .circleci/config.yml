@@ -546,16 +546,12 @@ jobs:
       - set_git_credentials
       - run: cd bit && node scripts/bump-bit-bin-ver.js
       - run: cd bit && bit status
-      # - run:
-      #     name: checkout latest
-      #     command: cd bit && bit checkout latest --all
-      - run:
-          name: soft
-          command: cd bit && node scripts/soft-tag-scope-teambit.js
+      - run: cd bit && bit checkout latest --all
+      # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          # command: cd bit && bit tag --all
-          command: cd bit && bit tag --persist --ignore-newest-version
+          command: cd bit && bit tag --all --ignore-newest-version
+          # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
       - run:
           name: backup bit objects (before export)
