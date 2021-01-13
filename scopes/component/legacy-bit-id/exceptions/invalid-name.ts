@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 
 export default class InvalidName extends BitError {
@@ -6,9 +5,7 @@ export default class InvalidName extends BitError {
 
   constructor(componentName: string) {
     super(
-      `error: "${chalk.bold(
-        componentName
-      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`
+      `error: "${componentName}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`
     );
   }
 }

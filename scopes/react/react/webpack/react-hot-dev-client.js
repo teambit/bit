@@ -45,14 +45,14 @@ if (module.hot && typeof module.hot.dispose === 'function') {
 }
 
 // Connect to WebpackDevServer via a socket.
-const querystring = module.i.substring(module.i.indexOf('?'));
+const querystring = module.id.substring(module.id.indexOf('?'));
 const urlParams = new URLSearchParams(querystring);
 
 const connection = new WebSocket(
   url.format({
     protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
-    hostname: process.env.WDS_SOCKET_HOST || window.location.hostname,
-    port: process.env.WDS_SOCKET_PORT || window.location.port,
+    hostname: window.location.hostname,
+    port: window.location.port,
     // Hardcoded in WebpackDevServer
     pathname: urlParams.get('sockPath') || '/sockjs-node',
     // pathname: '_hmr/teambit.bad-jokes/extensions/harmony-react',
