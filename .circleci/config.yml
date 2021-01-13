@@ -536,6 +536,8 @@ jobs:
 
       - run: cd bit && node scripts/bump-bit-bin-ver.js
       - run: cd bit && bit status
+      # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/bit-bin/node_modules/@babel/core/node_modules/semver/bin/semver'""
+      - run: cd bit && rm -rf node_modules
       - run: cd bit && bit checkout latest --all
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
