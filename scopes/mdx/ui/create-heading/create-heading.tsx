@@ -6,8 +6,13 @@ import styles from './create-heading.module.scss';
 
 export function createHeading(size: Sizes) {
   return function Heading({ children, className, ...rest }: HTMLAttributes<HTMLHeadingElement>) {
+    const isMainHeading = size === 'lg' || size === 'md';
     return (
-      <LinkedHeading {...rest} className={classnames(className, styles.mdxLinkedHeading)} size={size} link="">
+      <LinkedHeading
+        {...rest}
+        className={classnames(className, styles.mdxLinkedHeading, isMainHeading && styles.mainHeadingStyles)}
+        size={size}
+      >
         {children}
       </LinkedHeading>
     );
