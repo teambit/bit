@@ -6,7 +6,6 @@
         "rootDir": "scopes/harmony/bit-dev",
         "exported": false
     },
-    "ui/code-tab-page": {
     "teambit.code/ui/code-tab-page@0.0.245": {
         "mainFile": "index.ts",
         "rootDir": "scopes/code/ui/code-tab-page"
