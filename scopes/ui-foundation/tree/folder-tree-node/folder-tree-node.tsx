@@ -8,6 +8,9 @@ import { TreeLayer, TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-
 import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
 import styles from './folder-tree-node.module.scss';
 
+/**
+ * Renders a folder node in the file tree
+ */
 export function FolderTreeNode<T>({ node, depth }: TreeNodeProps<T>) {
   const [collapsed, collapse] = useState(false);
   const displayName = node.id.replace(/\/$/, '').split('/').pop();

@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
-import { gql } from 'apollo-boost';
+import { gql } from '@apollo/client';
+
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 
@@ -38,6 +39,7 @@ const componentFields = gql`
 const GET_COMPONENT = gql`
   query Component($id: String!, $extensionId: String!) {
     getHost(id: $extensionId) {
+      id # used for GQL caching
       get(id: $id) {
         ...componentFields
       }

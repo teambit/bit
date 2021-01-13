@@ -1,0 +1,26 @@
+---
+labels: ['react', 'typescript', 'accordion']
+description: 'An accordion coomponent'
+---
+
+import { DrawerUI } from './drawer';
+import { useState } from 'react';
+
+### Overview
+
+An accordion component
+
+Drawer example:
+
+```js live
+function DrawerExample() {
+  const [isOpen, onToggle] = useState(false);
+  return (
+    <div style={{display: 'flex'}}>
+      <DrawerUI name="drawer example" isOpen={isOpen} onToggle={() => onToggle(!isOpen)}>
+        items to be shown
+      </DrawerUI>
+    </div>
+  );
+}
+```
