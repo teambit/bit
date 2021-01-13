@@ -36,16 +36,16 @@
           "jest-watch-typeahead": "^0.6.0",
           "babel-plugin-named-asset-import": "^0.3.6",
           "babel-loader": "^8.1.0",
-          "babel-preset-react-app": "^9.1.2",
+          "babel-preset-react-app": "^10.0.0",
           "style-loader": "^1.2.1",
           "react-dom": "-",
           "css-loader": "^3.6.0",
-          "postcss-loader": "^3.0.0",
+          "postcss-loader": "^4.1.0",
           "sass-loader": "^10.1.0",
           "less": "^3.12.2",
           "less-loader": "^7.0.2",
           "bit-bin": "-",
-          "@babel/runtime": "^7.11.2"
+          "@babel/runtime": "^7.12.0"
         },
         "devDependencies": {
           "@types/mocha": "^5.2.7",
@@ -54,9 +54,9 @@
           "react-dom": "-"
         },
         "peerDependencies": {
-          "react": "^16.13.1",
+          "react": "^17.0.0",
           "bit-bin": "14.8.9-dev.255",
-          "react-dom": "^16.13.1"
+          "react-dom": "^17.0.0"
         }
       }
     }

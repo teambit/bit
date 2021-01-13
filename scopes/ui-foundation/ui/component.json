@@ -40,8 +40,8 @@
           "bit-bin": "-"
         },
         "peerDependencies": {
-          "react": "^16.13.1",
-          "react-dom": "^16.13.1",
+          "react": "^17.0.0",
+          "react-dom": "^17.0.0",
           "bit-bin": "14.8.9-dev.255"
         }
       }

@@ -82,7 +82,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         },
         {
           test: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -104,7 +104,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         {
           test: /\.s(a|c)ss$/,
           exclude: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -117,7 +117,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         },
         {
           test: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -139,7 +139,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -152,7 +152,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         },
         {
           test: /\.module.css$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -168,7 +168,7 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         {
           test: /\.css$/,
           exclude: /\.module\.css$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
     },
@@ -189,6 +189,11 @@ export default function (workspaceDir: string, targets: string[], envId: string,
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
+      },
+      fallback: {
+        path: false,
+        fs: false,
+        stream: false,
       },
     },
 

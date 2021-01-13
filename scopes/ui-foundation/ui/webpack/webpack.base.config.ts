@@ -1,6 +1,6 @@
 import webpack, { EnvironmentPlugin, Configuration } from 'webpack';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
-import ManifestPlugin from 'webpack-manifest-plugin';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
@@ -121,7 +121,7 @@ export default function createWebpackConfig(
 
       filename: 'static/js/[name].[contenthash:8].js',
       // TODO: remove this when upgrading to webpack 5
-      futureEmitAssets: true,
+      // futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // this defaults to 'window', but by setting it to 'this' then
@@ -152,12 +152,24 @@ export default function createWebpackConfig(
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
       },
+      fallback: {
+        module: false,
+        dgram: false,
+        dns: false,
+        fs: false,
+        path: false,
+        stream: false,
+        http2: false,
+        net: false,
+        tls: false,
+        child_process: false,
+      },
     },
     module: {
       strictExportPresence: true,
       rules: [
         // Disable require.ensure as it's not a standard language feature.
-        { parser: { requireEnsure: false } },
+        // { parser: { requireEnsure: false } },
         {
           // "oneOf" will traverse all following loaders until one will
           // match the requirements. When no loader matches it will fall
@@ -172,6 +184,12 @@ export default function createWebpackConfig(
               options: {
                 limit: imageInlineSizeLimit,
                 name: 'static/media/[name].[hash:8].[ext]',
+              },
+            },
+            {
+              test: /\.m?js/,
+              resolve: {
+                fullySpecified: false,
               },
             },
             // Process application JS with Babel.
@@ -344,7 +362,9 @@ export default function createWebpackConfig(
       ],
     },
     plugins: [
-      new EnvironmentPlugin(['NODE_ENV', 'production']),
+      new EnvironmentPlugin({
+        NODE_ENV: 'production',
+      }),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional
@@ -356,7 +376,7 @@ export default function createWebpackConfig(
       //   output file so that tools can pick it up without having to parse
       //   `index.html`
       //   can be used to reconstruct the HTML if necessary
-      new ManifestPlugin({
+      new WebpackManifestPlugin({
         fileName: 'asset-manifest.json',
         generate: (seed, files, entrypoints) => {
           const manifestFiles = files.reduce((manifest, file) => {
@@ -398,16 +418,6 @@ export default function createWebpackConfig(
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell webpack to provide empty mocks for them so importing them works.
-    node: {
-      module: 'empty',
-      dgram: 'empty',
-      dns: 'mock',
-      fs: 'empty',
-      http2: 'empty',
-      net: 'empty',
-      tls: 'empty',
-      child_process: 'empty',
-    },
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,

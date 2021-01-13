@@ -228,7 +228,7 @@ export class ReactEnv implements Environment {
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '^7.11.2',
+        '@babel/runtime': '^7.12.0',
       },
       // TODO: take version from config
       peerDependencies: {

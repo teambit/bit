@@ -10,17 +10,11 @@ module.exports = (entries, rootPath) => {
     // This means they will be the "root" imports that are included in JS bundle.
     entry: entries.filter(Boolean),
 
-    node: {
-      fs: 'empty',
-    },
-
     output: {
       // The build folder.
       path: `${rootPath}/public`,
 
       filename: 'static/js/[name].[contenthash:8].js',
-      // TODO: remove this when upgrading to webpack 5
-      futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // webpack uses `publicPath` to determine where the app is being served from.

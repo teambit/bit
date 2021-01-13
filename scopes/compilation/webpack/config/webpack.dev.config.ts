@@ -39,10 +39,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
     },
 
-    node: {
-      fs: 'empty',
-    },
-
     output: {
       // Development filename output
       filename: 'static/js/[name].bundle.js',
@@ -52,8 +48,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       path: resolveWorkspacePath(publicDirectory),
 
       publicPath: `${publicRoot}/`,
-
-      futureEmitAssets: true,
 
       chunkFilename: 'static/js/[name].chunk.js',
 
