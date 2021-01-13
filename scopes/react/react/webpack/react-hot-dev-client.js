@@ -125,7 +125,7 @@ function handleWarnings(warnings) {
       // eslint-disable-next-line no-plusplus
       for (let i = 0; i < formatted.warnings.length; i++) {
         if (i === 5) {
-          // eslint-disable-next-line no-console
+          // eslint-disable-next-line
           console.warn('There were more warnings in other files.\n' + 'You can find a complete log in the terminal.');
           break;
         }
@@ -220,7 +220,6 @@ function isUpdateAvailable() {
   /* globals __webpack_hash__ */
   // __webpack_hash__ is the hash of the current compilation.
   // It's a global variable injected by webpack.
-  // eslint-disable-next-line @typescript-eslint/camelcase
   return mostRecentCompilationHash !== __webpack_hash__;
 }
 
