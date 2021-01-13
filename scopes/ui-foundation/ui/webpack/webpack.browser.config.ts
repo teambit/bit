@@ -76,7 +76,6 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
               ascii_only: true,
             },
           },
-          sourceMap: shouldUseSourceMap,
         }),
         // This is only used in production mode
         new OptimizeCSSAssetsPlugin({
