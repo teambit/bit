@@ -1,7 +1,7 @@
 .mdxLinkedHeading {
   margin-top: 40px;
   width: 100%;
-  // lets the user decide how he wants to align the text
+  // mdx is aligning content using the deprecated html `align` attribute. this polyfills this behavior.
   justify-content: start;
   &[align='center'] {
     justify-content: center;

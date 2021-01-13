@@ -12,7 +12,6 @@ export function createHeading(size: Sizes) {
         {...rest}
         className={classnames(className, styles.mdxLinkedHeading, isMainHeading && styles.mainHeadingStyles)}
         size={size}
-        link="#"
       >
         {children}
       </LinkedHeading>

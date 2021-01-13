@@ -14,7 +14,7 @@ export function CompositionsSummary({ compositions, ...rest }: CompositionsSumma
 
   return (
     <Section {...rest}>
-      <LinkedHeading link="/~compositions">Compositions</LinkedHeading>
+      <LinkedHeading>Compositions</LinkedHeading>
       <CompositionsOverview compositions={compositions} />
     </Section>
   );
