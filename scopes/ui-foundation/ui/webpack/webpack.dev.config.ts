@@ -1,3 +1,5 @@
+import { Configuration } from 'webpack';
+
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
@@ -33,7 +35,7 @@ module.exports = {
   devConfig: createWebpackConfig,
 };
 
-function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
+function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Configuration {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -63,8 +65,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       path: resolveWorkspacePath('/'),
 
       publicPath: publicUrlOrPath,
-
-      futureEmitAssets: true,
 
       chunkFilename: 'static/js/[name].chunk.js',
 
@@ -145,14 +145,21 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         'react-dom': require.resolve('react-dom'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
-    },
-
-    node: {
-      fs: 'empty',
+      fallback: {
+        fs: false,
+        path: false,
+        stream: false,
+      },
     },
 
     module: {
       rules: [
+        {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
         {
           test: /\.js$/,
           enforce: 'pre',
@@ -176,7 +183,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         },
         {
           test: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -198,7 +205,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.s(a|c)ss$/,
           exclude: /\.module.(s(a|c)ss)$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -211,7 +218,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         },
         {
           test: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -233,7 +240,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -247,7 +254,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.css$/,
           exclude: /\.(s(a|c)ss)$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
     },

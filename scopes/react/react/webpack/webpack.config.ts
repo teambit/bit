@@ -31,6 +31,12 @@ export default function (workspaceDir: string, targets: string[], envId: string,
     module: {
       rules: [
         {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+        {
           test: /\.js$/,
           enforce: 'pre',
           exclude: /node_modules/,
@@ -40,6 +46,9 @@ export default function (workspaceDir: string, targets: string[], envId: string,
           test: /\.(js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
+          resolve: {
+            fullySpecified: false,
+          },
           loader: require.resolve('babel-loader'),
           options: {
             babelrc: false,
