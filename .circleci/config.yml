@@ -112,6 +112,15 @@ commands: # reusable commands
       - run:
           name: set git user.name and user.email
           command: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
+      # - run:
+      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
+      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
+      # - run: mkdir -p ~/.ssh
+      # - run: SCAN=$(ssh-keyscan github.com )
+      # - run: echo $SCAN >> ~/.ssh/known_hosts
+      - run: cd bit && git remote rm origin
+      # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
+      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
 
 
 orbs:
@@ -524,6 +533,7 @@ jobs:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
+
       - run: cd bit && node scripts/bump-bit-bin-ver.js
       - run: cd bit && bit status
       # - run:
@@ -568,15 +578,6 @@ jobs:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
-      # - run:
-      #     name: 'replace git protocol from ssh to http' # to not get the authenticate error
-      #     command: sed -i 's/git@github.com:teambit\/bit.git/https:\/\/github.com\/teambit\/bit.git/g' .git/config
-      # - run: mkdir -p ~/.ssh
-      # - run: SCAN=$(ssh-keyscan github.com )
-      # - run: echo $SCAN >> ~/.ssh/known_hosts
-      - run: cd bit && git remote rm origin
-      # todo: find a better way. currently, the ssh doesn't work, see the commented steps above.
-      - run: cd bit && git remote add origin https://davidfirst:$GH_RELEASE_GITHUB_API_TOKEN@github.com/teambit/bit.git
       - run:
           name: export components
           command: cd bit && bit export
