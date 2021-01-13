@@ -100,11 +100,6 @@ export function scopeSchema(scopeMain: ScopeMain) {
           return listData;
         },
 
-        getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
-          const logs = await log(scope.path, id);
-          return JSON.parse(logs);
-        },
-
         getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {
           return scope.getMany(ids.map((str) => ComponentID.fromString(str)));
         },

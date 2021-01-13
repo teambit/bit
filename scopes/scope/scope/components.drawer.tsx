@@ -4,10 +4,10 @@ import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 
 import { FullLoader } from '@teambit/ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { Drawer } from '@teambit/sidebar';
+import type { DrawerType } from '@teambit/ui.tree.drawer';
 import { useScope } from './ui/use-scope';
 
-export class ComponentsDrawer implements Drawer {
+export class ComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
   name = 'COMPONENTS';

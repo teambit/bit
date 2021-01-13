@@ -3,7 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import React, { ComponentType } from 'react';
 
-import { Drawer } from './drawer';
+import type { DrawerType } from '@teambit/ui.tree.drawer';
 import { SidebarAspect } from './sidebar.aspect';
 import { SideBar, SideBarProps } from './ui';
 
@@ -15,7 +15,7 @@ export type SidebarItem = ComponentType;
 
 export type SidebarItemSlot = SlotRegistry<SidebarItem[]>;
 
-export type DrawerSlot = SlotRegistry<Drawer>;
+export type DrawerSlot = SlotRegistry<DrawerType>;
 
 export class SidebarUI {
   constructor(private drawerSlot: DrawerSlot) {}
@@ -23,7 +23,7 @@ export class SidebarUI {
   /**
    * register a new drawer into the component sidebar.
    */
-  registerDrawer(drawer: Drawer) {
+  registerDrawer(drawer: DrawerType) {
     this.drawerSlot.register(drawer);
     return this;
   }
@@ -37,7 +37,7 @@ export class SidebarUI {
 
   static runtime = UIRuntime;
 
-  static slots = [Slot.withType<Drawer>()];
+  static slots = [Slot.withType<DrawerType>()];
 
   static dependencies = [];
 

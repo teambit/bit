@@ -11,9 +11,7 @@
     "packageManager": "teambit.dependencies/yarn",
     "policy": {
       "dependencies": {
-        "@apollo/react-common": "^3.1.4",
-        "@apollo/react-hooks": "^3.1.5",
-        "@apollo/react-ssr": "^3.1.5",
+        "@apollo/client": "3.3.6",
         "@babel/core": "7.11.6",
         "@babel/preset-react": "7.12.7",
         "@babel/preset-typescript": "7.10.4",
@@ -74,12 +72,12 @@
         "@teambit/capsule": "0.0.12",
         "@teambit/documenter.code.react-playground": "^1.0.3",
         "@teambit/documenter.routing.external-link": "1.0.3",
-        "@teambit/documenter.theme.theme-compositions": "1.0.2",
+        "@teambit/documenter.theme.theme-compositions": "2.0.3",
         "@teambit/documenter.theme.theme-context": "2.0.2",
         "@teambit/documenter.types.docs-file": "^1.0.3",
         "@teambit/documenter.ui.block-quote": "0.0.1",
         "@teambit/documenter.ui.bold": "0.0.1",
-        "@teambit/documenter.ui.code-snippet": "^3.0.2",
+        "@teambit/documenter.ui.code-snippet": "^3.0.5",
         "@teambit/documenter.ui.consumable-link": "^1.0.3",
         "@teambit/documenter.ui.heading": "^1.0.3",
         "@teambit/documenter.ui.highlighted-text": "^1.0.3",
@@ -88,8 +86,8 @@
         "@teambit/documenter.ui.italic": "0.0.1",
         "@teambit/documenter.ui.label": "2.0.2",
         "@teambit/documenter.ui.label-list": "^1.0.3",
-        "@teambit/documenter.ui.linked-heading": "^1.0.3",
-        "@teambit/documenter.ui.ol": "0.0.1",
+        "@teambit/documenter.ui.linked-heading": "^2.0.5",
+        "@teambit/documenter.ui.ol": "1.0.5",
         "@teambit/documenter.ui.paragraph": "^1.0.3",
         "@teambit/documenter.ui.property-table": "^1.0.3",
         "@teambit/documenter.ui.section": "^1.0.3",
@@ -99,7 +97,7 @@
         "@teambit/documenter.ui.table.base-table": "0.0.1",
         "@teambit/documenter.ui.table.td": "0.0.1",
         "@teambit/documenter.ui.table.tr": "0.0.1",
-        "@teambit/documenter.ui.ul": "0.0.1",
+        "@teambit/documenter.ui.ul": "1.0.5",
         "@teambit/evangelist.elements.button": "^0.5.4",
         "@teambit/evangelist.elements.heading": "^0.5.4",
         "@teambit/evangelist.elements.icon": "^0.5.4",
@@ -117,8 +115,8 @@
         "@types/cross-spawn": "^6.0.2",
         "@types/dagre": "0.7.44",
         "@types/didyoumean": "^1.2.0",
-        "@types/express": "4.17.9",
         "@types/eslint": "7.2.4",
+        "@types/express": "4.17.9",
         "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "^4.2.0",
         "@types/history": "^4.7.6",
@@ -145,14 +143,6 @@
         "@yarnpkg/fslib": "2.4.0",
         "@yarnpkg/plugin-npm": "2.4.0",
         "ansi-to-html": "^0.6.14",
-        "apollo-boost": "^0.4.9",
-        "apollo-cache-inmemory": "^1.6.6",
-        "apollo-client": "^2.6.10",
-        "apollo-link": "^1.2.14",
-        "apollo-link-error": "^1.1.13",
-        "apollo-link-http": "^1.5.17",
-        "apollo-link-ws": "^1.0.20",
-        "apollo-utilities": "^1.3.4",
         "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
         "babel-plugin-named-asset-import": "^0.3.6",
@@ -206,6 +196,7 @@
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
         "loader-utils": "2.0.0",
+        "lodash": "4.17.20",
         "lodash.compact": "3.0.1",
         "lodash.head": "^4.0.1",
         "memoize-one": "5.1.1",
@@ -279,7 +270,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.255",
+        "bit-bin": "14.8.9-dev.268",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -288,6 +279,9 @@
       }
     },
     "packageManagerArgs": [],
+    "devFilePatterns": [
+      "**/*.spec.ts"
+    ],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
@@ -332,7 +326,7 @@
           },
           "peerDependencies": {
             "react": "^17.0.0",
-            "bit-bin": "14.8.9-dev.255",
+            "bit-bin": "14.8.9-dev.268",
             "react-dom": "^17.0.0"
           }
         }
@@ -414,6 +408,9 @@
     "scopes/component": {
       "defaultScope": "teambit.component"
     },
+    "scopes/code": {
+      "defaultScope": "teambit.code"
+    },
     "scopes/component/component-id": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
@@ -461,7 +458,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.255",
+            "bit-bin": "14.8.9-dev.268",
             "react": "^17.0.0",
             "react-dom": "^17.0.0",
             "graphql": "^14.3.1",

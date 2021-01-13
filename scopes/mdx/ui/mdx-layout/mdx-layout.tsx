@@ -1,14 +1,6 @@
-import React, { ReactNode, useContext } from 'react';
-import { MDXScopeContext } from '@teambit/ui.mdx-scope-context';
-import { MDXProvider, mdx } from '@mdx-js/react';
-import type { Sizes } from '@teambit/documenter.ui.heading';
-import { LinkedHeading } from '@teambit/documenter.ui.linked-heading';
-import { Paragraph } from '@teambit/documenter.ui.paragraph';
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
-import { ExternalLink, ExternalLinkProps } from '@teambit/documenter.routing.external-link';
+import React, { ReactNode } from 'react';
+import { MDXProvider } from '@mdx-js/react';
 import { Separator } from '@teambit/documenter.ui.separator';
-import { Playground } from '@teambit/documenter.code.react-playground';
 import { Bold } from '@teambit/documenter.ui.bold';
 import { Italic } from '@teambit/documenter.ui.italic';
 import { Sup } from '@teambit/documenter.ui.sup';
@@ -19,51 +11,11 @@ import { Ul } from '@teambit/documenter.ui.ul';
 import { Ol } from '@teambit/documenter.ui.ol';
 import { Image } from '@teambit/documenter.ui.image';
 import { BlockQuote } from '@teambit/documenter.ui.block-quote';
-
-import styles from './mdx.module.scss';
-
-function createHeading(size: Sizes) {
-  return function Heading({ children }: { children: ReactNode }) {
-    return (
-      <LinkedHeading className={styles.mdxLinkedHeading} size={size} link="">
-        {children}
-      </LinkedHeading>
-    );
-  };
-}
-
-function HighlightedTextSpan({ children }: { children: ReactNode }) {
-  return (
-    <HighlightedText element="span" size="xxs">
-      {children}
-    </HighlightedText>
-  );
-}
-
-// TODO: @oded please refactor to an individual component.
-function Snippet({ children, live }: { live: string; children: string }) {
-  const components = useContext(MDXScopeContext);
-  const scope = Object.assign({}, components, {
-    mdx,
-  });
-
-  if (live) {
-    return <Playground code={children} scope={scope} />;
-  }
-  return <CodeSnippet>{children}</CodeSnippet>;
-}
-
-function Link(props: ExternalLinkProps) {
-  return <ExternalLink {...props} className={styles.link} />;
-}
-
-function P({ children }: { children: ReactNode }) {
-  return (
-    <Paragraph size="xs" className={styles.mdxParagraph}>
-      {children}
-    </Paragraph>
-  );
-}
+import { createHeading } from '@teambit/ui.docs.create-heading';
+import { HighlightedTextSpan } from '@teambit/ui.docs.highlighted-text-span';
+import { Snippet } from '@teambit/ui.docs.snippet';
+import { Link } from '@teambit/ui.docs.link';
+import { P } from '@teambit/ui.docs.paragraph';
 
 const defaultMdxComponents = {
   h1: createHeading('lg'),

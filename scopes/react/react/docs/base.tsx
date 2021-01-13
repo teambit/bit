@@ -1,13 +1,12 @@
 import 'reset-css';
 
 import React, { HTMLAttributes } from 'react';
-import { useQuery } from '@apollo/react-hooks';
+import { useQuery, gql } from '@apollo/client';
 import { ComponentModel } from '@teambit/component';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { docsFields } from '@teambit/ui.queries.get-docs';
-import { gql } from 'apollo-boost';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
@@ -27,6 +26,7 @@ export type DocsSectionProps = {
 const GET_COMPONENT = gql`
   query($id: String!) {
     getHost {
+      id # used for GQL caching
       get(id: $id) {
         id {
           name
@@ -96,7 +96,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
           <Content />
         )}
 
-        <CompositionsSummary compositions={compositions} />
+        <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
 
         <ExamplesOverview examples={Content.examples || examples} />
 

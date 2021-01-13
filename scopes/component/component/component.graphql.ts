@@ -1,3 +1,4 @@
+import log from 'bit-bin/dist/api/scope/lib/log';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
@@ -89,6 +90,7 @@ export function componentSchema(componentExtension: ComponentMain) {
       }
 
       type ComponentHost {
+        id: ID!
         name: String!
 
         # load a component.
@@ -141,6 +143,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);
+        },
+        id: async (host: ComponentFactory) => {
+          return host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;
