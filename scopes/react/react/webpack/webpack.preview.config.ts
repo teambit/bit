@@ -5,7 +5,7 @@ import safePostCssParser from 'postcss-safe-parser';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import TerserPlugin from 'terser-webpack-plugin';
 import webpack, { Configuration, EnvironmentPlugin } from 'webpack';
-import ManifestPlugin from 'webpack-manifest-plugin';
+import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
@@ -153,7 +153,6 @@ export default function (fileMapPath: string): Configuration {
               ascii_only: true,
             },
           },
-          sourceMap: shouldUseSourceMap,
         }),
         // This is only used in production mode
         new OptimizeCSSAssetsPlugin({
@@ -437,7 +436,9 @@ export default function (fileMapPath: string): Configuration {
       ],
     },
     plugins: [
-      new EnvironmentPlugin(['NODE_ENV', 'production']),
+      new EnvironmentPlugin({
+        NODE_ENV: 'production',
+      }),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional
@@ -449,7 +450,7 @@ export default function (fileMapPath: string): Configuration {
       //   output file so that tools can pick it up without having to parse
       //   `index.html`
       //   can be used to reconstruct the HTML if necessary
-      new ManifestPlugin({
+      new WebpackManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath: 'public',
         generate: (seed, files, entrypoints) => {

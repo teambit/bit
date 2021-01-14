@@ -28,6 +28,7 @@ export function CompositionsPanel({
   );
 
   return (
+    // @ts-ignore remove all rest to divs in react 17
     <ul {...rest} className={classNames(className)}>
       {compositions.map((composition) => {
         // TODO - move to composition panel node

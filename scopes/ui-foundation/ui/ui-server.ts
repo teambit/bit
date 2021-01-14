@@ -13,7 +13,8 @@ import { createSsrMiddleware } from './ssr/render-middleware';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
-import { devConfig } from './webpack/webpack.dev.config';
+
+const { devConfig } = require('./webpack/webpack.dev.config');
 
 export type UIServerProps = {
   graphql: GraphqlMain;

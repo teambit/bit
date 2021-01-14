@@ -15,6 +15,7 @@ export function CommandBarItem({ entry, className, active, ...rest }: CommandIte
   const firstKeybinding = Array.isArray(keybinding) ? keybinding[0] : keybinding;
 
   return (
+    // @ts-ignore remove all rest to divs in react 17
     <div
       {...rest}
       className={classnames(className, styles.commandBarOption, active && styles.active)}

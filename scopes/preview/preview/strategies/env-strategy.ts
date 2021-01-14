@@ -38,7 +38,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       return {
         component,
-        errors: result.errors,
+        errors: result.errors.map((err) => err.message),
         warning: result.warnings,
       };
     });

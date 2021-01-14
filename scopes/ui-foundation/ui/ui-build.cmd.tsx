@@ -1,4 +1,5 @@
 import { Command } from '@teambit/cli';
+import { UnknownBuildError } from './exceptions';
 
 import { UiMain } from './ui.main.runtime';
 
@@ -20,6 +21,7 @@ export class UIBuildCmd implements Command {
   async report([type]: [string]): Promise<string> {
     // teambit.workspace/variants should be the one to take care of component patterns.
     const stats = await this.ui.build(type);
+    if (!stats) throw new UnknownBuildError();
     return stats.toString();
   }
 }

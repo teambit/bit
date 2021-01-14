@@ -1,28 +1,31 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
-import React, { ReactNode } from 'react';
+import React from 'react';
 
+import { Drawer } from '../../drawer';
 import styles from './drawer.module.scss';
 
 export type DrawerProps = {
-  name: ReactNode;
+  drawer: Drawer;
   isOpen: boolean;
   onToggle: (event: React.MouseEvent<HTMLDivElement>) => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function DrawerUI({ name, children, className, isOpen, onToggle, ...rest }: DrawerProps) {
-  if (!name) return null;
+export function DrawerUI({ drawer, className, isOpen, onToggle, ...rest }: DrawerProps) {
+  if (!drawer) return null;
   return (
     // @ts-ignore remove all rest to divs in react 17
     <div {...rest} className={classNames(styles.drawer, className)}>
       <div className={classNames(styles.drawerName, { [styles.open]: isOpen })}>
         <div onClick={onToggle}>
           <Icon className={classNames(styles.arrow, { [styles.collapsed]: !isOpen })} of="fat-arrow-down" />
-          <span>{name}</span>
+          <span>{drawer.name}</span>
         </div>
       </div>
 
-      <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>{children}</div>
+      <div className={classNames(styles.drawerContent, { [styles.open]: isOpen })}>
+        <drawer.render />
+      </div>
     </div>
   );
 }
