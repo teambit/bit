@@ -27,13 +27,15 @@ const resetValues = () => {
   nested = false;
 };
 
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
+
 export const ComponentTooltipWithNewStatus = () => {
   resetValues();
   isNew = true;
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeCompositions>
+    <ThemeCompositions style={style}>
       <div data-tip="" data-for={compName}>
         N
         <StatusTooltip status={compStatus} name={compName} />
@@ -48,7 +50,7 @@ export const ComponentTooltipWithStagedStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeCompositions>
+    <ThemeCompositions style={style}>
       <div data-tip="" data-for={compName}>
         S
         <StatusTooltip status={compStatus} name={compName} />
@@ -64,7 +66,7 @@ export const ComponentTooltipWithModifiedFilesAndDependenciesStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeCompositions>
+    <ThemeCompositions style={style}>
       <div data-tip="" data-for={compName}>
         M
         <StatusTooltip status={compStatus} name={compName} />
@@ -79,7 +81,7 @@ export const ComponentTooltipWithModifiedFilesStatusAndIssues = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   const compName = getCompId();
   return (
-    <ThemeCompositions>
+    <ThemeCompositions style={style}>
       <div data-tip="" data-for={compName}>
         M
         <StatusTooltip status={compStatus} name={compName} issuesCount={2} />
@@ -87,12 +89,3 @@ export const ComponentTooltipWithModifiedFilesStatusAndIssues = () => {
     </ThemeCompositions>
   );
 };
-
-const compositions = [
-  ComponentTooltipWithNewStatus,
-  ComponentTooltipWithStagedStatus,
-  ComponentTooltipWithModifiedFilesAndDependenciesStatus,
-  ComponentTooltipWithModifiedFilesStatusAndIssues,
-];
-// @ts-ignore
-compositions.map((comp) => (comp.canvas = { height: 90 }));
