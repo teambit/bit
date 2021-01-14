@@ -1,7 +1,8 @@
 import React from 'react';
-import { ExternalLink, ExternalLinkProps } from '@teambit/documenter.routing.external-link';
+import { Link as RoutingLink, LinkProps } from '@teambit/ui.routing.link';
+
 import styles from './link.module.scss';
 
-export function Link(props: ExternalLinkProps) {
-  return <ExternalLink {...props} className={styles.link} />;
+export function Link(props: LinkProps) {
+  return <RoutingLink {...props} className={styles.link} external />;
 }
