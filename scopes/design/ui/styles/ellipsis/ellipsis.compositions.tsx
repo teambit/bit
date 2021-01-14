@@ -20,7 +20,3 @@ export const ShortString = () => {
     </ThemeCompositions>
   );
 };
-
-const compositions = [LongString, ShortString];
-// @ts-ignore
-compositions.map((comp) => (comp.canvas = { height: 90 }));
