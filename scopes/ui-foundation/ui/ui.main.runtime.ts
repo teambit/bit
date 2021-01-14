@@ -19,7 +19,7 @@ import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { createRoot } from './create-root';
-import { UnknownUI } from './exceptions';
+import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
@@ -380,6 +380,7 @@ export class UiMain {
     }
 
     const res = await this.build(name);
+    if (!res) throw new UnknownBuildError();
     this.clearConsole();
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
