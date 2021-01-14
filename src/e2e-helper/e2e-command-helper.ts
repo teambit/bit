@@ -88,9 +88,9 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
-  catScope(includeExtraData = false) {
+  catScope(includeExtraData = false, cwd = this.scopes.localPath) {
     const extraData = includeExtraData ? '--json-extra' : '';
-    const result = this.runCmd(`bit cat-scope --json ${extraData}`);
+    const result = this.runCmd(`bit cat-scope --json ${extraData}`, cwd);
     return JSON.parse(result);
   }
 
@@ -157,6 +157,11 @@ export default class CommandHelper {
   }
   tagAllWithoutBuild(options = '') {
     const result = this.runCmd(`bit tag -a ${options}`, undefined, undefined, BUILD_ON_CI);
+    expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  tagWithoutBuild(id: string, options = '') {
+    const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
