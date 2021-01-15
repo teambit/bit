@@ -48,16 +48,16 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+  async getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+    if (!ids.length) return [];
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
-      ids.map((id) => {
-        return this.get(id).then((component) => {
-          return {
-            id,
-            component,
-          };
-        });
+      ids.map(async (id) => {
+        const component = await this.get(id);
+        return {
+          id,
+          component,
+        };
       })
     );
   }
