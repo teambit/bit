@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { Extensions } from '../../src/constants';
 import { SchemaName } from '../../src/consumer/component/component-schema';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -34,6 +35,20 @@ describe('tag components on Harmony', function () {
     it('bit status should work and not show modified', () => {
       const status = helper.command.statusJson();
       expect(status.modifiedComponent).to.be.empty;
+    });
+    describe('tag without build after full tag', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('-s 1.0.0');
+      });
+      it('should not save the builder data from the previous version', () => {
+        const comp = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+        const builder = helper.general.getExtension(comp, Extensions.builder);
+        expect(builder.data).to.not.have.property('pipeline');
+        expect(builder.data).to.not.have.property('artifacts');
+      });
+      it('should be able to export successfully', () => {
+        expect(() => helper.command.export()).to.not.throw();
+      });
     });
   });
 });
