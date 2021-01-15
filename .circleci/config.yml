@@ -109,6 +109,8 @@ commands: # reusable commands
       - add_ssh_keys:
           fingerprints:
             - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
+      # to avoid error "error: Terminal is dumb, but EDITOR unset" on git pull
+      - run: GIT_MERGE_AUTOEDIT=no
       - run:
           name: set git user.name and user.email
           command: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
