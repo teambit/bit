@@ -84,7 +84,6 @@ export class WorkspaceManifestFactory {
     rootPolicy: WorkspacePolicy,
     dependencyFilterFn?: DepsFilterFn
   ): Promise<ComponentDependenciesMap> {
-    const result = new Map<PackageName, ManifestDependenciesObject>();
     const buildResultsP = components.map(async (component) => {
       const packageName = componentIdToPackageName(component.state._consumer);
       let depList = await this.dependencyResolver.getDependencies(component);
@@ -98,16 +97,20 @@ export class WorkspaceManifestFactory {
       if (dependencyFilterFn) {
         depList = dependencyFilterFn(depList);
       }
-
       await this.updateDependenciesVersions(component, rootPolicy, depList);
       const depManifest = await depList.toDependenciesManifest();
-      result.set(packageName, depManifest);
-      return Promise.resolve();
+
+      return { packageName, depManifest };
     });
+    const result = new Map<PackageName, ManifestDependenciesObject>();
 
     if (buildResultsP.length) {
-      await Promise.all(buildResultsP);
+      const results = await Promise.all(buildResultsP);
+      results.forEach((currResult) => {
+        result.set(currResult.packageName, currResult.depManifest);
+      });
     }
+
     return result;
   }
 
