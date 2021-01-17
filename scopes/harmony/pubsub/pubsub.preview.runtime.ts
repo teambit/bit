@@ -2,10 +2,6 @@
  * Please Notice: This file will run in the preview iframe.
  */
 
-// TODO: Use log aspect - currently do not work with the legacy log.
-// TODO: Decide and configure a consistent this alias.
-/* eslint-disable @typescript-eslint/no-this-alias */
-
 import { PreviewRuntime } from '@teambit/preview';
 import { isBrowser } from '@teambit/ui.is-browser';
 
@@ -17,33 +13,26 @@ import { PubsubAspect } from './pubsub.aspect';
 export class PubsubPreview {
   private _parentPubsub;
 
-  inIframe() {
+  protected inIframe() {
     try {
-      return window.self !== window.top;
+      return isBrowser && window.self !== window.top;
     } catch (e) {
       return true;
     }
   }
 
-  public async updateParentPubsub() {
-    if (!this.inIframe()) return undefined;
-    return connectToParent({ timeout: 300 })
-      .promise.then((parentPubsub) => {
-        this._parentPubsub = parentPubsub;
-      })
-      .catch(() => {
-        return this.updateParentPubsub();
-      });
-  }
+  private updateParentPubsub = (retries = 3) => {
+    if (retries <= 0) return undefined;
 
-  public init = () => {
-    window.addEventListener('load', () => {
-      // Making sure parent call connect-to-child before the child call connect-to-parent
-      // (not sure if its needed anymore)
-      setTimeout(() => {
-        this.updateParentPubsub();
-      }, 0);
-    });
+    return connectToParent({ timeout: 1 })
+      .promise.then((parentPubsub) => {
+        return (this._parentPubsub = parentPubsub);
+      })
+      .catch((e: any) => {
+        if (e.code !== 'ConnectionTimeout') return undefined;
+
+        return this.updateParentPubsub(retries - 1);
+      });
   };
 
   public sub(topicUUID, callback) {
@@ -62,8 +51,8 @@ export class PubsubPreview {
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
-    if (isBrowser) {
-      pubsubPreview.init();
+    if (pubsubPreview.inIframe()) {
+      window.addEventListener('load', pubsubPreview.updateParentPubsub());
     }
 
     return pubsubPreview;

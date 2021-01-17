@@ -1,68 +1,49 @@
-// TODO: Use log aspect - currently do not work with the legacy log.
-// TODO: Decide and configure a consistent this alias.
-/* eslint-disable @typescript-eslint/no-this-alias */
-
-import { UIRuntime } from '@teambit/ui';
-import { isBrowser } from '@teambit/ui.is-browser';
+import React, { ReactNode } from 'react';
+import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
-import MutationObserver from 'mutation-observer';
+import { Connection } from 'penpal/lib/types';
 
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
+import { pubsubRegistry, PubSubRegistry } from './pubsub-context';
+
 export class PubsubUI {
   private topicMap = {};
-  private _childs;
 
-  private getAllIframes = () => {
-    return Array.from(document.getElementsByTagName('iframe'));
-  };
-
-  private connectToIframe = async (iframe) => {
-    const _this = this;
-
-    return connectToChild({
+  private connectToIframeWithRetry = (iframe: HTMLIFrameElement, update: (c: Connection) => void, retries = 3) => {
+    const connection = connectToChild({
       timeout: 500,
       iframe,
-      methods: {
-        sub(topicUUID, callback) {
-          return _this.sub(topicUUID, callback);
-        },
-        pub(topicUUID, event: BitBaseEvent<any>) {
-          return _this.pub(topicUUID, event);
-        },
-      },
-    })
-      .promise.then((child) => child)
-      .catch(() => {
-        return this.connectToIframe(iframe);
-      });
+      methods: this.pubsubMethods,
+    });
+
+    connection.promise.catch((e) => {
+      // make sure not to retry when code === "ConnectionDestroyed"
+      if (e.code !== 'ConnectionTimeout') return;
+
+      if (retries <= 0) return;
+      this.connectToIframeWithRetry(iframe, update, retries - 1); // recursion!
+    });
+
+    update(connection);
   };
 
-  private updateConnectionsList() {
-    const _iframes = this.getAllIframes();
-    return _iframes.map((iframe) => this.connectToIframe(iframe));
-  }
+  private connectToIframe = (iframe: HTMLIFrameElement) => {
+    let connection: Connection;
+
+    this.connectToIframeWithRetry(iframe, (c) => (connection = c));
+
+    const destroy = () => {
+      connection && connection.destroy();
+    };
+    return destroy;
+  };
 
   private createOrGetTopic = (topicUUID) => {
     this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
   };
-
-  public async updateConnectionListWithRetry() {
-    this.updateConnectionsList();
-    const config = { childList: true, subtree: true };
-
-    // TODO - consider collecting iframes using a react context, instead of using MutationObserver
-    const observer = new MutationObserver((e: MutationRecord[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const addedIframes = e
-        .map((x) => Array.from(x.addedNodes).filter((element) => element.nodeName === 'IFRAME'))
-        .flat();
-      this.updateConnectionsList();
-    });
-    observer.observe(document.body, config);
-  }
 
   public sub = (topicUUID, callback) => {
     this.createOrGetTopic(topicUUID);
@@ -74,13 +55,26 @@ export class PubsubUI {
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   };
 
-  static runtime = UIRuntime;
+  private pubsubMethods = {
+    sub: this.sub,
+    pub: this.pub,
+  };
 
-  static async provider() {
+  static runtime = UIRuntime;
+  static dependencies = [UIAspect];
+
+  static async provider([uiUI]: [UiUI]) {
     const pubsubUI = new PubsubUI();
-    if (isBrowser) {
-      await pubsubUI.updateConnectionListWithRetry();
-    }
+
+    const pubSubContext: PubSubRegistry = {
+      connect: pubsubUI.connectToIframe,
+    };
+
+    const PubSubProvider = ({ children }: { children: ReactNode }) => (
+      <pubsubRegistry.Provider value={pubSubContext}>{children}</pubsubRegistry.Provider>
+    );
+    uiUI.registerRenderHooks({ reactContext: PubSubProvider });
+
     return pubsubUI;
   }
 }
