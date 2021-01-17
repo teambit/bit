@@ -15,11 +15,14 @@ export default function DocsRoot(
   if (firstTime && typeof window !== 'undefined') {
     window.addEventListener('load', render);
   } else {
-    firstTime = false;
+    // this can happen when re-rendering the page,
+    // i.e. when only the hash part of the url changes
     render();
   }
 
   function render() {
+    firstTime = false;
+
     ReactDOM.render(
       <DocsApp Provider={Provider} compositions={compositions} docs={docs} componentId={componentId} />,
       document.getElementById('root')
