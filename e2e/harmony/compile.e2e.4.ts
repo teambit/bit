@@ -71,7 +71,7 @@ describe('compile extension', function () {
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
         expect(catComp2).to.have.property('extensions');
-        const builderExt = catComp2.extensions.find((e) => e.name === Extensions.builder);
+        const builderExt = helper.general.getExtension(catComp2, Extensions.builder);
         expect(builderExt.data).to.have.property('artifacts');
         const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
         const files = compilerArtifacts.files.map((d) => d.relativePath);

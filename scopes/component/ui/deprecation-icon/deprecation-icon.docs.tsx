@@ -22,11 +22,14 @@ Overview.abstract = 'A component that shows a warning icon when a component is d
 
 Overview.labels = ['react', 'typescript', 'icon', 'deprecate'];
 
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
+
 Overview.examples = [
   {
     scope: {
       ComponentModel,
       DeprecationIcon,
+      style,
     },
     title: 'Deprecated icon',
     description: 'Using the Deprecation Icon with a deprecated component',
@@ -37,7 +40,11 @@ Overview.examples = [
       };
       // @ts-ignore
       const component = new ComponentModel(null, null, null, null, null, null, null, null, deprecation, null, null);
-      return <DeprecationIcon component={component} />;
+      return (
+        <div style={style}>
+          <DeprecationIcon component={component} />
+        </div>
+      )
     }
       `,
   },
