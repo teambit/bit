@@ -1,5 +1,6 @@
 import { ComponentModel } from '@teambit/component';
-import React, { CSSProperties } from 'react';
+import { usePubSubIframe } from '@teambit/pubsub';
+import React, { CSSProperties, createRef } from 'react';
 
 export type ComponentPreviewProps = {
   /**
@@ -32,6 +33,9 @@ export type ComponentPreviewProps = {
  * renders a preview of a component.
  */
 export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
+  const ref = createRef<HTMLIFrameElement>();
+  usePubSubIframe(ref);
+
   const serverUrl = `/api/${component.id.toString()}/~aspect/preview`;
   // const compWithVersion = component.id.version !== 'latest' ? `${component.id.fullName}@${component.id.version}`: component.id.fullName;
 
@@ -39,7 +43,7 @@ export function ComponentPreview({ component, style, previewName, queryParams }:
     `?preview=${previewName}&${queryParams && queryParams}` || ''
   }`;
 
-  return <iframe style={style} src={url} />;
+  return <iframe ref={ref} style={style} src={url} />;
 }
 
 ComponentPreview.defaultProps = {

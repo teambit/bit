@@ -35,9 +35,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     devtool: 'inline-source-map',
 
     // Entry point of app
-    entry: {
-      entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
-    },
+    entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
 
     node: {
       fs: 'empty',
