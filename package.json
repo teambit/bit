@@ -231,7 +231,7 @@
     "@types/chai-fs": "^2.0.2",
     "@types/chai-string": "^1.4.2",
     "@types/fs-extra": "^9.0.5",
-    "@types/graphlib": "^2.1.5",
+    "@types/graphlib": "^2.1.7",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.27",
     "@types/node-fetch": "2.5.7",

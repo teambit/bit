@@ -124,6 +124,7 @@
         "@types/lodash.compact": "3.0.6",
         "@types/lodash.head": "^4.0.6",
         "@types/mdx-js__react": "1.5.3",
+        "@types/mime": "2.0.3",
         "@types/mousetrap": "^1.6.3",
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "^4.1.1",
