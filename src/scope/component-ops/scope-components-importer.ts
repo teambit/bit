@@ -1,4 +1,5 @@
-import { mapSeries, filter } from 'bluebird';
+import { filter } from 'bluebird';
+import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
 
@@ -14,9 +15,8 @@ import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
 import ComponentVersion from '../component-version';
-import { ComponentNotFound, DependencyNotFound } from '../exceptions';
+import { ComponentNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
-import { PermissionDenied, RemoteScopeNotFound } from '../network/exceptions';
 import { Ref } from '../objects';
 import { ObjectItem } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
@@ -136,18 +136,6 @@ export default class ScopeComponentsImporter {
     return versionDependenciesArr;
   }
 
-  importDependencies(dependencies: BitIds): Promise<VersionDependencies[]> {
-    return new Promise((resolve, reject) => {
-      return this.importMany(dependencies)
-        .then(resolve)
-        .catch((e) => {
-          logger.error(`importDependencies got an error: ${JSON.stringify(e)}`);
-          if (e instanceof RemoteScopeNotFound || e instanceof PermissionDenied) return reject(e);
-          return reject(new DependencyNotFound(e.id));
-        });
-    });
-  }
-
   async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
     const lanes = await this.importLanes(remoteLaneIds);
     const ids = lanes.map((lane) => lane.toBitIds());
@@ -208,10 +196,8 @@ export default class ScopeComponentsImporter {
       } found, going to collect its dependencies`
     );
     const dependencies = await this.importManyWithoutDependencies(version.flattenedDependencies);
-    const devDependencies = await this.importManyWithoutDependencies(version.flattenedDevDependencies);
-    const extensionsDependencies = await this.importManyWithoutDependencies(version.extensions.extensionsBitIds);
 
-    return new VersionDependencies(versionComp, dependencies, devDependencies, extensionsDependencies, source);
+    return new VersionDependencies(versionComp, dependencies, [], [], source);
   }
 
   async componentsToComponentsObjects(

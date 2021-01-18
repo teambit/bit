@@ -1,21 +1,33 @@
+import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import { Configuration } from 'webpack';
+import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import * as mdxLoader from '@teambit/modules.mdx-loader';
+// Make sure the bit-react-transformer is a dependency
+// TODO: remove it once we can set policy from component to component then set it via the component.json
+import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
-  'web.mjs',
-  'mjs',
   'web.js',
   'js',
   'web.ts',
   'ts',
+  'web.mjs',
+  'mjs',
   'web.tsx',
   'tsx',
   'json',
   'web.jsx',
   'jsx',
+  'mdx',
+  'md',
 ];
 
-export default function (workspaceDir: string, targets: string[], envId: string): Configuration {
+export default function (
+  envId: string,
+  fileMapPath: string
+): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -23,24 +35,60 @@ export default function (workspaceDir: string, targets: string[], envId: string)
     module: {
       rules: [
         {
+          // support packages with `*.mjs`, namely, 'graphql'
+          test: /\.mjs$/,
+          include: /node_modules/,
+          type: 'javascript/auto',
+        },
+        {
           test: /\.js$/,
           enforce: 'pre',
           exclude: /node_modules/,
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: /\.(js|jsx|tsx|ts)$/,
+          test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
           loader: require.resolve('babel-loader'),
           options: {
             babelrc: false,
+            configFile: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),
             ],
-            plugins: [require.resolve('react-refresh/babel')],
+            plugins: [
+              require.resolve('react-refresh/babel'),
+              // for component highlighting in preview.
+              [
+                require.resolve('@teambit/babel.bit-react-transformer'),
+                {
+                  componentFilesPath: fileMapPath,
+                },
+              ],
+            ],
           },
+        },
+
+        // MDX support (move to the mdx aspect and extend from there)
+        {
+          test: /\.mdx?$/,
+          exclude: [/node_modules/, /dist/],
+          use: [
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
+                plugins: [require.resolve('react-refresh/babel')],
+              },
+            },
+            {
+              loader: require.resolve('@teambit/modules.mdx-loader'),
+            },
+          ],
         },
         {
           test: /\.module\.s(a|c)ss$/,
@@ -146,7 +194,10 @@ export default function (workspaceDir: string, targets: string[], envId: string)
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
+        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
+        '@mdx-js/react': require.resolve('@mdx-js/react'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
     },
@@ -160,6 +211,7 @@ export default function (workspaceDir: string, targets: string[], envId: string)
           entry: require.resolve('./react-hot-dev-client'),
           module: require.resolve('./refresh'),
         },
+        include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
       }),

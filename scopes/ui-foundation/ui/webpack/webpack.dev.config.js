@@ -6,7 +6,7 @@ const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMi
 const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
 const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
-const html = require('./html');
+const { default: html } = require('./html');
 
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
@@ -141,6 +141,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
       alias: {
         react: require.resolve('react'),
+        'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
@@ -164,6 +165,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
           include: workspaceDir,
           loader: require.resolve('babel-loader'),
           options: {
+            configFile: false,
+            babelrc: false,
             presets: [
               // Preset includes JSX, TypeScript, and some ESnext features
               require.resolve('babel-preset-react-app'),

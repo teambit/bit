@@ -1,4 +1,10 @@
-export { Policy } from './policy';
+export {
+  Policy,
+  PolicySemver,
+  PolicyConfigKeys,
+  PolicyConfigKeysNames,
+  PolicyEntry
+ } from './policy';
 export {
   WorkspacePolicy,
   WorkspacePolicyFactory,
@@ -6,4 +12,9 @@ export {
   AddEntryOptions as WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
 } from './workspace-policy';
-export { VariantPolicy, VariantPolicyFactory, VariantPolicyConfigObject } from './variant-policy';
+export {
+  VariantPolicy,
+  VariantPolicyFactory,
+  VariantPolicyConfigObject,
+  SerializedVariantPolicy,
+} from './variant-policy';

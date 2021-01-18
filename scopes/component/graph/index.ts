@@ -1,6 +1,6 @@
 export { GraphAspect as default, GraphAspect } from './graph.aspect';
 
-export { Dependency } from './dependency';
+export { Dependency } from './model/dependency';
 export { DuplicateDependency, VersionSubgraph } from './duplicate-dependency';
 export type { ComponentGraph } from './component-graph';
 export type { GraphBuilder } from './graph-builder';

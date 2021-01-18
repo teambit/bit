@@ -1,7 +1,8 @@
 import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
+import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
-import BitId from '../../bit-id/bit-id';
+import { BitId } from '../../bit-id';
 import {
   COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
@@ -23,7 +24,6 @@ import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
-import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
@@ -48,7 +48,6 @@ type State = {
   };
 };
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
@@ -475,14 +474,14 @@ export default class Component extends BitObject {
 
   async loadVersion(version: string, repository: Repository): Promise<Version> {
     const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version);
+    if (!versionRef) throw new VersionNotFound(version, this.id());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.load(repository);
   }
 
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version);
+    if (!versionRef) throw new VersionNotFound(version, this.id());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
   }
@@ -536,9 +535,17 @@ export default class Component extends BitObject {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (versionNum === VERSION_ZERO) {
+      throw new Error(`the component ${this.id()} has no versions and the head is empty.
+this is probably a component from another lane which should not be loaded in this lane.
+make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (isTag(versionNum) && !this.hasTag(versionNum!)) {
       throw new ShowDoctorError(
-        `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
+        `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersions().join(
+          '\n'
+        )}, versions array.`
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -603,21 +610,25 @@ export default class Component extends BitObject {
       bindingPrefix,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       mainFile: version.mainFile || null,
+      // @ts-ignore
       compiler,
+      // @ts-ignore
       tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
-      flattenedDevDependencies: version.flattenedDevDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
       compilerPackageDependencies: clone(version.compilerPackageDependencies),
       testerPackageDependencies: clone(version.testerPackageDependencies),
+      // @ts-ignore
       files,
+      // @ts-ignore
       dists,
       mainDistFile: version.mainDistFile,
       docs: version.docs,
+      // @ts-ignore
       license: scopeMeta ? License.deserialize(scopeMeta.license) : undefined, // todo: make sure we have license in case of local scope
       // @ts-ignore
       specsResults: version.specsResults ? version.specsResults.map((res) => SpecsResults.deserialize(res)) : null,
@@ -629,6 +640,7 @@ export default class Component extends BitObject {
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,
+      buildStatus: version.buildStatus,
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);

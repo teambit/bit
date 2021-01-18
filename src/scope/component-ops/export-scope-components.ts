@@ -1,4 +1,4 @@
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import R from 'ramda';
 
 import { BitId, BitIds } from '../../bit-id';
@@ -313,7 +313,6 @@ export async function exportMany({
     const versionsObjects: Version[] = componentAndObjects.objects.filter((object) => object instanceof Version);
     versionsObjects.forEach((version: Version) => {
       version.flattenedDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
-      version.flattenedDevDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
     });
   }
 
@@ -640,15 +639,12 @@ async function convertToCorrectScopeLegacy(
         dependency.id = updatedScope;
       }
     });
-    const flattenedFields = ['flattenedDependencies', 'flattenedDevDependencies'];
-    flattenedFields.forEach((flattenedField) => {
-      const ids: BitIds = version[flattenedField];
-      const needsChange = ids.some((id) => id.scope !== remoteScope);
-      if (needsChange) {
-        version[flattenedField] = getBitIdsWithUpdatedScope(ids);
-        hasChanged = true;
-      }
-    });
+    const ids: BitIds = version.flattenedDependencies;
+    const needsChange = ids.some((id) => id.scope !== remoteScope);
+    if (needsChange) {
+      version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
+      hasChanged = true;
+    }
     return hasChanged;
   }
 
@@ -819,15 +815,12 @@ async function convertToCorrectScopeHarmony(
         dependency.id = updatedScope;
       }
     });
-    const flattenedFields = ['flattenedDependencies', 'flattenedDevDependencies'];
-    flattenedFields.forEach((flattenedField) => {
-      const ids: BitIds = version[flattenedField];
-      const needsChange = ids.some((id) => id.scope !== remoteScope);
-      if (needsChange) {
-        version[flattenedField] = getBitIdsWithUpdatedScope(ids);
-        hasChanged = true;
-      }
-    });
+    const ids: BitIds = version.flattenedDependencies;
+    const needsChange = ids.some((id) => id.scope !== remoteScope);
+    if (needsChange) {
+      version.flattenedDependencies = getBitIdsWithUpdatedScope(ids);
+      hasChanged = true;
+    }
     return hasChanged;
   }
 

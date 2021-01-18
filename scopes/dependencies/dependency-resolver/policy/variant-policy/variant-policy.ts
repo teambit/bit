@@ -18,19 +18,27 @@ export type VariantPolicyEntryVersion = SemverVersion;
 
 export type VariantPolicyEntryValue = {
   version: VariantPolicyEntryVersion;
+  resolveFromEnv?: boolean;
 };
 
 export type VariantPolicyEntry = PolicyEntry & {
   value: VariantPolicyEntryValue;
 };
 
+export type SerializedVariantPolicyEntry = VariantPolicyEntry;
+export type SerializedVariantPolicy = SerializedVariantPolicyEntry[];
+
 export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   constructor(private _policiesEntries: VariantPolicyEntry[]) {
     this._policiesEntries = uniqEntries(_policiesEntries);
   }
 
-  get entries() {
+  get entries(): VariantPolicyEntry[] {
     return this._policiesEntries;
+  }
+
+  get length(): number {
+    return this.entries.length;
   }
 
   find(depId: string): VariantPolicyEntry | undefined {
@@ -38,6 +46,20 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       return entry.dependencyId === depId;
     });
     return matchedEntry;
+  }
+
+  filter(predicate: (dep: VariantPolicyEntry, index?: number) => boolean): VariantPolicy {
+    const filtered = this.entries.filter(predicate);
+    return new VariantPolicy(filtered);
+  }
+
+  /**
+   * Filter only deps which should be resolved from the env
+   */
+  getResolvedFromEnv() {
+    return this.filter((dep) => {
+      return !!dep.value.resolveFromEnv;
+    });
   }
 
   getDepVersion(depId: string): VariantPolicyEntryVersion | undefined {
@@ -48,8 +70,27 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return entry.value.version;
   }
 
+  serialize(): SerializedVariantPolicy {
+    return this.entries;
+  }
+
   toConfigObject(): VariantPolicyConfigObject {
     const res: VariantPolicyConfigObject = {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    };
+    this._policiesEntries.reduce((acc, entry) => {
+      const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
+      const value = entry.value.resolveFromEnv ? entry.value : entry.value.version;
+      acc[keyName][entry.dependencyId] = value;
+      return acc;
+    }, res);
+    return res;
+  }
+
+  toLegacyDepsOverrides(): DependenciesOverridesData {
+    const res: DependenciesOverridesData = {
       dependencies: {},
       devDependencies: {},
       peerDependencies: {},
@@ -60,13 +101,6 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
       return acc;
     }, res);
     return res;
-  }
-
-  toLegacyDepsOverrides(): DependenciesOverridesData {
-    // TODO: once we support DetailedDependencyPolicy in the object we should do here something
-    // TODO: it might be that we will have to return it as is, and handle it in the legacy
-    // TODO: since we don't have enough info about handle force here
-    return this.toConfigObject();
   }
 
   static mergePolices(policies: VariantPolicy[]): VariantPolicy {

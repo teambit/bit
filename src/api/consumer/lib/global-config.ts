@@ -1,4 +1,4 @@
-import gitconfig from '@teambit/gitconfig';
+import gitconfig from 'gitconfig';
 import R from 'ramda';
 
 import { BASE_DOCS_DOMAIN } from '../../../constants';

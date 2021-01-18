@@ -60,7 +60,8 @@ describe('bit tag command', function () {
       }
     });
     it('should not tag the component', () => {
-      expect(output).to.have.string('unable to find the mainFile');
+      expect(output).to.have.string('error: main file');
+      expect(output).to.have.string('was removed');
     });
   });
   describe('semver flags', () => {
@@ -1011,7 +1012,7 @@ describe('bit tag command', function () {
     });
     describe('tagging with --persist flag', () => {
       before(() => {
-        helper.command.hardTag();
+        helper.command.persistTag();
       });
       it('should tag and remove the nextVersion property in .bitmap file', () => {
         const bitMap = helper.bitMap.readComponentsMapOnly();

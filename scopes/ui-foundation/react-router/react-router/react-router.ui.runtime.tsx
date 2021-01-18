@@ -1,19 +1,23 @@
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
-import { History, UnregisterCallback, LocationListener } from 'history';
+import { History, UnregisterCallback, LocationListener, LocationDescriptor, Action } from 'history';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui.react-router.slot-router';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
 import { Routing } from './routing-method';
 
 type RouteChangeSlot = SlotRegistry<LocationListener>;
+type RenderRoutesOptions = {
+  initialLocation?: string;
+};
 
 export class ReactRouterUI {
   private routerHistory?: History;
-  private routingMode = Routing.url;
+  private routingMode = isBrowser ? Routing.url : Routing.static;
 
   constructor(
     /**
@@ -29,9 +33,9 @@ export class ReactRouterUI {
   /**
    * render all slot routes.
    */
-  renderRoutes(routes: RouteProps[]): JSX.Element {
+  renderRoutes(routes: RouteProps[], options: RenderRoutesOptions = {}): JSX.Element {
     return (
-      <RouteContext reactRouterUi={this} routing={this.routingMode}>
+      <RouteContext reactRouterUi={this} routing={this.routingMode} location={options.initialLocation}>
         <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>
       </RouteContext>
     );
@@ -73,6 +77,35 @@ export class ReactRouterUI {
    * change browser location
    */
   navigateTo = (
+    /** destination */
+    path: LocationDescriptor,
+    /**
+     * type of history action to execute (pop / push / replace).
+     * Supports state-object for legacy calls. (this will be removed when supported by symphony)
+     */
+    action?: Action | Record<string, any>
+  ) => {
+    if (typeof action !== 'string') {
+      this.legacyNavigateTo(path as string, action);
+      return;
+    }
+
+    switch (action) {
+      case 'POP':
+        return; // TBD;
+      case 'REPLACE':
+        this.routerHistory?.replace(path);
+        return;
+      case 'PUSH':
+      default:
+        this.routerHistory?.push(path);
+    }
+  };
+
+  /**
+   * change browser location
+   */
+  private legacyNavigateTo = (
     /** destination */
     path: string,
     state?: Record<string, any>

@@ -9,11 +9,15 @@ export default class CatObject implements LegacyCommand {
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"'],
+    ['', 'headers', 'shows the headers only'],
   ] as CommandOptions;
 
-  action([hash]: [string], { pretty, stringify }: { pretty: boolean; stringify: boolean }): Promise<any> {
+  action(
+    [hash]: [string],
+    { pretty, stringify, headers }: { pretty: boolean; stringify: boolean; headers: boolean }
+  ): Promise<any> {
     // @TODO - import should support multiple bits
-    return catObject(hash, pretty, stringify);
+    return catObject(hash, pretty, stringify, headers);
   }
 
   report(file: any): string {

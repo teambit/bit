@@ -5,9 +5,9 @@ import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
 import { BitId, BitIds } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { Scope } from 'bit-bin/dist/scope';
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import execa from 'execa';
 import R from 'ramda';
 import { PkgAspect } from './pkg.aspect';
@@ -42,7 +42,7 @@ export class Publisher {
   public async publishMultipleCapsules(capsules: Capsule[]): Promise<ComponentResult[]> {
     const description = `publish components${this.options.dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = Bluebird.mapSeries(capsules, (capsule) => {
+    const results = mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
       return this.publishOneCapsule(capsule);
     });
@@ -90,21 +90,9 @@ export class Publisher {
     }
     const idsToPublish = await this.getIdsToPublish(componentIds);
     this.logger.debug(`total ${idsToPublish.length} to publish out of ${componentIds.length}`);
-    const network = await this.workspace.createNetwork(idsToPublish);
+    const componentIdsToPublish = await this.workspace.resolveMultipleComponentIds(idsToPublish);
+    const network = await this.isolator.isolateComponents(componentIdsToPublish);
     return network.seedersCapsules;
-  }
-
-  private async getComponentCapsulesFromScope(componentIdsStr: string[]): Promise<Capsule[]> {
-    const consumer = this.workspace.consumer;
-    if (consumer.isLegacy) {
-      // publish is supported on Harmony only
-      return [];
-    }
-    const idsToPublish = await this.getIdsToPublish(componentIdsStr);
-    const componentIds = await this.workspace.resolveMultipleComponentIds(idsToPublish);
-    const components = await this.workspace.scope.getMany(componentIds);
-    const capsules = await this.isolator.isolateComponents(components, { baseDir: this.workspace.scope.path });
-    return capsules;
   }
 
   /**

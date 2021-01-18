@@ -1,36 +1,28 @@
 import { flatten } from 'lodash';
 import { Linter, LinterContext } from '@teambit/linter';
-import { ESLint } from 'eslint';
+import { ESLint as ESLintLib } from 'eslint';
+import mapSeries from 'p-map-series';
+import { Logger } from '@teambit/logger';
 import { ESLintOptions } from './eslint.main.runtime';
 
 export class ESLintLinter implements Linter {
   constructor(
+    private logger: Logger,
+
     private options: ESLintOptions,
 
     /**
      * reference to the eslint module.
      */
-    // eslint-disable-next-line no-shadow
     private ESLint?: any
   ) {}
 
-  /**
-   * get options for eslint.
-   */
-  private getOptions(options: ESLintOptions, context: LinterContext): ESLint.Options {
-    return {
-      overrideConfig: options.config,
-      extensions: context.extensionFormats,
-      useEslintrc: false,
-      cwd: options.pluginPath,
-    };
-  }
-
   // @ts-ignore
   async lint(context: LinterContext) {
-    const resultsP = context.components.map(async (component) => {
+    const longProcessLogger = this.logger.createLongProcessLogger('linting components', context.components.length);
+    const resultsP = mapSeries(context.components, async (component) => {
+      longProcessLogger.logProgress(component.id.toString());
       const eslint = this.createEslint(this.options, context, this.ESLint);
-      0;
       const filesP = component.filesystem.files.map(async (file) => {
         const sourceCode = file.contents.toString('utf8');
         const lintResults = await eslint.lintText(sourceCode, {
@@ -43,7 +35,7 @@ export class ESLintLinter implements Linter {
 
       const files = await Promise.all(filesP);
 
-      const results: ESLint.LintResult[] = flatten(files);
+      const results: ESLintLib.LintResult[] = flatten(files);
       const formatter = await eslint.loadFormatter(this.options.formatter || 'stylish');
       const output = formatter.format(results);
 
@@ -54,7 +46,7 @@ export class ESLintLinter implements Linter {
       };
     });
 
-    const results = await Promise.all(resultsP);
+    const results = await resultsP;
 
     return {
       results,
@@ -62,7 +54,7 @@ export class ESLintLinter implements Linter {
     };
   }
 
-  private computeResults(results: ESLint.LintResult[]) {
+  private computeResults(results: ESLintLib.LintResult[]) {
     return results.map((result) => {
       return {
         filePath: result.filePath,
@@ -73,14 +65,26 @@ export class ESLintLinter implements Linter {
     });
   }
 
-  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any): ESLint {
+  private createEslint(options: ESLintOptions, context: LinterContext, ESLintModule?: any): ESLintLib {
     // eslint-disable-next-line no-new
     if (ESLintModule) new ESLintModule.ESLint(this.getOptions(options, context));
-    return new ESLint(this.getOptions(options, context));
+    return new ESLintLib(this.getOptions(options, context));
+  }
+
+  /**
+   * get options for eslint.
+   */
+  private getOptions(options: ESLintOptions, context: LinterContext): ESLintLib.Options {
+    return {
+      overrideConfig: options.config,
+      extensions: context.extensionFormats,
+      useEslintrc: false,
+      cwd: options.pluginPath,
+    };
   }
 
   version() {
     if (this.ESLint) return this.ESLint.version;
-    return ESLint.version;
+    return ESLintLib.version;
   }
 }

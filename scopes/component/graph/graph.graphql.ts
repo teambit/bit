@@ -1,12 +1,16 @@
+import { ComponentMain } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
 
 import { GraphBuilder } from './graph-builder';
 import { ComponentGraph } from './component-graph';
-import { DependencyType } from './dependency';
+import { GraphFilter } from './model/graph-filters';
+import { DependencyType } from './model/dependency';
 import { EdgeType } from './edge-type';
 
-export function graphSchema(graphBuilder: GraphBuilder): Schema {
+const textCmp = new Intl.Collator().compare;
+
+export function graphSchema(graphBuilder: GraphBuilder, componentAspect: ComponentMain): Schema {
   return {
     typeDefs: gql`
       type ComponentGraph {
@@ -32,34 +36,52 @@ export function graphSchema(graphBuilder: GraphBuilder): Schema {
       }
 
       extend type Query {
-        graph(ids: [String]): ComponentGraph
+        graph(ids: [String], filter: String): ComponentGraph
       }
     `,
     resolvers: {
       ComponentGraph: {
         nodes: (graph: ComponentGraph) => {
-          return Array.from(graph.nodes).map(([nodeId, component]) => {
-            return {
-              id: nodeId,
-              component,
-            };
-          });
+          return graph.nodes
+            .map((node) => {
+              return {
+                id: node.id,
+                component: node.attr,
+              };
+            })
+            .sort((a, b) => textCmp(a.id, b.id));
         },
         edges: (graph: ComponentGraph) => {
-          // TODO: this is a hack since I don't have a proper way to get the edge with the source and target id from cleargraph
-          // it should be change once cleargraph provide this
-          const graphJson = graph.toJson();
-          return graphJson.edges.map((edge) => {
-            return {
-              sourceId: edge.sourceId,
-              targetId: edge.targetId,
-              dependencyLifecycleType: getDependencyLifecycleType(edge.edge.type),
-            };
-          });
+          return graph.edges
+            .map(
+              (edge) =>
+                ({
+                  sourceId: edge.sourceId,
+                  targetId: edge.targetId,
+                  dependencyLifecycleType: getDependencyLifecycleType(edge.attr.type),
+                } as { sourceId: string; targetId: string; dependencyLifecycleType: EdgeType })
+            )
+            .sort((a, b) => textCmp(a.sourceId, b.sourceId))
+            .sort((a, b) => textCmp(a.targetId, b.targetId));
         },
       },
       Query: {
-        graph: (_parent, { ids }: { ids: string[] }) => graphBuilder.getGraph(ids),
+        graph: async (_parent, { ids, filter }: { ids?: string[]; filter?: GraphFilter }) => {
+          const componentsHost = componentAspect.getHost();
+          const resolvedIds = ids
+            ? await componentsHost.resolveMultipleComponentIds(ids)
+            : (await componentsHost.list()).map((x) => x.id);
+
+          const graph = await graphBuilder.getGraph(resolvedIds);
+          if (!graph) return undefined;
+
+          if (filter === 'runtimeOnly') {
+            const runtimeGraph = graph.runtimeOnly(resolvedIds.map((x) => x.toString()));
+            return runtimeGraph;
+          }
+
+          return graph;
+        },
       },
     },
   };

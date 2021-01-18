@@ -20,14 +20,12 @@ export default function Overview() {
   );
 }
 
-export const Center = ({ children }: React.HTMLAttributes<HTMLDivElement>) => {
-  return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</div>;
-};
-
 Overview.abstract =
   'A UI component that handles the presentation  of the component status and allows to present multiple status options.';
 
 Overview.labels = ['react', 'typescript', 'status', 'tooltip'];
+
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
 
 Overview.examples = [
   {
@@ -35,7 +33,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'Modified dependencies',
     description: 'Using the Status Resolver component with modified dependencies',
@@ -52,9 +50,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} />
-        </Center>
+        </div>
       );
     }
       `,
@@ -64,7 +62,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'Modified files',
     description: 'Using the Status Resolver component with modified files',
@@ -81,9 +79,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} />
-        </Center>
+        </div>
       );
     }
       `,
@@ -93,7 +91,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'New status',
     description: 'Using the Status Resolver component with new status',
@@ -110,9 +108,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} />
-        </Center>
+        </div>
       );
     }
       `,
@@ -122,7 +120,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'Staged status',
     description: 'Using the Status Resolver component with staged status',
@@ -139,9 +137,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} />
-        </Center>
+        </div>
       );
     }
       `,
@@ -151,7 +149,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'New status and issues',
     description: 'Using the Status Resolver component with new status and issues',
@@ -168,9 +166,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} issuesCount={1} />
-        </Center>
+        </div>
       );
     }
       `,
@@ -180,7 +178,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'New staged and issues',
     description: 'Using the Status Resolver component with staged status and issues',
@@ -197,9 +195,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} issuesCount={1} />
-        </Center>
+        </div>
       );
     }
       `,
@@ -209,7 +207,7 @@ Overview.examples = [
       ComponentID,
       StatusProps,
       ComponentStatusResolver,
-      Center,
+      style,
     },
     title: 'Modified files and dependencies with issues',
     description: 'Using the Status Resolver component with modified status and issues',
@@ -226,9 +224,9 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <Center>
+        <div style={style}>
           <ComponentStatusResolver id={compId} status={compStatus} issuesCount={1} />
-        </Center>
+        </div>
       );
     }
       `,

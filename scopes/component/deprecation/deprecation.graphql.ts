@@ -15,21 +15,28 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
         isDeprecate: Boolean
       }
 
+      type DeprecationResult {
+        bitIds: [String]
+        missingComponents: [String]
+      }
+
       type Mutation {
         # deprecate components
-        deprecate(bitIds: [String!]!): Boolean
+        deprecate(bitIds: [String!]!): DeprecationResult
 
         # undo deprecate to components
-        undeprecate(bitIds: [String!]!): Boolean
+        undeprecate(bitIds: [String!]!): DeprecationResult
       }
     `,
     resolvers: {
       Mutation: {
-        deprecate: (req: any, { bitIds }: { bitIds: string[] }) => {
+        deprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: string }) => {
+          if (context.verb !== 'write') throw new Error('You are not authorized');
           return deprecation.deprecate(bitIds);
         },
 
-        undeprecate: (req: any, { bitIds }: { bitIds: string[] }) => {
+        undeprecate: (req: any, { bitIds }: { bitIds: string[] }, context: { verb: string }) => {
+          if (context.verb !== 'write') throw new Error('You are not authorized');
           return deprecation.unDeprecate(bitIds);
         },
       },

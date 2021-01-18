@@ -52,6 +52,10 @@ export const LEGACY_SHARED_DIR_FEATURE = 'legacy-shared-dir';
 
 export const HARMONY_FEATURE = 'harmony';
 
+export const NO_FS_CACHE_FEATURE = 'no-fs-cache';
+
+export const BUILD_ON_CI = 'build-on-ci';
+
 export function isHarmonyEnabled() {
   return isFeatureEnabled(HARMONY_FEATURE);
 }

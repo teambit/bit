@@ -88,6 +88,17 @@ export class ObjectList {
     return new BitObjectList(bitObjects);
   }
 
+  static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
+    const objectItems = await Promise.all(
+      bitObjects.map(async (obj) => ({
+        ref: obj.hash(),
+        buffer: await obj.compress(),
+        type: obj.getType(),
+      }))
+    );
+    return new ObjectList(objectItems);
+  }
+
   /**
    * helps debugging
    */

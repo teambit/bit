@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import path from 'path';
 
 import { Consumer } from '../..';
@@ -45,7 +45,8 @@ export async function mergeComponentsFromRemote(
   bitIds: BitId[],
   mergeStrategy: MergeStrategy,
   noSnap: boolean,
-  snapMessage: string
+  snapMessage: string,
+  build: boolean
 ): Promise<ApplyVersionResults> {
   const localLaneId = consumer.getCurrentLaneId();
   const localLaneObject = await consumer.getCurrentLaneObject();
@@ -64,6 +65,7 @@ export async function mergeComponentsFromRemote(
     localLane: localLaneObject,
     noSnap,
     snapMessage,
+    build,
   });
 
   async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
@@ -106,6 +108,7 @@ export async function merge({
   localLane,
   noSnap,
   snapMessage,
+  build,
 }: {
   consumer: Consumer;
   mergeStrategy: MergeStrategy;
@@ -115,6 +118,7 @@ export async function merge({
   localLane: Lane | null;
   noSnap: boolean;
   snapMessage: string;
+  build: boolean;
 }) {
   const componentWithConflict = allComponentsStatus.find(
     (component) => component.mergeResults && component.mergeResults.hasConflicts
@@ -150,7 +154,7 @@ export async function merge({
 
   await consumer.scope.objects.unmergedComponents.write();
 
-  const mergeSnapResults = noSnap ? null : await snapResolvedComponents(consumer, snapMessage);
+  const mergeSnapResults = noSnap ? null : await snapResolvedComponents(consumer, snapMessage, build);
 
   return { components: componentsResults, failedComponents, mergeSnapResults };
 }
@@ -367,7 +371,8 @@ export async function applyVersion({
 
 async function snapResolvedComponents(
   consumer: Consumer,
-  snapMessage: string
+  snapMessage: string,
+  build: boolean
 ): Promise<null | { snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
   const resolvedComponents = consumer.scope.objects.unmergedComponents.getResolvedComponents();
   logger.debug(`merge-snaps, snapResolvedComponents, total ${resolvedComponents.length.toString()} components`);
@@ -375,6 +380,7 @@ async function snapResolvedComponents(
   const ids = BitIds.fromArray(resolvedComponents.map((r) => new BitId(r.id)));
   return consumer.snap({
     ids,
+    build,
     message: snapMessage,
   });
 }
@@ -391,12 +397,14 @@ export async function abortMerge(consumer: Consumer, values: string[]): Promise<
 export async function resolveMerge(
   consumer: Consumer,
   values: string[],
-  snapMessage: string
+  snapMessage: string,
+  build: boolean
 ): Promise<ApplyVersionResults> {
   const ids = getIdsForUnresolved(consumer, values);
   const { snappedComponents } = await consumer.snap({
     ids: BitIds.fromArray(ids),
     resolveUnmerged: true,
+    build,
     message: snapMessage,
   });
   return { resolvedComponents: snappedComponents };

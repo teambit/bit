@@ -9,6 +9,7 @@ import httpProxy from 'http-proxy';
 import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
+import { createSsrMiddleware } from './ssr/render-middleware';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
@@ -21,6 +22,7 @@ export type UIServerProps = {
   uiRoot: UIRoot;
   uiRootExtension: string;
   logger: Logger;
+  publicDir: string;
 };
 
 export type StartOptions = {
@@ -37,7 +39,8 @@ export class UIServer {
     private ui: UiMain,
     private uiRoot: UIRoot,
     private uiRootExtension: string,
-    private logger: Logger
+    private logger: Logger,
+    private publicDir: string
   ) {}
 
   getName() {
@@ -53,7 +56,7 @@ export class UIServer {
   /**
    * get the webpack configuration of the UI server.
    */
-  async getDevConfig(): Promise<webpack.Configuration> {
+  async getDevConfig(): Promise<any> {
     const aspects = await this.uiRoot.resolveAspects(UIRuntime.name);
     const aspectsPaths = aspects.map((aspect) => aspect.aspectPath);
 
@@ -72,18 +75,43 @@ export class UIServer {
     const app = this.expressExtension.createApp();
     // TODO: better handle ports.
     const selectedPort = await this.selectPort(port || 4000);
-    const root = join(this.uiRoot.path, '/public');
+    const publicDir = `/${this.publicDir}`;
+    const root = join(this.uiRoot.path, publicDir);
     const server = await this.graphql.createServer({ app });
 
+    // set up proxy, for things like preview, e.g. '/preview/teambit.react/react'
     await this.configureProxy(app, server);
-    app.use(express.static(root));
+
+    // pass through files from public /folder:
+    // setting `index: false` so index.html will be served by the fallback() middleware
+    app.use(express.static(root, { index: false }));
+
+    if (this.uiRoot.buildOptions?.ssr) {
+      const ssrMiddleware = await createSsrMiddleware({
+        root,
+        port: selectedPort,
+        title: this.uiRoot.name,
+        logger: this.logger,
+      });
+
+      if (ssrMiddleware) {
+        app.get('*', ssrMiddleware);
+        this.logger.debug('[ssr] serving for "*"');
+      } else {
+        this.logger.warn('[ssr] middleware failed setup');
+      }
+    }
+
+    // in any and all other cases, serve index.html.
+    // No any other endpoints past this will execute
     app.use(fallback('index.html', { root }));
+
     server.listen(selectedPort);
     this._port = selectedPort;
+
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
   }
 
-  // TODO - check if this is necessary
   private async configureProxy(app: Express, server: Server) {
     const proxServer = httpProxy.createProxyServer();
     proxServer.on('error', (e) => this.logger.error(e.message));
@@ -151,6 +179,14 @@ export class UIServer {
   }
 
   static create(props: UIServerProps) {
-    return new UIServer(props.graphql, props.express, props.ui, props.uiRoot, props.uiRootExtension, props.logger);
+    return new UIServer(
+      props.graphql,
+      props.express,
+      props.ui,
+      props.uiRoot,
+      props.uiRootExtension,
+      props.logger,
+      props.publicDir
+    );
   }
 }

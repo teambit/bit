@@ -106,13 +106,12 @@ EOD`;
    * them later on into @ci scope of Verdaccio registry
    */
   setCiScopeInBitJson() {
-    if (this.helper.general.isProjectNew()) {
-      this.helper.bitJsonc.addDefaultOwner('@ci');
-    } else {
-      const bitJson = this.helper.bitJson.read();
-      bitJson.bindingPrefix = '@ci';
-      this.helper.bitJson.write(bitJson);
+    if (this.helper.general.isHarmonyProject()) {
+      throw new Error('Harmony does not need this. remove this call please');
     }
+    const bitJson = this.helper.bitJson.read();
+    bitJson.bindingPrefix = '@ci';
+    this.helper.bitJson.write(bitJson);
   }
 
   /**
@@ -134,7 +133,7 @@ EOD`;
     const options = {
       d: packDir,
     };
-    if (this.helper.general.isProjectNew()) {
+    if (this.helper.general.isHarmonyProject()) {
       // @ts-ignore
       options.c = '';
     }
@@ -153,7 +152,7 @@ EOD`;
         },
       },
     };
-    this.helper.bitJsonc.addToVariant(undefined, '*', 'teambit.pkg/pkg', pkg);
+    this.helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
   }
 
   configureCustomNameInPackageJsonHarmony(name: string) {
@@ -165,7 +164,7 @@ EOD`;
         },
       },
     };
-    this.helper.bitJsonc.addToVariant(undefined, '*', 'teambit.pkg/pkg', pkg);
+    this.helper.bitJsonc.addToVariant('*', 'teambit.pkg/pkg', pkg);
   }
 
   installPackage(pkgName: string) {

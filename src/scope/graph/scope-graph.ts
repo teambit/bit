@@ -56,7 +56,7 @@ export default class DependencyGraph {
    * @todo: refactor this to work with the newer method `buildGraphFromScope`.
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphWithAllVersions(scope: Scope): Graph {
+  static async buildGraphWithAllVersions(scope: Scope): Promise<Graph> {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
     const allComponents = await scope.list();

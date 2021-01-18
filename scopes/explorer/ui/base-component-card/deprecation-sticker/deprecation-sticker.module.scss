@@ -1,0 +1,16 @@
+.deprecated {
+  display: none;
+  position: absolute;
+  top: 7px;
+  right: 12px;
+  background-color: #ffc640;
+  text-transform: uppercase;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 10px;
+  padding: 3px 8px;
+  z-index: 1;
+  &.show {
+    display: unset;
+  }
+}

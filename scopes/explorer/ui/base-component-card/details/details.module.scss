@@ -1,0 +1,43 @@
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 16px;
+  height: 96px;
+}
+.nameSpace {
+  color: var(--text-muted, #6c707c);
+  font-size: 10px;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+  > span:first-child {
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right: 5px;
+  }
+}
+.description {
+  color: var(--text-muted, #6c707c);
+  font-size: var(--p-xs, 14px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  line-clamp: 2; /* number of lines to show */
+  box-orient: vertical;
+  -webkit-line-clamp: 2; /* number of lines to show */
+  -webkit-box-orient: vertical;
+  -moz-line-clamp: 2; /* number of lines to show */
+  -moz-box-orient: vertical;
+}

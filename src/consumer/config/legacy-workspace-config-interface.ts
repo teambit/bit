@@ -21,7 +21,6 @@ interface DependencyResolverExtensionProps {
   manageWorkspaces?: boolean;
 }
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
 export interface ILegacyWorkspaceConfig {
   lang: string;
   defaultScope?: string;

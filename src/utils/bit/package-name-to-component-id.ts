@@ -54,7 +54,7 @@ export function packageNameToComponentId(consumer: Consumer, packageName: string
   const componentName = getComponentName(packageName, bindingPrefix);
 
   const nameSplit = componentName.split(NODE_PATH_COMPONENT_SEPARATOR);
-  const allBitIds = consumer.bitMap.getAllBitIds();
+  const allBitIds = consumer.bitMap.getAllBitIdsFromAllLanes();
 
   const idWithoutScope = createBitIdAssumeNoScope(nameSplit);
   if (nameSplit.length < 2) {

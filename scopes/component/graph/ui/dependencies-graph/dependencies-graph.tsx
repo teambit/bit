@@ -49,6 +49,7 @@ export function DependenciesGraph({
   componentWidgets,
   className,
   onLoad,
+  children,
   ...rest
 }: DependenciesGraphProps) {
   const graphRef = useRef<OnLoadParams>();
@@ -90,6 +91,7 @@ export function DependenciesGraph({
         <Background />
         <Controls className={styles.controls} />
         <MiniMap nodeColor={calcMinimapColors} className={styles.minimap} />
+        {children}
       </ReactFlow>
     </ComponentGraphContext.Provider>
   );

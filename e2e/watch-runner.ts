@@ -20,7 +20,8 @@ export default class WatchRunner {
     const cmd = `${this.helper.command.bitBin} watch --verbose`;
     if (this.helper.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     return new Promise((resolve, reject) => {
-      this.watchProcess = childProcess.exec(cmd, { cwd: this.helper.scopes.localPath });
+      const cwd = this.helper.scopes.localPath;
+      this.watchProcess = childProcess.spawn(this.helper.command.bitBin, ['watch', '--verbose'], { cwd });
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.watchProcess.stdout.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stdout: ${data}`);
@@ -61,10 +62,13 @@ export default class WatchRunner {
   }
   killWatcher() {
     const isWin = process.platform === 'win32';
+    const pid = this.watchProcess.pid.toString();
+    if (this.helper.debugMode) console.log(`going to kill watcher process, pid: ${pid}`);
     if (isWin) {
-      childProcess.execSync(`taskkill /pid ${this.watchProcess.pid.toString()} /f /t`);
+      childProcess.execSync(`taskkill /pid ${pid} /f /t`);
     } else {
-      this.watchProcess.kill('SIGINT');
+      const result = this.watchProcess.kill('SIGINT');
+      if (this.helper.debugMode) console.log(`watcher process kill result: ${result}`);
     }
   }
 }

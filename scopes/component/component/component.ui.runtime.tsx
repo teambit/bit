@@ -5,6 +5,7 @@ import { Slot } from '@teambit/harmony';
 import { NavigationSlot, RouteSlot } from '@teambit/ui.react-router.slot-router';
 import { NavLinkProps } from '@teambit/ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
+import { isBrowser } from '@teambit/ui.is-browser';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
@@ -48,7 +49,7 @@ export class ComponentUI {
 
     private commandBarUI: CommandBarUI
   ) {
-    this.registerPubSub();
+    if (isBrowser) this.registerPubSub();
   }
 
   /**

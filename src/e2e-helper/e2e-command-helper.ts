@@ -6,7 +6,7 @@ import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
@@ -117,6 +117,12 @@ export default class CommandHelper {
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
+  sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
+  }
+  updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
+  }
   getConfig(configName: string) {
     return this.runCmd(`bit config get ${configName}`);
   }
@@ -139,14 +145,19 @@ export default class CommandHelper {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --persist`);
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options} --persist`);
+    return this.runCmd(`bit tag ${id} ${version} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --persist`);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --build`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  tagAllWithoutBuild(options = '') {
+    const result = this.runCmd(`bit tag -a ${options}`, undefined, undefined, BUILD_ON_CI);
+    expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
@@ -154,23 +165,19 @@ export default class CommandHelper {
     return this.tagAllComponents(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --persist`);
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
   }
   softTag(options = '') {
-    return this.runCmd(`bit tag ${options}`);
+    return this.runCmd(`bit tag --soft ${options}`);
   }
-  tagAndPersistAllHarmony(options = '', version = '', assertTagged = true) {
-    let result = this.runCmd(`bit tag -a ${version} ${options}`);
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    result = this.runCmd('bit tag --persist');
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    return result;
-  }
-  hardTag(options = '') {
+  persistTag(options = '') {
     return this.runCmd(`bit tag --persist ${options}`);
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+  }
+  snapComponentWithoutBuild(id: string, options = '') {
+    return this.runCmd(`bit snap ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
   }
   snapAllComponents(options = '', assertSnapped = true) {
     const result = this.runCmd(`bit snap -a ${options} `);
@@ -206,8 +213,8 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed.lanes[0];
   }
-  getHead(id: string) {
-    const comp = this.catComponent(id);
+  getHead(id: string, cwd?: string) {
+    const comp = this.catComponent(id, cwd);
     return comp.head;
   }
   getHeadOfLane(laneName: string, componentName: string) {
@@ -224,10 +231,10 @@ export default class CommandHelper {
     return artifacts;
   }
   untag(id: string) {
-    return this.runCmd(`bit untag ${id} --persisted`);
+    return this.runCmd(`bit untag ${id}`);
   }
   untagSoft(id: string) {
-    return this.runCmd(`bit untag ${id}`);
+    return this.runCmd(`bit untag ${id} --soft`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
     const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
@@ -393,6 +400,12 @@ export default class CommandHelper {
   showComponentParsed(id = 'bar/foo') {
     const output = this.runCmd(`bit show ${id} --json --legacy`);
     return JSON.parse(output);
+  }
+
+  getComponentFiles(id: string): string[] {
+    const output = this.runCmd(`bit show ${id} --json`);
+    const comp = JSON.parse(output);
+    return comp.find((c) => c.title === 'files').json;
   }
 
   showComponentWithOptions(id = 'bar/foo', options: Record<string, any>) {

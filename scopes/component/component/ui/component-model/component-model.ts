@@ -1,8 +1,8 @@
 import { Composition, CompositionProps } from '@teambit/compositions';
 import { DeprecationInfo } from '@teambit/deprecation';
 import { Descriptor } from '@teambit/envs';
+import { ComponentID } from '@teambit/component-id';
 
-import { ComponentID } from '../../id';
 import { Tag } from '../../tag';
 import { TagMap } from '../../tag-map';
 import { TagProps } from '../../tag/tag';
@@ -24,6 +24,7 @@ export type ComponentModelProps = {
   status: any; // workspace aspect.
   deprecation: DeprecationInfo; // deprecation aspect
   env: Descriptor; // env aspect.
+  labels: string[];
 };
 
 export type ComponentServer = {
@@ -85,7 +86,9 @@ export class ComponentModel {
     /**
      * description of the component.
      */
-    readonly description = ''
+    readonly description = '',
+
+    readonly labels: string[] = []
   ) {}
 
   get version() {
@@ -108,6 +111,7 @@ export class ComponentModel {
     status,
     issuesCount,
     description,
+    labels,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -120,7 +124,8 @@ export class ComponentModel {
       status,
       deprecation,
       env,
-      description
+      description,
+      labels
     );
   }
 

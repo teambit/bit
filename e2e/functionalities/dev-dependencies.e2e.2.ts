@@ -45,9 +45,6 @@ describe('dev-dependencies functionality', function () {
       it('should not save the dev-dependencies because they are the same as dependencies', () => {
         expect(barFoo.devDependencies).to.be.an('array').that.is.empty;
       });
-      it('should not save the anything to flattened-dev-dependencies', () => {
-        expect(barFoo.flattenedDevDependencies).to.be.an('array').that.is.empty;
-      });
       it('should save "chai" in the dev-packages because it is only required in the tests files', () => {
         expect(barFoo.devPackageDependencies).to.be.an('object').that.has.property('chai');
       });
@@ -100,9 +97,9 @@ describe('foo', () => {
         expect(barFoo.devDependencies).to.be.an('array').that.have.lengthOf(1);
         expect(barFoo.devDependencies[0].id).to.deep.equal({ name: 'utils/is-string', version: '0.0.1' });
       });
-      it('should save the flattened-dev-dependencies', () => {
-        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
-        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+      it('should save the flattened-dependencies', () => {
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save "chai" in the dev-packages', () => {
         expect(barFoo.devPackageDependencies).to.be.an('object').that.has.property('chai');
@@ -113,8 +110,8 @@ describe('foo', () => {
       it('should not save anything into dependencies', () => {
         expect(barFoo.dependencies).to.be.an('array').that.is.empty;
       });
-      it('should not save anything into flattened-dependencies', () => {
-        expect(barFoo.flattenedDependencies).to.be.an('array').that.is.empty;
+      it('should save the flattened dev-dependencies into flattened-dependencies', () => {
+        expect(barFoo.flattenedDependencies).to.be.an('array').with.lengthOf(2);
       });
       it('bit status should not show any component as modified', () => {
         const output = helper.command.runCmd('bit status');
@@ -165,14 +162,16 @@ describe('foo', () => {
       });
     });
   });
-  describe('dev-dependency of a nested component', () => {
+  // (bar ->(prod)-> is-string ->(dev)->is-type ->(prod)-> baz)
+  describe('dev-dependency of a nested component that originated from a prod dep', () => {
     let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       helper.fs.createFile('bar', 'foo.js', fixtures.barFooFixture);
       helper.fs.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.fs.createFile('utils', 'is-string.js', '');
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.fs.createFile('utils', 'is-type.js', 'require("./baz");');
+      helper.fs.createFile('utils', 'baz.js', '');
       helper.fixtures.addComponentBarFoo();
       helper.fixtures.addComponentUtilsIsType();
       helper.command.addComponent('utils/is-string.js', {
@@ -180,6 +179,7 @@ describe('foo', () => {
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js',
       });
+      helper.command.addComponent('utils/baz.js');
       helper.command.tagAllComponents();
       helper.command.exportAllComponents();
 
@@ -193,10 +193,43 @@ describe('foo', () => {
     it('bit status should show a clean state', () => {
       helper.command.expectStatusToBeClean();
     });
-    it('the nested dev-dependency should be saved in the flattenedDevDependencies', () => {
+    it('the nested dev-dependency and nested prod of the nested dev-dependency should be saved in the flattenedDependencies', () => {
       const barFoo = helper.command.catComponent(`${helper.scopes.remote}/bar/foo@latest`);
-      expect(barFoo.flattenedDevDependencies).to.have.lengthOf(1);
-      expect(barFoo.flattenedDevDependencies[0].name).to.equal('utils/is-type');
+      expect(barFoo.flattenedDependencies).to.have.lengthOf(3);
+      const names = barFoo.flattenedDependencies.map((d) => d.name);
+      expect(names).to.deep.equal(['utils/is-string', 'utils/is-type', 'baz']);
+    });
+  });
+  // (bar ->(dev)-> is-string ->(dev)->is-type
+  describe('dev-dependency of a nested component that originated from a dev dep', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.fs.createFile('utils', 'is-string-spec.js', fixtures.isString);
+      helper.fs.createFile('utils', 'is-string.js', '');
+      helper.fs.createFile('utils', 'is-type.js', '');
+      helper.fixtures.addComponentUtilsIsType();
+      helper.command.addComponent('utils/is-string.js', {
+        m: 'utils/is-string.js',
+        i: 'utils/is-string',
+        t: 'utils/is-string-spec.js',
+      });
+      helper.command.tagAllComponents();
+
+      helper.fs.createFile('bar', 'foo.js', '');
+      helper.fs.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
+      helper.command.addComponent('utils/is-string.js', {
+        m: 'bar/foo.js',
+        i: 'bar/foo',
+        t: 'bar/foo.spec.js',
+      });
+
+      helper.command.tagAllComponents();
+    });
+    it('the flattened dependencies should contain the entire chain of the dependencies', () => {
+      const barFoo = helper.command.catComponent('bar/foo@latest');
+      const names = barFoo.flattenedDependencies.map((d) => d.name);
+      expect(names).to.include('utils/is-type');
+      expect(names).to.include('utils/is-string');
     });
   });
   describe('dev-dependency that requires prod-dependency', () => {
@@ -219,8 +252,8 @@ describe('foo', () => {
       expect(barFoo.devDependencies).to.have.lengthOf(1);
       expect(barFoo.devDependencies[0].id.name).to.equal('utils/is-string');
     });
-    it('should include the prod dependencies inside flattenedDevDependencies', () => {
-      expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+    it('should include the prod dependencies inside flattenedDependencies', () => {
+      expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
     });
   });
 });

@@ -4,6 +4,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
@@ -56,7 +57,16 @@ export type TesterOptions = {
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect, UIAspect, DevFilesAspect];
+  static dependencies = [
+    CLIAspect,
+    EnvsAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    GraphqlAspect,
+    UIAspect,
+    DevFilesAspect,
+    BuilderAspect,
+  ];
 
   constructor(
     /**
@@ -84,7 +94,9 @@ export class TesterMain {
      */
     readonly task: TesterTask,
 
-    private devFiles: DevFilesMain
+    private devFiles: DevFilesMain,
+
+    private builder: BuilderMain
   ) {}
 
   _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
@@ -122,9 +134,13 @@ export class TesterMain {
     return this.watch(components, { watch: true, debug: false, ui: true });
   }
 
-  getTestsResults(component: Component): { testsResults?: TestsResult; loading: boolean } | undefined {
+  async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
-    if (entry && !component.isModified) return entry?.data.tests;
+    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
+    const isModified = await component.isModified();
+    if ((entry || data) && !isModified) {
+      return { testsResults: data?.tests || entry?.data.tests, loading: false };
+    }
     return this.getTestsResultsFromState(component);
   }
 
@@ -153,7 +169,7 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: ['*.spec.*', '*.test.*'],
+    patterns: ['**/*.spec.*', '**/*.test.*'],
 
     /**
      * determine whether to watch on start.
@@ -162,14 +178,15 @@ export class TesterMain {
   };
 
   static async provider(
-    [cli, envs, workspace, loggerAspect, graphql, ui, devFiles]: [
+    [cli, envs, workspace, loggerAspect, graphql, ui, devFiles, builder]: [
       CLIMain,
       EnvsMain,
       Workspace,
       LoggerMain,
       GraphqlMain,
       UiMain,
-      DevFilesMain
+      DevFilesMain,
+      BuilderMain
     ],
     config: TesterExtensionConfig
   ) {
@@ -183,7 +200,8 @@ export class TesterMain {
       workspace,
       testerService,
       new TesterTask(TesterAspect.id, devFiles),
-      devFiles
+      devFiles,
+      builder
     );
 
     if (workspace && !workspace.consumer.isLegacy) {

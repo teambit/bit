@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { compact } from 'ramda-adjunct';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Tag } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
@@ -12,7 +12,7 @@ import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
@@ -275,10 +275,8 @@ export class PkgMain {
     const distTags = {
       latest: latestVersion,
     };
-    const versionsP = component.tags.toArray().map((tag: Tag) => {
-      return this.getVersionManifest(component, tag);
-    });
-    const versions = await Promise.all(versionsP);
+
+    const versions = await this.getAllSnapsManifests(component);
     const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
     const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
@@ -287,6 +285,18 @@ export class PkgMain {
       externalRegistry,
       versions: versionsWithoutEmpty,
     };
+  }
+
+  private async getAllSnapsManifests(component: Component): Promise<VersionPackageManifest[]> {
+    const iterable = component.snapsIterable();
+    const result: VersionPackageManifest[] = [];
+    for await (const snap of iterable) {
+      const manifest = await this.getSnapManifest(component, snap);
+      if (manifest) {
+        result.push(manifest);
+      }
+    }
+    return result;
   }
 
   /**
@@ -301,16 +311,24 @@ export class PkgMain {
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
-  async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
-    const idWithCorrectVersion = component.id.changeVersion(tag.version.toString());
+  private getComponentBuildData(component: Component): ComponentPkgExtensionData | undefined {
+    const data = this.builder.getDataByAspect(component, PkgAspect.id);
+    if (data) return data as ComponentPkgExtensionData;
+    // backward compatibility. the data used to be saved on the pkg aspect rather than on the
+    // builder aspect
+    const currentExtension = component.state.aspects.get(PkgAspect.id);
+    return currentExtension?.data as ComponentPkgExtensionData | undefined;
+  }
+
+  async getSnapManifest(component: Component, snap: Snap): Promise<VersionPackageManifest | undefined> {
+    const idWithCorrectVersion = component.id.changeVersion(snap.hash);
     // const state = await this.scope.getState(component.id, tag.hash);
     // const currentExtension = state.aspects.get(PkgAspect.id);
     const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
     if (!updatedComponent) {
-      throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
+      throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
     }
-    const currentExtension = updatedComponent.state.aspects.get(PkgAspect.id);
-    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const currentData = this.getComponentBuildData(updatedComponent);
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;

@@ -34,11 +34,6 @@ type CombinationWithTotal = {
   total: number;
 };
 
-type VersionWithTotal = {
-  version: SemverVersion;
-  total: number;
-};
-
 /**
  * This is the second phase of the deduping process.
  * It will get the index calculated in the first phase (with dep id as key)
@@ -118,11 +113,12 @@ function addOneOccurrenceToRoot(
     return true;
   }
   const indexItem = indexItems[0];
-  if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
-    const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[indexItem.lifecycleType];
-    dedupedDependencies.rootDependencies[keyName][packageName] = indexItem.range;
-  }
+  // if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
+  const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[indexItem.lifecycleType];
+  dedupedDependencies.rootDependencies[keyName][packageName] = indexItem.range;
   return false;
+  // }
+  // return true;
 }
 
 /**

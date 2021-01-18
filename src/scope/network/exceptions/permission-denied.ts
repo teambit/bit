@@ -1,5 +1,5 @@
+import { BitError } from '@teambit/bit-error';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-import { BitError } from '../../../error/bit-error';
 
 export default class PermissionDenied extends BitError {
   scope: string;

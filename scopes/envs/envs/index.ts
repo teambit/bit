@@ -1,4 +1,4 @@
-export { Descriptor } from './environments.main.runtime';
+export { Descriptor, DEFAULT_ENV } from './environments.main.runtime';
 export { Environment } from './environment';
 export { ExecutionContext } from './context';
 export { EnvService, ConcreteService } from './services';

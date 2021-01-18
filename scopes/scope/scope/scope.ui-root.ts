@@ -19,12 +19,16 @@ export class ScopeUIRoot implements UIRoot {
   }
 
   get configFile(): string {
-    return 'scope.json';
+    return 'scope.jsonc';
   }
 
   get devServers() {
     return Promise.resolve([]);
   }
+
+  buildOptions = {
+    ssr: true,
+  };
 
   resolveAspects(runtime: string) {
     return this.scope.resolveAspects(runtime);

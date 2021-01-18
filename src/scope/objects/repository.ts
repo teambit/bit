@@ -67,6 +67,8 @@ export default class Repository {
     return path.join(scopePath, OBJECTS_DIR);
   }
 
+  static onPostObjectsPersist: () => Promise<void>;
+
   ensureDir() {
     return fs.ensureDir(this.getPath());
   }
@@ -255,6 +257,7 @@ export default class Repository {
   }
 
   clearCache() {
+    logger.debug('repository.clearCache');
     this._cache = {};
   }
 
@@ -306,6 +309,22 @@ export default class Repository {
     await this._writeMany();
     await this.remoteLanes.write();
     await this.unmergedComponents.write();
+    this.clearObjects();
+    if (Repository.onPostObjectsPersist) {
+      Repository.onPostObjectsPersist().catch((err) => {
+        logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
+      });
+    }
+  }
+
+  /**
+   * this is especially critical for http server, where one process lives long and serves multiple
+   * exports. without this, the objects get accumulated over time and being rewritten over and over
+   * again.
+   */
+  private clearObjects() {
+    this.objects = {};
+    this.objectsToRemove = [];
   }
 
   /**

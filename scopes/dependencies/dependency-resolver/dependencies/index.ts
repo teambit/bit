@@ -1,4 +1,4 @@
-export { DependencyList } from './dependency-list';
+export { DependencyList, DependenciesManifest } from './dependency-list';
 export { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 export { BaseDependency } from './base-dependency';
 export { DependencyListFactory } from './dependency-list-factory';

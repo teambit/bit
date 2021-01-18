@@ -1,0 +1,44 @@
+.codeView {
+  padding: 24px 40px;
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+
+  .codeSnippetWrapper {
+    width: 100%;
+    max-width: 100%;
+    .codeSnippet {
+      display: block;
+      overflow: auto;
+      height: calc(100vh - 200px);
+      > code {
+        > code {
+          // this is to design the line numbers culumn
+          border-right: 1px solid #323232;
+          padding-right: 16px !important;
+          margin-right: 16px;
+        }
+      }
+    }
+    // TODO - fix this in code snippet component. it breaks when the component renders in different places
+    > span {
+      top: 13px !important;
+    }
+  }
+}
+
+.img {
+  width: 20px;
+  margin-right: 10px;
+}
+
+.fileName {
+  display: flex;
+  align-items: baseline;
+}
+
+.emptyCodeView {
+  margin: auto;
+  text-align: center;
+  font-size: 24px;
+}

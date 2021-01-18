@@ -16,7 +16,7 @@ export type ComponentStatusResolverProps = {
 export function ComponentStatusResolver({ status, id, issuesCount = 0 }: ComponentStatusResolverProps) {
   const isModified = status && (status.modifyInfo.hasModifiedDependencies || status.modifyInfo.hasModifiedFiles);
   if (!status) return null;
-  const colorOverride = getOverrideColor(issuesCount, isModified);
+  const colorOverride = getOverrideColor({ issuesCount, isModified, isNew: status.isNew });
 
   return (
     <div className={styles.statusLine} data-tip="" data-for={id?.name}>
@@ -26,7 +26,7 @@ export function ComponentStatusResolver({ status, id, issuesCount = 0 }: Compone
         </div>
       )}
       {status.isNew && <ComponentStatus className={styles[colorOverride]} status="new" />}
-      {isModified && <ComponentStatus className={styles[colorOverride]} status="modified" />}
+      {isModified && !status.isNew && <ComponentStatus className={styles[colorOverride]} status="modified" />}
       {isModified && status.isStaged && <span className={styles[colorOverride]}>,</span>}
       {status.isStaged && <ComponentStatus className={styles[colorOverride]} status="staged" />}
       <StatusTooltip status={status} name={id?.name} issuesCount={issuesCount} />

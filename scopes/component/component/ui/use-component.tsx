@@ -1,6 +1,6 @@
 import { useRouteMatch } from 'react-router-dom';
+import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui.react-router.use-query';
-import { ComponentID } from '../id';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';
@@ -12,6 +12,7 @@ export type Component = {
 
 export function useComponent(host: string, id?: ComponentID): Component {
   const {
+    // @ts-ignore
     params: { componentId },
   } = useRouteMatch();
   const query = useQuery();

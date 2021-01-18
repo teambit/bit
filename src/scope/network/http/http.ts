@@ -20,6 +20,18 @@ import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-respons
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
 
+export enum Verb {
+  WRITE = 'write',
+  READ = 'read',
+}
+
+/**
+ * fetched from HTTP Authorization header.
+ * (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization)
+ */
+export type AuthData = { type: string; credentials: string };
+export const DEFAULT_AUTH_TYPE = 'Bearer';
+
 export class Http implements Network {
   constructor(
     private graphClient: GraphQLClient,
@@ -52,7 +64,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(SCOPE_QUERY);
+    const data = await this.graphClientRequest(SCOPE_QUERY, Verb.READ);
 
     return {
       name: data.scope.name,
@@ -70,7 +82,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': 'write' }),
     });
     await this.throwForNonOkStatus(res);
     const results = await this.getJsonResponse(res);
@@ -86,7 +98,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'POST',
       body: pack,
-      headers: this.getHeaders({ 'push-options': JSON.stringify(pushOptions) }),
+      headers: this.getHeaders({ 'push-options': JSON.stringify(pushOptions), 'x-verb': Verb.WRITE }),
     });
     await this.throwForNonOkStatus(res);
     const ids = await this.getJsonResponse(res);
@@ -103,7 +115,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.WRITE }),
     });
     await this.throwForNonOkStatus(res);
     const results = await this.getJsonResponse(res);
@@ -120,7 +132,7 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, {
       method: 'post',
       body,
-      headers: this.getHeaders({ 'Content-Type': 'application/json' }),
+      headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ }),
     });
     await this.throwForNonOkStatus(res);
     const objectList = await ObjectList.fromTar(res.body);
@@ -155,9 +167,10 @@ export class Http implements Network {
     throw err;
   }
 
-  private async graphClientRequest(query: string, variables?: Record<string, any>) {
+  private async graphClientRequest(query: string, verb: string = Verb.READ, variables?: Record<string, any>) {
     logger.debug(`http.graphClientRequest, scope "${this.scopeName}", url "${this.url}", query ${query}`);
     try {
+      this.graphClient.setHeader('x-verb', verb);
       return await this.graphClient.request(query, variables);
     } catch (err) {
       if (err instanceof ClientError) {
@@ -185,7 +198,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(LIST_LEGACY, {
+    const data = await this.graphClientRequest(LIST_LEGACY, Verb.READ, {
       namespaces: namespacesUsingWildcards,
     });
 
@@ -204,7 +217,7 @@ export class Http implements Network {
         }
       }
     `;
-    const data = await this.graphClientRequest(SHOW_COMPONENT, {
+    const data = await this.graphClientRequest(SHOW_COMPONENT, Verb.READ, {
       id: bitId.toString(),
     });
 
@@ -217,8 +230,8 @@ export class Http implements Network {
         deprecate(bitIds: $bitIds)
       }
     `;
-    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, {
-      ids,
+    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, 'write', {
+      bitIds: ids,
     });
 
     return res;
@@ -230,8 +243,8 @@ export class Http implements Network {
         undeprecate(bitIds: $bitIds)
       }
     `;
-    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, {
-      ids,
+    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.READ, {
+      bitIds: ids,
     });
 
     return res;
@@ -253,7 +266,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(GET_LOG_QUERY, {
+    const data = await this.graphClientRequest(GET_LOG_QUERY, Verb.READ, {
       id: id.toString(),
     });
 
@@ -269,7 +282,7 @@ export class Http implements Network {
       }
     `;
 
-    const data = await this.graphClientRequest(GET_LATEST_VERSIONS, {
+    const data = await this.graphClientRequest(GET_LATEST_VERSIONS, Verb.READ, {
       ids: bitIds.map((id) => id.toString()),
     });
 
@@ -290,7 +303,7 @@ export class Http implements Network {
     }
     `;
 
-    const res = await this.graphClientRequest(LIST_LANES, {
+    const res = await this.graphClientRequest(LIST_LANES, Verb.READ, {
       mergeData,
     });
 
@@ -307,6 +320,17 @@ export class Http implements Network {
 
 function getAuthHeader(token: string) {
   return {
-    Authorization: `Bearer ${token}`,
+    Authorization: `${DEFAULT_AUTH_TYPE} ${token}`,
   };
+}
+
+export function getAuthDataFromHeader(authorizationHeader: string | undefined): AuthData | undefined {
+  if (!authorizationHeader) return undefined;
+  const authorizationSplit = authorizationHeader.split(' ');
+  if (authorizationSplit.length !== 2) {
+    throw new Error(
+      `fatal: HTTP Authorization header "${authorizationHeader}" is invalid. it should have exactly one space`
+    );
+  }
+  return { type: authorizationSplit[0], credentials: authorizationSplit[1] };
 }

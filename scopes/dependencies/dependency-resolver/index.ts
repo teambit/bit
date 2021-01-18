@@ -24,10 +24,33 @@ export {
   DependencyList,
   DependencyFactory,
   SerializedDependency,
+  Dependency,
   BaseDependency,
   SemverVersion,
+  DependenciesManifest,
   ComponentDependency,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
 } from './dependencies';
-export { WorkspacePolicyEntry, WorkspacePolicy, VariantPolicyConfigObject } from './policy';
-export { CoreAspectLinkResult, LinkDetail, LinkResults, LinkingOptions } from './dependency-linker';
+export {
+  WorkspacePolicyEntry,
+  WorkspacePolicy,
+  VariantPolicyConfigObject,
+  Policy,
+  PolicySemver,
+  PolicyConfigKeys,
+  PolicyConfigKeysNames,
+  PolicyEntry,
+  VariantPolicy,
+  VariantPolicyFactory,
+  SerializedVariantPolicy,
+} from './policy';
+export {
+  CoreAspectLinkResult,
+  LinkDetail,
+  LinkResults,
+  LinkingOptions,
+  DepsLinkedToEnvResult,
+  NestedNMDepsLinksResult,
+} from './dependency-linker';
 export { InstallOptions } from './dependency-installer';
+export { DependencyDetector, FileContext } from './dependency-detector';

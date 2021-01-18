@@ -6,12 +6,14 @@ import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
 import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { DetectorHook } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -49,6 +51,7 @@ import {
   VariantPolicyFactory,
   WorkspacePolicyAddEntryOptions,
   WorkspacePolicyEntry,
+  SerializedVariantPolicy,
 } from './policy';
 import { PackageManager } from './package-manager';
 
@@ -61,6 +64,8 @@ import {
   DependencyList,
 } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
+import { dependencyResolverSchema } from './dependency-resolver.graphql';
+import { DependencyDetector } from './dependency-detector';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
@@ -157,6 +162,11 @@ export class DependencyResolverMain {
 
     private aspectLoader: AspectLoaderMain,
 
+    /**
+     * component aspect.
+     */
+    readonly componentAspect: ComponentMain,
+
     private packageManagerSlot: PackageManagerSlot,
 
     private dependencyFactorySlot: DependencyFactorySlot,
@@ -183,6 +193,16 @@ export class DependencyResolverMain {
 
   registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
     this.postInstallSlot.register(subscribers);
+  }
+
+  async getPolicy(component: Component): Promise<VariantPolicy> {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const factory = new VariantPolicyFactory();
+    if (!entry) {
+      return factory.getEmpty();
+    }
+    const serializedPolicy: SerializedVariantPolicy = get(entry, ['data', 'policy'], []);
+    return factory.parse(serializedPolicy);
   }
 
   /**
@@ -334,7 +354,15 @@ export class DependencyResolverMain {
   getLinker(options: GetLinkerOptions = {}) {
     const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyLinker(this.aspectLoader, this.logger, options.rootDir, linkingOptions);
+    return new DependencyLinker(
+      this,
+      this.aspectLoader,
+      this.componentAspect,
+      this.envs,
+      this.logger,
+      options.rootDir,
+      linkingOptions
+    );
   }
 
   getPackageManagerName() {
@@ -522,8 +550,17 @@ export class DependencyResolverMain {
     return version;
   }
 
+  /**
+   * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
+   * mechanism to support new file extensions and types.
+   */
+  registerDetector(detector: DependencyDetector) {
+    DetectorHook.hooks.push(detector);
+    return this;
+  }
+
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect, GraphqlAspect];
 
   static slots = [
     Slot.withType<VariantPolicyConfigObject>(),
@@ -532,6 +569,7 @@ export class DependencyResolverMain {
     Slot.withType<DependencyFactory>(),
     Slot.withType<PreInstallSubscriberList>(),
     Slot.withType<PostInstallSubscriberList>(),
+    Slot.withType<DependencyDetector>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
@@ -541,17 +579,18 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
-    devFilePatterns: ['*.spec.ts'],
+    devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql]: [
       EnvsMain,
       LoggerMain,
       Config,
       AspectLoaderMain,
-      ComponentMain
+      ComponentMain,
+      GraphqlMain
     ],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
@@ -571,6 +610,7 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
+      componentAspect,
       packageManagerSlot,
       dependencyFactorySlot,
       preInstallSlot,
@@ -601,6 +641,8 @@ export class DependencyResolverMain {
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
+
+    graphql.register(dependencyResolverSchema(dependencyResolver));
 
     return dependencyResolver;
   }

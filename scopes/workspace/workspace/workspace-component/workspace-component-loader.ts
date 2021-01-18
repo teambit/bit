@@ -1,16 +1,18 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
 import { BitId } from 'bit-bin/dist/bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import BluebirdPromise from 'bluebird';
+import mapSeries from 'p-map-series';
 import { compact } from 'ramda-adjunct';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
 import { getLatestVersionNumber } from 'bit-bin/dist/utils';
+import { ComponentNotFound } from 'bit-bin/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import { merge } from 'lodash';
+import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
+
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
@@ -27,14 +29,17 @@ export class WorkspaceComponentLoader {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
-    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, forCapsule).catch((err) => {
-        errors.push({
-          id,
-          err,
-        });
-        return undefined;
+        if (this.isComponentNotExistsError(err)) {
+          errors.push({
+            id,
+            err,
+          });
+          return undefined;
+        }
+        throw err;
       });
     });
     const components = await componentsP;
@@ -50,22 +55,35 @@ export class WorkspaceComponentLoader {
     return filteredComponents;
   }
 
-  async get(componentId: ComponentID, forCapsule = false, legacyComponent?: ConsumerComponent): Promise<Component> {
+  async get(
+    componentId: ComponentID,
+    forCapsule = false,
+    legacyComponent?: ConsumerComponent,
+    useCache = true,
+    storeInCache = true
+  ): Promise<Component> {
     const bitIdWithVersion: BitId = getLatestVersionNumber(this.workspace.consumer.bitmapIds, componentId._legacy);
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, forCapsule);
-    if (fromCache) {
+    if (fromCache && useCache) {
       return fromCache;
     }
     const consumerComponent = legacyComponent || (await this.getConsumerComponent(id, forCapsule));
     const component = await this.loadOne(id, consumerComponent);
-    this.saveInCache(component, forCapsule);
+    if (storeInCache) {
+      this.saveInCache(component, forCapsule);
+    }
     return component;
   }
 
   clearCache() {
     this._componentsCache = {};
     this._componentsCacheForCapsule = {};
+  }
+  clearComponentCache(id: ComponentID) {
+    const idStr = id.toString();
+    delete this._componentsCache[idStr];
+    delete this._componentsCacheForCapsule[idStr];
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
@@ -117,9 +135,23 @@ export class WorkspaceComponentLoader {
         ? await this.workspace.consumer.loadComponentForCapsule(id._legacy)
         : await this.workspace.consumer.loadComponent(id._legacy);
     } catch (err) {
+      // don't return undefined for any error. otherwise, if the component is invalid (e.g. main
+      // file is missing) it returns the model component later unexpectedly, or if it's new, it
+      // shows MissingBitMapComponent error incorrectly.
       this.logger.error(`failed loading component ${id.toString()}`, err);
-      return undefined;
+      if (this.isComponentNotExistsError(err)) {
+        return undefined;
+      }
+      throw err;
     }
+  }
+
+  private isComponentNotExistsError(err: Error): boolean {
+    return (
+      err instanceof ComponentNotFound ||
+      err instanceof MissingBitMapComponent ||
+      err instanceof ComponentNotFoundInPath
+    );
   }
 
   private async executeLoadSlot(component: Component) {
@@ -134,12 +166,14 @@ export class WorkspaceComponentLoader {
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
+    const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
 
-    const dependenciesData = {
+    const depResolverData = {
       dependencies,
+      policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, dependenciesData));
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
     promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
 
     await Promise.all(promises);
@@ -157,7 +191,8 @@ export class WorkspaceComponentLoader {
   private async upsertExtensionData(component: Component, extension: string, data: any) {
     const existingExtension = component.state.config.extensions.findExtension(extension);
     if (existingExtension) {
-      existingExtension.data = merge(existingExtension.data, data);
+      // Only merge top level of extension data
+      Object.assign(existingExtension.data, data);
       return;
     }
     component.state.config.extensions.push(await this.getDataEntry(extension, data));

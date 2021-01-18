@@ -97,11 +97,11 @@ export default async function provideWorkspace(
   ],
   harmony: Harmony
 ) {
-  const consumer = await getConsumer();
+  const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+  const consumer = await getConsumer(bitConfig.cwd);
   if (!consumer) return undefined;
   // TODO: get the 'worksacpe' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
-
   const workspace = new Workspace(
     pubsub,
     config,
@@ -189,7 +189,7 @@ export default async function provideWorkspace(
   cli.register(new EjectConfCmd(workspace));
 
   const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
-  const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
+  const capsuleCreateCmd = new CapsuleCreateCmd(workspace, isolator);
   cli.register(capsuleListCmd);
   cli.register(capsuleCreateCmd);
   const watcher = new Watcher(workspace, pubsub);
@@ -223,9 +223,9 @@ export default async function provideWorkspace(
  * stage we don't have the commands objects, so we can't check the command/flags from there. we
  * need to check the `process.argv.` directly instead, which is not 100% accurate.
  */
-async function getConsumer(): Promise<Consumer | undefined> {
+async function getConsumer(path?: string): Promise<Consumer | undefined> {
   try {
-    return await loadConsumerIfExist();
+    return await loadConsumerIfExist(path);
   } catch (err) {
     if (process.argv.includes('init') && !process.argv.includes('-r')) {
       return undefined;
