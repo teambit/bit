@@ -184,8 +184,42 @@ export class ReactEnv implements Environment {
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
     const defaultConfig = previewConfigFactory(path);
+
+    if (targetConfig?.entry) {
+      const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
+
+      const targetsWithGlobalEntries = context.targets.map((target) => {
+        // Putting the additionalEntries first to support globals defined there (like regenerator-runtime)
+        target.entries = additionalEntries.concat(target.entries);
+        return target;
+      });
+      context.targets = targetsWithGlobalEntries;
+    }
+
+    delete targetConfig?.entry;
+
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     return this.webpack.createBundler(context, config as any);
+  }
+
+  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
+    if (!config || !config.entry) {
+      return [];
+    }
+    if (typeof config.entry === 'string') {
+      return [config.entry];
+    }
+    if (Array.isArray(config.entry)) {
+      let entries: string[] = [];
+      entries = config.entry.reduce((acc, entry) => {
+        if (typeof entry === 'string') {
+          acc.push(entry);
+        }
+        return acc;
+      }, entries);
+      return entries;
+    }
+    return [];
   }
 
   /**
