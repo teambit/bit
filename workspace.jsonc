@@ -124,6 +124,7 @@
         "@types/lodash.compact": "3.0.6",
         "@types/lodash.head": "^4.0.6",
         "@types/mdx-js__react": "1.5.3",
+        "@types/mime": "2.0.3",
         "@types/mousetrap": "^1.6.3",
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "^4.1.1",
@@ -204,7 +205,6 @@
         "mini-css-extract-plugin": "^0.9.0",
         "minimatch": "3.0.4",
         "mousetrap": "^1.6.5",
-        "mutation-observer": "1.0.3",
         "nerf-dart": "1.0.0",
         "optimize-css-assets-webpack-plugin": "^5.0.3",
         "parallel-webpack": "^2.6.0",
@@ -269,7 +269,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.269",
+        "bit-bin": "14.8.9-dev.270",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -325,7 +325,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.269",
+            "bit-bin": "14.8.9-dev.270",
             "react-dom": "^16.13.1"
           }
         }
@@ -457,7 +457,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.269",
+            "bit-bin": "14.8.9-dev.270",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

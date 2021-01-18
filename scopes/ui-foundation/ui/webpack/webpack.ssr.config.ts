@@ -1,4 +1,4 @@
-import { IgnorePlugin, Configuration } from 'webpack';
+import { Configuration } from 'webpack';
 import path from 'path';
 import merge from 'webpack-merge';
 
@@ -32,13 +32,6 @@ function createSsrConfig(workspaceDir: string, publicDir: string) {
     // // no optimizations for ssr at this point,
     // // especially no chunks.
     // optimization: { },
-
-    plugins: [
-      // TODO - replace mutation-observer
-      new IgnorePlugin({
-        resourceRegExp: /^mutation-observer$/,
-      }),
-    ],
   };
 
   return ssrConfig;
