@@ -2,32 +2,30 @@
 labels: ['react', 'typescript', 'label', 'recursion']
 description: 'Label with onPick event'
 ---
+
 import { useState } from 'react';
-import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Label, LabelList } from './label';
 
-### Overview
-
-Exposes two options:
-Label - takes a single string as child
-LabelList - takes a string array as chile
+Exposes two options:  
+Label - takes a single string as child  
+LabelList - takes a string array as child
 
 ```js live
 () => {
-    const [state, setState] = useState('');
-    const [state2, setState2] = useState('');
+  const [state, setState] = useState('');
+  const [state2, setState2] = useState('');
   return (
-    <ThemeCompositions style={{ minHeight: 300, flexDirection: 'column', justifyContent: 'space-around' }}>
-        <div>
-            <Label onPick={setState}>chart</Label>
-            {state && <div>label "{state}" chosen</div>}
-        </div>
-
-        <div>
-      <LabelList onPick={setState2}>{['chart', 'graph', 'ui-component', 'react']}</LabelList>
-      {state2 && <div>label "{state2}" chosen</div>}
-        </div>
-    </ThemeCompositions>
+    <div>
+      <div>
+        <Label onPick={setState}>chart</Label>
+        {state && <div>label "{state}" chosen</div>}
+      </div>
+      <br />
+      <div>
+        <LabelList onPick={setState2}>{['chart', 'graph', 'ui-component', 'react']}</LabelList>
+        {state2 && <div>label "{state2}" chosen</div>}
+      </div>
+    </div>
   );
 };
 ```
