@@ -1,9 +1,9 @@
-$zIndex: 999;
+@import '~@teambit/ui.constants.z-indexes/z-indexes.module.scss';
 
 .collapser {
   position: absolute;
   bottom: 80px;
-  z-index: $zIndex;
+  z-index: $nav-z-index;
   cursor: pointer;
   transition: right 300ms, left 300ms ease-in-out;
 

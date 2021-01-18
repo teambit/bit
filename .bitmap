@@ -693,5 +693,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "ui/constants/z-indexes": {
+        "mainFile": "z-indexs.module.scss",
+        "rootDir": "scopes/ui-foundation/uis/constants/z-indexes",
+        "exported": false
+    },
     "version": "14.8.9-dev.269"
 }
