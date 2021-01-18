@@ -103,6 +103,7 @@
         "@teambit/evangelist.elements.icon": "^0.5.4",
         "@teambit/evangelist.elements.image": "^0.5.4",
         "@teambit/evangelist.elements.x-button": "0.5.4",
+        "@teambit/evangelist.input.checkbox.label": "0.0.1",
         "@teambit/evangelist.input.input": "^0.5.4",
         "@teambit/evangelist.surfaces.dropdown": "0.5.4",
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
