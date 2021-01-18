@@ -41,15 +41,15 @@ export class PubsubPreview {
   };
 
   public sub(topicUUID, callback) {
-    if (this._parentPubsub) {
-      this._parentPubsub?.sub(topicUUID, callback);
-    }
+    if (!this._parentPubsub) return undefined;
+
+    return this._parentPubsub?.sub(topicUUID, callback);
   }
 
   public pub(topicUUID, event: BitBaseEvent<any>) {
-    if (this._parentPubsub) {
-      this._parentPubsub.pub(topicUUID, event);
-    }
+    if (!this._parentPubsub) return undefined;
+
+    return this._parentPubsub.pub(topicUUID, event);
   }
 
   static runtime = PreviewRuntime;

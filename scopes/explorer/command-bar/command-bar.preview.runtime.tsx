@@ -11,7 +11,7 @@ export class CommandBarPreview {
   }
 
   handleKeyEvent = (e: KeyboardEvent) => {
-    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e));
+    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e))?.catch(() => {});
   };
 
   static dependencies = [PubsubAspect];
