@@ -10,10 +10,15 @@ import { connectToParent } from 'penpal';
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
-export class PubsubPreview {
-  private _parentPubsub;
+type ParentMethods = {
+  sub: (topicUUID: string, event: any) => Promise<void>;
+  pub: (topicUUID: string, event: any) => Promise<void>;
+};
 
-  protected inIframe() {
+export class PubsubPreview {
+  private _parentPubsub?: ParentMethods;
+
+  private inIframe() {
     try {
       return isBrowser && window.self !== window.top;
     } catch (e) {
@@ -21,23 +26,23 @@ export class PubsubPreview {
     }
   }
 
-  private updateParentPubsub = (retries = 3) => {
+  private connectToParentPubSub = (retries = 3) => {
     if (retries <= 0) return undefined;
 
-    return connectToParent({ timeout: 1 })
+    return connectToParent<ParentMethods>({ timeout: 300 })
       .promise.then((parentPubsub) => {
         return (this._parentPubsub = parentPubsub);
       })
       .catch((e: any) => {
         if (e.code !== 'ConnectionTimeout') return undefined;
 
-        return this.updateParentPubsub(retries - 1);
+        return this.connectToParentPubSub(retries - 1);
       });
   };
 
   public sub(topicUUID, callback) {
     if (this._parentPubsub) {
-      this._parentPubsub.sub(topicUUID, callback);
+      this._parentPubsub?.sub(topicUUID, callback);
     }
   }
 
@@ -52,7 +57,7 @@ export class PubsubPreview {
   static async provider() {
     const pubsubPreview = new PubsubPreview();
     if (pubsubPreview.inIframe()) {
-      window.addEventListener('load', pubsubPreview.updateParentPubsub());
+      window.addEventListener('load', () => pubsubPreview.connectToParentPubSub());
     }
 
     return pubsubPreview;

@@ -1,4 +1,3 @@
-import React, { ReactNode } from 'react';
 import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
@@ -7,7 +6,7 @@ import { Connection } from 'penpal/lib/types';
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
-import { pubsubRegistry, PubSubRegistry } from './pubsub-context';
+import { createProvider } from './pubsub-context';
 
 export class PubsubUI {
   private topicMap = {};
@@ -74,14 +73,6 @@ export class PubsubUI {
 
     return pubsubUI;
   }
-}
-
-function createProvider(pubSubContext: PubSubRegistry) {
-  const PubSubProvider = ({ children }: { children: ReactNode }) => (
-    <pubsubRegistry.Provider value={pubSubContext}>{children}</pubsubRegistry.Provider>
-  );
-
-  return PubSubProvider;
 }
 
 PubsubAspect.addRuntime(PubsubUI);

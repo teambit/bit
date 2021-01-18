@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, RefObject } from 'react';
+import React, { createContext, useContext, useEffect, RefObject, ReactNode } from 'react';
 
 export interface PubSubRegistry {
   /**
@@ -9,6 +9,14 @@ export interface PubSubRegistry {
 }
 
 export const pubsubRegistry = createContext<PubSubRegistry | undefined>(undefined);
+
+export function createProvider(pubSubContext: PubSubRegistry) {
+  const PubSubProvider = ({ children }: { children: ReactNode }) => (
+    <pubsubRegistry.Provider value={pubSubContext}>{children}</pubsubRegistry.Provider>
+  );
+
+  return PubSubProvider;
+}
 
 export function usePubSub() {
   return useContext(pubsubRegistry);
