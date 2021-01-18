@@ -29,6 +29,6 @@ export function usePubSubIframe(ref: RefObject<HTMLIFrameElement>) {
     if (!ref.current || !pubSub) return () => {};
 
     const destroyConnection = pubSub.connect(ref.current);
-    return destroyConnection;
+    return () => destroyConnection();
   }, [ref.current, pubSub]);
 }

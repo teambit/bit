@@ -1,7 +1,7 @@
 import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
-import { Connection } from 'penpal/lib/types';
+import type { Connection } from 'penpal/lib/types';
 
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
