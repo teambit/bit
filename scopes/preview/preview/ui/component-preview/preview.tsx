@@ -1,6 +1,6 @@
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
-import React, { CSSProperties, createRef, useEffect } from 'react';
+import React, { CSSProperties, createRef } from 'react';
 
 export type ComponentPreviewProps = {
   /**

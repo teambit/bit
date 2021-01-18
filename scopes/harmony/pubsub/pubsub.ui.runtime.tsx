@@ -66,17 +66,22 @@ export class PubsubUI {
   static async provider([uiUI]: [UiUI]) {
     const pubsubUI = new PubsubUI();
 
-    const pubSubContext: PubSubRegistry = {
+    const reactContext = createProvider({
       connect: pubsubUI.connectToIframe,
-    };
+    });
 
-    const PubSubProvider = ({ children }: { children: ReactNode }) => (
-      <pubsubRegistry.Provider value={pubSubContext}>{children}</pubsubRegistry.Provider>
-    );
-    uiUI.registerRenderHooks({ reactContext: PubSubProvider });
+    uiUI.registerRenderHooks({ reactContext });
 
     return pubsubUI;
   }
+}
+
+function createProvider(pubSubContext: PubSubRegistry) {
+  const PubSubProvider = ({ children }: { children: ReactNode }) => (
+    <pubsubRegistry.Provider value={pubSubContext}>{children}</pubsubRegistry.Provider>
+  );
+
+  return PubSubProvider;
 }
 
 PubsubAspect.addRuntime(PubsubUI);
