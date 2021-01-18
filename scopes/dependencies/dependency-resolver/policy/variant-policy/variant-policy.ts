@@ -90,10 +90,17 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
   }
 
   toLegacyDepsOverrides(): DependenciesOverridesData {
-    // TODO: once we support DetailedDependencyPolicy in the object we should do here something
-    // TODO: it might be that we will have to return it as is, and handle it in the legacy
-    // TODO: since we don't have enough info about handle force here
-    return this.toConfigObject();
+    const res: DependenciesOverridesData = {
+      dependencies: {},
+      devDependencies: {},
+      peerDependencies: {},
+    };
+    this._policiesEntries.reduce((acc, entry) => {
+      const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[entry.lifecycleType];
+      acc[keyName][entry.dependencyId] = entry.value.version;
+      return acc;
+    }, res);
+    return res;
   }
 
   static mergePolices(policies: VariantPolicy[]): VariantPolicy {

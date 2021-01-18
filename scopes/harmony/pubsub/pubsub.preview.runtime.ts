@@ -2,10 +2,6 @@
  * Please Notice: This file will run in the preview iframe.
  */
 
-// TODO: Use log aspect - currently do not work with the legacy log.
-// TODO: Decide and configure a consistent this alias.
-/* eslint-disable @typescript-eslint/no-this-alias */
-
 import { PreviewRuntime } from '@teambit/preview';
 import { isBrowser } from '@teambit/ui.is-browser';
 
@@ -14,47 +10,54 @@ import { connectToParent } from 'penpal';
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
 
-export class PubsubPreview {
-  private _parentPubsub;
+type ParentMethods = {
+  sub: (topicUUID: string, event: any) => Promise<void>;
+  pub: (topicUUID: string, event: any) => Promise<void>;
+};
 
-  public async updateParentPubsub() {
-    return connectToParent({ timeout: 300 })
-      .promise.then((parentPubsub) => {
-        this._parentPubsub = parentPubsub;
-      })
-      .catch(() => {
-        return this.updateParentPubsub();
-      });
+export class PubsubPreview {
+  private _parentPubsub?: ParentMethods;
+
+  private inIframe() {
+    try {
+      return isBrowser && window.self !== window.top;
+    } catch (e) {
+      return true;
+    }
   }
 
-  public init = () => {
-    window.addEventListener('load', () => {
-      // Making sure parent call connect-to-child before the child call connect-to-parent
-      // (not sure if its needed anymore)
-      setTimeout(() => {
-        this.updateParentPubsub();
-      }, 0);
-    });
+  private connectToParentPubSub = (retries = 3) => {
+    if (retries <= 0) return undefined;
+
+    return connectToParent<ParentMethods>({ timeout: 300 })
+      .promise.then((parentPubsub) => {
+        return (this._parentPubsub = parentPubsub);
+      })
+      .catch((e: any) => {
+        if (e.code !== 'ConnectionTimeout') return undefined;
+
+        return this.connectToParentPubSub(retries - 1);
+      });
   };
 
   public sub(topicUUID, callback) {
-    if (this._parentPubsub) {
-      this._parentPubsub.sub(topicUUID, callback);
-    }
+    if (!this._parentPubsub) return undefined;
+
+    return this._parentPubsub?.sub(topicUUID, callback);
   }
 
   public pub(topicUUID, event: BitBaseEvent<any>) {
-    if (this._parentPubsub) {
-      this._parentPubsub.pub(topicUUID, event);
-    }
+    if (!this._parentPubsub) return undefined;
+
+    return this._parentPubsub.pub(topicUUID, event);
   }
 
   static runtime = PreviewRuntime;
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
-    if (isBrowser) {
-      pubsubPreview.init();
+    if (pubsubPreview.inIframe()) {
+      window.addEventListener('load', () => pubsubPreview.connectToParentPubSub());
     }
 
     return pubsubPreview;

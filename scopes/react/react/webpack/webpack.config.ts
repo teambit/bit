@@ -1,6 +1,7 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import { Configuration } from 'webpack';
+import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as mdxLoader from '@teambit/modules.mdx-loader';
 // Make sure the bit-react-transformer is a dependency
@@ -8,12 +9,12 @@ import * as mdxLoader from '@teambit/modules.mdx-loader';
 import '@teambit/babel.bit-react-transformer';
 
 const moduleFileExtensions = [
-  'web.mjs',
-  'mjs',
   'web.js',
   'js',
   'web.ts',
   'ts',
+  'web.mjs',
+  'mjs',
   'web.tsx',
   'tsx',
   'json',
@@ -23,7 +24,10 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (workspaceDir: string, targets: string[], envId: string, fileMapPath: string): Configuration {
+export default function (
+  envId: string,
+  fileMapPath: string
+): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -31,13 +35,19 @@ export default function (workspaceDir: string, targets: string[], envId: string,
     module: {
       rules: [
         {
+          // support packages with `*.mjs`, namely, 'graphql'
+          test: /\.mjs$/,
+          include: /node_modules/,
+          type: 'javascript/auto',
+        },
+        {
           test: /\.js$/,
           enforce: 'pre',
           exclude: /node_modules/,
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: /\.(js|jsx|tsx|ts)$/,
+          test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
           loader: require.resolve('babel-loader'),

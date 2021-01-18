@@ -18,6 +18,7 @@ export function dependencyResolverSchema(dependencyResolver: DependencyResolverM
         version: String!
         lifecycle: String!
         type: String!
+        packageName: String # TODO - remove this after resolving the issue with apollo client when packages dont get packageName
       }
       # union Dependency = PackageDependency | ComponentDependency
 
@@ -32,6 +33,7 @@ export function dependencyResolverSchema(dependencyResolver: DependencyResolverM
         version: String!
         lifecycle: String!
         type: String!
+        packageName: String # TODO - remove this after resolving the issue with apollo client when packages dont get packageName
       }
 
       type ComponentDependency implements Dependency {

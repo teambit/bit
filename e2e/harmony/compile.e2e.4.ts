@@ -27,7 +27,7 @@ describe('compile extension', function () {
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
+      appOutput = helper.fixtures.populateComponentsTS(3);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
@@ -71,7 +71,7 @@ describe('compile extension', function () {
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
         expect(catComp2).to.have.property('extensions');
-        const builderExt = catComp2.extensions.find((e) => e.name === Extensions.builder);
+        const builderExt = helper.general.getExtension(catComp2, Extensions.builder);
         expect(builderExt.data).to.have.property('artifacts');
         const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
         const files = compilerArtifacts.files.map((d) => d.relativePath);
@@ -128,7 +128,7 @@ describe('compile extension', function () {
         helper.fs.outputFile('bar/foo.js');
         helper.command.addComponent('bar');
         helper.bitJsonc.setVariant(undefined, 'bar', {});
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
+        helper.bitJsonc.addToVariant('bar', 'propagate', false);
         output = helper.command.tagAllComponents();
       });
       // a guard for Flows bug that exits unexpectedly
@@ -151,7 +151,7 @@ describe('compile extension', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      helper.fixtures.populateComponentsTS(1, undefined, true);
+      helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');
       helper.command.runCmd('bit compile');

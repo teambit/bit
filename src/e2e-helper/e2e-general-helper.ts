@@ -20,7 +20,6 @@ export default class GeneralHelper {
     this.npm = npmHelper;
     this.command = commandHelper;
   }
-
   indexJsonPath() {
     return path.join(this.scopes.localPath, '.bit/index.json');
   }
@@ -84,7 +83,7 @@ export default class GeneralHelper {
     expect(GeneralHelper.alignOutput(output)).to.have.string(GeneralHelper.alignOutput(errorString) as string);
   }
 
-  isProjectNew() {
+  isHarmonyProject() {
     return fs.existsSync(path.join(this.scopes.localPath, WORKSPACE_JSONC));
   }
 
@@ -98,5 +97,9 @@ export default class GeneralHelper {
 
   generateRandomTmpDirName() {
     return path.join(this.scopes.e2eDir, generateRandomStr());
+  }
+
+  getExtension(component, extName: string) {
+    return component.extensions.find((e) => e.name === extName);
   }
 }

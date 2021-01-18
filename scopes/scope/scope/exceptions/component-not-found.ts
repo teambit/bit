@@ -1,16 +1,13 @@
+import { BitError } from '@teambit/bit-error';
 import { ComponentID } from '@teambit/component';
 
-export class ComponentNotFound extends Error {
+export class ComponentNotFound extends BitError {
   constructor(
     /**
      * id of the missing component.
      */
-    private id: ComponentID
+    id: ComponentID
   ) {
-    super();
-  }
-
-  toString() {
-    return `component with id: ${this.id} was not found`;
+    super(`component with id: ${id} was not found`);
   }
 }

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React from 'react';
 
-import { StatusTypes } from '../recursive-tree';
+import type { StatusTypes } from '@teambit/base-ui.graph.tree.recursive-tree';
 import styles from './status-dot.module.scss';
 
 export type StatusDotProps = {

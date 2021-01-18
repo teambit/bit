@@ -45,14 +45,3 @@ export const NoSetIconUserAvatar = () => (
     <UserAvatar size={32} account={accounts.noPicUserAccount} />
   </ThemeCompositions>
 );
-
-const compositions = [
-  DefaultAvatarExample,
-  OrganizationAvatarExample,
-  UserAvatarExample,
-  LargeAvatarExample,
-  NoSetIconOrgAvatar,
-  NoSetIconUserAvatar,
-];
-// @ts-ignore
-compositions.map((comp) => (comp.canvas = { height: 120 }));

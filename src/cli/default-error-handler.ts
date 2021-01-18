@@ -17,7 +17,6 @@ import { InvalidBitMap, MissingBitMapComponent, MissingMainFile } from '../consu
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
   DuplicateIds,
-  EmptyDirectory,
   ExcludedMainFile,
   IncorrectIdForImportedComponent,
   MainFileIsDir,
@@ -208,7 +207,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
         err.version
       } is missing.\n${reportIssueToGithubMsg}`,
   ],
-  [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ValidationError, (err) => `${err.message}\n${reportIssueToGithubMsg}`],
   [ComponentNotFoundInPath, (err) => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [RemoteNotFound, (err) => `error: remote "${chalk.bold(err.name)}" was not found`],
@@ -266,7 +264,8 @@ the cache is deleted and will be rebuilt on the next command. please re-run the 
   [CyclicDependencies, (err) => `${err.msg.toString().toLocaleLowerCase()}`],
   [
     UnexpectedNetworkError,
-    (err) => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`,
+    (err) => `unexpected network error has occurred.
+${err.message ? `server responded with: "${err.message}"` : ''}`,
   ],
   [
     RemoteResolverError,
