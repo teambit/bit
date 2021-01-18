@@ -209,10 +209,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/external-link"
     },
-    "teambit.design/ui/input/check-box@0.0.247": {
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/input/check-box"
-    },
     "teambit.design/ui/label@0.0.247": {
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/label"
@@ -694,7 +690,7 @@
         "rootDir": "scopes/workspace/workspace"
     },
     "ui/constants/z-indexes": {
-        "mainFile": "z-indexs.module.scss",
+        "mainFile": "z-indexes.module.scss",
         "rootDir": "scopes/ui-foundation/uis/constants/z-indexes",
         "exported": false
     },
