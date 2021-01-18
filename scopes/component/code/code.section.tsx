@@ -1,7 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { Icon } from '@teambit/evangelist.elements.icon';
-import styles from './code.module.scss';
+import { MenuWidgetIcon } from '@teambit/ui.menu-widget-icon';
 import type { CodeUI } from './code.ui.runtime';
 
 export class CodeSection implements Section {
@@ -12,7 +11,7 @@ export class CodeSection implements Section {
   };
   navigationLink = {
     href: '~code',
-    children: <Icon of="Code" className={styles.icon} />,
+    children: <MenuWidgetIcon icon="Code" id="codeIcon" tooltipContent="Code" />,
   };
   order = 30;
 }
