@@ -99,7 +99,7 @@
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
     "gitconfig": "^2.0.8",
-    "@typescript-eslint/typescript-estree": "^4.8.2",
+    "@typescript-eslint/typescript-estree": "4.13.0",
     "@vuedoc/parser": "^2.3.0",
     "acorn": "^6.0.0",
     "ajv": "^6.11.0",
