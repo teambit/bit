@@ -1,0 +1,31 @@
+---
+labels: ['react', 'typescript', 'label', 'recursion']
+description: 'Label with onPick event'
+---
+
+import { useState } from 'react';
+import { Label, LabelList } from './label';
+
+Exposes two options:  
+Label - takes a single string as child  
+LabelList - takes a string array as child
+
+```js live
+() => {
+  const [state, setState] = useState('');
+  const [state2, setState2] = useState('');
+  return (
+    <div>
+      <div>
+        <Label onPick={setState}>chart</Label>
+        {state && <div>label "{state}" chosen</div>}
+      </div>
+      <br />
+      <div>
+        <LabelList onPick={setState2}>{['chart', 'graph', 'ui-component', 'react']}</LabelList>
+        {state2 && <div>label "{state2}" chosen</div>}
+      </div>
+    </div>
+  );
+};
+```

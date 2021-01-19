@@ -8,7 +8,7 @@ export function Properties({ properties }: any) {
 
   return (
     <Section>
-      <LinkedHeading link="/~compositions">Properties</LinkedHeading>
+      <LinkedHeading>Properties</LinkedHeading>
       <PropTable rows={properties} />
     </Section>
   );

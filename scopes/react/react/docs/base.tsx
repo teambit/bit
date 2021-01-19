@@ -1,12 +1,8 @@
 import 'reset-css';
 
 import React, { HTMLAttributes } from 'react';
-import { useQuery, gql } from '@apollo/client';
 import { ComponentModel } from '@teambit/component';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
 import { docsFile } from '@teambit/documenter.types.docs-file';
-import { docsFields } from '@teambit/ui.queries.get-docs';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
@@ -16,38 +12,13 @@ import { ComponentOverview } from './component-overview';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
+import { useComponentDocs } from './use-component-docs';
 
 export type DocsSectionProps = {
   docs?: docsFile;
   compositions: React.ComponentType[];
   componentId: string;
 } & HTMLAttributes<HTMLDivElement>;
-
-const GET_COMPONENT = gql`
-  query($id: String!) {
-    getHost {
-      id # used for GQL caching
-      get(id: $id) {
-        id {
-          name
-          version
-          scope
-        }
-        displayName
-        packageName
-        description
-        labels
-        compositions {
-          identifier
-        }
-      }
-      getDocs(id: $id) {
-        ...docsFields
-      }
-    }
-  }
-  ${docsFields}
-`;
 
 const defaultDocs = {
   examples: [],
@@ -59,11 +30,10 @@ const defaultDocs = {
  * base template for react component documentation.
  */
 export function Base({ docs = defaultDocs, componentId, compositions, ...rest }: DocsSectionProps) {
-  const { loading, error, data } = useQuery(GET_COMPONENT, {
-    variables: { id: componentId },
-  });
+  const { loading, error, data } = useComponentDocs(componentId);
+
   // :TODO @uri please add a proper loader with amir
-  if (loading) return <div></div>;
+  if (loading) return null;
   if (error) throw error;
 
   const component = ComponentModel.from(data.getHost.get);
@@ -75,33 +45,30 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
-    <ThemeContext>
-      <div className={classNames(styles.docsMainBlock)} {...rest}>
-        <EvaIconFont query="mxd7i0" />
-        <ComponentOverview
-          displayName={Content.displayName || displayName}
-          version={version}
-          abstract={component.description || Content.abstract || abstract}
-          labels={component.labels || Content.labels || labels}
-          packageName={packageName}
-        />
+    <div className={classNames(styles.docsMainBlock)} {...rest}>
+      <ComponentOverview
+        displayName={Content.displayName || displayName}
+        version={version}
+        abstract={component.description || Content.abstract || abstract}
+        labels={component.labels || Content.labels || labels}
+        packageName={packageName}
+      />
 
-        {Content.isMDXComponent ? (
-          <MDXLayout>
-            <div className={styles.mdx}>
-              <Content />
-            </div>
-          </MDXLayout>
-        ) : (
-          <Content />
-        )}
+      {Content.isMDXComponent ? (
+        <MDXLayout>
+          <div className={styles.mdx}>
+            <Content />
+          </div>
+        </MDXLayout>
+      ) : (
+        <Content />
+      )}
 
-        <CompositionsSummary compositions={compositions} />
+      <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
 
-        <ExamplesOverview examples={Content.examples || examples} />
+      <ExamplesOverview examples={Content.examples || examples} />
 
-        <Properties properties={docsModel.properties} />
-      </div>
-    </ThemeContext>
+      <Properties properties={docsModel.properties} />
+    </div>
   );
 }

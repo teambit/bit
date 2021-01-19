@@ -20,6 +20,7 @@ const nextBitBinVersion = getNextBitBinVersion();
 
 replaceVersionOccurrencesInCode();
 gitCommitChanges();
+gitPush();
 publishBitBin();
 waitUntilShownInNpm().then(() => console.log('bump has completed!'));
 
@@ -49,17 +50,11 @@ async function sleep(ms) {
 }
 
 function getCurrentBitBinVerFromNpm() {
-  return execSync('npm view bit-bin@dev version').toString().trim();
+  return exec('npm view bit-bin@dev version').trim();
 }
 
 function publishBitBin() {
-  try {
-    const result = execSync('npm publish --tag dev', { cwd });
-    console.log('$npm publish --tag dev\n', result.toString());
-  } catch (err) {
-    console.log('FATAL $npm publish --tag dev\n', err.toString());
-    throw err;
-  }
+  exec('npm publish --tag dev');
 }
 
 function shouldBumpBitBin() {
@@ -104,6 +99,23 @@ function replaceVersionOccurrencesInCode() {
 }
 
 function gitCommitChanges() {
-  const results = execSync(`git commit -am "bump bit-bin version to ${nextBitBinVersion} [skip ci]"`, { cwd });
-  console.log('commit output: ', results.toString());
+  exec(`git commit -am "bump bit-bin version to ${nextBitBinVersion} [skip ci]"`);
+}
+
+function gitPush() {
+  exec('git pull origin master');
+  exec('git push origin master');
+}
+
+function exec(command) {
+  console.log(`$ ${command}`);
+  try {
+    const results = execSync(command, { cwd });
+    const resultsStr = results.toString();
+    console.log('SUCCESS: ', resultsStr);
+    return resultsStr;
+  } catch (err) {
+    console.log('FAILED: ', err.toString());
+    throw err;
+  }
 }
