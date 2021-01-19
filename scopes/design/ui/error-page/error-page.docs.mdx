@@ -1,0 +1,13 @@
+---
+labels: ['react', 'typescript', 'error', 'html', 'page']
+description: 'A parent error page component for displaying various html errors'
+---
+
+import { ErrorPage } from './error-page';
+
+An error page component for displaying error pages on bit.dev.  
+If the error code isn't supported, the alt "error image" is displayed.
+
+```js live
+<ErrorPage code={404} title="This is a 404 error page" />
+```
