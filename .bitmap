@@ -693,5 +693,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "ui/menu-widget-icon": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/menu-widget-icon",
+        "exported": false
+    },
     "version": "14.8.9-dev.270"
 }

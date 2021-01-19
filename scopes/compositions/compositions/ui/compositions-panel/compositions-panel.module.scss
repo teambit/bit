@@ -7,7 +7,7 @@
   font-size: var(--p-xs);
   &:hover {
     background-color: var(--border-color, #ededed);
-    border-radius: 8px;
+    // border-radius: 8px;
     transition: background-color 300ms ease-in-out;
     .right {
       visibility: unset;
