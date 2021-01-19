@@ -12,7 +12,7 @@ import { ScopeOverview } from './scope-overview';
 import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
 import { useScope } from './use-scope';
-import ScopeUI, { ScopeBadgeSlot, ScopeContextType, CornerSlot } from '../scope.ui.runtime';
+import ScopeUI, { ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
@@ -20,6 +20,7 @@ export type ScopeProps = {
   sidebar: JSX.Element;
   scopeUi: ScopeUI;
   badgeSlot: ScopeBadgeSlot;
+  overviewLineSlot: OverviewLineSlot;
   cornerSlot: CornerSlot;
   context?: ScopeContextType;
   onSidebarTogglerChange: (callback: () => void) => void;
@@ -34,6 +35,7 @@ export function Scope({
   sidebar,
   scopeUi,
   badgeSlot,
+  overviewLineSlot,
   cornerSlot,
   context,
   onSidebarTogglerChange,
@@ -78,7 +80,7 @@ export function Scope({
             <Pane>
               <SlotRouter slot={routeSlot} />
               <Route exact path="/">
-                <ScopeOverview badgeSlot={badgeSlot} />
+                <ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />
               </Route>
             </Pane>
           </SplitPane>
