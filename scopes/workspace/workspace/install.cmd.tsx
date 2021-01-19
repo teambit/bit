@@ -41,9 +41,7 @@ export default class InstallCmd implements Command {
 
   async report([packages]: [string[]], options: InstallCmdOptions) {
     const startTime = Date.now();
-    this.logger.off();
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
-
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,
       lifecycleType: options.lifecycleType,

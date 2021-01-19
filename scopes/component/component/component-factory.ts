@@ -1,9 +1,12 @@
 import { BitId } from 'bit-bin/dist/bit-id';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import type { AspectDefinition } from '@teambit/aspect-loader';
+import { ComponentID } from '@teambit/component-id';
 
 import { Component } from './component';
-import { ComponentID } from './id';
 import { State } from './state';
+import { Snap } from './snap';
 
 export interface ComponentFactory {
   /**
@@ -24,6 +27,11 @@ export interface ComponentFactory {
   resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID>;
 
   /**
+   * resolve multiple `string` component ID to an instance of a ComponentID.
+   */
+  resolveMultipleComponentIds(ids: (string | ComponentID | BitId)[]): Promise<ComponentID[]>;
+
+  /**
    * returns a component by ID.
    */
   get(
@@ -33,9 +41,16 @@ export interface ComponentFactory {
   ): Promise<Component | undefined>;
 
   /**
-   * returns many components with a group of ids.
+   * returns many components by ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  /**
+   * returns many components by their legacy representation.
+   */
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
+
+  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
   /**
    * returns a specific state of a component by hash or semver.
@@ -43,14 +58,28 @@ export interface ComponentFactory {
   getState(id: ComponentID, snapId: string): Promise<State>;
 
   /**
+   * returns a specific snap of a component by hash.
+   */
+  getSnap(id: ComponentID, snapId: string): Promise<Snap>;
+
+  /**
    * load extension.
    */
   loadAspects: (ids: string[], throwOnError: boolean) => Promise<void>;
 
   /**
+   * Resolve dirs for aspects
+   */
+  resolveAspects: (runtimeName?: string, componentIds?: ComponentID[]) => Promise<AspectDefinition[]>;
+
+  /**
    * list all components in the host.
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
+
+  listIds(): Promise<ComponentID[]>;
+
+  hasId(componentId: ComponentID): Promise<boolean>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.

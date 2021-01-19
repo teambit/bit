@@ -7,9 +7,6 @@
   "extensions": {
     "teambit.dependencies/dependency-resolver": {
       "policy": {
-        "dependencies": {
-          
-        },
         "devDependencies": {
           "@types/eslint": "7.2.4"
         }

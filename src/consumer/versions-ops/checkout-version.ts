@@ -1,4 +1,4 @@
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as path from 'path';
 
 import { Consumer } from '..';

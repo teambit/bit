@@ -3,7 +3,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import { InvalidName } from '../../src/bit-id/exceptions';
+import { InvalidName } from '@teambit/legacy-bit-id';
 import AddTestsWithoutId from '../../src/cli/commands/exceptions/add-tests-without-id';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { AUTO_GENERATED_MSG } from '../../src/constants';

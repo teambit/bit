@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -75,7 +75,6 @@ type ConsumerProps = {
   scope: Scope;
   created?: boolean;
   isolated?: boolean;
-  bitMap: BitMap;
   addedGitHooks?: string[] | undefined;
   existingGitHooks: string[] | undefined;
 };
@@ -99,14 +98,13 @@ export default class Consumer {
   componentLoader: ComponentLoader;
   componentStatusLoader: ComponentStatusLoader;
   packageJson: any;
-
+  public onCacheClear: Array<() => void> = [];
   constructor({
     projectPath,
     config,
     scope,
     created = false,
     isolated = false,
-    bitMap,
     addedGitHooks,
     existingGitHooks,
   }: ConsumerProps) {
@@ -115,12 +113,14 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
-    this.bitMap = bitMap || BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.componentLoader = ComponentLoader.getInstance(this);
     this.componentStatusLoader = new ComponentStatusLoader(this);
     this.packageJson = PackageJsonFile.loadSync(projectPath);
+  }
+  async setBitMap() {
+    this.bitMap = await BitMap.load(this);
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get compiler(): Promise<CompilerExtension | undefined> {
@@ -142,9 +142,18 @@ export default class Consumer {
     return this._dirStructure;
   }
 
+  get componentFsCache() {
+    return this.componentLoader.componentFsCache;
+  }
+
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get bitmapIds(): BitIds {
-    return this.bitMap.getAllBitIds();
+    return this.bitMap.getAllBitIdsFromAllLanes();
+  }
+
+  clearCache() {
+    this.componentLoader.clearComponentsCache();
+    this.onCacheClear.forEach((func) => func());
   }
 
   async getEnv(envType: EnvType, context: Record<string, any> | undefined): Promise<EnvExtension | undefined> {
@@ -195,7 +204,7 @@ export default class Consumer {
     const bitmapVersion = this.bitMap.version || '0.10.9';
 
     if (semver.gte(bitmapVersion, BIT_VERSION)) {
-      logger.silly('bit.map version is up to date');
+      logger.trace('bit.map version is up to date');
       return {
         run: false,
       };
@@ -212,7 +221,7 @@ export default class Consumer {
     result.bitMap.markAsChanged();
     // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
     this.bitMap.version = result.bitMap.version;
-    await result.bitMap.write();
+    await result.bitMap.write(this.componentFsCache);
 
     loader.stop();
 
@@ -225,7 +234,7 @@ export default class Consumer {
   async write(): Promise<Consumer> {
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
-    await this.bitMap.write();
+    await this.bitMap.write(this.componentFsCache);
     return this;
   }
 
@@ -520,6 +529,9 @@ export default class Consumer {
     const { ids, persist } = tagParams;
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
+    if (persist) {
+      await this.componentFsCache.deleteAllDependenciesDataCache();
+    }
     const components = await this._loadComponentsForTag(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
@@ -552,7 +564,7 @@ export default class Consumer {
       consumer: this,
     });
 
-    return { taggedComponents, autoTaggedResults, isSoftTag: !persist, publishedPackages };
+    return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
   }
 
   updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
@@ -579,6 +591,7 @@ export default class Consumer {
     force = false,
     skipTests = false,
     verbose = false,
+    build,
     skipAutoSnap = false,
     resolveUnmerged = false,
   }: {
@@ -588,6 +601,7 @@ export default class Consumer {
     force?: boolean;
     skipTests?: boolean;
     verbose?: boolean;
+    build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
@@ -633,6 +647,8 @@ export default class Consumer {
       verbose,
       skipAutoTag: skipAutoSnap,
       persist: true,
+      soft: false,
+      build,
       resolveUnmerged,
       isSnap: true,
       disableDeployPipeline: false,
@@ -679,7 +695,7 @@ export default class Consumer {
       );
     }
     if (!shouldReloadComponents) return components;
-    this.componentLoader.clearComponentsCache();
+    this.clearCache();
     const { components: reloadedComponents } = await this.loadComponents(ids);
     return reloadedComponents;
   }
@@ -812,17 +828,18 @@ export default class Consumer {
     let existingGitHooks;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const scopeP = Scope.ensure(resolvedScopePath);
+
     const configP = WorkspaceConfig.ensure(projectPath, standAlone, workspaceConfigProps);
     const [scope, config] = await Promise.all([scopeP, configP]);
-    const bitMap = BitMap.load(projectPath, scope.path, scope.lanes.getCurrentLaneName());
-    return new Consumer({
+    const consumer = new Consumer({
       projectPath,
       created: true,
       scope,
       config,
-      bitMap,
       existingGitHooks,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   /**
@@ -831,7 +848,7 @@ export default class Consumer {
    */
   static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit = false): Promise<void> {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
-    BitMap.reset(projectPath, resetHard, resolvedScopePath);
+    BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
     const configP = WorkspaceConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, configP]);
@@ -845,13 +862,16 @@ export default class Consumer {
     // for this reason, we must use a package manager that supports one
     config.packageManager = 'npm';
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new Consumer({
+    const consumer = new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
       isolated: true,
+      // @ts-ignore @gilad, the config type is incorrect indeed
       config,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   static locateProjectScope(projectPath: string) {
@@ -877,13 +897,14 @@ export default class Consumer {
     const config = consumer && consumer.config ? consumer.config : await WorkspaceConfig.loadIfExist(consumerInfo.path);
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     const scope = await Scope.load(scopePath as string);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return new Consumer({
+    consumer = new Consumer({
       projectPath: consumerInfo.path,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       config,
       scope,
     });
+    await consumer.setBitMap();
+    return consumer;
   }
 
   /**
@@ -984,6 +1005,6 @@ export default class Consumer {
   async onDestroy() {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
-    return this.bitMap.write();
+    return this.bitMap.write(this.componentFsCache);
   }
 }

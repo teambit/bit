@@ -1,18 +1,23 @@
 import ts, { TsConfigSourceFile } from 'typescript';
+import { tmpdir } from 'os';
+import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { Compiler, CompilerMain, CompilerOptions } from '@teambit/compiler';
+import { CompilerMain, CompilerOptions } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
+import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
+import { MultiCompilerMain } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
+import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import webpackMerge from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
@@ -21,7 +26,7 @@ import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
 
 export const AspectEnvType = 'react';
-const jest = require('jest');
+const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 
@@ -67,7 +72,11 @@ export class ReactEnv implements Environment {
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain
+    private eslint: ESLintMain,
+
+    private multiCompiler: MultiCompilerMain,
+
+    private mdx: MDXMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
@@ -81,15 +90,12 @@ export class ReactEnv implements Environment {
   /**
    * returns a component tester.
    */
-  getTester(jestConfigPath: string, jestModule = jest): Tester {
+  getTester(jestConfigPath: string, jestModule = jestM): Tester {
     const config = jestConfigPath || require.resolve('./jest/jest.config');
     return this.jestAspect.createTester(config, jestModule);
   }
 
-  /**
-   * returns a component compiler.
-   */
-  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts): Compiler {
+  createTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
     const tsconfig = this.getTsConfig(targetConfig);
     return this.tsAspect.createCompiler(
       {
@@ -98,7 +104,17 @@ export class ReactEnv implements Environment {
         types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
         ...compilerOptions,
       },
+      // @ts-ignore
       tsModule
+    );
+  }
+
+  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
+    if (!this.config.mdx) return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
+
+    return this.multiCompiler.createCompiler(
+      [this.createTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
+      compilerOptions
     );
   }
 
@@ -113,16 +129,30 @@ export class ReactEnv implements Environment {
     });
   }
 
+  private getFileMap(components: Component[]) {
+    return components.reduce<{ [key: string]: string }>((index, component: Component) => {
+      component.state.filesystem.files.forEach((file) => {
+        index[file.path] = component.id.toString();
+      });
+
+      return index;
+    }, {});
+  }
+
+  private writeFileMap(components: Component[]) {
+    const fileMap = this.getFileMap(components);
+    const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
+    outputFileSync(path, JSON.stringify(fileMap));
+    return path;
+  }
+
   /**
    * get the default react webpack config.
    */
   getWebpackConfig(context: DevServerContext): Configuration {
-    // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
-    const packagePaths = context.components
-      .map((comp) => this.pkg.getPackageName(comp))
-      .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
+    const fileMapPath = this.writeFileMap(context.components);
 
-    return webpackConfigFactory(this.workspace.path, packagePaths, context.id);
+    return webpackConfigFactory(context.id, fileMapPath);
   }
 
   /**
@@ -137,18 +167,50 @@ export class ReactEnv implements Environment {
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
     const defaultConfig = this.getWebpackConfig(context);
-    const config = targetConfig ? webpackMerge(targetConfig, defaultConfig) : defaultConfig;
-    const withDocs = Object.assign(context, {
-      entry: context.entry.concat([require.resolve('./docs')]),
-    });
+    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
 
-    return this.webpack.createDevServer(withDocs, config);
+    return this.webpack.createDevServer(context, config);
   }
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
-    const defaultConfig = previewConfigFactory();
-    const config = targetConfig ? webpackMerge(targetConfig, defaultConfig) : defaultConfig;
-    return this.webpack.createBundler(context, config);
+    const path = this.writeFileMap(context.components);
+    const defaultConfig = previewConfigFactory(path);
+
+    if (targetConfig?.entry) {
+      const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
+
+      const targetsWithGlobalEntries = context.targets.map((target) => {
+        // Putting the additionalEntries first to support globals defined there (like regenerator-runtime)
+        target.entries = additionalEntries.concat(target.entries);
+        return target;
+      });
+      context.targets = targetsWithGlobalEntries;
+    }
+
+    delete targetConfig?.entry;
+
+    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
+    return this.webpack.createBundler(context, config as any);
+  }
+
+  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
+    if (!config || !config.entry) {
+      return [];
+    }
+    if (typeof config.entry === 'string') {
+      return [config.entry];
+    }
+    if (Array.isArray(config.entry)) {
+      let entries: string[] = [];
+      entries = config.entry.reduce((acc, entry) => {
+        if (typeof entry === 'string') {
+          acc.push(entry);
+        }
+        return acc;
+      }, entries);
+      return entries;
+    }
+    return [];
   }
 
   /**
@@ -184,11 +246,14 @@ export class ReactEnv implements Environment {
       },
       // TODO: add this only if using ts
       devDependencies: {
+        '@types/node': '^12.12.27',
         'core-js': '^3.6.5',
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
+        // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
+        '@babel/runtime': '^7.11.2',
       },
       // TODO: take version from config
       peerDependencies: {
@@ -207,7 +272,7 @@ export class ReactEnv implements Environment {
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TypescriptCompiler', this.getCompiler(targetConfig));
+    return this.compiler.createTask('MultiCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {

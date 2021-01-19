@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
@@ -19,7 +20,6 @@ import { Lane, ModelComponent, Version } from '../../scope/models';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { pathNormalizeToLinux } from '../../utils';
 import hasWildcard from '../../utils/string/has-wildcard';
-import { isTag } from '../../version/version-parser';
 import Component from '../component';
 import { NothingToImport } from '../exceptions';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
@@ -226,13 +226,15 @@ export default class ImportComponents {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
+    // this is probably not needed anymore because the build-one-graph already imports all
+    // missing objects.
+    // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
+    const importedComponents = this.consumer.bitMap.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED]);
     const componentsIdsToImport = BitIds.fromArray([
       ...authoredExportedComponents,
       ...importedComponents,
-      ...idsOfDepsInstalledAsPackages,
+      // ...idsOfDepsInstalledAsPackages,
     ]);
 
     let compiler;

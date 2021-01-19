@@ -1,0 +1,27 @@
+---
+description: A component to easily use programmatically with Bit component IDs 
+labels: ['id', 'component', 'bit']
+---
+
+import { ComponentID } from './component-id';
+
+This component supports the parsing and programmatic use of Bit Component IDs. 
+
+## Parse a simple Bit component ID.
+
+```ts live=true
+() => {
+  const stringId = 'teambit.component/component-id@1.0.0';
+
+  const id = ComponentID.fromString(stringId);
+
+  // Log the component scope.
+  console.log(id.scope); // yields 'teambit.component'
+  console.log(id.name); // yields 'component-id'
+  console.log(id.version) // yields '1.0.0' (as SemVer object)
+  return id.toString();
+};
+```
+
+## API Reference
+??

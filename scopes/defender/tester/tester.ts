@@ -4,14 +4,18 @@ import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { TestsResult } from './tests-results';
 
 export type Tests = {
-  components: {
-    componentId: ComponentID;
-    results: TestsResult;
-  }[];
+  components: ComponentsResults[];
   errors?: Error[];
 };
 
+export type ComponentsResults = {
+  componentId: ComponentID;
+  results?: TestsResult;
+  loading?: boolean;
+};
+
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
+export type ComponentPatternsMap = ComponentMap<{ path: string; relative: string }[]>;
 
 export interface TesterContext extends ExecutionContext {
   /**
@@ -25,9 +29,9 @@ export interface TesterContext extends ExecutionContext {
   // workspace: Workspace;
 
   /**
-   * defines whether tester is expected to run in quite mode.
+   * defines whether tester is expected to run in quiet mode.
    */
-  quite?: boolean;
+  quiet?: boolean;
 
   /**
    * list of spec files to test.
@@ -40,14 +44,24 @@ export interface TesterContext extends ExecutionContext {
   rootPath: string;
 
   /**
-   * determines whether tester is expected to run in watch mode.
+   * determines whether tester is expected to run in debug mode.
+   */
+  debug?: boolean;
+
+  /**
+   * is start from ui
+   */
+  ui?: boolean;
+
+  /**
+   * determines whether to start the tester in watch mode.
    */
   watch?: boolean;
 
   /**
-   * determines whether tester is expected to run in debug mode.
+   * array of patterns to test.
    */
-  debug?: boolean;
+  patterns: ComponentPatternsMap;
 }
 
 /**
@@ -80,12 +94,23 @@ export interface Tester {
   id: string;
 
   /**
+   * on test run complete. (applies only during watch)
+   * @param callback
+   */
+  onTestRunComplete?(callback: CallbackFn): Promise<void>;
+
+  /**
    * execute tests on all components in the given execution context.
    */
   test(context: TesterContext): Promise<Tests>;
 
   /**
+   * watch tests on all components
+   */
+  watch?(context: TesterContext): Promise<Tests>;
+  /**
    * return the tester version.
    */
   version(): string;
 }
+export type CallbackFn = (testSuite: Tests) => void;

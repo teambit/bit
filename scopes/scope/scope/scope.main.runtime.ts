@@ -1,9 +1,12 @@
+import mapSeries from 'p-map-series';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
+import { difference } from 'ramda';
+import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
 import { readdirSync } from 'fs-extra';
 import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import type { AspectList, ComponentMain, ComponentMap } from '@teambit/component';
+import type { ComponentMain, ComponentMap } from '@teambit/component';
 import {
   Component,
   ComponentAspect,
@@ -20,24 +23,29 @@ import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { LoggerAspect } from '@teambit/logger';
+import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
-import { ModelComponent, Version } from 'bit-bin/dist/scope/models';
-import { Ref } from 'bit-bin/dist/scope/objects';
-import LegacyScope, { OnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
+import { ModelComponent, Version, Lane } from 'bit-bin/dist/scope/models';
+import { Ref, Repository } from 'bit-bin/dist/scope/objects';
+import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
 import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
 import { PersistOptions } from 'bit-bin/dist/scope/types';
-import BluebirdPromise from 'bluebird';
-import { ExportPersist } from 'bit-bin/dist/scope/actions';
+import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
+import { ExportPersist, PostSign } from 'bit-bin/dist/scope/actions';
 import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
 import { Remotes } from 'bit-bin/dist/remotes';
-import { compact, slice } from 'lodash';
-import { SemVer } from 'semver';
+import { Scope } from 'bit-bin/dist/scope';
+import { Http, DEFAULT_AUTH_TYPE, AuthData } from 'bit-bin/dist/scope/network/http/http';
+import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
+import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+import { compact, slice, uniqBy } from 'lodash';
+import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
 import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
@@ -47,11 +55,20 @@ import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
-export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<ComponentMap<AspectList>>;
+export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
+export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
 
-export type OnPostPut = (ids: ComponentID[]) => void;
+type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
+type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
+type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
+
+type OnPostPut = RemoteEvent<OnPostPutData>;
+type OnPostExport = RemoteEvent<OnPostPutData>;
+type OnPostObjectsPersist = RemoteEvent<undefined>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
+export type OnPostExportSlot = SlotRegistry<OnPostExport>;
+export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 
 export type ScopeConfig = {
   description: string;
@@ -79,16 +96,19 @@ export class ScopeMain implements ComponentFactory {
      */
     private tagRegistry: TagRegistry,
 
-    /**
-     * slot registry for subscribing to post-export
-     */
     private postPutSlot: OnPostPutSlot,
+
+    private postExportSlot: OnPostExportSlot,
+
+    private postObjectsPersist: OnPostObjectsPersistSlot,
 
     private isolator: IsolatorMain,
 
     private aspectLoader: AspectLoaderMain,
 
-    private config: ScopeConfig
+    private config: ScopeConfig,
+
+    private logger: Logger
   ) {}
 
   /**
@@ -118,38 +138,54 @@ export class ScopeMain implements ComponentFactory {
    * register to the tag slot.
    */
   onTag(tagFn: OnTag) {
-    const legacyOnTagFunc: OnTagFunc = async (legacyIds: BitId[], options?: OnTagOpts): Promise<OnTagResult[]> => {
+    const legacyOnTagFunc: OnTagFunc = async (
+      legacyComponents: ConsumerComponent[],
+      options?: OnTagOpts
+    ): Promise<LegacyOnTagResult[]> => {
       const host = this.componentExtension.getHost();
-      const ids = await Promise.all(legacyIds.map((legacyId) => host.resolveComponentId(legacyId)));
-      const components = await host.getMany(ids);
-      // TODO: fix what legacy tag accepts to just extension name and files.
-      const aspectListComponentMap = await tagFn(components, options);
-      const extensionsToLegacy = (aspectList: AspectList) => {
-        const extensionsDataList = aspectList.toLegacy();
-        extensionsDataList.forEach((extension) => {
-          if (extension.id && this.aspectLoader.isCoreAspect(extension.id.toString())) {
-            extension.name = extension.id.toString();
-            extension.extensionId = undefined;
-          }
-        });
-        return extensionsDataList;
-      };
-      const results = aspectListComponentMap.toArray().map(([component, aspectList]) => ({
-        id: component.id._legacy,
-        extensions: extensionsToLegacy(aspectList),
-      }));
-      return results;
+      const components = await host.getManyByLegacy(legacyComponents);
+      const { builderDataMap } = await tagFn(components, options);
+      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
     };
     this.legacyScope.onTag.push(legacyOnTagFunc);
     this.tagRegistry.register(tagFn);
+  }
+
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
+    return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
+  }
+
+  builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
+    const builderDataToLegacyExtension = (component: Component, builderData: BuilderData) => {
+      const existingBuilder = component.state.aspects.get(BuilderAspect.id)?.legacy;
+      const builderExtension = existingBuilder || new ExtensionDataEntry(undefined, undefined, BuilderAspect.id);
+      builderExtension.data = builderData;
+      return builderExtension;
+    };
+    return builderDataComponentMap.toArray().map(([component, builderData]) => ({
+      id: component.id._legacy,
+      builderData: builderDataToLegacyExtension(component, builderData),
+    }));
   }
 
   /**
    * register to the post-export slot.
    */
   onPostPut(postPutFn: OnPostPut) {
-    this.legacyScope.onPostExport.push(postPutFn);
     this.postPutSlot.register(postPutFn);
+    return this;
+  }
+
+  /**
+   * register to the post-export slot.
+   */
+  registerOnPostExport(postExportFn: OnPostExport) {
+    this.postExportSlot.register(postExportFn);
+    return this;
+  }
+
+  registerOnPostObjectsPersist(postObjectsPersistFn: OnPostObjectsPersist) {
+    this.postObjectsPersist.register(postObjectsPersistFn);
     return this;
   }
 
@@ -168,28 +204,6 @@ export class ScopeMain implements ComponentFactory {
    * @param {PersistOptions} persistGeneralOptions General persistence options such as verbose
    */
   persist(components: Component[], options: PersistOptions) {} // eslint-disable-line @typescript-eslint/no-unused-vars
-
-  async getResolvedAspects(components: Component[]) {
-    if (!components.length) return [];
-    const capsules = await this.isolator.isolateComponents(
-      components,
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
-      this.legacyScope
-    );
-
-    return capsules.map((capsule) => {
-      // return RequireableComponent.fromCapsule(capsule);
-      return new RequireableComponent(capsule.component, () => {
-        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
-          file.relative.includes('.scope.runtime.')
-        );
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
-        // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(capsule.path);
-      });
-    });
-  }
 
   // TODO: temporary compiler workaround - discuss this with david.
   private toJs(str: string) {
@@ -227,40 +241,65 @@ export class ScopeMain implements ComponentFactory {
   private localAspects: string[] = [];
 
   async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+    const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
+    if (!notLoadedIds.length) return;
+    const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
+    const idsWithoutCore: string[] = difference(ids, coreAspectsStringIds);
+    const aspectIds = idsWithoutCore.filter((id) => !id.startsWith('file://'));
+    // TODO: use diff instead of filter twice
     const localAspects = ids.filter((id) => id.startsWith('file://'));
     this.localAspects = this.localAspects.concat(localAspects);
     // load local aspects for debugging purposes.
     await this.loadAspectFromPath(localAspects);
-    const aspectIds = ids.filter((id) => !id.startsWith('file://'));
-    const componentIds = aspectIds.map((id) => ComponentID.fromLegacy(BitId.parse(id, true)));
+    const componentIds = await this.resolveMultipleComponentIds(aspectIds);
     if (!componentIds || !componentIds.length) return;
     const resolvedAspects = await this.getResolvedAspects(await this.import(componentIds));
     // Always throw an error when can't load scope extension
     await this.aspectLoader.loadRequireableExtensions(resolvedAspects, throwOnError);
   }
 
-  private async resolveLocalAspects(ids: string[], runtime: string) {
+  private async resolveLocalAspects(ids: string[], runtime?: string) {
     const dirs = this.parseLocalAspect(ids);
 
     return dirs.map((dir) => {
-      const runtimeManifest = this.findRuntime(dir, runtime);
+      const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
       return new AspectDefinition(dir, runtimeManifest ? join(dir, 'dist', runtimeManifest) : null);
     });
   }
 
-  async resolveAspects(runtimeName: string) {
-    const userAspectsIds = this.aspectLoader.getUserAspects();
-    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      const id = ComponentID.fromString(aspectId);
-      return this.localAspects.includes(id.fullName.replace('/', '.'));
+  async getResolvedAspects(components: Component[]) {
+    if (!components.length) return [];
+    const network = await this.isolator.isolateComponents(
+      components.map((c) => c.id),
+      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      this.legacyScope
+    );
+
+    const capsules = network.seedersCapsules;
+
+    return capsules.map((capsule) => {
+      // return RequireableComponent.fromCapsule(capsule);
+      return new RequireableComponent(capsule.component, () => {
+        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
+          file.relative.includes('.scope.runtime.')
+        );
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return require(capsule.path);
+      });
     });
-    const componentIds = await Promise.all(withoutLocalAspects.map((id) => ComponentID.fromString(id)));
-    const components = await this.getMany(componentIds);
-    const capsules = await this.isolator.isolateComponents(
-      components,
+  }
+
+  private async resolveUserAspects(runtimeName?: string, userAspectsIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    if (!userAspectsIds || !userAspectsIds.length) return [];
+    const components = await this.getMany(userAspectsIds);
+    const network = await this.isolator.isolateComponents(
+      userAspectsIds,
       { baseDir: this.path, skipIfExists: true },
       this.legacyScope
     );
+    const capsules = network.seedersCapsules;
     const aspectDefs = await this.aspectLoader.resolveAspects(components, async (component) => {
       const capsule = capsules.getCapsule(component.id);
       if (!capsule) throw new Error(`failed loading aspect: ${component.id.toString()}`);
@@ -268,31 +307,61 @@ export class ScopeMain implements ComponentFactory {
 
       return {
         aspectPath: localPath,
-        runtimesPath: await this.aspectLoader.getRuntimePath(component, localPath, runtimeName),
+        runtimePath: runtimeName ? await this.aspectLoader.getRuntimePath(component, localPath, runtimeName) : null,
       };
     });
+    return aspectDefs;
+  }
 
+  async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
+    const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
+    const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
+      return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
+    });
+    const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
     const coreAspects = await this.aspectLoader.getCoreAspectDefs(runtimeName);
 
-    return aspectDefs.concat(coreAspects).concat(localResolved);
+    const allDefs = userAspectsDefs.concat(coreAspects).concat(localResolved);
+    const uniqDefs = uniqBy(allDefs, (def) => `${def.aspectPath}-${def.runtimePath}`);
+    let defs = uniqDefs;
+    if (runtimeName) {
+      defs = defs.filter((def) => def.runtimePath);
+    }
+
+    return defs;
+  }
+
+  async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
+    if (!ids || ids.length < 1) ids = (await this.list()).map((comp) => comp.id) || [];
+    const legacyIds = ids.map((id) => {
+      let bitId = id._legacy;
+      // The resolve bitId in scope will remove the scope name in case it's the same as the scope
+      // We restore it back to use it correctly in the legacy code.
+      if (!bitId.hasScope()) {
+        bitId = bitId.changeScope(this.legacyScope?.name);
+      }
+      return bitId;
+    });
+
+    const legacyGraph = await buildOneGraphForComponentsUsingScope(legacyIds, this.legacyScope);
+    return legacyGraph;
   }
 
   /**
    * import components into the scope.
    */
-  async import(ids: ComponentID[]) {
+  async import(ids: ComponentID[], useCache = true) {
     const legacyIds = ids.map((id) => {
       const legacyId = id._legacy;
       if (legacyId.scope === this.name) return legacyId.changeScope(null);
       return legacyId;
     });
 
-    const withoutOwnScope = legacyIds.filter((id) => {
-      return id.scope !== this.name;
+    const withoutOwnScopeAndLocals = legacyIds.filter((id) => {
+      return id.scope !== this.name && id.hasScope();
     });
-
-    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScope));
+    await this.legacyScope.import(ComponentsIds.fromArray(withoutOwnScopeAndLocals), useCache);
 
     // TODO: return a much better output based on legacy version-dependencies
     return this.getMany(ids);
@@ -323,10 +392,36 @@ export class ScopeMain implements ComponentFactory {
     return new Component(newId, snap, state, tagMap, this);
   }
 
+  async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
+    const legacyId = consumerComponent.id;
+    const modelComponent = await this.legacyScope.getModelComponent(legacyId);
+    // :TODO move to head snap once we have it merged, for now using `latest`.
+    const id = await this.resolveComponentId(legacyId);
+    const version =
+      consumerComponent.pendingVersion ||
+      (await modelComponent.loadVersion(legacyId.version as string, this.legacyScope.objects));
+    const snap = this.createSnapFromVersion(version);
+    const state = await this.createStateFromVersion(id, version);
+    const tagMap = await this.getTagMap(modelComponent);
+
+    return new Component(id, snap, state, tagMap, this);
+  }
+
   /**
    * list all components in the scope.
    */
   async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
+    const componentsIds = await this.listIds(includeCache);
+
+    return this.getMany(
+      filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
+    );
+  }
+
+  /**
+   * get ids of all scope components.
+   */
+  async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
     if (!includeCache) {
       modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
@@ -335,10 +430,19 @@ export class ScopeMain implements ComponentFactory {
     const componentsIds = modelComponents.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
     );
+    return componentsIds;
+  }
 
-    return this.getMany(
-      filter && filter.limit ? slice(componentsIds, filter.offset, filter.offset + filter.limit) : componentsIds
-    );
+  /**
+   * Check if a specific id exist in the scope
+   * @param componentId
+   */
+  async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
+    const ids = await this.listIds(includeCache);
+    const found = ids.find((id) => {
+      return id.isEqual(componentId);
+    });
+    return !!found;
   }
 
   /**
@@ -350,11 +454,28 @@ export class ScopeMain implements ComponentFactory {
 
   async getMany(ids: Array<ComponentID>): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
-    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       return this.get(id);
     });
     const components = await componentsP;
     return compact(components);
+  }
+
+  /**
+   * load components from a scope and load its aspects.
+   */
+  async loadMany(ids: ComponentID[]) {
+    // get all components.
+    const components = await this.getMany(ids);
+    // load all component aspects.
+    await Promise.all(
+      components.map(async (component) => {
+        const aspectIds = component.state.aspects.ids;
+        await this.loadAspects(aspectIds, true);
+      })
+    );
+
+    return components;
   }
 
   /**
@@ -377,6 +498,12 @@ export class ScopeMain implements ComponentFactory {
     return this.createStateFromVersion(id, version);
   }
 
+  async getSnap(id: ComponentID, hash: string): Promise<Snap> {
+    // TODO: add cache by hash
+    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
+    return this.createSnapFromVersion(version);
+  }
+
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
     return this.legacyScope.loadComponentLogs(id._legacy);
   }
@@ -386,14 +513,18 @@ export class ScopeMain implements ComponentFactory {
    * @param id component ID.
    */
   async resolveComponentId(id: string | ComponentID | BitId): Promise<ComponentID> {
-    if (id.toString().startsWith(this.name)) {
-      const withoutOwn = id.toString().replace(`${this.name}/`, '');
-      const legacyId = await this.legacyScope.getParsedId(withoutOwn);
-      if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
-      return ComponentID.fromLegacy(legacyId);
-    }
-
-    const legacyId = await this.legacyScope.getParsedId(id.toString());
+    const idStr = id.toString();
+    const component = await this.legacyScope.loadModelComponentByIdStr(idStr);
+    const getIdToCheck = () => {
+      if (component) return idStr; // component exists in the scope with the scope-name.
+      if (idStr.startsWith(`${this.name}/`)) {
+        // component with the full name doesn't exist in the scope, it might be locally tagged
+        return idStr.replace(`${this.name}/`, '');
+      }
+      return idStr;
+    };
+    const IdToCheck = getIdToCheck();
+    const legacyId = await this.legacyScope.getParsedId(IdToCheck);
     if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
     return ComponentID.fromLegacy(legacyId);
   }
@@ -402,9 +533,15 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+    const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
+    const versions = modelComponent.listVersions();
+    return semver.maxSatisfying(versions, range);
+  }
+
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    await BluebirdPromise.mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
+    await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
       const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
       // TODO: what to return if no version in objects
       if (version) {
@@ -421,7 +558,7 @@ export class ScopeMain implements ComponentFactory {
     return new Snap(
       version.hash().toString(),
       new Date(parseInt(version.log.date)),
-      [],
+      version.parents.map((p) => p.toString()),
       {
         displayName: version.log.username || 'unknown',
         email: version.log.email || 'unknown@anywhere',
@@ -454,10 +591,17 @@ export class ScopeMain implements ComponentFactory {
     return getScopeRemotes(this.legacyScope);
   }
 
+  load() {}
+
   /**
    * declare the slots of scope extension.
    */
-  static slots = [Slot.withType<OnTag>(), Slot.withType<OnPostPut>()];
+  static slots = [
+    Slot.withType<OnTag>(),
+    Slot.withType<OnPostPut>(),
+    Slot.withType<OnPostExport>(),
+    Slot.withType<OnPostObjectsPersist>(),
+  ];
   static runtime = MainRuntime;
 
   static dependencies = [
@@ -472,47 +616,94 @@ export class ScopeMain implements ComponentFactory {
   ];
 
   static async provider(
-    [componentExt, ui, graphql, cli, isolator, aspectLoader, express]: [
+    [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
       ComponentMain,
       UiMain,
       GraphqlMain,
       CLIMain,
       IsolatorMain,
       AspectLoaderMain,
-      ExpressMain
+      ExpressMain,
+      LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot]: [TagRegistry, OnPostPutSlot],
+    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot]: [
+      TagRegistry,
+      OnPostPutSlot,
+      OnPostExportSlot,
+      OnPostObjectsPersistSlot
+    ],
     harmony: Harmony
   ) {
     cli.register(new ExportCmd());
-    const legacyScope = await loadScopeIfExist();
+    const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+    const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
       return undefined;
     }
 
-    // const logger = loggerMain.createLogger(ScopeAspect.id);
+    const logger = loggerMain.createLogger(ScopeAspect.id);
     const scope = new ScopeMain(
       harmony,
       legacyScope,
       componentExt,
       tagSlot,
       postPutSlot,
+      postExportSlot,
+      postObjectsPersistSlot,
       isolator,
       aspectLoader,
-      config
+      config,
+      logger
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
 
-    ExportPersist.onPutHook = (ids: string[]) => {
+    const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
+      logger.debug(`onPutHook, started. (${ids.length} components)`);
+      const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postPutSlot.values();
-      fns.map(async (fn) => {
-        return fn(await Promise.all(ids.map((id) => scope.resolveComponentId(id))));
-      });
+      const data = {
+        ids: componentIds,
+        lanes,
+      };
+      const metadata = { auth: authData };
+      await Promise.all(fns.map(async (fn) => fn(data, metadata)));
+      logger.debug(`onPutHook, completed. (${ids.length} components)`);
     };
+
+    const getAuthData = (): AuthData | undefined => {
+      const token = Http.getToken();
+      return token ? { type: DEFAULT_AUTH_TYPE, credentials: token } : undefined;
+    };
+
+    const onPostExportHook = async (ids: BitId[], lanes: Lane[]): Promise<void> => {
+      logger.debug(`onPostExportHook, started. (${ids.length} components)`);
+      const componentIds = await scope.resolveMultipleComponentIds(ids);
+      const fns = postExportSlot.values();
+      const data = {
+        ids: componentIds,
+        lanes,
+      };
+      const metadata = { auth: getAuthData() };
+      await Promise.all(fns.map(async (fn) => fn(data, metadata)));
+      logger.debug(`onPostExportHook, completed. (${ids.length} components)`);
+    };
+
+    const onPostObjectsPersistHook = async (): Promise<void> => {
+      logger.debug(`onPostObjectsPersistHook, started`);
+      const fns = postObjectsPersistSlot.values();
+      const metadata = { auth: getAuthData() };
+      await Promise.all(fns.map(async (fn) => fn(undefined, metadata)));
+      logger.debug(`onPostObjectsPersistHook, completed`);
+    };
+
+    ExportPersist.onPutHook = onPutHook;
+    PostSign.onPutHook = onPutHook;
+    Scope.onPostExport = onPostExportHook;
+    Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([
       new PutRoute(scope, postPutSlot),

@@ -3,11 +3,10 @@ import { ComponentFactory } from '@teambit/component';
 import { ComponentResult, ArtifactDefinition } from '@teambit/builder';
 import { Capsule, IsolatorMain } from '@teambit/isolator';
 import { ScopeMain } from '@teambit/scope';
-import { BitError } from 'bit-bin/dist/error/bit-error';
 import LegacyScope from 'bit-bin/dist/scope/scope';
 import { Packer as LegacyPacker, PackWriteOptions, PackOptions } from 'bit-bin/dist/pack';
 import { Logger } from '@teambit/logger';
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 
 // @ts-ignore (for some reason the tsc -w not found this)
 import { ScopeNotFound } from './exceptions/scope-not-found';
@@ -69,7 +68,7 @@ export class Packer {
   ): Promise<ComponentResult[]> {
     const description = `packing components${dryRun ? ' (dry-run)' : ''}`;
     const longProcessLogger = this.logger.createLongProcessLogger(description, capsules.length);
-    const results = Bluebird.mapSeries(capsules, (capsule) => {
+    const results = mapSeries(capsules, (capsule) => {
       longProcessLogger.logProgress(capsule.component.id.toString());
       return this.packCapsule(capsule, writeOptions, dryRun, omitFullTarPath);
     });
@@ -104,6 +103,7 @@ export class Packer {
       component,
       metadata,
       errors: packResult.errors,
+      warnings: packResult.warnings,
       startTime: packResult.startTime,
       endTime: packResult.endTime,
     };
@@ -120,12 +120,8 @@ export class Packer {
 
   private async getCapsule(componentIdStr: string, legacyScope: LegacyScope): Promise<Capsule> {
     const componentId = await this.host.resolveComponentId(componentIdStr);
-    const component = await this.host.get(componentId);
-    if (!component) {
-      throw new BitError(`unable to find "${componentId}"`);
-    }
-    const capsules = await this.isolator.isolateComponents([component], { baseDir: this.host.path }, legacyScope);
-    const capsule = capsules.getCapsule(componentId);
+    const network = await this.isolator.isolateComponents([componentId], { baseDir: this.host.path }, legacyScope);
+    const capsule = network.seedersCapsules.getCapsule(componentId);
 
     if (!capsule) throw new Error(`capsule not found for ${componentId}`);
     return capsule;

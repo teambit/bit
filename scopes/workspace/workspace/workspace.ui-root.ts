@@ -38,6 +38,10 @@ export class WorkspaceUIRoot implements UIRoot {
     return this.getServers();
   }
 
+  buildOptions = {
+    ssr: false,
+  };
+
   async resolveAspects(runtimeName: string) {
     return this.workspace.resolveAspects(runtimeName);
   }
@@ -66,6 +70,7 @@ export class WorkspaceUIRoot implements UIRoot {
   async postStart(options?: PostStartOptions) {
     const devServers = await this.getServers();
     devServers.forEach((server) => server.listen());
+    // DON'T add wait! this promise never resolve so it's stop all the start process!
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.workspace.watcher.watchAll();
   }

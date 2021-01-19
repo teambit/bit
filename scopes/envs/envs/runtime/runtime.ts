@@ -1,5 +1,6 @@
 import { Logger } from '@teambit/logger';
-import BluebirdPromise from 'bluebird';
+import { ComponentID } from '@teambit/component';
+import mapSeries from 'p-map-series';
 import { EnvNotFoundInRuntime } from '../exceptions';
 import { ExecutionContext } from '../context';
 import { EnvService, ServiceExecutionResult } from '../services';
@@ -30,7 +31,11 @@ export class Runtime {
     service: EnvService<T>,
     options?: { [key: string]: any }
   ): Promise<EnvsExecutionResult<T>> {
-    const envRuntime = this.runtimeEnvs.find((runtime) => runtime.id === envRuntimeId);
+    const envRuntime = this.runtimeEnvs.find((runtime) => {
+      const id = ComponentID.fromString(runtime.id);
+      const withoutVersion = id._legacy.toStringWithoutVersion();
+      return withoutVersion === envRuntimeId;
+    });
     if (!envRuntime) throw new EnvNotFoundInRuntime(envRuntimeId);
     return this.run(service, options, [envRuntime]);
   }
@@ -59,7 +64,7 @@ export class Runtime {
   ): Promise<EnvsExecutionResult<T>> {
     if (!service.run) throw new Error('a service must implement `run()` in order to be executed');
     const errors: Error[] = [];
-    const contexts: EnvResult<T>[] = await BluebirdPromise.mapSeries(runtimes || this.runtimeEnvs, async (env) => {
+    const contexts: EnvResult<T>[] = await mapSeries(runtimes || this.runtimeEnvs, async (env) => {
       try {
         // @ts-ignore
         const serviceResult = await service.run(new ExecutionContext(this, env), options);

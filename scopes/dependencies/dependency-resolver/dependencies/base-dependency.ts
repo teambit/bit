@@ -1,4 +1,4 @@
-import { Dependency, DependencyLifecycleType, SerializedDependency, DependencyManifest } from './dependency';
+import { Dependency, DependencyLifecycleType, DependencyManifest } from './dependency';
 
 export abstract class BaseDependency implements Dependency {
   _type: string;

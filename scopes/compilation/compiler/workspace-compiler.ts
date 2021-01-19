@@ -1,33 +1,30 @@
 /* eslint-disable max-classes-per-file */
+import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
-
-import BluebirdPromise from 'bluebird';
 import path from 'path';
-
 import { BitId } from 'bit-bin/dist/bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { Dist, SourceFile } from 'bit-bin/dist/consumer/component/sources';
 import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
 import logger from 'bit-bin/dist/logger/logger';
 import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
-
 import { Compiler } from './types';
 
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
-type LegacyCompilerOptions = {
-  noCache?: boolean;
+export type CompileOptions = {
+  changed?: boolean;
   verbose?: boolean;
-  dontPrintEnvMsg?: boolean;
 };
 
 export type CompileError = { path: string; error: Error };
@@ -127,11 +124,27 @@ ${this.compileErrors.map(formatError).join('\n')}`);
 }
 
 export class WorkspaceCompiler {
-  constructor(private workspace: Workspace, private envs: EnvsMain, private pubsub: PubsubMain) {
+  constructor(
+    private workspace: Workspace,
+    private envs: EnvsMain,
+    private pubsub: PubsubMain,
+    private aspectLoader: AspectLoaderMain
+  ) {
     if (this.workspace) {
       this.workspace.registerOnComponentChange(this.onComponentChange.bind(this));
       this.workspace.registerOnComponentAdd(this.onComponentChange.bind(this));
     }
+    if (this.aspectLoader) {
+      this.aspectLoader.registerOnAspectLoadErrorSlot(this.onAspectLoadFail.bind(this));
+    }
+  }
+
+  async onAspectLoadFail(err: Error & { code?: string }, id: ComponentID): Promise<boolean> {
+    if (err.code && err.code === 'MODULE_NOT_FOUND') {
+      await this.compileComponents([id.toString()], {}, true);
+      return true;
+    }
+    return false;
   }
 
   async onComponentChange(component: Component): Promise<SerializableResults> {
@@ -145,16 +158,15 @@ export class WorkspaceCompiler {
   }
 
   async compileComponents(
-    componentsIds: string[] | BitId[], // when empty, it compiles all
-    options: LegacyCompilerOptions,
+    componentsIds: string[] | BitId[], // when empty, it compiles new+modified (unless options.all is set),
+    options: CompileOptions,
     noThrow?: boolean
   ): Promise<BuildResult[]> {
     if (!this.workspace) throw new ConsumerNotFound();
-    const componentIds = await this.resolveIds(componentsIds);
-    // const { components } = await this.workspace.consumer.loadComponents(BitIds.fromArray(bitIds));
+    if (this.workspace.isLegacy) throw new Error('workspace-compiler should work for Harmony workspace only');
+    const componentIds = await this.getIdsToCompile(componentsIds, options.changed);
     const components = await this.workspace.getMany(componentIds);
 
-    const componentsWithLegacyCompilers: ConsumerComponent[] = [];
     const componentsAndNewCompilers: ComponentCompiler[] = [];
     components.forEach((c) => {
       const environment = this.envs.getEnv(c).env;
@@ -166,55 +178,22 @@ export class WorkspaceCompiler {
         componentsAndNewCompilers.push(
           new ComponentCompiler(this.pubsub, this.workspace, c.state._consumer, compilerInstance, compilerName)
         );
-      } else {
-        componentsWithLegacyCompilers.push(c.state._consumer);
       }
     });
-    let newCompilersResultOnWorkspace: BuildResult[] = [];
-    let oldCompilersResult: BuildResult[] = [];
-    if (componentsAndNewCompilers.length) {
-      newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
-        componentsAndNewCompilers,
-        (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
-      );
-    }
-    if (componentsWithLegacyCompilers.length) {
-      oldCompilersResult = await this.compileWithLegacyCompilers(componentsWithLegacyCompilers, options);
-    }
+    const newCompilersResultOnWorkspace = await mapSeries(componentsAndNewCompilers, (componentAndNewCompilers) =>
+      componentAndNewCompilers.compile(noThrow)
+    );
 
-    return [...newCompilersResultOnWorkspace, ...oldCompilersResult];
+    return newCompilersResultOnWorkspace;
   }
 
-  private async compileWithLegacyCompilers(
-    components: ConsumerComponent[],
-    options: LegacyCompilerOptions
-  ): Promise<BuildResult[]> {
-    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'using the legacy build mechanism');
-    const build = async (component: ConsumerComponent) => {
-      if (component.compiler) loader.start(`building component - ${component.id}`);
-      await component.build({
-        scope: this.workspace.consumer.scope,
-        consumer: this.workspace.consumer,
-        ...options,
-      });
-      const buildResults = await component.dists.writeDists(component, this.workspace.consumer, false);
-      if (component.compiler) loader.succeed();
-      return { component: component.id.toString(), buildResults };
-    };
-    const writeLinks = async (component: ConsumerComponent) =>
-      component.dists.writeDistsLinks(component, this.workspace.consumer);
-
-    const buildResults = await BluebirdPromise.mapSeries(components, build);
-    await BluebirdPromise.mapSeries(components, writeLinks);
-
-    return buildResults;
-  }
-
-  private async resolveIds(componentsIds: Array<string | BitId>): Promise<ComponentID[]> {
-    const ids: ComponentID[] = componentsIds.length
-      ? await Promise.all(componentsIds.map((compId) => this.workspace.resolveComponentId(compId)))
-      : await this.workspace.getAllComponentIds();
-
-    return ids;
+  private async getIdsToCompile(componentsIds: Array<string | BitId>, changed = false): Promise<ComponentID[]> {
+    if (componentsIds.length) {
+      return this.workspace.resolveMultipleComponentIds(componentsIds);
+    }
+    if (changed) {
+      return this.workspace.getNewAndModifiedIds();
+    }
+    return this.workspace.getAllComponentIds();
   }
 }

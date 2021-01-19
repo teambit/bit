@@ -29,6 +29,7 @@ import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
+import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -43,11 +44,18 @@ import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from '@teambit/linter';
 import { ChangelogAspect } from '@teambit/changelog';
+import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
 import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
+import { SignAspect } from '@teambit/sign';
+import WorkerAspect from '@teambit/worker';
+import { BitDevAspect } from '@teambit/bit-dev';
+import MultiCompilerAspect from '@teambit/multi-compiler';
+import MDXAspect from '@teambit/mdx';
+import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -59,12 +67,14 @@ export const manifestsMap = {
   [CompilerAspect.id]: CompilerAspect,
   [LinterAspect.id]: LinterAspect,
   [ComponentAspect.id]: ComponentAspect,
+  [MDXAspect.id]: MDXAspect,
   [PreviewAspect.id]: PreviewAspect,
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
+  [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
   [CreateAspect.id]: CreateAspect,
   [EnvsAspect.id]: EnvsAspect,
@@ -77,6 +87,8 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
+  [ReactNativeAspect.id]: ReactNativeAspect,
+  [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
   [TesterAspect.id]: TesterAspect,
@@ -97,9 +109,13 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  [CodeAspect.id]: CodeAspect,
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
+  [SignAspect.id]: SignAspect,
+  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
+  [BitDevAspect.id]: BitDevAspect,
 };
 
 export function isCoreAspect(id: string) {

@@ -625,7 +625,7 @@ describe('bit snap command', function () {
     let isTypeHead;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
 
@@ -669,7 +669,8 @@ describe('bit snap command', function () {
 
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
-        helper.command.importComponent('comp1');
+        // @todo: change to "helper.command.importComponent('comp1');". once the nested are working
+        helper.command.importComponent('*');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
         fs.outputFileSync(
@@ -680,6 +681,54 @@ describe('bit snap command', function () {
         // notice the "v2" (!)
         expect(result.trim()).to.equal('comp1 and comp2 and comp3 v2');
       });
+    });
+  });
+  describe('tag after tag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importComponent('comp1');
+    });
+    it('should fetch previous version files', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@0.0.1`);
+      const fileObj = comp1.files[0].file;
+      expect(() => helper.command.catObject(fileObj)).to.not.throw();
+    });
+  });
+  describe('merge tags', () => {
+    let authorFirstTag;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      authorFirstTag = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.getClonedLocalScope(authorFirstTag);
+      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.command.tagAllWithoutBuild('-s 0.0.3');
+      helper.command.importAllComponents();
+    });
+    it('should prevent exporting the component', () => {
+      const exportFunc = () => helper.command.exportAllComponents();
+      const ids = [{ id: `${helper.scopes.remote}/comp1` }];
+      const error = new MergeConflictOnRemote([], ids);
+      helper.general.expectToThrow(exportFunc, error);
+
+      // also it should not delete versions.
+      const compData = helper.command.catComponent('comp1');
+      const firstTag = compData.versions['0.0.1'];
+      expect(() => helper.command.catObject(firstTag)).to.not.throw();
     });
   });
 });

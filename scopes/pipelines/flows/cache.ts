@@ -77,7 +77,7 @@ async function safeGetLock(
     init: (somePath: string) => fs.writeFile(somePath, '{}', 'utf8'),
     timeout: 100,
   }
-) {
+): Promise<void> {
   let lockState: 'UNLOCK' | 'LOCK' | 'UNLOCKERROR' = 'UNLOCK';
   try {
     await lock(cachePath, { retries: 5, update: options.timeout });

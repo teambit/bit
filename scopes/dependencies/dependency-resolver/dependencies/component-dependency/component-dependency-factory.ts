@@ -1,4 +1,4 @@
-import Bluebird from 'bluebird';
+import mapSeries from 'p-map-series';
 import { ComponentMain, ComponentID } from '@teambit/component';
 import { compact } from 'ramda-adjunct';
 import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
@@ -49,20 +49,18 @@ export class ComponentDependencyFactory implements DependencyFactory {
   }
 
   async fromLegacyComponent(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const runtimeDeps = await Bluebird.mapSeries(legacyComponent.dependencies.get(), (dep) =>
+    const runtimeDeps = await mapSeries(legacyComponent.dependencies.get(), (dep) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'runtime')
     );
-    const devDeps = await Bluebird.mapSeries(legacyComponent.devDependencies.get(), (dep) =>
+    const devDeps = await mapSeries(legacyComponent.devDependencies.get(), (dep) =>
       this.transformLegacyComponentDepToSerializedDependency(dep, 'dev')
     );
-    const extensionDeps = await Bluebird.mapSeries(legacyComponent.extensions, (extension) =>
+    const extensionDeps = await mapSeries(legacyComponent.extensions, (extension) =>
       this.transformLegacyComponentExtensionToSerializedDependency(extension, 'dev')
     );
     const filteredExtensionDeps: SerializedComponentDependency[] = compact(extensionDeps);
     const serializedComponentDeps = [...runtimeDeps, ...devDeps, ...filteredExtensionDeps];
-    const componentDeps: ComponentDependency[] = await Bluebird.mapSeries(serializedComponentDeps, (dep) =>
-      this.parse(dep)
-    );
+    const componentDeps: ComponentDependency[] = await mapSeries(serializedComponentDeps, (dep) => this.parse(dep));
     const dependencyList = new DependencyList(componentDeps);
     return dependencyList;
   }
@@ -80,6 +78,7 @@ export class ComponentDependencyFactory implements DependencyFactory {
         packageName = componentIdToPackageName(depComponent.state._consumer);
       }
     }
+
     return {
       id: legacyDep.id.toString(),
       isExtension: false,

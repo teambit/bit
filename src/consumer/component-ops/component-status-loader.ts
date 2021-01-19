@@ -1,5 +1,4 @@
-import BluebirdPromise from 'bluebird';
-
+import mapSeries from 'p-map-series';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS, LATEST } from '../../constants';
@@ -29,7 +28,7 @@ export class ComponentStatusLoader {
 
   async getManyComponentsStatuses(ids: BitId[]): Promise<ComponentStatusResult[]> {
     const results: ComponentStatusResult[] = [];
-    await BluebirdPromise.mapSeries(ids, async (id) => {
+    await mapSeries(ids, async (id) => {
       const status = await this.getComponentStatusById(id);
       results.push({ id, status });
     });
@@ -83,6 +82,7 @@ export class ComponentStatusLoader {
       }
       throw err;
     }
+
     if (componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       status.nested = true;
       return status;

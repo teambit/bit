@@ -1,7 +1,6 @@
 import React, { useContext } from 'react';
-import { Separator } from '@teambit/documenter.ui.separator';
-import { ComponentCard } from '@teambit/explorer.ui.component-card';
-import { ComponentGrid } from '@teambit/explorer.ui.component-grid';
+import { ComponentCard } from '@teambit/ui.gallery.component-card';
+import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
 import { ScopeDetails } from '@teambit/ui.scope-details';
 import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
 import { EmptyScope } from '@teambit/ui.empty-scope';
@@ -22,10 +21,11 @@ export function ScopeOverview({ badgeSlot }: ScopeOverviewProps) {
     <div className={styles.container}>
       <ScopeDetails
         scopeName={scope.name}
+        icon={scope.icon}
         badgeSlot={badgeSlot} // visibility should be extended by a slot registered by bit.dev
         description={scope.description}
+        componentCount={scope.components.length}
       />
-      <Separator />
       <ComponentGrid>
         {components.map((component, index) => {
           return (

@@ -2,7 +2,7 @@ import { ComponentMap } from '@teambit/component';
 import {
   ComponentsManifestsMap,
   CreateFromComponentsOptions,
-  DependenciesObjectDefinition,
+  WorkspacePolicy,
   DependencyResolverMain,
   PackageManager,
   PackageManagerInstallOptions,
@@ -25,7 +25,7 @@ export class PnpmPackageManager implements PackageManager {
 
   async install(
     rootDir: string,
-    rootDepsObject: DependenciesObjectDefinition,
+    rootPolicy: WorkspacePolicy,
     componentDirectoryMap: ComponentMap<string>,
     installOptions: PackageManagerInstallOptions = {}
   ): Promise<void> {
@@ -44,7 +44,7 @@ export class PnpmPackageManager implements PackageManager {
     const workspaceManifest = await this.depResolver.getWorkspaceManifest(
       undefined,
       undefined,
-      rootDepsObject,
+      rootPolicy,
       rootDir,
       components,
       options
@@ -53,6 +53,7 @@ export class PnpmPackageManager implements PackageManager {
       includeDir: true,
       copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
     });
+
     const componentsManifests = this.computeComponentsManifests(
       componentDirectoryMap,
       workspaceManifest.componentsManifestsMap,
@@ -62,10 +63,15 @@ export class PnpmPackageManager implements PackageManager {
     );
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', componentsManifests);
-    this.logger.setStatusLine('installing dependencies');
+    this.logger.setStatusLine('installing dependencies using pnpm');
+    // turn off the logger because it interrupts the pnpm output
+    this.logger.off();
     const registries = await this.depResolver.getRegistries();
     await install(rootManifest, componentsManifests, storeDir, registries, this.logger);
-    this.logger.consoleSuccess('installing dependencies');
+    this.logger.on();
+    // Make a divider row to improve output
+    this.logger.console('-------------------------');
+    this.logger.consoleSuccess('installing dependencies using pnpm');
   }
 
   private computeComponentsManifests(

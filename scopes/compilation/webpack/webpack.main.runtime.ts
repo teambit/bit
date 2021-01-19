@@ -44,7 +44,7 @@ export class WebpackMain {
     return new WebpackDevServer(mergedConfig);
   }
 
-  getWebpackConfig(context: DevServerContext, config: Configuration): Configuration {
+  getWebpackConfig(context: DevServerContext, config: any): any {
     return merge(
       // TODO: create the type for the webpack config
       this.createConfig(context.entry, this.workspace.path, context.id, context.rootPath, context.publicPath) as any,
@@ -52,7 +52,7 @@ export class WebpackMain {
     );
   }
 
-  mergeConfig(target: Configuration, source: Configuration): Configuration {
+  mergeConfig(target: any, source: any): any {
     return merge(target, source);
   }
 

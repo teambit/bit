@@ -1,26 +1,37 @@
+/**
+ * leave the Winston for now to get the file-rotation we're missing from Pino and the "profile"
+ * functionality.
+ * also, Winston should start BEFORE Pino. otherwise, Pino starts creating the debug.log file first
+ * and it throws an error if the file doesn't exists on Docker/CI.
+ */
 import chalk from 'chalk';
-import * as path from 'path';
 import { serializeError } from 'serialize-error';
 import format from 'string-format';
-import winston, { LogEntry, Logger } from 'winston';
+import { Logger as PinoLogger, Level } from 'pino';
 import yn from 'yn';
-
 import { Analytics } from '../analytics/analytics';
 import { getSync } from '../api/consumer/lib/global-config';
 import defaultHandleError from '../cli/default-error-handler';
-import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS, DEBUG_LOG, GLOBAL_LOGS } from '../constants';
+import { CFG_LOG_JSON_FORMAT, CFG_LOG_LEVEL, CFG_NO_WARNINGS } from '../constants';
+import { getWinstonLogger } from './winston-logger';
+import { getPinoLogger } from './pino-logger';
+import { Profiler } from './profiler';
 
-// Store the extensionsLoggers to prevent create more than one logger for the same extension
-// in case the extension developer use api.logger more than once
-const extensionsLoggers = new Map();
+export { Level as LoggerLevel };
 
 const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
 
-const logLevel = getSync(CFG_LOG_LEVEL) || 'debug';
+const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
-// eslint-disable-next-line @typescript-eslint/interface-name-prefix
+const logLevel = getLogLevel();
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { winstonLogger, createExtensionLogger } = getWinstonLogger(logLevel, jsonFormat);
+
+const { pinoLogger, pinoLoggerConsole } = getPinoLogger(logLevel, jsonFormat);
+
 export interface IBitLogger {
-  silly(message: string, ...meta: any[]): void;
+  trace(message: string, ...meta: any[]): void;
 
   debug(message: string, ...meta: any[]): void;
 
@@ -32,46 +43,6 @@ export interface IBitLogger {
 
   console(msg: string): void;
 }
-
-export const baseFileTransportOpts = {
-  filename: DEBUG_LOG,
-  format: jsonFormat ? winston.format.combine(winston.format.timestamp(), winston.format.json()) : getFormat(),
-  level: logLevel,
-  maxsize: 10 * 1024 * 1024, // 10MB
-  maxFiles: 10,
-  // If true, log files will be rolled based on maxsize and maxfiles, but in ascending order.
-  // The filename will always have the most recent log lines. The larger the appended number, the older the log file
-  tailable: true,
-};
-
-function getMetadata(info) {
-  if (!Object.keys(info.metadata).length) return '';
-  if ((info.level === 'error' || info.level === '\u001b[31merror\u001b[39m') && info.metadata.stack) {
-    // this is probably an instance of Error, show the stack nicely and not serialized.
-    return `\n${info.metadata.stack}`;
-  }
-  try {
-    return JSON.stringify(info.metadata, null, 2);
-  } catch (err) {
-    return `logger error: logging failed to stringify the metadata Json. (error: ${err.message})`;
-  }
-}
-
-export function getFormat() {
-  return winston.format.combine(
-    winston.format.metadata(),
-    winston.format.colorize(),
-    winston.format.timestamp(),
-    winston.format.splat(), // does nothing?
-    winston.format.errors({ stack: true }),
-    winston.format.prettyPrint({ depth: 3, colorize: true }), // does nothing?
-    winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message} ${getMetadata(info)}`)
-  );
-}
-
-const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
-  filename: path.join(GLOBAL_LOGS, 'exceptions.log'),
-});
 
 /**
  * the method signatures of debug/info/error/etc are similar to Winston.logger.
@@ -85,7 +56,8 @@ const exceptionsFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
  * normally, no need to call logger.error(). once an error is thrown, it is already logged.
  */
 class BitLogger implements IBitLogger {
-  logger: Logger;
+  logger: PinoLogger;
+  profiler: Profiler;
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
@@ -93,16 +65,20 @@ class BitLogger implements IBitLogger {
    */
   shouldWriteToConsole = !process.argv.includes('--json') && !process.argv.includes('-j');
 
-  constructor(logger: Logger) {
+  constructor(logger: PinoLogger) {
     this.logger = logger;
-    logger.on('error', (err) => {
-      // eslint-disable-next-line no-console
-      console.log('got an error from the logger', err);
-    });
+    this.profiler = new Profiler();
   }
 
+  /**
+   * @deprecated use trace instead
+   */
   silly(message: string, ...meta: any[]) {
-    this.logger.silly(message, ...meta);
+    this.logger.trace(message, ...meta);
+  }
+
+  trace(message: string, ...meta: any[]) {
+    this.logger.trace(message, ...meta);
   }
 
   debug(message: string, ...meta: any[]) {
@@ -125,32 +101,51 @@ class BitLogger implements IBitLogger {
    * use this instead of calling `console.log()`, this way it won't break commands that don't
    * expect output during the execution.
    */
-  console(msg?: string | Error, level = 'info', color?: string) {
+  console(msg?: string | Error, level: Level = 'info', color?: string) {
     if (!msg) {
       return;
     }
-    let actualMessage = msg;
+    let messageStr: string;
     if (msg instanceof Error) {
       const { message } = defaultHandleError(msg);
-      actualMessage = message;
+      messageStr = message;
+    } else {
+      messageStr = msg;
     }
     if (!this.shouldWriteToConsole) {
-      this[level](actualMessage);
+      this[level](messageStr);
       return;
     }
     if (color) {
       try {
-        // @ts-ignore
-        actualMessage = chalk.keyword(color)(actualMessage);
+        messageStr = chalk.keyword(color)(messageStr);
       } catch (e) {
-        this.silly('a wrong color provided to logger.console method');
+        this.trace('a wrong color provided to logger.console method');
       }
     }
-    winston.loggers.get('consoleOnly')[level](actualMessage);
+    pinoLoggerConsole[level](messageStr);
   }
 
-  profile(id: string, meta?: LogEntry) {
-    this.logger.profile(id, meta);
+  /**
+   * useful to get an idea how long it takes from one point in the code to another point.
+   * to use it, choose an id and call `logger.profile(your-id)` before and after the code you want
+   * to measure. e.g.
+   * ```
+   * logger.profile('loadingComponent');
+   * consumer.loadComponent(id);
+   * logger.profile('loadingComponent');
+   * ```
+   * once done, the log writes the time it took to execute the code between the two calls.
+   * if this is a repeated code it also shows how long this code was executed in total.
+   * an example of the output:
+   * [2020-12-04 16:24:46.100 -0500] INFO	 (31641): loadingComponent: 14ms. (total repeating 14ms)
+   * [2020-12-04 16:24:46.110 -0500] INFO	 (31641): loadingComponent: 18ms. (total repeating 32ms)
+   */
+  profile(id: string, console?: boolean) {
+    const msg = this.profiler.profile(id);
+    if (!msg) return;
+    const fullMsg = `${id}: ${msg}`;
+    console ? this.console(fullMsg) : this.info(fullMsg);
   }
 
   async exitAfterFlush(code = 0, commandName: string) {
@@ -164,8 +159,11 @@ class BitLogger implements IBitLogger {
       level = 'error';
       msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
     }
+    // this should have been helpful to not miss any log message when using `sync: false` in the
+    // Pino opts, but sadly, it doesn't help.
+    // const finalLogger = pino.final(pinoLogger);
+    // finalLogger[level](msg);
     this.logger[level](msg);
-    await waitForLogger();
     process.exit(code);
   }
 
@@ -204,41 +202,14 @@ class BitLogger implements IBitLogger {
     this.logger[level](`${category}, ${messageWithData}`, extraData);
     addBreadCrumb(category, message, data, extraData);
   }
+
+  switchToConsoleLogger(level?: Level) {
+    this.logger = pinoLoggerConsole;
+    this.logger.level = level || 'debug';
+  }
 }
 
-const winstonLogger = winston.createLogger({
-  transports: [new winston.transports.File(baseFileTransportOpts)],
-  exceptionHandlers: [new winston.transports.File(exceptionsFileTransportOpts)],
-  exitOnError: false,
-});
-
-const logger = new BitLogger(winstonLogger);
-
-/**
- * Create a logger instance for extension
- * The extension name will be added as label so it will appear in the begining of each log line
- * The logger is cached for each extension so there is no problem to use getLogger few times for the same extension
- * @param {string} extensionName
- */
-export const createExtensionLogger = (extensionName: string) => {
-  // Getting logger from cache
-  const existingLogger = extensionsLoggers.get(extensionName);
-
-  if (existingLogger) {
-    return existingLogger;
-  }
-  const extensionFileTransportOpts = Object.assign({}, baseFileTransportOpts, {
-    filename: path.join(GLOBAL_LOGS, 'extensions.log'),
-    label: extensionName,
-  });
-  const extLogger = winston.createLogger({
-    transports: [new winston.transports.File(extensionFileTransportOpts)],
-    exceptionHandlers: [new winston.transports.File(extensionFileTransportOpts)],
-    exitOnError: false,
-  });
-  extensionsLoggers.set(extensionName, extLogger);
-  return extLogger;
-};
+const logger = new BitLogger(pinoLogger);
 
 export const printWarning = (msg: string) => {
   const cfgNoWarnings = getSync(CFG_NO_WARNINGS);
@@ -247,35 +218,6 @@ export const printWarning = (msg: string) => {
     console.log(chalk.yellow(`Warning: ${msg}`));
   }
 };
-
-/**
- * @credit dpraul from https://github.com/winstonjs/winston/issues/1250
- * it solves an issue when exiting the code explicitly and the log file is not written
- *
- * there are still two issues though.
- * 1. sometimes, an error is thrown "write after end". can be reproduced by running the
- * performance e2e-test on 3,000 components, 100 dependencies, on export.
- * 2. sometimes, it doesn't write all messages to the log. can be reproduced by the same method as
- * above, but even with 300 components and 10 dependencies.
- *
- * if you try to fix these issues, please make sure that after your fix, the following are working:
- * 1. the two cases should work.
- * 2. when error is thrown, it exists successfully with the correct error-code. (the standard
- * e2e-tests cover this multiple times).
- * 3. the ssh is working. (not covered by the e2e-tests). run a simple export to an ssh and make
- * sure it doesn't hang.
- *
- * for the record, the following was working for #1 and #2 but not for #3.
- * ```
- * const loggerDone = new Promise(resolve => logger.logger.on(code ? 'finish' : 'close', resolve));
- * if (code) logger.logger.end();
- * ```
- */
-async function waitForLogger() {
-  const loggerDone = new Promise((resolve) => logger.logger.on('finish', resolve));
-  logger.logger.end();
-  return loggerDone;
-}
 
 function addBreadCrumb(category: string, message: string, data: Record<string, any> = {}, extraData) {
   const hashedData = {};
@@ -296,35 +238,46 @@ if (process.env.BIT_LOG) {
   writeLogToScreen(process.env.BIT_LOG);
 }
 
-export function writeLogToScreen(levelOrPrefix = '') {
-  const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
-  const isLevel = levels.includes(levelOrPrefix);
-  const prefixes = levelOrPrefix.split(',');
-  const filterPrefix = winston.format((info) => {
-    if (isLevel) return info;
-    if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
-    return false;
-  });
-  logger.logger.add(
-    new winston.transports.Console({
-      level: isLevel ? levelOrPrefix : 'info',
-      format: winston.format.combine(
-        filterPrefix(),
-        winston.format.metadata(),
-        winston.format.errors({ stack: true }),
-        winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
-      ),
-    })
+function getLogLevel(): Level {
+  const defaultLevel = 'debug';
+  const level = getSync(CFG_LOG_LEVEL) || defaultLevel;
+  if (isLevel(level)) return level;
+  const levelsStr = LEVELS.join(', ');
+  // eslint-disable-next-line no-console
+  console.error(
+    `fatal: level "${level}" coming from ${CFG_LOG_LEVEL} configuration is invalid. permitted levels are: ${levelsStr}`
   );
+  return defaultLevel;
 }
 
-/**
- * useful when in the middle of the process, Bit needs to print to the console.
- * it's better than using `console.log` because, this way, it's possible to turn it on/off
- */
-winston.loggers.add('consoleOnly', {
-  format: winston.format.combine(winston.format.printf((info) => info.message)),
-  transports: [new winston.transports.Console({ level: 'silly' })],
-});
+function isLevel(maybeLevel: Level | string): maybeLevel is Level {
+  return LEVELS.includes(maybeLevel);
+}
+
+export function writeLogToScreen(levelOrPrefix = '') {
+  if (isLevel(levelOrPrefix)) {
+    logger.switchToConsoleLogger(levelOrPrefix);
+  }
+  // @todo: implement
+  // const prefixes = levelOrPrefix.split(',');
+  // const filterPrefix = winston.format((info) => {
+  //   if (isLevel) return info;
+  //   if (prefixes.some((prefix) => info.message.startsWith(prefix))) return info;
+  //   return false;
+  // });
+  // logger.logger.add(
+  //   new winston.transports.Console({
+  //     level: isLevel ? levelOrPrefix : 'info',
+  //     format: winston.format.combine(
+  //       filterPrefix(),
+  //       winston.format.metadata(),
+  //       winston.format.errors({ stack: true }),
+  //       winston.format.printf((info) => `${info.message} ${getMetadata(info)}`)
+  //     ),
+  //   })
+  // );
+}
+
+export { createExtensionLogger };
 
 export default logger;

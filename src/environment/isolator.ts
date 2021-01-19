@@ -1,5 +1,5 @@
 import execa from 'execa';
-import { mapSeries } from 'bluebird';
+import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -116,6 +116,7 @@ export default class Isolator {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
       isolated: true,
+      isLegacy: this.consumer?.isLegacy,
       applyPackageJsonTransformers: !this.consumer?.isLegacy,
     };
     this.componentWithDependencies = componentWithDependencies;

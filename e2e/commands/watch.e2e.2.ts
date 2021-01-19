@@ -109,7 +109,7 @@ describe('bit watch command', function () {
     before(() => {
       helper.command.resetFeatures();
       helper.command.setFeatures(HARMONY_FEATURE);
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -144,9 +144,8 @@ describe('bit watch command', function () {
           expect(distContent).to.have.string('hello');
         });
         it('should update the .bitmap file with the newly added file', () => {
-          const bitMap = helper.bitMap.read();
-          expect(bitMap.comp1.files).to.have.lengthOf(2);
-          const files = bitMap.comp1.files.map((f) => f.relativePath);
+          const files = helper.command.getComponentFiles('comp1');
+          expect(files).to.have.lengthOf(2);
           expect(files).to.include('index2.ts');
         });
       });

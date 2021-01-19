@@ -7,12 +7,18 @@ export function docsSchema(docs: DocsMain) {
     typeDefs: gql`
       extend type Component {
         description: String
+        labels: [String]
       }
     `,
     resolvers: {
       Component: {
         description: (component: Component) => {
           return docs.getDescription(component);
+        },
+
+        labels: (component: Component) => {
+          const doc = docs.getDoc(component);
+          return doc?.labels || [];
         },
       },
     },

@@ -1,7 +1,7 @@
-import { Author, Snap } from '@teambit/component';
+import { Author } from '@teambit/component';
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/ui.contributors';
-import { NavLink } from '@teambit/react-router';
+import { NavLink } from '@teambit/ui.react-router.nav-link';
 import { Labels } from '@teambit/ui.version-label';
 import classNames from 'classnames';
 import React, { HTMLAttributes } from 'react';
@@ -13,7 +13,7 @@ export type VersionBlockProps = {
   version: string;
   hash: string;
   timestamp: string;
-  parents: Snap[];
+  parents: string[];
   author?: Author;
   message: string;
   isLatest: boolean;

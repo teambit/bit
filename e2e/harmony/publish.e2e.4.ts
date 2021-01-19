@@ -1,26 +1,19 @@
 import chai, { expect } from 'chai';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import { generateRandomStr } from '../../src/utils';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
-
-const defaultOwner = 'ci';
 
 describe('publish functionality', function () {
   this.timeout(0);
   let helper: Helper;
   let npmCiRegistry: NpmCiRegistry;
   before(() => {
-    const helperOptions: HelperOptions = {
-      scopesOptions: {
-        remoteScopeWithDot: true,
-        remoteScopePrefix: defaultOwner,
-      },
-    };
-    helper = new Helper(helperOptions);
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
     helper.command.setFeatures(HARMONY_FEATURE);
   });
   after(() => {
@@ -32,15 +25,10 @@ describe('publish functionality', function () {
     let scopeWithoutOwner: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.addDefaultScope();
-      helper.bitJsonc.disablePreview();
-      const remoteScopeParts = helper.scopes.remote.split('.');
-      scopeWithoutOwner = remoteScopeParts[1];
-      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
+      helper.bitJsonc.setupDefault();
+      scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
+      appOutput = helper.fixtures.populateComponentsTS(3);
       npmCiRegistry = new NpmCiRegistry(helper);
-      helper.scopeHelper.reInitRemoteScope();
-      npmCiRegistry.setCiScopeInBitJson();
       npmCiRegistry.configureCiInPackageJsonHarmony();
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
@@ -62,15 +50,15 @@ describe('publish functionality', function () {
       describe('automatically by onPostPersistTag hook', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeBeforeTag);
-          helper.command.tagAndPersistAllHarmony();
+          helper.command.tagAllComponents();
         });
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.initNpm();
-          helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '0.0.1');
+          helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '0.0.1');
           helper.fs.outputFile(
             'app.js',
-            `const comp1 = require('@${defaultOwner}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
+            `const comp1 = require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
           );
           const output = helper.command.runCmd('node app.js');
           expect(output.trim()).to.be.equal(appOutput.trim());
@@ -88,10 +76,10 @@ describe('publish functionality', function () {
         it('should publish them successfully and be able to consume them by installing the packages', () => {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.npm.initNpm();
-          helper.npm.installNpmPackage(`@${defaultOwner}/${scopeWithoutOwner}.comp1`, '2.0.0');
+          helper.npm.installNpmPackage(`@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1`, '2.0.0');
           helper.fs.outputFile(
             'app.js',
-            `const comp1 = require('@${defaultOwner}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
+            `const comp1 = require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1').default;\nconsole.log(comp1())`
           );
           const output = helper.command.runCmd('node app.js');
           expect(output.trim()).to.be.equal(appOutput.trim());
@@ -153,8 +141,6 @@ describe('publish functionality', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       npmCiRegistry = new NpmCiRegistry(helper);
       helper.fixtures.populateComponentsTS(1);
-      helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-
       npmCiRegistry.configureCustomNameInPackageJsonHarmony('invalid/name/{name}');
     });
     it('builder should show the npm error about invalid name', () => {

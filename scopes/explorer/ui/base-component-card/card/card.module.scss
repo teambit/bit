@@ -1,0 +1,15 @@
+.componentCard {
+  position: relative;
+  border-color: var(--border-color, #ededed);
+  border-width: 1px;
+  border-style: solid;
+  width: 100%;
+  border-radius: 5px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 300ms ease-in-out;
+  &:hover {
+    border-color: var(--text-muted, #6c707c);
+    overflow: unset;
+  }
+}

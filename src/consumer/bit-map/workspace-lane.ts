@@ -4,8 +4,6 @@ import path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import { WORKSPACE_LANES_DIR } from '../../constants';
 
-type Lanes = { [laneName: string]: BitIds };
-
 /**
  * each lane holds hashes per component-id. this hash is the checked out version of the current user.
  * the data is not synced by git and available only to the current user.

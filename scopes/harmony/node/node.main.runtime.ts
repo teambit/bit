@@ -1,6 +1,8 @@
-import { DependenciesPolicy } from '@teambit/dependency-resolver';
+import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
+import { BuildTask } from '@teambit/builder';
+import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
@@ -32,7 +34,7 @@ export class NodeMain {
   /**
    * override the env build pipeline.
    */
-  overrideBuildPipe = this.react.overrideBuildPipe.bind(this.react);
+  overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
 
   /**
    * override the build ts config.
@@ -42,7 +44,9 @@ export class NodeMain {
   /**
    * override package json properties.
    */
-  overridePackageJsonProps = this.react.overridePackageJsonProps.bind(this.react);
+  overridePackageJsonProps: (props: PackageJsonProps) => EnvTransformer = this.react.overridePackageJsonProps.bind(
+    this.react
+  );
 
   /**
    * override the preview config in the env.
@@ -57,7 +61,7 @@ export class NodeMain {
   /**
    * override the dependency configuration of the component environment.
    */
-  overrideDependencies(dependencyPolicy: DependenciesPolicy) {
+  overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
       getDependencies: () => merge(dependencyPolicy, this.nodeEnv.getDependencies()),
     });

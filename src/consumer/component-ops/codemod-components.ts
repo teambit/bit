@@ -37,7 +37,7 @@ export async function changeCodeFromRelativeToModulePaths(
 }
 
 async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
-  consumer.componentLoader.clearComponentsCache();
+  consumer.clearCache();
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
   const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
@@ -60,7 +60,8 @@ function codemodComponent(consumer: Consumer, component: Component): { files: So
   if (!issues || !issues.relativeComponentsAuthored) return { files };
   const warnings: string[] = [];
   component.files.forEach((file: SourceFile) => {
-    const relativeInstances = issues.relativeComponentsAuthored[pathNormalizeToLinux(file.relative)];
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const relativeInstances = issues.relativeComponentsAuthored![pathNormalizeToLinux(file.relative)];
     if (!relativeInstances) return;
     // @ts-ignore
     const fileBefore = file.contents.toString() as string;

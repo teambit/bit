@@ -1,0 +1,35 @@
+.componentCardLink {
+  text-decoration: none;
+  color: var(--text-highlight);
+}
+.bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px 16px 16px;
+  > div {
+    display: flex;
+    align-items: center;
+    > span {
+      font-size: 14px;
+      margin-right: 10px;
+    }
+    .size {
+      font-size: 11px;
+      color: var(--text-muted, #6c707c);
+      vertical-align: middle;
+    }
+  }
+}
+
+.dot {
+  display: inline-block;
+  height: 14px;
+  width: 14px;
+  border-radius: 50%;
+  background-color: #ededed;
+}
+
+.img {
+  height: 14px;
+}

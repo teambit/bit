@@ -1,4 +1,4 @@
-import requestify from 'requestify';
+import fetch from 'node-fetch';
 
 import { BASE_WEB_DOMAIN } from '../src/constants';
 
@@ -19,12 +19,15 @@ export default class BitsrcTester {
 
   init() {
     if (!supportTestingOnBitsrc) throw new Error('supportTestingOnBitsrc is set to false');
-    return requestify
-      .post(`${apiBaseUrl}/user/login`, { username, password })
+    return fetch(`${apiBaseUrl}/user/login`, {
+      method: 'post',
+      body: JSON.stringify({ username, password }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
       .then((res) => {
-        return {
-          cocyclesSession: getSession(res.getHeader('set-cookie')),
-        };
+        return getSession(res.headers.raw()['set-cookie']);
       })
       .catch((err) => {
         console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
@@ -37,7 +40,7 @@ export default class BitsrcTester {
       }
       const cocyclesSessionPart = sessionPart.split(';');
       const cocyclesSession = cocyclesSessionPart.find((str) => str.includes('cocyclesSession'));
-      return cocyclesSession.replace('cocyclesSession=', '');
+      return cocyclesSession;
     }
   }
 
@@ -56,22 +59,41 @@ export default class BitsrcTester {
     if (debugMode) {
       console.log(`creating scope on bitsrc ${scope}`); // eslint-disable-line no-console
     }
-    return requestify
-      .request(`${apiBaseUrl}/scope/`, { method: 'POST', cookies: this.cookies, body: { scope, private: true } })
-      .then(() => scope)
-      .catch((res) => {
-        throw new Error(`Failed to create scope with error: ${res.getBody().message}`);
-      });
+    const headers = {
+      'Content-Type': 'application/json',
+      cookie: this.cookies,
+    };
+    return fetch(`${apiBaseUrl}/scope/`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ scope, private: true }),
+    }).then((res) => {
+      if (res.ok) {
+        // res.status >= 200 && res.status < 300
+        return scope;
+      }
+      throw new Error(`Failed to create scope with error ${res.statusText}`);
+    });
   }
 
   deleteScope(scope) {
     if (debugMode) {
       console.log(`deleting scope on bitsrc ${scope}`); // eslint-disable-line no-console
     }
-    return requestify
-      .request(`${apiBaseUrl}/scope/`, { method: 'DELETE', cookies: this.cookies, body: { scope } })
-      .catch((res) => {
-        throw new Error(`Failed to delete scope with error: ${res.getBody().message}`);
-      });
+    const headers = {
+      'Content-Type': 'application/json',
+      cookie: this.cookies,
+    };
+    return fetch(`${apiBaseUrl}/scope/`, {
+      method: 'DELETE',
+      headers,
+      body: JSON.stringify({ scope }),
+    }).then((res) => {
+      if (res.ok) {
+        // res.status >= 200 && res.status < 300
+        return res.json();
+      }
+      throw new Error(`Failed to delete scope with error ${res.statusText}`);
+    });
   }
 }

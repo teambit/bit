@@ -102,7 +102,7 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
     command.options.push([
       '',
       'log [level]',
-      'print log messages to the screen, options are: [silly, debug, info, warn, error], the default is info',
+      'print log messages to the screen, options are: [trace, debug, info, warn, error], the default is info',
     ]);
   }
 

@@ -17,6 +17,11 @@ import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
 
+export enum Verb {
+  WRITE = 'write',
+  READ = 'read',
+}
+
 export type GraphQLConfig = {
   port: number;
   subscriptionsPortRange: number[];
@@ -32,6 +37,7 @@ export type GraphQLServerOptions = {
   app?: Express;
   graphiql?: boolean;
   remoteSchemas?: GraphQLServer[];
+  subscriptionsPortRange?: number[];
 };
 
 export class GraphqlMain {
@@ -78,10 +84,24 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    app.use(cors());
+    // @ts-ignore todo: it's not clear what's the issue.
+    app.use(
+      cors({
+        origin(origin, callback) {
+          callback(null, true);
+        },
+        credentials: true,
+      })
+    );
+
     app.use(
       '/graphql',
-      graphqlHTTP((request) => ({
+      graphqlHTTP((request, res, params) => ({
+        customFormatErrorFn: (err) => {
+          this.logger.error('graphql got an error during running the following query:', params);
+          this.logger.error('graphql error ', err);
+          return err;
+        },
         schema,
         rootValue: request,
         graphiql,
@@ -89,7 +109,8 @@ export class GraphqlMain {
     );
 
     const server = createServer(app);
-    const subscriptionServerPort = await this.getPort(this.config.subscriptionsPortRange);
+    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
+    const subscriptionServerPort = await this.getPort(subscriptionsPort);
     const { port } = this.createSubscription(options, subscriptionServerPort);
     this.proxySubscription(server, port);
 
@@ -193,6 +214,11 @@ export class GraphqlMain {
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
         imports: moduleDeps,
+        context: (session) => {
+          return {
+            verb: session?.headers?.['x-verb'] || Verb.READ,
+          };
+        },
       });
 
       this.modules.set(extensionId, module);

@@ -7,7 +7,7 @@ module.exports = function html(title) {
       <title>${title}</title>
       <script>
       // Allow to use react dev-tools inside the examples
-      window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      try { window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__; } catch {}
       </script>
     </head>
     <body>

@@ -46,18 +46,32 @@ export class TesterTask implements BuildTask {
       release: true,
       specFiles: specFilesWithCapsule,
       rootPath: context.capsuleNetwork.capsulesRootDir,
+      patterns: specFilesWithCapsule,
     });
 
     // TODO: remove after fix AbstractVinyl on capsule
     // @ts-ignore
     const testsResults = await tester.test(testerContext);
+
     return {
       artifacts: [], // @ts-ignore
-      componentsResults: testsResults.components.map((componentTests) => ({
-        component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
-        metadata: { tests: componentTests.results },
-        errors: testsResults.errors ? testsResults.errors : [],
-      })),
+      componentsResults: testsResults.components.map((componentTests) => {
+        const componentErrors = componentTests.results?.testFiles.reduce((errors: string[], file) => {
+          if (file?.error?.failureMessage) {
+            errors.push(file.error.failureMessage);
+          }
+          file.tests.forEach((test) => {
+            if (test.error) errors.push(test.error);
+          });
+
+          return errors;
+        }, []);
+        return {
+          component: context.capsuleNetwork.graphCapsules.getCapsule(componentTests.componentId)?.component,
+          metadata: { tests: componentTests.results },
+          errors: componentErrors,
+        };
+      }),
     };
   }
 }

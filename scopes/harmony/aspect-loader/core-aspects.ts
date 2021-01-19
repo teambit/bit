@@ -31,11 +31,14 @@ export function getCoreAspectPackageName(id: string): string {
   return `@teambit/${aspectName}`;
 }
 
-export async function getAspectDef(aspectName: string, runtime: string) {
+export async function getAspectDef(aspectName: string, runtime?: string) {
   const dirPath = getAspectDistDir(aspectName);
 
   const files = await readdir(dirPath);
-  const runtimeFile = files.find((file) => file.includes(`.${runtime}.runtime.js`)) || null;
+  let runtimeFile;
+  if (runtime) {
+    runtimeFile = files.find((file) => file.includes(`.${runtime}.runtime.js`)) || null;
+  }
 
   return {
     id: aspectName,

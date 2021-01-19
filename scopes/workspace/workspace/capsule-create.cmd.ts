@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { CapsuleList } from '@teambit/isolator';
+import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import chalk from 'chalk';
 
 import { Workspace } from '.';
@@ -9,7 +9,6 @@ type CreateOpts = {
   alwaysNew?: boolean;
   id: string;
   installPackages?: boolean;
-  packageManager?: string;
 };
 
 export class CapsuleCreateCmd implements Command {
@@ -28,17 +27,23 @@ export class CapsuleCreateCmd implements Command {
     ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private isolator: IsolatorMain) {}
 
   async create(
     [componentIds]: [string[]],
-    { baseDir, alwaysNew = false, id, installPackages = false, packageManager = 'npm' }: CreateOpts
+    { baseDir, alwaysNew = false, id, installPackages = false }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
-    const capsuleOptions = { baseDir, installPackages, alwaysNew, name: id, packageManager };
-    const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
-    const capsules = isolatedEnvironment.graphCapsules;
+    const capsuleOptions: IsolateComponentsOptions = {
+      baseDir,
+      installOptions: { installPackages },
+      alwaysNew,
+      name: id,
+    };
+    const ids = await this.workspace.resolveMultipleComponentIds(componentIds);
+    const network = await this.isolator.isolateComponents(ids, capsuleOptions);
+    const capsules = network.graphCapsules;
     return capsules;
   }
 

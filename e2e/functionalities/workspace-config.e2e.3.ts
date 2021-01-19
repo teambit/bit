@@ -204,6 +204,7 @@ describe('workspace config', function () {
         helper.command.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
         helper.command.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
         helper.command.addComponent('bar-dir/bar.js', { i: 'bar' });
+        helper.command.link();
         scopeAfterAdding = helper.scopeHelper.cloneLocalScope();
         remoteScopeEmpty = helper.scopeHelper.cloneRemoteScope();
       });
@@ -303,7 +304,7 @@ describe('workspace config', function () {
             const overrides = {
               bar: {
                 dependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils.foo.foo1`]: '-',
                 },
               },
             };
@@ -328,7 +329,7 @@ describe('workspace config', function () {
             const overrides = {
               bar: {
                 dependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-',
+                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.utils.foo.foo1`]: '-',
                 },
               },
             };
@@ -350,6 +351,7 @@ describe('workspace config', function () {
         describe('when adding the component as devDependency without removing it', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeAfterAdding);
+            helper.command.link();
             helper.scopeHelper.reInitRemoteScope();
             helper.command.tagAllComponents();
             helper.command.exportAllComponents();
@@ -361,7 +363,7 @@ describe('workspace config', function () {
             const overrides = {
               bar: {
                 devDependencies: {
-                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '+',
+                  [`${OVERRIDE_COMPONENT_PREFIX}${helper.scopes.remote}.utils.foo.foo1`]: '+',
                 },
               },
             };
@@ -450,7 +452,7 @@ describe('workspace config', function () {
           const overrides = {
             bar: {
               dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}bit.utils/is-string`]: '-',
+                [`${OVERRIDE_COMPONENT_PREFIX}bit.utils.is-string`]: '-',
               },
             },
           };
@@ -465,7 +467,8 @@ describe('workspace config', function () {
         it('should show the component as ignored', () => {
           expect(showBar).to.have.property('manuallyRemovedDependencies');
           expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bit.utils/is-string');
+          // expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bit.utils/is-string');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('@bit/bit.utils.is-string');
         });
       });
       describe('ignoring an existing component required as a package', () => {
@@ -1669,7 +1672,7 @@ describe('workspace config', function () {
       it('bit tag should throw an error', () => {
         const output = helper.general.runWithTryCatch('bit tag -a');
         expect(output).to.have.string(
-          'unable to save Version object, "overrides.private" is a package.json field but is not compliant with npm requirements. Type for field private, was expected to be boolean, not string'
+          'unable to save Version object of "bar/foo@0.0.1", "overrides.private" is a package.json field but is not compliant with npm requirements. Type for field private, was expected to be boolean, not string'
         );
       });
     });

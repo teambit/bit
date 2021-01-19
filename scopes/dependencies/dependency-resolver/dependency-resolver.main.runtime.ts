@@ -6,13 +6,14 @@ import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
 import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
 import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { DetectorHook } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -23,69 +24,103 @@ import {
 } from 'bit-bin/dist/scope/component-ops/export-scope-components';
 import { Version as VersionModel } from 'bit-bin/dist/scope/models';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
-import { sortObject } from 'bit-bin/dist/utils';
 import fs from 'fs-extra';
 import { BitId } from 'bit-bin/dist/bit-id';
-import R, { forEachObjIndexed, flatten } from 'ramda';
+import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Registries, Registry } from './registry';
-import { KEY_NAME_BY_LIFECYCLE_TYPE, LIFECYCLE_TYPE_BY_KEY_NAME, ROOT_NAME } from './dependencies/constants';
-import { BitLinkType, DependencyInstaller } from './dependency-installer';
+import { ROOT_NAME } from './dependencies/constants';
+import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
 import { DependencyResolverAspect } from './dependency-resolver.aspect';
 import { DependencyVersionResolver } from './dependency-version-resolver';
+import { DependencyLinker, LinkingOptions } from './dependency-linker';
 import { PackageManagerNotFound } from './exceptions';
-import { CreateFromComponentsOptions, WorkspaceManifest, WorkspaceManifestFactory } from './manifest';
-import { PackageManager } from './package-manager';
 import {
-  DependenciesObjectDefinition,
-  DependenciesPolicy,
-  DependencyResolverVariantConfig,
-  DependencyResolverWorkspaceConfig,
-  DepObjectKeyName,
-  PolicyDep,
-  WorkspaceDependenciesPolicy,
-} from './types';
+  CreateFromComponentsOptions,
+  WorkspaceManifest,
+  WorkspaceManifestFactory,
+  ManifestDependenciesObject,
+} from './manifest';
+import {
+  WorkspacePolicyConfigObject,
+  VariantPolicyConfigObject,
+  WorkspacePolicy,
+  WorkspacePolicyFactory,
+  VariantPolicy,
+  VariantPolicyFactory,
+  WorkspacePolicyAddEntryOptions,
+  WorkspacePolicyEntry,
+  SerializedVariantPolicy,
+} from './policy';
+import { PackageManager } from './package-manager';
+
 import {
   SerializedDependency,
   DependencyListFactory,
-  DependencyLifecycleType,
   DependencyFactory,
   ComponentDependencyFactory,
   COMPONENT_DEP_TYPE,
   DependencyList,
 } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
+import { dependencyResolverSchema } from './dependency-resolver.graphql';
+import { DependencyDetector } from './dependency-detector';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
-export type PoliciesRegistry = SlotRegistry<DependenciesPolicy>;
+export interface DependencyResolverWorkspaceConfig {
+  policy: WorkspacePolicyConfigObject;
+  /**
+   * choose the package manager for Bit to use. you can choose between 'npm', 'yarn', 'pnpm'
+   * and 'librarian'. our recommendation is use 'librarian' which reduces package duplicates
+   * and totally removes the need of a 'node_modules' directory in your project.
+   */
+  packageManager: string;
+  /**
+   * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
+   * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
+   * an invalid state that can cause build failures or incompatible dependency versions.
+   * (For historical reasons, JavaScript package managers generally do not treat this invalid
+   * state as an error.)
+   *
+   * The default value is false to avoid legacy compatibility issues.
+   * It is strongly recommended to set strictPeerDependencies=true.
+   */
+  strictPeerDependencies: boolean;
+  /**
+   * map of extra arguments to pass to the configured package manager upon the installation
+   * of dependencies.
+   */
+  packageManagerArgs: string[];
+
+  /**
+   * regex to determine whether a file is a file meant for development purposes.
+   */
+  devFilePatterns: string[];
+}
+
+export interface DependencyResolverVariantConfig {
+  policy: VariantPolicyConfigObject;
+}
+
+export type PoliciesRegistry = SlotRegistry<VariantPolicyConfigObject>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
+export type PreInstallSlot = SlotRegistry<PreInstallSubscriberList>;
+export type PostInstallSlot = SlotRegistry<PostInstallSubscriberList>;
 
-export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<DependenciesPolicy>;
-
-export type BitExtendedLinkType = 'none' | BitLinkType;
-
-export type LinkingOptions = {
-  /**
-   * How to create the link from the root dir node modules to @teambit/bit -
-   * none - don't create it at all
-   * link - use symlink to the global installation dir
-   * install - use package manager to install it
-   */
-  bitLinkType?: BitExtendedLinkType;
-  /**
-   * Whether to create links in the root dir node modules to all core aspects
-   */
-  linkCoreAspects?: boolean;
-};
+export type MergeDependenciesFunc = (configuredExtensions: ExtensionDataList) => Promise<VariantPolicyConfigObject>;
 
 export type GetInstallerOptions = {
   rootDir?: string;
   packageManager?: string;
   cacheRootDirectory?: string;
+};
+
+export type GetLinkerOptions = {
+  rootDir?: string;
   linkingOptions?: LinkingOptions;
 };
 
@@ -93,26 +128,9 @@ export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
 };
 
-export type UpdatePolicyOptions = {
-  updateExisting: boolean;
-};
-
-export type UpdatedPackage = {
-  packageName: string;
-  newVersion: string;
-  newLifecycleType: DependencyLifecycleType;
-  oldVersion: string;
-  oldLifecycleType: DependencyLifecycleType;
-};
-
-export type UpdatePolicyResult = {
-  addedPackages: PolicyDep[];
-  existingPackages: PolicyDep[];
-  updatedPackages: UpdatedPackage[];
-};
-
 const defaultLinkingOptions: LinkingOptions = {
-  bitLinkType: 'link',
+  legacyLink: true,
+  linkTeambitBit: true,
   linkCoreAspects: true,
 };
 
@@ -144,9 +162,18 @@ export class DependencyResolverMain {
 
     private aspectLoader: AspectLoaderMain,
 
+    /**
+     * component aspect.
+     */
+    readonly componentAspect: ComponentMain,
+
     private packageManagerSlot: PackageManagerSlot,
 
-    private dependencyFactorySlot: DependencyFactorySlot
+    private dependencyFactorySlot: DependencyFactorySlot,
+
+    private preInstallSlot: PreInstallSlot,
+
+    private postInstallSlot: PostInstallSlot
   ) {}
 
   /**
@@ -158,6 +185,24 @@ export class DependencyResolverMain {
 
   registerDependencyFactories(factories: DependencyFactory[]) {
     this.dependencyFactorySlot.register(factories);
+  }
+
+  registerPreInstallSubscribers(subscribers: PreInstallSubscriberList) {
+    this.preInstallSlot.register(subscribers);
+  }
+
+  registerPostInstallSubscribers(subscribers: PreInstallSubscriberList) {
+    this.postInstallSlot.register(subscribers);
+  }
+
+  async getPolicy(component: Component): Promise<VariantPolicy> {
+    const entry = component.state.aspects.get(DependencyResolverAspect.id);
+    const factory = new VariantPolicyFactory();
+    if (!entry) {
+      return factory.getEmpty();
+    }
+    const serializedPolicy: SerializedVariantPolicy = get(entry, ['data', 'policy'], []);
+    return factory.parse(serializedPolicy);
   }
 
   /**
@@ -210,8 +255,18 @@ export class DependencyResolverMain {
     return deps;
   }
 
-  getWorkspacePolicy(): WorkspaceDependenciesPolicy {
-    return this.config.policy;
+  getWorkspacePolicy(): WorkspacePolicy {
+    const factory = new WorkspacePolicyFactory();
+    return factory.fromConfigObject(this.config.policy);
+  }
+
+  getWorkspacePolicyFromPackageJson(packageJson: Record<string, any>): WorkspacePolicy {
+    const factory = new WorkspacePolicyFactory();
+    return factory.fromPackageJson(packageJson);
+  }
+
+  mergeWorkspacePolices(polices: WorkspacePolicy[]): WorkspacePolicy {
+    return WorkspacePolicy.mergePolices(polices);
   }
 
   /**
@@ -222,7 +277,7 @@ export class DependencyResolverMain {
    *
    * @param {string} [name=ROOT_NAME]
    * @param {SemVer} [version=new SemVer('1.0.0')]
-   * @param {DependenciesObjectDefinition} dependencies
+   * @param {ManifestDependenciesObject} dependencies
    * @param {string} rootDir
    * @param {Component[]} components
    * @param {CreateFromComponentsOptions} [options={
@@ -235,7 +290,7 @@ export class DependencyResolverMain {
   async getWorkspaceManifest(
     name: string = ROOT_NAME,
     version: SemVer = new SemVer('1.0.0'),
-    rootDependencies: DependenciesObjectDefinition,
+    rootPolicy: WorkspacePolicy,
     rootDir: string,
     components: Component[],
     options: CreateFromComponentsOptions = defaultCreateFromComponentsOptions
@@ -246,7 +301,7 @@ export class DependencyResolverMain {
     const res = await workspaceManifestFactory.createFromComponents(
       name,
       version,
-      rootDependencies,
+      rootPolicy,
       rootDir,
       components,
       concreteOpts
@@ -271,9 +326,47 @@ export class DependencyResolverMain {
       this.logger.debug(`creating package manager cache dir at ${cacheRootDir}`);
       fs.ensureDirSync(cacheRootDir);
     }
+    const preInstallSubscribers = this.getPreInstallSubscribers();
+    const postInstallSubscribers = this.getPostInstallSubscribers();
+    // TODO: we should somehow pass the cache root dir to the package manager constructor
+    return new DependencyInstaller(
+      packageManager,
+      this.aspectLoader,
+      this.logger,
+      options.rootDir,
+      cacheRootDir,
+      preInstallSubscribers,
+      postInstallSubscribers
+    );
+  }
+
+  private getPreInstallSubscribers(): PreInstallSubscriberList {
+    return flatten(this.preInstallSlot.values());
+  }
+
+  private getPostInstallSubscribers(): PostInstallSubscriberList {
+    return flatten(this.postInstallSlot.values());
+  }
+
+  /**
+   * get a component dependency linker.
+   */
+  getLinker(options: GetLinkerOptions = {}) {
     const linkingOptions = Object.assign({}, defaultLinkingOptions, options?.linkingOptions || {});
     // TODO: we should somehow pass the cache root dir to the package manager constructor
-    return new DependencyInstaller(packageManager, this.aspectLoader, options.rootDir, cacheRootDir, linkingOptions);
+    return new DependencyLinker(
+      this,
+      this.aspectLoader,
+      this.componentAspect,
+      this.envs,
+      this.logger,
+      options.rootDir,
+      linkingOptions
+    );
+  }
+
+  getPackageManagerName() {
+    return this.config.packageManager;
   }
 
   getVersionResolver(options: GetVersionResolverOptions = {}) {
@@ -354,88 +447,26 @@ export class DependencyResolverMain {
     return this.config.packageManager;
   }
 
-  updateRootPolicy(newDeps: PolicyDep[], options?: UpdatePolicyOptions): WorkspaceDependenciesPolicy {
-    const rootPolicy = this.config.policy ?? {};
-    this.config.policy = rootPolicy;
-    this.updatePolicy(this.config.policy, newDeps, options);
+  addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
+    const workspacePolicy = this.getWorkspacePolicy();
+    entries.forEach((entry) => workspacePolicy.add(entry, options));
+    const workspacePolicyObject = workspacePolicy.toConfigObject();
+    this.config.policy = workspacePolicyObject;
     this.configAspect.setExtension(DependencyResolverAspect.id, this.config, {
       overrideExisting: true,
       ignoreVersion: true,
     });
-    return this.config.policy;
-  }
-
-  updatePolicy(
-    existingPolicy: DependenciesPolicy,
-    newDeps: PolicyDep[],
-    options?: UpdatePolicyOptions
-  ): UpdatePolicyResult {
-    const defaultOptions: UpdatePolicyOptions = {
-      updateExisting: false,
-    };
-    const calculatedOpts = Object.assign({}, defaultOptions, options);
-    const addedPackages: PolicyDep[] = [];
-    const existingPackages: PolicyDep[] = [];
-    const updatedPackages: UpdatedPackage[] = [];
-    newDeps.forEach((dep) => {
-      const policyDep = this.findInPolicy(existingPolicy, dep.packageName);
-      if (!policyDep) {
-        addedPackages.push(dep);
-        this.addDepToPolicy(existingPolicy, dep);
-      } else {
-        existingPackages.push(policyDep);
-        if (calculatedOpts?.updateExisting) {
-          const updatedPackage: UpdatedPackage = {
-            packageName: dep.packageName,
-            newVersion: dep.version,
-            newLifecycleType: dep.lifecycleType,
-            oldVersion: policyDep.version,
-            oldLifecycleType: policyDep.lifecycleType,
-          };
-          updatedPackages.push(updatedPackage);
-          const oldKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[policyDep.lifecycleType];
-          delete existingPolicy[oldKeyName][dep.packageName];
-          this.addDepToPolicy(existingPolicy, dep);
-        }
-      }
-    });
-    const result: UpdatePolicyResult = {
-      addedPackages,
-      existingPackages,
-      updatedPackages,
-    };
-    return result;
+    return workspacePolicy;
   }
 
   async persistConfig(workspaceDir?: string) {
     return this.configAspect.workspaceConfig?.write({ dir: workspaceDir });
   }
 
-  private addDepToPolicy(policy: DependenciesPolicy, dep: PolicyDep): void {
-    const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[dep.lifecycleType];
-    policy[keyName] = policy[keyName] || {};
-    policy[keyName][dep.packageName] = dep.version;
-    policy[keyName] = sortObject(policy[keyName]);
-  }
-
-  findInPolicy(policy: DependenciesPolicy, packageName: string): PolicyDep | undefined {
-    let result;
-    forEachObjIndexed((depObject, keyName: DepObjectKeyName) => {
-      if (!result && depObject[packageName]) {
-        result = {
-          packageName,
-          version: depObject[packageName],
-          lifecycleType: LIFECYCLE_TYPE_BY_KEY_NAME[keyName],
-        };
-      }
-    }, policy);
-    return result;
-  }
-
   /**
    * register new dependencies policies
    */
-  registerDependenciesPolicies(policy: DependenciesPolicy): void {
+  registerDependenciesPolicies(policy: VariantPolicyConfigObject): void {
     return this.policiesRegistry.register(policy);
   }
 
@@ -446,13 +477,17 @@ export class DependencyResolverMain {
    * 3. props defined by the user (they are the strongest one)
    * @param configuredExtensions
    */
-  async mergeDependencies(configuredExtensions: ExtensionDataList): Promise<DependenciesPolicy> {
-    let policiesFromEnv: DependenciesPolicy = {};
-    let policiesFromHooks: DependenciesPolicy = {};
-    let policiesFromConfig: DependenciesPolicy = {};
+  async mergeVariantPolicies(configuredExtensions: ExtensionDataList): Promise<VariantPolicy> {
+    const variantPolicyFactory = new VariantPolicyFactory();
+    let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
+    let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
+    let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
     const env = this.envs.getEnvFromExtensions(configuredExtensions).env;
     if (env.getDependencies && typeof env.getDependencies === 'function') {
-      policiesFromEnv = await env.getDependencies();
+      const policiesFromEnvConfig = await env.getDependencies();
+      if (policiesFromEnvConfig) {
+        policiesFromEnv = variantPolicyFactory.fromConfigObject(policiesFromEnvConfig);
+      }
     }
     const configuredIds = configuredExtensions.ids;
     const policiesTuples = this.policiesRegistry.toArray();
@@ -467,16 +502,16 @@ export class DependencyResolverMain {
       });
 
       if (policyTupleToApply && policyTupleToApply[1]) {
-        const currentPolicy = policyTupleToApply[1];
-        policiesFromHooks = mergePolices([policiesFromHooks, currentPolicy]);
+        const currentPolicy = variantPolicyFactory.fromConfigObject(policyTupleToApply[1]);
+        policiesFromSlots = VariantPolicy.mergePolices([policiesFromSlots, currentPolicy]);
       }
     });
     const currentExtension = configuredExtensions.findExtension(DependencyResolverAspect.id);
     const currentConfig = (currentExtension?.config as unknown) as DependencyResolverVariantConfig;
     if (currentConfig && currentConfig.policy) {
-      policiesFromConfig = currentConfig.policy;
+      policiesFromConfig = variantPolicyFactory.fromConfigObject(currentConfig.policy);
     }
-    const result = mergePolices([policiesFromEnv, policiesFromHooks, policiesFromConfig]);
+    const result = VariantPolicy.mergePolices([policiesFromEnv, policiesFromSlots, policiesFromConfig]);
     return result;
   }
 
@@ -515,14 +550,26 @@ export class DependencyResolverMain {
     return version;
   }
 
+  /**
+   * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
+   * mechanism to support new file extensions and types.
+   */
+  registerDetector(detector: DependencyDetector) {
+    DetectorHook.hooks.push(detector);
+    return this;
+  }
+
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
+  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect, GraphqlAspect];
 
   static slots = [
-    Slot.withType<DependenciesPolicy>(),
+    Slot.withType<VariantPolicyConfigObject>(),
     Slot.withType<PackageManager>(),
     Slot.withType<RegExp>(),
     Slot.withType<DependencyFactory>(),
+    Slot.withType<PreInstallSubscriberList>(),
+    Slot.withType<PostInstallSubscriberList>(),
+    Slot.withType<DependencyDetector>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
@@ -532,23 +579,26 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
-    devFilePatterns: ['*.spec.ts'],
+    devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql]: [
       EnvsMain,
       LoggerMain,
       Config,
       AspectLoaderMain,
-      ComponentMain
+      ComponentMain,
+      GraphqlMain
     ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot, dependencyFactorySlot]: [
+    [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
       PoliciesRegistry,
       PackageManagerSlot,
-      DependencyFactorySlot
+      DependencyFactorySlot,
+      PreInstallSlot,
+      PostInstallSlot
     ]
   ) {
     // const packageManager = new PackageManagerLegacy(config.packageManager, logger);
@@ -560,8 +610,11 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
+      componentAspect,
       packageManagerSlot,
-      dependencyFactorySlot
+      dependencyFactorySlot,
+      preInstallSlot,
+      postInstallSlot
     );
 
     componentAspect.registerShowFragments([
@@ -578,40 +631,29 @@ export class DependencyResolverMain {
     LegacyComponent.registerOnComponentOverridesLoading(
       DependencyResolverAspect.id,
       async (configuredExtensions: ExtensionDataList) => {
-        const policies = await dependencyResolver.mergeDependencies(configuredExtensions);
-        return transformPoliciesToLegacyDepsOverrides(policies);
+        const policy = await dependencyResolver.mergeVariantPolicies(configuredExtensions);
+        return policy.toLegacyDepsOverrides();
       }
     );
-    DependencyResolver.registerWorkspacePolicyGetter(dependencyResolver.getWorkspacePolicy.bind(dependencyResolver));
+    DependencyResolver.registerWorkspacePolicyGetter(() => {
+      const workspacePolicy = dependencyResolver.getWorkspacePolicy();
+      return workspacePolicy.toManifest();
+    });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
+
+    graphql.register(dependencyResolverSchema(dependencyResolver));
 
     return dependencyResolver;
   }
 
-  getEmptyDepsObject(): DependenciesObjectDefinition {
+  getEmptyDepsObject(): ManifestDependenciesObject {
     return {
       dependencies: {},
       devDependencies: {},
       peerDependencies: {},
     };
   }
-}
-
-function mergePolices(policies: DependenciesPolicy[]) {
-  const result: DependenciesPolicy = {
-    dependencies: {},
-    devDependencies: {},
-    peerDependencies: {},
-  };
-  return R.reduce(R.mergeDeepRight, result, policies);
-}
-
-function transformPoliciesToLegacyDepsOverrides(policy: DependenciesPolicy): DependenciesOverridesData {
-  // TODO: once we support DetailedDependencyPolicy in the object we should do here something
-  // TODO: it might be that we will have to return it as is, and handle it in the legacy
-  // TODO: since we don't have enough info about handle force here
-  return policy;
 }
 
 DependencyResolverAspect.addRuntime(DependencyResolverMain);

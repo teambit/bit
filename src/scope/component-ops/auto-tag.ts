@@ -1,11 +1,11 @@
 import graphlib, { Graph } from 'graphlib';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import Component from '../../consumer/component/consumer-component';
 import { Dependency } from '../../consumer/component/dependencies';
-import { isTag } from '../../version/version-parser';
 
 export async function getAutoTagPending(consumer: Consumer, changedComponents: BitIds): Promise<Component[]> {
   const autoTagInfo = await getAutoTagInfo(consumer, changedComponents);
@@ -84,14 +84,11 @@ function buildGraph(components: Component[]): Graph {
 }
 
 function potentialComponentsForAutoTagging(consumer: Consumer, modifiedComponents: BitIds): BitIds {
-  const candidateComponents = consumer.bitMap.getAuthoredAndImportedBitIds();
-  const modifiedComponentsWithoutVersions = modifiedComponents.map((modifiedComponent) =>
-    modifiedComponent.toStringWithoutVersion()
-  );
-  // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
-  // correct version
-  const idsWithoutModified = candidateComponents.filter(
-    (component) => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
+  const candidateComponentsIds = consumer.bitMap.getAuthoredAndImportedBitIds();
+  // if a modified component is in candidates array, remove it from the array as it will be already
+  // tagged with the correct version
+  const idsWithoutModified = candidateComponentsIds.filter(
+    (candidateId) => !modifiedComponents.hasWithoutVersion(candidateId)
   );
   return BitIds.fromArray(idsWithoutModified);
 }

@@ -32,7 +32,7 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
 export async function installIds(consumer: Consumer, ids: BitId[], verbose: boolean): Promise<LinksResult[]> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
-  const dirs: string[] = components.map((component) => component.componentMap.rootDir).filter((dir) => dir);
+  const dirs = components.map((component) => component.componentMap?.rootDir).filter((dir) => dir) as string[];
   if (dirs.length) await installPackages(consumer, dirs, verbose);
   Analytics.setExtraData('num_components', components.length);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);

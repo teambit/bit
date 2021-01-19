@@ -1,6 +1,7 @@
 import c from 'chalk';
 import rightpad from 'pad-right';
 import { table } from 'table';
+import { BitId } from '../../bit-id';
 
 import {
   componentToPrintableForDiff,
@@ -68,7 +69,7 @@ export default function paintComponent(
 
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable() : '';
-    const dependentsInfoTableStr = generateDependentsInfoTable();
+    const dependentsInfoTableStr = generateDependentsInfoTable(dependentsInfo, component.id);
     const dependenciesInfoTableStr = generateDependenciesInfoTable();
     return (
       componentTable +
@@ -205,28 +206,6 @@ export default function paintComponent(
     return dependenciesTable;
   }
 
-  function generateDependentsInfoTable() {
-    if (!dependentsInfo.length) {
-      return '';
-    }
-    const dependentsHeader = [];
-    dependentsHeader.push([
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Dependent ID'),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Depth'),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Immediate Dependency'),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Dependent type'),
-    ]);
-    const allDependenciesRows = getAllDependenciesRows(dependentsInfo);
-
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
-    return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
-  }
-
   function generateDependenciesInfoTable() {
     if (!dependenciesInfo.length) {
       return '';
@@ -243,26 +222,11 @@ export default function paintComponent(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       c.cyan('Dependency type'),
     ]);
-    const allDependenciesRows = getAllDependenciesRows(dependenciesInfo);
+    const allDependenciesRows = getAllDependenciesRows(dependenciesInfo, component.id);
 
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
     return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
-  }
-
-  function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[]): Array<string[]> {
-    return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
-      const row = [];
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      row.push(dependency.id.toString());
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      row.push(dependency.depth.toString());
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      row.push(dependency.parent === component.id.toString() ? '<self>' : dependency.parent);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      row.push(dependency.dependencyType);
-      return row;
-    });
   }
 
   function calculatePadRightLength(str: string, columnWidth: number): string {
@@ -270,4 +234,31 @@ export default function paintComponent(
     const padRightCount = Math.ceil(str.length / columnWidth) * columnWidth;
     return str.length > columnWidth ? rightpad(str, padRightCount, ' ') : rightpad(str, columnWidth, ' ');
   }
+}
+
+function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: BitId): Array<string[]> {
+  return dependenciesInfoArray.map((dependency: DependenciesInfo) => {
+    const row: string[] = [];
+    row.push(dependency.id.toString());
+    row.push(dependency.depth.toString());
+    row.push(dependency.parent === id.toString() ? '<self>' : dependency.parent);
+    row.push(dependency.dependencyType);
+    return row;
+  });
+}
+
+export function generateDependentsInfoTable(dependentsInfo: DependenciesInfo[], id: BitId) {
+  if (!dependentsInfo.length) {
+    return '';
+  }
+  const dependentsHeader: string[][] = [];
+  dependentsHeader.push([
+    c.cyan('Dependent ID'),
+    c.cyan('Depth'),
+    c.cyan('Immediate Dependency'),
+    c.cyan('Dependent type'),
+  ]);
+  const allDependenciesRows = getAllDependenciesRows(dependentsInfo, id);
+  const dependentsTable = table(dependentsHeader.concat(allDependenciesRows));
+  return `\n${c.bold('Dependents Details')}\n${dependentsTable}`;
 }

@@ -1,1 +1,1 @@
-export { depTypeToClass } from './dep-edge';
+export { depTypeToClass, depTypeToLabel } from './dep-edge';

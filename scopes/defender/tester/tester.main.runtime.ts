@@ -4,8 +4,12 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
-import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
+import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+
+import { ComponentsResults, CallbackFn } from './tester';
 import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
@@ -18,6 +22,12 @@ export type TesterExtensionConfig = {
   /**
    * regex of the text environment.
    */
+  testRegex: string;
+
+  /**
+   * determine whether to watch on start.
+   */
+  watchOnStart: boolean;
   patterns: string[];
 };
 
@@ -33,16 +43,37 @@ export type TesterOptions = {
   debug: boolean;
 
   /**
+   * start the tester in debug mode.
+   */
+  ui?: boolean;
+
+  /**
    * initiate the tester on given env.
    */
   env?: string;
+
+  callback?: CallbackFn;
 };
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect, DevFilesAspect];
+  static dependencies = [
+    CLIAspect,
+    EnvsAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    GraphqlAspect,
+    UIAspect,
+    DevFilesAspect,
+    BuilderAspect,
+  ];
 
   constructor(
+    /**
+     * graphql extension.
+     */
+    private graphql: GraphqlMain,
+
     /**
      * envs extension.
      */
@@ -63,8 +94,12 @@ export class TesterMain {
      */
     readonly task: TesterTask,
 
-    private devFiles: DevFilesMain
+    private devFiles: DevFilesMain,
+
+    private builder: BuilderMain
   ) {}
+
+  _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
 
   async test(components: Component[], opts?: TesterOptions) {
     const options = this.getOptions(opts);
@@ -79,13 +114,39 @@ export class TesterMain {
   /**
    * watch all components for changes and test upon each.
    */
-  watch() {}
+  async watch(components: Component[], opts?: TesterOptions) {
+    const options = this.getOptions(opts);
+    const envsRuntime = await this.envs.createEnvironment(components);
+    if (opts?.env) {
+      return envsRuntime.runEnv(opts.env, this.service, options);
+    }
 
-  getTestsResults(component: Component): TestsResult | undefined {
+    this.service.onTestRunComplete((results) => {
+      results.components.forEach((component) => {
+        this._testsResults[component.componentId.toString()] = component;
+      });
+    });
+    return envsRuntime.run(this.service, options);
+  }
+
+  async uiWatch() {
+    const components = await this.workspace.list();
+    return this.watch(components, { watch: true, debug: false, ui: true });
+  }
+
+  async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
-    // TODO: type is ok, talk to @david about it
-    // @ts-ignore
-    return entry?.data.tests;
+    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
+    const isModified = await component.isModified();
+    if ((entry || data) && !isModified) {
+      return { testsResults: data?.tests || entry?.data.tests, loading: false };
+    }
+    return this.getTestsResultsFromState(component);
+  }
+
+  private getTestsResultsFromState(component: Component) {
+    const tests = this._testsResults[component.id.toString()];
+    return { testsResults: tests?.results, loading: tests?.loading || false };
   }
 
   /**
@@ -108,31 +169,52 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: ['*.spec.*', '*.test.*'],
+    patterns: ['**/*.spec.*', '**/*.test.*'],
+
+    /**
+     * determine whether to watch on start.
+     */
+    watchOnStart: true,
   };
 
   static async provider(
-    [cli, envs, workspace, loggerAspect, graphql, devFiles]: [
+    [cli, envs, workspace, loggerAspect, graphql, ui, devFiles, builder]: [
       CLIMain,
       EnvsMain,
       Workspace,
       LoggerMain,
       GraphqlMain,
-      DevFilesMain
+      UiMain,
+      DevFilesMain,
+      BuilderMain
     ],
     config: TesterExtensionConfig
   ) {
     const logger = loggerAspect.createLogger(TesterAspect.id);
-    const testerService = new TesterService(workspace, config.patterns, logger, devFiles);
+    const testerService = new TesterService(workspace, config.patterns, logger, graphql.pubsub, devFiles);
     envs.registerService(testerService);
     devFiles.registerDevPattern(config.patterns);
-    const tester = new TesterMain(envs, workspace, testerService, new TesterTask(TesterAspect.id, devFiles), devFiles);
+    const tester = new TesterMain(
+      graphql,
+      envs,
+      workspace,
+      testerService,
+      new TesterTask(TesterAspect.id, devFiles),
+      devFiles,
+      builder
+    );
 
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
+      ui.registerOnStart(async () => {
+        if (!config.watchOnStart) return false;
+        return tester.uiWatch();
+      });
+
       cli.register(new TestCmd(tester, workspace, logger));
     }
-    graphql.register(testerSchema(tester));
+
+    graphql.register(testerSchema(tester, graphql));
 
     return tester;
   }

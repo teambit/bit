@@ -5,9 +5,11 @@
   justify-content: space-between;
   height: 40px;
   font-size: var(--p-xs);
+  transition: all 300ms ease-in-out;
+
   &:hover {
     background-color: var(--border-color, #ededed);
-    border-radius: 8px;
+    // border-radius: 8px;
     transition: background-color 300ms ease-in-out;
     .right {
       visibility: unset;
@@ -27,14 +29,16 @@
     align-items: center;
     background-color: var(--base-color);
     color: var(--bg-base);
-    border-radius: 8px;
-    transition: background-color 300ms ease-in-out;
+
+    // overrides
     &:hover {
       background-color: #5d4aec;
     }
+
     .box {
       background-color: var(--bg-color);
     }
+
     .right {
       visibility: unset;
       opacity: 1;

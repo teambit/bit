@@ -60,6 +60,15 @@ export function componentSchema(componentExtension: ComponentMain) {
         # head tag of the component.
         headTag: Tag
 
+        # list of all relative component paths.
+        fs: [String]
+
+        # relative path to the main file of the component
+        mainFile: String
+
+        # return specific file contents by relative file path.
+        getFile(path: String): String
+
         # latest version of the component.
         latest: String
 
@@ -80,6 +89,7 @@ export function componentSchema(componentExtension: ComponentMain) {
       }
 
       type ComponentHost {
+        id: ID!
         name: String!
 
         # load a component.
@@ -98,6 +108,17 @@ export function componentSchema(componentExtension: ComponentMain) {
       Component: {
         id: (component: Component) => component.id.toObject(),
         displayName: (component: Component) => component.displayName,
+        fs: (component: Component) => {
+          return component.state.filesystem.files.map((file) => file.relative);
+        },
+        getFile: (component: Component, { path }: { path: string }) => {
+          const maybeFile = component.state.filesystem.files.find((file) => file.relative === path);
+          if (!maybeFile) return undefined;
+          return maybeFile.contents.toString('utf-8');
+        },
+        mainFile: (component: Component) => {
+          return component.state._consumer.mainFile;
+        },
         headTag: (component: Component) => component.headTag?.toObject(),
         latest: (component: Component) => component.latest,
         tags: (component) => {
@@ -121,6 +142,9 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);
+        },
+        id: async (host: ComponentFactory) => {
+          return host.name;
         },
         name: async (host: ComponentFactory) => {
           return host.name;

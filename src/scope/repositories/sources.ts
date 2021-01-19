@@ -1,4 +1,5 @@
 import R from 'ramda';
+import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
@@ -9,9 +10,8 @@ import Consumer from '../../consumer/consumer';
 import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
-import { isHash } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
-import { getAllVersionHashes, getAllVersionHashesByVersionsObjects } from '../component-ops/traverse-versions';
+import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -209,8 +209,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }: {
     readonly consumerComponent: ConsumerComponent;
     consumer: Consumer;
-    force?: boolean;
-    verbose?: boolean;
   }): Promise<{ version: Version; files: any; dists: any; compilerFiles: any; testerFiles: any }> {
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl[]) => {
@@ -286,17 +284,44 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return { version, files, dists, compilerFiles, testerFiles };
   }
 
+  async consumerComponentToVersionHarmony(
+    consumerComponent: ConsumerComponent
+  ): Promise<{ version: Version; files: any }> {
+    const clonedComponent: ConsumerComponent = consumerComponent.clone();
+    const files = consumerComponent.files.map((file) => {
+      return {
+        name: file.basename,
+        relativePath: file.relative,
+        file: file.toSourceAsLinuxEOL(),
+        test: file.test,
+      };
+    });
+    const version: Version = Version.fromComponent({
+      component: clonedComponent,
+      files: files as any,
+    });
+    // $FlowFixMe it's ok to override the pendingVersion attribute
+    consumerComponent.pendingVersion = version as any; // helps to validate the version against the consumer-component
+
+    return { version, files };
+  }
+
   async enrichSource(consumerComponent: ConsumerComponent) {
     const objectRepo = this.objects();
+    const objects = await this.getObjectsToEnrichSource(consumerComponent);
+    objects.forEach((obj) => objectRepo.add(obj));
+    return consumerComponent;
+  }
+
+  async getObjectsToEnrichSource(consumerComponent: ConsumerComponent): Promise<BitObject[]> {
     const component = await this.findOrAddComponent(consumerComponent);
-    const version = await component.loadVersion(consumerComponent.id.version as string, objectRepo);
+    const version = await component.loadVersion(consumerComponent.id.version as string, this.objects());
     const artifactFiles = getArtifactsFiles(consumerComponent.extensions);
     const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
     version.extensions = consumerComponent.extensions;
-    artifacts.forEach((file) => objectRepo.add(file.source));
-    objectRepo.add(version);
-
-    return consumerComponent;
+    version.buildStatus = consumerComponent.buildStatus;
+    const artifactObjects = artifacts.map((file) => file.source);
+    return [version, ...artifactObjects];
   }
 
   async addSource({
@@ -346,6 +371,22 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (testerFiles) testerFiles.forEach((file) => objectRepo.add(file.file));
     if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
 
+    return component;
+  }
+
+  async addSourceFromScope(source: ConsumerComponent): Promise<ModelComponent> {
+    const objectRepo = this.objects();
+    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
+    const component = await this.findOrAddComponent(source);
+    const artifactFiles = getArtifactsFiles(source.extensions);
+    const artifacts = this.transformArtifactsFromVinylToSource(artifactFiles);
+    const { version, files } = await this.consumerComponentToVersionHarmony(source);
+    objectRepo.add(version);
+    if (!source.version) throw new Error(`addSource expects source.version to be set`);
+    component.addVersion(version, source.version, null, objectRepo);
+    objectRepo.add(component);
+    files.forEach((file) => objectRepo.add(file.file));
+    if (artifacts) artifacts.forEach((file) => objectRepo.add(file.source));
     return component;
   }
 
@@ -531,15 +572,21 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     // @ts-ignore
     // const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
     // don't throw if not found because on export not all objects are sent to the remote
-    const allHashes = await getAllVersionHashesByVersionsObjects(component, versionObjects, false);
+    const allVersionsInfo = await getAllVersionsInfo({ modelComponent: component, throws: false, versionObjects });
+    const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
       this.putModelComponent(component);
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
+    const hashesOfHistoryGraph = allVersionsInfo
+      .map((v) => (v.isPartOfHistory ? v.ref : null))
+      .filter((ref) => ref) as Ref[];
     const existingComponentHead = existingComponent.getHead();
     const existingHeadIsMissingInIncomingComponent =
-      component.hasHead() && existingComponentHead && !allHashes.find((ref) => ref.isEqual(existingComponentHead));
+      component.hasHead() &&
+      existingComponentHead &&
+      !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead));
     if (
       !local &&
       existingHeadIsMissingInIncomingComponent &&
@@ -563,7 +610,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       );
       const componentHead = component.getHead();
       if (componentHead) {
-        // when importing (local), do not override the head
+        // when importing (local), do not override the head unless the incoming is ahead.
         if (!local || !existingHeadIsMissingInIncomingComponent) {
           mergedComponent.setHead(componentHead);
         }

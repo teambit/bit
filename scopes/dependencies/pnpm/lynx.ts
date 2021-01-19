@@ -93,6 +93,18 @@ export async function install(
   const packagesToBuild: MutatedProject[] = []; // supi will use this to install the packages
   const workspacePackages = {}; // supi will use this to link packages to each other
 
+  // This will create local link by pnpm to a component exists in the ws.
+  // it will later deleted by the link process
+  // we keep it here to better support case like this:
+  // compA@1.0.0 uses compB@1.0.0
+  // I have compB@2.0.0 in my workspace
+  // now I install compA@1.0.0
+  // compA is hoisted to the root and install B@1.0.0 hoisted to the root as well
+  // now we will make link to B@2.0.0 and A will break
+  // with this we will have a link to the local B by pnpm so it will install B@1.0.0 inside A
+  // then when overriding the link, A will still works
+  // This is the rational behind not deleting this completely, but need further check that it really works
+
   // eslint-disable-next-line
   for (const rootDir in pathsToManifests) {
     const manifest = pathsToManifests[rootDir];

@@ -40,7 +40,6 @@ export class ObjectList {
   toJsonString(): string {
     return JSON.stringify(this.objects);
   }
-
   toTar(): NodeJS.ReadableStream {
     const pack = tarStream.pack();
     this.objects.forEach((obj) => {
@@ -87,5 +86,23 @@ export class ObjectList {
   async toBitObjects(): Promise<BitObjectList> {
     const bitObjects = await Promise.all(this.objects.map((object) => BitObject.parseObject(object.buffer)));
     return new BitObjectList(bitObjects);
+  }
+
+  static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
+    const objectItems = await Promise.all(
+      bitObjects.map(async (obj) => ({
+        ref: obj.hash(),
+        buffer: await obj.compress(),
+        type: obj.getType(),
+      }))
+    );
+    return new ObjectList(objectItems);
+  }
+
+  /**
+   * helps debugging
+   */
+  toConsoleLog() {
+    console.log(this.objects.map((o) => o.ref.hash).join('\n')); // eslint-disable-line no-console
   }
 }

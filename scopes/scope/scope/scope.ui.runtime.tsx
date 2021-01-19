@@ -1,23 +1,26 @@
 import type { ComponentUI, ComponentModel } from '@teambit/component';
 import { ComponentAspect } from '@teambit/component';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import ReactRouterAspect, { RouteSlot, ReactRouterUI } from '@teambit/react-router';
-import { SidebarAspect, SidebarUI } from '@teambit/sidebar';
+import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
+import { RouteSlot } from '@teambit/ui.react-router.slot-router';
+import { SidebarAspect, SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
 import { ComponentTreeNode } from '@teambit/component-tree';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ComponentType, ReactNode } from 'react';
 import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui.menu';
+import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeMenu } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
 import { ComponentsDrawer } from './components.drawer';
-import { ScopeBadge } from './scope-badge';
 
-export type ScopeBadgeSlot = SlotRegistry<ScopeBadge>;
+export type ScopeBadge = ComponentType;
+
+export type ScopeBadgeSlot = SlotRegistry<ScopeBadge[]>;
 
 export type ScopeContextType = ComponentType<{ scope: ScopeModel; children: ReactNode }>;
 
@@ -26,6 +29,10 @@ export type SidebarSlot = SlotRegistry<ComponentTreeNode>;
 export type ScopeOverview = ComponentType;
 
 export type ScopeOverviewSlot = SlotRegistry<ScopeOverview>;
+
+export type Corner = ComponentType;
+
+export type CornerSlot = SlotRegistry<Corner>;
 
 export class ScopeUI {
   constructor(
@@ -56,9 +63,19 @@ export class ScopeUI {
     private menuWidgetSlot: MenuWidgetSlot,
 
     /**
+     * sidebar link slot
+     */
+    private sidebarItemSlot: SidebarItemSlot,
+
+    /**
      * main dropdown item slot
      */
-    private menuItemSlot: MenuItemSlot
+    private menuItemSlot: MenuItemSlot,
+
+    /**
+     * corner slot
+     */
+    private cornerSlot: CornerSlot
   ) {}
 
   private setSidebarToggle: (updated: CommandHandler) => void = () => {};
@@ -66,8 +83,8 @@ export class ScopeUI {
   /**
    * register a new badge into the scope overview.
    */
-  registerBadge(badge: ScopeBadge) {
-    this.scopeBadgeSlot.register(badge);
+  registerBadge(...badges: ScopeBadge[]) {
+    this.scopeBadgeSlot.register(badges);
     return this;
   }
 
@@ -100,6 +117,10 @@ export class ScopeUI {
 
   registerMenuWidget(...menuItems: MenuWidget[]) {
     this.menuWidgetSlot.register(menuItems);
+  }
+
+  registerCorner(corner: Corner) {
+    this.cornerSlot.register(corner);
   }
 
   /**
@@ -147,6 +168,13 @@ export class ScopeUI {
     this.menuItemSlot.register(menuItems);
   };
 
+  /**
+   * register a sidebar link to the section above the drawers
+   */
+  registerSidebarLink = (...links: SidebarItem[]) => {
+    this.sidebarItemSlot.register(links);
+  };
+
   uiRoot(): UIRoot {
     this.sidebar.registerDrawer(new ComponentsDrawer(this.sidebarSlot));
     this.commandBarUI.addSearcher(this.componentSearcher);
@@ -167,11 +195,12 @@ export class ScopeUI {
             <Scope
               routeSlot={this.routeSlot}
               menuSlot={this.menuSlot}
-              sidebar={<this.sidebar.render />}
+              sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
               context={this.getContext()}
               onSidebarTogglerChange={this.setSidebarToggle}
+              cornerSlot={this.cornerSlot}
             />
           ),
         },
@@ -209,6 +238,8 @@ export class ScopeUI {
     Slot.withType<ScopeOverview>(),
     Slot.withType<MenuWidget[]>(),
     Slot.withType<MenuItemSlot>(),
+    Slot.withType<CornerSlot>(),
+    Slot.withType<SidebarItemSlot>(),
   ];
 
   static async provider(
@@ -220,13 +251,15 @@ export class ScopeUI {
       ReactRouterUI
     ],
     config,
-    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot, menuItemSlot]: [
+    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot, menuItemSlot, sidebarItemSlot, cornerSlot]: [
       RouteSlot,
       RouteSlot,
       SidebarSlot,
       ScopeBadgeSlot,
       MenuWidgetSlot,
-      MenuItemSlot
+      MenuItemSlot,
+      SidebarItemSlot,
+      CornerSlot
     ]
   ) {
     const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
@@ -240,11 +273,18 @@ export class ScopeUI {
       componentSearcher,
       scopeBadgeSlot,
       menuWidgetSlot,
-      menuItemSlot
+      sidebarItemSlot,
+      menuItemSlot,
+      cornerSlot
     );
     scopeUi.registerExplicitRoutes();
     scopeUi.registerMenuItem(scopeUi.menuItems);
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
+    scopeUi.registerSidebarLink(() => (
+      <MenuLinkItem exact href="/" icon="comps">
+        Overview
+      </MenuLinkItem>
+    ));
 
     return scopeUi;
   }

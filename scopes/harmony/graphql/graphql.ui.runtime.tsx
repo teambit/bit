@@ -1,23 +1,34 @@
+import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import ApolloClient, { ApolloQueryResult, QueryOptions } from 'apollo-client';
-import { ApolloLink } from 'apollo-link';
-import { onError } from 'apollo-link-error';
-import { HttpLink } from 'apollo-link-http';
-import { WebSocketLink } from 'apollo-link-ws';
-import React from 'react';
+import { isBrowser } from '@teambit/ui.is-browser';
+
+import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
+import type { NormalizedCacheObject, ApolloQueryResult, QueryOptions } from '@apollo/client';
+import { WebSocketLink } from '@apollo/client/link/ws';
+import { onError } from '@apollo/client/link/error';
+
+import crossFetch from 'cross-fetch';
+
 import { createLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphQLServer } from './graphql-server';
 import { GraphqlAspect } from './graphql.aspect';
+import { GraphqlRenderLifecycle } from './render-lifecycle';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
+/**
+ * Type of gql client.
+ * Used to abstract Apollo client, so consumers could import the type from graphql.ui, and not have to depend on @apollo/client directly
+ * */
+export type GraphQLClient<T> = ApolloClient<T>;
+
+type ClientOptions = { state?: NormalizedCacheObject };
 
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
 
-  private _client: ApolloClient<any> | undefined;
+  private _client?: GraphQLClient<any>;
 
   get client() {
     if (!this._client) {
@@ -27,14 +38,38 @@ export class GraphqlUI {
     return this._client;
   }
 
+  /** internal. Sets the global gql client */
+  _setClient(client: GraphQLClient<any>) {
+    this._client = client;
+  }
+
   async query(options: QueryOptions): Promise<ApolloQueryResult<any>> {
     return this.client.query(options);
   }
 
-  createClient(host: string = window.location.host) {
+  createClient(host: string = isBrowser ? window.location.host : '/', { state }: ClientOptions = {}) {
     const client = new ApolloClient({
       link: this.createApolloLink(host),
-      cache: this.getCache(),
+      cache: this.createCache({ state }),
+    });
+
+    return client;
+  }
+
+  createSsrClient({ serverUrl, cookie }: { serverUrl: string; cookie?: any }) {
+    const link = createHttpLink({
+      credentials: 'include',
+      uri: serverUrl,
+      headers: {
+        cookie,
+      },
+      fetch: crossFetch,
+    });
+
+    const client = new ApolloClient({
+      ssrMode: true,
+      link,
+      cache: this.createCache(),
     });
 
     return client;
@@ -46,6 +81,7 @@ export class GraphqlUI {
 
   private createApolloLink(host: string) {
     return ApolloLink.from([
+      // TODO - try to find a better way get hook errors, maybe using ApolloClient
       onError(({ graphQLErrors, networkError }) => {
         if (graphQLErrors)
           graphQLErrors.forEach(({ message, locations, path }) =>
@@ -59,11 +95,12 @@ export class GraphqlUI {
     ]);
   }
 
-  private getCache() {
-    return new InMemoryCache({
-      // @ts-ignore TODO: @uri please fix this: see https://stackoverflow.com/questions/48840223/apollo-duplicates-first-result-to-every-node-in-array-of-edges
-      dataIdFromObject: (o) => (o._id ? `${o.__typename}:${o._id}` : null),
-    });
+  private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
+    const cache = new InMemoryCache();
+
+    if (state) cache.restore(state);
+
+    return cache;
   }
 
   createLinks() {
@@ -80,6 +117,7 @@ export class GraphqlUI {
 
   private createHttpLink(host: string) {
     return new HttpLink({
+      credentials: 'include',
       uri: `${(window.location.protocol === 'https:' ? 'https://' : 'http://') + host}/graphql`,
     });
   }
@@ -96,16 +134,22 @@ export class GraphqlUI {
   /**
    * get the graphQL provider
    */
-  getProvider = ({ children }: { children: JSX.Element }) => {
-    return <GraphQLProvider client={this.client}>{children}</GraphQLProvider>;
+  getProvider = ({ client = this.client, children }: { client?: GraphQLClient<any>; children: ReactNode }) => {
+    return <GraphQLProvider client={client}>{children}</GraphQLProvider>;
   };
+
+  renderHooks = new GraphqlRenderLifecycle(this);
+
+  static dependencies = [];
 
   static runtime = UIRuntime;
 
   static slots = [Slot.withType<GraphQLServer>()];
 
   static async provider(deps, config, [serverSlot]: [GraphQLServerSlot]) {
-    return new GraphqlUI(serverSlot);
+    const graphqlUI = new GraphqlUI(serverSlot);
+
+    return graphqlUI;
   }
 }
 

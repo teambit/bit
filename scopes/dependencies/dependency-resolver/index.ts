@@ -1,17 +1,10 @@
+export { RawComponentState, ComponentsManifestsMap, RegistriesMap } from './types';
 export {
-  DependenciesObjectDefinition,
-  LegacyDependenciesDefinition,
-  SemverVersionRule,
-  DependencyResolverWorkspaceConfig,
-  DependencyResolverVariantConfig,
-  RawComponentState,
-  DependencyType,
-  ComponentsManifestsMap,
-  PolicyDep,
-  RegistriesMap,
-  DependenciesPolicy,
-} from './types';
-export { WorkspaceManifest, ComponentManifest, CreateFromComponentsOptions } from './manifest';
+  WorkspaceManifest,
+  ComponentManifest,
+  CreateFromComponentsOptions,
+  ManifestDependenciesObject,
+} from './manifest';
 export { Registries, Registry } from './registry';
 export {
   PackageManager,
@@ -19,7 +12,11 @@ export {
   PackageManagerResolveRemoteVersionOptions,
   ResolvedPackageVersion,
 } from './package-manager';
-export type { DependencyResolverMain, LinkingOptions } from './dependency-resolver.main.runtime';
+export type {
+  DependencyResolverMain,
+  DependencyResolverWorkspaceConfig,
+  DependencyResolverVariantConfig,
+} from './dependency-resolver.main.runtime';
 export { BIT_DEV_REGISTRY, NPM_REGISTRY } from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
@@ -27,7 +24,33 @@ export {
   DependencyList,
   DependencyFactory,
   SerializedDependency,
+  Dependency,
   BaseDependency,
   SemverVersion,
+  DependenciesManifest,
   ComponentDependency,
+  KEY_NAME_BY_LIFECYCLE_TYPE,
 } from './dependencies';
+export {
+  WorkspacePolicyEntry,
+  WorkspacePolicy,
+  VariantPolicyConfigObject,
+  Policy,
+  PolicySemver,
+  PolicyConfigKeys,
+  PolicyConfigKeysNames,
+  PolicyEntry,
+  VariantPolicy,
+  VariantPolicyFactory,
+  SerializedVariantPolicy,
+} from './policy';
+export {
+  CoreAspectLinkResult,
+  LinkDetail,
+  LinkResults,
+  LinkingOptions,
+  DepsLinkedToEnvResult,
+  NestedNMDepsLinksResult,
+} from './dependency-linker';
+export { InstallOptions } from './dependency-installer';
+export { DependencyDetector, FileContext } from './dependency-detector';

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { BuildTaskHelper } from './build-task';
 import { TasksQueue } from './tasks-queue';
 import { TaskResults } from './build-pipe';
@@ -18,10 +18,17 @@ export class TaskResultsList {
     return this.tasksResults.some((taskResult) => taskResult.componentsResults.find((c) => c.errors?.length));
   }
 
+  throwErrorsIfExist() {
+    const errorMessage = this.getErrorMessageFormatted();
+    if (errorMessage) {
+      throw new BitError(errorMessage);
+    }
+  }
+
   /**
    * group errors from all tasks and show them nicely to the user
    */
-  throwErrorsIfExist() {
+  public getErrorMessageFormatted(): string | null {
     const tasksErrors: string[] = [];
     let totalErrors = 0;
     this.tasksResults.forEach((taskResult) => {
@@ -40,16 +47,15 @@ export class TaskResultsList {
       totalErrors += taskErrors;
       tasksErrors.push(title + errorsStr + summery);
     });
-    if (tasksErrors.length) {
-      const title = `\nThe following errors were found while running the build pipeline\n`;
-      const errorsStr = tasksErrors.join('\n\n');
-      const totalTasks = this.tasksQueue.length;
-      const totalFailed = tasksErrors.length;
-      const totalSucceed = this.tasksResults.length - totalFailed;
-      const totalSkipped = totalTasks - this.tasksResults.length;
-      const summery = `\n\n\n✖ Total ${totalTasks} tasks. ${totalSucceed} succeeded. ${totalFailed} failed. ${totalSkipped} skipped. Total errors: ${totalErrors}.`;
-      throw new BitError(title + errorsStr + summery);
-    }
+    if (!tasksErrors.length) return null;
+    const title = `\nThe following errors were found while running the build pipeline\n`;
+    const errorsStr = tasksErrors.join('\n\n');
+    const totalTasks = this.tasksQueue.length;
+    const totalFailed = tasksErrors.length;
+    const totalSucceed = this.tasksResults.length - totalFailed;
+    const totalSkipped = totalTasks - this.tasksResults.length;
+    const summery = `\n\n\n✖ Total ${totalTasks} tasks. ${totalSucceed} succeeded. ${totalFailed} failed. ${totalSkipped} skipped. Total errors: ${totalErrors}.`;
+    return title + errorsStr + summery;
   }
 
   private aggregateTaskErrorsToOneString(componentResult: ComponentResult) {

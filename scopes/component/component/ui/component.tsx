@@ -1,4 +1,4 @@
-import { RouteSlot, SlotSubRouter } from '@teambit/react-router';
+import { RouteSlot, SlotSubRouter } from '@teambit/ui.react-router.slot-router';
 import React, { useEffect } from 'react';
 
 import styles from './component.module.scss';

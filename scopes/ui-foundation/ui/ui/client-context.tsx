@@ -1,18 +1,23 @@
+import React, { ReactNode } from 'react';
 import { Theme } from '@teambit/base-ui.theme.theme-provider';
 import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
-import React, { ReactNode } from 'react';
+import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
+import { Roboto } from '@teambit/base-ui.theme.fonts.roboto';
 
-import { LoaderContext, LoaderRibbon, useLoaderApi } from './global-loader';
+import { LoaderContext, useLoaderApi } from '@teambit/ui.global-loader';
+import styles from './client-context.module.scss';
 
 export function ClientContext({ children }: { children: ReactNode }) {
   const [loaderApi, isLoading] = useLoaderApi();
 
   return (
     <React.StrictMode>
+      {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
-        <EvaIconFont query="av92bs" />
+        <EvaIconFont query="mxd7i0" />
         <Theme>
-          <LoaderRibbon active={isLoading} />
+          <Roboto />
+          <LoaderRibbon active={isLoading} className={styles.loader} />
           {children}
         </Theme>
       </LoaderContext.Provider>

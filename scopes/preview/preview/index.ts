@@ -6,3 +6,4 @@ export type { PreviewPreview } from './preview.preview.runtime';
 export { PreviewDefinition } from './preview-definition';
 export { ComponentPreview } from './ui';
 export type { PreviewModule, ModuleFile } from './types/preview-module';
+export type { RenderingContext } from './rendering-context';
