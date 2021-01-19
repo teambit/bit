@@ -43,7 +43,7 @@ export default class Remotes extends Map<string, Remote> {
     thisScope: Scope,
     options: Partial<FETCH_OPTIONS> = {},
     context?: Record<string, any>
-  ): Promise<ObjectList> {
+  ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
       withoutDependencies: false,
@@ -51,15 +51,19 @@ export default class Remotes extends Map<string, Remote> {
       ...options,
     };
     logger.debug('[-] Running fetch on a remote, with the following options', fetchOptions);
+
+    const objectListPerRemote = {};
     const objectLists: ObjectList[] = await Promise.all(
       Object.keys(idsGroupedByScope).map(async (scopeName) => {
         const remote = await this.resolve(scopeName, thisScope);
-        return remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+        const objectList = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+        objectListPerRemote[scopeName] = objectList;
+        return objectList;
       })
     );
     logger.debug('[-] Returning from a remote');
 
-    return ObjectList.mergeMultipleInstances(objectLists);
+    return { objectList: ObjectList.mergeMultipleInstances(objectLists), objectListPerRemote };
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {

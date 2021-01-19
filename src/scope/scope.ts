@@ -432,16 +432,33 @@ export default class Scope {
     return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
   }
 
-  /**
-   * Writes components as objects into the 'objects' directory
-   */
-  async writeManyComponentsToModel(objectList: ObjectList, persist = true, ids: BitId[]): Promise<any> {
+  // @todo: optimize to remove duplications between multiple object-lists before writing to the fs.
+  // (for all objects other than components and lanes).
+  async writeManyObjectListToModel(
+    objectListPerRemote: { [remoteName: string]: ObjectList },
+    persist = true,
+    ids: BitId[]
+  ): Promise<BitId[]> {
+    const bitIds = await mapSeries(Object.keys(objectListPerRemote), (remote) =>
+      this.writeObjectListToModel(objectListPerRemote[remote], remote, persist, ids)
+    );
+    return BitIds.uniqFromArray(R.flatten(bitIds));
+  }
+
+  async writeObjectListToModel(
+    objectList: ObjectList,
+    remoteName: string,
+    persist = true,
+    ids: BitId[]
+  ): Promise<BitId[]> {
     logger.debugAndAddBreadCrumb('scope.writeManyComponentsToModel', `total objects ${objectList.objects.length}`);
     const bitObjectList = await objectList.toBitObjects();
     const components = bitObjectList.getComponents();
     const versions = bitObjectList.getVersions();
     const laneObjects = bitObjectList.getLanes();
-    await mapSeries(components, (component: ModelComponent) => this.mergeModelComponent(component, versions));
+    await mapSeries(components, (component: ModelComponent) =>
+      this.mergeModelComponent(component, versions, remoteName)
+    );
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
       laneObjects.map(async (lane) => {
@@ -460,10 +477,11 @@ export default class Scope {
     return nonLaneIds;
   }
 
-  async mergeModelComponent(component: ModelComponent, versions: Version[]) {
-    const { mergedComponent } = await this.sources.merge(component, versions);
-    if (mergedComponent.remoteHead) {
-      // when importing a component, save the remote head into the remote master ref file
+  async mergeModelComponent(component: ModelComponent, versions: Version[], remoteName: string) {
+    const { mergedComponent } = await this.sources.merge(component, versions, remoteName);
+    if (mergedComponent.remoteHead && remoteName === component.scope) {
+      // when importing a component, save the remote head into the remote master ref file.
+      // unless this component arrived as a cache of the dependent, which its head might be wrong
       await this.objects.remoteLanes.addEntry(
         RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
         mergedComponent.toBitId(),

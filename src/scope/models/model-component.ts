@@ -64,6 +64,7 @@ export type ComponentProps = {
   scope: string | null | undefined;
   name: string;
   versions?: Versions;
+  orphanedVersions?: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -88,6 +89,7 @@ export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;
   versions: Versions;
+  orphanedVersions?: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -106,6 +108,7 @@ export default class Component extends BitObject {
     this.scope = props.scope || null;
     this.name = props.name;
     this.versions = props.versions || {};
+    this.orphanedVersions = props.orphanedVersions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
@@ -465,6 +468,8 @@ export default class Component extends BitObject {
     if (this.local) componentObject.local = this.local;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
+    // @ts-ignore
+    if (!isEmpty(this.orphanedVersions)) componentObject.orphanedVersions = versions(this.orphanedVersions);
     const headStr = this.getHeadStr();
     // @ts-ignore
     if (headStr) componentObject.head = headStr;
@@ -753,6 +758,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
+      orphanedVersions: rawComponent.orphanedVersions,
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
     });

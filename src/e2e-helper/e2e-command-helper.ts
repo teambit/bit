@@ -277,6 +277,9 @@ export default class CommandHelper {
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
   }
+  import(value = '') {
+    return this.runCmd(`bit import ${value}`);
+  }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
   }

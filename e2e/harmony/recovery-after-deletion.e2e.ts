@@ -10,6 +10,11 @@ import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 chai.use(require('chai-fs'));
 
 /**
+ * different scenarios of when a component or a version is missing from the original scope.
+ * in all e2-tests below, we're dealing with 3 components.
+ * scopeA/comp1 -> scopeA/comp2 -> scopeB/comp3.
+ * for comp1 perspective, the comp2 is a direct-dep, comp3 is an indirect-dep.
+ *
  * @todo: test the following cases
  * 1. delete the package of the deleted component and make sure it's possible to import it (maybe with a flag of disable-npm-install)
  * 2. the entire scope of flattened-dependency is down. make sure that it fetches the component from cache of direct.
@@ -25,63 +30,10 @@ describe('recovery after component/scope deletion', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('scope of dependency is down', () => {
-    let depRemote;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.setupDefault();
-      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
-      depRemote = scopeName;
-      helper.scopeHelper.addRemoteScope(scopePath);
-      helper.fs.outputFile('dep/dep.js', `console.log("I am just dep");`);
-      helper.fs.outputFile('main/main.js', `require('@${scopeName}/dep');`);
-      helper.command.addComponent('dep');
-      helper.command.addComponent('main');
-      helper.bitJsonc.addToVariant('dep', 'defaultScope', depRemote);
-      helper.command.linkAndRewire();
-      helper.command.compile();
-      helper.command.tagAllComponents();
-      helper.command.export();
-
-      helper.scopeHelper.reInitLocalScopeHarmony();
-      helper.scopeHelper.addRemoteScope();
-      fs.removeSync(scopePath);
-      helper.command.importComponent('main');
-    });
-    it('should', () => {});
-  });
-  describe('scope of dependency of dependency is down', () => {
-    let depRemote;
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.setupDefault();
-      const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
-      depRemote = scopeName;
-      helper.scopeHelper.addRemoteScope(scopePath);
-      helper.fs.outputFile('dep/dep.js', `console.log("I am just dep");`);
-      helper.fs.outputFile('middle/middle.js', `require('@${scopeName}/dep');`);
-      helper.fs.outputFile('main/main.js', `require('@${helper.scopes.remote}/middle');`);
-      helper.command.addComponent('dep');
-      helper.command.addComponent('middle');
-      helper.command.addComponent('main');
-      helper.bitJsonc.addToVariant('dep', 'defaultScope', depRemote);
-      helper.command.linkAndRewire();
-      helper.command.compile();
-      helper.command.tagAllComponents();
-      helper.command.export();
-
-      helper.scopeHelper.reInitLocalScopeHarmony();
-      helper.scopeHelper.addRemoteScope();
-      fs.removeSync(scopePath);
-      helper.command.importComponent('main');
-    });
-    it('should', () => {});
-  });
-  (supportNpmCiRegistryTesting ? describe : describe.skip)('workspace with TS components', () => {
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('indirect-dep scope has re-initiated', () => {
     let scopeWithoutOwner: string;
     let secondRemotePath: string;
     let secondRemoteName: string;
-    let secondScopeBeforeUpdate: string;
     before(async () => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -183,6 +135,103 @@ describe('recovery after component/scope deletion', function () {
               'has the following dependencies missing'
             );
           });
+        });
+      });
+    });
+    // comp3 exits with 0.0.1 as cache of comp2/comp1 but in its origin it has only 0.0.2
+    describe('indirect dependency has re-created with a different version', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope(secondRemotePath);
+        helper.fs.outputFile('comp3/index.js', '');
+        helper.command.addComponent('comp3');
+        helper.bitJsonc.addToVariant('comp3', 'defaultScope', secondRemoteName);
+        helper.command.tagAllComponents('', '0.0.2');
+        helper.command.export();
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope(secondRemotePath);
+        npmCiRegistry.setResolver();
+      });
+      it('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
+        helper.command.importComponent('comp1');
+        const scope = helper.command.catScope(true);
+        const comp3 = scope.find((item) => item.name === 'comp3');
+        expect(comp3).to.not.be.undefined;
+        expect(comp3.versions).to.have.property('0.0.1');
+        expect(comp3.versions).to.not.have.property('0.0.2');
+      });
+      it('should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2', () => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope(secondRemotePath);
+        npmCiRegistry.setResolver();
+        helper.command.importComponent('comp2');
+        const scope = helper.command.catScope(true);
+        const comp3 = scope.find((item) => item.name === 'comp3');
+        expect(comp3).to.not.be.undefined;
+        expect(comp3.versions).to.have.property('0.0.1');
+        expect(comp3.versions).to.not.have.property('0.0.2');
+      });
+      describe('importing both: comp1 and comp3 to the same workspace', () => {
+        let beforeImportScope: string;
+        before(() => {
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope(secondRemotePath);
+          npmCiRegistry.setResolver();
+          beforeImportScope = helper.scopeHelper.cloneLocalScope();
+        });
+        function expectToImportProperly() {
+          it('comp3: should save 0.0.1 of in the orphanedVersions prop', () => {
+            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+            expect(comp3).to.have.property('orphanedVersions');
+            expect(comp3.orphanedVersions).to.have.property('0.0.1');
+          });
+          it('comp3: should not have 0.0.1 in the versions object, only 0.0.2', () => {
+            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+            expect(comp3.versions).not.to.have.property('0.0.1');
+            expect(comp3.versions).to.have.property('0.0.2');
+          });
+          it('comp3: the head should be the same as 0.0.2 not as 0.0.1', () => {
+            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+            const hash = comp3.versions['0.0.2'];
+            expect(comp3.head === hash);
+          });
+          it('comp3: the remote ref hash should be the same as 0.0.2 not as 0.0.1', () => {
+            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+            const hash = comp3.versions['0.0.2'];
+
+            const remoteRefs = helper.general.getRemoteRefPath(undefined, secondRemoteName);
+            expect(remoteRefs).to.be.a.file();
+            const remoteRefContent = fs.readJsonSync(remoteRefs);
+            expect(remoteRefContent).to.deep.include({
+              id: { scope: secondRemoteName, name: 'comp3' },
+              head: hash,
+            });
+          });
+        }
+        // before, it was throwing NoCommonSnap in this case.
+        describe('importing comp1 (comp3 as cached) first then comp3 (comp3 as direct)', () => {
+          before(() => {
+            helper.command.importComponent('comp1');
+            helper.command.import(`${secondRemoteName}/comp3`);
+          });
+          expectToImportProperly();
+        });
+        // before, it was merging 0.0.1 into the current comp3 incorrectly. (versions prop had both 0.0.1 and 0.0.2)
+        describe('importing comp3 (comp3 as direct) first then comp1 (comp3 as cached)', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            helper.command.import(`${secondRemoteName}/comp3`);
+            helper.command.importComponent('comp1');
+          });
+          expectToImportProperly();
+        });
+        // before, it was throwing NoCommonSnap in this case.
+        describe('importing comp3 (comp3 as direct) and comp1 (comp3 as cached) at the same time', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            helper.command.import(`${helper.scopes.remote}/comp1 ${secondRemoteName}/comp3`);
+          });
+          expectToImportProperly();
         });
       });
     });

@@ -77,10 +77,9 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
 }
 
 /**
+ * Note - this gets called from Harmony only.
  * returns one graph that includes all dependencies types. each edge has a label of the dependency
  * type. the nodes content is the Component object.
- * note that the graph only includes the dependencies of the gives ids, but not the dependents,
- * regardless the `direction` parameter.
  */
 export async function buildOneGraphForComponents(
   ids: BitId[],

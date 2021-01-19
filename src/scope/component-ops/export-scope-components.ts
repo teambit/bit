@@ -478,7 +478,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
   const mergeResults = await Promise.all(
     components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(component, versions, false);
+        const result = await scope.sources.merge(component, versions, undefined, false);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {

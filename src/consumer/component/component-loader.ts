@@ -267,7 +267,8 @@ export default class ComponentLoader {
     const remotes = await getScopeRemotes(this.consumer.scope);
     let objectList: ObjectList;
     try {
-      objectList = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.consumer.scope);
+      const fetchResults = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.consumer.scope);
+      objectList = fetchResults.objectList;
     } catch (err) {
       return null; // probably doesn't exist
     }
