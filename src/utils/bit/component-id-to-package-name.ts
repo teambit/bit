@@ -31,7 +31,7 @@ export default function componentIdToPackageName({
   const partsToJoin = scope ? [scope, name] : [name];
   let nameWithoutPrefix = partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR);
   if (!withPrefix) return nameWithoutPrefix;
-  const registryPrefix = bindingPrefix || npmRegistryName();
+  const registryPrefix = getRegistryPrefix(defaultScope, bindingPrefix);
   // Make sure we don't have the prefix also as part of the scope name
   // since prefixes are now taken from the owner name, and the scope name has the owner name as well.
   const registryPrefixWithDotWithoutAt = `${registryPrefix}.`.replace('@', '');
@@ -40,6 +40,14 @@ export default function componentIdToPackageName({
   }
 
   return `${registryPrefix}/${nameWithoutPrefix}`;
+}
+
+function getRegistryPrefix(defaultScope?: string | null, bindingPrefix?: string | null): string {
+  if (defaultScope) {
+    const owner = defaultScope.split(NODE_PATH_COMPONENT_SEPARATOR)[0];
+    return `@${owner}`;
+  }
+  return bindingPrefix || npmRegistryName();
 }
 
 function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList, isDependency?: boolean): null | string {
