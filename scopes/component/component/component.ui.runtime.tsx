@@ -96,7 +96,7 @@ export class ComponentUI {
     {
       category: 'general',
       title: 'Toggle component list',
-      keyChar: 's',
+      keyChar: 'alt+s',
       handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
     {

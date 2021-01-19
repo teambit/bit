@@ -183,7 +183,7 @@ export class ScopeUI {
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
       displayName: 'Toggle component list',
-      keybinding: 's',
+      keybinding: 'alt+s',
     });
     this.setSidebarToggle = setKeyBindHandler;
 
@@ -223,7 +223,7 @@ export class ScopeUI {
     {
       category: 'general',
       title: 'Toggle component list',
-      keyChar: 's',
+      keyChar: 'alt+s',
       handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
   ];
