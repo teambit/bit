@@ -1,5 +1,4 @@
 .mainDropdown {
-  z-index: 2;
   height: 100%;
   > div {
     height: 100%;
@@ -12,7 +11,6 @@
     right: -5px;
     font-size: var(--p-xs);
     border-radius: 6px;
-    z-index: 3;
     > div {
       margin-bottom: 8px;
     }
