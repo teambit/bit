@@ -180,7 +180,7 @@ function _stripArgs(args) {
     res.componentObjects = res.componentObjects.length;
   }
   if (res.objectList) {
-    res.objectList = res.objectList.count();
+    res.objectList = res.objectList.count ? res.objectList.count() : undefined;
   }
   return res;
 }

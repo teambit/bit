@@ -15,12 +15,17 @@ export function deprecationSchema(deprecation: DeprecationMain): Schema {
         isDeprecate: Boolean
       }
 
+      type DeprecationResult {
+        bitIds: [String]
+        missingComponents: [String]
+      }
+
       type Mutation {
         # deprecate components
-        deprecate(bitIds: [String!]!): Boolean
+        deprecate(bitIds: [String!]!): DeprecationResult
 
         # undo deprecate to components
-        undeprecate(bitIds: [String!]!): Boolean
+        undeprecate(bitIds: [String!]!): DeprecationResult
       }
     `,
     resolvers: {

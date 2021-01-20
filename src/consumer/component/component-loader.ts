@@ -81,7 +81,7 @@ export default class ComponentLoader {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
       id: id.toString(),
     });
-    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
     const idStr = idWithVersion.toString();
     if (!this._componentsCacheForCapsule[idStr]) {
       const { components } = await this.loadMany(BitIds.fromArray([id]));
@@ -109,7 +109,7 @@ export default class ComponentLoader {
       if (!(id instanceof BitId)) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
       const idStr = idWithVersion.toString();
       if (this._componentsCache[idStr]) {
         alreadyLoadedComponents.push(this._componentsCache[idStr]);
@@ -228,6 +228,18 @@ export default class ComponentLoader {
       } else if (!currentId.hasScope()) {
         // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
         newId = currentId.changeVersion(undefined);
+      }
+    }
+    if (!componentFromModel && !currentId.hasVersion() && component.defaultScope) {
+      // for Harmony, we know ahead the defaultScope, so even then .bitmap shows it as new and
+      // there is nothing in the scope, we can check if there is a component with the same
+      // default-scope in the objects
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(
+        currentId.changeScope(component.defaultScope)
+      );
+      if (modelComponent) {
+        newId = currentId.changeVersion(modelComponent.latest()).changeScope(modelComponent.scope);
+        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       }
     }
 

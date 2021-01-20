@@ -12,6 +12,7 @@ import { MiddlewareManifest } from './middleware-manifest';
 export type ExpressConfig = {
   port: number;
   namespace: string;
+  loggerIgnorePath: string[];
 };
 
 export type MiddlewareSlot = SlotRegistry<MiddlewareManifest[]>;
@@ -77,19 +78,17 @@ export class ExpressMain {
     ];
   }
 
-  createApp(expressApp?: Express): Express {
+  createApp(expressApp?: Express, options?: { disableBodyParser: true }): Express {
     const internalRoutes = this.createRootRoutes();
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
     const app = expressApp || express();
     app.use((req, res, next) => {
+      if (this.config.loggerIgnorePath.includes(req.url)) return next();
       this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
-      next();
+      return next();
     });
-    app.use(bodyParser.text({ limit: '5000mb' }));
-    app.use(bodyParser.json({ limit: '5000mb' }));
-    app.use(bodyParser.raw({ type: 'application/octet-stream', limit: '5000mb' }));
-    // app.use(cors());
+    if (!options?.disableBodyParser) this.bodyParser(app);
 
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
@@ -132,12 +131,19 @@ export class ExpressMain {
     return middlewares.map((middleware) => catchErrors(middleware));
   }
 
+  private bodyParser(app: Express) {
+    app.use(bodyParser.text({ limit: '5000mb' }));
+    app.use(bodyParser.json({ limit: '5000mb' }));
+    app.use(bodyParser.raw({ type: 'application/octet-stream', limit: '5000mb' }));
+  }
+
   static slots = [Slot.withType<Route[]>(), Slot.withType<MiddlewareManifest[]>()];
   static dependencies = [LoggerAspect];
 
   static defaultConfig = {
     port: 4001,
     namespace: 'api',
+    loggerIgnorePath: ['/api/_health'],
   };
 
   static async provider(

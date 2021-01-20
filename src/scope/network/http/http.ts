@@ -227,27 +227,32 @@ export class Http implements Network {
   async deprecateMany(ids: string[]): Promise<Record<string, any>[]> {
     const DEPRECATE_COMPONENTS = gql`
       mutation deprecate($bitIds: [String!]!) {
-        deprecate(bitIds: $bitIds)
+        deprecate(bitIds: $bitIds) {
+          bitIds
+          missingComponents
+        }
       }
     `;
-    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, 'write', {
-      ids,
+    const res = await this.graphClientRequest(DEPRECATE_COMPONENTS, Verb.WRITE, {
+      bitIds: ids,
     });
-
-    return res;
+    return res.deprecate;
   }
 
   async undeprecateMany(ids: string[]): Promise<Record<string, any>[]> {
     const UNDEPRECATE_COMPONENTS = gql`
       mutation deprecate($bitIds: [String!]!) {
-        undeprecate(bitIds: $bitIds)
+        undeprecate(bitIds: $bitIds) {
+          bitIds
+          missingComponents
+        }
       }
     `;
-    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.READ, {
-      ids,
+    const res = await this.graphClientRequest(UNDEPRECATE_COMPONENTS, Verb.WRITE, {
+      bitIds: ids,
     });
 
-    return res;
+    return res.undeprecate;
   }
 
   async log(id: BitId): Promise<ComponentLog[]> {

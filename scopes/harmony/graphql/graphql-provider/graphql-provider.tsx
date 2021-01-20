@@ -1,9 +1,9 @@
-import { ApolloProvider } from '@apollo/react-hooks';
-import ApolloClient from 'apollo-boost';
 import React, { ReactNode } from 'react';
+import { ApolloProvider } from '@apollo/client';
+import type { GraphQLClient } from '../graphql.ui.runtime';
 
 export type GraphQLProviderProps = {
-  client: ApolloClient<any>;
+  client: GraphQLClient<any>;
   children: ReactNode;
 };
 

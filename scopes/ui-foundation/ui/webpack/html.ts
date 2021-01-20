@@ -7,7 +7,11 @@ export default function html(title: string, withDevTools?: boolean) {
       <title>${title}</title>
       <script>
       // Allow to use react dev-tools inside the examples
-      ${withDevTools ? '' : 'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;'}
+      ${
+        withDevTools
+          ? ''
+          : 'try { window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__; } catch {}'
+      }
       </script>
     </head>
     <body>

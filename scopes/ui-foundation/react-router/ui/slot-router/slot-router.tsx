@@ -3,7 +3,7 @@ import React from 'react';
 import { Route, RouteProps, Switch, useRouteMatch } from 'react-router-dom';
 import { flatten } from 'lodash';
 import { extendPath } from '@teambit/ui.react-router.extend-path';
-import { NavLinkProps } from '@teambit/ui.react-router.nav-link';
+import { NavLinkProps } from '@teambit/ui.routing.nav-link';
 
 export type RouteSlot = SlotRegistry<RouteProps | RouteProps[]>;
 export type NavigationSlot = SlotRegistry<NavLinkProps>;

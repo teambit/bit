@@ -279,7 +279,8 @@ export default async function tagModelComponent({
     consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
-    await addFlattenedDependenciesToComponents(consumer, allComponentsToTag);
+    await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    emptyBuilderData(allComponentsToTag);
     addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
     validateDirManipulation(allComponentsToTag);
@@ -317,9 +318,16 @@ async function addComponentsToScope(consumer: Consumer, components: Component[],
   });
 }
 
-async function addFlattenedDependenciesToComponents(consumer: Consumer, components: Component[]) {
+function emptyBuilderData(components: Component[]) {
+  components.forEach((component) => {
+    const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
+    if (existingBuilder) existingBuilder.data = {};
+  });
+}
+
+export async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
   loader.start('importing missing dependencies...');
-  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(consumer.scope, components);
+  const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
   await flattenedDependenciesGetter.populateFlattenedDependencies();
   loader.stop();
 }

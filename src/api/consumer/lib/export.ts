@@ -67,7 +67,7 @@ export default (async function exportAction(params: {
   };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
   if (Scope.onPostExport) {
-    Scope.onPostExport(exported, exportedLanes).catch((err) => {
+    await Scope.onPostExport(exported, exportedLanes).catch((err) => {
       logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
     });
   }

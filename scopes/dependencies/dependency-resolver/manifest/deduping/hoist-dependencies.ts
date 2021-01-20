@@ -113,11 +113,12 @@ function addOneOccurrenceToRoot(
     return true;
   }
   const indexItem = indexItems[0];
-  if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
-    const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[indexItem.lifecycleType];
-    dedupedDependencies.rootDependencies[keyName][packageName] = indexItem.range;
-  }
+  // if (indexItem.lifecycleType !== PEER_DEP_LIFECYCLE_TYPE) {
+  const keyName = KEY_NAME_BY_LIFECYCLE_TYPE[indexItem.lifecycleType];
+  dedupedDependencies.rootDependencies[keyName][packageName] = indexItem.range;
   return false;
+  // }
+  // return true;
 }
 
 /**

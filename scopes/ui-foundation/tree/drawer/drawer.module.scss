@@ -1,0 +1,81 @@
+.drawer {
+  max-height: 100%;
+  overflow: hidden;
+  min-height: 32px;
+
+  display: flex;
+  flex-direction: column;
+}
+.drawerName {
+  font-size: var(--p-xxs);
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  font-weight: bold;
+  padding: 0 8px;
+
+  border-bottom: 1px solid #ededed;
+  transition: background-color 300ms, border-color 300ms ease-in-out;
+  &:hover {
+    border-color: var(--bg-topping-highlight);
+    background: var(--bg-topping-highlight);
+    .link {
+      visibility: visible;
+      opacity: 1;
+    }
+  }
+  .arrow {
+    display: inline-block;
+    font-size: var(--p-xs);
+    line-height: inherit;
+    transition: all 300ms;
+    margin-right: 10px;
+    color: var(--text-muted);
+    &.collapsed {
+      transform: rotate(-0.25turn);
+    }
+  }
+  > div {
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    margin-right: 5px;
+    > span {
+      &:last-child {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 8px;
+      }
+    }
+  }
+}
+
+// kept for now until we return the icons to drawer
+// .link {
+//   text-decoration: none;
+//   visibility: hidden;
+//   opacity: 0;
+//   transition: opacity 300ms, visibility 300ms ease-in-out;
+//   color: var(--text-muted);
+//   &:hover {
+//     color: var(--text-highlight);
+//   }
+// }
+
+.drawerContent {
+  flex: 1 1;
+  transition: max-height 300ms ease-in-out;
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  max-height: 0;
+  &.open {
+    max-height: 100%;
+  }
+}

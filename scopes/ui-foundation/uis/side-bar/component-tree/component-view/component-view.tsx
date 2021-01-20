@@ -1,5 +1,5 @@
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import { NavLink } from '@teambit/ui.react-router.nav-link';
+import { NavLink } from '@teambit/ui.routing.nav-link';
 import { EnvIcon } from '@teambit/ui.env-icon';
 import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
@@ -7,10 +7,10 @@ import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
 import ReactTooltip from 'react-tooltip';
 import { ComponentModel } from '@teambit/component';
-import { ComponentTreeContext } from '../component-tree-context';
-import { indentClass } from '../indent';
+import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
+import { indentClass } from '@teambit/base-ui.graph.tree.indent';
+import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '../payload-type';
-import { TreeNodeProps } from '../recursive-tree';
 import { getName } from '../utils/get-name';
 import styles from './component-view.module.scss';
 
@@ -22,7 +22,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const { node } = props;
   const component = node.payload;
 
-  const { onSelect } = useContext(ComponentTreeContext);
+  const { onSelect } = useContext(TreeContext);
 
   const handleClick = useCallback(
     (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
