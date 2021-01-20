@@ -4,7 +4,7 @@ import styles from './paragraph.module.scss';
 
 export function P({ children, ...rest }: HTMLAttributes<HTMLElement>) {
   return (
-    <Paragraph {...rest} size="xs" className={styles.mdxParagraph}>
+    <Paragraph {...rest} size="md" className={styles.mdxParagraph}>
       {children}
     </Paragraph>
   );

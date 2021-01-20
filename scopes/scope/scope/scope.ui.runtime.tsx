@@ -34,6 +34,10 @@ export type Corner = ComponentType;
 
 export type CornerSlot = SlotRegistry<Corner>;
 
+export type OverviewLine = ComponentType;
+
+export type OverviewLineSlot = SlotRegistry<OverviewLine[]>;
+
 export class ScopeUI {
   constructor(
     /**
@@ -75,7 +79,12 @@ export class ScopeUI {
     /**
      * corner slot
      */
-    private cornerSlot: CornerSlot
+    private cornerSlot: CornerSlot,
+
+    /**
+     * overview line slot to add new lines beneath the overview section
+     */
+    private overviewSlot: OverviewLineSlot
   ) {}
 
   private setSidebarToggle: (updated: CommandHandler) => void = () => {};
@@ -85,6 +94,14 @@ export class ScopeUI {
    */
   registerBadge(...badges: ScopeBadge[]) {
     this.scopeBadgeSlot.register(badges);
+    return this;
+  }
+
+  /**
+   * register a new line beneath the scope overview section.
+   */
+  registerOverviewLine(...lines: OverviewLine[]) {
+    this.overviewSlot.register(lines);
     return this;
   }
 
@@ -183,7 +200,7 @@ export class ScopeUI {
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
       displayName: 'Toggle component list',
-      keybinding: 's',
+      keybinding: 'alt+s',
     });
     this.setSidebarToggle = setKeyBindHandler;
 
@@ -198,6 +215,7 @@ export class ScopeUI {
               sidebar={<this.sidebar.render itemSlot={this.sidebarItemSlot} />}
               scopeUi={this}
               badgeSlot={this.scopeBadgeSlot}
+              overviewLineSlot={this.overviewSlot}
               context={this.getContext()}
               onSidebarTogglerChange={this.setSidebarToggle}
               cornerSlot={this.cornerSlot}
@@ -223,7 +241,7 @@ export class ScopeUI {
     {
       category: 'general',
       title: 'Toggle component list',
-      keyChar: 's',
+      keyChar: 'alt+s',
       handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
   ];
@@ -239,6 +257,7 @@ export class ScopeUI {
     Slot.withType<MenuWidget[]>(),
     Slot.withType<MenuItemSlot>(),
     Slot.withType<CornerSlot>(),
+    Slot.withType<OverviewLineSlot>(),
     Slot.withType<SidebarItemSlot>(),
   ];
 
@@ -251,7 +270,17 @@ export class ScopeUI {
       ReactRouterUI
     ],
     config,
-    [routeSlot, menuSlot, sidebarSlot, scopeBadgeSlot, menuWidgetSlot, menuItemSlot, sidebarItemSlot, cornerSlot]: [
+    [
+      routeSlot,
+      menuSlot,
+      sidebarSlot,
+      scopeBadgeSlot,
+      menuWidgetSlot,
+      menuItemSlot,
+      sidebarItemSlot,
+      cornerSlot,
+      overviewSlot,
+    ]: [
       RouteSlot,
       RouteSlot,
       SidebarSlot,
@@ -259,7 +288,8 @@ export class ScopeUI {
       MenuWidgetSlot,
       MenuItemSlot,
       SidebarItemSlot,
-      CornerSlot
+      CornerSlot,
+      OverviewLineSlot
     ]
   ) {
     const componentSearcher = new ComponentSearcher(reactRouterUI.navigateTo);
@@ -275,7 +305,8 @@ export class ScopeUI {
       menuWidgetSlot,
       sidebarItemSlot,
       menuItemSlot,
-      cornerSlot
+      cornerSlot,
+      overviewSlot
     );
     scopeUi.registerExplicitRoutes();
     scopeUi.registerMenuItem(scopeUi.menuItems);

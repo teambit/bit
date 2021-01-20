@@ -1,4 +1,4 @@
-import { NavLink, NavLinkProps } from '@teambit/ui.react-router.nav-link';
+import { NavLink, NavLinkProps } from '@teambit/ui.routing.nav-link';
 import { extendPath } from '@teambit/ui.react-router.extend-path';
 import classnames from 'classnames';
 import React from 'react';
