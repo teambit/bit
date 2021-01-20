@@ -18,6 +18,8 @@ chai.use(require('chai-fs'));
  * @todo: test the following cases
  * 1. delete the package of the deleted component and make sure it's possible to import it (maybe with a flag of disable-npm-install)
  * 2. the entire scope of flattened-dependency is down. make sure that it fetches the component from cache of direct.
+ * 3. make sure the orphanedVersions doesn't go to the origin remote.
+ * 4. make sure importing a version that was in orphanedVersions before doesn't save it twice. should be only in "versions".
  */
 describe('recovery after component/scope deletion', function () {
   this.timeout(0);
@@ -176,39 +178,39 @@ describe('recovery after component/scope deletion', function () {
         expect(comp3.versions).to.have.property('0.0.1');
         expect(comp3.versions).to.not.have.property('0.0.2');
       });
+      function expectToImportProperly() {
+        it('comp3: should save 0.0.1 of in the orphanedVersions prop', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+          expect(comp3).to.have.property('orphanedVersions');
+          expect(comp3.orphanedVersions).to.have.property('0.0.1');
+        });
+        it('comp3: should not have 0.0.1 in the versions object, only 0.0.2', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+          expect(comp3.versions).not.to.have.property('0.0.1');
+          expect(comp3.versions).to.have.property('0.0.2');
+        });
+        it('comp3: the head should be the same as 0.0.2 not as 0.0.1', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+          const hash = comp3.versions['0.0.2'];
+          expect(comp3.head === hash);
+        });
+        it('comp3: the remote ref hash should be the same as 0.0.2 not as 0.0.1', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
+          const hash = comp3.versions['0.0.2'];
+
+          const remoteRefs = helper.general.getRemoteRefPath(undefined, secondRemoteName);
+          expect(remoteRefs).to.be.a.file();
+          const remoteRefContent = fs.readJsonSync(remoteRefs);
+          expect(remoteRefContent).to.deep.include({
+            id: { scope: secondRemoteName, name: 'comp3' },
+            head: hash,
+          });
+        });
+      }
       describe('importing both: comp1 and comp3 to the same workspace', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
         });
-        function expectToImportProperly() {
-          it('comp3: should save 0.0.1 of in the orphanedVersions prop', () => {
-            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
-            expect(comp3).to.have.property('orphanedVersions');
-            expect(comp3.orphanedVersions).to.have.property('0.0.1');
-          });
-          it('comp3: should not have 0.0.1 in the versions object, only 0.0.2', () => {
-            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
-            expect(comp3.versions).not.to.have.property('0.0.1');
-            expect(comp3.versions).to.have.property('0.0.2');
-          });
-          it('comp3: the head should be the same as 0.0.2 not as 0.0.1', () => {
-            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
-            const hash = comp3.versions['0.0.2'];
-            expect(comp3.head === hash);
-          });
-          it('comp3: the remote ref hash should be the same as 0.0.2 not as 0.0.1', () => {
-            const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`);
-            const hash = comp3.versions['0.0.2'];
-
-            const remoteRefs = helper.general.getRemoteRefPath(undefined, secondRemoteName);
-            expect(remoteRefs).to.be.a.file();
-            const remoteRefContent = fs.readJsonSync(remoteRefs);
-            expect(remoteRefContent).to.deep.include({
-              id: { scope: secondRemoteName, name: 'comp3' },
-              head: hash,
-            });
-          });
-        }
         // before, it was throwing NoCommonSnap in this case.
         describe('importing comp1 (comp3 as cached) first then comp3 (comp3 as direct)', () => {
           before(() => {
@@ -235,16 +237,17 @@ describe('recovery after component/scope deletion', function () {
           expectToImportProperly();
         });
       });
-      // describe('importing both: comp1 and comp2 to the same workspace', () => {
-      //   // before, it was throwing ComponentNotFound error of comp3@0.0.1.
-      //   describe('importing comp2 (comp3 as cached) and then comp3', () => {
-      //     before(() => {
-      //       helper.scopeHelper.getClonedLocalScope(beforeImportScope);
-      //       helper.command.importComponent('comp2');
-      //       helper.command.import(`${secondRemoteName}/comp3`);
-      //     });
-      //   });
-      // });
+      describe.only('importing both: comp1 and comp2 to the same workspace', () => {
+        // before, it was throwing ComponentNotFound error of comp3@0.0.1.
+        describe('importing comp2 (comp3 as cached) and then comp3', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            helper.command.importComponent('comp2');
+            helper.command.import(`${secondRemoteName}/comp3`);
+          });
+          expectToImportProperly();
+        });
+      });
       // comp1 scope has the old comp3 with 0.0.1, now with a new export of comp1, it imports
       // comp3 again, which now has only 0.0.2 in its origin.
       // describe('the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1)', () => {

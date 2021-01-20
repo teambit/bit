@@ -98,7 +98,7 @@ export default class Graph extends GraphLib {
     await Promise.all(
       allModelComponents.map(async (modelComponent) => {
         const latestVersion = modelComponent.latest();
-        const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
+        const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
           if (onlyLatest && latestVersion !== versionNum) return;
           const id = modelComponent.toBitId().changeVersion(versionNum);
           const componentFromWorkspace = workspaceComponents

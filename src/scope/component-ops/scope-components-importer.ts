@@ -222,10 +222,8 @@ export default class ScopeComponentsImporter {
         return null;
       }
     }
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versionComp: ComponentVersion = component.toComponentVersion(id.version);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const source: string = id.scope;
+    const versionComp: ComponentVersion = component.toComponentVersion(id.version as string);
+    const source = id.scope as string;
     const version: Version = await versionComp.getVersion(this.scope.objects);
     if (!version) {
       logger.debug(
@@ -239,9 +237,8 @@ export default class ScopeComponentsImporter {
           `Version ${versionComp.version} of ${component.id().toString()} was not found in scope ${this.scope.name}`
         );
       }
-      return getScopeRemotes(this.scope).then((remotes) => {
-        return this._getExternal({ id, remotes, localFetch: false });
-      });
+      const remotes = await getScopeRemotes(this.scope);
+      return this._getExternal({ id, remotes, localFetch: false });
     }
 
     logger.debug(

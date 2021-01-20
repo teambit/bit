@@ -118,7 +118,6 @@ export default class Component extends BitObject {
     this.head = props.head;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get versionArray(): Ref[] {
     return Object.values(this.versions);
   }
@@ -127,7 +126,7 @@ export default class Component extends BitObject {
     if (isHash(version)) {
       return new Ref(version);
     }
-    return this.versions[version];
+    return this.versionsIncludeOrphaned[version];
   }
 
   getHeadStr(): string | null {
@@ -156,14 +155,30 @@ export default class Component extends BitObject {
     return versions.sort(semver.compare).reverse();
   }
 
-  async hasVersion(version: string, repo: Repository): Promise<boolean> {
-    if (isTag(version)) return this.hasTag(version);
+  listVersionsIncludeOrphaned(sort?: 'ASC' | 'DESC'): string[] {
+    const versions = Object.keys(this.versionsIncludeOrphaned);
+    if (!sort) return versions;
+    if (sort === 'ASC') {
+      return versions.sort(semver.compare);
+    }
+
+    return versions.sort(semver.compare).reverse();
+  }
+
+  async hasVersion(version: string, repo: Repository, includeOrphaned = true): Promise<boolean> {
+    if (isTag(version)) {
+      return includeOrphaned ? this.hasTagIncludeOrphaned(version) : this.hasTag(version);
+    }
     const allHashes = await getAllVersionHashes(this, repo, false);
     return allHashes.some((hash) => hash.toString() === version);
   }
 
   hasTag(version: string): boolean {
     return Boolean(this.versions[version]);
+  }
+
+  get versionsIncludeOrphaned(): Versions {
+    return { ...this.orphanedVersions, ...this.versions };
   }
 
   hasTagIncludeOrphaned(version: string): boolean {
@@ -361,7 +376,9 @@ export default class Component extends BitObject {
   }
 
   getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versions).find((versionRef) => this.versions[versionRef].isEqual(ref));
+    return Object.keys(this.versionsIncludeOrphaned).find((versionRef) =>
+      this.versionsIncludeOrphaned[versionRef].isEqual(ref)
+    );
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
@@ -550,7 +567,7 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
 
   toComponentVersion(versionStr: string): ComponentVersion {
     const versionParsed = versionParser(versionStr);
-    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
+    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     if (versionNum === VERSION_ZERO) {
       throw new Error(`the component ${this.id()} has no versions and the head is empty.
@@ -558,9 +575,9 @@ this is probably a component from another lane which should not be loaded in thi
 make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (isTag(versionNum) && !this.hasTag(versionNum!)) {
+    if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
       throw new ShowDoctorError(
-        `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersions().join(
+        `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersionsIncludeOrphaned().join(
           '\n'
         )}, versions array.`
       );
@@ -669,7 +686,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head
   refs(): Ref[] {
-    const versions = Object.values(this.versions);
+    const versions = Object.values(this.versionsIncludeOrphaned);
     if (this.head) versions.push(this.head);
     return versions;
   }
@@ -767,7 +784,7 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
-      orphanedVersions: rawComponent.orphanedVersions,
+      orphanedVersions: mapObject(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
     });
@@ -800,5 +817,12 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     if (hashDuplications.length) {
       throw new ValidationError(`${message}, the following hash(es) are duplicated ${hashDuplications.join(', ')}`);
     }
+    Object.keys(this.orphanedVersions).forEach((version) => {
+      if (this.versions[version]) {
+        throw new ValidationError(
+          `${message}, the version "${version}" exists in orphanedVersions but it exits also in "versions" prop`
+        );
+      }
+    });
   }
 }

@@ -80,14 +80,12 @@ export default class SourceRepository {
         return foundComponent;
       }
       // @ts-ignore
-      // if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
-      if (!foundComponent.hasTag(bitId.version)) {
+      if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return undefined;
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const versionHash = foundComponent.versions[bitId.version];
-      // const versionHash = foundComponent.versions[bitId.version] || foundComponent.orphanedVersions[bitId.version];
+      const versionHash = foundComponent.versionsIncludeOrphaned[bitId.version];
       const version = await this.objects().load(versionHash);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
@@ -403,22 +401,24 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const repo: Repository = this.objects();
     repo.add(component);
 
-    const isObjectShouldBeAdded = (obj) => {
-      // don't add a component if it's already exist locally with more versions
-      if (obj instanceof ModelComponent) {
-        const loaded = repo.loadSync(obj.hash(), false);
-        if (loaded) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
-            return false;
-          }
-        }
-      }
-      return true;
-    };
+    // const isObjectShouldBeAdded = (obj) => {
+    //   // don't add a component if it's already exist locally with more versions
+    //   if (obj instanceof ModelComponent) {
+    //     const loaded = repo.loadSync(obj.hash(), false);
+    //     if (loaded) {
+    //       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    //       if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
+    //         return false;
+    //       }
+    //     }
+    //   }
+    //   return true;
+    // };
 
     objects.forEach((obj) => {
-      if (isObjectShouldBeAdded(obj)) repo.add(obj);
+      // @todo: do we need this?
+      // if (isObjectShouldBeAdded(obj)) repo.add(obj);
+      repo.add(obj);
     });
     return component;
   }
