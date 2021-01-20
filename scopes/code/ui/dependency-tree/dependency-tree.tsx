@@ -1,9 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { DrawerUI } from '@teambit/ui.tree.drawer';
-import { Link } from '@teambit/ui.routing.link';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import { buildDependencyTree } from './build-depndency-tree';
-import styles from './dependency-tree.module.scss';
+import { DependencyDrawer } from './dependency-drawer/dependency-drawer'; // TODO - find out why this explodes when I direct to index.ts
 
 export function DependencyTree({ dependenciesArray }: { dependenciesArray?: DependencyType[] }) {
   if (!dependenciesArray) return null;
@@ -15,62 +13,26 @@ export function DependencyTree({ dependenciesArray }: { dependenciesArray?: Depe
   const [isDevDependenciesOpen, toggleDevDependencies] = useState(true);
   const [isPeerDependenciesOpen, togglePeerDependencies] = useState(true);
   return (
-    <div className={styles.dependencyDrawerContainer}>
-      <DrawerUI
+    <>
+      <DependencyDrawer
         isOpen={isDependenciesOpen}
         onToggle={() => toggleDependencies(!isDependenciesOpen)}
         name="dependencies"
-        className={styles.dependencyDrawer}
-      >
-        <DependencyList deps={dependencies} />
-      </DrawerUI>
-      <DrawerUI
+        dependencies={dependencies}
+      />
+
+      <DependencyDrawer
         isOpen={isDevDependenciesOpen}
         onToggle={() => toggleDevDependencies(!isDevDependenciesOpen)}
         name="devDependencies"
-        className={styles.dependencyDrawer}
-      >
-        <DependencyList deps={devDependencies} />
-      </DrawerUI>
-      <DrawerUI
+        dependencies={devDependencies}
+      />
+      <DependencyDrawer
         isOpen={isPeerDependenciesOpen}
         onToggle={() => togglePeerDependencies(!isPeerDependenciesOpen)}
         name="peerDependencies"
-        className={styles.dependencyDrawer}
-      >
-        <DependencyList deps={peerDependencies} />
-      </DrawerUI>
-    </div>
+        dependencies={peerDependencies}
+      />
+    </>
   );
-}
-
-// TODO - add type. currently causes issues
-function DependencyList({ deps }: { deps: any }) {
-  if (!deps) return null;
-  return deps.map((dep: DependencyType) => {
-    const dependency = getDependencyLink(dep);
-    return (
-      <div className={styles.depNode} key={dep.id}>
-        <Link className={styles.dependencyLink} external href={dependency.link}>
-          <span>{`${dependency.name}@${dep.version}`}</span>
-        </Link>
-      </div>
-    );
-  });
-}
-
-// remove this once the links are calculated in the dependency resolver
-function getDependencyLink(dep: DependencyType) {
-  const version = dep.version.replace('^', '').replace('~', '');
-  const linkPrefix = dep.__typename === 'ComponentDependency' ? 'https://bit.dev/' : 'https://npmjs.com/package/';
-  if (dep.packageName) {
-    return {
-      name: dep.packageName,
-      link: `${linkPrefix}${dep.id.replace('.', '/').split('@')[0]}?version=${version}`,
-    };
-  }
-  return {
-    name: dep.id,
-    link: `${linkPrefix}${dep.id}/v/${version}`,
-  };
 }
