@@ -3,7 +3,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import ReactTooltip from 'react-tooltip';
 import styles from './menu-widget-icon.module.scss';
 
-type MenuWidgetIconProps = {
+export type MenuWidgetIconProps = {
   tooltipContent: ReactNode;
   id: string;
   icon: string;
