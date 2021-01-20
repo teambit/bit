@@ -146,8 +146,11 @@ export default class Consumer {
     return this.componentLoader.componentFsCache;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  get bitmapIds(): BitIds {
+  get bitmapIdsFromCurrentLane(): BitIds {
+    return this.bitMap.getAllIdsAvailableOnLane();
+  }
+
+  get bitMapIdsFromAllLanes(): BitIds {
     return this.bitMap.getAllBitIdsFromAllLanes();
   }
 
