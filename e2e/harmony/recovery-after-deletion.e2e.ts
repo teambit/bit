@@ -62,6 +62,7 @@ describe('recovery after component/scope deletion', function () {
     });
     describe('indirect dependency is missing', () => {
       let scopeWithMissingDep: string;
+      let remoteScope: string;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope(secondRemotePath);
@@ -72,6 +73,10 @@ describe('recovery after component/scope deletion', function () {
         fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
         fs.removeSync(path.join(helper.scopes.localPath, '.bit/index.json'));
         scopeWithMissingDep = helper.scopeHelper.cloneLocalScope();
+        remoteScope = helper.scopeHelper.cloneRemoteScope();
+      });
+      after(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
       });
       it('an intermediate check. the scope should not have the comp3 object', () => {
         const scope = helper.command.catScope(true);
