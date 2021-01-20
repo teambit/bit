@@ -12,7 +12,7 @@ import { ScopeOverview } from './scope-overview';
 import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
 import { useScope } from './use-scope';
-import ScopeUI, { ScopeBadgeSlot, ScopeContextType } from '../scope.ui.runtime';
+import ScopeUI, { ScopeBadgeSlot, ScopeContextType, CornerSlot, OverviewLineSlot } from '../scope.ui.runtime';
 
 export type ScopeProps = {
   routeSlot: RouteSlot;
@@ -20,6 +20,8 @@ export type ScopeProps = {
   sidebar: JSX.Element;
   scopeUi: ScopeUI;
   badgeSlot: ScopeBadgeSlot;
+  overviewLineSlot: OverviewLineSlot;
+  cornerSlot: CornerSlot;
   context?: ScopeContextType;
   onSidebarTogglerChange: (callback: () => void) => void;
 };
@@ -33,6 +35,8 @@ export function Scope({
   sidebar,
   scopeUi,
   badgeSlot,
+  overviewLineSlot,
+  cornerSlot,
   context,
   onSidebarTogglerChange,
 }: ScopeProps) {
@@ -42,7 +46,7 @@ export function Scope({
   if (!scope) {
     return <FullLoader />;
   }
-
+  const CornerOverride = cornerSlot?.values()[0];
   scopeUi.setComponents(scope.components);
   const defaultContext = ({ children }) => <div>{children}</div>;
   const Context = context || defaultContext;
@@ -55,7 +59,10 @@ export function Scope({
         <div className={styles.scope}>
           <TopBar
             className={styles.topbar}
-            Corner={() => <Corner name={scope.name} className={styles.whiteCorner} />}
+            Corner={() => {
+              if (CornerOverride) return <CornerOverride />;
+              return <Corner name={scope.name} className={styles.whiteCorner} />;
+            }}
             menu={menuSlot}
           />
 
@@ -73,7 +80,7 @@ export function Scope({
             <Pane>
               <SlotRouter slot={routeSlot} />
               <Route exact path="/">
-                <ScopeOverview badgeSlot={badgeSlot} />
+                <ScopeOverview badgeSlot={badgeSlot} overviewSlot={overviewLineSlot} />
               </Route>
             </Pane>
           </SplitPane>

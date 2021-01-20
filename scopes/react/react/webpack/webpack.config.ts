@@ -25,8 +25,6 @@ const moduleFileExtensions = [
 ];
 
 export default function (
-  workspaceDir: string,
-  targets: string[],
   envId: string,
   fileMapPath: string
 ): WebpackConfigWithDevServer {
