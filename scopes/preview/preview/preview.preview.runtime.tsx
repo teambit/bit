@@ -37,7 +37,7 @@ export class PreviewPreview {
     window.addEventListener('click', (e) => {
       const timestamp = Date.now().toString();
       const clickEvent = Object.assign({}, e);
-      this.pubsub.pub(PreviewAspect.id, new ClickInsideAnIframeEvent(timestamp, clickEvent));
+      this.pubsub.pub(PreviewAspect.id, new ClickInsideAnIframeEvent(timestamp, clickEvent))?.catch(() => {});
     });
   }
 

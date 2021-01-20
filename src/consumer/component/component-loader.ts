@@ -81,7 +81,7 @@ export default class ComponentLoader {
     logger.debugAndAddBreadCrumb('ComponentLoader', 'loadForCapsule, id: {id}', {
       id: id.toString(),
     });
-    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
     const idStr = idWithVersion.toString();
     if (!this._componentsCacheForCapsule[idStr]) {
       const { components } = await this.loadMany(BitIds.fromArray([id]));
@@ -109,7 +109,7 @@ export default class ComponentLoader {
       if (!(id instanceof BitId)) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIdsFromCurrentLane, id);
       const idStr = idWithVersion.toString();
       if (this._componentsCache[idStr]) {
         alreadyLoadedComponents.push(this._componentsCache[idStr]);

@@ -1,4 +1,5 @@
 import React, { useContext } from 'react';
+import { flatten } from 'lodash';
 import { ComponentCard } from '@teambit/ui.gallery.component-card';
 import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
 import { ScopeDetails } from '@teambit/ui.scope-details';
@@ -7,16 +8,19 @@ import { EmptyScope } from '@teambit/ui.empty-scope';
 import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '../scope-context';
 import styles from './scope-overview.module.scss';
-import { ScopeBadgeSlot } from '../../scope.ui.runtime';
+import type { ScopeBadgeSlot, OverviewLineSlot } from '../../scope.ui.runtime';
 
 export type ScopeOverviewProps = {
   badgeSlot: ScopeBadgeSlot;
+  overviewSlot: OverviewLineSlot;
 };
 
-export function ScopeOverview({ badgeSlot }: ScopeOverviewProps) {
+export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
   const { components } = scope;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
+  const lines = flatten(overviewSlot.values());
+
   return (
     <div className={styles.container}>
       <ScopeDetails
@@ -26,6 +30,7 @@ export function ScopeOverview({ badgeSlot }: ScopeOverviewProps) {
         description={scope.description}
         componentCount={scope.components.length}
       />
+      {lines.length > 0 && lines.map((Line, index) => <Line key={index} />)}
       <ComponentGrid>
         {components.map((component, index) => {
           return (

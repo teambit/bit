@@ -62,7 +62,10 @@ export class WorkspaceComponentLoader {
     useCache = true,
     storeInCache = true
   ): Promise<Component> {
-    const bitIdWithVersion: BitId = getLatestVersionNumber(this.workspace.consumer.bitmapIds, componentId._legacy);
+    const bitIdWithVersion: BitId = getLatestVersionNumber(
+      this.workspace.consumer.bitmapIdsFromCurrentLane,
+      componentId._legacy
+    );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, forCapsule);
     if (fromCache && useCache) {
