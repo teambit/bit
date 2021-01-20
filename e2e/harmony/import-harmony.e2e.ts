@@ -32,7 +32,7 @@ describe('import functionality on Harmony', function () {
       before(async () => {
         await npmCiRegistry.init();
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
       });
       after(() => {
         npmCiRegistry.destroy();

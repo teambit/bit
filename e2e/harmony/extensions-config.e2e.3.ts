@@ -138,7 +138,7 @@ describe('harmony extension config', function () {
           });
           describe('exporting extension and component together', () => {
             before(() => {
-              helper.command.exportAllComponents();
+              helper.command.export();
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -174,7 +174,7 @@ describe('harmony extension config', function () {
           helper.command.exportComponent('dummy-extension');
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
           helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');

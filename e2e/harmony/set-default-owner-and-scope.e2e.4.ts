@@ -51,7 +51,7 @@ describe('set default owner and scope', function () {
     describe('after export', () => {
       let exportOutput;
       before(() => {
-        exportOutput = helper.command.exportAllComponents();
+        exportOutput = helper.command.export();
       });
       it('should export the component to correct scope', () => {
         expect(exportOutput).to.have.string('exported 1 components');

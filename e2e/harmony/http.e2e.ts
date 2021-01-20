@@ -28,7 +28,7 @@ describe('http protocol', function () {
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      exportOutput = helper.command.exportAllComponents();
+      exportOutput = helper.command.export();
       scopeAfterExport = helper.scopeHelper.cloneLocalScope();
     });
     after(() => {

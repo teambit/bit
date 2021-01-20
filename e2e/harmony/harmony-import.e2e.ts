@@ -20,7 +20,7 @@ describe('import component on Harmony', function () {
       helper.bitJsonc.disablePreview();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importAllComponents();
@@ -28,7 +28,7 @@ describe('import component on Harmony', function () {
       helper.command.tagAllComponents();
     });
     it('should export with no errors about missing artifacts (pkg file) from the first tag', () => {
-      expect(() => helper.command.exportAllComponents()).to.not.throw();
+      expect(() => helper.command.export()).to.not.throw();
     });
   });
 });
