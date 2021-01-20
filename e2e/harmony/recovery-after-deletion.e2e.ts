@@ -140,6 +140,7 @@ describe('recovery after component/scope deletion', function () {
     });
     // comp3 exits with 0.0.1 as cache of comp2/comp1 but in its origin it has only 0.0.2
     describe('indirect dependency has re-created with a different version', () => {
+      let beforeImportScope: string;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope(secondRemotePath);
@@ -151,6 +152,7 @@ describe('recovery after component/scope deletion', function () {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope(secondRemotePath);
         npmCiRegistry.setResolver();
+        beforeImportScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
         helper.command.importComponent('comp1');
@@ -161,9 +163,7 @@ describe('recovery after component/scope deletion', function () {
         expect(comp3.versions).to.not.have.property('0.0.2');
       });
       it('should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2', () => {
-        helper.scopeHelper.reInitLocalScopeHarmony();
-        helper.scopeHelper.addRemoteScope(secondRemotePath);
-        npmCiRegistry.setResolver();
+        helper.scopeHelper.getClonedLocalScope(beforeImportScope);
         helper.command.importComponent('comp2');
         const scope = helper.command.catScope(true);
         const comp3 = scope.find((item) => item.name === 'comp3');
@@ -172,12 +172,8 @@ describe('recovery after component/scope deletion', function () {
         expect(comp3.versions).to.not.have.property('0.0.2');
       });
       describe('importing both: comp1 and comp3 to the same workspace', () => {
-        let beforeImportScope: string;
         before(() => {
-          helper.scopeHelper.reInitLocalScopeHarmony();
-          helper.scopeHelper.addRemoteScope(secondRemotePath);
-          npmCiRegistry.setResolver();
-          beforeImportScope = helper.scopeHelper.cloneLocalScope();
+          helper.scopeHelper.getClonedLocalScope(beforeImportScope);
         });
         function expectToImportProperly() {
           it('comp3: should save 0.0.1 of in the orphanedVersions prop', () => {
@@ -234,6 +230,24 @@ describe('recovery after component/scope deletion', function () {
           expectToImportProperly();
         });
       });
+      // describe('importing both: comp1 and comp2 to the same workspace', () => {
+      //   // before, it was throwing ComponentNotFound error of comp3@0.0.1.
+      //   describe('importing comp2 (comp3 as cached) and then comp3', () => {
+      //     before(() => {
+      //       helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+      //       helper.command.importComponent('comp2');
+      //       helper.command.import(`${secondRemoteName}/comp3`);
+      //     });
+      //   });
+      // });
+      // comp1 scope has the old comp3 with 0.0.1, now with a new export of comp1, it imports
+      // comp3 again, which now has only 0.0.2 in its origin.
+      // describe('the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1)', () => {
+      //   before(() => {
+      //     helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+      //     helper.command.import(`${helper.scopes.remote}/comp1 ${secondRemoteName}/comp2`);
+      //   });
+      // });
     });
   });
 });

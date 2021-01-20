@@ -80,12 +80,15 @@ export default class SourceRepository {
         return foundComponent;
       }
       // @ts-ignore
+      // if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
       if (!foundComponent.hasTag(bitId.version)) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return undefined;
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const version = await this.objects().load(foundComponent.versions[bitId.version]);
+      const versionHash = foundComponent.versions[bitId.version];
+      // const versionHash = foundComponent.versions[bitId.version] || foundComponent.orphanedVersions[bitId.version];
+      const version = await this.objects().load(versionHash);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return undefined;
@@ -529,8 +532,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         mergedVersions.push(existingVersion);
       }
 
-      if (!incomingComponent.versions[existingVersion] && isImport && isIncomingFromOrigin) {
-        if (!mergedComponent.orphanedVersions) mergedComponent.orphanedVersions = {};
+      if (
+        !incomingComponent.versions[existingVersion] &&
+        isImport &&
+        isIncomingFromOrigin &&
+        !existingComponent.hasLocalTag(existingVersion)
+      ) {
         mergedComponent.orphanedVersions[existingVersion] = existingComponent.versions[existingVersion];
         delete existingComponent.versions[existingVersion];
       }
@@ -542,7 +549,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
           mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
         } else {
           // happens on import only when retrieved from the cache of the remote.
-          if (!mergedComponent.orphanedVersions) mergedComponent.orphanedVersions = {};
           mergedComponent.orphanedVersions[incomingVersion] = incomingComponent.versions[incomingVersion];
         }
         mergedVersions.push(incomingVersion);

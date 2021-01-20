@@ -89,7 +89,7 @@ export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;
   versions: Versions;
-  orphanedVersions?: Versions;
+  orphanedVersions: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -164,6 +164,10 @@ export default class Component extends BitObject {
 
   hasTag(version: string): boolean {
     return Boolean(this.versions[version]);
+  }
+
+  hasTagIncludeOrphaned(version: string): boolean {
+    return Boolean(this.versions[version] || this.orphanedVersions[version]);
   }
 
   /**
@@ -717,6 +721,11 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     if (isEmpty(this.state) || isEmpty(this.state.versions)) return [];
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
+  }
+
+  hasLocalTag(tag: string): boolean {
+    const localVersions = this.getLocalVersions();
+    return localVersions.includes(tag);
   }
 
   getLocalTagsOrHashes(): string[] {
