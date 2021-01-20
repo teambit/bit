@@ -24,12 +24,7 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (
-  workspaceDir: string,
-  targets: string[],
-  envId: string,
-  fileMapPath: string
-): WebpackConfigWithDevServer {
+export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,

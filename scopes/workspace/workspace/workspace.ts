@@ -269,7 +269,7 @@ export class Workspace implements ComponentFactory {
    * get ids of all workspace components.
    */
   async listIds(): Promise<ComponentID[]> {
-    return this.resolveMultipleComponentIds(this.consumer.bitmapIds);
+    return this.resolveMultipleComponentIds(this.consumer.bitmapIdsFromCurrentLane);
   }
 
   /**

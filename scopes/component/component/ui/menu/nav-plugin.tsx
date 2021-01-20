@@ -1,5 +1,5 @@
 import { SlotRegistry } from '@teambit/harmony';
-import { NavLinkProps } from '@teambit/ui.react-router.nav-link';
+import { NavLinkProps } from '@teambit/ui.routing.nav-link';
 
 export type NavPlugin = {
   props: NavLinkProps;

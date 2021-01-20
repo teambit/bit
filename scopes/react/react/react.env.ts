@@ -150,15 +150,9 @@ export class ReactEnv implements Environment {
    * get the default react webpack config.
    */
   getWebpackConfig(context: DevServerContext): Configuration {
-    // @ts-ignore due to issue with component ID types. TODO: make sure all types are aligned to one.
     const fileMapPath = this.writeFileMap(context.components);
 
-    // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
-    const packagePaths = context.components
-      .map((comp) => this.pkg.getPackageName(comp))
-      .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
-
-    return webpackConfigFactory(this.workspace.path, packagePaths, context.id, fileMapPath);
+    return webpackConfigFactory(context.id, fileMapPath);
   }
 
   /**
@@ -174,18 +168,49 @@ export class ReactEnv implements Environment {
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
     const defaultConfig = this.getWebpackConfig(context);
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
-    const withDocs = Object.assign(context, {
-      entry: context.entry.concat([require.resolve('./docs')]),
-    });
 
-    return this.webpack.createDevServer(withDocs, config);
+    return this.webpack.createDevServer(context, config);
   }
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
     const defaultConfig = previewConfigFactory(path);
+
+    if (targetConfig?.entry) {
+      const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
+
+      const targetsWithGlobalEntries = context.targets.map((target) => {
+        // Putting the additionalEntries first to support globals defined there (like regenerator-runtime)
+        target.entries = additionalEntries.concat(target.entries);
+        return target;
+      });
+      context.targets = targetsWithGlobalEntries;
+    }
+
+    delete targetConfig?.entry;
+
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     return this.webpack.createBundler(context, config as any);
+  }
+
+  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
+    if (!config || !config.entry) {
+      return [];
+    }
+    if (typeof config.entry === 'string') {
+      return [config.entry];
+    }
+    if (Array.isArray(config.entry)) {
+      let entries: string[] = [];
+      entries = config.entry.reduce((acc, entry) => {
+        if (typeof entry === 'string') {
+          acc.push(entry);
+        }
+        return acc;
+      }, entries);
+      return entries;
+    }
+    return [];
   }
 
   /**

@@ -34,7 +34,7 @@ export function MainDropdown({ menuItems }: MainDropdownProps) {
         placeholder=""
         clickOutside
         PlaceholderComponent={() => (
-          <div>
+          <div className={styles.iconAnchor}>
             <div className={styles.overlay} />
             <Icon className={classNames(styles.icon)} of="more" />
           </div>

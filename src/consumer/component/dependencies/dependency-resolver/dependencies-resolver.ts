@@ -731,7 +731,7 @@ either, use the ignore file syntax or change the require statement to have a mod
         return;
       }
       const getExistingId = (): BitId | undefined => {
-        const existingIds = this.consumer.bitmapIds.filterWithoutVersion(componentId);
+        const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
         if (existingIds.length === 1) return existingIds[0];
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
