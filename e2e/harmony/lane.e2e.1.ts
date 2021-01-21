@@ -94,7 +94,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeExport);
         helper.scopeHelper.reInitRemoteScope();
-        helper.command.export(helper.command.scopes.remote);
+        helper.command.export(`${helper.command.scopes.remote} --lanes`);
       });
       it('should export components on that lane', () => {
         const list = helper.command.listRemoteScopeParsed();

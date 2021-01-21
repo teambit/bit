@@ -65,6 +65,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
     describe('when rootDir is not the same as the sharedDir', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.outputFile('src/bar/foo.js');
         helper.command.addComponent('src', { i: 'comp' });
         helper.command.tagAllComponents();

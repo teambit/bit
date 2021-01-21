@@ -154,7 +154,7 @@ describe('bit snap command', function () {
     let secondSnap: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
@@ -686,7 +686,7 @@ describe('bit snap command', function () {
   describe('tag after tag', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.fixtures.populateComponents(1, undefined, ' v2');
