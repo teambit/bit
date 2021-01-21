@@ -17,7 +17,7 @@ describe('import component on Harmony', function () {
   describe('tag, export, clean scope objects, tag and export', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
       helper.command.export();

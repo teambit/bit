@@ -159,12 +159,12 @@ describe('bit snap command', function () {
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapComponent('bar/foo');
       firstSnap = helper.command.getHead('bar/foo');
-      helper.command.exportAllComponents();
+      helper.command.export();
       scopeAfterFirstSnap = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.snapComponent('bar/foo');
       secondSnap = helper.command.getHead('bar/foo');
-      helper.command.exportAllComponents();
+      helper.command.export();
     });
     describe('when the local is behind the remote', () => {
       describe('import only objects', () => {
@@ -230,7 +230,7 @@ describe('bit snap command', function () {
         localScope = helper.scopeHelper.cloneLocalScope();
       });
       it('should prevent exporting the component', () => {
-        const exportFunc = () => helper.command.exportAllComponents(); // v2 is exported again
+        const exportFunc = () => helper.command.export(); // v2 is exported again
         const ids = [{ id: `${helper.scopes.remote}/bar/foo` }];
         const error = new MergeConflictOnRemote([], ids);
         helper.general.expectToThrow(exportFunc, error);
@@ -665,7 +665,7 @@ describe('bit snap command', function () {
     });
     describe('importing the component to another scope', () => {
       before(() => {
-        helper.command.exportAllComponents();
+        helper.command.export();
 
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
@@ -691,7 +691,7 @@ describe('bit snap command', function () {
       helper.command.tagAllComponents();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
@@ -709,18 +709,18 @@ describe('bit snap command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       authorFirstTag = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.getClonedLocalScope(authorFirstTag);
       helper.fixtures.populateComponents(1, undefined, ' v3');
       helper.command.tagAllWithoutBuild('-s 0.0.3');
       helper.command.importAllComponents();
     });
     it('should prevent exporting the component', () => {
-      const exportFunc = () => helper.command.exportAllComponents();
+      const exportFunc = () => helper.command.export();
       const ids = [{ id: `${helper.scopes.remote}/comp1` }];
       const error = new MergeConflictOnRemote([], ids);
       helper.general.expectToThrow(exportFunc, error);

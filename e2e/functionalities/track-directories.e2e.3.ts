@@ -155,8 +155,9 @@ describe('track directories functionality', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.command.importComponent('utils/bar');
       });
       it('should not change the rootDir', () => {
