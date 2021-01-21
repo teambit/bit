@@ -113,11 +113,14 @@ export async function exportMany({
         );
   }
 
-  manyObjectsPerRemote.forEach((objectsPerRemote) => {
-    objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
-      addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
-    );
-  });
+  // @todo: make sure it works fine without pushing the flattened to the remote.
+  // we're going to change many things in this area very soon. currently, it seems to do more harm
+  // then good, so we disable it for now.
+  // manyObjectsPerRemote.forEach((objectsPerRemote) => {
+  //   objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
+  //     addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
+  //   );
+  // });
   const remotes = manyObjectsPerRemote.map((o) => o.remote);
   const clientId = Date.now().toString();
   await pushRemotesPendingDir();
@@ -289,32 +292,32 @@ export async function exportMany({
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
-  function addDependenciesToObjectList(
-    objectsPerRemote: ObjectsPerRemote,
-    componentAndObjects: ModelComponentAndObjects
-  ): void {
-    const addDepsIfCurrentlyExported = (id: BitId) => {
-      const depScope = id.scope;
-      if (!depScope) throw new Error(`export-scope-components, unable to export ${id.toString()}, it has no scope`);
-      if (depScope === componentAndObjects.component.scope) {
-        return; // it's already included in the ObjectList.
-      }
-      const dependencyObjects = manyObjectsPerRemote.find((obj) => obj.remote.name === depScope);
-      if (!dependencyObjects) {
-        return; // this id is not currently exported. the remote will import it during the push.
-      }
-      const dependencyObjectList = dependencyObjects.objectListPerName[id.name];
-      if (!dependencyObjectList) {
-        return; // this id is not currently exported. the remote will import it during the push.
-      }
-      objectsPerRemote.objectList.mergeObjectList(dependencyObjectList);
-    };
-    // @ts-ignore
-    const versionsObjects: Version[] = componentAndObjects.objects.filter((object) => object instanceof Version);
-    versionsObjects.forEach((version: Version) => {
-      version.flattenedDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
-    });
-  }
+  // function addDependenciesToObjectList(
+  //   objectsPerRemote: ObjectsPerRemote,
+  //   componentAndObjects: ModelComponentAndObjects
+  // ): void {
+  //   const addDepsIfCurrentlyExported = (id: BitId) => {
+  //     const depScope = id.scope;
+  //     if (!depScope) throw new Error(`export-scope-components, unable to export ${id.toString()}, it has no scope`);
+  //     if (depScope === componentAndObjects.component.scope) {
+  //       return; // it's already included in the ObjectList.
+  //     }
+  //     const dependencyObjects = manyObjectsPerRemote.find((obj) => obj.remote.name === depScope);
+  //     if (!dependencyObjects) {
+  //       return; // this id is not currently exported. the remote will import it during the push.
+  //     }
+  //     const dependencyObjectList = dependencyObjects.objectListPerName[id.name];
+  //     if (!dependencyObjectList) {
+  //       return; // this id is not currently exported. the remote will import it during the push.
+  //     }
+  //     objectsPerRemote.objectList.mergeObjectList(dependencyObjectList);
+  //   };
+  //   // @ts-ignore
+  //   const versionsObjects: Version[] = componentAndObjects.objects.filter((object) => object instanceof Version);
+  //   versionsObjects.forEach((version: Version) => {
+  //     version.flattenedDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
+  //   });
+  // }
 
   async function pushRemotesPendingDir(): Promise<void> {
     const pushOptions = { clientId };
