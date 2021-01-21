@@ -47,6 +47,8 @@ describe('recovery after component/scope deletion', function () {
       secondRemotePath = secondRemote.scopePath;
       secondRemoteName = secondRemote.scopeName;
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
+      helper.scopeHelper.addRemoteScope(secondRemote.scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, secondRemote.scopePath);
       helper.fs.outputFile('comp1/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp2');`);
       helper.fs.outputFile('comp2/index.js', `require('@${DEFAULT_OWNER}/${secondRemote.scopeWithoutOwner}.comp3');`);
       helper.fs.outputFile('comp3/index.js', '');
@@ -271,7 +273,7 @@ describe('recovery after component/scope deletion', function () {
       });
       // comp1 scope has the old comp3 with 0.0.1, now with a new export of comp1, it imports
       // comp3 again, which now has only 0.0.2 in its origin.
-      describe.only('the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1)', () => {
+      describe('the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1)', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
           helper.command.import(`${helper.scopes.remote}/comp2 ${secondRemoteName}/comp3`);
