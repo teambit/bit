@@ -1,3 +1,5 @@
+import { Configuration } from 'webpack';
+import webpackMerge from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
@@ -7,7 +9,6 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-// import { ReactNativeEnv } from './react-native.env';
 
 const webpackConfig = require('./webpack/webpack.config');
 
@@ -23,7 +24,7 @@ export class ReactNativeMain {
   ) {}
 
   icon() {
-    return 'https://static.bit.dev/extensions-icons/nodejs.svg';
+    return 'https://static.bit.dev/extensions-icons/react.svg';
   }
 
   /**
@@ -56,12 +57,18 @@ export class ReactNativeMain {
   /**
    * override the preview config in the env.
    */
-  overridePreviewConfig = this.react.overridePreviewConfig.bind(this.react);
+  overridePreviewConfig(config: Configuration) {
+    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
+    this.react.overridePreviewConfig(mergedConfig);
+  }
 
   /**
    * override the dev server configuration.
    */
-  overrideDevServerConfig = this.react.overrideDevServerConfig.bind(this.react);
+  overrideDevServerConfig(config: Configuration) {
+    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
+    this.react.overrideDevServerConfig(mergedConfig);
+  }
 
   /**
    * override the dependency configuration of the component environment.
@@ -94,23 +101,7 @@ export class ReactNativeMain {
       react.overrideDevServerConfig(webpackConfig),
       react.overridePreviewConfig(webpackConfig),
       // react.overrideJestConfig(jestConfig),
-      react.overrideDependencies({
-        dependencies: {
-          react: '-',
-          'react-native': '-',
-        },
-        devDependencies: {
-          '@types/react-native': '^0.63.2',
-          '@types/jest': '~26.0.9',
-          react: '-',
-          'react-native': '-',
-          'react-native-web': '0.14.8',
-        },
-        peerDependencies: {
-          react: '^16.13.1',
-          'react-native': '^0.63.3',
-        },
-      }),
+      react.overrideDependencies(getReactNativeDeps()),
     ]);
     envs.registerEnv(reactNativeEnv);
     return new ReactNativeMain(react, reactNativeEnv, envs);
@@ -118,3 +109,23 @@ export class ReactNativeMain {
 }
 
 ReactNativeAspect.addRuntime(ReactNativeMain);
+
+function getReactNativeDeps() {
+  return {
+    dependencies: {
+      react: '-',
+      'react-native': '-',
+    },
+    devDependencies: {
+      '@types/react-native': '^0.63.2',
+      '@types/jest': '~26.0.9',
+      react: '-',
+      'react-native': '-',
+      'react-native-web': '0.14.8',
+    },
+    peerDependencies: {
+      react: '^16.13.1',
+      'react-native': '^0.63.3',
+    },
+  };
+}
