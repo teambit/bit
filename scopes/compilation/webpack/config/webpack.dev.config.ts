@@ -93,7 +93,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       sockPath,
       sockPort,
 
-      before(app, server) {
+      onBeforeSetupMiddleware(app, server) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -102,7 +102,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(errorOverlayMiddleware());
       },
 
-      after(app) {
+      onAfterSetupMiddleware(app) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -114,8 +114,10 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // Public path is root of content base
-      publicPath: publicRoot,
+      dev: {
+        // Public path is root of content base
+        publicPath: publicRoot,
+      },
     },
 
     resolve: {

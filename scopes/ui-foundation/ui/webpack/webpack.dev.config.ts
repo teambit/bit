@@ -1,4 +1,5 @@
 import { Configuration } from 'webpack';
+import { Configuration as DevServerConfiguration } from 'webpack-dev-server';
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
@@ -32,8 +33,32 @@ const moduleFileExtensions = [
 
 module.exports = {
   createWebpackConfig,
-  devConfig: createWebpackConfig,
+  devConfig: createDevConfig,
 };
+
+function createDevConfig(workspaceDir, entryFiles, title, aspectPaths): DevServerConfiguration {
+  const config = createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths);
+  const publicPath = config.devServer?.publicPath;
+  if (publicPath) {
+    delete config.devServer?.publicPath;
+    config.devServer = config.devServer || {};
+    // @ts-ignore - fix this
+    config.devServer.dev = {
+      publicPath,
+    };
+  }
+  if (config.devServer?.before) {
+    // @ts-ignore - fix this
+    config.devServer.onBeforeSetupMiddleware = config.devServer?.before;
+    delete config.devServer?.before;
+  }
+  if (config.devServer?.after) {
+    // @ts-ignore - fix this
+    config.devServer.onAfterSetupMiddleware = config.devServer?.after;
+    config.devServer?.after;
+  }
+  return config;
+}
 
 function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Configuration {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
