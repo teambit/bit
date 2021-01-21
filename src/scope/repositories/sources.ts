@@ -561,6 +561,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       mergedVersions.push(...mergedSnaps);
     }
     if (incomingComponent.remoteHead) mergedComponent.remoteHead = incomingComponent.remoteHead;
+    // makes sure that components received with orphanedVersions, this property won't be saved
+    if (isExport) mergedComponent.orphanedVersions = {};
 
     return { mergedComponent, mergedVersions };
   }

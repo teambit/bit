@@ -68,6 +68,7 @@ describe('recovery after component/scope deletion', function () {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope(secondRemotePath);
+        helper.bitJsonc.disablePreview();
         npmCiRegistry.setResolver();
         helper.command.importComponent('comp1');
         // delete the comp3 from the scope.
@@ -146,10 +147,11 @@ describe('recovery after component/scope deletion', function () {
       });
     });
     // comp3 exits with 0.0.1 as cache of comp2/comp1 but in its origin it has only 0.0.2
-    describe('indirect dependency has re-created with a different version', () => {
+    describe('indirect dependency (comp3) has re-created with a different version', () => {
       let beforeImportScope: string;
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.bitJsonc.disablePreview();
         helper.scopeHelper.addRemoteScope(secondRemotePath);
         helper.fs.outputFile('comp3/index.js', '');
         helper.command.addComponent('comp3');
@@ -158,6 +160,7 @@ describe('recovery after component/scope deletion', function () {
         helper.command.export();
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope(secondRemotePath);
+        helper.bitJsonc.disablePreview();
         npmCiRegistry.setResolver();
         beforeImportScope = helper.scopeHelper.cloneLocalScope();
       });
@@ -207,7 +210,7 @@ describe('recovery after component/scope deletion', function () {
           });
         });
       }
-      describe('importing both: comp1 and comp3 to the same workspace', () => {
+      describe('importing both: comp1 and flatten-dep comp3 to the same workspace ', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
         });
@@ -237,7 +240,7 @@ describe('recovery after component/scope deletion', function () {
           expectToImportProperly();
         });
       });
-      describe.only('importing both: comp1 and comp2 to the same workspace', () => {
+      describe('importing both: comp2 and direct-dep comp3 to the same workspace', () => {
         // before, it was throwing ComponentNotFound error of comp3@0.0.1.
         describe('importing comp2 (comp3 as cached) and then comp3', () => {
           before(() => {
@@ -247,15 +250,71 @@ describe('recovery after component/scope deletion', function () {
           });
           expectToImportProperly();
         });
+        describe('importing comp3 and then comp2', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            helper.command.import(`${secondRemoteName}/comp3`);
+            helper.command.importComponent('comp2');
+          });
+          expectToImportProperly();
+        });
+        describe('importing comp3 and comp2 at the same time', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+            helper.command.import(`${helper.scopes.remote}/comp2 ${secondRemoteName}/comp3`);
+          });
+          expectToImportProperly();
+          it('should be able to tag', () => {
+            expect(() => helper.command.tagAllComponents()).to.not.throw();
+          });
+        });
       });
       // comp1 scope has the old comp3 with 0.0.1, now with a new export of comp1, it imports
       // comp3 again, which now has only 0.0.2 in its origin.
-      // describe('the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1)', () => {
-      //   before(() => {
-      //     helper.scopeHelper.getClonedLocalScope(beforeImportScope);
-      //     helper.command.import(`${helper.scopes.remote}/comp1 ${secondRemoteName}/comp2`);
-      //   });
-      // });
+      describe.only('the remote of comp1 imports the new version of comp3 (via importMany of exporting comp1)', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+          helper.command.import(`${helper.scopes.remote}/comp2 ${secondRemoteName}/comp3`);
+          helper.command.tagAllComponents(); // tag comp2 with the updated comp3 version - 0.0.2
+          helper.command.export();
+        });
+        it('comp3: should save 0.0.1 of in the orphanedVersions prop on the remote', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`, helper.scopes.remotePath);
+          expect(comp3).to.have.property('orphanedVersions');
+          expect(comp3.orphanedVersions).to.have.property('0.0.1');
+        });
+        it('comp3: should not have 0.0.1 in the versions object, only 0.0.2 on the remote', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`, helper.scopes.remotePath);
+          expect(comp3.versions).not.to.have.property('0.0.1');
+          expect(comp3.versions).to.have.property('0.0.2');
+        });
+        it('comp3: the head should be the same as 0.0.2 not as 0.0.1 on the remote', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`, helper.scopes.remotePath);
+          const hash = comp3.versions['0.0.2'];
+          expect(comp3.head === hash);
+        });
+        it('should not change the remote of comp3', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`, secondRemotePath);
+          expect(comp3).to.not.have.property('orphanedVersions');
+          expect(comp3.versions).not.to.have.property('0.0.1');
+          expect(comp3.versions).to.have.property('0.0.2');
+        });
+      });
+      describe('re-export comp3 when locally it has orphanedVersions prop', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+          helper.command.import(`${helper.scopes.remote}/comp1 ${secondRemoteName}/comp3`);
+          helper.command.tagComponent(`${secondRemoteName}/comp3`, undefined, '--force');
+          helper.command.export();
+        });
+        it('the remote of comp3 should not get this orphanedVersions prop', () => {
+          const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`, secondRemotePath);
+          expect(comp3).to.not.have.property('orphanedVersions');
+          expect(comp3.versions).not.to.have.property('0.0.1');
+          expect(comp3.versions).to.have.property('0.0.2');
+          expect(comp3.versions).to.have.property('0.0.3');
+        });
+      });
     });
   });
 });
