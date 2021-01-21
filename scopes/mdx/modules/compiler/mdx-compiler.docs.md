@@ -50,7 +50,7 @@ Set the `bitFlavour` to `true` to have the transpiled output wrapped with a Reac
   const result = compileSync(mdxInput, {
     bitFlavour: true,
   });
-  const dataContent = new JSONFormatter(result, Infinity);
+  const dataContent = new JSONFormatter(result, 2);
   return (
     <div>
       <div
@@ -87,7 +87,7 @@ async function foo() {
   const result = await compile(mdxInput, {
     bitFlavour: true,
   });
-  const dataContent = new JSONFormatter(result, Infinity);
+  const dataContent = new JSONFormatter(result, 2);
   return (
     <div>
       <div
