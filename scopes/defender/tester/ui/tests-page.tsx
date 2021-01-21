@@ -81,7 +81,7 @@ export function TestsPage({ className }: TestsPageProps) {
   if (testData?.loading) return <TestLoader />;
 
   const testResults = testData?.testsResults?.testFiles;
-  if (testResults === null) {
+  if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any tests."
