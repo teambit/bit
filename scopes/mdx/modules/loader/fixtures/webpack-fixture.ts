@@ -12,9 +12,7 @@ export async function bundleFixture(fixturePath: string) {
       path: path.resolve(__dirname),
       filename: 'bundle.js'
     },
-    node: {
-      fs: 'empty'
-    },
+    node: false,
     module: {
       rules: [
         {
@@ -42,6 +40,7 @@ export async function bundleFixture(fixturePath: string) {
   return new Promise((resolve, reject) => {
     compiler.run((err, stats) => {
       if (err) return reject(err);
+      if (!stats) return reject(new Error('no modules compiled'));
       if (stats.hasErrors()) return reject(stats.compilation.errors);
 
       const json = stats.toJson();
