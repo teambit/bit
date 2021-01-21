@@ -113,11 +113,14 @@ export async function exportMany({
         );
   }
 
-  manyObjectsPerRemote.forEach((objectsPerRemote) => {
-    objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
-      addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
-    );
-  });
+  // @todo: make sure it works fine without pushing the flattened to the remote.
+  // we're going to change many things in this area very soon. currently, it seems to do more harm
+  // then good, so we disable it for now.
+  // manyObjectsPerRemote.forEach((objectsPerRemote) => {
+  //   objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
+  //     addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
+  //   );
+  // });
   const remotes = manyObjectsPerRemote.map((o) => o.remote);
   const clientId = Date.now().toString();
   await pushRemotesPendingDir();
