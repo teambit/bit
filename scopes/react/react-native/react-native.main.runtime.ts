@@ -60,6 +60,7 @@ export class ReactNativeMain {
   overridePreviewConfig(config: Configuration) {
     const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
     this.react.overridePreviewConfig(mergedConfig);
+    // this.react.overridePreviewConfig.call(this.react, mergedConfig);
   }
 
   /**
@@ -68,6 +69,7 @@ export class ReactNativeMain {
   overrideDevServerConfig(config: Configuration) {
     const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
     this.react.overrideDevServerConfig(mergedConfig);
+    // this.react.overrideDevServerConfig.call(this.react, mergedConfig);
   }
 
   /**
