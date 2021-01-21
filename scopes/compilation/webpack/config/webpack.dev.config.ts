@@ -120,6 +120,10 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
+      fallback: {
+        util: require.resolve('util'),
+        assert: require.resolve('assert'),
+      },
     },
 
     plugins: [

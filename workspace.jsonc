@@ -194,7 +194,6 @@
         "jest-message-util": "26.6.2",
         "jest-watcher": "26.6.2",
         "join-path": "^1.1.1",
-        "process": "0.11.10",
         "json-formatter-js": "2.3.4",
         "jsx-to-string": "1.4.0",
         "loader-utils": "2.0.0",
@@ -221,6 +220,7 @@
         "postcss-safe-parser": "^4.0.2",
         "pretty-time": "^1.1.0",
         "prism-react-renderer": "^1.1.1",
+        "process": "0.11.10",
         "proper-lockfile": "^4.1.1",
         "react": "^17.0.0",
         "react-animate-height": "2.0.23",
@@ -489,6 +489,20 @@
         "policy": {
           "peerDependencies": {
             "jest": "^26.0.1"
+          }
+        }
+      }
+    },
+    "scopes/compilation/webpack": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          // Used for webpack5 native modules fallbacks
+          // see more here:
+          // https://webpack.js.org/blog/2020-10-10-webpack-5-release/#automatic-nodejs-polyfills-removed
+          // https://github.com/webpack/webpack/pull/8460/commits/a68426e9255edcce7822480b78416837617ab065
+          "dependencies": {
+            "util": "0.12.3",
+            "assert": "2.0.0"
           }
         }
       }

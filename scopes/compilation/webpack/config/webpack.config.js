@@ -26,6 +26,13 @@ module.exports = (entries, rootPath) => {
       globalObject: 'this',
     },
 
+    resolve: {
+      fallback: {
+        util: require.resolve('util'),
+        assert: require.resolve('assert'),
+      },
+    },
+
     plugins: [
       new HtmlWebpackPlugin(
         Object.assign(
