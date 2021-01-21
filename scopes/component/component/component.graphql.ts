@@ -1,4 +1,3 @@
-import log from 'bit-bin/dist/api/scope/lib/log';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
