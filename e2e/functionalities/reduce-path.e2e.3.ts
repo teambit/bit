@@ -68,7 +68,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         helper.fs.outputFile('src/bar/foo.js');
         helper.command.addComponent('src', { i: 'comp' });
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp');

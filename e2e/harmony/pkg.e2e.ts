@@ -27,6 +27,7 @@ describe('pkg extension', function () {
 
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();

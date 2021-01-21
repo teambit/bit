@@ -35,7 +35,7 @@ describe('http protocol', function () {
       httpHelper.killHttp();
     });
     it('should export successfully', () => {
-      expect(exportOutput).to.have.string('exported 3 components');
+      expect(exportOutput).to.have.string('exported the following 3 component');
     });
     describe('bit log', () => {
       let logOutput: string;

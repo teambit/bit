@@ -252,6 +252,9 @@ export default class CommandHelper {
   exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --rewire --force`);
   }
+  exportToDefaultAndRewire(scope: string = this.scopes.remote) {
+    return this.runCmd(`bit export ${scope} --rewire --force`);
+  }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
