@@ -547,6 +547,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       if (!existingComponent.versions[incomingVersion]) {
         if (isExport || isIncomingFromOrigin) {
           mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
+          delete mergedComponent.orphanedVersions[incomingVersion];
         } else {
           // happens on import only when retrieved from the cache of the remote.
           mergedComponent.orphanedVersions[incomingVersion] = incomingComponent.versions[incomingVersion];

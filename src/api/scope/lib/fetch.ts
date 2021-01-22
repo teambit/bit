@@ -36,8 +36,8 @@ export default async function fetch(
       const { withoutDependencies, includeArtifacts } = fetchOptions;
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const importedComponents = withoutDependencies
-        ? await scopeComponentsImporter.importManyWithoutDependencies(bitIds, false)
-        : await scopeComponentsImporter.importMany(bitIds);
+        ? await scopeComponentsImporter.fetchWithoutDeps(bitIds, false)
+        : await scopeComponentsImporter.fetchWithDeps(bitIds);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const clientVersion = headers ? headers.version : null;
       const collectParents = !withoutDependencies;
