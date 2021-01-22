@@ -53,6 +53,7 @@ export default class VersionDependencies {
       dependencies,
       devDependencies: [],
       extensionDependencies: [],
+      missingDependencies: this.getMissingDependencies(),
     });
   }
 

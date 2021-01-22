@@ -37,7 +37,12 @@ export const formatPlainComponentItemWithVersions = (component: Component, impor
     return `(the following files were saved with conflicts ${conflictedFiles.map((file) => c.bold(file)).join(', ')}) `;
   };
   const deprecated = component.deprecated ? c.yellow('deprecated') : '';
-  return `- ${c.green(status)} ${c.cyan(id)} ${versions}${usedVersion} ${getConflictMessage()}${deprecated}`;
+  const missingDeps = importDetails.missingDeps.length
+    ? c.red(`missing dependencies: ${importDetails.missingDeps.map((d) => d.toString()).join(', ')}`)
+    : '';
+  return `- ${c.green(status)} ${c.cyan(
+    id
+  )} ${versions}${usedVersion} ${getConflictMessage()}${deprecated} ${missingDeps}`;
 };
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
