@@ -90,22 +90,23 @@ export default class ScopeComponentsImporter {
     return compact(versionDeps);
   }
 
-  private async findMissingExternalsRecursively(
-    compDef: ComponentDef,
-    externalsToFetch: BitId[] = []
-  ): Promise<BitId[]> {
+  private async findMissingExternalsRecursively(compDef: ComponentDef, externalsToFetch: BitId[] = []): Promise<void> {
     const version = await this.getVersionFromComponentDef(compDef.component as ModelComponent, compDef.id);
     if (!version) {
       // it must be external. otherwise, getVersionFromComponentDef would throw
       externalsToFetch.push(compDef.id);
-      return externalsToFetch;
+      return;
     }
     const flattenedDepsDefs = await this.sources.getMany(version.flattenedDependencies);
     const existingFlattened = BitIds.fromArray(flattenedDepsDefs.filter((def) => def.component).map((def) => def.id));
     if (flattenedDepsDefs.every((def) => def.component)) {
-      return externalsToFetch; // all exist.
+      return; // all exist.
     }
     // some flattened are missing
+    if (!compDef.id.isLocal(this.scope.name)) {
+      externalsToFetch.push(compDef.id);
+      return;
+    }
     const directDepsDefs = await this.sources.getMany(version.getAllDependenciesIds());
     const localMissingDepDefs: ComponentDef[] = [];
     await Promise.all(
@@ -131,7 +132,6 @@ export default class ScopeComponentsImporter {
       })
     );
     await mapSeries(localMissingDepDefs, (depDef) => this.findMissingExternalsRecursively(depDef, externalsToFetch));
-    return externalsToFetch;
   }
 
   async fetchWithDeps(ids: BitIds): Promise<VersionDependencies[]> {
@@ -154,7 +154,7 @@ current scope ${this.scope.name}, externals: ${externalStr}`);
 
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);
     const versionDeps = await mapSeries(localDefs, async (compDef) => {
-      if (!compDef.component) throw new ComponentNotFound(compDef.id.toString());
+      if (!compDef.component) return null;
       return this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id);
     });
     return compact(versionDeps);
