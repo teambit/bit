@@ -2,7 +2,7 @@ import { filter } from 'bluebird';
 import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { compact } from 'lodash';
+import { compact, flatten } from 'lodash';
 import { Scope } from '..';
 import { Analytics } from '../../analytics/analytics';
 import { BitId, BitIds } from '../../bit-id';
@@ -62,19 +62,57 @@ export default class ScopeComponentsImporter {
 
     const [locals, externals] = R.partition((id: BitId) => id.isLocal(this.scope.name), idsWithoutNils);
 
-    const localDefs = await this.sources.getMany(locals);
-    const versionDeps = await mapSeries(localDefs, async (def) => {
-      if (!def.component) throw new ComponentNotFound(def.id.toString());
-      const results = await this.componentToVersionDependencies(def.component, def.id);
-      return results;
-    });
-    const versionDepsWithoutNull = removeNils(versionDeps);
+    const versionDepsFromLocal = await this.importManyLocal(locals);
     logger.debugAndAddBreadCrumb(
       'ScopeComponentsImporter.importMany',
       `fetched ${locals.length} local components and their dependencies. Going to fetch externals`
     );
     const externalDeps = await this.importManyExternals(externals, cache, persist, throwForDependencyNotFound);
-    return versionDepsWithoutNull.concat(externalDeps);
+    return versionDepsFromLocal.concat(externalDeps);
+  }
+
+  private async importManyLocal(
+    ids: BitId[],
+    persist = true,
+    throwForDependencyNotFound = true
+  ): Promise<VersionDependencies[]> {
+    const localDefs = await this.sources.getMany(ids);
+
+    const versionDeps: VersionDependencies[] = [];
+    const missingDeps: VersionDependencies[] = [];
+    await mapSeries(localDefs, async (compDef) => {
+      if (!compDef.component) throw new ComponentNotFound(compDef.id.toString());
+      const versionDep = await this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id);
+      if (!versionDep) return;
+      const missing = versionDep.getMissingDependencies();
+      if (missing.length) {
+        missingDeps.push(versionDep);
+      } else {
+        versionDeps.push(versionDep);
+      }
+    });
+
+    const externalDirectDeps = missingDeps.map((missingDep) =>
+      missingDep.version.getAllDependenciesIds().filter((depId) => !depId.isLocal(this.scope.name))
+    );
+    const externalDepsToFetch = compact(flatten(externalDirectDeps));
+    logger.debug(`ScopeComponentsImporter.importManyLocal, missingDeps ${missingDeps.length}`);
+    const remotes = await getScopeRemotes(this.scope);
+    await this.fetchExternalMany(externalDepsToFetch, remotes, persist, throwForDependencyNotFound);
+
+    await mapSeries(
+      missingDeps.map((m) => m.component),
+      async (comp) => {
+        const versionDep = await this.componentToVersionDependencies(comp.component as ModelComponent, comp.id);
+        if (!versionDep) return;
+        if (throwForDependencyNotFound) {
+          versionDep.throwForMissingDependencies();
+        }
+        versionDeps.push(versionDep);
+      }
+    );
+
+    return versionDeps;
   }
 
   /**

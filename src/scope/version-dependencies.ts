@@ -14,7 +14,7 @@ export default class VersionDependencies {
     public component: ComponentVersion,
     private dependencies: ComponentVersion[],
     public sourceScope: string,
-    private version: Version
+    public version: Version
   ) {}
 
   get allDependencies(): ComponentVersion[] {

@@ -18,7 +18,6 @@ chai.use(require('chai-fs'));
  * @todo: test the following cases
  * 1. delete the package of the deleted component and make sure it's possible to import it (maybe with a flag of disable-npm-install)
  * 2. the entire scope of flattened-dependency is down. make sure that it fetches the component from cache of direct.
- * 3. make sure the orphanedVersions doesn't go to the origin remote.
  * 4. make sure importing a version that was in orphanedVersions before doesn't save it twice. should be only in "versions".
  */
 describe('recovery after component/scope deletion', function () {
@@ -110,6 +109,26 @@ describe('recovery after component/scope deletion', function () {
           });
           it('should bring the missing dep from the dependent', () => {
             const scope = helper.command.catScope(true);
+            const comp3 = scope.find((item) => item.name === 'comp3');
+            expect(comp3).to.not.be.undefined;
+          });
+        });
+        describe('bit export to another remote', () => {
+          let compNewRemote;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
+            helper.fs.outputFile('comp-new/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1');`);
+            helper.command.addComponent('comp-new');
+            compNewRemote = helper.scopeHelper.getNewBareScope('-remote3', true);
+            helper.bitJsonc.addToVariant('comp-new', 'defaultScope', compNewRemote.scopeName);
+            helper.command.tagAllComponents();
+            helper.scopeHelper.addRemoteScope(compNewRemote.scopePath);
+            helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compNewRemote.scopePath);
+            helper.scopeHelper.addRemoteScope(secondRemotePath, compNewRemote.scopePath);
+            helper.command.export();
+          });
+          it('this new remote should bring the flattened dependency (comp3) from the dependent scope', () => {
+            const scope = helper.command.catScope(true, compNewRemote.scopePath);
             const comp3 = scope.find((item) => item.name === 'comp3');
             expect(comp3).to.not.be.undefined;
           });
