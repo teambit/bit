@@ -18,6 +18,7 @@ chai.use(require('chai-fs'));
  * @todo: test the following cases
  * 1. delete the package of the deleted component and make sure it's possible to import it (maybe with a flag of disable-npm-install)
  * 2. the entire scope of flattened-dependency is down. make sure that it fetches the component from cache of direct.
+ * 3. fix performance. bit-import on bit-bin is super slow. makes sure to not merge the same component multiple times if their content is the same, do not write the same hashes over and over
  * 4. make sure importing a version that was in orphanedVersions before doesn't save it twice. should be only in "versions".
  */
 describe('recovery after component/scope deletion', function () {
