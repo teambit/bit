@@ -13,7 +13,7 @@ export default class ComponentWithDependencies {
     dependencies: Component[];
     devDependencies: Component[];
     extensionDependencies: Component[];
-    missingDependencies: BitId[];
+    missingDependencies?: BitId[];
   }) {
     this.component = props.component;
     this.dependencies = props.dependencies || [];
