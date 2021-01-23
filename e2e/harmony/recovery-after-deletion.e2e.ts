@@ -297,7 +297,7 @@ describe('recovery after component/scope deletion', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
           helper.command.import(`${helper.scopes.remote}/comp2 ${secondRemoteName}/comp3`);
-          helper.command.tagAllComponents(); // tag comp2 with the updated comp3 version - 0.0.2
+          helper.command.tagAllComponents('', '0.0.7'); // tag comp2 with the updated comp3 version - 0.0.7
           helper.command.export();
         });
         it('comp3: should save 0.0.1 of in the orphanedVersions prop on the remote', () => {
@@ -326,15 +326,14 @@ describe('recovery after component/scope deletion', function () {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
           helper.command.import(`${helper.scopes.remote}/comp1 ${secondRemoteName}/comp3`);
-          helper.command.tagComponent(`${secondRemoteName}/comp3`, undefined, '--force');
+          helper.command.tagComponent(`${secondRemoteName}/comp3`, undefined, '0.0.8 --force');
           helper.command.export();
         });
         it('the remote of comp3 should not get this orphanedVersions prop', () => {
           const comp3 = helper.command.catComponent(`${secondRemoteName}/comp3`, secondRemotePath);
           expect(comp3).to.not.have.property('orphanedVersions');
           expect(comp3.versions).not.to.have.property('0.0.1');
-          expect(comp3.versions).to.have.property('0.0.2');
-          expect(comp3.versions).to.have.property('0.0.3');
+          expect(comp3.versions).to.have.property('0.0.8');
         });
       });
     });
