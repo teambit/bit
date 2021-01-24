@@ -271,7 +271,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.273",
+        "bit-bin": "14.8.9-dev.276",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -323,7 +323,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.273",
+            "bit-bin": "14.8.9-dev.276",
             "react-dom": "^16.13.1"
           }
         }
@@ -453,7 +453,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.273",
+            "bit-bin": "14.8.9-dev.276",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
