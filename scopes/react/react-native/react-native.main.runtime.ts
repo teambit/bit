@@ -59,8 +59,7 @@ export class ReactNativeMain {
    */
   overridePreviewConfig(config: Configuration) {
     const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
-    this.react.overridePreviewConfig(mergedConfig);
-    // this.react.overridePreviewConfig.call(this.react, mergedConfig);
+    return this.react.overridePreviewConfig(mergedConfig);
   }
 
   /**
@@ -68,8 +67,7 @@ export class ReactNativeMain {
    */
   overrideDevServerConfig(config: Configuration) {
     const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
-    this.react.overrideDevServerConfig(mergedConfig);
-    // this.react.overrideDevServerConfig.call(this.react, mergedConfig);
+    return this.react.overrideDevServerConfig(mergedConfig);
   }
 
   /**
@@ -88,14 +86,6 @@ export class ReactNativeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactNativeEnv), transformers);
   }
 
-  // static runtime = MainRuntime;
-  // static dependencies = [EnvsAspect, ReactAspect];
-
-  // static async provider([envs, react]: [EnvsMain, ReactMain]) {
-  //   const reactEnv: Environment = envs.merge(new NodeEnv(), react.reactEnv);
-  //   envs.registerEnv(nodeEnv);
-  //   return new NodeMain(react, nodeEnv, envs);
-  // }
   static dependencies: Aspect[] = [ReactAspect, EnvsAspect];
   static runtime = MainRuntime;
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
