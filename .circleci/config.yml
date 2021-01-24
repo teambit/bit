@@ -109,8 +109,6 @@ commands: # reusable commands
       - add_ssh_keys:
           fingerprints:
             - 'SHA256:fF5QridDUgTXkn8xIMZQNbn9sPN5QhNhc3jr8y8e2LI ci@bit.dev'
-      # to avoid error "error: Terminal is dumb, but EDITOR unset" on git pull
-      - run: GIT_MERGE_AUTOEDIT=no
       - run:
           name: set git user.name and user.email
           command: 'git config --global user.email "ci@bit.dev" && git config --global user.name "CircleCI"'
@@ -540,11 +538,16 @@ jobs:
       - run: cd bit && bit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/bit-bin/node_modules/@babel/core/node_modules/semver/bin/semver'""
       - run: cd bit && rm -rf node_modules
-      - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
+      - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
+      # since we removed the node_modules we need to make sure we compile, install and link everything again
+      - run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony-skip-import'
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
-          command: cd bit && bit tag --all --ignore-newest-version
+          # command: cd bit && bit tag --all --ignore-newest-version
+          command: cd bit && bit tag --all
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
       - run:
@@ -586,7 +589,7 @@ jobs:
           command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
       - run: cd bit && git commit -am "bump teambit version to `npm show @teambit/bit version` [skip ci]"
       # git pull first in case another commit entered to master so then the push could work with no errors.
-      - run: cd bit && git pull origin master
+      - run: cd bit && GIT_MERGE_AUTOEDIT=no git pull origin master
       # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
       - run: cd bit && git push origin master
       - store_artifacts:

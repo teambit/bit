@@ -23,7 +23,7 @@ export const CompileSyncExample = () => {
   const result = compileSync(mdxInput, {
     bitFlavour: true,
   });
-  const dataContent = new JSONFormatter(result, Infinity);
+  const dataContent = new JSONFormatter(result, 2);
   return (
     <ThemeCompositions>
       <div>

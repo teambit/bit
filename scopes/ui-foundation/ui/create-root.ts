@@ -34,7 +34,7 @@ export function render(...props){
       .run()
       .then(() => {
         const rootExtension = harmony.get('${rootAspect}');
-        
+
         if (isBrowser) {
           return rootExtension.render(${rootId}, ...props);
         } else {
@@ -58,7 +58,7 @@ function createImports(aspectDefs: AspectDefinition[]) {
 ${getImportStatements(
   aspectDefs.map((def) => def.aspectPath),
   'Aspect'
-)} 
+)}
 ${getImportStatements(
   // @ts-ignore no nulls can be found here - see above.
   defs.map((def) => def.runtimePath),
