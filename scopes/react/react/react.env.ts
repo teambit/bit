@@ -1,4 +1,4 @@
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile, JsonSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
@@ -11,6 +11,7 @@ import { PkgMain } from '@teambit/pkg';
 import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
+import { BabelMain } from '@teambit/babel';
 import { WebpackMain } from '@teambit/webpack';
 import { MultiCompilerMain } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
@@ -28,6 +29,7 @@ import eslintConfig from './eslint/eslintrc';
 export const AspectEnvType = 'react';
 const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
+const defaultBabelConfig = require('./babel/babel.config.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
 
 /**
@@ -44,6 +46,11 @@ export class ReactEnv implements Environment {
      * typescript extension.
      */
     private tsAspect: TypescriptMain,
+
+    /**
+     * typescript extension.
+     */
+    private babelAspect: BabelMain,
 
     /**
      * compiler extension.
@@ -83,6 +90,10 @@ export class ReactEnv implements Environment {
     return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
   }
 
+  getBabelConfig(targetBabelConfig?: JsonSourceFile) {
+    return targetBabelConfig ? merge({}, defaultBabelConfig, targetBabelConfig) : defaultBabelConfig;
+  }
+
   getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
     return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
   }
@@ -108,6 +119,14 @@ export class ReactEnv implements Environment {
       // @ts-ignore
       tsModule
     );
+  }
+
+  createBabelCompiler(targetConfig?: any) {
+    return this.babelAspect.createCompiler({ babelTransformOptions: targetConfig });
+  }
+
+  createMdxCompiler(targetConfig?: any) {
+    return this.mdx.createCompiler({ opts: targetConfig });
   }
 
   getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {

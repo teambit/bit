@@ -16,6 +16,9 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
+import type { BabelMain } from '@teambit/babel';
+import { BabelAspect } from '@teambit/babel';
+import { MDXCompilerOpts } from '@teambit/mdx';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { MDXAspect, MDXMain } from '@teambit/mdx';
@@ -23,17 +26,19 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile, JsonSourceFile } from 'typescript';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { TypescriptCompiler } from '../../typescript/typescript';
 
 type ReactDeps = [
   EnvsMain,
   JestMain,
   TypescriptMain,
+  BabelMain,
   CompilerMain,
   WebpackMain,
   Workspace,
@@ -44,6 +49,11 @@ type ReactDeps = [
   MultiCompilerMain,
   MDXMain
 ];
+
+enum ConfigTargets {
+  workspace = 'workspace',
+  build = 'build',
+}
 
 export type ReactMainConfig = {
   /**
@@ -84,8 +94,25 @@ export class ReactMain {
   readonly env = this.reactEnv;
 
   private tsConfigOverride: TsConfigSourceFile | undefined;
+  private compilers: Compiler[];
 
   /**
+   * add ts compiler to the compilers array of the React environment.
+   * @param tsConfig typeof `TsConfigSourceFile` config file to merge with original config
+   * @param targets where to apply the config (workspace, build, etc)
+   * @param tsModule typeof `ts` module instance.
+   */
+  useTypescript(tsconfig: TsConfigSourceFile, targets?: ConfigTargets[], tsModule: any = ts) {
+    this.tsConfigOverride = tsconfig;
+    let compiler = this.reactEnv.createTsCompiler(tsconfig, {}, tsModule);
+    this.compilers.push(compiler);
+    // The following could possibly be passed to centralised functions for all compilers:
+    // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
+    // create compiler task and add to compiler tasks
+  }
+
+  /**
+   * @deprecated replaced by useTsConfig
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
@@ -100,6 +127,7 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated replaced by useTsConfig
    * override the build tsconfig.
    */
   overrideBuildTsConfig(tsconfig) {
@@ -108,6 +136,30 @@ export class ReactMain {
         return this.reactEnv.getBuildPipe(tsconfig);
       },
     });
+  }
+
+  /**
+   * adds babel compiler to the compilers array of the React environment.
+   * @param babelConfig typeof `JsonSourceFile` config file to merge with original config
+   * @param targets where to apply the config (workspace, build, etc)
+   */
+  useBabel(babelconfig: JsonSourceFile, targets?: ConfigTargets[]) {
+    this.compilers.push(this.reactEnv.createBabelCompiler(babelconfig));
+    // The following could possibly be passed to centralised functions for all compilers:
+    // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
+    // create compiler task and add to compiler tasks
+  }
+
+  /**
+   * adds mdx compiler to the compilers array of the React environment.
+   * @param mdxCompilerOptions typeof `MdxCompilerOpts` config file to merge with original config
+   * @param targets where to apply the config (workspace, build, etc)
+   */
+  useMdx(mdxCompilerOptions: MDXCompilerOpts, targets?: ConfigTargets[]) {
+    this.compilers.push(this.reactEnv.createMdxCompiler(mdxCompilerOptions));
+    // The following could possibly be passed to centralised functions for all compilers:
+    // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
+    // create compiler task and add to compiler tasks
   }
 
   /**
@@ -162,6 +214,7 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated replaced by useTsConfig
    * override the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
@@ -190,6 +243,10 @@ export class ReactMain {
         return compiler;
       },
     });
+  }
+
+  overrideCompilers() {
+    // pass the compilers array to the multiCompiler.createCompiler function - needs some thought how to make backwards compatible
   }
 
   overrideEslintConfig() {}
@@ -243,6 +300,7 @@ export class ReactMain {
     EnvsAspect,
     JestAspect,
     TypescriptAspect,
+    BabelAspect,
     CompilerAspect,
     WebpackAspect,
     WorkspaceAspect,
@@ -259,6 +317,7 @@ export class ReactMain {
       envs,
       jestAspect,
       tsAspect,
+      babelAspect,
       compiler,
       webpack,
       workspace,
@@ -274,6 +333,7 @@ export class ReactMain {
     const reactEnv = new ReactEnv(
       jestAspect,
       tsAspect,
+      babelAspect,
       compiler,
       webpack,
       workspace,
