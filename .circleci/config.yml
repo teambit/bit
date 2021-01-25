@@ -517,6 +517,7 @@ jobs:
           command: 'cd bit && bit build'
 
   bit_tag:
+    resource_class: large
     <<: *defaults
     environment:
       # change the npm config to avoid using sudo
