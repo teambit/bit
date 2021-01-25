@@ -1,5 +1,5 @@
 import { Configuration } from 'webpack';
-import webpackMerge from 'webpack-merge';
+import { merge as webpackMerge } from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
