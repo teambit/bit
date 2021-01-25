@@ -1,5 +1,6 @@
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
-import { ScopeBadgeSlot } from '@teambit/scope';
+import { flatten } from 'lodash';
+import type { ScopeBadgeSlot, OverviewLineSlot } from '@teambit/scope';
 import { ScopeLabels } from '@teambit/ui.scope-labels';
 import { ScopeTitle } from '@teambit/ui.scope-title';
 import classNames from 'classnames';
@@ -13,17 +14,20 @@ type ScopeDetailsProps = {
   badgeSlot: ScopeBadgeSlot;
   description: string;
   componentCount: number;
+  overviewSlot: OverviewLineSlot;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ScopeDetails({
   scopeName,
   icon,
   badgeSlot,
+  overviewSlot,
   description,
   componentCount,
   className,
   ...rest
 }: ScopeDetailsProps) {
+  const lines = flatten(overviewSlot.values());
   return (
     <div {...rest} className={classNames(styles.scopeTitle, className)}>
       <div className={styles.titleRow}>
@@ -31,6 +35,7 @@ export function ScopeDetails({
       </div>
       <Subtitle>{description}</Subtitle>
       <ScopeLabels badgeSlot={badgeSlot} componentCount={componentCount} />
+      {lines.length > 0 && lines.map((Line, index) => <Line key={index} />)}
     </div>
   );
 }
