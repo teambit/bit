@@ -4,7 +4,7 @@ import type { ScopeBadgeSlot, OverviewLineSlot } from '@teambit/scope';
 import { ScopeLabels } from '@teambit/ui.scope-labels';
 import { ScopeTitle } from '@teambit/ui.scope-title';
 import classNames from 'classnames';
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import styles from './scope-details.module.scss';
 
@@ -27,7 +27,7 @@ export function ScopeDetails({
   className,
   ...rest
 }: ScopeDetailsProps) {
-  const lines = flatten(overviewSlot.values());
+  const overviewItems = useMemo(() => flatten(overviewSlot.values()), [overviewSlot]);
   return (
     <div {...rest} className={classNames(styles.scopeTitle, className)}>
       <div className={styles.titleRow}>
@@ -35,7 +35,7 @@ export function ScopeDetails({
       </div>
       <Subtitle>{description}</Subtitle>
       <ScopeLabels badgeSlot={badgeSlot} componentCount={componentCount} />
-      {lines.length > 0 && lines.map((Line, index) => <Line key={index} />)}
+      {overviewItems.length > 0 && overviewItems.map((Item, index) => <Item key={index} />)}
     </div>
   );
 }
