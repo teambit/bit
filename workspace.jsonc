@@ -67,6 +67,7 @@
         "@teambit/base-ui.theme.fonts.roboto": "0.6.2",
         "@teambit/base-ui.theme.sizes": "^0.5.9",
         "@teambit/base-ui.theme.theme-provider": "^0.5.9",
+        "@teambit/base-ui.utils.string.affix": "0.0.2",
         "@teambit/base-ui.utils.sub-paths": "^0.5.9",
         "@teambit/base-ui.utils.time-ago": "0.5.9",
         "@teambit/capsule": "0.0.12",
