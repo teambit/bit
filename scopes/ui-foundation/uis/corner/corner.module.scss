@@ -10,6 +10,7 @@ $topbarHeight: 56px;
   user-select: none;
   box-sizing: border-box;
   width: 30%;
+  font-weight: bold;
   max-width: 264px; // for now until we have the split pane in pixels
   @media screen and (max-width: 768px) {
     display: none;
@@ -21,7 +22,6 @@ $topbarHeight: 56px;
     flex: 1;
     min-width: 0;
     text-decoration: none;
-    text-transform: capitalize;
     color: var(--text-highlight);
     transition: color 300ms ease-in-out;
     &:active {
