@@ -11,7 +11,7 @@ const html = require('./html');
 const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
 const WebpackCompilerStartedPlugin = require('../plugins/webpack-compiler-started-plugin');
 
-const host = process.env.WDS_SOCKET_HOST;
+const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
 
@@ -96,7 +96,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       },
 
       client: {
-        host,
+        host: clientHost,
         path: clientPath,
         port,
       },
