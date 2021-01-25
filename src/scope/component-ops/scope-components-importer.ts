@@ -184,8 +184,12 @@ please make sure that the scope-resolver points to the right scope.`);
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);
     const componentVersionArr = await Promise.all(
       localDefs.map((def) => {
-        // if (!def.component) throw new ComponentNotFound(def.id.toString());
-        if (!def.component) return null;
+        if (!def.component) {
+          logger.warn(
+            `fetchWithoutDeps failed to find a local component ${def.id.toString()}. continuing without this component`
+          );
+          return null;
+        }
         return def.component.toComponentVersion(def.id.version as string);
       })
     );
@@ -430,7 +434,7 @@ please make sure that the scope-resolver points to the right scope.`);
     localFetch = false,
     context: Record<string, any> = {}
   ): Promise<ComponentVersion[]> {
-    if (!ids.length) return Promise.resolve([]);
+    if (!ids.length) return [];
     logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `ids: {ids}, localFetch: ${localFetch.toString()}`, {
       ids: ids.join(', '),
     });
