@@ -27,9 +27,11 @@ It then serves this file to the Bundler, to be bundled according to the environm
 
 ### Extending the Preview aspect
 
-The preview aspect can be extended to generate other renderable artifacts when running Bit's development server or as part of the build pipeline, for components' tagged versions.  
+The preview aspect can be extended to generate other renderable artifacts , either when running Bit's development server or as part of the build pipeline (for a component's tagged version).  
 These artifacts can present additional information that assists in inspecting a component (for example, showing the results of accessibility tests).
 
 ### Adding context providers to compositions
 
-Compositions can be wrapped by context providers to gain access to a common theme, canvas dimensions or information (e.g, mock data).
+Preview offers a way to wrap all compositions (that are using the same environment) with your own list of providers.
+This will grant all compositions with access to a common theme, canvas dimensions or information (e.g, mock data).
+Use 'providers' to speed-up the authoring process of compositions that mimic "real-life" scenarios.
