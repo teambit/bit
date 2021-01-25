@@ -398,6 +398,23 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
+  isEqual(component: Component): boolean {
+    if ((this.hasHead() && !component.hasHead()) || (!this.hasHead() && component.hasHead())) {
+      return false; // only one of them has head
+    }
+    if (this.head && component.head && !this.head.isEqual(component.head)) {
+      return false; // the head is not equal.
+    }
+    // the head is equal or they both don't have head. check the versions
+    if (this.versionArray.length !== component.versionArray.length) {
+      return false;
+    }
+    const hasSameVersions = Object.keys(this.versions).every(
+      (tag) => component.versions[tag] && component.versions[tag].isEqual(this.versions[tag])
+    );
+    return hasSameVersions;
+  }
+
   getSnapToAdd() {
     return sha1(v4());
   }

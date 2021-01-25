@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
-
+import { flatten } from 'lodash';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -58,6 +58,7 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
+import { BitObjectList } from './objects/bit-object-list';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -432,28 +433,56 @@ export default class Scope {
     return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
   }
 
-  // @todo: optimize to remove duplications between multiple object-lists before writing to the fs.
-  // (for all objects other than components and lanes).
   async writeManyObjectListToModel(
     objectListPerRemote: { [remoteName: string]: ObjectList },
     persist = true,
     ids: BitId[]
   ): Promise<BitId[]> {
-    const bitIds = await mapSeries(Object.keys(objectListPerRemote), (remote) =>
-      this.writeObjectListToModel(objectListPerRemote[remote], remote, persist, ids)
-    );
+    const bitObjectsPerRemote: { [remoteName: string]: BitObjectList } = {};
+    await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
+      const objectList = objectListPerRemote[remoteName];
+      bitObjectsPerRemote[remoteName] = await objectList.toBitObjects();
+    });
+
+    const componentsFromOrigin = await mapSeries(Object.keys(bitObjectsPerRemote), async (remoteName) => {
+      const bitObjectList = bitObjectsPerRemote[remoteName];
+      const components = bitObjectList.getComponents().filter((c) => c.scope === remoteName);
+      const versions = bitObjectList.getVersions();
+      await mapSeries(components, (component: ModelComponent) =>
+        this.mergeModelComponent(component, versions, remoteName)
+      );
+      return components;
+    });
+    const mergedComponents = flatten(componentsFromOrigin);
+
+    const bitIds = await mapSeries(Object.keys(bitObjectsPerRemote), async (remoteName) => {
+      const bitObjectList = bitObjectsPerRemote[remoteName];
+      const components = bitObjectList.getComponents().filter((component) => {
+        if (component.scope === remoteName) {
+          return false; // has been processed above already
+        }
+        const mergedComponent = mergedComponents.find((c) => c.id() === component.id());
+        if (!mergedComponent) {
+          mergedComponents.push(component);
+          return true; // this has never been processed.
+        }
+        if (mergedComponent.isEqual(component)) {
+          return false; // no need to re-process, they are the same.
+        }
+        return true;
+      });
+      return this.addObjectListToRepo(bitObjectList, components, remoteName, ids);
+    });
+    if (persist) await this.objects.persist();
     return BitIds.uniqFromArray(R.flatten(bitIds));
   }
 
-  async writeObjectListToModel(
-    objectList: ObjectList,
+  private async addObjectListToRepo(
+    bitObjectList: BitObjectList,
+    components: ModelComponent[],
     remoteName: string,
-    persist = true,
     ids: BitId[]
   ): Promise<BitId[]> {
-    logger.debugAndAddBreadCrumb('scope.writeManyComponentsToModel', `total objects ${objectList.objects.length}`);
-    const bitObjectList = await objectList.toBitObjects();
-    const components = bitObjectList.getComponents();
     const versions = bitObjectList.getVersions();
     const laneObjects = bitObjectList.getLanes();
     await mapSeries(components, (component: ModelComponent) =>
@@ -473,6 +502,19 @@ export default class Scope {
     // components and lanes were merged previously, add the rest.
     const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
     this.sources.putObjects(objectsToAdd);
+    return nonLaneIds;
+  }
+
+  async writeObjectListToModel(
+    objectList: ObjectList,
+    remoteName: string,
+    persist = true,
+    ids: BitId[]
+  ): Promise<BitId[]> {
+    logger.debugAndAddBreadCrumb('scope.writeManyComponentsToModel', `total objects ${objectList.objects.length}`);
+    const bitObjectList = await objectList.toBitObjects();
+    const components = bitObjectList.getComponents();
+    const nonLaneIds = await this.addObjectListToRepo(bitObjectList, components, remoteName, ids);
     if (persist) await this.objects.persist();
     return nonLaneIds;
   }
