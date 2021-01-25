@@ -6,7 +6,7 @@
   "dependencies": {
     "memfs": "^2.14.2",
     "unionfs": "^3.0.2",
-    "readable-stream": "^3.1.1"
+    "readable-stream": "^3.6.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
