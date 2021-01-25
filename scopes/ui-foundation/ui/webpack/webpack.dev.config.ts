@@ -1,5 +1,4 @@
 import { Configuration } from 'webpack';
-import { Configuration as DevServerConfiguration } from 'webpack-dev-server';
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
@@ -11,7 +10,7 @@ const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
 const { default: html } = require('./html');
 
-const host = process.env.WDS_SOCKET_HOST;
+const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
 
@@ -33,32 +32,8 @@ const moduleFileExtensions = [
 
 module.exports = {
   createWebpackConfig,
-  devConfig: createDevConfig,
+  devConfig: createWebpackConfig,
 };
-
-function createDevConfig(workspaceDir, entryFiles, title, aspectPaths): DevServerConfiguration {
-  const config = createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths);
-  const publicPath = config.devServer?.publicPath;
-  if (publicPath) {
-    delete config.devServer?.publicPath;
-    config.devServer = config.devServer || {};
-    // @ts-ignore - fix this
-    config.devServer.dev = {
-      publicPath,
-    };
-  }
-  if (config.devServer?.before) {
-    // @ts-ignore - fix this
-    config.devServer.onBeforeSetupMiddleware = config.devServer?.before;
-    delete config.devServer?.before;
-  }
-  if (config.devServer?.after) {
-    // @ts-ignore - fix this
-    config.devServer.onAfterSetupMiddleware = config.devServer?.after;
-    config.devServer?.after;
-  }
-  return config;
-}
 
 function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Configuration {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
@@ -102,14 +77,15 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
     },
 
     devServer: {
+      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {
-          directory: resolveWorkspacePath(publicDirectory),
+          directory: resolveWorkspacePath(publicUrlOrPath),
           staticOptions: {},
           // Don't be confused with `dev.publicPath`, it is `publicPath` for static directory
           // Can be:
           // publicPath: ['/static-public-path-one/', '/static-public-path-two/'],
-          publicPath: publicDirectory,
+          publicPath: publicUrlOrPath,
           // Can be:
           // serveIndex: {} (options for the `serveIndex` option you can find https://github.com/expressjs/serve-index)
           serveIndex: true,
@@ -137,12 +113,12 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
       },
 
       client: {
-        host,
+        host: clientHost,
         path: clientPath,
         port,
       },
 
-      before(app, server) {
+      onBeforeSetupMiddleware(app, server) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -151,7 +127,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
         app.use(errorOverlayMiddleware());
       },
 
-      after(app) {
+      onAfterSetupMiddleware(app) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -163,8 +139,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // Public path is root of content base
-      publicPath: publicUrlOrPath.slice(0, -1),
+      dev: {
+        // Public path is root of content base
+        publicPath: publicUrlOrPath.slice(0, -1),
+      },
     },
 
     resolve: {

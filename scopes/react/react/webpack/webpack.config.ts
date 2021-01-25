@@ -27,6 +27,7 @@ const moduleFileExtensions = [
 export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
   return {
     devServer: {
+      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       client: {
         path: `_hmr/${envId}`,
       },
