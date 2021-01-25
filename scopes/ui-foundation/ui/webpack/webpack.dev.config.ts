@@ -11,9 +11,9 @@ const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
 const { default: html } = require('./html');
 
-const sockHost = process.env.WDS_SOCKET_HOST;
-const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
-const sockPort = process.env.WDS_SOCKET_PORT;
+const host = process.env.WDS_SOCKET_HOST;
+const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
+const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
@@ -102,13 +102,22 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
     },
 
     devServer: {
-      // Serve index.html as the base
-      contentBase: resolveWorkspacePath(publicUrlOrPath),
-
-      // By default files from `contentBase` will not trigger a page reload.
-      watchContentBase: true,
-
-      contentBasePublicPath: publicUrlOrPath,
+      static: [
+        {
+          directory: resolveWorkspacePath(publicDirectory),
+          staticOptions: {},
+          // Don't be confused with `dev.publicPath`, it is `publicPath` for static directory
+          // Can be:
+          // publicPath: ['/static-public-path-one/', '/static-public-path-two/'],
+          publicPath: publicDirectory,
+          // Can be:
+          // serveIndex: {} (options for the `serveIndex` option you can find https://github.com/expressjs/serve-index)
+          serveIndex: true,
+          // Can be:
+          // watch: {} (options for the `watch` option you can find https://github.com/paulmillr/chokidar)
+          watch: true,
+        },
+      ],
 
       // Enable compression
       compress: true,
@@ -127,9 +136,11 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
         index: publicUrlOrPath,
       },
 
-      sockHost,
-      sockPath,
-      sockPort,
+      client: {
+        host,
+        path: clientPath,
+        port,
+      },
 
       before(app, server) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`

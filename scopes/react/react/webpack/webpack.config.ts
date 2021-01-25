@@ -27,7 +27,9 @@ const moduleFileExtensions = [
 export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
   return {
     devServer: {
-      sockPath: `_hmr/${envId}`,
+      client: {
+        path: `_hmr/${envId}`,
+      },
     },
     module: {
       rules: [
