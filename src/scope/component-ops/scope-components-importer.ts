@@ -84,9 +84,10 @@ export default class ScopeComponentsImporter {
     await this.getExternalMany(BitIds.uniqFromArray(externalsToFetch), remotes, persist, throwForDependencyNotFound);
 
     const compDefsFinal = await this.sources.getMany(idsToImport);
-    const versionDeps = await mapSeries(compDefsFinal, (compDef) =>
-      this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id)
-    );
+    const versionDeps = await mapSeries(compDefsFinal, (compDef) => {
+      if (!compDef.component) throw new ComponentNotFound(compDef.id.toString());
+      return this.componentToVersionDependencies(compDef.component, compDef.id);
+    });
     return compact(versionDeps);
   }
 
