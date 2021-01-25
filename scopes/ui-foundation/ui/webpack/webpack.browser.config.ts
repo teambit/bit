@@ -4,7 +4,7 @@ import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
 import safePostCssParser from 'postcss-safe-parser';
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import merge from 'webpack-merge';
+import { merge } from 'webpack-merge';
 
 import html from './html';
 import createBaseConfig from './webpack.base.config';
