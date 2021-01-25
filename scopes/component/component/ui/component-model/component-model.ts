@@ -12,7 +12,7 @@ import { TagProps } from '../../tag/tag';
 // HOOK FROM YOUR ASPECT!!!
 // TODO: remove all properties from here to their rightful place in their aspects.
 export type ComponentModelProps = {
-  id: string;
+  id: { name: string; version?: string; scope?: string };
   version: string;
   description: string;
   server: ComponentServer;
