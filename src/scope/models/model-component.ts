@@ -565,7 +565,7 @@ for a component "${this.id()}", versions: ${versions.join(', ')}`);
     return objectRef || Ref.from(version);
   }
 
-  toComponentVersion(versionStr: string): ComponentVersion {
+  toComponentVersion(versionStr: string | undefined): ComponentVersion {
     const versionParsed = versionParser(versionStr);
     const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion

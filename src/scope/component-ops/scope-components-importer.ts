@@ -249,7 +249,6 @@ current scope ${this.scope.name}, externals: ${externalStr}`);
   }
 
   async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {
-    if (!id.version) throw new Error(`getVersionFromComponentDef expects ${id.toString()} to have version`);
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
     const version: Version = await versionComp.getVersion(this.scope.objects);
     if (version) return version;

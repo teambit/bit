@@ -83,7 +83,6 @@ export async function exportMany({
   idsWithFutureScope: BitIds;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  enrichContextFromGlobal(context);
   if (lanesObjects.length && !remoteName) {
     throw new Error('todo: implement export lanes to default scopes after tracking lanes local:remote is implemented');
   }
@@ -123,6 +122,7 @@ export async function exportMany({
   // });
   const remotes = manyObjectsPerRemote.map((o) => o.remote);
   const clientId = Date.now().toString();
+  enrichContextFromGlobal(context);
   await pushRemotesPendingDir();
   await validateRemotes();
   await persistRemotes();
