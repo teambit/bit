@@ -6,6 +6,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
+import { ComponentNotFound } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -164,6 +165,98 @@ describe('recovery after component/scope deletion', function () {
             expect(() => helper.command.tagWithoutBuild('comp1', '--force')).to.throw(
               'has the following dependencies missing'
             );
+          });
+        });
+      });
+    });
+    describe('direct dependency is missing', () => {
+      let scopeWithMissingDep: string;
+      let remoteScope: string;
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.bitJsonc.setupDefault();
+        npmCiRegistry.setResolver({ [secondRemoteName]: secondRemotePath });
+        helper.command.importComponent('comp2');
+        // delete the comp3 from the scope.
+        const hashPath = helper.general.getHashPathOfComponent('comp3');
+        fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
+        fs.removeSync(path.join(helper.scopes.localPath, '.bit/index.json'));
+        scopeWithMissingDep = helper.scopeHelper.cloneLocalScope();
+        remoteScope = helper.scopeHelper.cloneRemoteScope();
+      });
+      after(() => {
+        helper.scopeHelper.getClonedRemoteScope(remoteScope);
+      });
+      it('an intermediate check. the scope should not have the comp3 object', () => {
+        const scope = helper.command.catScope(true);
+        const comp3 = scope.find((item) => item.name === 'comp3');
+        expect(comp3).to.be.undefined;
+      });
+      describe('the direct dependency exists as cache inside the dependent scope', () => {
+        describe('bit import', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
+            helper.command.importAllComponents();
+          });
+          it('should bring the missing dep from the dependent', () => {
+            const scope = helper.command.catScope(true);
+            const comp3 = scope.find((item) => item.name === 'comp3');
+            expect(comp3).to.not.be.undefined;
+          });
+        });
+        describe('bit tag', () => {
+          let tagOutput;
+          before(() => {
+            helper.command.importAllComponents(); // otherwise, it shows "your workspace has outdated objects" warning.
+            tagOutput = helper.command.tagWithoutBuild('comp2', '--force');
+          });
+          it('should succeed', () => {
+            expect(tagOutput).to.have.string('1 component(s) tagged');
+          });
+          it('should bring the missing dep from the dependent', () => {
+            const scope = helper.command.catScope(true);
+            const comp3 = scope.find((item) => item.name === 'comp3');
+            expect(comp3).to.not.be.undefined;
+          });
+        });
+      });
+      describe('the direct dependency is missing in the dependent scope as well', () => {
+        before(() => {
+          helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
+          // delete the comp3 from the remote scope.
+          const hashPath = helper.general.getHashPathOfComponent('comp3', helper.scopes.remotePath);
+          fs.removeSync(path.join(helper.scopes.remotePath, 'objects', hashPath));
+          fs.removeSync(path.join(helper.scopes.remotePath, 'index.json'));
+          helper.scopeHelper.addRemoteScope(secondRemotePath, helper.scopes.remotePath);
+        });
+        it('an intermediate check. the scope should not have the comp3 object', () => {
+          const scope = helper.command.catScope(true, helper.scopes.remotePath);
+          const comp3 = scope.find((item) => item.name === 'comp3');
+          expect(comp3).to.be.undefined;
+        });
+        describe('bit import', () => {
+          let importOutput: string;
+          before(() => {
+            importOutput = helper.command.importAllComponents();
+          });
+          it('should not throw an error and not bring the missing dep', () => {
+            const scope = helper.command.catScope(true);
+            const comp3 = scope.find((item) => item.name === 'comp3');
+            expect(comp3).to.be.undefined;
+          });
+          it('should indicate the dependencies are missing', () => {
+            expect(importOutput).to.have.string(`missing dependencies: ${secondRemoteName}/comp3`);
+          });
+        });
+        describe('bit tag', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
+            helper.command.importAllComponents();
+          });
+          it('should throw ComponentNotFound error because it is a direct dependency', () => {
+            const cmd = () => helper.command.tagWithoutBuild('comp2', '--force');
+            const err = new ComponentNotFound(`${secondRemoteName}/comp3@0.0.1`);
+            helper.general.expectToThrow(cmd, err);
           });
         });
       });

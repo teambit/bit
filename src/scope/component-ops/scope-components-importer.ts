@@ -91,6 +91,14 @@ export default class ScopeComponentsImporter {
     return compact(versionDeps);
   }
 
+  /**
+   * once we discover that a component is external, no need to dig deeper to its dependencies, we
+   * just add it to `externalsToFetch` array. later, its dependencies will be fetched from the
+   * dependent remote.
+   * the recursive is needed for locals. if this component is local, we need to know what
+   * components to ask for from the remote. we iterate over the direct dependencies and if some of
+   * them are local as well, we need to iterate over their dependencies and so on.
+   */
   private async findMissingExternalsRecursively(compDef: ComponentDef, externalsToFetch: BitId[] = []): Promise<void> {
     const version = await this.getVersionFromComponentDef(compDef.component as ModelComponent, compDef.id);
     if (!version) {
@@ -149,8 +157,9 @@ export default class ScopeComponentsImporter {
     if (externals.length) {
       const externalStr = externals.map((id) => id.toString()).join(', ');
       // we can't support fetching-with-dependencies of external components as we risk going into an infinite loop
-      throw new Error(`fatal: fetch-with-dependencies API does not support fetching external ids.
-current scope ${this.scope.name}, externals: ${externalStr}`);
+      throw new Error(`fatal: fetch-with-dependencies API does not support fetching components from different scopes.
+current scope: "${this.scope.name}", externals: "${externalStr}"
+please make sure that the scope-resolver points to the right scope.`);
     }
 
     const localDefs: ComponentDef[] = await this.sources.getMany(locals);

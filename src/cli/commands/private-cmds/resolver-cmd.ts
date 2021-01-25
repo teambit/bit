@@ -1,3 +1,7 @@
+/**
+ * this command is not in-use currently. consider deleting it.
+ */
+
 /* eslint max-classes-per-file: 0 */
 
 import chalk from 'chalk';

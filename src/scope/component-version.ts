@@ -69,11 +69,15 @@ Please upgrade your bit client to version >= v14.1.0`);
     const collectVersionObjects = async (ver: Version): Promise<ObjectItem[]> => {
       const versionRefs = ver.refsWithOptions(collectParents, collectArtifacts);
       const versionObjects = await ver.collectManyObjects(repo, versionRefs);
-      const versionData = { ref: ver.hash(), buffer: await ver.asRaw(repo) };
+      const versionData = { ref: ver.hash(), buffer: await ver.asRaw(repo), type: ver.getType() };
       return [...versionObjects, versionData];
     };
     try {
-      const componentData = { ref: this.component.hash(), buffer: await this.component.asRaw(repo) };
+      const componentData = {
+        ref: this.component.hash(),
+        buffer: await this.component.asRaw(repo),
+        type: this.component.getType(),
+      };
       const parentsObjects: ObjectItem[] = [];
       if (collectParents) {
         const allParentsHashes = await getAllVersionHashes(this.component, repo, true, version.hash());
