@@ -39,10 +39,26 @@ export default class ScopeComponentsImporter {
   }
 
   /**
-   * 1. Local objects, fetch from local. (done by this.sources.getMany method)
-   * 2. Fetch flattened dependencies (done by toVersionDependencies method). If they're not locally, fetch from remote
-   * and save them locally.
-   * 3. External objects, fetch from a remote and save locally. (done by this._getExternalMany method).
+   * ensure the given ids and their dependencies are in the scope.
+   * if they belong to this scope and are not exist, throw ComponentNotFound.
+   * if they are external, fetch them from their remotes by calling this.getExternalMany(), which
+   * fetches these components and all their flattened dependencies.
+   *
+   * keep in mind that as a rule, an indirect dependency should be fetched from its dependent
+   * remote first and not from its original scope because it might not be available anymore in the
+   * original scope but it must be available in the dependent scope.
+   * to ensure we ask getExternalMany for the direct dependency only, the following is done for
+   * each one of the components:
+   * 1. get the component object.
+   * 1.a. If It's a local component and not exists, throw ComponentNotFound.
+   * 1.b. If it's an external component and not exists, put it in the externalsToFetch array.
+   * 2. If all flattened exist locally - exit.
+   * 3. otherwise, go to each one of the direct dependencies and do the following:
+   * 3. a. Load the component. (Again, if it's local and not found, throw. Otherwise, put it in the externalsToFetch array).
+   * 3. b. If all flattened exists locally - exit the loop.
+   * 3. c. otherwise, put it in the externalsToFetch array.
+   *
+   *
    */
   async importMany(
     ids: BitIds,

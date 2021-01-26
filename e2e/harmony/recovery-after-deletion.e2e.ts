@@ -270,6 +270,7 @@ describe('recovery after component/scope deletion', function () {
         let scopeWithMissingDep: string;
         before(() => {
           helper.scopeHelper.getClonedRemoteScope(remoteScope);
+          helper.scopeHelper.reInitRemoteScope(remote2Path);
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.bitJsonc.setupDefault();
           npmCiRegistry.setResolver({ [remote2Name]: remote2Path });
