@@ -67,6 +67,7 @@
         "@teambit/base-ui.theme.fonts.roboto": "0.6.2",
         "@teambit/base-ui.theme.sizes": "^0.5.9",
         "@teambit/base-ui.theme.theme-provider": "^0.5.9",
+        "@teambit/base-ui.utils.string.affix": "0.0.2",
         "@teambit/base-ui.utils.sub-paths": "^0.5.9",
         "@teambit/base-ui.utils.time-ago": "0.5.9",
         "@teambit/capsule": "0.0.12",
@@ -269,7 +270,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.276",
+        "bit-bin": "14.8.9-dev.277",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -325,7 +326,7 @@
           },
           "peerDependencies": {
             "react": "^17.0.0",
-            "bit-bin": "14.8.9-dev.276",
+            "bit-bin": "14.8.9-dev.277",
             "react-dom": "^17.0.0"
           }
         }
@@ -457,7 +458,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.276",
+            "bit-bin": "14.8.9-dev.277",
             "react": "^17.0.0",
             "react-dom": "^17.0.0",
             "graphql": "^14.3.1",
