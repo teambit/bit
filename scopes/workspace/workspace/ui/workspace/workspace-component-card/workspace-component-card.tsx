@@ -24,6 +24,7 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
         id={component.id.fullName}
         envIcon={component.environment?.icon}
         description={component.description}
+        version={component.version}
         preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
       />
       {shouldPreviewButton && <LoadPreview onClick={showPreview} />}
