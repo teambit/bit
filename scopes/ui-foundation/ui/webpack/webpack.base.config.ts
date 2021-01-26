@@ -154,6 +154,7 @@ export default function createWebpackConfig(
       },
       fallback: {
         module: false,
+        path: require.resolve('path-browserify'),
         dgram: false,
         dns: false,
         fs: false,

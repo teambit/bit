@@ -161,6 +161,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
       },
       fallback: {
         fs: false,
+        path: require.resolve('path-browserify'),
         stream: false,
         process: false,
       },

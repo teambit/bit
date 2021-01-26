@@ -27,6 +27,7 @@
           "babel-plugin-named-asset-import": "^0.3.6",
           "css-loader": "^3.6.0",
           "url-loader": "^4.1.0",
+          "path-browserify": "1.0.1",
           "postcss-loader": "3.0.0",
           "sass-loader": "^10.1.0",
           "less": "^3.12.2",
