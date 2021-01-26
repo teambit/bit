@@ -1,4 +1,4 @@
-import React, { CSSProperties, createRef, useEffect, useState } from 'react';
+import React, { CSSProperties, createRef } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
 
