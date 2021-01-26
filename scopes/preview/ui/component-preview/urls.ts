@@ -1,6 +1,9 @@
 import { ComponentModel } from '@teambit/component';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 
+/**
+ * generates a full url to a preview (overview / docs etc)
+ */
 export function toPreviewUrl(component: ComponentModel, previewName?: string, additionalParams?: string) {
   const serverPath = toPreviewServer(component);
   const hash = toPreviewHash(component, previewName, additionalParams);
