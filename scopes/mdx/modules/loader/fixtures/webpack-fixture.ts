@@ -43,7 +43,7 @@ export async function bundleFixture(fixturePath: string) {
       if (!stats) return reject(new Error('no modules compiled'));
       if (stats.hasErrors()) return reject(stats.compilation.errors);
 
-      const json = stats.toJson();
+      const json = stats.toJson({source: true});
       const modules = json.modules;
       if (!modules) {
         return reject(new Error('no modules compiled'));
