@@ -1,5 +1,5 @@
 import { ComponentModel } from '@teambit/component';
-import { ComponentPreview } from '@teambit/preview';
+import { ComponentPreview } from '@teambit/ui.component-preview';
 import React from 'react';
 
 import { Composition } from '../composition';

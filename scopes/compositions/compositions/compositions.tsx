@@ -7,6 +7,7 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.side-bar';
 import { EmptyBox } from '@teambit/ui.empty-box';
+import { toPreviewUrl } from '@teambit/ui.component-preview';
 import head from 'lodash.head';
 import React, { useContext, useEffect, useState, useRef } from 'react';
 
@@ -37,7 +38,7 @@ export function Compositions() {
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(component.compositions.length > 0), [component.compositions.length]);
 
-  const compositionUrl = `${component.server.url}/#${component.id.fullName}?preview=compositions&`;
+  const compositionUrl = toPreviewUrl(component, 'compositions');
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>

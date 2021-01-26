@@ -12,19 +12,22 @@ import { TagProps } from '../../tag/tag';
 // HOOK FROM YOUR ASPECT!!!
 // TODO: remove all properties from here to their rightful place in their aspects.
 export type ComponentModelProps = {
-  id: string;
-  version: string;
+  id: {
+    name: string;
+    version?: string;
+    scope?: string;
+  };
   description: string;
-  server: ComponentServer;
+  server?: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
   compositions?: CompositionProps[];
   tags?: TagProps[];
-  issuesCount: number; // component/issues aspect
-  status: any; // workspace aspect.
-  deprecation: DeprecationInfo; // deprecation aspect
-  env: Descriptor; // env aspect.
-  labels: string[];
+  issuesCount?: number; // component/issues aspect
+  status?: any; // workspace aspect.
+  deprecation?: DeprecationInfo; // deprecation aspect
+  env?: Descriptor; // env aspect.
+  labels?: string[];
 };
 
 export type ComponentServer = {
@@ -52,7 +55,7 @@ export class ComponentModel {
     /**
      * the component server.
      */
-    readonly server: ComponentServer,
+    readonly server: ComponentServer | undefined,
 
     /**
      * array of compositions

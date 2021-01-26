@@ -1,7 +1,6 @@
 import 'reset-css';
 
 import React, { HTMLAttributes } from 'react';
-import { ComponentModel } from '@teambit/component';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
@@ -12,7 +11,8 @@ import { ComponentOverview } from './component-overview';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { ExamplesOverview } from './examples-overview';
 import { Properties } from './properties/properties';
-import { useComponentDocs } from './use-component-docs';
+
+import { useFetchDocs } from './use-fetch-docs';
 
 export type DocsSectionProps = {
   docs?: docsFile;
@@ -30,18 +30,16 @@ const defaultDocs = {
  * base template for react component documentation.
  */
 export function Base({ docs = defaultDocs, componentId, compositions, ...rest }: DocsSectionProps) {
-  const { loading, error, data } = useComponentDocs(componentId);
+  const { loading, error, data } = useFetchDocs(componentId);
 
-  // :TODO @uri please add a proper loader with amir
+  if (!data || loading) return null;
   if (loading) return null;
   if (error) throw error;
 
-  const component = ComponentModel.from(data.getHost.get);
-  const docsModel = data.getHost.getDocs;
+  const { component, docs: docsModel } = data;
 
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
-  const { displayName, version, packageName } = component;
-
+  const { displayName, version, packageName, description } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
 
   return (
@@ -49,7 +47,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
       <ComponentOverview
         displayName={Content.displayName || displayName}
         version={version}
-        abstract={component.description || Content.abstract || abstract}
+        abstract={description || Content.abstract || abstract}
         labels={component.labels || Content.labels || labels}
         packageName={packageName}
       />
