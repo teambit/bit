@@ -15,9 +15,6 @@ chai.use(require('chai-fs'));
  * in all e2-tests below, we're dealing with 3 components.
  * scopeA/comp1 -> scopeA/comp2 -> scopeB/comp3.
  * for comp1 perspective, the comp2 is a direct-dep, comp3 is an indirect-dep.
- *
- * @todo: test the following cases
- * 5. test snaps
  */
 describe('recovery after component/scope deletion', function () {
   this.timeout(0);
@@ -529,7 +526,7 @@ describe('recovery after component/scope deletion', function () {
           });
         });
       });
-      describe('dealing with snaps', () => {
+      describe('dealing with snaps, indirect dependency (comp3) has re-created with a new snap', () => {
         let beforeImportScope: string;
         before(() => {
           helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
@@ -573,6 +570,90 @@ describe('recovery after component/scope deletion', function () {
           expect(comp3).to.not.be.undefined;
           expect(comp3.versions).to.have.property('0.0.1');
           expect(comp3.versions).to.not.have.property('0.0.2');
+        });
+        function expectToImportProperly() {
+          it('comp3: should save 0.0.1 of in the orphanedVersions prop', () => {
+            const comp3 = helper.command.catComponent(`${remote2Name}/comp3`);
+            expect(comp3).to.have.property('orphanedVersions');
+            expect(comp3.orphanedVersions).to.have.property('0.0.1');
+          });
+          it('comp3: should not have 0.0.1 in the versions object', () => {
+            const comp3 = helper.command.catComponent(`${remote2Name}/comp3`);
+            expect(comp3.versions).not.to.have.property('0.0.1');
+          });
+          it('comp3: the head should be different than 0.0.1', () => {
+            const comp3 = helper.command.catComponent(`${remote2Name}/comp3`);
+            const hash = comp3.orphanedVersions['0.0.1'];
+            expect(comp3.head !== hash);
+          });
+          it('comp3: the remote ref hash should be the same as the current head, not as 0.0.1', () => {
+            const comp3 = helper.command.catComponent(`${remote2Name}/comp3`);
+            const hash = comp3.head;
+
+            const remoteRefs = helper.general.getRemoteRefPath(undefined, remote2Name);
+            expect(remoteRefs).to.be.a.file();
+            const remoteRefContent = fs.readJsonSync(remoteRefs);
+            expect(remoteRefContent).to.deep.include({
+              id: { scope: remote2Name, name: 'comp3' },
+              head: hash,
+            });
+          });
+        }
+        describe('importing both: comp1 and flatten-dep comp3 to the same workspace ', () => {
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+          });
+          describe('importing comp1 (comp3 as cached) first then comp3 (comp3 as direct)', () => {
+            before(() => {
+              helper.command.importComponent('comp1');
+              helper.command.import(`${remote2Name}/comp3`);
+            });
+            expectToImportProperly();
+          });
+          describe('importing comp3 (comp3 as direct) first then comp1 (comp3 as cached)', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+              helper.command.import(`${remote2Name}/comp3`);
+              helper.command.importComponent('comp1');
+            });
+            expectToImportProperly();
+          });
+          describe('importing comp3 (comp3 as direct) and comp1 (comp3 as cached) at the same time', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+              helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
+            });
+            expectToImportProperly();
+          });
+        });
+        describe('importing both: comp2 and direct-dep comp3 to the same workspace', () => {
+          // before, it was throwing ComponentNotFound error of comp3@0.0.1.
+          describe('importing comp2 (comp3 as cached) and then comp3', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+              helper.command.importComponent('comp2');
+              helper.command.import(`${remote2Name}/comp3`);
+            });
+            expectToImportProperly();
+          });
+          describe('importing comp3 and then comp2', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+              helper.command.import(`${remote2Name}/comp3`);
+              helper.command.importComponent('comp2');
+            });
+            expectToImportProperly();
+          });
+          describe('importing comp3 and comp2 at the same time', () => {
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+              helper.command.import(`${helper.scopes.remote}/comp2 ${remote2Name}/comp3`);
+            });
+            expectToImportProperly();
+            it('should be able to tag', () => {
+              expect(() => helper.command.tagAllComponents()).to.not.throw();
+            });
+          });
         });
       });
     }

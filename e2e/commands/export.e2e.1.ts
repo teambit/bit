@@ -1,8 +1,6 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-
 import { CURRENT_UPSTREAM } from '../../src/constants';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
