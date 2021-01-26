@@ -10,7 +10,7 @@ describe('SourceRepository', () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       sources = new Sources();
     });
-    it('should not remove a version that exist locally but not in the incoming component', () => {
+    it('should not remove a version that exist locally but not in the incoming component if it came not from its origin', () => {
       const existingComponent = Component.parse(
         JSON.stringify({
           name: 'foo',
@@ -30,10 +30,104 @@ describe('SourceRepository', () => {
         existingComponent,
         incomingComponent,
         [],
-        []
+        [],
+        false,
+        true
       );
       expect(mergedComponent.versions).to.have.property('0.0.2');
       expect(mergedComponent.versions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+      expect(mergedVersions).to.deep.equal([]);
+    });
+    it('should move a version to orphanedVersions if the incoming came from its origin and it does not have the version', () => {
+      const existingComponent = Component.parse(
+        JSON.stringify({
+          name: 'foo',
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+        })
+      );
+      const incomingComponent = Component.parse(
+        JSON.stringify({
+          name: 'foo',
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+        })
+      );
+      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+        existingComponent,
+        incomingComponent,
+        [],
+        [],
+        true,
+        true
+      );
+      expect(mergedComponent.versions).to.not.have.property('0.0.2');
+      expect(mergedComponent.orphanedVersions).to.have.property('0.0.2');
+      expect(mergedComponent.orphanedVersions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+      expect(mergedVersions).to.deep.equal([]);
+    });
+    it('should move a version from orphanedVersions to versions if the incoming came from its origin and it has this version', () => {
+      const existingComponent = Component.parse(
+        JSON.stringify({
+          name: 'foo',
+          versions: {
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          orphanedVersions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+          },
+        })
+      );
+      const incomingComponent = Component.parse(
+        JSON.stringify({
+          name: 'foo',
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+        })
+      );
+      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+        existingComponent,
+        incomingComponent,
+        [],
+        [],
+        true,
+        true
+      );
+      expect(mergedComponent.versions).to.have.property('0.0.1');
+      expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.1');
+      expect(mergedVersions).to.deep.equal(['0.0.1']);
+    });
+    // @todo: needs to decide what should be done here.
+    it.skip('should move a version to orphanedVersions if the incoming came via export and it does not have the version', () => {
+      const existingComponent = Component.parse(
+        JSON.stringify({
+          name: 'foo',
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+        })
+      );
+      const incomingComponent = Component.parse(
+        JSON.stringify({
+          name: 'foo',
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+        })
+      );
+      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+        existingComponent,
+        incomingComponent,
+        [],
+        [],
+        undefined,
+        false
+      );
+      expect(mergedComponent.versions).to.not.have.property('0.0.2');
+      expect(mergedComponent.orphanedVersions).to.have.property('0.0.2');
+      expect(mergedComponent.orphanedVersions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
       expect(mergedVersions).to.deep.equal([]);
     });
     it('should override a version from the incoming component in case of hash discrepancies', () => {

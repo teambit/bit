@@ -313,7 +313,7 @@ please make sure that the scope-resolver points to the right scope.`);
         } not found, going to fetch from a remote`
       );
       const remotes = await getScopeRemotes(this.scope);
-      return this._getExternal({ id, remotes, localFetch: false });
+      return this.getExternal({ id, remotes, localFetch: false });
     }
 
     logger.debug(
@@ -393,10 +393,11 @@ please make sure that the scope-resolver points to the right scope.`);
   }
 
   /**
-   * If the component is not in the local scope, fetch it from a remote and save into the local
+   * fetch from external with dependencies.
+   * if the component is not in the local scope, fetch it from a remote and save into the local
    * scope. (objects directory).
    */
-  async _getExternal({
+  private async getExternal({
     id,
     remotes,
     localFetch = true,
@@ -415,10 +416,10 @@ please make sure that the scope-resolver points to the right scope.`);
     }
     const { objectList } = await remotes.fetch(groupByScopeName([id]), this.scope, undefined, context);
     await this.scope.writeObjectListToModel(objectList, id.scope as string, true, [id]);
-    return this._getExternal({ id, remotes, localFetch: true });
+    return this.getExternal({ id, remotes, localFetch: true });
   }
 
-  async _getExternalWithoutDependencies({
+  private async getExternalWithoutDependencies({
     id,
     remotes,
     localFetch = true,
@@ -440,7 +441,7 @@ please make sure that the scope-resolver points to the right scope.`);
       context
     );
     await this.scope.writeObjectListToModel(objectList, id.scope as string, true, [id]);
-    const versionDependencies = await this._getExternal({ id, remotes, localFetch: true });
+    const versionDependencies = await this.getExternal({ id, remotes, localFetch: true });
     return versionDependencies.component;
   }
 
@@ -484,7 +485,7 @@ please make sure that the scope-resolver points to the right scope.`);
   async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.scope.name)) {
       const remotes = await getScopeRemotes(this.scope);
-      return this._getExternalWithoutDependencies({ id, remotes, localFetch: true });
+      return this.getExternalWithoutDependencies({ id, remotes, localFetch: true });
     }
 
     return this.sources.get(id).then((component) => {

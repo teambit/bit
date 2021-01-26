@@ -461,6 +461,7 @@ export default class Scope {
         if (component.scope === remoteName) {
           return false; // has been processed above already
         }
+        // @todo: maybe this should move to the merge logic
         const mergedComponent = mergedComponents.find((c) => c.id() === component.id());
         if (!mergedComponent) {
           mergedComponents.push(component);

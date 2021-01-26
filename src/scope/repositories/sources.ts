@@ -11,7 +11,7 @@ import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import ComponentObjects from '../component-objects';
-import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
+import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
 import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
@@ -21,6 +21,7 @@ import { ComponentProps } from '../models/model-component';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
 import Scope from '../scope';
+import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -571,9 +572,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   /**
    * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
    *
-   * When this function gets called originally from import command, the 'local' parameter is true. Otherwise, if it was
-   * originated from export command, it'll be false.
-   * If the 'local' is true and the existing component wasn't changed locally, it doesn't check for
+   * If the 'isImport' is true and the existing component wasn't changed locally, it doesn't check for
    * discrepancies, but simply override the existing component.
    * In this context, "discrepancy" means, same version but different hashes.
    * When using import command, it makes sense to override a component in case of discrepancies because the source of
@@ -606,6 +605,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
     if (!existingComponent) {
+      if (isExport) this.throwForMissingVersions(allVersionsInfo, component);
       this.putModelComponent(component);
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
     }
@@ -653,6 +653,13 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
     const conflictVersions = component.diffWith(existingComponent, isImport);
     throw new MergeConflict(component.id(), conflictVersions);
+  }
+
+  private throwForMissingVersions(allVersionsInfo: VersionInfo[], component: ModelComponent) {
+    const missingVersions = allVersionsInfo.filter((c) => !c.version).map((c) => c.tag || c.ref.toString());
+    if (missingVersions.length) {
+      throw new ExportMissingVersions(component.id(), missingVersions);
+    }
   }
 
   /**

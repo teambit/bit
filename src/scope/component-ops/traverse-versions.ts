@@ -14,7 +14,7 @@ import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
 
-type VersionInfo = {
+export type VersionInfo = {
   ref: Ref;
   tag?: string;
   version?: Version;

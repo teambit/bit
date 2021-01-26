@@ -17,7 +17,7 @@ chai.use(require('chai-fs'));
  * for comp1 perspective, the comp2 is a direct-dep, comp3 is an indirect-dep.
  *
  * @todo: test the following cases
- * 4. make sure importing a version that was in orphanedVersions before doesn't save it twice. should be only in "versions".
+ * 5. test snaps
  */
 describe('recovery after component/scope deletion', function () {
   this.timeout(0);
@@ -36,7 +36,9 @@ describe('recovery after component/scope deletion', function () {
       let scopeWithoutOwner: string;
       let remote2Path: string;
       let remote2Name: string;
-      let remoteScope: string;
+      let remoteScopeClone: string;
+      let remote2Clone: string;
+      let localClone: string;
       before(async () => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
@@ -60,8 +62,10 @@ describe('recovery after component/scope deletion', function () {
         helper.command.linkAndCompile();
         helper.command.tagAllComponents();
         helper.command.export();
+        localClone = helper.scopeHelper.cloneLocalScope();
         helper.scopeHelper.reInitRemoteScope(remote2Path);
-        remoteScope = helper.scopeHelper.cloneRemoteScope();
+        remote2Clone = helper.scopeHelper.cloneScope(remote2Path);
+        remoteScopeClone = helper.scopeHelper.cloneRemoteScope();
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -168,7 +172,7 @@ describe('recovery after component/scope deletion', function () {
       describe('indirect dependency scope is down (import comp1 while remote2 is down)', () => {
         let scopeWithMissingDep: string;
         before(() => {
-          helper.scopeHelper.getClonedRemoteScope(remoteScope);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
@@ -179,7 +183,7 @@ describe('recovery after component/scope deletion', function () {
           fs.removeSync(path.join(helper.scopes.localPath, '.bit/objects', hashPath));
           fs.removeSync(path.join(helper.scopes.localPath, '.bit/index.json'));
           scopeWithMissingDep = helper.scopeHelper.cloneLocalScope();
-          remoteScope = helper.scopeHelper.cloneRemoteScope();
+          remoteScopeClone = helper.scopeHelper.cloneRemoteScope();
           // delete the entire remote2
           fs.emptyDirSync(remote2Path);
         });
@@ -269,7 +273,7 @@ describe('recovery after component/scope deletion', function () {
       describe('direct dependency is missing (import comp2 while comp3 is missing)', () => {
         let scopeWithMissingDep: string;
         before(() => {
-          helper.scopeHelper.getClonedRemoteScope(remoteScope);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
           helper.scopeHelper.reInitRemoteScope(remote2Path);
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.bitJsonc.setupDefault();
@@ -359,7 +363,7 @@ describe('recovery after component/scope deletion', function () {
       describe('indirect dependency (comp3) has re-created with a different version', () => {
         let beforeImportScope: string;
         before(() => {
-          helper.scopeHelper.getClonedRemoteScope(remoteScope);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.bitJsonc.disablePreview();
           helper.scopeHelper.addRemoteScope(remote2Path);
@@ -523,6 +527,52 @@ describe('recovery after component/scope deletion', function () {
             expect(comp3.versions).not.to.have.property('0.0.1');
             expect(comp3.versions).to.have.property('0.0.8');
           });
+        });
+      });
+      describe('dealing with snaps', () => {
+        let beforeImportScope: string;
+        before(() => {
+          helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
+          helper.scopeHelper.getClonedRemoteScope(remoteScopeClone);
+          helper.scopeHelper.getClonedLocalScope(localClone);
+          helper.fs.modifyFile('comp1/index.js');
+          helper.fs.modifyFile('comp2/index.js');
+          helper.fs.modifyFile('comp3/index.js');
+          helper.command.snapAllComponentsWithoutBuild();
+          helper.command.export('--all-versions');
+          helper.scopeHelper.reInitRemoteScope(remote2Path);
+
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.bitJsonc.disablePreview();
+          helper.scopeHelper.addRemoteScope(remote2Path);
+          helper.fs.outputFile('comp3/index.js', '');
+          helper.command.addComponent('comp3');
+          helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
+          helper.command.snapAllComponentsWithoutBuild();
+
+          helper.command.export();
+          helper.scopeHelper.reInitLocalScopeHarmony();
+          helper.scopeHelper.addRemoteScope(remote2Path);
+          helper.bitJsonc.disablePreview();
+          npmCiRegistry.setResolver();
+          beforeImportScope = helper.scopeHelper.cloneLocalScope();
+        });
+        it('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
+          helper.command.importComponent('comp1');
+          const scope = helper.command.catScope(true);
+          const comp3 = scope.find((item) => item.name === 'comp3');
+          expect(comp3).to.not.be.undefined;
+          expect(comp3.versions).to.have.property('0.0.1');
+          expect(comp3.versions).to.not.have.property('0.0.2');
+        });
+        it('should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2', () => {
+          helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+          helper.command.importComponent('comp2');
+          const scope = helper.command.catScope(true);
+          const comp3 = scope.find((item) => item.name === 'comp3');
+          expect(comp3).to.not.be.undefined;
+          expect(comp3.versions).to.have.property('0.0.1');
+          expect(comp3.versions).to.not.have.property('0.0.2');
         });
       });
     }

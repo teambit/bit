@@ -189,6 +189,11 @@ export default class CommandHelper {
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
+  snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
+    const result = this.runCmd(`bit snap -a ${options} `, undefined, undefined, BUILD_ON_CI);
+    if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
+    return result;
+  }
   createLane(laneName = 'dev') {
     return this.runCmd(`bit switch ${laneName} --create`);
   }
