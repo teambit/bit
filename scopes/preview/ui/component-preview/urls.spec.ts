@@ -2,7 +2,6 @@ import { ComponentModel } from '@teambit/component';
 import { expect } from 'chai';
 import { toPreviewUrl, toPreviewServer, toPreviewHash } from './urls';
 
-// @ts-ignore
 const component = ComponentModel.from({
   id: { name: 'input/button', version: '0.6.2', scope: 'teambit.base-ui' },
   description: '',
@@ -10,7 +9,6 @@ const component = ComponentModel.from({
   packageName: '',
 });
 
-// @ts-ignore
 const componentWithoutVersion = ComponentModel.from({
   id: { name: 'input/button', version: undefined, scope: 'teambit.base-ui' },
   description: '',
@@ -18,7 +16,6 @@ const componentWithoutVersion = ComponentModel.from({
   packageName: '',
 });
 
-// @ts-ignore
 const componentWithExplicitServer = ComponentModel.from({
   id: { name: 'input/button', version: '0.6.2', scope: 'teambit.base-ui' },
   server: {

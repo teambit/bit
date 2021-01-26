@@ -15,7 +15,7 @@ export class Composition {
     /**
      * file path in which the composition is contained.
      */
-    readonly filepath: string
+    readonly filepath?: string
   ) {}
 
   get displayName() {
