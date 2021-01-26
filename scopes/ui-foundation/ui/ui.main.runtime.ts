@@ -169,7 +169,8 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootName?: string) {
+  async build(uiRootName?: string): Promise<any> {
+    // TODO: change to MultiStats from webpack once they export it in their types
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
