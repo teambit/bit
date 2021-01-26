@@ -1,4 +1,4 @@
-import { ComponentModel } from '@teambit/component';
+import type { ComponentModel } from '@teambit/component';
 import { affix } from '@teambit/base-ui.utils.string.affix';
 
 /**
