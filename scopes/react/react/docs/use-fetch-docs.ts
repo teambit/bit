@@ -90,7 +90,6 @@ export function useFetchDocs(componentId: string) {
     request(GQL_SERVER, DOCS_QUERY, variables)
       .then((result: QueryResults) => {
         setData({
-          // @ts-ignore
           component: ComponentModel.from(result.getHost.get),
           docs: result.getHost.getDocs,
         });
