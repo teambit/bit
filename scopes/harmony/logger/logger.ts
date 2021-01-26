@@ -106,6 +106,7 @@ export class Logger implements IBitLogger {
 
   private colorMessage(message: string) {
     const text = `${this.extensionName}, ${message}`;
+    if (logger.isJsonFormat) return text;
     return chalk.hex(stc(this.extensionName))(text);
   }
 }

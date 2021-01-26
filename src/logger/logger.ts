@@ -19,7 +19,8 @@ import { Profiler } from './profiler';
 
 export { Level as LoggerLevel };
 
-const jsonFormat = yn(getSync(CFG_LOG_JSON_FORMAT), { default: false });
+const jsonFormat =
+  yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }) || yn(process.env.JSON_LOGS, { default: false });
 
 const LEVELS = ['fatal', 'error', 'warn', 'info', 'debug', 'trace'];
 
@@ -95,6 +96,10 @@ class BitLogger implements IBitLogger {
 
   error(message: string, ...meta: any[]) {
     this.logger.error(message, ...meta);
+  }
+
+  get isJsonFormat() {
+    return jsonFormat;
   }
 
   /**
