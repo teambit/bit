@@ -242,6 +242,8 @@ export default function (fileMapPath: string): Configuration {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
               loader: require.resolve('babel-loader'),
               options: {
+                babelrc: false,
+                configFile: false,
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
                 plugins: [
                   [
