@@ -207,6 +207,7 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
         path: false,
         fs: false,
         stream: false,
+        process: false,
       },
     },
 

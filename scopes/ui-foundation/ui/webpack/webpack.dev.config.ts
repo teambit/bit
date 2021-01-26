@@ -163,6 +163,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
         fs: false,
         path: false,
         stream: false,
+        process: false,
       },
     },
 
