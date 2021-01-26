@@ -157,7 +157,6 @@ export default function createWebpackConfig(
         dgram: false,
         dns: false,
         fs: false,
-        path: false,
         stream: false,
         http2: false,
         net: false,

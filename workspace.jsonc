@@ -500,7 +500,8 @@
           // https://github.com/webpack/webpack/pull/8460/commits/a68426e9255edcce7822480b78416837617ab065
           "dependencies": {
             "util": "0.12.3",
-            "assert": "2.0.0"
+            "assert": "2.0.0",
+            "path-browserify": "1.0.1"
           }
         }
       }

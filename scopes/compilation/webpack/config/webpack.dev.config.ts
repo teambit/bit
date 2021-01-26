@@ -133,6 +133,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       fallback: {
         util: require.resolve('util'),
         assert: require.resolve('assert'),
+        path: require.resolve('path-browserify'),
       },
     },
 

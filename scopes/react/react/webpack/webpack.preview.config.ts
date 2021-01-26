@@ -205,7 +205,6 @@ export default function (fileMapPath: string): Configuration {
         }),
       },
       fallback: {
-        path: false,
         fs: false,
         stream: false,
         process: false,

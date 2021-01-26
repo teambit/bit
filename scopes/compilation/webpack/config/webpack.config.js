@@ -30,6 +30,7 @@ module.exports = (entries, rootPath) => {
       fallback: {
         util: require.resolve('util'),
         assert: require.resolve('assert'),
+        path: require.resolve('path-browserify'),
       },
     },
 
