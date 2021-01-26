@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import crossFetch from 'cross-fetch';
+import { request, gql } from 'graphql-request';
 import { ComponentModel } from '@teambit/component';
 
 const GQL_SERVER = '/graphql';
-const DOCS_QUERY = `
-  query getComponentDocs ($id: String!) {
+const DOCS_QUERY = gql`
+  query getComponentDocs($id: String!) {
     getHost {
       id
       get(id: $id) {
@@ -86,7 +86,8 @@ export function useFetchDocs(componentId: string) {
   useEffect(() => {
     setLoading(true);
 
-    execFetch(componentId)
+    const variables = { id: componentId };
+    request(GQL_SERVER, DOCS_QUERY, variables)
       .then((result: QueryResults) => {
         setData({
           // @ts-ignore
@@ -99,20 +100,7 @@ export function useFetchDocs(componentId: string) {
         setError(e);
         setLoading(false);
       });
-  }, []);
+  }, [componentId]);
 
   return { data, loading, error };
-}
-
-function execFetch(componentId: string) {
-  return crossFetch(GQL_SERVER, {
-    headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
-    body: JSON.stringify({
-      query: DOCS_QUERY,
-      variables: { id: componentId },
-    }),
-  })
-    .then((response) => response.json())
-    .then((results) => results.data);
 }
