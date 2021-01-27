@@ -10,7 +10,7 @@ export class TagMap extends Map<SemVer, Tag> {
    * get snap by hash.
    */
   byHash(hash: Hash) {
-    const tag = Array.from(this.values()).find((currTag) => currTag.snap.hash === hash);
+    const tag = Array.from(this.values()).find((currTag) => currTag.hash === hash);
     return tag;
   }
 

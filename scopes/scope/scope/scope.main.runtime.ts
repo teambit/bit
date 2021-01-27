@@ -546,7 +546,7 @@ export class ScopeMain implements ComponentFactory {
       // TODO: what to return if no version in objects
       if (version) {
         const snap = this.createSnapFromVersion(version);
-        const tag = new Tag(snap, new SemVer(versionStr));
+        const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr), snap);
         tagMap.set(tag.version, tag);
       }
     });
