@@ -556,10 +556,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const modelComponentMerger = new ModelComponentMerger(
       existingComponent,
       component,
-      isImport,
-      isIncomingFromOrigin,
       existingComponentTagsAndSnaps,
       tagsAndSnaps,
+      isImport,
+      isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();

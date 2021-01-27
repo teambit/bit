@@ -9,10 +9,10 @@ export class ModelComponentMerger {
   constructor(
     private existingComponent: ModelComponent,
     private incomingComponent: ModelComponent,
-    private isImport = true,
-    private isIncomingFromOrigin = true,
     private existingComponentTagsAndSnaps: string[],
     private incomingComponentTagsAndSnaps: string[],
+    private isImport: boolean,
+    private isIncomingFromOrigin: boolean,
     private existingHeadIsMissingInIncomingComponent: boolean
   ) {
     // the base component to save is the existingComponent because it might contain local data that
@@ -31,7 +31,6 @@ export class ModelComponentMerger {
   async merge(): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     logger.debug(`model-component-merger.merge component ${this.incomingComponent.id()}`);
     this.throwComponentNeedsUpdateIfNeeded();
-    // @todo lanes: should we pass the local lane to `isLocallyChanged`?
     const locallyChanged = await this.existingComponent.isLocallyChanged();
     this.throwMergeConflictIfNeeded(locallyChanged);
     this.replaceTagHashIfDifferentOnIncoming();
@@ -77,7 +76,7 @@ export class ModelComponentMerger {
 
   private throwMergeConflictIfNeeded(locallyChanged: boolean) {
     if (this.isImport && !locallyChanged) {
-      // since the component wasn't change, we don't mind replacing it with what we got from the remote.
+      // since the component wasn't change, we don't mind replacing it with what we got from the remote
       return;
     }
     if (!this.incomingComponent.compatibleWith(this.existingComponent, this.isImport)) {

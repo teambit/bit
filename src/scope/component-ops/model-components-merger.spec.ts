@@ -2,15 +2,16 @@ import { expect } from 'chai';
 
 import Sources from '../../scope/repositories/sources';
 import Component from '../models/model-component';
+import { ModelComponentMerger } from './model-components-merger';
 
-describe('SourceRepository', () => {
-  describe('mergeTwoComponentsObjects', () => {
+describe('ModelComponentMerger', () => {
+  describe('merge', () => {
     let sources: Sources;
     before(() => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       sources = new Sources();
     });
-    it('should not remove a version that exist locally but not in the incoming component if it came not from its origin', () => {
+    it('should not remove a version that exist locally but not in the incoming component if it came not from its origin', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
           name: 'foo',
@@ -26,19 +27,20 @@ describe('SourceRepository', () => {
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
         })
       );
-      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+      const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
         [],
         [],
         false,
-        true
-      );
+        true,
+        false
+      ).merge();
       expect(mergedComponent.versions).to.have.property('0.0.2');
       expect(mergedComponent.versions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
       expect(mergedVersions).to.deep.equal([]);
     });
-    it('should move a version to orphanedVersions if the incoming came from its origin and it does not have the version', () => {
+    it('should move a version to orphanedVersions if the incoming came from its origin and it does not have the version', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
           name: 'foo',
@@ -54,20 +56,21 @@ describe('SourceRepository', () => {
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
         })
       );
-      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+      const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
         [],
         [],
         true,
-        true
-      );
+        true,
+        false
+      ).merge();
       expect(mergedComponent.versions).to.not.have.property('0.0.2');
       expect(mergedComponent.orphanedVersions).to.have.property('0.0.2');
       expect(mergedComponent.orphanedVersions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
       expect(mergedVersions).to.deep.equal([]);
     });
-    it('should move a version from orphanedVersions to versions if the incoming came from its origin and it has this version', () => {
+    it('should move a version from orphanedVersions to versions if the incoming came from its origin and it has this version', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
           name: 'foo',
@@ -88,14 +91,15 @@ describe('SourceRepository', () => {
           },
         })
       );
-      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+      const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
         [],
         [],
         true,
-        true
-      );
+        true,
+        false
+      ).merge();
       expect(mergedComponent.versions).to.have.property('0.0.1');
       expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.1');
       expect(mergedVersions).to.deep.equal(['0.0.1']);
@@ -130,7 +134,7 @@ describe('SourceRepository', () => {
       expect(mergedComponent.orphanedVersions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
       expect(mergedVersions).to.deep.equal([]);
     });
-    it('should override a version from the incoming component in case of hash discrepancies', () => {
+    it('should override a version from the incoming component in case of hash discrepancies', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
           name: 'foo',
@@ -143,16 +147,19 @@ describe('SourceRepository', () => {
           versions: { '0.0.1': 'c471678f719783b044ac6d933ccb1da7132dc93d' },
         })
       );
-      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+      const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
         [],
-        []
-      );
+        [],
+        true,
+        true,
+        false
+      ).merge();
       expect(mergedComponent.versions['0.0.1'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
       expect(mergedVersions).to.deep.equal(['0.0.1']);
     });
-    it('should add versions that exist in the incoming component but not locally', () => {
+    it('should add versions that exist in the incoming component but not locally', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
           name: 'foo',
@@ -169,12 +176,15 @@ describe('SourceRepository', () => {
           },
         })
       );
-      const { mergedComponent, mergedVersions } = sources.mergeTwoComponentsObjects(
+      const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
         [],
-        []
-      );
+        [],
+        true,
+        true,
+        false
+      ).merge();
       expect(mergedComponent.versions).to.have.property('0.0.1');
       expect(mergedComponent.versions).to.have.property('0.0.2');
       expect(mergedComponent.versions).to.have.property('0.0.3');
