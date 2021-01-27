@@ -94,7 +94,7 @@ export default class DependencyGraph {
     const allModelComponents: ModelComponent[] = await scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
       const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
-        const version = await modelComponent.loadVersion(versionNum, scope.objects);
+        const version = await modelComponent.loadVersion(versionNum, scope.objects, false);
         if (!version) {
           // a component might be in the scope with only the latest version
           return;
@@ -122,7 +122,7 @@ export default class DependencyGraph {
         const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =
-          componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects));
+          componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects, false));
         if (!version) {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;

@@ -35,6 +35,7 @@ export class ModelComponentMerger {
     this.moveTagToOrphanedIfNotExistOnOrigin();
     this.addSnapsToMergedVersions();
     this.addNonExistTagFromIncoming();
+    this.addOrphanedVersionFromIncoming();
     this.setHead(locallyChanged);
     this.deleteOrphanedVersionsOnExport();
 
@@ -137,6 +138,21 @@ export class ModelComponentMerger {
         // happens when retrieved from the cache of the remote.
         this.mergedComponent.orphanedVersions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
       }
+      this.mergedVersions.push(incomingVersion);
+    });
+  }
+
+  /**
+   * a remote may have a version not in the "versions" array but in the "orphanedVersions".
+   * it happens when it got that version not from the original remote but from a cache of a
+   * different remote. locally, we need this data to not throw an error later about missing objects
+   */
+  private addOrphanedVersionFromIncoming() {
+    if (this.isExport) {
+      return; // we shouldn't get any orphaned during export.
+    }
+    Object.keys(this.incomingComponent.orphanedVersions).forEach((incomingVersion) => {
+      this.mergedComponent.orphanedVersions[incomingVersion] = this.incomingComponent.orphanedVersions[incomingVersion];
       this.mergedVersions.push(incomingVersion);
     });
   }

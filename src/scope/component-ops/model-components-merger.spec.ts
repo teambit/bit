@@ -300,6 +300,29 @@ describe('ModelComponentMerger', () => {
         // no need to put in orphaned because this version exists already in "versions" prop.
         expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.2');
       });
+      it('should copy orphanedVersions', async () => {
+        const existing = getComponentObject({
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+          head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+        });
+        const incoming = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+          },
+          orphanedVersions: {
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+        });
+        const { mergedComponent } = await merge(existing, incoming, true, false);
+        expect(mergedComponent.orphanedVersions).to.have.property('0.0.2');
+        expect(mergedComponent.orphanedVersions['0.0.2'].toString()).to.equal(
+          'c471678f719783b044ac6d933ccb1da7132dc93d'
+        );
+        expect(mergedComponent.versions).to.have.property('0.0.1');
+        expect(mergedComponent.versions).to.not.have.property('0.0.2');
+        expect(mergedComponent.head?.toString()).to.equal('3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e');
+      });
     });
     describe('exporting to origin', () => {
       it('should update the head', async () => {

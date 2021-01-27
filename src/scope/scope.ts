@@ -3,7 +3,6 @@ import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import { flatten } from 'lodash';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -707,9 +706,7 @@ export default class Scope {
   async getVersionInstance(id: BitId): Promise<Version> {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
     const component: ModelComponent = await this.getModelComponent(id);
-    // $FlowFixMe id.version is not null, was checked above
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return component.loadVersion(id.version, this.objects);
+    return component.loadVersion(id.version as string, this.objects);
   }
 
   async getComponentsAndVersions(ids: BitIds, defaultToLatestVersion = false): Promise<ComponentsAndVersions[]> {

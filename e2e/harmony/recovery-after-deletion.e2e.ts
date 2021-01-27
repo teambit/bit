@@ -510,6 +510,25 @@ describe('recovery after component/scope deletion', function () {
             expect(comp3.versions).not.to.have.property('0.0.1');
             expect(comp3.versions).to.have.property('0.0.2');
           });
+          describe('importing comp3 and then comp1 which brings comp3 with orphaned', () => {
+            let importComp1Output: string;
+            before(() => {
+              helper.scopeHelper.getClonedLocalScope(beforeImportScope);
+              helper.command.import(`${remote2Name}/comp3`);
+              importComp1Output = helper.command.importComponent('comp1');
+            });
+            it('should not indicate that dependencies are missing', () => {
+              expect(importComp1Output).to.not.include('missing dependencies');
+            });
+            it('should save the orphaned version of comp3 locally', () => {
+              const comp3 = helper.command.catComponent(`${remote2Name}/comp3`);
+              expect(comp3).to.have.property('orphanedVersions');
+              expect(comp3.orphanedVersions).to.have.property('0.0.1');
+            });
+            it('should not throw an error on bit-tag of comp1', () => {
+              expect(() => helper.command.tagWithoutBuild(`${helper.scopes.remote}/comp1`, '--force')).to.not.throw();
+            });
+          });
         });
         describe('re-export comp3 when locally it has orphanedVersions prop', () => {
           before(() => {

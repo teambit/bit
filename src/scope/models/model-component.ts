@@ -412,7 +412,13 @@ export default class Component extends BitObject {
     const hasSameVersions = Object.keys(this.versions).every(
       (tag) => component.versions[tag] && component.versions[tag].isEqual(this.versions[tag])
     );
-    return hasSameVersions;
+    if (Object.keys(this.orphanedVersions).length !== Object.keys(component.orphanedVersions).length) {
+      return false;
+    }
+    const hasSameOrphanedVersions = Object.keys(this.orphanedVersions).every(
+      (tag) => component.orphanedVersions[tag] && component.orphanedVersions[tag].isEqual(this.orphanedVersions[tag])
+    );
+    return hasSameVersions && hasSameOrphanedVersions;
   }
 
   getSnapToAdd() {
@@ -515,11 +521,12 @@ export default class Component extends BitObject {
     return componentObject;
   }
 
-  async loadVersion(version: string, repository: Repository): Promise<Version> {
-    const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version, this.id());
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return versionRef.load(repository);
+  async loadVersion(versionStr: string, repository: Repository, throws = true): Promise<Version> {
+    const versionRef = this.getRef(versionStr);
+    if (!versionRef) throw new VersionNotFound(versionStr, this.id());
+    const version = await versionRef.load(repository);
+    if (!version && throws) throw new VersionNotFound(versionStr, this.id(), true);
+    return version as Version;
   }
 
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
