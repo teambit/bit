@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
+import { ComponentID } from '@teambit/component-id';
 
 import { Workspace } from './workspace-model';
 
@@ -85,6 +86,15 @@ export function useWorkspace() {
       updateQuery: (prev, { subscriptionData }) => {
         const update = subscriptionData.data;
         if (!update) return prev;
+        const componentExists = prev.workspace.components.find(
+          (component: any) =>
+            ComponentID.fromObject(component.id, component.id.scope).toString() ===
+            ComponentID.fromObject(
+              update.componentAdded.component.id,
+              update.componentAdded.component.id.scope
+            ).toString()
+        );
+        if (componentExists) return prev;
 
         return {
           ...prev,
