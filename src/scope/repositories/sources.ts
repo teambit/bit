@@ -523,44 +523,44 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * hasn't changed.
    */
   async merge(
-    component: ModelComponent,
+    incomingComp: ModelComponent,
     versionObjects: Version[],
     remoteName: string | undefined, // not available on export (isImport = false)
     isImport = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     const isExport = !isImport;
-    // for export, currently it'll always be true. later, we might want to support exporting
-    // dependencies from other scopes and then isIncomingFromOrigin could be false
-    const isIncomingFromOrigin = isImport ? remoteName === component.scope : component.scope === this.scope.name;
-    // don't throw if not found because on export not all objects are sent to the remote
-    const allVersionsInfo = await getAllVersionsInfo({ modelComponent: component, throws: false, versionObjects });
-    const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
-    const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
-    const existingComponent = await this._findComponent(component);
-    if (!existingComponent) {
-      if (isExport) this.throwForMissingVersions(allVersionsInfo, component);
-      this.putModelComponent(component);
-      return { mergedComponent: component, mergedVersions: tagsAndSnaps };
+    const existingComp = await this._findComponent(incomingComp);
+    if (existingComp && incomingComp.isEqual(existingComp)) {
+      return { mergedComponent: incomingComp, mergedVersions: [] };
     }
-    if (component.isEqual(existingComponent)) {
-      return { mergedComponent: component, mergedVersions: [] };
+    // don't throw if not found because on export not all objects are sent to the remote
+    const allVersionsInfo = await getAllVersionsInfo({ modelComponent: incomingComp, throws: false, versionObjects });
+    const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
+    const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
+    if (!existingComp) {
+      if (isExport) this.throwForMissingVersions(allVersionsInfo, incomingComp);
+      this.putModelComponent(incomingComp);
+      return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
     const hashesOfHistoryGraph = allVersionsInfo
       .map((v) => (v.isPartOfHistory ? v.ref : null))
       .filter((ref) => ref) as Ref[];
-    const existingComponentHead = existingComponent.getHead();
+    const existingComponentHead = existingComp.getHead();
     const existingHeadIsMissingInIncomingComponent = Boolean(
-      component.hasHead() &&
+      incomingComp.hasHead() &&
         existingComponentHead &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
-    const existingComponentHashes = await getAllVersionHashes(existingComponent, this.objects(), false);
-    const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
+    const existingComponentHashes = await getAllVersionHashes(existingComp, this.objects(), false);
+    const existingTagsAndSnaps = existingComp.switchHashesWithTagsIfExist(existingComponentHashes);
+    // for export, currently it'll always be true. later, we might want to support exporting
+    // dependencies from other scopes and then isIncomingFromOrigin could be false
+    const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
     const modelComponentMerger = new ModelComponentMerger(
-      existingComponent,
-      component,
-      existingComponentTagsAndSnaps,
-      tagsAndSnaps,
+      existingComp,
+      incomingComp,
+      existingTagsAndSnaps,
+      incomingTagsAndSnaps,
       isImport,
       isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
