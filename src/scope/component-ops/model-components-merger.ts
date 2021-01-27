@@ -10,8 +10,8 @@ export class ModelComponentMerger {
   constructor(
     private existingComponent: ModelComponent,
     private incomingComponent: ModelComponent,
-    private existingComponentTagsAndSnaps: string[],
-    private incomingComponentTagsAndSnaps: string[],
+    private existingTagsAndSnaps: string[],
+    private incomingTagsAndSnaps: string[],
     private isImport: boolean,
     private isIncomingFromOrigin: boolean,
     private existingHeadIsMissingInIncomingComponent: boolean
@@ -48,27 +48,20 @@ export class ModelComponentMerger {
 
   private addSnapsToMergedVersions() {
     if (this.incomingComponent.hasHead()) {
-      const mergedSnaps = this.incomingComponentTagsAndSnaps.filter(
-        (tagOrSnap) =>
-          !this.existingComponentTagsAndSnaps.includes(tagOrSnap) && !this.mergedVersions.includes(tagOrSnap)
+      const mergedSnaps = this.incomingTagsAndSnaps.filter(
+        (tagOrSnap) => !this.existingTagsAndSnaps.includes(tagOrSnap) && !this.mergedVersions.includes(tagOrSnap)
       );
       this.mergedVersions.push(...mergedSnaps);
     }
   }
 
   private setHead(locallyChanged: boolean) {
-    if (this.incomingComponent.remoteHead) this.mergedComponent.remoteHead = this.incomingComponent.remoteHead;
-
-    const componentHead = this.incomingComponent.getHead();
-    if (componentHead) {
-      // when importing, do not override the head unless the incoming is ahead or it wasn't changed
-      if (
-        this.isExport ||
-        !this.existingHeadIsMissingInIncomingComponent ||
-        (this.isIncomingFromOrigin && !locallyChanged)
-      ) {
-        this.mergedComponent.setHead(componentHead);
-      }
+    const incomingHead = this.incomingComponent.getHead();
+    if (!incomingHead) {
+      return;
+    }
+    if (this.isIncomingFromOrigin && !locallyChanged) {
+      this.mergedComponent.setHead(incomingHead);
     }
   }
 
@@ -126,16 +119,19 @@ export class ModelComponentMerger {
   private addNonExistTagFromIncoming() {
     // in case the incoming component has versions that are not in the existing component, copy them
     Object.keys(this.incomingComponent.versions).forEach((incomingVersion) => {
-      if (!this.existingComponent.versions[incomingVersion]) {
-        if (this.isExport || this.isIncomingFromOrigin) {
-          this.mergedComponent.versions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
-          delete this.mergedComponent.orphanedVersions[incomingVersion];
-        } else {
-          // happens on import only when retrieved from the cache of the remote.
-          this.mergedComponent.orphanedVersions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
-        }
-        this.mergedVersions.push(incomingVersion);
+      if (this.existingComponent.versions[incomingVersion]) {
+        return;
       }
+      if (this.isIncomingFromOrigin) {
+        // it's legit, add the tag
+        this.mergedComponent.versions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
+        // if this tag was in orphaned (fetched previously from dependent-cache), remove it.
+        delete this.mergedComponent.orphanedVersions[incomingVersion];
+      } else {
+        // happens when retrieved from the cache of the remote.
+        this.mergedComponent.orphanedVersions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
+      }
+      this.mergedVersions.push(incomingVersion);
     });
   }
 }

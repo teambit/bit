@@ -529,7 +529,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     isImport = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     const isExport = !isImport;
-    const isIncomingFromOrigin = remoteName === component.scope;
+    // for export, currently it'll always be true. later, we might want to support exporting
+    // dependencies from other scopes and then isIncomingFromOrigin could be false
+    const isIncomingFromOrigin = isImport ? remoteName === component.scope : component.scope === this.scope.name;
     // don't throw if not found because on export not all objects are sent to the remote
     const allVersionsInfo = await getAllVersionsInfo({ modelComponent: component, throws: false, versionObjects });
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];

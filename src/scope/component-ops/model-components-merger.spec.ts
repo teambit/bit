@@ -97,37 +97,6 @@ describe('ModelComponentMerger', () => {
       expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.1');
       expect(mergedVersions).to.deep.equal(['0.0.1']);
     });
-    // @todo: needs to decide what should be done here.
-    it.skip('should move a version to orphanedVersions if the incoming came via export and it does not have the version', async () => {
-      const existingComponent = Component.parse(
-        JSON.stringify({
-          name: 'foo',
-          versions: {
-            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
-            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
-          },
-        })
-      );
-      const incomingComponent = Component.parse(
-        JSON.stringify({
-          name: 'foo',
-          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
-        })
-      );
-      const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
-        existingComponent,
-        incomingComponent,
-        [],
-        [],
-        true,
-        true,
-        false
-      ).merge();
-      expect(mergedComponent.versions).to.not.have.property('0.0.2');
-      expect(mergedComponent.orphanedVersions).to.have.property('0.0.2');
-      expect(mergedComponent.orphanedVersions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
-      expect(mergedVersions).to.deep.equal([]);
-    });
     it('should override a version from the incoming component in case of hash discrepancies', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
@@ -187,5 +156,71 @@ describe('ModelComponentMerger', () => {
       expect(mergedComponent.versions['0.0.3'].toString()).to.equal('56f2b008f43c20f6538ef27023759c3d9a44992c');
       expect(mergedVersions).to.deep.equal(['0.0.2', '0.0.3']);
     });
+    describe('with head', () => {
+      it('importing from origin, should update the head and move tags to orphanedVersions if needed', async () => {
+        const existing = getComponentObject({
+          name: 'foo',
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
+        });
+        const incoming = getComponentObject({
+          name: 'foo',
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+          head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+        });
+        const { mergedComponent } = await merge(existing, incoming, true, true);
+
+        expect(mergedComponent.head?.toString()).to.equal('3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e');
+        expect(mergedComponent.versions).to.have.property('0.0.1');
+        expect(mergedComponent.versions).to.not.have.property('0.0.2');
+        expect(mergedComponent.orphanedVersions).to.have.property('0.0.2');
+      });
+      it('importing from non-origin, should not update the head and not move tags to orphanedVersions', async () => {
+        const existing = getComponentObject({
+          name: 'foo',
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
+        });
+        const incoming = getComponentObject({
+          name: 'foo',
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+          head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+        });
+        const { mergedComponent } = await merge(existing, incoming, true, false);
+
+        expect(mergedComponent.head?.toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+        expect(mergedComponent.versions).to.have.property('0.0.1');
+        expect(mergedComponent.versions).to.have.property('0.0.2');
+        expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.2');
+      });
+    });
   });
 });
+
+function getComponentObject(componentObj: Record<string, any>): Component {
+  return Component.parse(JSON.stringify(componentObj));
+}
+
+async function merge(
+  existingComponent: Component,
+  incomingComponent: Component,
+  isImport: boolean,
+  isIncomingFromOrigin: boolean
+) {
+  const modelComponentMerger = new ModelComponentMerger(
+    existingComponent,
+    incomingComponent,
+    [],
+    [],
+    isImport,
+    isIncomingFromOrigin,
+    false
+  );
+  return modelComponentMerger.merge();
+}

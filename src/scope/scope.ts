@@ -521,10 +521,10 @@ export default class Scope {
   }
 
   async mergeModelComponent(component: ModelComponent, versions: Version[], remoteName: string) {
-    const isIncomingFromOrigin = remoteName === component.scope;
-    if (isIncomingFromOrigin && component.head) component.remoteHead = component.head;
     const { mergedComponent } = await this.sources.merge(component, versions, remoteName);
-    if (isIncomingFromOrigin && mergedComponent.remoteHead) {
+    const isIncomingFromOrigin = remoteName === component.scope;
+    if (isIncomingFromOrigin && component.head) {
+      mergedComponent.remoteHead = component.head;
       // when importing a component, save the remote head into the remote master ref file.
       // unless this component arrived as a cache of the dependent, which its head might be wrong
       await this.objects.remoteLanes.addEntry(
