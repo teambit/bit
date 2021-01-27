@@ -1,6 +1,8 @@
+import React, { CSSProperties, createRef } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
-import React, { CSSProperties, createRef } from 'react';
+
+import { toPreviewUrl } from './urls';
 
 export type ComponentPreviewProps = {
   /**
@@ -26,7 +28,7 @@ export type ComponentPreviewProps = {
   /**
    * enable/disable hot reload for the composition preview.
    */
-  hotReload: boolean;
+  hotReload?: boolean;
 };
 
 /**
@@ -36,12 +38,7 @@ export function ComponentPreview({ component, style, previewName, queryParams }:
   const ref = createRef<HTMLIFrameElement>();
   usePubSubIframe(ref);
 
-  const serverUrl = `/api/${component.id.toString()}/~aspect/preview`;
-  // const compWithVersion = component.id.version !== 'latest' ? `${component.id.fullName}@${component.id.version}`: component.id.fullName;
-
-  const url = `${(component.server && component.server.url) || serverUrl}/#${component.id.toString()}${
-    `?preview=${previewName}&${queryParams && queryParams}` || ''
-  }`;
+  const url = toPreviewUrl(component, previewName, queryParams);
 
   return <iframe ref={ref} style={style} src={url} />;
 }

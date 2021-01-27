@@ -13,24 +13,28 @@ export async function createRoot(
   config = {}
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
+  const identifiers = getIdentifiers(
+    aspectDefs.map((def) => def.aspectPath),
+    'Aspect'
+  );
+
+  const idSetters = getIdSetters(aspectDefs, 'Aspect');
 
   return `
 ${createImports(aspectDefs)}
 
 const isBrowser = typeof window !== "undefined";
 const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
+${idSetters.join('\n')}
 
 export function render(...props){
-  return Harmony.load([${getIdentifiers(
-    aspectDefs.map((def) => def.aspectPath),
-    'Aspect'
-  )}], '${runtime}', config)
+  return Harmony.load([${identifiers.join(', ')}], '${runtime}', config)
     .then((harmony) => {
       return harmony
       .run()
       .then(() => {
         const rootExtension = harmony.get('${rootAspect}');
-        
+
         if (isBrowser) {
           return rootExtension.render(${rootId}, ...props);
         } else {
@@ -54,7 +58,7 @@ function createImports(aspectDefs: AspectDefinition[]) {
 ${getImportStatements(
   aspectDefs.map((def) => def.aspectPath),
   'Aspect'
-)} 
+)}
 ${getImportStatements(
   // @ts-ignore no nulls can be found here - see above.
   defs.map((def) => def.runtimePath),
@@ -68,8 +72,17 @@ function getImportStatements(extensionPaths: string[], suffix: string): string {
     .join('\n');
 }
 
-function getIdentifiers(extensionsPaths: string[], suffix: string): string {
-  return extensionsPaths.map((path) => `${getIdentifier(path, suffix)}`).join(', ');
+function getIdentifiers(extensionsPaths: string[], suffix: string): string[] {
+  return extensionsPaths.map((path) => `${getIdentifier(path, suffix)}`);
+}
+
+function getIdSetters(defs: AspectDefinition[], suffix: string) {
+  return defs
+    .map((def) => {
+      if (!def.getId) return undefined;
+      return `${getIdentifier(def.aspectPath, suffix)}.id = '${def.getId}';`;
+    })
+    .filter((val) => !!val);
 }
 
 function getIdentifier(path: string, suffix: string): string {

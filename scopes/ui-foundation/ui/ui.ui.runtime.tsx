@@ -4,7 +4,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { ReactRouterUI } from '@teambit/react-router';
 import { ReactRouterAspect } from '@teambit/react-router';
 
-import merge from 'webpack-merge';
+import { merge } from 'webpack-merge';
 import React, { ReactNode, ComponentType } from 'react';
 import ReactDOM from 'react-dom';
 import ReactDOMServer from 'react-dom/server';

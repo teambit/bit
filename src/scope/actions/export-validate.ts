@@ -45,6 +45,7 @@ export class ExportValidate implements Action<Options> {
         break;
       }
     }
+    if (clientQueue[0] === this.clientId) return; // it's your turn
     const nextClientCreatedTs = await this.clientCreatedTimestampMs(clientQueue[0]);
     throw new ServerIsBusy(clientQueue.length, nextClientCreatedTs ? this.msUntilStale(nextClientCreatedTs) : 0);
   }

@@ -1,5 +1,4 @@
 import React, { useContext } from 'react';
-import { flatten } from 'lodash';
 import { ComponentCard } from '@teambit/ui.gallery.component-card';
 import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
 import { ScopeDetails } from '@teambit/ui.scope-details';
@@ -19,18 +18,17 @@ export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
   const { components } = scope;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
-  const lines = flatten(overviewSlot.values());
 
   return (
     <div className={styles.container}>
       <ScopeDetails
         scopeName={scope.name}
         icon={scope.icon}
-        badgeSlot={badgeSlot} // visibility should be extended by a slot registered by bit.dev
+        badgeSlot={badgeSlot}
+        overviewSlot={overviewSlot}
         description={scope.description}
         componentCount={scope.components.length}
       />
-      {lines.length > 0 && lines.map((Line, index) => <Line key={index} />)}
       <ComponentGrid>
         {components.map((component, index) => {
           return (
@@ -55,6 +53,7 @@ export function ScopeComponentCard({ component }: ScopeComponentCardProps) {
       id={component.id.fullName}
       envIcon={component.environment?.icon}
       description={component.description}
+      version={component.version}
       preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
     />
   );

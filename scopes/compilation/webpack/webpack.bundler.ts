@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import webpack, { Compiler, Configuration } from 'webpack';
-import merge from 'webpack-merge';
+import { merge } from 'webpack-merge';
 
 import configFactory from './config/webpack.config';
 
