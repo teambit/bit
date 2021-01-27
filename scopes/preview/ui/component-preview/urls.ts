@@ -15,7 +15,9 @@ export function toPreviewUrl(component: ComponentModel, previewName?: string, ad
  * generates preview server path from component data
  */
 export function toPreviewServer(component: ComponentModel) {
-  const explicitUrl = component.server?.url;
+  let explicitUrl = component.server?.url;
+  // quickfix - preview urls in `start` (without `--dev`) won't work without trailing '/'
+  if (explicitUrl && !explicitUrl.endsWith('/')) explicitUrl += '/';
 
   // // not fully working in bare-scope, and does not support version
   // const envId = component.environment?.id;
