@@ -10,6 +10,24 @@ export function getPinoLogger(
     sync: true, // no choice here :( otherwise, it looses data especially when an error is thrown (although pino.final is used to flush)
   });
 
+  // https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
+  const PinoLevelToSeverityLookup = {
+    trace: 'DEBUG',
+    debug: 'DEBUG',
+    info: 'INFO',
+    warn: 'WARNING',
+    error: 'ERROR',
+    fatal: 'CRITICAL',
+  };
+
+  const formatters = {
+    level(label: string, number: number) {
+      return {
+        severity: PinoLevelToSeverityLookup[label] || PinoLevelToSeverityLookup.info,
+        level: number,
+      };
+    },
+  };
   const prettyPrint = {
     colorize: true,
     translateTime: 'SYS:standard',
@@ -40,6 +58,7 @@ export function getPinoLogger(
 
   const opts: LoggerOptions = {
     hooks,
+    formatters,
   };
 
   if (!jsonFormat) {
@@ -49,7 +68,7 @@ export function getPinoLogger(
   const pinoLogger: PinoLogger = pino(opts, dest);
   pinoLogger.level = logLevel;
 
-  const pinoLoggerConsole = pino({ hooks, prettyPrint: prettyPrintConsole });
+  const pinoLoggerConsole = pino({ hooks, formatters, prettyPrint: jsonFormat ? false : prettyPrintConsole });
   pinoLoggerConsole.level = logLevel;
 
   return { pinoLogger, pinoLoggerConsole };
