@@ -154,8 +154,8 @@ export class EnvsMain {
       const envDef = this.getEnvDefinitionById(aspectEntry.id);
       if (envDef) {
         envDefFromList = envDef;
-        return !!envDef;
       }
+      return !!envDef;
     });
 
     if (envDefFromList) {
@@ -218,8 +218,8 @@ export class EnvsMain {
       const envDef = getEnvDefinitionByLegacyExtension(extension);
       if (envDef) {
         envDefFromList = envDef;
-        return !!envDef;
       }
+      return !!envDef;
     });
 
     if (envDefFromList) {
@@ -240,6 +240,7 @@ export class EnvsMain {
     if (env) {
       return new EnvDefinition(envId, env as Environment);
     }
+    return undefined;
   }
 
   /**
