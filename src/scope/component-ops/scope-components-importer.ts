@@ -279,7 +279,7 @@ please make sure that the scope-resolver points to the right scope.`);
 
   async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
-    const version: Version = await versionComp.getVersion(this.scope.objects);
+    const version = await versionComp.getVersion(this.scope.objects, false);
     if (version) return version;
     if (component.scope === this.scope.name) {
       // it should have been fetched locally, since it wasn't found, this is an error

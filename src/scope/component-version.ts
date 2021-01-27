@@ -27,8 +27,8 @@ export default class ComponentVersion {
     Object.freeze(this);
   }
 
-  getVersion(repository: Repository): Promise<Version> {
-    return this.component.loadVersion(this.version, repository);
+  getVersion(repository: Repository, throws = true): Promise<Version> {
+    return this.component.loadVersion(this.version, repository, throws);
   }
 
   flattenedDependencies(repository: Repository): Promise<BitIds> {
@@ -58,7 +58,7 @@ export default class ComponentVersion {
     collectParents: boolean,
     collectArtifacts: boolean
   ): Promise<ObjectItem[]> {
-    const version = await this.getVersion(repo);
+    const version = await this.getVersion(repo, false);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15
     // and the client has < 15, the client will get anyway an error to upgrade the version

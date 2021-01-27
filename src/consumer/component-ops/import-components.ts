@@ -435,7 +435,7 @@ export default class ImportComponents {
       otherComponent: fsComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent, // $FlowFixMe
+      currentComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       currentLabel: component.id.version,
       baseComponent,

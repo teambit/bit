@@ -67,7 +67,7 @@ export default class DependencyGraph {
         graph.setNode(component.id(), component);
         await Promise.all(
           Object.keys(component.versionsIncludeOrphaned).map(async (version) => {
-            const componentVersion = await component.loadVersion(version, scope.objects);
+            const componentVersion = await component.loadVersion(version, scope.objects, false);
             if (!componentVersion) return;
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);
