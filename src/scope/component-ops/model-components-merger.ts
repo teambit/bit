@@ -13,7 +13,7 @@ export class ModelComponentMerger {
     private existingTagsAndSnaps: string[],
     private incomingTagsAndSnaps: string[],
     private isImport: boolean,
-    private isIncomingFromOrigin: boolean,
+    private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
     private existingHeadIsMissingInIncomingComponent: boolean
   ) {
     // the base component to save is the existingComponent because it might contain local data that
@@ -66,6 +66,9 @@ export class ModelComponentMerger {
   }
 
   private throwMergeConflictIfNeeded(locallyChanged: boolean) {
+    if (!this.isIncomingFromOrigin) {
+      return; // if it's not from origin, the tag is not going to save in "versions" anyway.
+    }
     if (this.isImport && !locallyChanged) {
       // since the component wasn't change, we don't mind replacing it with what we got from the remote
       return;
@@ -88,6 +91,9 @@ export class ModelComponentMerger {
   }
 
   private replaceTagHashIfDifferentOnIncoming() {
+    if (!this.isIncomingFromOrigin) {
+      return; // no need to replace. the existing is the correct one.
+    }
     // in case the existing version hash is different than incoming version hash, use the incoming
     // version because we hold the incoming component from a remote as the source of truth
     Object.keys(this.existingComponent.versions).forEach((existingVersion) => {

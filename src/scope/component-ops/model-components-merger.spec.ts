@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import { MergeConflict } from '../exceptions';
 import Component from '../models/model-component';
 import { ModelComponentMerger } from './model-components-merger';
 
@@ -159,7 +160,6 @@ describe('ModelComponentMerger', () => {
     describe('with head', () => {
       it('importing from origin, should update the head and move tags to orphanedVersions if needed', async () => {
         const existing = getComponentObject({
-          name: 'foo',
           versions: {
             '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
             '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
@@ -167,7 +167,6 @@ describe('ModelComponentMerger', () => {
           head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
         });
         const incoming = getComponentObject({
-          name: 'foo',
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
           head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
         });
@@ -180,7 +179,6 @@ describe('ModelComponentMerger', () => {
       });
       it('importing from non-origin, should not update the head and not move tags to orphanedVersions', async () => {
         const existing = getComponentObject({
-          name: 'foo',
           versions: {
             '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
             '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
@@ -188,7 +186,6 @@ describe('ModelComponentMerger', () => {
           head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
         });
         const incoming = getComponentObject({
-          name: 'foo',
           versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
           head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
         });
@@ -199,12 +196,122 @@ describe('ModelComponentMerger', () => {
         expect(mergedComponent.versions).to.have.property('0.0.2');
         expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.2');
       });
+      it('exporting to origin, should update the head', async () => {
+        const existing = getComponentObject({
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+          head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+        });
+        const incoming = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
+        });
+        const { mergedComponent, mergedVersions } = await merge(existing, incoming, false, true);
+
+        expect(mergedComponent.head?.toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+        expect(mergedComponent.versions).to.have.property('0.0.1');
+        expect(mergedComponent.versions).to.have.property('0.0.2');
+        expect(mergedVersions).to.deep.equal(['0.0.2']);
+      });
+      it('importing from origin, should not update the head if changed locally', async () => {
+        const existing = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          state: {
+            versions: {
+              '0.0.2': {
+                local: true,
+              },
+            },
+          },
+          head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
+        });
+        const incoming = getComponentObject({
+          versions: { '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e' },
+          head: '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+        });
+        const { mergedComponent } = await merge(existing, incoming, true, true);
+
+        expect(mergedComponent.head?.toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+        expect(mergedComponent.versions).to.have.property('0.0.1');
+        expect(mergedComponent.versions).to.have.property('0.0.2');
+        expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.2');
+      });
+      it('importing from origin, should throw MergeConflict if same versions have different hash', async () => {
+        const existing = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          state: {
+            versions: {
+              '0.0.2': {
+                local: true,
+              },
+            },
+          },
+          head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
+        });
+        const incoming = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'fa2ec220dbf817c07b2119c561ce8d3fe163f03d',
+          },
+          head: 'fa2ec220dbf817c07b2119c561ce8d3fe163f03d',
+        });
+        try {
+          await merge(existing, incoming, true, true);
+          expect.fail();
+        } catch (err) {
+          expect(err).to.be.instanceOf(MergeConflict);
+        }
+      });
+      it('importing from non-origin, should not throw MergeConflict if same versions have different hash and not put it in orphaned', async () => {
+        const existing = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'c471678f719783b044ac6d933ccb1da7132dc93d',
+          },
+          state: {
+            versions: {
+              '0.0.2': {
+                local: true,
+              },
+            },
+          },
+          head: 'c471678f719783b044ac6d933ccb1da7132dc93d',
+        });
+        const incoming = getComponentObject({
+          versions: {
+            '0.0.1': '3d4f647fb943437b675e7163ed1e4d1f7c8a8c0e',
+            '0.0.2': 'fa2ec220dbf817c07b2119c561ce8d3fe163f03d',
+          },
+          head: 'fa2ec220dbf817c07b2119c561ce8d3fe163f03d',
+        });
+        const { mergedComponent } = await merge(existing, incoming, true, false);
+
+        expect(mergedComponent.head?.toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+        expect(mergedComponent.versions).to.have.property('0.0.1');
+        expect(mergedComponent.versions).to.have.property('0.0.2');
+        expect(mergedComponent.versions['0.0.2'].toString()).to.equal('c471678f719783b044ac6d933ccb1da7132dc93d');
+        // no need to put in orphaned because this version exists already in "versions" prop.
+        expect(mergedComponent.orphanedVersions).to.not.have.property('0.0.2');
+      });
     });
   });
 });
 
 function getComponentObject(componentObj: Record<string, any>): Component {
-  return Component.parse(JSON.stringify(componentObj));
+  return Component.parse(
+    JSON.stringify({
+      name: 'foo',
+      ...componentObj,
+    })
+  );
 }
 
 async function merge(
