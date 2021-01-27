@@ -23,7 +23,7 @@ export function getPinoLogger(
   const formatters = {
     level(label: string, number: number) {
       return {
-        severity: PinoLevelToSeverityLookup[label] || PinoLevelToSeverityLookup['info'],
+        severity: PinoLevelToSeverityLookup[label] || PinoLevelToSeverityLookup.info,
         level: number,
       };
     },
