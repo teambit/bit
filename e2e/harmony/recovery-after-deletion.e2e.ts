@@ -651,7 +651,7 @@ describe('recovery after component/scope deletion', function () {
             });
             expectToImportProperly();
             it('should be able to tag', () => {
-              expect(() => helper.command.tagAllComponents()).to.not.throw();
+              expect(() => helper.command.tagAllWithoutBuild()).to.not.throw();
             });
           });
         });
