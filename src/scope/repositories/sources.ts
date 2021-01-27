@@ -12,7 +12,7 @@ import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
-import { ComponentNotFound, MergeConflict } from '../exceptions';
+import { ComponentNotFound } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
 import { ModelComponent, Source, Symlink, Version } from '../models';
@@ -529,18 +529,19 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     isImport = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
     const isExport = !isImport;
-    const componentHead = component.getHead();
-    const isIncomingFromOrigin = Boolean(remoteName && remoteName === component.scope);
-    if (isImport && isIncomingFromOrigin && componentHead) component.remoteHead = componentHead;
-    const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
+    const isIncomingFromOrigin = remoteName === component.scope;
     // don't throw if not found because on export not all objects are sent to the remote
     const allVersionsInfo = await getAllVersionsInfo({ modelComponent: component, throws: false, versionObjects });
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
+    const existingComponent = await this._findComponent(component);
     if (!existingComponent) {
       if (isExport) this.throwForMissingVersions(allVersionsInfo, component);
       this.putModelComponent(component);
       return { mergedComponent: component, mergedVersions: tagsAndSnaps };
+    }
+    if (component.isEqual(existingComponent)) {
+      return { mergedComponent: component, mergedVersions: [] };
     }
     const hashesOfHistoryGraph = allVersionsInfo
       .map((v) => (v.isPartOfHistory ? v.ref : null))

@@ -6,6 +6,7 @@ import { ModelComponent } from '../models';
 export class ModelComponentMerger {
   mergedComponent: ModelComponent;
   mergedVersions: string[] = [];
+  isExport: boolean;
   constructor(
     private existingComponent: ModelComponent,
     private incomingComponent: ModelComponent,
@@ -18,10 +19,7 @@ export class ModelComponentMerger {
     // the base component to save is the existingComponent because it might contain local data that
     // is not available in the remote component, such as the "state" property.
     this.mergedComponent = this.existingComponent;
-  }
-
-  get isExport() {
-    return !this.isImport;
+    this.isExport = !this.isImport;
   }
 
   /**

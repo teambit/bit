@@ -1,16 +1,9 @@
 import { expect } from 'chai';
-
-import Sources from '../../scope/repositories/sources';
 import Component from '../models/model-component';
 import { ModelComponentMerger } from './model-components-merger';
 
 describe('ModelComponentMerger', () => {
   describe('merge', () => {
-    let sources: Sources;
-    before(() => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      sources = new Sources();
-    });
     it('should not remove a version that exist locally but not in the incoming component if it came not from its origin', async () => {
       const existingComponent = Component.parse(
         JSON.stringify({
