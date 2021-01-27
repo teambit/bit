@@ -56,13 +56,11 @@ export class GraphqlUI {
     return client;
   }
 
-  createSsrClient({ serverUrl, cookie }: { serverUrl: string; cookie?: any }) {
+  createSsrClient({ serverUrl, headers }: { serverUrl: string; headers: any }) {
     const link = createHttpLink({
       credentials: 'include',
       uri: serverUrl,
-      headers: {
-        cookie,
-      },
+      headers,
       fetch: crossFetch,
     });
 

@@ -21,7 +21,7 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
     const port = server?.port || 3000;
     const serverUrl = `http://localhost:${port}/graphql`;
 
-    const client = this.graphqlUI.createSsrClient({ serverUrl, cookie: browser?.cookie });
+    const client = this.graphqlUI.createSsrClient({ serverUrl, headers: browser?.connection.headers });
 
     const ctx: RenderContext = { client };
     return ctx;
