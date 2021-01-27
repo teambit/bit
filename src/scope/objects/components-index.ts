@@ -155,7 +155,7 @@ export default class ScopeIndex {
    * for other purposes, don't rely on this.
    */
   isFileOnBitHub() {
-    return this.indexPath.includes('/bithub/');
+    return this.indexPath.includes('/bithub/') || this.indexPath.includes('/tmp/scope-fs/');
   }
   find(hash: string): IndexItem | null {
     for (const entity of Object.keys(IndexType)) {
