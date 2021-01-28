@@ -36,7 +36,7 @@ describe('export functionality on Harmony', function () {
       expect(() => helper.command.export('--all-versions')).not.to.throw();
     });
   });
-  describe('export first time to multiple scope', () => {
+  describe('export to multiple scope with circular between the scopes', () => {
     let anotherRemote;
     let exportOutput;
     before(() => {
@@ -45,6 +45,8 @@ describe('export functionality on Harmony', function () {
       const { scopeName, scopePath } = helper.scopeHelper.getNewBareScope();
       anotherRemote = scopeName;
       helper.scopeHelper.addRemoteScope(scopePath);
+      helper.scopeHelper.addRemoteScope(scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, scopePath);
       helper.fs.outputFile('bar1/foo1.js', `require('@${anotherRemote}/bar2');`);
       helper.fs.outputFile('bar2/foo2.js', `require('@${helper.scopes.remote}/bar1');`);
       helper.command.addComponent('bar1');
