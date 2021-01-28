@@ -354,7 +354,7 @@ describe('bit untag command', function () {
       describe('modify, tag and then untag all', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-          helper.fs.modifyFile(path.join(helper.scopes.localPath, 'components/utils/is-string/is-string.js'));
+          helper.fs.modifyFile('components/utils/is-string/is-string.js');
           helper.command.tagAllComponents();
           helper.command.runCmd('bit untag --all');
         });
