@@ -142,10 +142,12 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        throw new EnvNotFound(matchedEntry.id.toString(), component.id.toString());
+        // throw new EnvNotFound(matchedEntry.id.toString(), component.id.toString());
+        return this.getDefaultEnv();
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString());
+      // throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString());
+      return this.getDefaultEnv();
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -206,10 +208,12 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        throw new EnvNotFound(matchedEntry.id.toString());
+        // throw new EnvNotFound(matchedEntry.id.toString());
+        return this.getDefaultEnv();
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig);
+      // throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig);
+      return this.getDefaultEnv();
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
