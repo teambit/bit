@@ -587,6 +587,7 @@ jobs:
       - run:
           name: export components
           command: cd bit && bit export
+          no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
           command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
