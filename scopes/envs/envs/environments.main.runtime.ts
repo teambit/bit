@@ -14,7 +14,7 @@ import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
-import { EnvNotConfiguredForComponent, EnvNotFound } from './exceptions';
+// import { EnvNotConfiguredForComponent, EnvNotFound } from './exceptions';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
