@@ -20,6 +20,7 @@ import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './except
 import WorkspaceLane from './workspace-lane';
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
+import { BitError } from '@teambit/bit-error';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
 export type IgnoreFilesDirs = { files: PathLinux[]; dirs: PathLinux[] };
@@ -247,6 +248,11 @@ export default class BitMap {
       const idHasScope = (): boolean => {
         if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
         if ('exported' in componentFromJson) {
+          if (typeof componentFromJson.exported !== 'boolean') {
+            throw new BitError(
+              `fatal: .bitmap record of "${componentId}" is invalid, the exported property must be boolean, got "${typeof componentFromJson.exported}" instead.`
+            );
+          }
           return componentFromJson.exported;
         }
         if (this.isLegacy) {
