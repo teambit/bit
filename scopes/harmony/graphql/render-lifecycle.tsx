@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import { getDataFromTree } from '@apollo/client/react/ssr';
 import { NormalizedCacheObject } from '@apollo/client';
+import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui.is-browser';
 import type { BrowserData, RenderLifecycle } from '@teambit/ui';
@@ -12,6 +13,8 @@ type RenderContext = {
   client: GraphQLClient<any>;
 };
 
+const ALLOWED_HEADERS = ['cookie'];
+
 export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { state?: NormalizedCacheObject }> {
   constructor(private graphqlUI: GraphqlUI) {}
 
@@ -21,7 +24,10 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
     const port = server?.port || 3000;
     const serverUrl = `http://localhost:${port}/graphql`;
 
-    const client = this.graphqlUI.createSsrClient({ serverUrl, headers: browser?.connection.headers });
+    const client = this.graphqlUI.createSsrClient({
+      serverUrl,
+      headers: pick(browser.connection.headers, ALLOWED_HEADERS),
+    });
 
     const ctx: RenderContext = { client };
     return ctx;
