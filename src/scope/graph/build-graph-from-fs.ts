@@ -3,7 +3,6 @@ import { flatten } from 'lodash';
 import { Consumer } from '../../consumer';
 import BitId from '../../bit-id/bit-id';
 import BitIds from '../../bit-id/bit-ids';
-import { COMPONENT_ORIGINS } from '../../constants';
 import Component from '../../consumer/component/consumer-component';
 import Graph from '../../scope/graph/graph';
 import logger from '../../logger/logger';
@@ -15,6 +14,7 @@ export class GraphFromFsBuilder {
   private graph = new Graph();
   private completed: string[] = [];
   private depth = 1;
+  private shouldThrowOnMissingDep = true;
   constructor(
     private consumer: Consumer,
     private ignoreIds = new BitIds(),
@@ -39,13 +39,17 @@ export class GraphFromFsBuilder {
    * the next level, in this case they're [A2, B2, C2]. it runs `importMany` in case some objects
    * are missing. then, it loads them all (some from FS, some from the model) and sets the edges
    * between the component and the dependencies.
-   * once done, it finds all their dependencies, which are [A2, B3, C3] and repeat the process
+   * once done, it finds all their dependencies, which are [A3, B3, C3] and repeat the process
    * above. since there are no more dependencies, the graph is completed.
    * in this case, the total depth levels are 3.
    *
    * even with a huge project, there are not many depth levels. by iterating through depth levels
    * we keep performance sane as the importMany doesn't run multiple time and therefore the round
    * trips to the remotes are minimal.
+   *
+   * normally, one importMany of the seeders is enough as importMany knows to fetch all flattened.
+   * however, since this buildGraph is performed on the workspace, a dependency may be new or
+   * modified and as such, we don't know its flattened yet.
    */
   async buildGraph(ids: BitId[]): Promise<Graph> {
     logger.debug(`GraphFromFsBuilder, buildGraph with ${ids.length} seeders`);
@@ -64,7 +68,12 @@ export class GraphFromFsBuilder {
     const allDeps = flatten(components.map((c) => this.getAllDeps(c)));
     const allDepsWithScope = allDeps.filter((dep) => dep.hasScope());
     const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
-    await scopeComponentsImporter.importMany(BitIds.uniqFromArray(allDepsWithScope));
+    await scopeComponentsImporter.importMany(
+      BitIds.uniqFromArray(allDepsWithScope),
+      undefined,
+      undefined,
+      this.shouldThrowOnMissingDep
+    );
     const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
     const allDependenciesFlattened = flatten(allDependencies);
     if (allDependenciesFlattened.length) await this.processManyComponents(allDependenciesFlattened);
@@ -111,8 +120,8 @@ export class GraphFromFsBuilder {
   }
   private async loadComponent(componentId: BitId): Promise<Component> {
     const componentMap = this.consumer.bitMap.getComponentIfExist(componentId);
-    const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
-    if (couldBeModified) {
+    const isOnWorkspace = Boolean(componentMap);
+    if (isOnWorkspace) {
       if (this.loadComponentsFunc) {
         const dependency = await this.loadComponentsFunc([componentId]);
         if (!dependency.length || !dependency[0]) {

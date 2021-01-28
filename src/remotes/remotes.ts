@@ -4,6 +4,7 @@ import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
+import { ScopeNotFound } from '../scope/exceptions';
 import DependencyGraph from '../scope/graph/scope-graph';
 import { ObjectList } from '../scope/objects/object-list';
 import Scope from '../scope/scope';
@@ -43,23 +44,39 @@ export default class Remotes extends Map<string, Remote> {
     thisScope: Scope,
     options: Partial<FETCH_OPTIONS> = {},
     context?: Record<string, any>
-  ): Promise<ObjectList> {
+  ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
       withoutDependencies: false,
       includeArtifacts: false,
       ...options,
     };
-    logger.debug('[-] Running fetch on a remote, with the following options', fetchOptions);
+    logger.debug('[-] Running fetch on remotes, with the following options', fetchOptions);
+    // when importing directly from a remote scope, throw for ScopeNotFound. otherwise, when
+    // fetching flattened dependencies (withoutDependencies=true), ignore this error
+    const shouldThrowOnUnavailableScope = !fetchOptions.withoutDependencies;
+    const objectListPerRemote = {};
     const objectLists: ObjectList[] = await Promise.all(
       Object.keys(idsGroupedByScope).map(async (scopeName) => {
         const remote = await this.resolve(scopeName, thisScope);
-        return remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+        let objectList: ObjectList;
+        try {
+          objectList = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+        } catch (err) {
+          if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
+            logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
+            objectList = new ObjectList();
+          } else {
+            throw err;
+          }
+        }
+        objectListPerRemote[scopeName] = objectList;
+        return objectList;
       })
     );
-    logger.debug('[-] Returning from a remote');
+    logger.debug('[-] Returning from the remotes');
 
-    return ObjectList.mergeMultipleInstances(objectLists);
+    return { objectList: ObjectList.mergeMultipleInstances(objectLists), objectListPerRemote };
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {

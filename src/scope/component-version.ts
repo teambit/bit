@@ -27,8 +27,8 @@ export default class ComponentVersion {
     Object.freeze(this);
   }
 
-  getVersion(repository: Repository): Promise<Version> {
-    return this.component.loadVersion(this.version, repository);
+  getVersion(repository: Repository, throws = true): Promise<Version> {
+    return this.component.loadVersion(this.version, repository, throws);
   }
 
   flattenedDependencies(repository: Repository): Promise<BitIds> {
@@ -43,7 +43,6 @@ export default class ComponentVersion {
     });
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return this.toId();
   }
@@ -59,7 +58,7 @@ export default class ComponentVersion {
     collectParents: boolean,
     collectArtifacts: boolean
   ): Promise<ObjectItem[]> {
-    const version = await this.getVersion(repo);
+    const version = await this.getVersion(repo, false);
     if (!version) throw new ShowDoctorError(`failed loading version ${this.version} of ${this.component.id()}`);
     // @todo: remove this customError once upgrading to v15, because when the server has v15
     // and the client has < 15, the client will get anyway an error to upgrade the version
@@ -70,11 +69,15 @@ Please upgrade your bit client to version >= v14.1.0`);
     const collectVersionObjects = async (ver: Version): Promise<ObjectItem[]> => {
       const versionRefs = ver.refsWithOptions(collectParents, collectArtifacts);
       const versionObjects = await ver.collectManyObjects(repo, versionRefs);
-      const versionData = { ref: ver.hash(), buffer: await ver.asRaw(repo) };
+      const versionData = { ref: ver.hash(), buffer: await ver.asRaw(repo), type: ver.getType() };
       return [...versionObjects, versionData];
     };
     try {
-      const componentData = { ref: this.component.hash(), buffer: await this.component.asRaw(repo) };
+      const componentData = {
+        ref: this.component.hash(),
+        buffer: await this.component.asRaw(repo),
+        type: this.component.getType(),
+      };
       const parentsObjects: ObjectItem[] = [];
       if (collectParents) {
         const allParentsHashes = await getAllVersionHashes(this.component, repo, true, version.hash());
