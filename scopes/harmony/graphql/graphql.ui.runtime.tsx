@@ -1,7 +1,6 @@
 import React, { ReactNode } from 'react';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { isBrowser } from '@teambit/ui.is-browser';
 
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
 import type { NormalizedCacheObject, ApolloQueryResult, QueryOptions } from '@apollo/client';
@@ -10,11 +9,12 @@ import { onError } from '@apollo/client/link/error';
 
 import crossFetch from 'cross-fetch';
 
-import { createLink } from './create-link';
+import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
 import { GraphQLServer } from './graphql-server';
 import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderLifecycle } from './render-lifecycle';
+import { logError } from './logging';
 
 export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 /**
@@ -30,9 +30,10 @@ export class GraphqlUI {
 
   private _client?: GraphQLClient<any>;
 
+  /** @deprecated */
   get client() {
     if (!this._client) {
-      this._client = this.createClient();
+      this._client = this.createClient(window.location.host);
     }
 
     return this._client;
@@ -43,13 +44,14 @@ export class GraphqlUI {
     this._client = client;
   }
 
+  /** @deprecated */
   async query(options: QueryOptions): Promise<ApolloQueryResult<any>> {
     return this.client.query(options);
   }
 
-  createClient(host: string = isBrowser ? window.location.host : '/', { state }: ClientOptions = {}) {
+  createClient(host: string, { state }: ClientOptions = {}) {
     const client = new ApolloClient({
-      link: this.createApolloLink(host),
+      link: this.createLink(host),
       cache: this.createCache({ state }),
     });
 
@@ -57,12 +59,15 @@ export class GraphqlUI {
   }
 
   createSsrClient({ serverUrl, headers }: { serverUrl: string; headers: any }) {
-    const link = createHttpLink({
-      credentials: 'include',
-      uri: serverUrl,
-      headers,
-      fetch: crossFetch,
-    });
+    const link = ApolloLink.from([
+      onError(logError),
+      createHttpLink({
+        credentials: 'include',
+        uri: serverUrl,
+        headers,
+        fetch: crossFetch,
+      }),
+    ]);
 
     const client = new ApolloClient({
       ssrMode: true,
@@ -77,22 +82,6 @@ export class GraphqlUI {
     this.remoteServerSlot.register(server);
   }
 
-  private createApolloLink(host: string) {
-    return ApolloLink.from([
-      // TODO - try to find a better way get hook errors, maybe using ApolloClient
-      onError(({ graphQLErrors, networkError }) => {
-        if (graphQLErrors)
-          graphQLErrors.forEach(({ message, locations, path }) =>
-            // eslint-disable-next-line no-console
-            console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
-          );
-        // eslint-disable-next-line no-console
-        if (networkError) console.log(`[Network error]: ${networkError}`);
-      }),
-      this.createLink(host),
-    ]);
-  }
-
   private createCache({ state }: { state?: NormalizedCacheObject } = {}) {
     const cache = new InMemoryCache();
 
@@ -101,6 +90,7 @@ export class GraphqlUI {
     return cache;
   }
 
+  // unused
   createLinks() {
     const servers = this.remoteServerSlot.values();
 
@@ -109,8 +99,13 @@ export class GraphqlUI {
     });
   }
 
-  createLink(host: string) {
-    return createLink(this.createHttpLink(host), this.createWsLink(host));
+  private createLink(host: string) {
+    const httpLink = this.createHttpLink(host);
+    const wsLink = this.createWsLink(host);
+    const hybridLink = createSplitLink(httpLink, wsLink);
+    const errorLogger = onError(logError);
+
+    return ApolloLink.from([errorLogger, hybridLink]);
   }
 
   private createHttpLink(host: string) {

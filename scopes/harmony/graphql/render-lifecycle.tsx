@@ -58,7 +58,7 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
   };
 
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
-    const client = this.graphqlUI.createClient(undefined, { state });
+    const client = this.graphqlUI.createClient(window.location.host, { state });
 
     this.graphqlUI._setClient(client);
 
