@@ -23,6 +23,7 @@ import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import { FetchMissingDeps } from '../actions/fetch-missing-deps';
 import loader from '../../cli/loader';
+import { getAllVersionHashes } from './traverse-versions';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -83,7 +84,6 @@ export async function exportMany({
   idsWithFutureScope: BitIds;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  enrichContextFromGlobal(context);
   if (lanesObjects.length && !remoteName) {
     throw new Error('todo: implement export lanes to default scopes after tracking lanes local:remote is implemented');
   }
@@ -123,6 +123,7 @@ export async function exportMany({
   // });
   const remotes = manyObjectsPerRemote.map((o) => o.remote);
   const clientId = Date.now().toString();
+  enrichContextFromGlobal(context);
   await pushRemotesPendingDir();
   await validateRemotes();
   await persistRemotes();
@@ -251,9 +252,9 @@ export async function exportMany({
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
     const processModelComponent = async (modelComponent: ModelComponent) => {
-      const localVersions = modelComponent.getLocalTagsOrHashes();
+      const versionToExport = await getVersionsToExport(modelComponent);
       modelComponent.clearStateData();
-      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, localVersions);
+      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, versionToExport);
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
       await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
@@ -290,6 +291,12 @@ export async function exportMany({
     objectList.addIfNotExist(lanesData);
 
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
+  }
+
+  async function getVersionsToExport(modelComponent: ModelComponent): Promise<string[]> {
+    if (!allVersions) return modelComponent.getLocalTagsOrHashes();
+    const allHashes = await getAllVersionHashes(modelComponent, scope.objects, true);
+    return modelComponent.switchHashesWithTagsIfExist(allHashes);
   }
 
   // function addDependenciesToObjectList(
@@ -481,7 +488,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
   const mergeResults = await Promise.all(
     components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(component, versions, false);
+        const result = await scope.sources.merge(component, versions, undefined, false);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {

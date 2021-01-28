@@ -37,7 +37,7 @@ export async function getManipulateDirForExistingComponents(
   const componentMap: ComponentMap | undefined = consumer.bitMap.getComponentIfExist(id, {
     ignoreVersion: true,
   });
-  const version: Version = await componentVersion.getVersion(consumer.scope.objects);
+  const version: Version = await componentVersion.getVersion(consumer.scope.objects, false);
   if (!version) {
     throw new CorruptedComponent(id.toString(), componentVersion.version);
   }

@@ -59,6 +59,7 @@ export type ImportDetails = {
   versions: string[];
   status: ImportStatus;
   filesStatus: FilesStatus | null | undefined;
+  missingDeps: BitId[];
 };
 export type ImportResult = Promise<{
   dependencies: ComponentWithDependencies[];
@@ -352,7 +353,13 @@ export default class ImportComponents {
         return 'updated';
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
-      return { id: idStr, versions: versionDifference, status: getStatus(), filesStatus };
+      return {
+        id: idStr,
+        versions: versionDifference,
+        status: getStatus(),
+        filesStatus,
+        missingDeps: component.missingDependencies,
+      };
     });
     return Promise.all(detailsP);
   }
@@ -428,7 +435,7 @@ export default class ImportComponents {
       otherComponent: fsComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent, // $FlowFixMe
+      currentComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       currentLabel: component.id.version,
       baseComponent,
