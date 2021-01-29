@@ -1,8 +1,10 @@
 import chai, { expect } from 'chai';
-
+import path from 'path';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { PENDING_OBJECTS_DIR } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { ExportMissingVersions } from '../../src/scope/exceptions/export-missing-versions';
+import ServerIsBusy from '../../src/scope/exceptions/server-is-busy';
 
 chai.use(require('chai-fs'));
 
@@ -66,6 +68,151 @@ describe('export functionality on Harmony', function () {
     });
     it('bit status should be clean', () => {
       helper.command.expectStatusToBeClean();
+    });
+  });
+
+  describe('recover from persist-error during export', () => {
+    let remote1Name: string;
+    let remote2Name: string;
+    let remote1Path: string;
+    let remote2Path: string;
+    let remote1Clone: string;
+    let remote2Clone: string;
+    let exportId: string;
+    // extract the pending-objects to the two remotes
+    before(() => {
+      remote1Name = 'ovio1b1s-remote';
+      remote2Name = 'mjtjb8oh-remote2';
+      exportId = '1611930408860';
+      remote1Path = helper.scopeHelper.getNewBareScopeWithSpecificName(remote1Name);
+      remote2Path = helper.scopeHelper.getNewBareScopeWithSpecificName(remote2Name);
+      helper.fixtures.extractCompressedFixture('objects/ovio1b1s-remote-bar1.tgz', remote1Path);
+      helper.fixtures.extractCompressedFixture('objects/mjtjb8oh-remote2-bar2.tgz', remote2Path);
+      helper.scopeHelper.addRemoteScope(remote1Path, remote2Path);
+      helper.scopeHelper.addRemoteScope(remote2Path, remote1Path);
+      remote1Clone = helper.scopeHelper.cloneScope(remote1Path);
+      remote2Clone = helper.scopeHelper.cloneScope(remote2Path);
+    });
+    it('as an intermediate step, make sure the remotes scopes are empty', () => {
+      const scope1 = helper.command.catScope(true, remote1Path);
+      const scope2 = helper.command.catScope(true, remote2Path);
+      expect(scope1).to.have.lengthOf(0);
+      expect(scope2).to.have.lengthOf(0);
+    });
+    function expectRemotesToHaveTheComponents() {
+      it('the remotes should now have the components', () => {
+        const scope1 = helper.command.catScope(true, remote1Path);
+        const scope2 = helper.command.catScope(true, remote2Path);
+        expect(scope1).to.have.lengthOf.least(1); // can be two if fetched-missing-deps completed.
+        expect(scope2).to.have.lengthOf.least(1);
+      });
+    }
+    describe('when the failure happened on the same workspace', () => {
+      let beforeExportClone;
+      before(() => {
+        // simulate the same workspace the persist failed.
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.addRemoteScope(remote1Path);
+        helper.scopeHelper.addRemoteScope(remote2Path);
+
+        helper.fs.outputFile('bar1/foo1.js', `require('@${remote2Name}/bar2');`);
+        helper.fs.outputFile('bar2/foo2.js', `require('@${remote1Name}/bar1');`);
+        helper.command.addComponent('bar1');
+        helper.command.addComponent('bar2');
+        helper.bitJsonc.addToVariant('bar1', 'defaultScope', remote1Name);
+        helper.bitJsonc.addToVariant('bar2', 'defaultScope', remote2Name);
+        helper.command.linkAndRewire();
+        helper.command.compile();
+        helper.command.tagAllWithoutBuild();
+        beforeExportClone = helper.scopeHelper.cloneLocalScope();
+      });
+      describe('running bit export --resume <export-id>', () => {
+        let exportOutput: string;
+        before(() => {
+          exportOutput = helper.command.export(`--resume ${exportId}`);
+        });
+        it('should resume the export and complete it successfully', () => {
+          expect(exportOutput).to.have.string('exported the following 2 component(s)');
+          expect(exportOutput).to.have.string('ovio1b1s-remote/bar1');
+          expect(exportOutput).to.have.string('mjtjb8oh-remote2/bar2');
+        });
+        it('bit status should be clean', () => {
+          helper.command.expectStatusToBeClean();
+        });
+        expectRemotesToHaveTheComponents();
+      });
+      describe('running bit export without resume', () => {
+        before(() => {
+          helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
+          helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
+          helper.scopeHelper.getClonedLocalScope(beforeExportClone);
+        });
+        it('should throw ServerIsBusy error', () => {
+          const err = new ServerIsBusy(2, exportId);
+          const cmd = () => helper.command.export();
+          helper.general.expectToThrow(cmd, err);
+        });
+      });
+      describe('when one remote succeeded and one failed', () => {
+        let exportOutput;
+        before(() => {
+          helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
+          helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
+          helper.scopeHelper.getClonedLocalScope(beforeExportClone);
+          helper.command.resumeExport(exportId, [remote1Name]);
+          exportOutput = helper.command.export(`--resume ${exportId}`);
+        });
+        it('should still be able to run export --resume to persist to other scopes', () => {
+          expect(exportOutput).to.have.string('exported the following 1 component(s)');
+          expect(exportOutput).to.have.string('mjtjb8oh-remote2/bar2');
+        });
+      });
+    });
+    describe('from different workspace, by running bit resume-export <export-id> <remotes...>', () => {
+      before(() => {
+        helper.scopeHelper.reInitLocalScopeHarmony();
+        helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
+        helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
+        helper.scopeHelper.addRemoteScope(remote1Path);
+        helper.scopeHelper.addRemoteScope(remote2Path);
+      });
+      describe('running it with the correct export-id and all the remotes', () => {
+        let resumeExportOutput: string;
+        before(() => {
+          resumeExportOutput = helper.command.resumeExport(exportId, [remote1Name, remote2Name]);
+        });
+        it('should complete the export successfully', () => {
+          expect(resumeExportOutput).to.have.string('the following components were persisted successfully');
+          expect(resumeExportOutput).to.have.string('ovio1b1s-remote/bar1');
+          expect(resumeExportOutput).to.have.string('mjtjb8oh-remote2/bar2');
+        });
+        expectRemotesToHaveTheComponents();
+      });
+      describe('running it with the correct export-id and only one remote', () => {
+        let resumeExportOutput: string;
+        before(() => {
+          helper.scopeHelper.getClonedScope(remote1Clone, remote1Path);
+          helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
+          resumeExportOutput = helper.command.resumeExport(exportId, [remote1Name]);
+        });
+        it('should complete the export for that remote only', () => {
+          expect(resumeExportOutput).to.have.string('the following components were persisted successfully');
+          expect(resumeExportOutput).to.have.string('ovio1b1s-remote/bar1');
+          expect(resumeExportOutput).to.not.have.string('mjtjb8oh-remote2/bar2');
+        });
+        it('only the first remote should have the component', () => {
+          const scope1 = helper.command.catScope(true, remote1Path);
+          const scope2 = helper.command.catScope(true, remote2Path);
+          expect(scope1).to.have.lengthOf(1);
+          expect(scope2).to.have.lengthOf(0);
+        });
+      });
+      describe('running it with a non-exist export-id', () => {
+        it('should indicate that no components were persisted', () => {
+          const output = helper.command.resumeExport('1234', [remote1Name]);
+          expect(output).to.have.string('no components were left to persist for this export-id');
+        });
+      });
     });
   });
 });
