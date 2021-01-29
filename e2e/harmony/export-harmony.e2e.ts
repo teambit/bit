@@ -1,7 +1,5 @@
 import chai, { expect } from 'chai';
-import path from 'path';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
-import { PENDING_OBJECTS_DIR } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { ExportMissingVersions } from '../../src/scope/exceptions/export-missing-versions';
 import ServerIsBusy from '../../src/scope/exceptions/server-is-busy';
