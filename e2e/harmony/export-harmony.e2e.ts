@@ -69,6 +69,15 @@ describe('export functionality on Harmony', function () {
     });
   });
 
+  /**
+   * there is no good option to make the remote scope fails at the persist step. normally, if there
+   * is any error, it stops at the validation step.
+   * to be able to test these scenarios, we ran the previous test "(export to multiple scope with
+   * circular between the scopes)", manually threw an error during the persist phase, and then tar
+   * the remote scopes (tar -czf mjtjb8oh-remote2-bar2.tgz pending-objects/1611930408860).
+   * this way, we could create tests using the extracted remote-scopes with the pending-objects
+   * directories.
+   */
   describe('recover from persist-error during export', () => {
     let remote1Name: string;
     let remote2Name: string;
