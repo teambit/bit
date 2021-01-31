@@ -1,14 +1,14 @@
 ---
-description: Integrates MDX with Bit.
+description: A tool for simple & powerful component documentation and standalone component composition
 labels: ['mdx', 'bit', 'docs', 'md', 'markdown', 'ui']
 ---
 
 import _ from 'lodash';
 import { Button } from '@teambit/evangelist.elements.button';
 
-The MDX aspect integrates [MDX](https://mdxjs.com/) with Bit to provide an enjoyable and flexible content creation in a Bit workspace.
-
-MDX can be used to author documentation for Bit components, or to create independent content components that can be used across web projects.
+The MDX aspect integrates [MDX](https://mdxjs.com/) with Bit to enable the authoring of component documentation and standalone content components, using the MDX format.   
+The MDX format joins together the ease-of-use and readability of the Markdown syntax with the endless possibilities that are offered by JSX. 
+The modularity that's offered by both technologies (MDX and Bit) enables MDX files to be exported to a remote scope and imported to other web projects, just like any other Bit component.
 
 #### Example
 ````md
@@ -42,10 +42,11 @@ A simple example of live example:
 
 #### Features
 
+* __Powerful component composition__: Author clear and engaging documentation that integrates readable Markdown syntax, Bit's live playground and your own customized components.
 * __Docs that look and feel like Bit__: Component docs written with MDX (like the one you're reading right now) are themed using Bit's [Documenter design system](https://bit.dev/teambit/documenter) to provide a look-and-feel that is consistent with the Workspace/Scope UI.
 * __Bit component frontmatter__: Use Bit's YAML frontmatter to add or override metadata to the component being documented.
 * __A simple-to-use live playground__: Use MDX's user-friendly syntax to add live examples of code. No need to worry about dependencies - any module used by the doc file will also be available to code running in the live playground.
-* __Independent MDX components__: Author consumable independent content components that can be shared across web projects.
+* __Independent MDX components__: Author consumable independent content components that can be shared across web projects. Use it to maintain a consistent "voice & tone" and to keep your content always up-to-date.
 
 
 ## Quick start
@@ -135,7 +136,13 @@ The above MDX snippet will be rendered like so:
 
 ### Documenting components
 
-The MDX format is perfect for writing documentation for components as it joins together the ease-of-use and readability of the Markdown syntax with the great flexibility that's offered by integrating code into it. In addition to that, the modularity that's offered by both technologies (MDX and Bit) enables importing and integrating segments of content from the documentation of other components, into a single documentation file. This can be done to document your components in a way that reflects the way they are built - through a composition of components. That will help in keeping your docs always up-to-date as changes made to a sub-component will propagate to the component's docs. Links to other pages should only be used when the page they reference is expected to be read by only a small percentage of readers.
+The MDX format is perfect for writing documentation for components as it joins together the ease-of-use and readability
+of the Markdown syntax with the great flexibility that's offered by integrating code into it.
+In addition to that, the modularity that's offered by both technologies (MDX and Bit) enables importing and integrating
+segments of content from the documentation of other components, into a single documentation file.
+This can be done to document your components in a way that reflects the way they are built - through a composition of components.
+That will help in keeping your docs always up-to-date as changes made to a sub-component will propagate to the component's docs.
+Links to other pages should only be used when the page they reference is expected to be read by only a small percentage of readers.
 
 To start writing your docs with MDX, add a `*.docs.mdx` or `*.docs.md` file to the component's directory and Bit will render it in the component's 'Overview' tab, in the Workspace UI (and later on, after it is exported, in the Scope UI). Bit's development server will hot-reload your documentation to reflect any changes made to it, in real time.
 
