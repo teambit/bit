@@ -4,7 +4,7 @@ import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { CompilerMain, CompilerOptions } from '@teambit/compiler';
+import { CompilerMain, CompilerOptions, Compiler } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
@@ -129,13 +129,18 @@ export class ReactEnv implements Environment {
     return this.mdx.createCompiler({ opts: targetConfig });
   }
 
+  /**
+   * returns and configures the component compilers.
+   */
   getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    if (!this.config.mdx) return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
+    let compilers: Compiler[] = [
+      this.createTsCompiler(targetConfig, compilerOptions, tsModule),
+      this.createBabelCompiler(),
+    ];
 
-    return this.multiCompiler.createCompiler(
-      [this.createTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
-      compilerOptions
-    );
+    if (!this.config.mdx) compilers.push(this.mdx.createCompiler());
+
+    return this.multiCompiler.createCompiler(compilers, compilerOptions);
   }
 
   /**
