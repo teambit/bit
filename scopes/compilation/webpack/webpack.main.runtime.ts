@@ -4,7 +4,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Configuration } from 'webpack';
-import merge from 'webpack-merge';
+import { merge } from 'webpack-merge';
 
 import { configFactory } from './config/webpack.dev.config';
 import { WebpackAspect } from './webpack.aspect';

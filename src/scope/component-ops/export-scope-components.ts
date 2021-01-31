@@ -23,6 +23,7 @@ import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import { FetchMissingDeps } from '../actions/fetch-missing-deps';
 import loader from '../../cli/loader';
+import { getAllVersionHashes } from './traverse-versions';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -83,7 +84,6 @@ export async function exportMany({
   idsWithFutureScope: BitIds;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
-  enrichContextFromGlobal(context);
   if (lanesObjects.length && !remoteName) {
     throw new Error('todo: implement export lanes to default scopes after tracking lanes local:remote is implemented');
   }
@@ -113,13 +113,17 @@ export async function exportMany({
         );
   }
 
-  manyObjectsPerRemote.forEach((objectsPerRemote) => {
-    objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
-      addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
-    );
-  });
+  // @todo: make sure it works fine without pushing the flattened to the remote.
+  // we're going to change many things in this area very soon. currently, it seems to do more harm
+  // then good, so we disable it for now.
+  // manyObjectsPerRemote.forEach((objectsPerRemote) => {
+  //   objectsPerRemote.componentsAndObjects.forEach((componentAndObjects) =>
+  //     addDependenciesToObjectList(objectsPerRemote, componentAndObjects)
+  //   );
+  // });
   const remotes = manyObjectsPerRemote.map((o) => o.remote);
   const clientId = Date.now().toString();
+  enrichContextFromGlobal(context);
   await pushRemotesPendingDir();
   await validateRemotes();
   await persistRemotes();
@@ -248,9 +252,9 @@ export async function exportMany({
     const objectList = new ObjectList();
     const objectListPerName: ObjectListPerName = {};
     const processModelComponent = async (modelComponent: ModelComponent) => {
-      const localVersions = modelComponent.getLocalTagsOrHashes();
+      const versionToExport = await getVersionsToExport(modelComponent);
       modelComponent.clearStateData();
-      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, localVersions);
+      const objectItems = await modelComponent.collectVersionsObjects(scope.objects, versionToExport);
       const objectsList = await new ObjectList(objectItems).toBitObjects();
       const componentAndObject = { component: modelComponent, objects: objectsList.getAll() };
       await convertToCorrectScopeHarmony(scope, componentAndObject, remoteNameStr, bitIds, idsWithFutureScope);
@@ -289,32 +293,38 @@ export async function exportMany({
     return { remote, objectList, objectListPerName, idsToChangeLocally, componentsAndObjects };
   }
 
-  function addDependenciesToObjectList(
-    objectsPerRemote: ObjectsPerRemote,
-    componentAndObjects: ModelComponentAndObjects
-  ): void {
-    const addDepsIfCurrentlyExported = (id: BitId) => {
-      const depScope = id.scope;
-      if (!depScope) throw new Error(`export-scope-components, unable to export ${id.toString()}, it has no scope`);
-      if (depScope === componentAndObjects.component.scope) {
-        return; // it's already included in the ObjectList.
-      }
-      const dependencyObjects = manyObjectsPerRemote.find((obj) => obj.remote.name === depScope);
-      if (!dependencyObjects) {
-        return; // this id is not currently exported. the remote will import it during the push.
-      }
-      const dependencyObjectList = dependencyObjects.objectListPerName[id.name];
-      if (!dependencyObjectList) {
-        return; // this id is not currently exported. the remote will import it during the push.
-      }
-      objectsPerRemote.objectList.mergeObjectList(dependencyObjectList);
-    };
-    // @ts-ignore
-    const versionsObjects: Version[] = componentAndObjects.objects.filter((object) => object instanceof Version);
-    versionsObjects.forEach((version: Version) => {
-      version.flattenedDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
-    });
+  async function getVersionsToExport(modelComponent: ModelComponent): Promise<string[]> {
+    if (!allVersions) return modelComponent.getLocalTagsOrHashes();
+    const allHashes = await getAllVersionHashes(modelComponent, scope.objects, true);
+    return modelComponent.switchHashesWithTagsIfExist(allHashes);
   }
+
+  // function addDependenciesToObjectList(
+  //   objectsPerRemote: ObjectsPerRemote,
+  //   componentAndObjects: ModelComponentAndObjects
+  // ): void {
+  //   const addDepsIfCurrentlyExported = (id: BitId) => {
+  //     const depScope = id.scope;
+  //     if (!depScope) throw new Error(`export-scope-components, unable to export ${id.toString()}, it has no scope`);
+  //     if (depScope === componentAndObjects.component.scope) {
+  //       return; // it's already included in the ObjectList.
+  //     }
+  //     const dependencyObjects = manyObjectsPerRemote.find((obj) => obj.remote.name === depScope);
+  //     if (!dependencyObjects) {
+  //       return; // this id is not currently exported. the remote will import it during the push.
+  //     }
+  //     const dependencyObjectList = dependencyObjects.objectListPerName[id.name];
+  //     if (!dependencyObjectList) {
+  //       return; // this id is not currently exported. the remote will import it during the push.
+  //     }
+  //     objectsPerRemote.objectList.mergeObjectList(dependencyObjectList);
+  //   };
+  //   // @ts-ignore
+  //   const versionsObjects: Version[] = componentAndObjects.objects.filter((object) => object instanceof Version);
+  //   versionsObjects.forEach((version: Version) => {
+  //     version.flattenedDependencies.forEach((id: BitId) => addDepsIfCurrentlyExported(id));
+  //   });
+  // }
 
   async function pushRemotesPendingDir(): Promise<void> {
     const pushOptions = { clientId };
@@ -478,7 +488,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
   const mergeResults = await Promise.all(
     components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(component, versions, false);
+        const result = await scope.sources.merge(component, versions, undefined, false);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {

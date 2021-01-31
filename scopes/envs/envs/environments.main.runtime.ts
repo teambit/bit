@@ -1,9 +1,9 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
 import findDuplications from 'bit-bin/dist/utils/array/find-duplications';
 import { EnvService } from './services';
 import { Environment } from './environment';
@@ -14,6 +14,7 @@ import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
+// import { EnvNotConfiguredForComponent, EnvNotFound } from './exceptions';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -115,30 +116,52 @@ export class EnvsMain {
   getEnv(component: Component): EnvDefinition {
     // Search first for env configured via envs aspect itself
     const envsAspect = component.state.aspects.get(EnvsAspect.id);
-    const envId = envsAspect?.config.env;
-    let env;
-    if (envId) {
-      env = this.envSlot.get(envId);
-    }
-    if (env) {
-      return new EnvDefinition(envId, env as Environment);
+    const envIdFromEnvsConfig = envsAspect?.config.env;
+    if (envIdFromEnvsConfig) {
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
+      if (envDef) {
+        return envDef;
+      }
     }
 
-    let id = '';
-    const envEntry = component.state.aspects.entries.find((aspectEntry) => {
-      id = aspectEntry.id.toString();
-      env = this.envSlot.get(id);
-      if (!env) {
+    // in some cases we have the id configured in the teambit.envs/envs but without the version
+    // in such cases we won't find it in the slot
+    // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
+    if (envIdFromEnvsConfig) {
+      const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
+        return (
+          envIdFromEnvsConfig === aspectEntry.id.toString() ||
+          envIdFromEnvsConfig === aspectEntry.id.toString({ ignoreVersion: true })
+        );
+      });
+      if (matchedEntry) {
         // during the tag process, the version in the aspect-entry-id is changed and is not the
         // same as it was when it registered to the slot.
-        id = aspectEntry.id.toString({ ignoreVersion: true });
-        env = this.envSlot.get(id);
+        const envDef = this.getEnvDefinitionById(matchedEntry.id);
+        if (envDef) {
+          return envDef;
+        }
+        // Do not allow a non existing env
+        // throw new EnvNotFound(matchedEntry.id.toString(), component.id.toString());
       }
-      return !!env;
+      // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
+      // throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString());
+    }
+
+    // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
+    let envDefFromList;
+    component.state.aspects.entries.find((aspectEntry) => {
+      const envDef = this.getEnvDefinitionById(aspectEntry.id);
+      if (envDef) {
+        envDefFromList = envDef;
+      }
+      return !!envDef;
     });
 
-    if (!envEntry) return this.getDefaultEnv();
-    return new EnvDefinition(id, env as Environment);
+    if (envDefFromList) {
+      return envDefFromList;
+    }
+    return this.getDefaultEnv();
   }
 
   /**
@@ -147,28 +170,77 @@ export class EnvsMain {
   getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
     // Search first for env configured via envs aspect itself
     const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
-    const envId = envsAspect?.config.env;
-    let env;
-    if (envId) {
-      env = this.envSlot.get(envId);
+    const envIdFromEnvsConfig = envsAspect?.config.env;
+    if (envIdFromEnvsConfig) {
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
+      if (envDef) {
+        return envDef;
+      }
     }
+
+    const getEnvDefinitionByLegacyExtension = (extension: ExtensionDataEntry): EnvDefinition | undefined => {
+      const envDef = extension.newExtensionId
+        ? this.getEnvDefinitionById(extension.newExtensionId)
+        : this.getEnvDefinitionByStringId(extension.stringId);
+      return envDef;
+    };
+
+    // in some cases we have the id configured in the teambit.envs/envs but without the version
+    // in such cases we won't find it in the slot
+    // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
+    if (envIdFromEnvsConfig) {
+      const matchedEntry = extensions.find((extension) => {
+        if (extension.newExtensionId) {
+          return (
+            envIdFromEnvsConfig === extension.newExtensionId.toString() ||
+            envIdFromEnvsConfig === extension.newExtensionId.toString({ ignoreVersion: true })
+          );
+        }
+        return envIdFromEnvsConfig === extension.stringId;
+      });
+      if (matchedEntry) {
+        // during the tag process, the version in the aspect-entry-id is changed and is not the
+        // same as it was when it registered to the slot.
+        const envDef = getEnvDefinitionByLegacyExtension(matchedEntry);
+        if (envDef) {
+          return envDef;
+        }
+        // Do not allow a non existing env
+        // throw new EnvNotFound(matchedEntry.id.toString());
+      }
+      // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
+      // throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig);
+    }
+
+    // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
+    let envDefFromList;
+    extensions.find((extension: ExtensionDataEntry) => {
+      const envDef = getEnvDefinitionByLegacyExtension(extension);
+      if (envDef) {
+        envDefFromList = envDef;
+      }
+      return !!envDef;
+    });
+
+    if (envDefFromList) {
+      return envDefFromList;
+    }
+    return this.getDefaultEnv();
+  }
+
+  private getEnvDefinitionById(id: ComponentID): EnvDefinition | undefined {
+    const envDef =
+      this.getEnvDefinitionByStringId(id.toString()) ||
+      this.getEnvDefinitionByStringId(id.toString({ ignoreVersion: true }));
+    return envDef;
+  }
+
+  private getEnvDefinitionByStringId(envId: string): EnvDefinition | undefined {
+    const env = this.envSlot.get(envId);
     if (env) {
       return new EnvDefinition(envId, env as Environment);
     }
-
-    const envInExtensionList = extensions.find((e) =>
-      this.envSlot.get(e.newExtensionId ? e.newExtensionId.toString() : e.stringId)
-    );
-    if (envInExtensionList) {
-      const id = envInExtensionList.newExtensionId
-        ? envInExtensionList.newExtensionId.toString()
-        : envInExtensionList.stringId;
-      return new EnvDefinition(id, this.envSlot.get(id) as Environment);
-    }
-    const defaultEnvId = 'teambit.harmony/node';
-    const defaultEnv = this.envSlot.get(defaultEnvId);
-    if (!defaultEnv) throw new Error(`the default environment "${defaultEnvId}" was not registered`);
-    return new EnvDefinition(defaultEnvId, defaultEnv);
+    return undefined;
   }
 
   /**

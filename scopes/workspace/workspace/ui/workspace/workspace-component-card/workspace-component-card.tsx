@@ -18,12 +18,14 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
     }
   };
   const shouldPreviewButton = !shouldShowPreview && component.compositions.length > 0;
+  const componentVersion = component.version === 'new' ? undefined : component.version;
   return (
     <div {...rest} className={styles.wrapper}>
       <ComponentCard
         id={component.id.fullName}
         envIcon={component.environment?.icon}
         description={component.description}
+        version={componentVersion}
         preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
       />
       {shouldPreviewButton && <LoadPreview onClick={showPreview} />}

@@ -20,7 +20,7 @@ import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
-import webpackMerge from 'webpack-merge';
+import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
@@ -108,11 +108,12 @@ export class ReactEnv implements Environment {
 
   createTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
     const tsconfig = this.getTsConfig(targetConfig);
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     return this.tsAspect.createCompiler(
       {
         tsconfig,
         // TODO: @david please remove this line and refactor to be something that makes sense.
-        types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
+        types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
         ...compilerOptions,
       },
       // @ts-ignore

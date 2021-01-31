@@ -542,7 +542,7 @@ export class ScopeMain implements ComponentFactory {
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
     await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
-      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
+      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects, false);
       // TODO: what to return if no version in objects
       if (version) {
         const snap = this.createSnapFromVersion(version);

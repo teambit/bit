@@ -103,7 +103,7 @@ function gitCommitChanges() {
 }
 
 function gitPush() {
-  exec('git pull origin master');
+  exec('GIT_MERGE_AUTOEDIT=no git pull origin master');
   exec('git push origin master');
 }
 

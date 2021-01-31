@@ -14,7 +14,7 @@ import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
 
-type VersionInfo = {
+export type VersionInfo = {
   ref: Ref;
   tag?: string;
   version?: Version;
@@ -95,9 +95,9 @@ export async function getAllVersionsInfo({
   // even if they do have head (as a result of tag/snap after v15), they
   // have old versions without parents and new versions with parents
   await Promise.all(
-    Object.keys(modelComponent.versions).map(async (version) => {
+    Object.keys(modelComponent.versionsIncludeOrphaned).map(async (version) => {
       if (!results.find((r) => r.tag === version)) {
-        const ref = modelComponent.versions[version];
+        const ref = modelComponent.versionsIncludeOrphaned[version];
         const versionObj = await getVersionObj(ref);
         const versionInfo: VersionInfo = { ref, tag: version };
         if (versionObj) {

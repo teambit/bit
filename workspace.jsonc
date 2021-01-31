@@ -67,6 +67,7 @@
         "@teambit/base-ui.theme.fonts.roboto": "0.6.2",
         "@teambit/base-ui.theme.sizes": "^0.5.9",
         "@teambit/base-ui.theme.theme-provider": "^0.5.9",
+        "@teambit/base-ui.utils.string.affix": "0.0.2",
         "@teambit/base-ui.utils.sub-paths": "^0.5.9",
         "@teambit/base-ui.utils.time-ago": "0.5.9",
         "@teambit/capsule": "0.0.12",
@@ -124,6 +125,7 @@
         "@types/lodash": "4.14.165",
         "@types/lodash.compact": "3.0.6",
         "@types/lodash.head": "^4.0.6",
+        "@types/lodash.pick": "4.4.6",
         "@types/mdx-js__react": "1.5.3",
         "@types/mime": "2.0.3",
         "@types/mousetrap": "^1.6.3",
@@ -144,6 +146,7 @@
         "@yarnpkg/core": "2.4.0",
         "@yarnpkg/fslib": "2.4.0",
         "@yarnpkg/plugin-npm": "2.4.0",
+        "@yarnpkg/plugin-pack": "2.2.3",
         "ansi-to-html": "^0.6.14",
         "aws-sdk": "2.756.0",
         "babel-jest": "^26.0.1",
@@ -200,6 +203,7 @@
         "lodash": "4.17.20",
         "lodash.compact": "3.0.1",
         "lodash.head": "^4.0.1",
+        "lodash.pick": "4.4.0",
         "memoize-one": "5.1.1",
         "memory-fs": "0.5.0",
         "mime": "^2.4.6",
@@ -265,12 +269,12 @@
         "webpack-dev-server": "^3.11.0",
         "webpack-hot-middleware": "^2.25.0",
         "webpack-manifest-plugin": "^2.2.0",
-        "webpack-merge": "^4.2.2",
+        "webpack-merge": "^5.7.3",
         "workbox-webpack-plugin": "^5.1.3",
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.274",
+        "bit-bin": "14.8.9-dev.281",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -324,7 +328,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.274",
+            "bit-bin": "14.8.9-dev.281",
             "react-dom": "^16.13.1"
           }
         }
@@ -454,7 +458,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.274",
+            "bit-bin": "14.8.9-dev.281",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

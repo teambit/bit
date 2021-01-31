@@ -7,7 +7,7 @@ import type { WebSocketLink } from '@apollo/client/link/ws';
  * @param httpLink http link for apollo graphql
  * @param wsLink web socket link for apollo graphql
  */
-export function createLink(httpLink: HttpLink, wsLink: WebSocketLink) {
+export function createSplitLink(httpLink: HttpLink, wsLink: WebSocketLink) {
   return split(
     // split based on operation type
     ({ query }) => {

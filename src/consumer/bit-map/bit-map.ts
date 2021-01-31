@@ -3,8 +3,8 @@ import fs from 'fs-extra';
 import * as path from 'path';
 import { compact, uniq } from 'lodash';
 import R from 'ramda';
+import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
-
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
 import { BIT_MAP, BIT_VERSION, COMPONENT_ORIGINS, DEFAULT_LANE, OLD_BIT_MAP, VERSION_DELIMITER } from '../../constants';
@@ -247,6 +247,11 @@ export default class BitMap {
       const idHasScope = (): boolean => {
         if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
         if ('exported' in componentFromJson) {
+          if (typeof componentFromJson.exported !== 'boolean') {
+            throw new BitError(
+              `fatal: .bitmap record of "${componentId}" is invalid, the exported property must be boolean, got "${typeof componentFromJson.exported}" instead.`
+            );
+          }
           return componentFromJson.exported;
         }
         if (this.isLegacy) {

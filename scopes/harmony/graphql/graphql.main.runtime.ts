@@ -100,7 +100,8 @@ export class GraphqlMain {
         customFormatErrorFn: (err) => {
           this.logger.error('graphql got an error during running the following query:', params);
           this.logger.error('graphql error ', err);
-          return err;
+          // @ts-ignore
+          return { err, ERR_CODE: err.originalError.constructor.name, HTTP_CODE: err.originalError?.code };
         },
         schema,
         rootValue: request,

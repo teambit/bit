@@ -192,18 +192,22 @@ EOD`;
    * once the remote scope is deleted from the remote list, Bit assumes that it the remote is a hub
    * and enable the save-dependencies-as-packages feature.
    */
-  setResolver() {
+  setResolver(extraScopes: { [scopeName: string]: string } = {}) {
     const scopeJsonPath = '.bit/scope.json';
     const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
     const resolverPath = path.join(this.helper.scopes.localPath, 'resolver.js');
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     scopeJson.resolverPath = resolverPath;
     this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
-    this.helper.fs.createFile('', 'resolver.js', this._getResolverContent());
+    this.helper.fs.createFile('', 'resolver.js', this._getResolverContent(extraScopes));
   }
 
-  _getResolverContent() {
-    return `module.exports = () => Promise.resolve('file://${this.helper.scopes.remotePath}');`;
+  _getResolverContent(extraScopes: { [scopeName: string]: string } = {}) {
+    return `const extraScopes = ${JSON.stringify(extraScopes)};
+module.exports = (scopeName) => {
+  if (extraScopes[scopeName]) return Promise.resolve('file://' + extraScopes[scopeName]);
+  return Promise.resolve('file://${this.helper.scopes.remotePath}');
+}`;
   }
 
   _validateRegistryScope(dir: string) {

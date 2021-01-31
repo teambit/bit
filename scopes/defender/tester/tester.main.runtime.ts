@@ -136,9 +136,9 @@ export class TesterMain {
 
   async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
+    const componentStatus = await this.workspace.getComponentStatus(component);
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
-    const isModified = await component.isModified();
-    if ((entry || data) && !isModified) {
+    if ((entry || data) && !componentStatus.modifyInfo.hasModifiedFiles) {
       return { testsResults: data?.tests || entry?.data.tests, loading: false };
     }
     return this.getTestsResultsFromState(component);
