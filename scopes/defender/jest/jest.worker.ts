@@ -37,8 +37,12 @@ export class JestWorker {
               specFiles: testFiles,
               onComplete: (results) => {
                 if (!this.onTestCompleteCb) return;
-                const json = parse(stringify(results));
-                this.onTestCompleteCb(json);
+                try {
+                  const json = parse(stringify(results));
+                  this.onTestCompleteCb(json);
+                  // disable eslint because we want to catch error but not print it on worker
+                  // eslint-disable-next-line
+                } catch (error) {}
               },
             },
           ],
