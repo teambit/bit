@@ -270,6 +270,9 @@ export default class CommandHelper {
     // --force just silents the prompt, which obviously needed for CIs
     return this.runCmd(`bit export --force ${options}`);
   }
+  resumeExport(exportId: string, remotes: string[]) {
+    return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);
+  }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
   }
