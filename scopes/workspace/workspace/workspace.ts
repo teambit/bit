@@ -374,7 +374,7 @@ export class Workspace implements ComponentFactory {
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
   async getEnvSystemDescriptor(component: Component): Promise<AspectData> {
-    const env = this.envs.getEnv(component);
+    const env = this.envs.calculateEnv(component);
     if (env.env.__getDescriptor && typeof env.env.__getDescriptor === 'function') {
       const systemDescriptor = await env.env.__getDescriptor();
       // !important persist services only on the env itself.

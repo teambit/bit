@@ -482,7 +482,7 @@ export class DependencyResolverMain {
     let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
-    const env = this.envs.getEnvFromExtensions(configuredExtensions).env;
+    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
