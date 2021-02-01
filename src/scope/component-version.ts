@@ -82,11 +82,13 @@ Please upgrade your bit client to version >= v14.1.0`);
       if (collectParents) {
         const allParentsHashes = await getAllVersionHashes(this.component, repo, true, version.hash());
         const missingParentsHashes = allParentsHashes.filter((h) => !h.isEqual(version.hash()));
-        missingParentsHashes.map(async (parentHash) => {
-          const parentVersion = (await parentHash.load(repo)) as Version;
-          const parentsObj = await collectVersionObjects(parentVersion);
-          parentsObjects.push(...parentsObj);
-        });
+        await Promise.all(
+          missingParentsHashes.map(async (parentHash) => {
+            const parentVersion = (await parentHash.load(repo)) as Version;
+            const parentsObj = await collectVersionObjects(parentVersion);
+            parentsObjects.push(...parentsObj);
+          })
+        );
       }
       const versionObjects = await collectVersionObjects(version);
       const scopeMeta = await repo.getScopeMetaObject();
