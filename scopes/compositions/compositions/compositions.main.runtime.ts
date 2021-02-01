@@ -1,10 +1,10 @@
 import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMap, AspectData } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
-import { ExtensionData, Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import { flatten } from 'bit-bin/dist/utils';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
@@ -81,7 +81,7 @@ export class CompositionsMain {
     );
   }
 
-  async onComponentLoad(component: Component): Promise<ExtensionData> {
+  async onComponentLoad(component: Component): Promise<AspectData> {
     const compositions = this.readCompositions(component);
     return {
       compositions: compositions.map((composition) => composition.toObject()),
