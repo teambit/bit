@@ -42,10 +42,7 @@ export class TypescriptCompiler implements Compiler {
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
-    const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
-      this.options.tsconfig.compilerOptions,
-      '.'
-    );
+    const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(this.options.tsconfig, '.');
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
       const formattedErrors = this.tsModule.formatDiagnosticsWithColorAndContext(
