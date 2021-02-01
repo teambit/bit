@@ -102,7 +102,7 @@ export class ReactMain {
    * @param targets where to apply the config (workspace, build, etc)
    * @param tsModule typeof `ts` module instance.
    */
-  useTypescript(tsconfig: TsConfigSourceFile, targets?: ConfigTargets[], tsModule: any = ts) {
+  useTypescript(tsconfig: TsConfigSourceFile, tsOptions: TypescriptCompilerOptions, tsModule: any = ts) {
     this.tsConfigOverride = tsconfig;
     let compiler = this.reactEnv.createTsCompiler(tsconfig, {}, tsModule);
     this.compilers.push(compiler);
