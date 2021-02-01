@@ -32,7 +32,7 @@ import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
-import { TypescriptCompiler } from '../../typescript/typescript';
+import { UseTypescriptCompilerOptions, TsConfigs } from './typescript/interfaces';
 
 type ReactDeps = [
   EnvsMain,
@@ -93,22 +93,38 @@ export class ReactMain {
 
   readonly env = this.reactEnv;
 
-  private tsConfigOverride: TsConfigSourceFile | undefined;
-  private compilers: Compiler[];
+  private tsConfigOverride: TsConfigSourceFile | undefined; // TODO remove
+  private compilers: Compiler[]; // TODO remove
 
   /**
    * add ts compiler to the compilers array of the React environment.
-   * @param tsConfig typeof `TsConfigSourceFile` config file to merge with original config
-   * @param targets where to apply the config (workspace, build, etc)
+   * @param configs typeof `TsConfigs` - workspace and build configs to merge with/override original configs
+   * @param tsOptions where to apply the config (workspace, build, etc)
    * @param tsModule typeof `ts` module instance.
    */
-  useTypescript(tsconfig: TsConfigSourceFile, tsOptions: TypescriptCompilerOptions, tsModule: any = ts) {
-    this.tsConfigOverride = tsconfig;
-    let compiler = this.reactEnv.createTsCompiler(tsconfig, {}, tsModule);
-    this.compilers.push(compiler);
+  useTypescript(
+    configs: TsConfigs,
+    tsOptions: Partial<UseTypescriptCompilerOptions>,
+    tsModule: any = ts
+  ): EnvTransformer[] {
+    const workspaceCompilerTransformer = this.envs.override({
+      getTsWorkspaceCompiler: () => {
+        return this.reactEnv.getTsWorkspaceCompiler({ tsconfig: configs.workspaceConfig, ...tsOptions }, tsModule);
+      },
+    });
+
+    const buildCompilerTransformer = this.envs.override({
+      getTsBuildCompiler: () => {
+        return this.reactEnv.getTsBuildCompiler(
+          { tsconfig: configs.buildConfig || configs.workspaceConfig, ...tsOptions },
+          tsModule
+        );
+      },
+    });
     // The following could possibly be passed to centralised functions for all compilers:
     // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
     // create compiler task and add to compiler tasks
+    return [workspaceCompilerTransformer, buildCompilerTransformer];
   }
 
   /**
