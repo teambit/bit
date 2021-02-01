@@ -7,6 +7,7 @@ import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
+import { ChownOptions } from '../../utils/fs-write-file';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
@@ -389,8 +390,7 @@ export default class Repository {
    */
   async _writeOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
-    const options = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.trace(`repository._writeOne: ${objectPath}`);
@@ -401,10 +401,12 @@ export default class Repository {
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
+    const options: ChownOptions = {};
+    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     await Promise.all(
       objectList.objects.map(async (object) => {
         const objPath = path.join(pendingDir, this.hashPath(object.ref));
-        await fs.outputFile(objPath, object.buffer);
+        await writeFile(objPath, object.buffer, options);
       })
     );
   }

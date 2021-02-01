@@ -169,7 +169,7 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: ['**/*.spec.*', '**/*.test.*'],
+    patterns: ['**/*.spec.+(js|ts|jsx|tsx)', '**/*.test.+(js|ts|jsx|tsx)'],
 
     /**
      * determine whether to watch on start.
