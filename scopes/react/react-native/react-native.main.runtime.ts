@@ -12,7 +12,7 @@ import { ReactNativeAspect } from './react-native.aspect';
 
 const webpackConfig = require('./webpack/webpack.config');
 
-// const jestConfig = require.resolve('./jest/jest.config');
+const jestConfig = require.resolve('./jest/jest.config');
 
 export class ReactNativeMain {
   constructor(
@@ -92,7 +92,7 @@ export class ReactNativeMain {
     const reactNativeEnv = react.compose([
       react.overrideDevServerConfig(webpackConfig),
       react.overridePreviewConfig(webpackConfig),
-      // react.overrideJestConfig(jestConfig),
+      react.overrideJestConfig(jestConfig),
       react.overrideDependencies(getReactNativeDeps()),
     ]);
     envs.registerEnv(reactNativeEnv);

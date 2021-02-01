@@ -33,31 +33,31 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/code/utils/get-file-icon"
     },
-    "teambit.compilation/babel@0.0.262": {
+    "teambit.compilation/babel@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/babel"
     },
-    "teambit.compilation/bundler@0.0.262": {
+    "teambit.compilation/bundler@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/bundler"
     },
-    "teambit.compilation/compiler@0.0.262": {
+    "teambit.compilation/compiler@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/compiler"
     },
-    "teambit.compilation/multi-compiler@0.0.262": {
+    "teambit.compilation/multi-compiler@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler"
     },
-    "teambit.compilation/webpack@0.0.262": {
+    "teambit.compilation/webpack@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/webpack"
     },
-    "teambit.component/changelog@0.0.262": {
+    "teambit.component/changelog@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/changelog"
     },
-    "teambit.component/code@0.0.262": {
+    "teambit.component/code@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/code"
     },
@@ -77,23 +77,23 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-version"
     },
-    "teambit.component/component@0.0.262": {
+    "teambit.component/component@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component"
     },
-    "teambit.component/deprecation@0.0.262": {
+    "teambit.component/deprecation@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/deprecation"
     },
-    "teambit.component/dev-files@0.0.262": {
+    "teambit.component/dev-files@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/dev-files"
     },
-    "teambit.component/graph@0.0.262": {
+    "teambit.component/graph@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/graph"
     },
-    "teambit.component/isolator@0.0.262": {
+    "teambit.component/isolator@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/component/isolator"
     },
@@ -129,7 +129,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/version-label"
     },
-    "teambit.compositions/compositions@0.0.262": {
+    "teambit.compositions/compositions@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/compositions"
     },
@@ -145,19 +145,19 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
     },
-    "teambit.defender/eslint@0.0.262": {
+    "teambit.defender/eslint@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/eslint"
     },
-    "teambit.defender/jest@0.0.262": {
+    "teambit.defender/jest@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/jest"
     },
-    "teambit.defender/linter@0.0.262": {
+    "teambit.defender/linter@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/linter"
     },
-    "teambit.defender/tester@0.0.262": {
+    "teambit.defender/tester@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tester"
     },
@@ -173,15 +173,15 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/ui/test-table"
     },
-    "teambit.dependencies/dependency-resolver@0.0.262": {
+    "teambit.dependencies/dependency-resolver@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/dependency-resolver"
     },
-    "teambit.dependencies/pnpm@0.0.262": {
+    "teambit.dependencies/pnpm@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/pnpm"
     },
-    "teambit.dependencies/yarn@0.0.262": {
+    "teambit.dependencies/yarn@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn"
     },
@@ -257,7 +257,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/time-ago"
     },
-    "teambit.docs/docs@0.0.262": {
+    "teambit.docs/docs@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs"
     },
@@ -265,7 +265,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/ui/queries/get-docs"
     },
-    "teambit.envs/envs@0.0.262": {
+    "teambit.envs/envs@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/envs"
     },
@@ -273,11 +273,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/ui/env-icon"
     },
-    "teambit.explorer/command-bar@0.0.262": {
+    "teambit.explorer/command-bar@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/command-bar"
     },
-    "teambit.explorer/insights@0.0.262": {
+    "teambit.explorer/insights@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
@@ -293,15 +293,15 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/ui/component-grid"
     },
-    "teambit.generator/generator@0.0.262": {
+    "teambit.generator/generator@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/generator/generator"
     },
-    "teambit.harmony/aspect-loader@0.0.262": {
+    "teambit.harmony/aspect-loader@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-loader"
     },
-    "teambit.harmony/aspect@0.0.262": {
+    "teambit.harmony/aspect@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect"
     },
@@ -313,7 +313,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit-error"
     },
-    "teambit.harmony/bit@0.0.262": {
+    "teambit.harmony/bit@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -333,7 +333,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
-    "teambit.harmony/graphql@0.0.262": {
+    "teambit.harmony/graphql@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/graphql"
     },
@@ -349,11 +349,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
-    "teambit.harmony/node@0.0.262": {
+    "teambit.harmony/node@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/node"
     },
-    "teambit.harmony/pubsub@0.0.262": {
+    "teambit.harmony/pubsub@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/pubsub"
     },
@@ -361,7 +361,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/ui/aspect-box"
     },
-    "teambit.harmony/worker@0.0.262": {
+    "teambit.harmony/worker@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/worker"
     },
@@ -405,11 +405,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-scope-context"
     },
-    "teambit.pipelines/builder@0.0.262": {
+    "teambit.pipelines/builder@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/builder"
     },
-    "teambit.pipelines/flows@0.0.262": {
+    "teambit.pipelines/flows@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/flows"
     },
@@ -417,11 +417,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/pipelines/modules/merge-component-results"
     },
-    "teambit.pkg/pkg@0.0.262": {
+    "teambit.pkg/pkg@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/pkg/pkg"
     },
-    "teambit.preview/preview@0.0.262": {
+    "teambit.preview/preview@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/preview"
     },
@@ -445,11 +445,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/dom-to-react"
     },
-    "teambit.react/react-native@0.0.262": {
+    "teambit.react/react-native@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react-native"
     },
-    "teambit.react/react@0.0.262": {
+    "teambit.react/react@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react"
     },
@@ -457,11 +457,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/component-highlighter"
     },
-    "teambit.scope/scope@0.0.262": {
+    "teambit.scope/scope@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
     },
-    "teambit.scope/sign@0.0.262": {
+    "teambit.scope/sign@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/sign"
     },
@@ -481,11 +481,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/ui/scope-title"
     },
-    "teambit.scope/update-dependencies@0.0.262": {
+    "teambit.scope/update-dependencies@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/update-dependencies"
     },
-    "teambit.semantics/schema@0.0.262": {
+    "teambit.semantics/schema@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/semantics/schema"
     },
@@ -517,11 +517,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/url/query-string"
     },
-    "teambit.typescript/typescript@0.0.262": {
+    "teambit.typescript/typescript@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/typescript/typescript"
     },
-    "teambit.ui-foundation/notifications@0.0.262": {
+    "teambit.ui-foundation/notifications@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/notifications/aspect"
     },
@@ -529,11 +529,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/panels"
     },
-    "teambit.ui-foundation/react-router@0.0.262": {
+    "teambit.ui-foundation/react-router@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/react-router"
     },
-    "teambit.ui-foundation/sidebar@0.0.262": {
+    "teambit.ui-foundation/sidebar@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/sidebar"
     },
@@ -677,7 +677,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/tree/tree-node"
     },
-    "teambit.ui-foundation/ui@0.0.262": {
+    "teambit.ui-foundation/ui@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui"
     },
@@ -697,7 +697,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants"
     },
-    "teambit.workspace/workspace@0.0.262": {
+    "teambit.workspace/workspace@0.0.263": {
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
