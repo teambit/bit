@@ -1,0 +1,15 @@
+$bg: #2b2b2b;
+
+.tippy-box[data-theme~='teambit'] {
+  background: $bg;
+  border-radius: 8px;
+
+  .tippy-content {
+    padding: 0.85em;
+    white-space: nowrap;
+  }
+
+  .tippy-svg-arrow {
+    fill: $bg;
+  }
+}
