@@ -12,7 +12,7 @@ import Repository from './objects/repository';
 export default class VersionDependencies implements ObjectCollector {
   constructor(
     public component: ComponentVersion,
-    private dependencies: ComponentVersion[],
+    public dependencies: ComponentVersion[],
     public sourceScope: string,
     public version: Version
   ) {}
