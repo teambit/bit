@@ -37,6 +37,11 @@ export class ExportCmd implements Command {
     ['f', 'force', 'force changing a component remote without asking for a confirmation'],
     ['l', 'lanes', 'HARMONY ONLY. export lanes'],
     ['', 'all-versions', 'export not only staged versions but all of them'],
+    [
+      '',
+      'resume <string>',
+      'in case the previous export failed and suggested to resume with an export-id, enter the id',
+    ],
   ] as CommandOptions;
   loader = true;
   migration = true;
@@ -55,6 +60,7 @@ export class ExportCmd implements Command {
       force = false,
       rewire = false,
       lanes = false,
+      resume,
     }: any
   ): Promise<string> {
     const currentScope = !remote || remote === CURRENT_UPSTREAM;
@@ -77,6 +83,7 @@ export class ExportCmd implements Command {
       codemod: rewire,
       force,
       lanes,
+      resumeExportId: resume,
     });
     if (R.isEmpty(componentsIds) && R.isEmpty(nonExistOnBitMap) && R.isEmpty(missingScope)) {
       return chalk.yellow('nothing to export');

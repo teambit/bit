@@ -354,4 +354,14 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       cwd: this.scopes.e2eDir,
     });
   }
+
+  extractCompressedFixture(filePathRelativeToFixtures: string, destDir: string) {
+    fs.ensureDirSync(destDir);
+    const compressedFile = path.join(this.getFixturesDir(), filePathRelativeToFixtures);
+    tar.extract({
+      sync: true,
+      file: compressedFile,
+      cwd: destDir,
+    });
+  }
 }

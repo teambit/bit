@@ -630,7 +630,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
-      if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
+      if (!content)
+        throw new ShowDoctorError(
+          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`
+        );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
