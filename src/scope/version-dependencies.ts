@@ -3,13 +3,13 @@ import R from 'ramda';
 import { BitId, BitIds } from '../bit-id';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ComponentWithDependencies from './component-dependencies';
-import ComponentVersion from './component-version';
+import ComponentVersion, { ObjectCollector, CollectObjectsOpts } from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
 import { Version } from './models';
 import { ObjectItem } from './objects/object-list';
 import Repository from './objects/repository';
 
-export default class VersionDependencies {
+export default class VersionDependencies implements ObjectCollector {
   constructor(
     public component: ComponentVersion,
     private dependencies: ComponentVersion[],
@@ -57,15 +57,15 @@ export default class VersionDependencies {
     });
   }
 
-  async toObjects(
+  async collectObjects(
     repo: Repository,
     clientVersion: string | null | undefined,
-    collectParents: boolean,
-    collectArtifacts: boolean
+    options: CollectObjectsOpts
   ): Promise<ObjectItem[]> {
     // for the dependencies, don't collect parents they might not exist
-    const depsP = mapSeries(this.allDependencies, (dep) => dep.toObjects(repo, clientVersion, false, collectArtifacts));
-    const compP = this.component.toObjects(repo, clientVersion, collectParents, collectArtifacts);
+    const depOptions: CollectObjectsOpts = { ...options, collectParents: false };
+    const depsP = mapSeries(this.allDependencies, (dep) => dep.collectObjects(repo, clientVersion, depOptions));
+    const compP = this.component.collectObjects(repo, clientVersion, options);
     const [component, dependencies] = await Promise.all([compP, depsP]);
     return [...component, ...R.flatten(dependencies)];
   }

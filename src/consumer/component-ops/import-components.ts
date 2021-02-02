@@ -231,7 +231,7 @@ export default class ImportComponents {
     // missing objects.
     // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.IMPORTED]);
+    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
     const componentsIdsToImport = BitIds.fromArray([
       ...authoredExportedComponents,
       ...importedComponents,
@@ -257,8 +257,11 @@ export default class ImportComponents {
     let componentsAndDependencies: ComponentWithDependencies[] = [];
     if (componentsIdsToImport.length) {
       // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
-      const idsWithLatestVersion = componentsIdsToImport.map((id) => id.changeVersion(LATEST_BIT_VERSION));
-      componentsAndDependencies = await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
+      const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
+      componentsAndDependencies =
+        !this.consumer.isLegacy && this.options.objectsOnly
+          ? await this.consumer.importComponentsObjectsHarmony(componentsIdsToImport)
+          : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }

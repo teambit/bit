@@ -10,6 +10,7 @@
  * methods here.
  */
 
+import { BitId } from '../../bit-id';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
@@ -37,12 +38,14 @@ export async function getAllVersionsInfo({
   throws = true,
   versionObjects,
   startFrom,
+  stopAt,
 }: {
   modelComponent: ModelComponent;
   repo?: Repository;
   throws?: boolean;
   versionObjects?: Version[];
-  startFrom?: Ref | null;
+  startFrom?: Ref | null; // by default, start from the head
+  stopAt?: Ref | null; // by default, stop when the parents is empty
 }): Promise<VersionInfo[]> {
   const results: VersionInfo[] = [];
   const getVersionObj = async (ref: Ref): Promise<Version | undefined> => {
@@ -67,6 +70,9 @@ export async function getAllVersionsInfo({
     results.push(headInfo);
 
     const addParentsRecursively = async (version: Version) => {
+      if (stopAt && version.hash().isEqual(stopAt)) {
+        return;
+      }
       await Promise.all(
         version.parents.map(async (parent) => {
           const parentVersion = await getVersionObj(parent);
@@ -139,9 +145,10 @@ export async function getAllVersionHashes(
   modelComponent: ModelComponent,
   repo: Repository,
   throws = true,
-  startFrom?: Ref | null
+  startFrom?: Ref | null,
+  stopAt?: Ref | null
 ): Promise<Ref[]> {
-  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws, startFrom });
+  const allVersionsInfo = await getAllVersionsInfo({ modelComponent, repo, throws, startFrom, stopAt });
   return allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
 }
 
