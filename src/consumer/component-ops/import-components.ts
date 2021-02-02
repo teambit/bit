@@ -6,7 +6,7 @@ import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS, LATEST_BIT_VERSION } from '../../constants';
+import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '../../consumer';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';

@@ -398,13 +398,14 @@ export default class Consumer {
     try {
       await scopeComponentsImporter.importManyDeltaWithoutDeps(ids);
     } catch (err) {
+      loader.stop();
       // @todo: remove once the server is deployed with this new "component-delta" type
       if (err.message.includes('type component-delta was not implemented')) {
         return this.importComponents(ids.toVersionLatest(), true);
       }
       throw err;
     }
-
+    loader.start(`import ${ids.length} components with their dependencies if missing`);
     const versionDependenciesArr: VersionDependencies[] = await scopeComponentsImporter.importMany(ids);
     const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
       versionDependencies.toConsumer(this.scope.objects, null)

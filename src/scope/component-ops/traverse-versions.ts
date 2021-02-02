@@ -10,7 +10,6 @@
  * methods here.
  */
 
-import { BitId } from '../../bit-id';
 import { HeadNotFound, ParentNotFound, VersionNotFound } from '../exceptions';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
