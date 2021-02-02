@@ -11,6 +11,7 @@ import { CLIAspect, MainRuntime } from './cli.aspect';
 import { Help } from './commands/help.cmd';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { CommandNotFound } from './exceptions/command-not-found';
+import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 
 export type CommandList = Array<Command>;
@@ -62,7 +63,12 @@ export class CLIMain {
    * helpful for having the same command name in different environments (legacy and Harmony)
    */
   unregister(commandName: string) {
-    delete this.commands[commandName];
+    this.commandsSlot.toArray().forEach(([aspectId, commands]) => {
+      const filteredCommands = commands.filter((command) => {
+        return getCommandId(command.name) !== commandName;
+      });
+      this.commandsSlot.map.set(aspectId, filteredCommands);
+    });
   }
 
   /**
@@ -149,7 +155,7 @@ export class CLIMain {
     const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
     const allCommandsAdapters = allCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     // @ts-ignore
-    cliMain.register(allCommandsAdapters);
+    cliMain.register(...allCommandsAdapters);
     return cliMain;
   }
 }
