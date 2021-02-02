@@ -110,6 +110,31 @@ export class EnvsMain {
     };
   }
 
+  /**
+   * compose two environments into one.
+   */
+  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
+    const allNames = new Set<string>();
+    const keys = ['icon', 'name', 'description'];
+    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
+      for (const name of Object.getOwnPropertyNames(o)) {
+        allNames.add(name);
+      }
+    }
+
+    allNames.forEach((key: string) => {
+      const fn = sourceEnv[key];
+      if (targetEnv[key]) return;
+      if (keys.includes(key)) targetEnv[key] = fn;
+      if (!fn || !fn.bind) {
+        return;
+      }
+      targetEnv[key] = fn.bind(sourceEnv);
+    });
+
+    return targetEnv as T;
+  }
+
   getEnvData(component: Component): AspectData {
     let envsData = component.state.aspects.get(EnvsAspect.id);
     if (!envsData) {
@@ -327,31 +352,6 @@ export class EnvsMain {
    */
   registerEnv(env: Environment) {
     return this.envSlot.register(env);
-  }
-
-  /**
-   * compose two environments into one.
-   */
-  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
-    const allNames = new Set<string>();
-    const keys = ['icon', 'name', 'description'];
-    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
-      for (const name of Object.getOwnPropertyNames(o)) {
-        allNames.add(name);
-      }
-    }
-
-    allNames.forEach((key: string) => {
-      const fn = sourceEnv[key];
-      if (targetEnv[key]) return;
-      if (keys.includes(key)) targetEnv[key] = fn;
-      if (!fn || !fn.bind) {
-        return;
-      }
-      targetEnv[key] = fn.bind(sourceEnv);
-    });
-
-    return targetEnv as T;
   }
 
   // refactor here
