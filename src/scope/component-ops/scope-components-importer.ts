@@ -91,7 +91,11 @@ export default class ScopeComponentsImporter {
       return false;
     });
 
-    await mapSeries(existingDefs, async (compDef) => this.findMissingExternalsRecursively(compDef, externalsToFetch));
+    const visited: string[] = [];
+    const existingCache = new BitIds();
+    await mapSeries(existingDefs, async (compDef) =>
+      this.findMissingExternalsRecursively(compDef, externalsToFetch, visited, existingCache)
+    );
 
     logger.debugAndAddBreadCrumb(
       'importMany',
@@ -117,17 +121,32 @@ export default class ScopeComponentsImporter {
    * components to ask for from the remote. we iterate over the direct dependencies and if some of
    * them are local as well, we need to iterate over their dependencies and so on.
    */
-  private async findMissingExternalsRecursively(compDef: ComponentDef, externalsToFetch: BitId[] = []): Promise<void> {
+  private async findMissingExternalsRecursively(
+    compDef: ComponentDef,
+    externalsToFetch: BitId[],
+    visited: string[],
+    existingCache: BitIds
+  ): Promise<void> {
+    const idStr = compDef.id.toString();
+    if (visited.includes(idStr)) return;
+    logger.debug(`findMissingExternalsRecursively, component ${compDef.id.toString()}`);
+    visited.push(idStr);
     const version = await this.getVersionFromComponentDef(compDef.component as ModelComponent, compDef.id);
     if (!version) {
       // it must be external. otherwise, getVersionFromComponentDef would throw
       externalsToFetch.push(compDef.id);
       return;
     }
-    const flattenedDepsDefs = await this.sources.getMany(version.flattenedDependencies);
+    const flattenedDepsToLocate = version.flattenedDependencies.filter((id) => !existingCache.has(id));
+    const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate);
     const existingFlattened = BitIds.fromArray(flattenedDepsDefs.filter((def) => def.component).map((def) => def.id));
-    if (flattenedDepsDefs.every((def) => def.component)) {
-      return; // all exist.
+    const allFlattenedExist = flattenedDepsDefs.every((def) => {
+      if (!def.component) return false;
+      existingCache.push(def.id);
+      return true;
+    });
+    if (allFlattenedExist) {
+      return;
     }
     // some flattened are missing
     if (!compDef.id.isLocal(this.scope.name)) {
@@ -158,7 +177,9 @@ export default class ScopeComponentsImporter {
         }
       })
     );
-    await mapSeries(localMissingDepDefs, (depDef) => this.findMissingExternalsRecursively(depDef, externalsToFetch));
+    await mapSeries(localMissingDepDefs, (depDef) =>
+      this.findMissingExternalsRecursively(depDef, externalsToFetch, visited, existingCache)
+    );
   }
 
   async fetchWithDeps(ids: BitIds): Promise<VersionDependencies[]> {
