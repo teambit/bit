@@ -122,6 +122,20 @@ export default class Component extends BitObject {
     return Object.values(this.versions);
   }
 
+  setVersion(tag: string, ref: Ref) {
+    this.versions[tag] = ref;
+    delete this.orphanedVersions[tag]; // just in case it's there.
+  }
+
+  setOrphanedVersion(tag: string, ref: Ref) {
+    if (this.versions[tag]) {
+      throw new Error(
+        `unable to save orphanedVersion "${tag}" for "${this.id()}" because this tag is already part of the versions prop`
+      );
+    }
+    this.orphanedVersions[tag] = ref;
+  }
+
   getRef(version: string): Ref | null {
     if (isHash(version)) {
       return new Ref(version);
@@ -460,7 +474,7 @@ export default class Component extends BitObject {
     }
     if (!version.isLegacy) this.setHead(version.hash());
     if (isTag(versionToAdd)) {
-      this.versions[versionToAdd] = version.hash();
+      this.setVersion(versionToAdd, version.hash());
     }
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
