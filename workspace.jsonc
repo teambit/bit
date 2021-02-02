@@ -110,6 +110,7 @@
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
         "@teambit/evangelist.theme.icon-font": "0.5.5",
         "@teambit/harmony": "0.2.11",
+        "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@types/classnames": "^2.2.10",

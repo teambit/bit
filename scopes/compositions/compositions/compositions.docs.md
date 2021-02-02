@@ -7,8 +7,9 @@ import { Button } from '@teambit/evangelist.elements.button';
 import { CompositionCard } from '@teambit/ui.composition-card';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 
-The Compositions aspect renders component 'compositions' in isolation and displays them in the Workspace UI and Scope UI.
-'Compositions' are examples or instances of a component that serve to exhibit and test a component in different contexts and variations.
+A composition captures a rendered instance of a component in isolation. A composition can be rendered as a standalone instance of a component or in a specific context, such as another consuming component, theme, or even a page.
+
+For example, as you develop a “button” component, you can use compositions to view how every change looks and behaves inside other dependant components like “form” or “menu”.
 
 The Compositions aspect is an essential tool to authoring independent components as it renders component instances in "controlled environments", isolated and un-affected by code that was not purposefully included. 
 This sterile environment provides accurate and comprehensive understanding of their look and behavior, for manual and automated testings.
