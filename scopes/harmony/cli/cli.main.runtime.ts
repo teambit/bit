@@ -20,16 +20,6 @@ export type OnStartSlot = SlotRegistry<OnStart>;
 
 export class CLIMain {
   readonly groups: { [k: string]: string } = {};
-  static dependencies = [];
-
-  static provider(deps, config, [onStartSlot]: [OnStartSlot]) {
-    const cli = new CLIMain(new CommandRegistry({}), onStartSlot);
-    return CLIProvider([cli]);
-  }
-
-  static runtime = MainRuntime;
-
-  static slots = [Slot.withType<OnStart>()];
 
   constructor(
     /**
@@ -138,30 +128,35 @@ export class CLIMain {
     }
     this.groups[name] = description;
   }
-}
 
-export async function CLIProvider([cliExtension]: [CLIMain]) {
-  const legacyExtensions = await LegacyLoadExtensions();
-  // Make sure to register all the hooks actions in the global hooks manager
-  legacyExtensions.forEach((extension) => {
-    extension.registerHookActionsOnHooksManager();
-  });
+  static dependencies = [];
+  static runtime = MainRuntime;
+  static slots = [Slot.withType<OnStart>()];
 
-  const extensionsCommands = legacyExtensions.reduce((acc, curr) => {
-    if (curr.commands && curr.commands.length) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      acc = acc.concat(curr.commands);
-    }
-    return acc;
-  }, []);
+  static async provider(deps, config, [onStartSlot]: [OnStartSlot]) {
+    const cliMain = new CLIMain(new CommandRegistry({}), onStartSlot);
+    const legacyExtensions = await LegacyLoadExtensions();
+    // Make sure to register all the hooks actions in the global hooks manager
+    legacyExtensions.forEach((extension) => {
+      extension.registerHookActionsOnHooksManager();
+    });
 
-  const legacyRegistry = buildRegistry(extensionsCommands);
-  const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
-  allCommands.forEach((command) => {
-    const legacyCommandAdapter = new LegacyCommandAdapter(command, cliExtension);
-    cliExtension.register(legacyCommandAdapter);
-  });
-  return cliExtension;
+    const extensionsCommands = legacyExtensions.reduce((acc, curr) => {
+      if (curr.commands && curr.commands.length) {
+        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        acc = acc.concat(curr.commands);
+      }
+      return acc;
+    }, []);
+
+    const legacyRegistry = buildRegistry(extensionsCommands);
+    const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
+    allCommands.forEach((command) => {
+      const legacyCommandAdapter = new LegacyCommandAdapter(command, cliMain);
+      cliMain.register(legacyCommandAdapter);
+    });
+    return cliMain;
+  }
 }
 
 CLIAspect.addRuntime(CLIMain);
