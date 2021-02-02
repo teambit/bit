@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import { setContext } from 'apollo-link-context';
 import { HttpLink } from 'apollo-link-http';
 import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
 import { WebSocketLink } from 'apollo-link-ws';
@@ -10,7 +11,13 @@ import { GraphQLServer } from '../graphql-server';
 
 async function getRemoteSchema({ uri, subscriptionsUri }) {
   // @ts-ignore
-  const httpLink = new HttpLink({ uri, fetch });
+  const http = new HttpLink({ uri, fetch });
+  const httpLink = setContext((request, previousContext) => {
+    return {
+      headers: previousContext?.graphqlContext?.headers,
+    };
+  }).concat(http);
+
   if (!subscriptionsUri) {
     return makeRemoteExecutableSchema({
       schema: await introspectSchema(httpLink),
