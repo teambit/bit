@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { flatten } from 'lodash';
 import R from 'ramda';
 import { BitId, BitIds } from '../bit-id';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
@@ -8,6 +9,7 @@ import { DependenciesNotFound } from './exceptions/dependencies-not-found';
 import { Version } from './models';
 import { ObjectItem } from './objects/object-list';
 import Repository from './objects/repository';
+import ConsumerComponent from '../consumer/component';
 
 export default class VersionDependencies implements ObjectCollector {
   constructor(
@@ -69,4 +71,34 @@ export default class VersionDependencies implements ObjectCollector {
     const [component, dependencies] = await Promise.all([compP, depsP]);
     return [...component, ...R.flatten(dependencies)];
   }
+}
+
+export async function multipleVersionDependenciesToConsumer(
+  versionDependencies: VersionDependencies[],
+  repo: Repository
+): Promise<ComponentWithDependencies[]> {
+  const flattenedCompVer: { [id: string]: ComponentVersion } = {};
+  const flattenedConsumerComp: { [id: string]: ConsumerComponent } = {};
+
+  versionDependencies.forEach((verDep) => {
+    const allComps = [verDep.component, ...verDep.dependencies];
+    allComps.forEach((compVer) => {
+      flattenedCompVer[compVer.id.toString()] = compVer;
+    });
+  });
+
+  await Promise.all(
+    Object.keys(flattenedCompVer).map(async (idStr) => {
+      flattenedConsumerComp[idStr] = await flattenedCompVer[idStr].toConsumer(repo, null);
+    })
+  );
+  return versionDependencies.map((verDep) => {
+    return new ComponentWithDependencies({
+      component: flattenedConsumerComp[verDep.component.id.toString()] as ConsumerComponent,
+      dependencies: verDep.dependencies.map((d) => flattenedConsumerComp[d.id.toString()]),
+      devDependencies: [],
+      extensionDependencies: [],
+      missingDependencies: verDep.getMissingDependencies(),
+    });
+  });
 }

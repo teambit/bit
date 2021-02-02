@@ -39,7 +39,7 @@ import { ComponentNotFound } from '../scope/exceptions';
 import installExtensions from '../scope/extensions/install-extensions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 import { getScopeRemotes } from '../scope/scope-remotes';
-import VersionDependencies from '../scope/version-dependencies';
+import VersionDependencies, { multipleVersionDependenciesToConsumer } from '../scope/version-dependencies';
 import { pathNormalizeToLinux, sortObject } from '../utils';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
@@ -407,8 +407,9 @@ export default class Consumer {
     }
     loader.start(`import ${ids.length} components with their dependencies if missing`);
     const versionDependenciesArr: VersionDependencies[] = await scopeComponentsImporter.importMany(ids);
-    const componentWithDependencies = await mapSeries(versionDependenciesArr, (versionDependencies) =>
-      versionDependencies.toConsumer(this.scope.objects, null)
+    const componentWithDependencies = await multipleVersionDependenciesToConsumer(
+      versionDependenciesArr,
+      this.scope.objects
     );
 
     return componentWithDependencies;
