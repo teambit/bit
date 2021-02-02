@@ -130,6 +130,7 @@ export class EnvsMain {
 
   /**
    * get the env of the given component.
+   * In case you are asking for the env during on load you should use calculateEnv instead
    */
   getEnv(component: Component): EnvDefinition {
     const id = this.getEnvId(component);

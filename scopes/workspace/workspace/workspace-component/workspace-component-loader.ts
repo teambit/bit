@@ -158,10 +158,16 @@ export class WorkspaceComponentLoader {
   }
 
   private async executeLoadSlot(component: Component) {
-    let promises: Promise<any>[] = [];
+    const entries = this.workspace.onComponentLoadSlot.toArray();
+    const promises = entries.map(async ([extension, onLoad]) => {
+      const data = await onLoad(component);
+      return this.upsertExtensionData(component, extension, data);
+    });
+
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
+
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
@@ -173,14 +179,6 @@ export class WorkspaceComponentLoader {
 
     promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
     promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
-
-    await Promise.all(promises);
-
-    const entries = this.workspace.onComponentLoadSlot.toArray();
-    promises = entries.map(async ([extension, onLoad]) => {
-      const data = await onLoad(component);
-      return this.upsertExtensionData(component, extension, data);
-    });
 
     await Promise.all(promises);
 

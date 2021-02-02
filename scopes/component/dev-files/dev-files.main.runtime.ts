@@ -46,7 +46,7 @@ export class DevFilesMain {
   computeDevPatterns(component: Component) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
-    const envDef = this.envs.getEnv(component);
+    const envDef = this.envs.calculateEnv(component);
     const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
 
     const patternSlot = this.devPatternSlot.toArray();
