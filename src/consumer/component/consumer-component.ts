@@ -126,6 +126,7 @@ export default class Component {
 
   name: string;
   version: string | undefined;
+  previouslyUsedVersion: string | undefined;
   scope: string | null | undefined;
   lang: string;
   bindingPrefix: string;
