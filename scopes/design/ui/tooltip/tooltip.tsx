@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import Tippy, { TippyProps } from '@tippyjs/react';
 import { roundArrow } from 'tippy.js';
 import 'tippy.js/dist/tippy.css';
@@ -10,7 +10,8 @@ import { useCtxTooltipInstance } from './shared-instance';
 
 const THEME = 'teambit';
 
-export interface TooltipProps extends TippyProps {
+export interface TooltipProps extends Omit<TippyProps, 'children'> {
+  children?: ReactElement<any> | string;
   id?: string;
 }
 
