@@ -100,24 +100,24 @@ export class CLIMain {
       packageManagerArgs.shift(); // remove the -- delimiter
     }
 
-    Object.values(this.commands).forEach((command) => register(command as any, commander, packageManagerArgs));
+    this.commands.forEach((command) => register(command as any, commander, packageManagerArgs));
     this.throwForNonExistsCommand(args[0]);
 
     // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
   }
   private throwForNonExistsCommand(commandName: string) {
-    const commands = Object.keys(this.commands);
-    const aliases = commands.map((c) => this.commands[c].alias).filter((a) => a);
+    const commandsNames = this.commands.map((c) => getCommandId(c.name));
+    const aliases = this.commands.map((c) => c.alias).filter((a) => a);
     const globalFlags = ['-V', '--version'];
-    const validCommands = [...commands, ...aliases, ...globalFlags];
+    const validCommands = [...commandsNames, ...aliases, ...globalFlags];
     const commandExist = validCommands.includes(commandName);
 
     if (!commandExist) {
       didYouMean.returnFirstMatch = true;
       const suggestions = didYouMean(
         commandName,
-        Object.keys(this.commands).filter((c) => !this.commands[c].private)
+        this.commands.filter((c) => !c.private).map((c) => getCommandId(c.name))
       );
       const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
       // @ts-ignore
