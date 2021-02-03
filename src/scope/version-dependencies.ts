@@ -1,5 +1,4 @@
 import mapSeries from 'p-map-series';
-import { flatten } from 'lodash';
 import R from 'ramda';
 import { BitId, BitIds } from '../bit-id';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
