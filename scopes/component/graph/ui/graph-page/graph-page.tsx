@@ -36,22 +36,20 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
 
   return (
     <div className={styles.page}>
-      <SingletonTooltipProvider disabled>
-        <H2 size="xs">Dependencies</H2>
-        <DependenciesGraph
-          componentWidgets={componentWidgets}
-          graph={graph}
-          rootNode={component.id}
-          className={styles.graph}
-        >
-          <GraphFilters
-            className={styles.filters}
-            disable={loading}
-            isFiltered={isFiltered}
-            onChangeFilter={onCheckFilter}
-          />
-        </DependenciesGraph>
-      </SingletonTooltipProvider>
+      <H2 size="xs">Dependencies</H2>
+      <DependenciesGraph
+        componentWidgets={componentWidgets}
+        graph={graph}
+        rootNode={component.id}
+        className={styles.graph}
+      >
+        <GraphFilters
+          className={styles.filters}
+          disable={loading}
+          isFiltered={isFiltered}
+          onChangeFilter={onCheckFilter}
+        />
+      </DependenciesGraph>
     </div>
   );
 }
