@@ -17,7 +17,13 @@ export function Tooltip(props: TooltipProps) {
   const ctxInstance = useCtxTooltipInstance();
 
   const singleton = props.singleton || ctxInstance;
-  console.log(props.id, 'singleton', singleton);
 
-  return <Tippy arrow={roundArrow} theme={THEME} interactive {...props} singleton={singleton} />;
+  // children should accept a ref
+  const children = typeof props.children === 'string' ? <span>{props.children}</span> : props.children;
+
+  return (
+    <Tippy arrow={roundArrow} theme={THEME} interactive {...props} singleton={singleton}>
+      {children}
+    </Tippy>
+  );
 }

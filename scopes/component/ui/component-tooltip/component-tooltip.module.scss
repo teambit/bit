@@ -1,6 +1,10 @@
 .list {
   list-style: revert;
   list-style-position: inside;
+
+  > li:only-child {
+    list-style: none;
+  }
 }
 
 .tooltip {

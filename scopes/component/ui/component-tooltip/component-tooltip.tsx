@@ -27,7 +27,7 @@ export function StatusTooltip({ status, issuesCount, children }: any) {
   );
 
   return (
-    <Tooltip className={styles.tooltip} placement="right" interactive={true} content={content}>
+    <Tooltip className={styles.tooltip} placement="right" content={content}>
       {children}
     </Tooltip>
   );
