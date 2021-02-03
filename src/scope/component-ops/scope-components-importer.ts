@@ -354,10 +354,10 @@ export default class ScopeComponentsImporter {
     const versionComp: ComponentVersion = component.toComponentVersion(id.version);
     const version = await versionComp.getVersion(this.scope.objects, false);
     if (version) return version;
-    if (component.scope === this.scope.name) {
+    if (id.isLocal(this.scope.name)) {
       // it should have been fetched locally, since it wasn't found, this is an error
       throw new ShowDoctorError(
-        `Version ${versionComp.version} of ${component.id().toString()} was not found in scope ${this.scope.name}`
+        `Version ${versionComp.version} of ${id.toString()} was not found in scope ${this.scope.name}`
       );
     }
     return null;
@@ -518,20 +518,24 @@ export default class ScopeComponentsImporter {
     if (!compDefs.length) return;
     const idsStr = compDefs.map((c) => c.id.toString()).join(', ');
     logger.debug(`findMissingExternalsRecursively, components ${idsStr}`);
-    const localMissingDepDefs: ComponentDef[] = [];
-    await mapSeries(compDefs, async (compDef) => {
-      const idStr = compDef.id.toString();
+    const compDefsForNextIteration: ComponentDef[] = [];
+    await mapSeries(compDefs, async ({ component, id }) => {
+      const idStr = id.toString();
       if (visited.includes(idStr)) return;
       visited.push(idStr);
-      const version = await this.getVersionFromComponentDef(compDef.component as ModelComponent, compDef.id);
-      if (!version) {
-        // it must be external. otherwise, getVersionFromComponentDef would throw
-        externalsToFetch.push(compDef.id);
+      if (!component) {
+        if (id.isLocal(this.scope.name)) throw new ComponentNotFound(idStr);
+        externalsToFetch.push(id);
         return;
       }
-      const flattenedDepsToLocate = version.flattenedDependencies.filter((id) => !existingCache.has(id));
+      const version = await this.getVersionFromComponentDef(component, id);
+      if (!version) {
+        // it must be external. otherwise, getVersionFromComponentDef would throw
+        externalsToFetch.push(id);
+        return;
+      }
+      const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
       const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate);
-      const existingFlattened = BitIds.fromArray(flattenedDepsDefs.filter((def) => def.component).map((def) => def.id));
       const allFlattenedExist = flattenedDepsDefs.every((def) => {
         if (!def.component) return false;
         existingCache.push(def.id);
@@ -541,36 +545,16 @@ export default class ScopeComponentsImporter {
         return;
       }
       // some flattened are missing
-      if (!compDef.id.isLocal(this.scope.name)) {
-        externalsToFetch.push(compDef.id);
+      if (!id.isLocal(this.scope.name)) {
+        externalsToFetch.push(id);
         return;
       }
+      // it's local and some flattened are missing, check the direct dependencies
       const directDepsDefs = await this.sources.getMany(version.getAllDependenciesIds());
-      await Promise.all(
-        directDepsDefs.map(async (depDef) => {
-          if (!depDef.component) {
-            if (depDef.id.isLocal(this.scope.name)) throw new ComponentNotFound(depDef.id.toString());
-            externalsToFetch.push(depDef.id);
-            return;
-          }
-          const versionDep = await this.getVersionFromComponentDef(depDef.component as ModelComponent, depDef.id);
-          if (!versionDep) {
-            // it must be external. otherwise, getVersionFromComponentDef would throw
-            externalsToFetch.push(compDef.id);
-            return;
-          }
-          const hasMissingFlattened = versionDep.flattenedDependencies.some((d) => !existingFlattened.has(d));
-          if (!hasMissingFlattened) return; // all exist
-          if (depDef.id.isLocal(this.scope.name)) {
-            localMissingDepDefs.push(depDef);
-          } else {
-            externalsToFetch.push(compDef.id);
-          }
-        })
-      );
+      compDefsForNextIteration.push(...directDepsDefs);
     });
 
-    await this.findMissingExternalsRecursively(localMissingDepDefs, externalsToFetch, visited, existingCache);
+    await this.findMissingExternalsRecursively(compDefsForNextIteration, externalsToFetch, visited, existingCache);
   }
 
   /**
