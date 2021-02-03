@@ -580,7 +580,7 @@ async function convertToCorrectScopeLegacy(
         const versions = componentsObjects.component.versions;
         Object.keys(versions).forEach((version) => {
           if (versions[version].toString() === hashBefore) {
-            versions[version] = Ref.from(hashAfter);
+            componentsObjects.component.setVersion(version, Ref.from(hashAfter));
           }
         });
         if (componentsObjects.component.getHeadStr() === hashBefore) {

@@ -38,6 +38,7 @@ export type GraphQLServerOptions = {
   graphiql?: boolean;
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
+  onWsConnect?: Function;
 };
 
 export class GraphqlMain {
@@ -77,7 +78,6 @@ export class GraphqlMain {
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-
     const schema = mergeSchemas({
       schemas,
     });
@@ -179,6 +179,7 @@ export class GraphqlMain {
         execute,
         subscribe,
         schema: schema.schema,
+        onConnect: options.onWsConnect,
       },
       {
         server: websocketServer,

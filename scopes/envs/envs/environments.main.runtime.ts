@@ -1,5 +1,5 @@
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMain, ComponentID } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMain, ComponentID, AspectData } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
@@ -14,7 +14,7 @@ import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
-// import { EnvNotConfiguredForComponent, EnvNotFound } from './exceptions';
+import { EnvNotFound } from './exceptions';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -39,6 +39,8 @@ export const DEFAULT_ENV = 'teambit.harmony/node';
 
 export class EnvsMain {
   static runtime = MainRuntime;
+
+  private alreadyShownWarning = {};
 
   /**
    * icon of the extension.
@@ -111,9 +113,80 @@ export class EnvsMain {
   }
 
   /**
+   * compose two environments into one.
+   */
+  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
+    const allNames = new Set<string>();
+    const keys = ['icon', 'name', 'description'];
+    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
+      for (const name of Object.getOwnPropertyNames(o)) {
+        allNames.add(name);
+      }
+    }
+
+    allNames.forEach((key: string) => {
+      const fn = sourceEnv[key];
+      if (targetEnv[key]) return;
+      if (keys.includes(key)) targetEnv[key] = fn;
+      if (!fn || !fn.bind) {
+        return;
+      }
+      targetEnv[key] = fn.bind(sourceEnv);
+    });
+
+    return targetEnv as T;
+  }
+
+  getEnvData(component: Component): AspectData {
+    let envsData = component.state.aspects.get(EnvsAspect.id);
+    if (!envsData) {
+      // TODO: remove this once we re-export old components used to store the data here
+      envsData = component.state.aspects.get('teambit.workspace/workspace');
+    }
+    if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
+    return envsData.data;
+  }
+
+  /**
+   * get the env id of the given component.
+   */
+  getEnvId(component: Component): string {
+    const envsData = this.getEnvData(component);
+    return envsData.id;
+  }
+
+  /**
    * get the env of the given component.
+   * In case you are asking for the env during on load you should use calculateEnv instead
    */
   getEnv(component: Component): EnvDefinition {
+    const id = this.getEnvId(component);
+    const envDef = this.getEnvDefinitionByStringId(id);
+    if (envDef) {
+      return envDef;
+    }
+    // Do not allow a non existing env
+    throw new EnvNotFound(id, component.id.toString());
+  }
+
+  /**
+   * get an environment Descriptor.
+   */
+  getDescriptor(component: Component): Descriptor | null {
+    const envsData = this.getEnvData(component);
+    return {
+      id: envsData.id,
+      icon: envsData.icon,
+      services: envsData.services,
+    };
+  }
+
+  /**
+   * This used to calculate the actual env during the component load.
+   * Do not use it to get the env (use getEnv instead)
+   * This should be used only during on load
+   */
+  calculateEnv(component: Component): EnvDefinition {
     // Search first for env configured via envs aspect itself
     const envsAspect = component.state.aspects.get(EnvsAspect.id);
     const envIdFromEnvsConfig = envsAspect?.config.env;
@@ -142,10 +215,16 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        // throw new EnvNotFound(matchedEntry.id.toString(), component.id.toString());
+        this.printWarningIfFirstTime(
+          matchedEntry.id.toString(),
+          `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not found`
+        );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      // throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString());
+      this.printWarningIfFirstTime(
+        envIdFromEnvsConfig,
+        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component ${component.id.toString()}`
+      );
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -165,9 +244,9 @@ export class EnvsMain {
   }
 
   /**
-   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .getEnv() instead!)
+   * @deprecated DO NOT USE THIS METHOD ANYMORE!!! (PLEASE USE .calculateEnv() instead!)
    */
-  getEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
+  calculateEnvFromExtensions(extensions: ExtensionDataList): EnvDefinition {
     // Search first for env configured via envs aspect itself
     const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
     const envIdFromEnvsConfig = envsAspect?.config.env;
@@ -206,10 +285,16 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        // throw new EnvNotFound(matchedEntry.id.toString());
+        this.printWarningIfFirstTime(
+          matchedEntry.id.toString(),
+          `environment with ID: ${matchedEntry.id.toString()} was not found`
+        );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      // throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig);
+      this.printWarningIfFirstTime(
+        envIdFromEnvsConfig,
+        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component`
+      );
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -241,6 +326,13 @@ export class EnvsMain {
       return new EnvDefinition(envId, env as Environment);
     }
     return undefined;
+  }
+
+  private printWarningIfFirstTime(envId: string, message: string) {
+    if (!this.alreadyShownWarning[envId]) {
+      this.alreadyShownWarning[envId] = true;
+      this.logger.consoleWarning(message);
+    }
   }
 
   /**
@@ -277,53 +369,10 @@ export class EnvsMain {
   }
 
   /**
-   * get an environment Descriptor.
-   */
-  getDescriptor(component: Component): Descriptor | null {
-    let envsData = component.state.aspects.get(EnvsAspect.id);
-    if (!envsData) {
-      // TODO: remove this once we re-export old components used to store the data here
-      envsData = component.state.aspects.get('teambit.workspace/workspace');
-    }
-    if (!envsData) throw new Error(`env was not configured on component ${component.id.toString()}`);
-
-    return {
-      id: envsData.data.id,
-      icon: envsData.data.icon,
-      services: envsData.data.services,
-    };
-  }
-
-  /**
    * register an environment.
    */
   registerEnv(env: Environment) {
     return this.envSlot.register(env);
-  }
-
-  /**
-   * compose two environments into one.
-   */
-  merge<T>(targetEnv: Environment, sourceEnv: Environment): T {
-    const allNames = new Set<string>();
-    const keys = ['icon', 'name', 'description'];
-    for (let o = sourceEnv; o !== Object.prototype; o = Object.getPrototypeOf(o)) {
-      for (const name of Object.getOwnPropertyNames(o)) {
-        allNames.add(name);
-      }
-    }
-
-    allNames.forEach((key: string) => {
-      const fn = sourceEnv[key];
-      if (targetEnv[key]) return;
-      if (keys.includes(key)) targetEnv[key] = fn;
-      if (!fn || !fn.bind) {
-        return;
-      }
-      targetEnv[key] = fn.bind(sourceEnv);
-    });
-
-    return targetEnv as T;
   }
 
   // refactor here

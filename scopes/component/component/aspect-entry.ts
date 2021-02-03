@@ -9,6 +9,10 @@ export type SerializableMap = {
   [key: string]: Serializable;
 };
 
+export type AspectData = {
+  [key: string]: any;
+};
+
 export class AspectEntry {
   constructor(public id: ComponentID, private legacyEntry: ExtensionDataEntry) {}
 
