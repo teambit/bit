@@ -32,7 +32,7 @@ import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
-import { UseTypescriptCompilerOptions, TsConfigs } from './typescript/interfaces';
+import { ReactEnvState } from './state';
 
 type ReactDeps = [
   EnvsMain,
@@ -94,37 +94,19 @@ export class ReactMain {
   readonly env = this.reactEnv;
 
   private tsConfigOverride: TsConfigSourceFile | undefined; // TODO remove
-  private compilers: Compiler[]; // TODO remove
 
   /**
-   * add ts compiler to the compilers array of the React environment.
-   * @param configs typeof `TsConfigs` - workspace and build configs to merge with/override original configs
-   * @param tsOptions where to apply the config (workspace, build, etc)
-   * @param tsModule typeof `ts` module instance.
+   * Used to override environment configs
+   * @param statePartials number of partial state objects to be merged with default state
    */
-  useTypescript(
-    configs: TsConfigs,
-    tsOptions: Partial<UseTypescriptCompilerOptions>,
-    tsModule: any = ts
-  ): EnvTransformer[] {
-    const workspaceCompilerTransformer = this.envs.override({
-      getTsWorkspaceCompiler: () => {
-        return this.reactEnv.getTsWorkspaceCompiler({ tsconfig: configs.workspaceConfig, ...tsOptions }, tsModule);
+  extend(...statePartials: Partial<ReactEnvState>[]): Environment {
+    const newState = merge(this.reactEnv.getState(), ...statePartials);
+    const overrideState = this.envs.override({
+      getState: () => {
+        return newState;
       },
     });
-
-    const buildCompilerTransformer = this.envs.override({
-      getTsBuildCompiler: () => {
-        return this.reactEnv.getTsBuildCompiler(
-          { tsconfig: configs.buildConfig || configs.workspaceConfig, ...tsOptions },
-          tsModule
-        );
-      },
-    });
-    // The following could possibly be passed to centralised functions for all compilers:
-    // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
-    // create compiler task and add to compiler tasks
-    return [workspaceCompilerTransformer, buildCompilerTransformer];
+    return this.compose([overrideState]);
   }
 
   /**
@@ -143,7 +125,7 @@ export class ReactMain {
   }
 
   /**
-   * @deprecated replaced by useTsConfig
+   * @deprecated now using env state to manage overrides
    * override the build tsconfig.
    */
   overrideBuildTsConfig(tsconfig) {
@@ -155,30 +137,7 @@ export class ReactMain {
   }
 
   /**
-   * adds babel compiler to the compilers array of the React environment.
-   * @param babelConfig typeof `JsonSourceFile` config file to merge with original config
-   * @param targets where to apply the config (workspace, build, etc)
-   */
-  useBabel(babelconfig: JsonSourceFile, targets?: ConfigTargets[]) {
-    this.compilers.push(this.reactEnv.createBabelCompiler(babelconfig));
-    // The following could possibly be passed to centralised functions for all compilers:
-    // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
-    // create compiler task and add to compiler tasks
-  }
-
-  /**
-   * adds mdx compiler to the compilers array of the React environment.
-   * @param mdxCompilerOptions typeof `MdxCompilerOpts` config file to merge with original config
-   * @param targets where to apply the config (workspace, build, etc)
-   */
-  useMdx(mdxCompilerOptions: MDXCompilerOpts, targets?: ConfigTargets[]) {
-    this.compilers.push(this.reactEnv.createMdxCompiler(mdxCompilerOptions));
-    // The following could possibly be passed to centralised functions for all compilers:
-    // check targets - if exists apply config to supplied target/s, if doesnt exist apply to all targets
-    // create compiler task and add to compiler tasks
-  }
-
-  /**
+   * @deprecated now using env state to manage overrides
    * override the dev server webpack config.
    */
   overrideDevServerConfig(config: Configuration) {
@@ -190,11 +149,12 @@ export class ReactMain {
   /**
    * create a new composition of the react environment.
    */
-  compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
+  compose(transformers: EnvTransformer[], targetEnv: Environment = {}): Environment {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactEnv), transformers);
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the preview webpack config.
    */
   overridePreviewConfig(config: Configuration) {
@@ -204,6 +164,7 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the jest configuration.
    * @param jestConfigPath {typeof jest} absolute path to jest.config.json.
    */
@@ -230,7 +191,7 @@ export class ReactMain {
   }
 
   /**
-   * @deprecated replaced by useTsConfig
+   * @deprecated now using env state to manage overrides
    * override the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {

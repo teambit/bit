@@ -1,4 +1,5 @@
 import ts, { TsConfigSourceFile, JsonSourceFile } from 'typescript';
+import { TransformOptions } from '@babel/core';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
@@ -15,7 +16,7 @@ import { BabelMain } from '@teambit/babel';
 import { WebpackMain } from '@teambit/webpack';
 import { MultiCompilerMain, MultiCompiler } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
-import { ESLintMain, EsLintLinter } from '@teambit/eslint';
+import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
@@ -25,13 +26,26 @@ import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
-import { UseTypescriptCompilerOptions } from './typescript/interfaces';
+import { ExtendedTypescriptCompilerOptions } from './typescript/types';
+import { ExtendedBabelOptions } from './babel/types';
+import { ReactEnvState } from './state';
 
 export const AspectEnvType = 'react';
 const jestM = require('jest');
-const defaultTsConfig = require('./typescript/tsconfig.json');
-const defaultBabelConfig = require('./babel/babel.config.json');
-const buildTsConfig = require('./typescript/tsconfig.build.json');
+const defaultWsTsConfig = require('./typescript/tsconfig.json');
+const defaultBuildTsConfig = require('./typescript/tsconfig.build.json');
+
+const defaultState: ReactEnvState = {
+  compiler: {
+    configs: {
+      typeScriptConfigs: {
+        tsWorkspaceOptions: { compilerOptions: { tsconfig: defaultWsTsConfig, types: [] } },
+        tsBuildOptions: { compilerOptions: { tsconfig: defaultBuildTsConfig, types: [] } },
+        tsModule: ts,
+      },
+    },
+  },
+};
 
 /**
  * a component environment built for [React](https://reactjs.org) .
@@ -87,34 +101,47 @@ export class ReactEnv implements Environment {
     private mdx: MDXMain
   ) {}
 
-  // base typescript settings - can be overriden via React Main
-  tsConfig = defaultTsConfig;
-  // tsCompiler = this.getTsCompiler({tsconfig}, )
-
-  getTsWorkspaceCompiler(options: Partial<UseTypescriptCompilerOptions>, tsModule = ts) {
-    return this.createTsCompiler(options, tsModule);
+  getState(): ReactEnvState {
+    return defaultState;
   }
 
-  getTsBuildCompiler(options: Partial<UseTypescriptCompilerOptions>, tsModule = ts) {
-    return this.createTsCompiler(options, tsModule);
+  getTsWorkspaceCompiler(): Compiler | undefined {
+    const tsWorkspaceOptions = this.getState().compiler.configs.typeScriptConfigs?.tsWorkspaceOptions;
+    return this.getTsCompiler(tsWorkspaceOptions);
   }
 
-  getTsConfig(targetTsConfig?: TsConfigSourceFile, shouldOverride: Boolean = false) {
-    return targetTsConfig
-      ? shouldOverride
-        ? targetTsConfig
-        : merge({}, defaultTsConfig, targetTsConfig)
-      : defaultTsConfig;
+  getTsBuildCompiler(): Compiler | undefined {
+    const tsBuildOptions = this.getState().compiler.configs.typeScriptConfigs?.tsBuildOptions;
+    const calculatedConfig = this.getTsConfig(tsBuildOptions, defaultBuildTsConfig);
+    return this.getTsCompiler(tsBuildOptions);
   }
 
-  getBabelCompiler(babelConfig: JsonSourceFile, options: UseBabelCompilerOptions): Compiler {}
-
-  getBabelConfig(targetBabelConfig?: JsonSourceFile) {
-    return targetBabelConfig ? merge({}, defaultBabelConfig, targetBabelConfig) : defaultBabelConfig;
+  getTsCompiler(tsOptions?: ExtendedTypescriptCompilerOptions): Compiler | undefined {
+    const { typeScriptConfigs, babelConfigs } = this.getState().compiler.configs;
+    const tsInUse = !babelConfigs?.babelOptions || babelConfigs.babelOptions.useBabelAndTypescript;
+    return tsInUse && tsOptions ? this.createTsCompiler(tsOptions, typeScriptConfigs?.tsModule) : undefined;
   }
 
-  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
+  getTsConfig(tsOptions?: ExtendedTypescriptCompilerOptions, defaultConfig: TsConfigSourceFile) {
+    const {
+      compilerOptions: { tsconfig },
+      overrideExistingConfig,
+    } = tsOptions;
+    return tsconfig ? (overrideExistingConfig ? tsconfig : merge({}, defaultTsConfig, tsconfig)) : defaultTsConfig;
+  }
+
+  /**
+   * @param options of type UseBabelOptions, which contains the base BabelCompilerOptions, plus
+   * option to overrideExistingConfig with the provided BabelTransformOptions
+   */
+  getBabelCompiler(): Compiler | undefined {
+    const babelOptions = this.getState().compiler.configs.babelConfigs?.babelOptions;
+    if (!babelOptions?.compilerOptions) return undefined;
+    return this.babelAspect.createCompiler(babelOptions.compilerOptions);
+  }
+
+  getMdxCompiler(): Compiler | undefined {
+    return undefined;
   }
 
   /**
@@ -125,13 +152,14 @@ export class ReactEnv implements Environment {
     return this.jestAspect.createTester(config, jestModule);
   }
 
-  createTsCompiler(compilerOptions: Partial<UseTypescriptCompilerOptions> = {}, tsModule = ts): Compiler {
-    const { overrideExistingConfig, tsconfig: tsconfigFromOptions, ...mainCompilerOptions } = compilerOptions;
+  createTsCompiler(tsOptions: ExtendedTypescriptCompilerOptions, tsModule: any): Compiler {
+    const {
+      overrideExistingConfig,
+      compilerOptions: { tsconfig: tsconfigFromOptions, types, ...mainCompilerOptions },
+    } = tsOptions || {};
     const tsconfig = this.getTsConfig(tsconfigFromOptions, !!overrideExistingConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
-    const userDefinedTypes = compilerOptions.types
-      ? compilerOptions.types.map((path) => resolve(pathToSource, path))
-      : [];
+    const userDefinedTypes = types ? types.map((path) => resolve(pathToSource, path)) : [];
     return this.tsAspect.createCompiler(
       {
         tsconfig,
@@ -148,10 +176,6 @@ export class ReactEnv implements Environment {
     );
   }
 
-  createBabelCompiler(targetConfig?: any) {
-    return this.babelAspect.createCompiler({ babelTransformOptions: targetConfig });
-  }
-
   createMdxCompiler(targetConfig?: any) {
     return this.mdx.createCompiler({ opts: targetConfig });
   }
@@ -159,13 +183,14 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the component compilers.
    */
-  getCompiler(
-    targetConfig?: any,
-    compilerOptions: Partial<UseTypescriptCompilerOptions> = {},
-    tsModule = ts
-  ): MultiCompiler {
-    let compilers: Compiler[] = [];
-    if (this.getTsCompiler()) if (!this.config.mdx) compilers.push(this.mdx.createCompiler());
+  getCompiler(compilerOptions: Partial<CompilerOptions> = {}): MultiCompiler {
+    let compilers: (Compiler | undefined)[] = [
+      this.getTsWorkspaceCompiler(),
+      this.getTsBuildCompiler(),
+      this.getBabelCompiler(),
+      this.getMdxCompiler(),
+    ];
+    if (!this.config.mdx) compilers.push(this.mdx.createCompiler());
 
     return this.multiCompiler.createCompiler(compilers, compilerOptions);
   }
@@ -173,7 +198,7 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the component linter.
    */
-  getLinter(): ESLintLinter {
+  getLinter() {
     return this.eslint.createLinter({
       config: eslintConfig,
       // resolve all plugins from the react environment.

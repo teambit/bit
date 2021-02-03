@@ -1,12 +1,13 @@
 import { TsConfigSourceFile } from 'typescript';
 import { TypeScriptCompilerOptions } from '@teambit/typescript';
 
-export type UseTypescriptCompilerOptions = {
+export type ExtendedTypescriptCompilerOptions = {
   /**
    * If set, overrides existing typescript config
    */
-  overrideExistingConfig: Boolean;
-} & Partial<TypeScriptCompilerOptions>;
+  overrideExistingConfig?: Boolean;
+  compilerOptions: TypeScriptCompilerOptions;
+};
 
 export type TsConfigs = {
   /**
