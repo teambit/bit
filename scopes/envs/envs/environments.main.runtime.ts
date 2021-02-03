@@ -40,6 +40,8 @@ export const DEFAULT_ENV = 'teambit.harmony/node';
 export class EnvsMain {
   static runtime = MainRuntime;
 
+  private alreadyShownWarning = {};
+
   /**
    * icon of the extension.
    */
@@ -213,10 +215,16 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        throw new EnvNotFound(matchedEntry.id.toString(), component.id.toString());
+        this.printWarningIfFirstTime(
+          matchedEntry.id.toString(),
+          `environment with ID: ${matchedEntry.id.toString()} configured on component ${component.id.toString()} was not found`
+        );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString());
+      this.printWarningIfFirstTime(
+        envIdFromEnvsConfig,
+        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component ${component.id.toString()}`
+      );
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -277,10 +285,16 @@ export class EnvsMain {
           return envDef;
         }
         // Do not allow a non existing env
-        throw new EnvNotFound(matchedEntry.id.toString());
+        this.printWarningIfFirstTime(
+          matchedEntry.id.toString(),
+          `environment with ID: ${matchedEntry.id.toString()} was not found`
+        );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      throw new EnvNotConfiguredForComponent(envIdFromEnvsConfig);
+      this.printWarningIfFirstTime(
+        envIdFromEnvsConfig,
+        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component`
+      );
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -312,6 +326,13 @@ export class EnvsMain {
       return new EnvDefinition(envId, env as Environment);
     }
     return undefined;
+  }
+
+  private printWarningIfFirstTime(envId: string, message: string) {
+    if (!this.alreadyShownWarning[envId]) {
+      this.alreadyShownWarning[envId] = true;
+      this.logger.consoleWarning(message);
+    }
   }
 
   /**
