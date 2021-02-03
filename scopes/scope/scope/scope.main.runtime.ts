@@ -696,7 +696,6 @@ export class ScopeMain implements ComponentFactory {
     ],
     harmony: Harmony
   ) {
-    cli.register(new ExportCmd());
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
@@ -722,7 +721,7 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope));
+    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);

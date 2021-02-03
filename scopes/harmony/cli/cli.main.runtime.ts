@@ -5,30 +5,25 @@ import { register } from 'bit-bin/dist/cli/command-registry';
 import LegacyLoadExtensions from 'bit-bin/dist/legacy-extensions/extensions-loader';
 import commander from 'commander';
 import didYouMean from 'didyoumean';
-import { equals, splitWhen } from 'ramda';
+import { equals, splitWhen, flatten } from 'ramda';
 
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { Help } from './commands/help.cmd';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { CommandNotFound } from './exceptions/command-not-found';
+import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
-import CommandRegistry from './registry';
 
+export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean) => void;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
+export type CommandsSlot = SlotRegistry<CommandList>;
 
 export class CLIMain {
   readonly groups: { [k: string]: string } = {};
 
-  constructor(
-    /**
-     * paper's command registry
-     */
-    private registry: CommandRegistry,
-
-    private onStartSlot: OnStartSlot
-  ) {}
+  constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot) {}
 
   private setDefaults(command: Command) {
     command.alias = command.alias || '';
@@ -55,25 +50,32 @@ export class CLIMain {
   /**
    * registers a new command in to the CLI.
    */
-  register(command: Command) {
-    this.setDefaults(command);
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    command.commands!.forEach((cmd) => this.setDefaults(cmd));
-    this.registry.register(command);
+  register(...commands: CommandList) {
+    commands.forEach((command) => {
+      this.setDefaults(command);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      command.commands!.forEach((cmd) => this.setDefaults(cmd));
+    });
+    this.commandsSlot.register(commands);
   }
 
   /**
    * helpful for having the same command name in different environments (legacy and Harmony)
    */
   unregister(commandName: string) {
-    delete this.commands[commandName];
+    this.commandsSlot.toArray().forEach(([aspectId, commands]) => {
+      const filteredCommands = commands.filter((command) => {
+        return getCommandId(command.name) !== commandName;
+      });
+      this.commandsSlot.map.set(aspectId, filteredCommands);
+    });
   }
 
   /**
    * list of all registered commands. (legacy and new).
    */
   get commands() {
-    return this.registry.commands;
+    return flatten(this.commandsSlot.values());
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
@@ -98,24 +100,24 @@ export class CLIMain {
       packageManagerArgs.shift(); // remove the -- delimiter
     }
 
-    Object.values(this.commands).forEach((command) => register(command as any, commander, packageManagerArgs));
+    this.commands.forEach((command) => register(command as any, commander, packageManagerArgs));
     this.throwForNonExistsCommand(args[0]);
 
     // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
   }
   private throwForNonExistsCommand(commandName: string) {
-    const commands = Object.keys(this.commands);
-    const aliases = commands.map((c) => this.commands[c].alias).filter((a) => a);
+    const commandsNames = this.commands.map((c) => getCommandId(c.name));
+    const aliases = this.commands.map((c) => c.alias).filter((a) => a);
     const globalFlags = ['-V', '--version'];
-    const validCommands = [...commands, ...aliases, ...globalFlags];
+    const validCommands = [...commandsNames, ...aliases, ...globalFlags];
     const commandExist = validCommands.includes(commandName);
 
     if (!commandExist) {
       didYouMean.returnFirstMatch = true;
       const suggestions = didYouMean(
         commandName,
-        Object.keys(this.commands).filter((c) => !this.commands[c].private)
+        this.commands.filter((c) => !c.private).map((c) => getCommandId(c.name))
       );
       const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
       // @ts-ignore
@@ -131,10 +133,10 @@ export class CLIMain {
 
   static dependencies = [];
   static runtime = MainRuntime;
-  static slots = [Slot.withType<OnStart>()];
+  static slots = [Slot.withType<CommandList>(), Slot.withType<OnStart>()];
 
-  static async provider(deps, config, [onStartSlot]: [OnStartSlot]) {
-    const cliMain = new CLIMain(new CommandRegistry({}), onStartSlot);
+  static async provider(deps, config, [commandsSlot, onStartSlot]: [CommandsSlot, OnStartSlot]) {
+    const cliMain = new CLIMain(commandsSlot, onStartSlot);
     const legacyExtensions = await LegacyLoadExtensions();
     // Make sure to register all the hooks actions in the global hooks manager
     legacyExtensions.forEach((extension) => {
@@ -151,10 +153,9 @@ export class CLIMain {
 
     const legacyRegistry = buildRegistry(extensionsCommands);
     const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
-    allCommands.forEach((command) => {
-      const legacyCommandAdapter = new LegacyCommandAdapter(command, cliMain);
-      cliMain.register(legacyCommandAdapter);
-    });
+    const allCommandsAdapters = allCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
+    // @ts-ignore
+    cliMain.register(...allCommandsAdapters);
     return cliMain;
   }
 }

@@ -15,7 +15,6 @@ export class TestCmd implements Command {
   name = 'test [pattern]';
   description = 'test set of components in your workspace';
   alias = 'at';
-  private = true;
   group = 'development';
   shortDescription = '';
   options = [
