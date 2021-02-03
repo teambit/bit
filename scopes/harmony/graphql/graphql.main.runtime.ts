@@ -185,6 +185,7 @@ export class GraphqlMain {
         execute,
         subscribe,
         schema,
+        onConnect: options.onWsConnect,
       },
       {
         server: websocketServer,
@@ -226,6 +227,7 @@ export class GraphqlMain {
         imports: moduleDeps,
         context: (session) => {
           return {
+            ...session,
             verb: session?.headers?.['x-verb'] || Verb.READ,
           };
         },
