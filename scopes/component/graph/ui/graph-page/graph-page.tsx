@@ -4,6 +4,7 @@ import { H2 } from '@teambit/documenter.ui.heading';
 import { NotFoundPage } from '@teambit/ui.pages.not-found';
 import { ServerErrorPage } from '@teambit/ui.pages.server-error';
 import { ComponentContext } from '@teambit/component';
+import { SingletonTooltipProvider } from '@teambit/ui.tooltip';
 import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
 
 import { useGraphQuery } from '../query';
@@ -35,20 +36,22 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
 
   return (
     <div className={styles.page}>
-      <H2 size="xs">Dependencies</H2>
-      <DependenciesGraph
-        componentWidgets={componentWidgets}
-        graph={graph}
-        rootNode={component.id}
-        className={styles.graph}
-      >
-        <GraphFilters
-          className={styles.filters}
-          disable={loading}
-          isFiltered={isFiltered}
-          onChangeFilter={onCheckFilter}
-        />
-      </DependenciesGraph>
+      <SingletonTooltipProvider disabled>
+        <H2 size="xs">Dependencies</H2>
+        <DependenciesGraph
+          componentWidgets={componentWidgets}
+          graph={graph}
+          rootNode={component.id}
+          className={styles.graph}
+        >
+          <GraphFilters
+            className={styles.filters}
+            disable={loading}
+            isFiltered={isFiltered}
+            onChangeFilter={onCheckFilter}
+          />
+        </DependenciesGraph>
+      </SingletonTooltipProvider>
     </div>
   );
 }
