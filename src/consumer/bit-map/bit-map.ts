@@ -440,7 +440,7 @@ export default class BitMap {
   }
 
   getAuthoredExportedComponents(): BitId[] {
-    const authoredIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.AUTHORED]);
+    const authoredIds = this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter((id) => id.hasScope());
   }
   getAuthoredNonExportedComponents(): BitId[] {
