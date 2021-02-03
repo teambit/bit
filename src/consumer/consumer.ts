@@ -405,7 +405,7 @@ export default class Consumer {
       }
       throw err;
     }
-    loader.start(`import ${ids.length} components with their dependencies if missing`);
+    loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = await scopeComponentsImporter.importMany(ids);
     const componentWithDependencies = await multipleVersionDependenciesToConsumer(
       versionDependenciesArr,
