@@ -59,6 +59,7 @@ describe('recovery after component/scope deletion', function () {
         helper.command.linkAndCompile();
         helper.command.tagAllComponents();
         helper.command.export();
+        helper.command.importAllComponents();
         localClone = helper.scopeHelper.cloneLocalScope();
         helper.scopeHelper.reInitRemoteScope(remote2Path);
         remote2Clone = helper.scopeHelper.cloneScope(remote2Path);
