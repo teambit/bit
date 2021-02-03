@@ -515,6 +515,8 @@ jobs:
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
+          environment:
+            NODE_OPTIONS: --max_old_space_size=4096
 
   bit_tag:
     resource_class: large

@@ -39,7 +39,7 @@ import { ComponentNotFound } from '../scope/exceptions';
 import installExtensions from '../scope/extensions/install-extensions';
 import { Lane, ModelComponent, Version } from '../scope/models';
 import { getScopeRemotes } from '../scope/scope-remotes';
-import VersionDependencies from '../scope/version-dependencies';
+import VersionDependencies, { multipleVersionDependenciesToConsumer } from '../scope/version-dependencies';
 import { pathNormalizeToLinux, sortObject } from '../utils';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
@@ -390,6 +390,28 @@ export default class Consumer {
       }
       componentWithDeps.component.dependenciesSavedAsComponents = shouldSavedAsComponents.saveDependenciesAsComponents;
     });
+    return componentWithDependencies;
+  }
+
+  async importComponentsObjectsHarmony(ids: BitIds): Promise<ComponentWithDependencies[]> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    try {
+      await scopeComponentsImporter.importManyDeltaWithoutDeps(ids);
+    } catch (err) {
+      loader.stop();
+      // @todo: remove once the server is deployed with this new "component-delta" type
+      if (err.message.includes('type component-delta was not implemented')) {
+        return this.importComponents(ids.toVersionLatest(), true);
+      }
+      throw err;
+    }
+    loader.start(`import ${ids.length} components with their dependencies if missing`);
+    const versionDependenciesArr: VersionDependencies[] = await scopeComponentsImporter.importMany(ids);
+    const componentWithDependencies = await multipleVersionDependenciesToConsumer(
+      versionDependenciesArr,
+      this.scope.objects
+    );
+
     return componentWithDependencies;
   }
 

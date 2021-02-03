@@ -54,7 +54,7 @@ export type MergeResultsThreeWay = {
  * base-file    => bar/foo@0.0.2
  * other-file   => bar/foo@0.0.2 + modification
  */
-export default (async function threeWayMergeVersions({
+export default async function threeWayMergeVersions({
   consumer,
   otherComponent,
   otherLabel,
@@ -146,7 +146,7 @@ export default (async function threeWayMergeVersions({
   });
 
   return results;
-});
+}
 
 async function getMergeResults(
   consumer: Consumer,

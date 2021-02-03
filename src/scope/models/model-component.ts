@@ -412,7 +412,7 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
-  isEqual(component: Component): boolean {
+  isEqual(component: Component, considerOrphanedVersions = true): boolean {
     if ((this.hasHead() && !component.hasHead()) || (!this.hasHead() && component.hasHead())) {
       return false; // only one of them has head
     }
@@ -426,13 +426,19 @@ export default class Component extends BitObject {
     const hasSameVersions = Object.keys(this.versions).every(
       (tag) => component.versions[tag] && component.versions[tag].isEqual(this.versions[tag])
     );
-    if (Object.keys(this.orphanedVersions).length !== Object.keys(component.orphanedVersions).length) {
-      return false;
+    if (considerOrphanedVersions) {
+      if (Object.keys(this.orphanedVersions).length !== Object.keys(component.orphanedVersions).length) {
+        return false;
+      }
+      const hasSameOrphanedVersions = Object.keys(this.orphanedVersions).every(
+        (tag) => component.orphanedVersions[tag] && component.orphanedVersions[tag].isEqual(this.orphanedVersions[tag])
+      );
+      if (!hasSameOrphanedVersions) {
+        return false;
+      }
     }
-    const hasSameOrphanedVersions = Object.keys(this.orphanedVersions).every(
-      (tag) => component.orphanedVersions[tag] && component.orphanedVersions[tag].isEqual(this.orphanedVersions[tag])
-    );
-    return hasSameVersions && hasSameOrphanedVersions;
+
+    return hasSameVersions;
   }
 
   getSnapToAdd() {
