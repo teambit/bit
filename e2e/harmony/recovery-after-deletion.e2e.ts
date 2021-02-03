@@ -126,6 +126,7 @@ describe('recovery after component/scope deletion', function () {
               helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compNewRemote.scopePath);
               helper.scopeHelper.addRemoteScope(remote2Path, compNewRemote.scopePath);
               helper.command.export();
+              helper.command.importAllComponents();
             });
             it('this new remote should bring the flattened dependency (comp3) from the dependent scope', () => {
               const scope = helper.command.catScope(true, compNewRemote.scopePath);
@@ -228,6 +229,7 @@ describe('recovery after component/scope deletion', function () {
               helper.scopeHelper.addRemoteScope(compNewRemote.scopePath);
               helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compNewRemote.scopePath);
               helper.command.export();
+              helper.command.importAllComponents();
             });
             it('this new remote should bring the flattened dependency (comp3) from the dependent scope', () => {
               const scope = helper.command.catScope(true, compNewRemote.scopePath);
@@ -370,6 +372,7 @@ describe('recovery after component/scope deletion', function () {
           helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
           helper.command.tagAllComponents('', '0.0.2');
           helper.command.export();
+          helper.command.importAllComponents();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
@@ -489,6 +492,7 @@ describe('recovery after component/scope deletion', function () {
             helper.command.import(`${helper.scopes.remote}/comp2 ${remote2Name}/comp3`);
             helper.command.tagAllComponents('', '0.0.7'); // tag comp2 with the updated comp3 version - 0.0.7
             helper.command.export();
+            helper.command.importAllComponents();
           });
           it('comp3: should save 0.0.1 of in the orphanedVersions prop on the remote', () => {
             const comp3 = helper.command.catComponent(`${remote2Name}/comp3`, helper.scopes.remotePath);
@@ -537,6 +541,7 @@ describe('recovery after component/scope deletion', function () {
             helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
             helper.command.tagComponent(`${remote2Name}/comp3`, undefined, '0.0.8 --force');
             helper.command.export();
+            helper.command.importAllComponents();
           });
           it('the remote of comp3 should not get this orphanedVersions prop', () => {
             const comp3 = helper.command.catComponent(`${remote2Name}/comp3`, remote2Path);
@@ -568,6 +573,7 @@ describe('recovery after component/scope deletion', function () {
           helper.command.snapAllComponentsWithoutBuild();
 
           helper.command.export();
+          helper.command.importAllComponents();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
