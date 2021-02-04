@@ -360,11 +360,11 @@ export async function exportMany({
   }
 
   function triggerPrePersistHook() {
-    Scope.onPrePersist(
+    Scope.onPrePersistExport(
       clientId,
       remotes.map((r) => r.name)
     ).catch((err) => {
-      logger.error('fatal: onPrePersistHook encountered an error (this error does not stop the process)', err);
+      logger.error('fatal: onPrePersistExportHook encountered an error (this error does not stop the process)', err);
     });
   }
 
