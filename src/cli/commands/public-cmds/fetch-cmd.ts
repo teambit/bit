@@ -16,6 +16,11 @@ export default class Fetch implements LegacyCommand {
     ['l', 'lanes', 'EXPERIMENTAL. fetch lanes'],
     ['c', 'components', 'fetch components'],
     ['j', 'json', 'return the output as JSON'],
+    [
+      '',
+      'from-original-scopes',
+      'fetch indirect dependencies from their original scope as opposed to from their dependents',
+    ],
   ] as CommandOptions;
   loader = true;
 
@@ -25,13 +30,15 @@ export default class Fetch implements LegacyCommand {
       lanes = false,
       components = false,
       json = false,
+      fromOriginalScope = false,
     }: {
       lanes?: boolean;
       components?: boolean;
       json?: boolean;
+      fromOriginalScope?: boolean;
     }
   ): Promise<{}> {
-    return fetch(ids, lanes, components).then((results) => ({ ...results, json }));
+    return fetch(ids, lanes, components, fromOriginalScope).then((results) => ({ ...results, json }));
   }
 
   report({

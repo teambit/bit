@@ -68,7 +68,6 @@ export default class ScopeComponentsImporter {
     persist = true,
     throwForDependencyNotFound = false
   ): Promise<VersionDependencies[]> {
-    if (cache && persist && !throwForDependencyNotFound) return this.importManyFromOriginalScopes(ids);
     logger.debugAndAddBreadCrumb(
       'importMany',
       `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}`,
