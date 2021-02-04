@@ -33,6 +33,7 @@ import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
 import { ReactEnvState } from './state';
+import { useTypescript } from './extenders';
 
 type ReactDeps = [
   EnvsMain,
@@ -175,13 +176,6 @@ export class ReactMain {
   }
 
   /**
-   * return the computed tsconfig.
-   */
-  getTsConfig() {
-    return this.reactEnv.getTsConfig(this.tsConfigOverride);
-  }
-
-  /**
    * override the build pipeline of the component environment.
    */
   overrideBuildPipe(tasks: BuildTask[]) {
@@ -212,6 +206,7 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the workspace compiler.
    */
   overrideCompiler(compiler: Compiler) {
@@ -220,10 +215,6 @@ export class ReactMain {
         return compiler;
       },
     });
-  }
-
-  overrideCompilers() {
-    // pass the compilers array to the multiCompiler.createCompiler function - needs some thought how to make backwards compatible
   }
 
   overrideEslintConfig() {}

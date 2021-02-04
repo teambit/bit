@@ -1,9 +1,8 @@
-import ts, { TsConfigSourceFile, JsonSourceFile } from 'typescript';
-import { TransformOptions } from '@babel/core';
+import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
-import { merge } from 'lodash';
+import { merge, uniq, compact } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain, CompilerOptions, Compiler } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
@@ -27,7 +26,6 @@ import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
 import { ExtendedTypescriptCompilerOptions } from './typescript/types';
-import { ExtendedBabelOptions } from './babel/types';
 import { ReactEnvState } from './state';
 
 export const AspectEnvType = 'react';
@@ -35,14 +33,13 @@ const jestM = require('jest');
 const defaultWsTsConfig = require('./typescript/tsconfig.json');
 const defaultBuildTsConfig = require('./typescript/tsconfig.build.json');
 
+const defaultTypes = ['./typescript/style.d.ts', './typescript/asset.d.ts'];
 const defaultState: ReactEnvState = {
   compiler: {
-    configs: {
-      typeScriptConfigs: {
-        tsWorkspaceOptions: { compilerOptions: { tsconfig: defaultWsTsConfig, types: [] } },
-        tsBuildOptions: { compilerOptions: { tsconfig: defaultBuildTsConfig, types: [] } },
-        tsModule: ts,
-      },
+    typeScriptConfigs: {
+      tsWorkspaceOptions: { compilerOptions: { tsconfig: defaultWsTsConfig, types: [] } },
+      tsBuildOptions: { compilerOptions: { tsconfig: defaultBuildTsConfig, types: [] } },
+      tsModule: ts,
     },
   },
 };
@@ -105,71 +102,72 @@ export class ReactEnv implements Environment {
     return defaultState;
   }
 
-  getTsWorkspaceCompiler(): Compiler | undefined {
-    const tsWorkspaceOptions = this.getState().compiler.configs.typeScriptConfigs?.tsWorkspaceOptions;
-    return this.getTsCompiler(tsWorkspaceOptions);
+  private isTsInUse(): Boolean {
+    const { babelConfigs } = this.getState().compiler;
+    return !babelConfigs?.babelOptions || !!babelConfigs.babelOptions.useBabelAndTypescript;
   }
 
-  getTsBuildCompiler(): Compiler | undefined {
-    const tsBuildOptions = this.getState().compiler.configs.typeScriptConfigs?.tsBuildOptions;
-    const calculatedConfig = this.getTsConfig(tsBuildOptions, defaultBuildTsConfig);
-    return this.getTsCompiler(tsBuildOptions);
-  }
-
-  getTsCompiler(tsOptions?: ExtendedTypescriptCompilerOptions): Compiler | undefined {
-    const { typeScriptConfigs, babelConfigs } = this.getState().compiler.configs;
-    const tsInUse = !babelConfigs?.babelOptions || babelConfigs.babelOptions.useBabelAndTypescript;
-    return tsInUse && tsOptions ? this.createTsCompiler(tsOptions, typeScriptConfigs?.tsModule) : undefined;
-  }
-
-  getTsConfig(tsOptions?: ExtendedTypescriptCompilerOptions, defaultConfig: TsConfigSourceFile) {
+  getTsConfig(defaultConfig: TsConfigSourceFile, tsOptions: ExtendedTypescriptCompilerOptions) {
+    if (!tsOptions) return defaultConfig;
     const {
       compilerOptions: { tsconfig },
       overrideExistingConfig,
     } = tsOptions;
-    return tsconfig ? (overrideExistingConfig ? tsconfig : merge({}, defaultTsConfig, tsconfig)) : defaultTsConfig;
+    return overrideExistingConfig ? tsconfig : merge({}, defaultConfig, tsconfig);
   }
 
   /**
    * @param options of type UseBabelOptions, which contains the base BabelCompilerOptions, plus
    * option to overrideExistingConfig with the provided BabelTransformOptions
    */
-  getBabelCompiler(): Compiler | undefined {
-    const babelOptions = this.getState().compiler.configs.babelConfigs?.babelOptions;
+  private getBabelCompiler(): Compiler | undefined {
+    const babelOptions = this.getState().compiler.babelConfigs?.babelOptions;
     if (!babelOptions?.compilerOptions) return undefined;
     return this.babelAspect.createCompiler(babelOptions.compilerOptions);
   }
 
-  getMdxCompiler(): Compiler | undefined {
-    return undefined;
+  private getMdxCompiler(): Compiler | undefined {
+    return this.getState().compiler.mdxConfigs ? this.mdx.createCompiler() : undefined;
   }
 
-  /**
-   * returns a component tester.
-   */
-  getTester(jestConfigPath: string, jestModule = jestM): Tester {
-    const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jestAspect.createTester(config, jestModule);
+  getTsCompilers(): (Compiler | undefined)[] {
+    const { typeScriptConfigs } = this.getState().compiler;
+    if (!typeScriptConfigs) return [];
+    return [
+      this.getTsBuildCompiler(),
+      //this.getTsWorkspaceCompiler() // TODO check if/when this should actually be created
+    ];
   }
 
-  createTsCompiler(tsOptions: ExtendedTypescriptCompilerOptions, tsModule: any): Compiler {
-    const {
-      overrideExistingConfig,
-      compilerOptions: { tsconfig: tsconfigFromOptions, types, ...mainCompilerOptions },
-    } = tsOptions || {};
-    const tsconfig = this.getTsConfig(tsconfigFromOptions, !!overrideExistingConfig);
+  getTsBuildCompiler(): Compiler | undefined {
+    const buildOptions = this.getState().compiler.typeScriptConfigs?.tsBuildOptions;
+    if (!buildOptions) return undefined;
+
+    return this.createTsCompiler(defaultBuildTsConfig, buildOptions);
+  }
+
+  getTsWorkspaceCompiler(): Compiler | undefined {
+    const wsOptions = this.getState().compiler.typeScriptConfigs?.tsWorkspaceOptions;
+    if (!wsOptions) return undefined;
+
+    return this.createTsCompiler(defaultBuildTsConfig, wsOptions);
+  }
+
+  createTsCompiler(
+    defaultConfig: TsConfigSourceFile,
+    tsOptions?: ExtendedTypescriptCompilerOptions
+  ): Compiler | undefined {
+    if (!tsOptions) return undefined;
+    const { types: userTypes } = tsOptions.compilerOptions;
+    const mergedTsConfig = this.getTsConfig(defaultConfig, tsOptions);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
-    const userDefinedTypes = types ? types.map((path) => resolve(pathToSource, path)) : [];
+    const mergedTypes = uniq([...userTypes, ...defaultTypes]).map((path) => resolve(pathToSource, path));
+    const tsModule = this.getState().compiler.typeScriptConfigs?.tsModule;
     return this.tsAspect.createCompiler(
       {
-        tsconfig,
-        // TODO: @david please remove this line and refactor to be something that makes sense.
-        types: [
-          resolve(pathToSource, './typescript/style.d.ts'),
-          resolve(pathToSource, './typescript/asset.d.ts'),
-          ...userDefinedTypes,
-        ],
-        ...mainCompilerOptions,
+        ...tsOptions.compilerOptions,
+        tsconfig: mergedTsConfig,
+        types: mergedTypes,
       },
       // @ts-ignore
       tsModule
@@ -184,15 +182,21 @@ export class ReactEnv implements Environment {
    * returns and configures the component compilers.
    */
   getCompiler(compilerOptions: Partial<CompilerOptions> = {}): MultiCompiler {
-    let compilers: (Compiler | undefined)[] = [
-      this.getTsWorkspaceCompiler(),
-      this.getTsBuildCompiler(),
+    const compilers: (Compiler | undefined)[] = [
       this.getBabelCompiler(),
+      ...this.getTsCompilers(),
       this.getMdxCompiler(),
     ];
-    if (!this.config.mdx) compilers.push(this.mdx.createCompiler());
 
-    return this.multiCompiler.createCompiler(compilers, compilerOptions);
+    return this.multiCompiler.createCompiler(compact(compilers), compilerOptions);
+  }
+
+  /**
+   * returns a component tester.
+   */
+  getTester(jestConfigPath: string, jestModule = jestM): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
+    return this.jestAspect.createTester(config, jestModule);
   }
 
   /**
@@ -235,8 +239,8 @@ export class ReactEnv implements Environment {
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(tsconfig: TsConfigSourceFile) {
-    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
+  getSchemaExtractor(defaultConfig: TsConfigSourceFile, tsOptions: ExtendedTypescriptCompilerOptions) {
+    return this.tsAspect.createSchemaExtractor(this.getTsConfig(defaultConfig, tsOptions));
   }
 
   /**
@@ -343,13 +347,13 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
-    return [this.getCompilerTask(tsconfig), this.tester.task];
+  getBuildPipe(): BuildTask[] {
+    return [this.getCompilerTask(), this.tester.task];
   }
 
-  private getCompilerTask(tsconfig?: TsConfigSourceFile) {
-    const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('MultiCompiler', this.getCompiler(targetConfig));
+  private getCompilerTask() {
+    // TODO make sure this creates the correct tasks for all compilers in the multi-compiler
+    return this.compiler.createTask('MultiCompiler', this.getCompiler());
   }
 
   async __getDescriptor() {

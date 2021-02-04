@@ -8,7 +8,7 @@ export type TypescriptCompilerConfigs = {
   /**
    * User defined ts module, to set the ts version used by the environment
    */
-  tsModule?: any;
+  tsModule: any;
 };
 
 export type BabelCompilerConfigs = {
@@ -23,19 +23,13 @@ export type MdxCompilerConfigs = {
   mdxOptions?: UseMdxOptions;
 };
 
-export type CompilerConfigs = {
-  typeScriptConfigs?: TypescriptCompilerConfigs;
-  babelConfigs?: BabelCompilerConfigs;
-  mdxConfigs?: MdxCompilerConfigs;
-};
-
 export type CompilerState = {
   /**
    * Various compiler configs
    */
-  configs: CompilerConfigs;
-
-  babelModule?: any;
+  typeScriptConfigs?: TypescriptCompilerConfigs;
+  babelConfigs?: BabelCompilerConfigs;
+  mdxConfigs?: MdxCompilerConfigs;
 };
 
 export type TesterState = {};
