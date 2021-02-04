@@ -373,9 +373,9 @@ describe('recovery after component/scope deletion', function () {
           helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope(remote2Path);
-          helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
           helper.bitJsonc.disablePreview();
           npmCiRegistry.setResolver();
+          helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
           beforeImportScope = helper.scopeHelper.cloneLocalScope();
         });
         it('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
