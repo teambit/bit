@@ -4,7 +4,7 @@ export default class UnexpectedNetworkError extends AbstractError {
   message: string;
   showDoctorMessage: boolean;
 
-  constructor(message: string) {
+  constructor(message = 'unknown error') {
     super();
     this.message = message;
     // @todo: delete this hack once a new version is deployed.
