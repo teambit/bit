@@ -40,7 +40,6 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
-          id="CodeTabCollapser"
           placement="left"
           isOpen={isSidebarOpen}
           onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag

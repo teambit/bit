@@ -8,10 +8,6 @@ import styles from './sidebar-collapser.module.scss';
 type CollapserProps = {
   isOpen: boolean;
   /**
-   * the id used for the tooltip [optional]
-   */
-  id?: string;
-  /**
    * content to be placed in the tooltip
    */
   tooltipContent?: ReactNode;
@@ -23,7 +19,6 @@ type CollapserProps = {
 
 export function Collapser({
   isOpen,
-  id,
   tooltipContent,
   placement = 'right',
   onClick,
