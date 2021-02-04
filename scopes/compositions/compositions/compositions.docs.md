@@ -44,7 +44,7 @@ export const PrimaryVariantComposition = () => {
 
 #### Features
 
-**Create component examples with zero configuration:** Write you compositions the same way you write your components.
+**Create component examples with zero configuration:** Write your compositions the same way you write your components.
 Place your examples in the component's `*.compositions.*` file to have them rendered in the Workspace UI with no additional configurations.
 
 **See your components render in all relevant contexts:** - Render components in the visual context of related and dependant components to learn how changes impact other components during development.
@@ -146,7 +146,9 @@ The ["Environment"](https://bit.dev/teambit/envs/envs) in use will automatically
 
 ## Viewing component compositions
 
-To explore compositions in your Workspace UI, start the local development server for your workspace (`bit start`), browse to a specific component and select the **compositions** tab. There, you will see the full list of compositions available for that component, along with additional component meta-data.
+To explore compositions in your Workspace UI, start the local development server for your workspace (`bit start`),
+browse to a specific component and select the **compositions** tab.
+There, you will see the full list of compositions available for that component, along with additional component meta-data.
 
 ## Using compositions for automated testings
 
@@ -170,6 +172,11 @@ describe('Button', () => {
   });
 });
 ```
+
+## Setting providers for all your compositions 
+Extend the [React](https://bit.dev/teambit/react/react) or [React Native](https://bit.dev/teambit/react/react-native) environments to customize their list of providers with your own context providers.
+The extended environment will then wrap every composition with these providers to make sure your themes or mock data are accessible to all of them, 
+without you having to repeat that task ever again.
 
 ## Compositions and storybook
 
