@@ -63,17 +63,17 @@ export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<On
 type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
-type OnPrePersistData = { clientId: string; scopes: string[] };
+type OnPrePersistExportData = { clientId: string; scopes: string[] };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
-type OnPrePersist = RemoteEvent<OnPrePersistData>;
+type OnPrePersistExport = RemoteEvent<OnPrePersistExportData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
-export type OnPrePersistSlot = SlotRegistry<OnPrePersist>;
+export type OnPrePersistExportSlot = SlotRegistry<OnPrePersistExport>;
 
 export type ScopeConfig = {
   description: string;
@@ -107,7 +107,7 @@ export class ScopeMain implements ComponentFactory {
 
     private postObjectsPersist: OnPostObjectsPersistSlot,
 
-    private prePersistSlot: OnPrePersistSlot,
+    private prePersistExportSlot: OnPrePersistExportSlot,
 
     private isolator: IsolatorMain,
 
@@ -240,8 +240,8 @@ export class ScopeMain implements ComponentFactory {
     return this;
   }
 
-  registerOnPrePersist(prePersistFn: OnPrePersist) {
-    this.prePersistSlot.register(prePersistFn);
+  registerOnPrePersistExport(prePersistFn: OnPrePersistExport) {
+    this.prePersistExportSlot.register(prePersistFn);
     return this;
   }
 
@@ -661,6 +661,7 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
+    Slot.withType<OnPrePersistExportSlot>(),
   ];
   static runtime = MainRuntime;
 
@@ -687,12 +688,12 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, prePersistSlot]: [
+    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, prePersistExportSlot]: [
       TagRegistry,
       OnPostPutSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
-      OnPrePersistSlot
+      OnPrePersistExportSlot
     ],
     harmony: Harmony
   ) {
@@ -711,7 +712,7 @@ export class ScopeMain implements ComponentFactory {
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
-      prePersistSlot,
+      prePersistExportSlot,
       isolator,
       aspectLoader,
       config,
@@ -762,19 +763,19 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
-    const onPrePersistHook = async (clientId: string, scopes: string[]): Promise<void> => {
+    const onPrePersistExportHook = async (clientId: string, scopes: string[]): Promise<void> => {
       const data = { clientId, scopes };
-      logger.debug(`onPrePersistHook, started`, data);
-      const fns = prePersistSlot.values();
+      logger.debug(`onPrePersistExportHook, started`, data);
+      const fns = prePersistExportSlot.values();
       const metadata = { auth: getAuthData() };
       await Promise.all(fns.map(async (fn) => fn(data, metadata)));
-      logger.debug(`onPrePersistHook, completed`);
+      logger.debug(`onPrePersistExportHook, completed`);
     };
 
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
-    Scope.onPrePersist = onPrePersistHook;
+    Scope.onPrePersistExport = onPrePersistExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([
