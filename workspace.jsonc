@@ -179,7 +179,7 @@
         },
         "eslint-import-resolver-node": "0.3.4",
         "express": "^4.17.1",
-        "express-graphql": "^0.9.0",
+        "express-graphql": "^0.12.0",
         "express-history-api-fallback": "^2.2.1",
         "file-loader": "^6.0.0",
         "filenamify": "^4.1.0",
@@ -283,7 +283,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.284",
+        "bit-bin": "14.8.9-dev.285",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -339,7 +339,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.284",
+            "bit-bin": "14.8.9-dev.285",
             "react-dom": "^16.13.1"
           }
         }
@@ -471,7 +471,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.284",
+            "bit-bin": "14.8.9-dev.285",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

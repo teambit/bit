@@ -147,9 +147,17 @@ export class ScopeMain implements ComponentFactory {
   onTag(tagFn: OnTag) {
     const host = this.componentExtension.getHost();
 
+    // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
+    const getAspectsIdsWithoutRootIds = (): string[] => {
+      const allIds = this.harmony.extensionsIds;
+      const rootIds = Object.keys(this.harmony.config.toObject());
+      const diffIds = difference(allIds, rootIds);
+      return diffIds;
+    };
+
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
     const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
-      const harmonyIds = this.harmony.extensionsIds;
+      const harmonyIds = getAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
         const newId = await host.resolveComponentId(component.id);
@@ -688,7 +696,6 @@ export class ScopeMain implements ComponentFactory {
     ],
     harmony: Harmony
   ) {
-    cli.register(new ExportCmd());
     const bitConfig: any = harmony.config.get('teambit.harmony/bit');
     const legacyScope = await loadScopeIfExist(bitConfig?.cwd);
     if (!legacyScope) {
@@ -714,7 +721,7 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope));
+    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
