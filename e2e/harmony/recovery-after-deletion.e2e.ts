@@ -378,7 +378,7 @@ describe('recovery after component/scope deletion', function () {
           helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
           beforeImportScope = helper.scopeHelper.cloneLocalScope();
         });
-        it('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
+        it.skip('should import comp1 successfully and bring comp3@0.0.1 from the cache of comp1', () => {
           helper.command.importComponent('comp1');
           const scope = helper.command.catScope(true);
           const comp3 = scope.find((item) => item.name === 'comp3');
@@ -386,7 +386,7 @@ describe('recovery after component/scope deletion', function () {
           expect(comp3.versions).to.have.property('0.0.1');
           expect(comp3.versions).to.not.have.property('0.0.2');
         });
-        it('should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2', () => {
+        it.skip('should import comp2 successfully and bring comp3@0.0.1 from the cache of comp2', () => {
           helper.scopeHelper.getClonedLocalScope(beforeImportScope);
           helper.command.importComponent('comp2');
           const scope = helper.command.catScope(true);
