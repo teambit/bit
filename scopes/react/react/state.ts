@@ -1,6 +1,6 @@
-import { ExtendedBabelOptions } from './babel/types';
-import { ExtendedTypescriptCompilerOptions } from './typescript/types';
-import { UseMdxOptions } from './mdx/types';
+import { ExtendedBabelOptions, emptyExtendedBabelOptions } from './babel/types';
+import { ExtendedTypescriptCompilerOptions, emptyExtendedTsCompilerOptions } from './typescript/types';
+import { ExtendedMdxOptions, emptyExtendedMdxOption } from './mdx/types';
 
 export type TypescriptCompilerConfigs = {
   tsWorkspaceOptions: ExtendedTypescriptCompilerOptions;
@@ -11,16 +11,31 @@ export type TypescriptCompilerConfigs = {
   tsModule: any;
 };
 
+export const emptyTypescriptCompilerConfigs: TypescriptCompilerConfigs = {
+  tsWorkspaceOptions: emptyExtendedTsCompilerOptions,
+  tsBuildOptions: emptyExtendedTsCompilerOptions,
+  tsModule: undefined,
+};
+
 export type BabelCompilerConfigs = {
-  babelOptions?: ExtendedBabelOptions;
+  babelOptions: ExtendedBabelOptions;
   /**
    * User defined @babel/core module, to set the @babel/core version used by the environment
    */
-  babelModule?: any;
+  babelModule: any;
+};
+
+export const emptyBabelCompilerConfigs: BabelCompilerConfigs = {
+  babelOptions: emptyExtendedBabelOptions,
+  babelModule: undefined,
 };
 
 export type MdxCompilerConfigs = {
-  mdxOptions?: UseMdxOptions;
+  mdxOptions: ExtendedMdxOptions;
+};
+
+export const emptyMdxCompilerConfigs: MdxCompilerConfigs = {
+  mdxOptions: emptyExtendedMdxOption,
 };
 
 export type CompilerState = {
@@ -40,4 +55,11 @@ export type ReactEnvState = {
    */
   compiler: CompilerState;
   // tester: TesterState
+};
+
+export const emptyState: ReactEnvState = {
+  compiler: {
+    typeScriptConfigs: emptyTypescriptCompilerConfigs,
+    babelConfigs: emptyBabelCompilerConfigs,
+  },
 };

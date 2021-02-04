@@ -94,8 +94,6 @@ export class ReactMain {
 
   readonly env = this.reactEnv;
 
-  private tsConfigOverride: TsConfigSourceFile | undefined; // TODO remove
-
   /**
    * Used to override environment configs
    * @param statePartials number of partial state objects to be merged with default state
@@ -116,11 +114,9 @@ export class ReactMain {
    * @param tsModule typeof `ts` module instance.
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
-    this.tsConfigOverride = tsconfig;
-
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
+        return this.reactEnv.deprecatedGetCompiler(tsconfig, {}, tsModule);
       },
     });
   }
@@ -132,7 +128,7 @@ export class ReactMain {
   overrideBuildTsConfig(tsconfig) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig);
+        return this.reactEnv.deprecatedGetBuildPipe(tsconfig);
       },
     });
   }
@@ -189,7 +185,9 @@ export class ReactMain {
    * override the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+    const pipeWithoutCompiler = this.reactEnv
+      .deprecatedGetBuildPipe()
+      .filter((task) => task.aspectId !== CompilerAspect.id);
 
     return this.envs.override({
       getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],

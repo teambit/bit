@@ -6,5 +6,6 @@ export type ExtendedBabelOptions = {
    */
   overrideExistingConfig?: Boolean;
   useBabelAndTypescript?: Boolean;
-  compilerOptions?: BabelCompilerOptions;
-};
+} & Partial<BabelCompilerOptions>;
+
+export const emptyExtendedBabelOptions: ExtendedBabelOptions = {};
