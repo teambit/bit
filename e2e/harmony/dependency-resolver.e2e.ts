@@ -136,8 +136,8 @@ describe('dependency-resolver extension', function () {
       npmCiRegistry = new NpmCiRegistry(helper);
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `react.${randomStr}.{name}`;
-      helper.fixtures.populateComponents(4);
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
+      helper.fixtures.populateComponents(4);
 
       await npmCiRegistry.init();
 
