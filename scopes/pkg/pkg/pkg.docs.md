@@ -1,35 +1,40 @@
 ---
-description: Bit Component package automation, packing and publishing.
+displayName: PKG
+description: Generates, packs and publishes component packages
 labels: ['packages', 'aspect', 'pkg']
 ---
 
-Pkg aspect automates the creation, packing and publishing of packages of Bit components.
+Bit components can be thought of as a super-set of standard packaged node modules. Each component contains a consumable package in addition to its documentation, history and other information that enables it to be maintained independently.
 
-1. allows users to change (add) properties in the component's package.json
-2. allows other extensions to add new properties to the component's package.json
-3. allows an env to add new properxties to the component's package.json
-4. exposes a pack command to pack a component into a tar suitable for an npm registry
-5. exposes a publish command to publish components to a private registry
-6. utilizes PostTag hook to auto publish components after tag
+The PKG aspect handles the configuration, publishing and packing of component packages. Packages can be published to any registry and installed into any project, Bit or non-Bit alike.
 
-## Usage
+#### Features
 
-### Configuration
+- **Efficient `package.json` configuration**: Use the PKG's workspace config API to add or override `package.json` properties to a group of components, all at once.
+  Use PKG's 'placeholders' to integrate component-specific data into the component's package configurations.
+- **An API for programmable `package.json` configuration** - Use PKG's API to provide your extensions with "packaging capabilities". Modify the `package.json` to suit your extension's needs, whether it is an environment or any other type of extension.
+- **Automated packing and publishing** - PKG is registered to your build pipeline. That means every 'build' will also test 'packing' and every tagging of a new release version will also include 'publishing'. Your components and packages versions are alway in-sync.
+- **"On-demand" packing and publishing** - PKG offers the `pack` and `preview` CLI commands for a manual and on-demand usage.
 
-#### Workspace configuration
+### Quickstart & configuration
 
-This extension doesn't get any configuration in the workspace level.
+> This aspect is only configurable using the 'variants' workspace API.
 
-#### Variants configuration
+#### Package properties
 
-This extensions gets properties to add to the package.json in the variants config in this format:
+Use the `packageJson` property to add or override the default `package.json` for your component packages.
+
+> Warning! Packages with a modified `name` property will not be published to Bit.dev's registry.
 
 ```js
 {
   "ui/*": {
     "teambit.pkg/pkg": {
       "packageJson": {
-        "myPropToAdd": "propValue"
+          "name": "@{scope}/{name}",
+          "private": false,
+          "main": "dist/{main}.js",
+          "custom-prop": "value"
       }
     }
   }
@@ -38,7 +43,43 @@ This extensions gets properties to add to the package.json in the variants confi
 
 #### Publish
 
-Configure the `publishConfig` prop with your registry data. For example:
+> If `publishConfig` or `name` are not set, packages will be published to Bit.dev's registry.
+
+##### NPM arguments
+
+You can specify additional arguments to the `npm publish` command by adding an array of args to `packageManagerPublishArgs`.
+
+For example:
+
+```js
+"ui/*": {
+  "teambit.pkg/pkg": {
+    "packageManagerPublishArgs": ["--access public"]
+  }
+}
+```
+
+#### NPM Registry
+
+- Use the `name` property to set the publishing process to your [NPM scope](https://docs.npmjs.com/cli/v6/using-npm/scope).
+- Use the `private` _(boolean)_ property to set packages to be published with either private or public access.
+
+```js
+{
+  "ui/*": {
+    "teambit.pkg/pkg": {
+      "packageJson": {
+          "name": "@{scope}/{name}",
+          "private": false,
+      }
+    }
+  }
+}
+```
+
+#### Private registry
+
+Use the `scope` and `registry` properties to configure the publishing process to your own private registry (and scope).
 
 ```js
 "ui/*": {
@@ -53,73 +94,76 @@ Configure the `publishConfig` prop with your registry data. For example:
 }
 ```
 
-The auto-publishing during export is triggered only when this `publishConfig` or `name` is set
-
-In addition, you can specify args to the `npm publish` command by adding an array of args to `packageManagerPublishArgs`. For example:
-
-```js
-"ui/*": {
-  "teambit.pkg/pkg": {
-    "packageManagerPublishArgs": ["--access public"]
-  }
-}
-```
+if the main file is "index.ts", it'll be translated to `dist/index.js`.
 
 #### Placeholders
 
-* `{main}` main source file without the extension
-* `{scope}` scope name
-* `{name}` component name
+Placeholders are an easy way to inject component-specific information into the 'pkg' configurations.
 
-e.g.
+- `{name}` - The name of the component.
+- `{scope}` - The name of the component scope.
+- `{main}` - the name of the main file (leaving out the extension) - for example `index.js` will be `index`.
+
+For example:
+
 ```js
  "packageJson": {
     "main": "dist/{main}.js"
   }
 ```
-if the main file is "index.ts", it'll be translated to `dist/index.js`.
 
-### Commands
-This extension register a new `pack` command.
-`pack <componentId> [scopePath]`
+### CLI Reference
 
-## Rational
+#### Pack
 
-This used mainly for this cases:
-1. user who wants to add a property to the package.json. for example a component with exectuable that the user wants to add the bin property
-2. extensions that wants to add props to the package.json for example a special compiler that wants to register the path to the umd file in the component compiled files.
-3. A command to to pack a component into a tar suitable for an npm registry - in order to publish it to the npm registry or to private registry.
+Creates a TAR file (to be published to a node package registry):
 
-## API Usage
-
-### Slots
-This extension provide an api for other extensions to add properties to the package json - `registerPackageJsonNewProps`;
-This method gets an object of key -> value that represents the new props and their values.
-The extension will apply those changes to the package.json only if the extension that register it is applied on the component via the variants.
-
-### Methods
-A function to pack a component and generate a tarball suitable for npm registry
-
-```js
-async packComponent(
-    componentId: string,
-    scopePath: string | undefined,
-    outDir: string,
-    prefix = false,
-    override = false,
-    keep = false
-  ): Promise<PackResult>
-
-  /**
-   * Merge the configs provided by:
-   * 1. envs configured in the component - via getPackageJsonProps method
-   * 2. extensions that registered to the registerPackageJsonNewProps slot (and configured for the component)
-   * 3. props defined by the user (they are the strongest one)
-   * @param configuredExtensions
-   */
-  mergePackageJsonProps(configuredExtensions: ExtensionDataList): PackageJsonProps
+```shell
+$ bit pack <component-id>
 ```
 
-## Internal
-This extension is register to the AddConfigAction exposed by the consumer component to provide the package.json new props to the legacy code.
-During this process it will use the the `mergePackageJsonProps` function to calculate the final properties to add.
+Overrides the existing TAR file (in the same location):
+
+```shell
+$ bit pack <component-id> --override
+
+$ bit pack <component-id> -o
+```
+
+Returns the output in a JSON format:
+
+```shell
+$ bit pack <component-id> --json
+
+$ bit pack <component-id> -j
+```
+
+#### Publish
+
+Publishes an exported component:
+
+```shell
+$ bit publish <componentId>
+```
+
+Publishes a staged component that has not yet been exported:
+
+```shell
+$ bit publish <component-id> --allow-staged
+```
+
+Checks if the publishing process will be done successfully (without publishing):
+
+```shell
+$ bit publish <component-id> --dry-run
+
+$ bit publish <component-id> -d
+```
+
+Returns the output as JSON:
+
+```shell
+$ bit publish <component-id> --json
+
+$ bit publish <component-id> --j
+```
