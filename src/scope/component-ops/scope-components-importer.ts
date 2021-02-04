@@ -175,10 +175,10 @@ export default class ScopeComponentsImporter {
    */
   async importManyDeltaWithoutDeps(ids: BitIds): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
-    const idsWithoutNils = removeNils(ids);
+    const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
 
-    const compDef = await this.sources.getMany(idsWithoutNils);
+    const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest());
     const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
       if (!component) {
         // remove the version to fetch it with all versions.
@@ -207,10 +207,11 @@ export default class ScopeComponentsImporter {
     loader.start(statusMsg);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
     const remotes = await getScopeRemotes(this.scope);
-    const { objectListPerRemote } = await remotes.fetch(groupedIds, this.scope, {
+    const { objectList, objectListPerRemote } = await remotes.fetch(groupedIds, this.scope, {
       type: 'component-delta',
       withoutDependencies: true,
     });
+    loader.start(`got ${objectList.count()} objects from the remotes, merging them and writing to the filesystem`);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', 'writing them to the model');
     await this.scope.writeManyObjectListToModel(objectListPerRemote, true, idsToFetch);
   }
