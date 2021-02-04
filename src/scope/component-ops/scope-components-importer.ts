@@ -68,6 +68,7 @@ export default class ScopeComponentsImporter {
     persist = true,
     throwForDependencyNotFound = false
   ): Promise<VersionDependencies[]> {
+    if (cache && persist && !throwForDependencyNotFound) return this.importManyFromOriginalScopes(ids);
     logger.debugAndAddBreadCrumb(
       'importMany',
       `cache ${cache}, throwForDependencyNotFound: ${throwForDependencyNotFound}. ids: {ids}`,
@@ -100,6 +101,39 @@ export default class ScopeComponentsImporter {
     const versionDeps = await this.bitIdsToVersionDeps(idsToImport);
     logger.debug('importMany, completed!');
     return versionDeps;
+  }
+
+  /**
+   * as opposed to importMany, which imports from dependents only.
+   * needed for bit-export, where the scopes still don't have all their dependencies imported.
+   *
+   * the downside is that a flattened-dependency could be on a dependent only and not on the
+   * original scope, so it won't be retrieved by this method, however, next time the component is
+   * imported,
+   */
+  async importManyFromOriginalScopes(ids: BitIds) {
+    logger.debugAndAddBreadCrumb('importManyDuringExport', `ids: {ids}`, { ids: ids.toString() });
+    const idsToImport = compact(ids);
+    if (R.isEmpty(idsToImport)) return [];
+
+    const externalsToFetch: BitId[] = [];
+    const localDefs = await this.sources.getMany(idsToImport);
+    const versionDeps = await mapSeries(localDefs, ({ id, component }) => {
+      if (!component) {
+        if (id.isLocal(this.scope.name)) throw new ComponentNotFound(id.toString());
+        externalsToFetch.push(id);
+        return null;
+      }
+      return this.componentToVersionDependencies(component, id);
+    });
+    const remotes = await getScopeRemotes(this.scope);
+    const versionDepsWithoutNull = compact(versionDeps);
+    logger.debugAndAddBreadCrumb(
+      'ScopeComponentsImporter',
+      'importMany: successfully fetched local components and their dependencies. Going to fetch externals'
+    );
+    const externalDeps = await this.getExternalMany(externalsToFetch, remotes);
+    return [...versionDepsWithoutNull, ...externalDeps];
   }
 
   async importWithoutDeps(ids: BitIds, cache = true): Promise<ComponentVersion[]> {
