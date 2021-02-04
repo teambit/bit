@@ -4,17 +4,17 @@ description: Generates, packs and publishes component packages
 labels: ['packages', 'aspect', 'pkg']
 ---
 
-Bit components can be thought of as a super-set of standard packaged node modules. Each component contains a consumable package in addition to its documentation, history and other information that enables it to be maintained independently.
+Bit components can be thought of as a super-set of standard packaged node modules. Each component contains a consumable package in addition to its documentation, history and other information that enables it to be independently developed and maintained.
 
 The PKG aspect handles the configuration, publishing and packing of component packages. Packages can be published to any registry and installed into any project, Bit or non-Bit alike.
 
 #### Features
 
-- **Efficient `package.json` configuration**: Use the PKG's workspace config API to add or override `package.json` properties to a group of components, all at once.
+- **Efficient `package.json` configuration:** Use the PKG's workspace config API to add or override `package.json` properties to a group of components, all at once.
   Use PKG's 'placeholders' to integrate component-specific data into the component's package configurations.
-- **An API for programmable `package.json` configuration** - Use PKG's API to provide your extensions with "packaging capabilities". Modify the `package.json` to suit your extension's needs, whether it is an environment or any other type of extension.
-- **Automated packing and publishing** - PKG is registered to your build pipeline. That means every 'build' will also test 'packing' and every tagging of a new release version will also include 'publishing'. Your components and packages versions are alway in-sync.
-- **"On-demand" packing and publishing** - PKG offers the `pack` and `preview` CLI commands for a manual and on-demand usage.
+- **An API for programmable `package.json` configuration:** Use PKG's API to provide your extensions with "packaging capabilities". Modify the `package.json` to suit your extension's needs, whether it is an environment or any other type of extension.
+- **Automated packing and publishing:** - PKG is registered to your build pipeline. That means every 'build' will also test 'packing' and every tagging of a new release version will also include 'publishing'. Your components and packages versions are alway in-sync.
+- **"On-demand" packing and publishing:** - PKG offers the `pack` and `preview` CLI commands for a manual and on-demand usage.
 
 ### Quickstart & configuration
 
@@ -45,7 +45,7 @@ Use the `packageJson` property to add or override the default `package.json` for
 
 > If `publishConfig` or `name` are not set, packages will be published to Bit.dev's registry.
 
-##### NPM arguments
+##### npm arguments
 
 You can specify additional arguments to the `npm publish` command by adding an array of args to `packageManagerPublishArgs`.
 
@@ -59,9 +59,9 @@ For example:
 }
 ```
 
-#### NPM Registry
+#### npmjs Registry
 
-- Use the `name` property to set the publishing process to your [NPM scope](https://docs.npmjs.com/cli/v6/using-npm/scope).
+- Use the `name` property to set the publishing process to your [npm scope](https://docs.npmjs.com/cli/v6/using-npm/scope).
 - Use the `private` _(boolean)_ property to set packages to be published with either private or public access.
 
 ```js
@@ -94,7 +94,7 @@ Use the `scope` and `registry` properties to configure the publishing process to
 }
 ```
 
-if the main file is "index.ts", it'll be translated to `dist/index.js`.
+> Packages with a modified `publishConfig` property will not be published to Bit.dev's registry.
 
 #### Placeholders
 
