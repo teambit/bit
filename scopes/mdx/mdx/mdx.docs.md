@@ -142,7 +142,12 @@ In addition to that, the modularity that's offered by both technologies (MDX and
 segments of content from the documentation of other components, into a single documentation file.
 This can be done to document your components in a way that reflects the way they are built - through a composition of components.
 That will help in keeping your docs always up-to-date as changes made to a sub-component will propagate to the component's docs.
-Links to other pages should only be used when the page they reference is expected to be read by only a small percentage of readers.
+
+> Linking to external pages is, in  many cases,  the  result of technological limitations and not the preferred solution.
+If most people reading your docs need to visit an external page in order for them to get the full explanation,
+then it makes more sense to have that external text integrated into your docs (by importing it).
+<br/>
+Now that we have MDX and Bit, that can be done quite easily.
 
 To start writing your docs with MDX, add a `*.docs.mdx` or `*.docs.md` file to the component's directory and Bit will render it in the component's 'Overview' tab, in the Workspace UI (and later on, after it is exported, in the Scope UI). Bit's development server will hot-reload your documentation to reflect any changes made to it, in real time.
 
