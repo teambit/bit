@@ -20,7 +20,6 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
 import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
-import { FetchMissingDeps } from '../actions/fetch-missing-deps';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
@@ -145,7 +144,6 @@ export async function exportMany({
   await validateRemotes(remotes, clientId, Boolean(resumeExportId));
   triggerPrePersistHook();
   await persistRemotes(manyObjectsPerRemote, clientId);
-  await fetchMissingDependenciesOnRemotes(manyObjectsPerRemote);
   loader.start('updating data locally...');
   const results = await updateLocalObjects(lanesObjects);
   return {
@@ -580,7 +578,7 @@ async function convertToCorrectScopeLegacy(
         const versions = componentsObjects.component.versions;
         Object.keys(versions).forEach((version) => {
           if (versions[version].toString() === hashBefore) {
-            versions[version] = Ref.from(hashAfter);
+            componentsObjects.component.setVersion(version, Ref.from(hashAfter));
           }
         });
         if (componentsObjects.component.getHeadStr() === hashBefore) {
@@ -903,37 +901,11 @@ async function persistRemotes(
   });
 }
 
-async function fetchMissingDependenciesOnRemotes(manyObjectsPerRemote: RemotesForPersist[]) {
-  loader.start('fetching missing dependencies (if any) on the remotes...');
-  await Promise.all(
-    manyObjectsPerRemote.map(async (objectsPerRemote: RemotesForPersist) => {
-      const { remote } = objectsPerRemote;
-      try {
-        await remote.action(FetchMissingDeps.name, { ids: objectsPerRemote.exportedIds });
-        logger.debugAndAddBreadCrumb(
-          'fetchMissingDependenciesOnRemotes',
-          `successfully fetched dependencies from a remote ${remote.name}`
-        );
-      } catch (err) {
-        // do not throw an error, the remote-scope of a dependency can be down for a while
-        // next time a component is exported, the client will fetch the dependency from the original remote
-        logger.warnAndAddBreadCrumb(
-          'fetchMissingDependenciesOnRemotes',
-          `failed fetching dependencies on ${remote.name}`,
-          {},
-          err
-        );
-      }
-    })
-  );
-}
-
 export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
   const scopeRemotes: Remotes = await getScopeRemotes(scope);
   const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r, scope)));
   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
   await validateRemotes(remotesObj, exportId, true);
   await persistRemotes(remotesForPersist, exportId, true);
-  await fetchMissingDependenciesOnRemotes(remotesForPersist);
   return R.flatten(remotesForPersist.map((r) => r.exportedIds));
 }

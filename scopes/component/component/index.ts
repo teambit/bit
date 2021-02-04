@@ -7,7 +7,7 @@ export { default as ComponentFS } from './component-fs';
 export type { default as ComponentConfig } from './config';
 export type { ComponentFactory } from './component-factory';
 export type { AspectList } from './aspect-list';
-export { AspectEntry } from './aspect-entry';
+export { AspectEntry, AspectData } from './aspect-entry';
 // TODO: check why it's not working when using the index in snap dir like this:
 // export { Snap, Author } from './snap';
 export { Snap } from './snap/snap';
