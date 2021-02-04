@@ -45,6 +45,7 @@ export type ImportOptions = {
   saveDependenciesAsComponents?: boolean; // default: false,
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
+  fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   skipLane?: boolean; // save on master instead of current lane
   lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
 };
@@ -260,7 +261,7 @@ export default class ImportComponents {
       const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
       componentsAndDependencies =
         !this.consumer.isLegacy && this.options.objectsOnly
-          ? await this.consumer.importComponentsObjectsHarmony(componentsIdsToImport)
+          ? await this.consumer.importComponentsObjectsHarmony(componentsIdsToImport, this.options.fromOriginalScope)
           : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
