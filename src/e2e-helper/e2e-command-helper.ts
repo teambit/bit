@@ -592,6 +592,10 @@ export default class CommandHelper {
     return value;
   }
 
+  init(options = '') {
+    return this.runCmd(`bit init ${options}`);
+  }
+
   async runInteractiveCmd({
     args = [],
     inputs = [],

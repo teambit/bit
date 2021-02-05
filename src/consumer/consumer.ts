@@ -881,6 +881,11 @@ export default class Consumer {
     await Promise.all([scopeP, configP]);
   }
 
+  async resetNew() {
+    this.bitMap.resetToNewComponents();
+    await Scope.reset(this.scope.path, true);
+  }
+
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
