@@ -222,6 +222,22 @@ export default class BitMap {
     }
   }
 
+  resetToNewComponents() {
+    this.components = this.components.map(
+      (component) =>
+        new ComponentMap({
+          id: component.id.changeVersion(undefined).changeScope(undefined),
+          mainFile: component.mainFile,
+          rootDir: component.rootDir,
+          exported: false,
+          trackDir: component.trackDir,
+          files: component.files,
+          origin: COMPONENT_ORIGINS.AUTHORED,
+          onLanesOnly: false,
+        })
+    );
+  }
+
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {
     const rootDirs = compact(Object.keys(componentsJson).map((c) => componentsJson[c].rootDir));
     if (uniq(rootDirs).length === rootDirs.length) {
