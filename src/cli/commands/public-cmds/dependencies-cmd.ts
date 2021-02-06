@@ -1,9 +1,6 @@
-import chalk from 'chalk';
 import { dependencies } from '../../../api/consumer/lib/dependencies';
-import { DependentsResults } from '../../../api/consumer/lib/dependents';
 import { DebugDependencies } from '../../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
-import { generateDependentsInfoTable } from '../../templates/component-template';
 
 export default class Dependencies implements LegacyCommand {
   name = 'dependencies <id>';
