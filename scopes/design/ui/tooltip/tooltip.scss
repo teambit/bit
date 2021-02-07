@@ -1,8 +1,11 @@
-$bg: #2b2b2b;
+$bg: var(--bg-tooltip, #2b2b2b);
+$textColor: var(--text-color, #fff);
 
+// using global '.tippy-box' from TippyJS
 .tippy-box[data-theme~='teambit'] {
+  color: $textColor;
   background: $bg;
-  border-radius: 8px;
+  border-radius: 4px;
 
   .tippy-content {
     padding: 0.85em;
