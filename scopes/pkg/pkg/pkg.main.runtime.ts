@@ -149,9 +149,7 @@ export class PkgMain {
 
     PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
     // TODO: consider passing the pkg instead of packer
-    cli.register(new PackCmd(packer));
-    cli.register(new PublishCmd(publisher));
-
+    cli.register(new PackCmd(packer), new PublishCmd(publisher));
     return pkg;
   }
 

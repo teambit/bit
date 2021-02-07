@@ -12,3 +12,5 @@ export default UIAspect;
 
 // using `useDataQuery` from this package is deprecated, use `@teambit/ui.hooks.use-data-query` directly
 export { DataQueryResult, useDataQuery } from '@teambit/ui.hooks.use-data-query';
+// temporary. TODO: fix this
+export { useMutation } from '@apollo/client';

@@ -137,14 +137,7 @@ describe('dependency-resolver extension', function () {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `react.${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-
       helper.fixtures.populateComponents(4);
-      const pkg = {
-        packageJson: {
-          name,
-        },
-      };
-      helper.bitJsonc.addToVariant('*', Extensions.pkg, pkg);
 
       await npmCiRegistry.init();
 

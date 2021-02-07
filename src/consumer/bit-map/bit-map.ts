@@ -222,6 +222,22 @@ export default class BitMap {
     }
   }
 
+  resetToNewComponents() {
+    this.components = this.components.map(
+      (component) =>
+        new ComponentMap({
+          id: component.id.changeVersion(undefined).changeScope(undefined),
+          mainFile: component.mainFile,
+          rootDir: component.rootDir,
+          exported: false,
+          trackDir: component.trackDir,
+          files: component.files,
+          origin: COMPONENT_ORIGINS.AUTHORED,
+          onLanesOnly: false,
+        })
+    );
+  }
+
   private throwForDuplicateRootDirs(componentsJson: Record<string, any>) {
     const rootDirs = compact(Object.keys(componentsJson).map((c) => componentsJson[c].rootDir));
     if (uniq(rootDirs).length === rootDirs.length) {
@@ -440,7 +456,7 @@ export default class BitMap {
   }
 
   getAuthoredExportedComponents(): BitId[] {
-    const authoredIds = this.getAllBitIdsFromAllLanes([COMPONENT_ORIGINS.AUTHORED]);
+    const authoredIds = this.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter((id) => id.hasScope());
   }
   getAuthoredNonExportedComponents(): BitId[] {
@@ -838,9 +854,22 @@ export default class BitMap {
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();
-    const bitMapContent = this.getContent();
-    await outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+    await outputFile({ filePath: this.mapPath, content: this.contentToString() });
     this.hasChanged = false;
+  }
+
+  /**
+   * instead of `JSON.stringify(this.getContent(), null, 4)`
+   * format the file to have each object key in its own line. it makes it easier to resolve git conflicts
+   */
+  private contentToString() {
+    const bitMapContent = this.getContent();
+    const records = Object.keys(bitMapContent)
+      .map((key) => {
+        return `  "${key}": ${JSON.stringify(bitMapContent[key])}`;
+      })
+      .join(',\n');
+    return `{\n${records}\n}`;
   }
 
   getContent(): Record<string, any> {

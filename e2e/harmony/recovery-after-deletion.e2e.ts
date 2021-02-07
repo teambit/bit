@@ -36,6 +36,10 @@ describe('recovery after component/scope deletion', function () {
       let remoteScopeClone: string;
       let remote2Clone: string;
       let localClone: string;
+      function runFetchMissingDepsAction(remote, ids: string[]) {
+        const options = { ids };
+        return helper.command.runCmd(`bit run-action FetchMissingDeps ${remote} '${JSON.stringify(options)}'`);
+      }
       before(async () => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
         helper.bitJsonc.setupDefault();
@@ -59,6 +63,7 @@ describe('recovery after component/scope deletion', function () {
         helper.command.linkAndCompile();
         helper.command.tagAllComponents();
         helper.command.export();
+        helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
         localClone = helper.scopeHelper.cloneLocalScope();
         helper.scopeHelper.reInitRemoteScope(remote2Path);
         remote2Clone = helper.scopeHelper.cloneScope(remote2Path);
@@ -116,6 +121,10 @@ describe('recovery after component/scope deletion', function () {
             let compNewRemote;
             before(() => {
               helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
+              runFetchMissingDepsAction(helper.scopes.remote, [
+                `${helper.scopes.remote}/comp1@0.0.1`,
+                `${helper.scopes.remote}/comp2@0.0.1`,
+              ]);
               helper.fs.outputFile('comp-new/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1');`);
               helper.command.addComponent('comp-new');
               compNewRemote = helper.scopeHelper.getNewBareScope('-remote3', true);
@@ -125,6 +134,7 @@ describe('recovery after component/scope deletion', function () {
               helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compNewRemote.scopePath);
               helper.scopeHelper.addRemoteScope(remote2Path, compNewRemote.scopePath);
               helper.command.export();
+              runFetchMissingDepsAction(compNewRemote.scopeName, [`${compNewRemote.scopeName}/comp-new@0.0.1`]);
             });
             it('this new remote should bring the flattened dependency (comp3) from the dependent scope', () => {
               const scope = helper.command.catScope(true, compNewRemote.scopePath);
@@ -211,25 +221,6 @@ describe('recovery after component/scope deletion', function () {
             });
             it('should bring the missing dep from the dependent', () => {
               const scope = helper.command.catScope(true);
-              const comp3 = scope.find((item) => item.name === 'comp3');
-              expect(comp3).to.not.be.undefined;
-            });
-          });
-          describe('bit export to another remote', () => {
-            let compNewRemote;
-            before(() => {
-              helper.scopeHelper.getClonedLocalScope(scopeWithMissingDep);
-              helper.fs.outputFile('comp-new/index.js', `require('@${DEFAULT_OWNER}/${scopeWithoutOwner}.comp1');`);
-              helper.command.addComponent('comp-new');
-              compNewRemote = helper.scopeHelper.getNewBareScope('-remote3', true);
-              helper.bitJsonc.addToVariant('comp-new', 'defaultScope', compNewRemote.scopeName);
-              helper.command.tagAllComponents();
-              helper.scopeHelper.addRemoteScope(compNewRemote.scopePath);
-              helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, compNewRemote.scopePath);
-              helper.command.export();
-            });
-            it('this new remote should bring the flattened dependency (comp3) from the dependent scope', () => {
-              const scope = helper.command.catScope(true, compNewRemote.scopePath);
               const comp3 = scope.find((item) => item.name === 'comp3');
               expect(comp3).to.not.be.undefined;
             });
@@ -364,6 +355,11 @@ describe('recovery after component/scope deletion', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.bitJsonc.disablePreview();
           helper.scopeHelper.addRemoteScope(remote2Path);
+          helper.scopeHelper.addRemoteScope();
+          runFetchMissingDepsAction(helper.scopes.remote, [
+            `${helper.scopes.remote}/comp1@0.0.1`,
+            `${helper.scopes.remote}/comp2@0.0.1`,
+          ]);
           helper.fs.outputFile('comp3/index.js', '');
           helper.command.addComponent('comp3');
           helper.bitJsonc.addToVariant('comp3', 'defaultScope', remote2Name);
@@ -488,6 +484,7 @@ describe('recovery after component/scope deletion', function () {
             helper.command.import(`${helper.scopes.remote}/comp2 ${remote2Name}/comp3`);
             helper.command.tagAllComponents('', '0.0.7'); // tag comp2 with the updated comp3 version - 0.0.7
             helper.command.export();
+            helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
           });
           it('comp3: should save 0.0.1 of in the orphanedVersions prop on the remote', () => {
             const comp3 = helper.command.catComponent(`${remote2Name}/comp3`, helper.scopes.remotePath);
@@ -536,6 +533,7 @@ describe('recovery after component/scope deletion', function () {
             helper.command.import(`${helper.scopes.remote}/comp1 ${remote2Name}/comp3`);
             helper.command.tagComponent(`${remote2Name}/comp3`, undefined, '0.0.8 --force');
             helper.command.export();
+            helper.command.importAllComponents();
           });
           it('the remote of comp3 should not get this orphanedVersions prop', () => {
             const comp3 = helper.command.catComponent(`${remote2Name}/comp3`, remote2Path);
@@ -545,7 +543,7 @@ describe('recovery after component/scope deletion', function () {
           });
         });
       });
-      describe('dealing with snaps, indirect dependency (comp3) has re-created with a new snap', () => {
+      describe.skip('dealing with snaps, indirect dependency (comp3) has re-created with a new snap', () => {
         let beforeImportScope: string;
         before(() => {
           helper.scopeHelper.getClonedScope(remote2Clone, remote2Path);
@@ -567,6 +565,7 @@ describe('recovery after component/scope deletion', function () {
           helper.command.snapAllComponentsWithoutBuild();
 
           helper.command.export();
+          helper.command.runCmd(`bit import ${helper.scopes.remote}/* ${remote2Name}/* --objects`);
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope(remote2Path);
           helper.bitJsonc.disablePreview();
