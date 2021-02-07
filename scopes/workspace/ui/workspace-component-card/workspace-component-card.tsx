@@ -6,7 +6,7 @@ import { ComponentModel } from '@teambit/component';
 import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
 import styles from './workspace-component-card.module.scss';
 
-type WorkspaceComponentCardProps = {
+export type WorkspaceComponentCardProps = {
   component: ComponentModel;
 } & React.HTMLAttributes<HTMLDivElement>;
 

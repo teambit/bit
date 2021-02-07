@@ -701,5 +701,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
-    "version": "14.8.9-dev.282"
+    "ui/workspace-component-card": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/ui/workspace-component-card",
+        "exported": false
+    },
+    "version": "14.8.9-dev.283"
 }
