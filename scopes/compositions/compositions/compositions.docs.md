@@ -174,7 +174,7 @@ describe('Button', () => {
 ```
 
 ## Setting providers for all your compositions 
-Extend the [React](https://bit.dev/teambit/react/react) or [React Native](https://bit.dev/teambit/react/react-native) environments to customize their list of providers with your own context providers.
+Extend the [React](https://bit.dev/teambit/react/react) environment to customize its list of providers with your own composition providers.
 The extended environment will then wrap every composition with these providers to make sure your themes or mock data are accessible to all of them, 
 without you having to repeat that task ever again.
 
