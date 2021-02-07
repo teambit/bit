@@ -13,7 +13,7 @@ it('should render a tooltip with new component', () => {
 
   const textStatus = getByText('N');
   fireEvent.mouseEnter(textStatus);
-  const textTooltip = () => getByText(/^New component$/);
+  const textTooltip = getByText(/^New component$/);
 
   expect(textTooltip).to.exist;
 });
@@ -23,7 +23,7 @@ it('should render a tooltip with staged component', () => {
 
   const textStatus = getByText('S');
   fireEvent.mouseEnter(textStatus);
-  const textTooltip = () => getByText(/^Staged component$/);
+  const textTooltip = getByText(/^Staged component$/);
 
   expect(textTooltip).to.exist;
 });

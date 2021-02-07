@@ -8,7 +8,7 @@
     // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/pnpm",
+    "packageManager": "teambit.dependencies/yarn",
     "policy": {
       "dependencies": {
         "@apollo/client": "3.3.6",
