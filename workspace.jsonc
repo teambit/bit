@@ -8,7 +8,7 @@
     // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
-    "packageManager": "teambit.dependencies/yarn",
+    "packageManager": "teambit.dependencies/pnpm",
     "policy": {
       "dependencies": {
         "@apollo/client": "3.3.6",
@@ -244,7 +244,6 @@
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "^3.1.1",
         "react-test-renderer": "^16.13.1",
-        "react-tooltip": "^4.2.8",
         "remark-frontmatter": "2.0.0",
         "reset-css": "^5.0.1",
         "resolve-from": "5.0.0",
