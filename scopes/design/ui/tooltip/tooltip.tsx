@@ -25,9 +25,11 @@ const popperOptions = {
 
 export interface TooltipProps extends Omit<TippyProps, 'children'> {
   children?: ReactElement<any> | string;
-  id?: string;
 }
 
+/**
+ * TippyJS tooltip with Teambit styles
+ */
 export function Tooltip({ children, singleton, className, ...rest }: TooltipProps) {
   const ctxInstance = useCtxTooltipInstance();
 
