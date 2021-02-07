@@ -24,6 +24,7 @@ import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
+import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
 const jestM = require('jest');
@@ -156,8 +157,12 @@ export class ReactEnv implements Environment {
     return webpackConfigFactory(context.id, fileMapPath);
   }
 
+  getDevEnvId(id?: string) {
+    return id || ReactAspect.id;
+  }
+
   /**
-   * get a schema generator instance configured with the correct tsconfig.
+   * get a schema generator instan ce configured with the correct tsconfig.
    */
   getSchemaExtractor(tsconfig: TsConfigSourceFile) {
     return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));

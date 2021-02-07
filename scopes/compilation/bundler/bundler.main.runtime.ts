@@ -48,15 +48,21 @@ export class BundlerMain {
   async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     this.devService.uiRoot = root;
-    const executionResults = await envRuntime.run<ComponentServer>(this.devService);
-    executionResults.throwErrorsIfExist();
-    this._componentServers = executionResults.results.map((res) => res.data as ComponentServer);
+    const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    if (!servers) throw new Error();
+    this._componentServers = servers;
 
     this.indexByComponent();
+    // @ts-ignore
     return this._componentServers;
   }
 
-  getPublicPath() {}
+  /**
+   * can be used 
+   */
+  getDevServerSimilarity() {
+
+  }
 
   /**
    * get a dev server instance containing a component.
