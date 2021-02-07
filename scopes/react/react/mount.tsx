@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { RenderingContext } from '@teambit/preview';
 import { StandaloneNotFoundPage } from '@teambit/ui.pages.standalone-not-found-page';
 import { ReactAspect } from './react.aspect';
+import { ComponentHighlighter } from '@teambit/comp-highlighter';
 
 function wrap(Component: ComponentType, WrapperComponent?: ComponentType): ComponentType {
   function Wrapper({ children }: { children?: ReactNode }) {
@@ -40,9 +41,11 @@ export default (Composition: React.ComponentType = StandaloneNotFoundPage, previ
   const reactContext = previewContext.get(ReactAspect.id);
   const Provider = withProviders(reactContext?.providers);
   ReactDOM.render(
-    <Provider>
-      <Composition />
-    </Provider>,
+    <ComponentHighlighter>
+      <Provider>
+        <Composition />
+      </Provider>
+    </ComponentHighlighter>,
     document.getElementById('root')
   );
   // ReactDOM.render(<Composition />, document.getElementById('root'));

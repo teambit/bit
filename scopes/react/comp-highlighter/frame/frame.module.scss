@@ -1,0 +1,16 @@
+$border: 2;
+$padding: 4;
+
+.overlayBorder {
+  border: $border * 1px solid var(--component-highlighter-border, #f83d6c);
+
+  border-radius: 11px;
+  padding: $padding * 1px;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+:export {
+  offset: -$border - $padding;
+}
