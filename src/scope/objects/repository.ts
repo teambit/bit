@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
-import uniqBy from 'lodash.uniqby';
+import { uniqBy } from 'lodash';
 import * as path from 'path';
 import R from 'ramda';
-
-import { OBJECTS_DIR } from '../../constants';
+import pMap from 'p-map';
+import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
@@ -358,7 +358,7 @@ export default class Repository {
     if (!this.objectsToRemove.length) return;
     const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
-    await Promise.all(uniqRefs.map((ref) => this._deleteOne(ref)));
+    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency: CONCURRENT_IO_LIMIT });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -367,7 +367,10 @@ export default class Repository {
     if (R.isEmpty(this.objects)) return;
     logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
     // @TODO handle failures
-    await Promise.all(Object.keys(this.objects).map((hash) => this._writeOne(this.objects[hash])));
+    await pMap(Object.keys(this.objects), (hash) => this._writeOne(this.objects[hash]), {
+      concurrency: CONCURRENT_IO_LIMIT,
+    });
+    logger.debug(`Repository._writeMany: completed writing ${Object.keys(this.objects).length} objects successfully`);
     const added = this.scopeIndex.addMany(R.values(this.objects));
     if (added) await this.scopeIndex.write();
   }

@@ -59,6 +59,7 @@ import Undeprecate from './commands/public-cmds/undeprecate-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
+import RunAction from './commands/private-cmds/run-action.cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
   return new CommandRegistry(
@@ -159,6 +160,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Switch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Fetch(),
+      new RunAction(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new ScopeLanesList(),
     ],

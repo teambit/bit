@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.8.9-dev.285",
+  "version": "14.8.9-dev.287",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -150,7 +150,6 @@
     "lodash.set": "^4.3.2",
     "lodash.toarray": "^4.4.0",
     "lodash.unionby": "^4.8.0",
-    "lodash.uniqby": "^4.7.0",
     "make-fetch-happen": "^4.0.1",
     "memfs": "2.15.5",
     "minimatch": "^3.0.4",
@@ -168,6 +167,7 @@
     "open": "^7.2.0",
     "ora": "^4.0.3",
     "p-event": "^4.1.0",
+    "p-map": "^4.0.0",
     "p-map-series": "^2.1.0",
     "p-queue": "^6.2.1",
     "p-series": "^2.1.0",

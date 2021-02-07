@@ -104,14 +104,15 @@ export default class ScopeComponentsImporter {
 
   /**
    * as opposed to importMany, which imports from dependents only.
-   * needed for bit-export, where the scopes still don't have all their dependencies imported.
+   * needed mostly for cases when importMany doesn't work due to corrupted cache or the cache
+   * doesn't exist yet.
    *
    * the downside is that a flattened-dependency could be on a dependent only and not on the
    * original scope, so it won't be retrieved by this method, however, next time the component is
    * imported,
    */
   async importManyFromOriginalScopes(ids: BitIds) {
-    logger.debugAndAddBreadCrumb('importManyDuringExport', `ids: {ids}`, { ids: ids.toString() });
+    logger.debugAndAddBreadCrumb('importManyFromOriginalScopes', `ids: {ids}`, { ids: ids.toString() });
     const idsToImport = compact(ids);
     if (R.isEmpty(idsToImport)) return [];
 
@@ -128,8 +129,8 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const versionDepsWithoutNull = compact(versionDeps);
     logger.debugAndAddBreadCrumb(
-      'ScopeComponentsImporter',
-      'importMany: successfully fetched local components and their dependencies. Going to fetch externals'
+      'importManyFromOriginalScopes',
+      'successfully fetched local components and their dependencies. Going to fetch externals'
     );
     const externalDeps = await this.getExternalMany(externalsToFetch, remotes);
     return [...versionDepsWithoutNull, ...externalDeps];
