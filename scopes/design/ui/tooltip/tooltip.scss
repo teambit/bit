@@ -5,7 +5,7 @@ $textColor: var(--text-color, #fff);
 .tippy-box[data-theme~='teambit'] {
   color: $textColor;
   background: $bg;
-  border-radius: 4px;
+  border-radius: 8px;
 
   .tippy-content {
     padding: 0.85em;

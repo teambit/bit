@@ -11,6 +11,17 @@ import './tooltip.scss';
 import { useCtxTooltipInstance } from './shared-instance';
 
 const THEME = 'teambit';
+const popperOptions = {
+  modifiers: [
+    {
+      name: 'arrow',
+      options: {
+        // prevent svg arrow from 'breaking' because of border radius
+        padding: 5,
+      },
+    },
+  ],
+};
 
 export interface TooltipProps extends Omit<TippyProps, 'children'> {
   children?: ReactElement<any> | string;
@@ -32,6 +43,7 @@ export function Tooltip({ children, singleton, className, ...rest }: TooltipProp
       theme={THEME}
       interactive
       appendTo={getMountPoint}
+      popperOptions={popperOptions}
       {...rest}
       singleton={_singleton}
     >
