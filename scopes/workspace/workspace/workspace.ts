@@ -12,6 +12,7 @@ import {
   ComponentID,
   ComponentMap,
   AspectList,
+  AspectData,
 } from '@teambit/component';
 import { ComponentScopeDirMap } from '@teambit/config';
 import {
@@ -59,7 +60,6 @@ import type { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
-  ExtensionData,
   OnComponentAdd,
   OnComponentChange,
   OnComponentEventResult,
@@ -378,8 +378,8 @@ export class Workspace implements ComponentFactory {
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
-  async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnv(component);
+  async getEnvSystemDescriptor(component: Component): Promise<AspectData> {
+    const env = this.envs.calculateEnv(component);
     if (env.env.__getDescriptor && typeof env.env.__getDescriptor === 'function') {
       const systemDescriptor = await env.env.__getDescriptor();
       // !important persist services only on the env itself.

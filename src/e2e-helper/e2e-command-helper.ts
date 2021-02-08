@@ -88,9 +88,9 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
-  catScope(includeExtraData = false) {
+  catScope(includeExtraData = false, cwd = this.scopes.localPath) {
     const extraData = includeExtraData ? '--json-extra' : '';
-    const result = this.runCmd(`bit cat-scope --json ${extraData}`);
+    const result = this.runCmd(`bit cat-scope --json ${extraData}`, cwd);
     return JSON.parse(result);
   }
 
@@ -160,6 +160,11 @@ export default class CommandHelper {
     expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
+  tagWithoutBuild(id: string, options = '') {
+    const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
+    expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
     this.linkAndRewire();
     return this.tagAllComponents(options, version, assertTagged);
@@ -181,6 +186,11 @@ export default class CommandHelper {
   }
   snapAllComponents(options = '', assertSnapped = true) {
     const result = this.runCmd(`bit snap -a ${options} `);
+    if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
+    return result;
+  }
+  snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
+    const result = this.runCmd(`bit snap -a ${options} `, undefined, undefined, BUILD_ON_CI);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
@@ -260,6 +270,9 @@ export default class CommandHelper {
     // --force just silents the prompt, which obviously needed for CIs
     return this.runCmd(`bit export --force ${options}`);
   }
+  resumeExport(exportId: string, remotes: string[]) {
+    return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);
+  }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
   }
@@ -271,6 +284,9 @@ export default class CommandHelper {
   }
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
+  }
+  import(value = '') {
+    return this.runCmd(`bit import ${value}`);
   }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
@@ -574,6 +590,10 @@ export default class CommandHelper {
       })
       .join(' ');
     return value;
+  }
+
+  init(options = '') {
+    return this.runCmd(`bit init ${options}`);
   }
 
   async runInteractiveCmd({

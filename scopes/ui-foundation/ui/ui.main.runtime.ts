@@ -462,8 +462,7 @@ export class UiMain {
       logger,
       harmony
     );
-    cli.register(new StartCmd(ui, logger, pubsub));
-    cli.register(new UIBuildCmd(ui));
+    cli.register(new StartCmd(ui, logger, pubsub), new UIBuildCmd(ui));
     return ui;
   }
 }

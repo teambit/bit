@@ -4,7 +4,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import graphqlHTTP from 'express-graphql';
+import { graphqlHTTP } from 'express-graphql';
 import getPort from 'get-port';
 import { execute, subscribe } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
@@ -38,6 +38,7 @@ export type GraphQLServerOptions = {
   graphiql?: boolean;
   remoteSchemas?: GraphQLServer[];
   subscriptionsPortRange?: number[];
+  onWsConnect?: Function;
 };
 
 export class GraphqlMain {
@@ -77,7 +78,6 @@ export class GraphqlMain {
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-
     const schema = mergeSchemas({
       schemas,
     });
@@ -100,7 +100,11 @@ export class GraphqlMain {
         customFormatErrorFn: (err) => {
           this.logger.error('graphql got an error during running the following query:', params);
           this.logger.error('graphql error ', err);
-          return err;
+          return Object.assign(err, {
+            ERR_CODE: err.originalError?.constructor?.name,
+            // @ts-ignore
+            HTTP_CODE: err.originalError?.code,
+          });
         },
         schema,
         rootValue: request,
@@ -111,7 +115,7 @@ export class GraphqlMain {
     const server = createServer(app);
     const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
     const subscriptionServerPort = await this.getPort(subscriptionsPort);
-    const { port } = this.createSubscription(options, subscriptionServerPort);
+    const { port } = await this.createSubscription(options, subscriptionServerPort);
     this.proxySubscription(server, port);
 
     return server;
@@ -156,7 +160,7 @@ export class GraphqlMain {
 
   /** create Subscription server with different port */
 
-  private createSubscription(options: GraphQLServerOptions, port: number) {
+  private async createSubscription(options: GraphQLServerOptions, port: number) {
     // Create WebSocket listener server
     const websocketServer = createServer((request, response) => {
       response.writeHead(404);
@@ -168,13 +172,20 @@ export class GraphqlMain {
       this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
     );
 
-    const schema = this.createRootModule(options.schemaSlot);
+    const localSchema = this.createRootModule(options.schemaSlot);
+    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+    const schema = mergeSchemas({
+      schemas,
+    });
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const subServer = new SubscriptionServer(
       {
         execute,
         subscribe,
-        schema: schema.schema,
+        schema,
+        onConnect: options.onWsConnect,
       },
       {
         server: websocketServer,
@@ -216,6 +227,7 @@ export class GraphqlMain {
         imports: moduleDeps,
         context: (session) => {
           return {
+            ...session,
             verb: session?.headers?.['x-verb'] || Verb.READ,
           };
         },

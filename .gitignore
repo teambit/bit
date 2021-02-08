@@ -42,6 +42,7 @@ jspm_packages
 
 # Output of 'npm pack'
 *.tgz
+!e2e/fixtures/**/*.tgz
 
 # Yarn Integrity file
 .yarn-Integrity
