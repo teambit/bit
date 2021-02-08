@@ -134,7 +134,7 @@ export class Component {
     if (!this.latest) return false;
     const latestTag = this.tags.byVersion(this.latest);
     if (!latestTag) return false;
-    if (this.head?.hash != latestTag?.hash) return true;
+    if (this.head?.hash !== latestTag?.hash) return true;
     return false;
   }
 

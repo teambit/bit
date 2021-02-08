@@ -45,7 +45,7 @@ export class TagMap extends Map<SemVer, Tag> {
     return Array.from(this.values());
   }
 
-  byVersion(version: string) {
+  byVersion(version: string): Tag | undefined {
     const versions = this.toArray().map((tag) => tag);
     return versions.find((tag) => tag.version.raw === version);
   }
