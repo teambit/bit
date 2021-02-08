@@ -4,6 +4,7 @@ import { Separator } from '@teambit/documenter.ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
+import { useSnaps } from './getlogs';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';
@@ -12,8 +13,9 @@ type ChangeLogPageProps = {} & HTMLAttributes<HTMLDivElement>;
 
 export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
-  const tags = component.tags.toArray();
-  if (!tags || tags.length === 0) {
+  const { snaps, loading } = useSnaps(component.id);
+
+  if (!snaps && !loading) {
     return (
       <EmptyBox
         title="This component is new and doesn’t have a changelog yet."
@@ -22,20 +24,30 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       />
     );
   }
-  const latestVersion = component.tags.getLatest();
+
+  if (!snaps) return null;
+
+  const latestVersion = snaps[0].tag;
   return (
     <div className={classNames(styles.changeLogPage, className)}>
       <H1 className={styles.title}>History</H1>
       <Separator className={styles.separator} />
-      {tags.reverse().map((tag, index) => {
+      {snaps.map((snap, index) => {
+        const author = {
+          displayName: snap.username,
+          email: snap.email,
+        };
+        const timeStamp = new Date(parseInt(snap.date)).toString();
+
         return (
           <VersionBlock
             key={index}
             componentId={component.id.fullName}
-            isLatest={latestVersion === tag.version.toString()}
-            {...tag.snap}
-            timestamp={tag.snap.timestamp.toString()}
-            version={tag.version.toString()}
+            isLatest={latestVersion === snap.tag}
+            message={snap.message}
+            author={author}
+            timestamp={timeStamp}
+            version={snap.tag}
           />
         );
       })}

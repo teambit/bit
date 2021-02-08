@@ -11,9 +11,7 @@ import styles from './version-block.module.scss';
 export type VersionBlockProps = {
   componentId: string;
   version: string;
-  hash: string;
   timestamp: string;
-  parents: string[];
   author?: Author;
   message: string;
   isLatest: boolean;
