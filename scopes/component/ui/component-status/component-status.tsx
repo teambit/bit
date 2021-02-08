@@ -1,12 +1,13 @@
 import classNames from 'classnames';
 import React from 'react';
 
-import type { StatusTypes } from '@teambit/base-ui.graph.tree.recursive-tree';
 import styles from './component-status.module.scss';
 
 export type ComponentStatusProps = {
   status?: StatusTypes;
 } & React.HTMLAttributes<HTMLDivElement>;
+
+export type StatusTypes = 'modified' | 'error' | 'new' | 'staged' | 'pending';
 
 export function ComponentStatus({ status, className, ...rest }: ComponentStatusProps) {
   if (!status) return null;
