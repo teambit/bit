@@ -1,37 +1,131 @@
-import { TsConfigSourceFile } from 'typescript';
-import { EnvsMain, EnvsAspect } from '@teambit/envs';
-import { ReactAspect, ReactMain } from '@teambit/react';
-import { ReactEnvState } from './state';
-import { useTypescript } from './extenders';
+import { merge } from 'lodash';
+import { UseExtenderFunction } from '@teambit/envs';
+import {
+  UseTypescript,
+  UseTypescriptParameters,
+  ExtendedTypescriptCompilerOptions,
+  emptyExtendedTsCompilerOptions,
+  TypeScriptCompilerOptions,
+} from '@teambit/typescript';
+import { UseBabel, UseBabelParameters, ExtendedBabelOptions, BabelCompilerOptions } from '@teambit/babel';
+import { UseMdx, UseMdxParameters, ExtendedMdxOptions, MdxCompilerOptions } from '@teambit/mdx';
+import { ReactEnvState, TsCompilerStateOptions, CompilerState, defaultReactState } from './state';
 
-/**
- * Example usage:
- * CompanyNameReact extends HarmonyReactExtender
- * Then override the getUsages function, to return a list of all the
- * UseXyz overrides you wish to apply to your environment
- */
+type ExtendedReactEnvState = {
+  compiler: {
+    extendedTsCompilerConfig?: ExtendedTypescriptCompilerOptions;
+    extendedBabelCompilerConfig?: ExtendedBabelOptions;
+    extendedMdxCompilerConfig?: ExtendedMdxOptions;
+  };
+};
 
-// const jest = require('jest');
-// const tsconfig = require('./typescript/tsconfig.json') as TsConfigSourceFile;
-// const webpackConfig = require('./webpack/webpack.config');
+export class ReactExtender {
+  state: ReactEnvState;
+  stateOverride: Partial<ExtendedReactEnvState> = {};
 
-export class HarmonyReactExtender {
-  constructor(private react: ReactMain) {}
+  constructor(initialState?: ReactEnvState) {
+    /**
+     * Initialise initial state for react environment - overridable via input to Extender
+     */
+    this.state = initialState ?? defaultReactState;
+  }
 
-  protected static getUsages = (): Partial<ReactEnvState>[] => {
-    return [
-      // Example useXyz implementation
-      //useTypescript({ overrideExistingConfig: true,  tsconfig})
-    ];
+  updateStateOverride = (overrideStatePartial: Partial<ExtendedReactEnvState>) => {
+    return merge(this.stateOverride, overrideStatePartial);
   };
 
-  static dependencies: any = [EnvsAspect, ReactAspect];
+  extend = (initialState?: ReactEnvState) => {
+    if (initialState) this.state = initialState;
+    return this;
+  };
 
-  static async provider([envs, react]: [EnvsMain, ReactMain]) {
-    const usages = this.getUsages();
-    const harmonyReactEnv = react.extend(...usages);
+  useTypescript: UseExtenderFunction = (params: UseTypescriptParameters): ReactExtender => {
+    const userDefinedTypeSriptConfig = UseTypescript(params.vendorConfigs, params.options, params.tsModule); // TODO work out how to pass the params as an object!
+    this.updateStateOverride(userDefinedTypeSriptConfig);
+    return this;
+  };
 
-    envs.registerEnv(harmonyReactEnv);
-    return new HarmonyReactExtender(react);
+  private CanUseTs(): Boolean {
+    if (!this.stateOverride.compiler?.extendedBabelCompilerConfig) return true;
+    return this.stateOverride.compiler?.extendedBabelCompilerConfig.useBabelAndTypescript ?? true;
+  }
+
+  useBabel: UseExtenderFunction = (params: UseBabelParameters): ReactExtender => {
+    const userDefinedBabelConfig = UseBabel(params.vendorConfig, params.options, params.module);
+    this.updateStateOverride(userDefinedBabelConfig);
+    return this;
+  };
+
+  useMdx: UseExtenderFunction = (params: UseMdxParameters): ReactExtender => {
+    const userDefinedMdxConfig = UseMdx(params.vendorConfig, params.options, params.module);
+    this.updateStateOverride(userDefinedMdxConfig);
+    return this;
+  };
+
+  buildCompilerState = (): CompilerState => {
+    if (!this.stateOverride.compiler) return this.state.compiler;
+    const babelCompilerOptions: BabelCompilerOptions | undefined = this.buildBabelCompilerState();
+    const typescriptCompilerOptions: TsCompilerStateOptions | undefined = this.buildTsCompilerState();
+    const mdxCompilerOptions: MdxCompilerOptions | undefined = this.buildMdxCompilerState();
+    return {
+      tsConfigs: typescriptCompilerOptions,
+      babelConfigs: babelCompilerOptions,
+      mdxConfigs: mdxCompilerOptions,
+    };
+  };
+
+  buildMdxCompilerState = (): MdxCompilerOptions | undefined => {
+    const extendedConfig = this.stateOverride.compiler?.extendedMdxCompilerConfig;
+    if (!extendedConfig) return undefined;
+    const { overrideExistingConfig, ...mdxCompileOptions } = extendedConfig;
+    const newMdxState: MdxCompilerOptions | undefined = overrideExistingConfig
+      ? (mdxCompileOptions as MdxCompilerOptions)
+      : merge(this.state.compiler.mdxConfigs, mdxCompileOptions as Partial<MdxCompilerOptions>);
+    return newMdxState;
+  };
+
+  buildBabelCompilerState = (): BabelCompilerOptions | undefined => {
+    const extendedConfig = this.stateOverride.compiler?.extendedBabelCompilerConfig;
+    if (!extendedConfig) return undefined;
+    const { overrideExistingConfig, ...babelCompileOptions } = extendedConfig;
+    const newBabelState: BabelCompilerOptions | undefined = overrideExistingConfig
+      ? (babelCompileOptions as BabelCompilerOptions)
+      : merge(this.state.compiler.babelConfigs, babelCompileOptions as BabelCompilerOptions);
+    return newBabelState;
+  };
+
+  buildTsCompilerState = (): TsCompilerStateOptions | undefined => {
+    const extendedConfig = this.stateOverride.compiler?.extendedTsCompilerConfig;
+    if (!this.CanUseTs() || !extendedConfig) return undefined;
+    const { tsWorkspaceOptions, tsBuildOptions, tsModule } = extendedConfig;
+    const { overrideExistingConfig: overrideWsOptions, ...wsCompilerOptions } = tsWorkspaceOptions;
+    const { overrideExistingConfig: overrideBuildOptions, ...buildCompilerOptions } = tsBuildOptions;
+    const newWsCompilerState: TypeScriptCompilerOptions = tsWorkspaceOptions.overrideExistingConfig
+      ? (wsCompilerOptions as TypeScriptCompilerOptions)
+      : merge(this.state.compiler.tsConfigs?.typeScriptWsConfigs, wsCompilerOptions as TypeScriptCompilerOptions);
+    const newBuildCompilerState: TypeScriptCompilerOptions = tsBuildOptions.overrideExistingConfig
+      ? (buildCompilerOptions as TypeScriptCompilerOptions)
+      : merge(this.state.compiler.tsConfigs?.typeScriptBuildConfigs, buildCompilerOptions as TypeScriptCompilerOptions);
+
+    const newTsCompilerState: TsCompilerStateOptions = {
+      typeScriptWsConfigs: newWsCompilerState,
+      typeScriptBuildConfigs: newBuildCompilerState,
+      tsModule,
+    };
+
+    return newTsCompilerState;
+  };
+
+  private buildState(): ReactEnvState {
+    // logic of creating state from overrides
+
+    // Compiler
+    return {
+      compiler: this.buildCompilerState(),
+    };
+  }
+
+  getState(): ReactEnvState {
+    return this.buildState();
   }
 }
