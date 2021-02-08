@@ -12,3 +12,30 @@ export type TypeScriptCompilerOptions = {
    */
   types: string[];
 } & Partial<CompilerOptions>;
+
+export type ExtenderOptions = {
+  /**
+   * If set, overrides existing typescript config
+   */
+  overrideExistingConfig?: Boolean;
+};
+
+export type SingleExtendedTypescriptCompilerOption = {} & Partial<TypeScriptCompilerOptions> & ExtenderOptions;
+
+export type ExtendedTypescriptCompilerOptions = {
+  tsWorkspaceOptions: SingleExtendedTypescriptCompilerOption;
+  tsBuildOptions: SingleExtendedTypescriptCompilerOption;
+  tsModule: any;
+};
+
+export const emptySingleExtendedTsCompilerOptions: SingleExtendedTypescriptCompilerOption = {
+  overrideExistingConfig: undefined,
+  tsconfig: undefined,
+  types: undefined,
+};
+
+export const emptyExtendedTsCompilerOptions: ExtendedTypescriptCompilerOptions = {
+  tsWorkspaceOptions: emptySingleExtendedTsCompilerOptions,
+  tsBuildOptions: emptySingleExtendedTsCompilerOptions,
+  tsModule: undefined,
+};
