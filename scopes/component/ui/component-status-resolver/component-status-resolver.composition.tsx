@@ -1,15 +1,7 @@
 import React from 'react';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
-import { ComponentID } from '@teambit/component';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import { ComponentStatusResolver } from './component-status-resolver';
-
-let id = 0;
-const getCompId = () => {
-  id += 1;
-  // @ts-ignore
-  return new ComponentID({ name: `ui/component-status-resolver-${id}` }, 'teambit.component');
-};
 
 let modifyInfo = { hasModifiedFiles: false, hasModifiedDependencies: false };
 let isNew = false;
@@ -37,7 +29,7 @@ export const ComponentStatusResolverWithModifiedDependencies = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} />
+      <ComponentStatusResolver status={compStatus} />
     </ThemeCompositions>
   );
 };
@@ -48,7 +40,7 @@ export const ComponentStatusResolverWithModifiedFiles = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} />
+      <ComponentStatusResolver status={compStatus} />
     </ThemeCompositions>
   );
 };
@@ -59,7 +51,7 @@ export const ComponentStatusResolverWithNewStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} />
+      <ComponentStatusResolver status={compStatus} />
     </ThemeCompositions>
   );
 };
@@ -70,7 +62,7 @@ export const ComponentStatusResolverWithStagedStatus = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} />
+      <ComponentStatusResolver status={compStatus} />
     </ThemeCompositions>
   );
 };
@@ -81,7 +73,7 @@ export const ComponentStatusResolverWithNewStatusAndIssue = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} issuesCount={1} />
+      <ComponentStatusResolver status={compStatus} issuesCount={1} />
     </ThemeCompositions>
   );
 };
@@ -92,7 +84,7 @@ export const ComponentStatusResolverWithStagedStatusAndIssue = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} issuesCount={1} />
+      <ComponentStatusResolver status={compStatus} issuesCount={1} />
     </ThemeCompositions>
   );
 };
@@ -104,7 +96,7 @@ export const ComponentStatusResolverWithModifiedStatusAndIssue = () => {
   const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
   return (
     <ThemeCompositions style={style}>
-      <ComponentStatusResolver id={getCompId()} status={compStatus} issuesCount={1} />
+      <ComponentStatusResolver status={compStatus} issuesCount={1} />
     </ThemeCompositions>
   );
 };
