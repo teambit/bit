@@ -254,7 +254,7 @@ export class Workspace implements ComponentFactory {
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
     const hasModifiedDependencies = await this.hasModifiedDependencies(component);
-    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies, component.isOutdated());
   }
 
   /**

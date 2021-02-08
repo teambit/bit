@@ -38,12 +38,17 @@ export class ComponentStatus {
     readonly isInScope: boolean,
 
     /**
+     * does the component is outdated (pending for update).
+     */
+    readonly isOutdated: boolean,
+
+    /**
      *  the component is not authored and not imported.
      */
     readonly nested?: boolean
   ) {}
 
-  static fromLegacy(status: LegacyComponentStatus, hasModifiedDependencies: boolean) {
+  static fromLegacy(status: LegacyComponentStatus, hasModifiedDependencies: boolean, isOutdated: boolean) {
     const modify: ModifyInfo = {
       hasModifiedFiles: !!status.modified,
       hasModifiedDependencies,
@@ -55,6 +60,7 @@ export class ComponentStatus {
       !!status.staged,
       !status.notExist,
       !status.missingFromScope,
+      isOutdated,
       !!status.nested
     );
   }

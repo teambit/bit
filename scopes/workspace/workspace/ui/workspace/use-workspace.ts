@@ -18,6 +18,7 @@ const wcComponentFields = gql`
     description
     issuesCount
     status {
+      isOutdated
       isNew
       isInScope
       isStaged
