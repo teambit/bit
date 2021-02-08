@@ -10,7 +10,7 @@ export class ChangelogSection implements Section {
   };
   navigationLink = {
     href: '~changelog',
-    children: <MenuWidgetIcon icon="changelog" id="changelogIcon" tooltipContent="Change log" />,
+    children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,
   };
   order = 30;
 }

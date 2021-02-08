@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { forwardRef } from 'react';
 import { ComponentModel } from '@teambit/component';
 
 export type EnvIconProps = { component: ComponentModel } & React.HTMLAttributes<HTMLImageElement>;
 
-export function EnvIcon({ component, ...rest }: EnvIconProps) {
-  if (!component || !component.environment?.icon) return null;
+export const EnvIcon = forwardRef<HTMLImageElement, EnvIconProps>(function EnvIcon(
+  { component, ...rest }: EnvIconProps,
+  ref
+) {
+  if (!component || !component.environment?.icon) return <span />;
 
-  return <img {...rest} src={component.environment?.icon} alt={component.environment.id} />;
-}
+  return <img ref={ref} {...rest} src={component.environment?.icon} alt={component.environment.id} />;
+});
