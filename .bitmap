@@ -701,5 +701,10 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/workspace"
     },
+    "ui/tooltip": {
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/tooltip",
+        "exported": false
+    },
     "version": "14.8.9-dev.285"
 }
