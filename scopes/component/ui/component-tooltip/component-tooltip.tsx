@@ -12,15 +12,16 @@ export type StatusTooltipProps = {
 // TODO - how do I get the status type without tying this to workspace?
 export function StatusTooltip({ status, name, issuesCount }: any) {
   if (!status) return null;
-  const { isNew, isStaged, modifyInfo = {} } = status;
+  const { isNew, isStaged, isOutdated, modifyInfo = {} } = status;
   const { hasModifiedDependencies, hasModifiedFiles } = modifyInfo;
-  if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles) return null;
+  if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles && !isOutdated) return null;
 
   return (
     <div className="--ssr-hidden">
       <ReactTooltip place="right" id={name} effect="solid">
         <ul className={styles.list}>
-          {isNew && <li>New component</li>}
+          {isOutdated && <li>Pending for update</li>}
+          {isNew && !isOutdated && <li>New component</li>}
           {isStaged && <li>Staged component</li>}
           {hasModifiedFiles && <li>Modified files</li>}
           {hasModifiedDependencies && <li>Modified dependencies</li>}
