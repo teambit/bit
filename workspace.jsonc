@@ -187,6 +187,7 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
+        // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
@@ -477,7 +478,9 @@
             "browserslist": "^4",
             "reflect-metadata": "^0.1.13",
             "mz": "^2.7.0",
-            "react-refresh": "^0.8.2"
+            "react-refresh": "^0.8.2",
+            // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
+            "graceful-fs": "4.2.4"
           },
           "devDependencies": {
             "@types/react": "^16.9.43",
