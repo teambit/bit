@@ -12,13 +12,14 @@ export type StatusTooltipProps = {
 export function StatusTooltip({ status, issuesCount, children }: any) {
   if (!status) return children;
 
-  const { isNew, isStaged, modifyInfo = {} } = status;
+  const { isNew, isStaged, isOutdated, modifyInfo = {} } = status;
   const { hasModifiedDependencies, hasModifiedFiles } = modifyInfo;
-  if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles) return null;
+  if (!isNew && !isStaged && !hasModifiedDependencies && !hasModifiedFiles && !isOutdated) return null;
 
   const content = (
     <ul className={styles.list}>
-      {isNew && <li>New component</li>}
+      {isOutdated && <li>Pending for update</li>}
+      {isNew && !isOutdated && <li>New component</li>}
       {isStaged && <li>Staged component</li>}
       {hasModifiedFiles && <li>Modified files</li>}
       {hasModifiedDependencies && <li>Modified dependencies</li>}
