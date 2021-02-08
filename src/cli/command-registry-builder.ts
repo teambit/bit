@@ -60,6 +60,7 @@ import Untag from './commands/public-cmds/untag-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import RunAction from './commands/private-cmds/run-action.cmd';
+import Dependencies from './commands/public-cmds/dependencies-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
   return new CommandRegistry(
@@ -89,6 +90,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new CatComponent(),
       new CatLane(),
       new Dependents(),
+      new Dependencies(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

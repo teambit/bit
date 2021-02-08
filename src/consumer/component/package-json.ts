@@ -1,5 +1,4 @@
 import fs from 'fs-extra';
-import parents from 'parents';
 import path from 'path';
 import R from 'ramda';
 
@@ -87,50 +86,6 @@ export default class PackageJson {
   static hasExisting(componentRootFolder: string): boolean {
     const packageJsonPath = composePath(componentRootFolder);
     return fs.pathExistsSync(packageJsonPath);
-  }
-
-  /**
-   * Taken from this package (with some minor changes):
-   * https://www.npmjs.com/package/find-package
-   * https://github.com/jalba/find-package
-   */
-  static findPath(dir) {
-    const parentsArr = parents(dir);
-    let i;
-    // eslint-disable-next-line
-    for (i = 0; i < parentsArr.length; i++) {
-      const config = `${parentsArr[i]}/package.json`;
-      try {
-        if (fs.lstatSync(config).isFile()) {
-          return config;
-        }
-      } catch (e) {} // eslint-disable-line
-    }
-    return null;
-  }
-
-  /**
-   * Taken from this package (with some minor changes):
-   * https://www.npmjs.com/package/find-package
-   * https://github.com/jalba/find-package
-   *
-   */
-  static findPackage(dir, addPaths?) {
-    const pathToConfig = this.findPath(dir);
-    let configJSON: any = null;
-    // eslint-disable-next-line import/no-dynamic-require, global-require
-    if (pathToConfig !== null) configJSON = require(path.resolve(pathToConfig));
-    if (configJSON && addPaths) {
-      configJSON.paths = {
-        // @ts-ignore
-        relative: path.relative(dir, pathToConfig),
-        absolute: pathToConfig,
-      };
-    } else if (configJSON !== null) {
-      delete configJSON.paths;
-    }
-
-    return configJSON;
   }
 
   /*
