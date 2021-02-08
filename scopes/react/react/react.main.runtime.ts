@@ -18,7 +18,6 @@ import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { BabelMain } from '@teambit/babel';
 import { BabelAspect } from '@teambit/babel';
-import { MDXCompilerOpts } from '@teambit/mdx';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { MDXAspect, MDXMain } from '@teambit/mdx';
@@ -33,7 +32,7 @@ import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
 import { ReactEnvState } from './state';
-import { useTypescript } from './extenders';
+import { ReactExtender } from './react.extender';
 
 type ReactDeps = [
   EnvsMain,
@@ -96,10 +95,13 @@ export class ReactMain {
 
   /**
    * Used to override environment configs
-   * @param statePartials number of partial state objects to be merged with default state
+   * @param {ReactEnvState} initialState optional initial state to override environment's default states
    */
-  extend(...statePartials: Partial<ReactEnvState>[]): Environment {
-    const newState = merge(this.reactEnv.getState(), ...statePartials);
+  extend(initialState?: ReactEnvState): ReactExtender {
+    return new ReactExtender(initialState);
+  }
+
+  override(newState: ReactEnvState): Environment {
     const overrideState = this.envs.override({
       getState: () => {
         return newState;
