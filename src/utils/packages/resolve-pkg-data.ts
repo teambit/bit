@@ -1,15 +1,19 @@
 import R from 'ramda';
-
+import path from 'path';
+import readPkgUp from 'read-pkg-up';
 import { BitId } from '../../bit-id';
+import { PACKAGE_JSON } from '../../constants';
 import PackageJson from '../../consumer/component/package-json';
-import { PathLinuxAbsolute } from '../path';
+import { PathLinuxAbsolute, PathOsBased } from '../path';
 import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 
 export interface ResolvedPackageData {
-  fullPath: PathLinuxAbsolute;
+  fullPath: PathLinuxAbsolute; // package path
+  packageJsonPath?: PathOsBased;
+  dependentPackageJsonPath?: PathOsBased;
   name: string; // package name
-  concreteVersion?: string; // Version from the package.json of the package itself
-  versionUsedByDependent?: string; // Version from the dependent package.json
+  concreteVersion?: string; // version from the package.json of the package itself
+  versionUsedByDependent?: string; // version from the dependent package.json
   componentId?: BitId; // add the component id in case it's a bit component
 }
 
@@ -41,30 +45,34 @@ export function resolvePackageData(
   return packageData;
 }
 
-function enrichDataFromDependent(packageData: ResolvedPackageData, dependentDir: string): ResolvedPackageData {
+function enrichDataFromDependent(packageData: ResolvedPackageData, dependentDir: string) {
   const NODE_MODULES = 'node_modules';
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const packageJsonInfo = PackageJson.findPackage(dependentDir);
-  if (packageJsonInfo) {
-    const packageFullPath = packageData.fullPath;
-    // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
-    const packageRelativePath = packageFullPath.substring(
-      packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1,
-      packageFullPath.length
-    );
-
-    const packageName = resolvePackageNameByPath(packageRelativePath);
-    const packageNameNormalized = packageName.replace('\\', '/');
-    const packageVersion =
-      R.path(['dependencies', packageNameNormalized], packageJsonInfo) ||
-      R.path(['devDependencies', packageNameNormalized], packageJsonInfo) ||
-      R.path(['peerDependencies', packageNameNormalized], packageJsonInfo);
-    if (packageVersion) {
-      packageData.name = packageNameNormalized;
-      packageData.versionUsedByDependent = packageVersion;
-    }
+  // @todo: currently, the "normalize" makes sure that the package.json is valid, however, due to a
+  // bug, when importing snaps not from hub, it saves them in .dependencies and generate pkg.json
+  // with version that has the hash, which is invalid. later, this .dependencies will be gone.
+  const packageJsonInfo = readPkgUp.sync({ cwd: dependentDir, normalize: false });
+  if (!packageJsonInfo) {
+    return;
   }
-  return packageData;
+  const dependentPackageJson = packageJsonInfo.packageJson;
+  const packageFullPath = packageData.fullPath;
+  // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
+  const packageRelativePath = packageFullPath.substring(
+    packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1,
+    packageFullPath.length
+  );
+
+  const packageName = resolvePackageNameByPath(packageRelativePath);
+  const packageNameNormalized = packageName.replace('\\', '/');
+  const packageVersion =
+    R.path(['dependencies', packageNameNormalized], dependentPackageJson) ||
+    R.path(['devDependencies', packageNameNormalized], dependentPackageJson) ||
+    R.path(['peerDependencies', packageNameNormalized], dependentPackageJson);
+  if (packageVersion) {
+    packageData.dependentPackageJsonPath = packageJsonInfo.path;
+    packageData.name = packageNameNormalized;
+    packageData.versionUsedByDependent = packageVersion;
+  }
 }
 
 function enrichDataFromDependency(packageData: ResolvedPackageData) {
@@ -79,13 +87,12 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const packageInfo = PackageJson.loadSync(packageDir);
 
-  // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
-  // or when using custom-module-resolution it may be empty
-  // the version can be empty when creating the package.json for author, that's fine, we still
-  // need the component-id in this case.
+  // the version can be empty when creating the package.json for author, or when using custom-module-resolution
+  // that's fine, we still need the component-id in this case.
   if (!packageInfo || !packageInfo.name) {
     return;
   }
+  packageData.packageJsonPath = path.join(packageDir, PACKAGE_JSON);
   packageData.name = packageInfo.name;
   packageData.concreteVersion = packageInfo.version;
   if (packageInfo.componentId) {
