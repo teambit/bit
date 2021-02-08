@@ -238,11 +238,6 @@ export class Workspace implements ComponentFactory {
     return false;
   }
 
-  async isOutdated(component: Component) {
-    if (component.id.version != component.latest) return true;
-    return false;
-  }
-
   /**
    * get Component issues
    */
@@ -258,8 +253,7 @@ export class Workspace implements ComponentFactory {
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
     const hasModifiedDependencies = await this.hasModifiedDependencies(component);
-    const isOutdated = await this.isOutdated(component);
-    return ComponentStatus.fromLegacy(status, hasModifiedDependencies, isOutdated);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies, component.isOutdated());
   }
 
   /**

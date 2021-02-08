@@ -128,6 +128,17 @@ export class Component {
   }
 
   /**
+   * is component isOutdated
+   */
+  isOutdated(): boolean {
+    if (!this.latest) return false;
+    const latestTag = this.tags.byVersion(this.latest);
+    if (!latestTag) return false;
+    if (this.head?.hash != latestTag?.hash) return true;
+    return false;
+  }
+
+  /**
    * determines whether this component is new.
    */
   isNew(): Promise<boolean> {
