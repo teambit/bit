@@ -487,6 +487,8 @@ jobs:
             - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/yarn.lock
 
   bit_build:
     resource_class: large
