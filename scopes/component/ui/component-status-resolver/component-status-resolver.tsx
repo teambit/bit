@@ -24,10 +24,11 @@ export function ComponentStatusResolver({ status, issuesCount = 0 }: ComponentSt
             <span>{issuesCount}</span>,
           </div>
         )}
-        {status.isNew && <ComponentStatus className={styles[colorOverride]} status="new" />}
+        {status.isNew && !status.isOutdated && <ComponentStatus className={styles[colorOverride]} status="new" />}
         {isModified && !status.isNew && <ComponentStatus className={styles[colorOverride]} status="modified" />}
         {isModified && status.isStaged && <span className={styles[colorOverride]}>,</span>}
         {status.isStaged && <ComponentStatus className={styles[colorOverride]} status="staged" />}
+        {status.isOutdated && <ComponentStatus className={styles[colorOverride]} status="pending" />}
       </div>
     </StatusTooltip>
   );
