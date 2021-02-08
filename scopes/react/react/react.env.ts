@@ -10,7 +10,7 @@ import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
-import { TypescriptMain } from '@teambit/typescript';
+import { TypescriptMain, TypeScriptCompilerOptions } from '@teambit/typescript';
 import { BabelMain, BabelCompilerOptions } from '@teambit/babel';
 import { WebpackMain } from '@teambit/webpack';
 import { MultiCompilerMain, MultiCompiler } from '@teambit/multi-compiler';
@@ -25,25 +25,16 @@ import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
-import { ExtendedTypescriptCompilerOptions } from './typescript/types';
-import { ReactEnvState } from './state';
+import { ReactEnvState, defaultReactState } from './state';
 
 export const AspectEnvType = 'react';
+
+// TODO move to state and remove from here
 const jestM = require('jest');
+
+// TODO remove these when getTsConfig has been deleted
 const defaultWsTsConfig = require('./typescript/tsconfig.json');
 const defaultBuildTsConfig = require('./typescript/tsconfig.build.json');
-const defaultTypes = ['./typescript/style.d.ts', './typescript/asset.d.ts'];
-
-const defaultState: ReactEnvState = {
-  compiler: {
-    typeScriptConfigs: {
-      tsWorkspaceOptions: { tsconfig: defaultWsTsConfig, types: [] },
-      tsBuildOptions: { tsconfig: defaultBuildTsConfig, types: [] },
-      tsModule: ts,
-    },
-  },
-};
-
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
@@ -99,85 +90,60 @@ export class ReactEnv implements Environment {
   ) {}
 
   getState(): ReactEnvState {
-    return defaultState;
+    return defaultReactState;
   }
 
-  private isTsInUse(): Boolean {
-    const { babelConfigs } = this.getState().compiler;
-    return !babelConfigs?.babelOptions || !!babelConfigs.babelOptions.useBabelAndTypescript;
+  deprecatedGetTsConfig(defaultConfig: TsConfigSourceFile, targetConfig?: TsConfigSourceFile): TsConfigSourceFile {
+    return targetConfig ? merge({}, defaultConfig, targetConfig) : defaultConfig;
   }
 
-  getTsConfig(defaultConfig: TsConfigSourceFile, tsOptions: ExtendedTypescriptCompilerOptions): TsConfigSourceFile {
-    if (!tsOptions?.tsconfig) return defaultConfig;
-    const { tsconfig, overrideExistingConfig } = tsOptions;
-    return overrideExistingConfig ? tsconfig : merge({}, defaultConfig, tsconfig);
-  }
-
-  /**
-   * @param options of type UseBabelOptions, which contains the base BabelCompilerOptions, plus
-   * option to overrideExistingConfig with the provided BabelTransformOptions
-   */
-  private getBabelCompiler(): Compiler | undefined {
-    const babelOptions = this.getState().compiler.babelConfigs?.babelOptions;
+  getBabelCompiler(): Compiler | undefined {
+    const babelOptions = this.getState().compiler.babelConfigs;
     if (!babelOptions?.babelTransformOptions) return undefined;
-    return this.babelAspect.createCompiler(babelOptions as BabelCompilerOptions);
+    return this.babelAspect.createCompiler(babelOptions);
   }
 
-  private getMdxCompiler(): Compiler | undefined {
-    return this.getState().compiler.mdxConfigs ? this.mdx.createCompiler() : undefined;
+  getMdxCompiler(): Compiler | undefined {
+    const { mdxConfigs } = this.getState().compiler;
+    return mdxConfigs ? this.mdx.createCompiler(mdxConfigs) : undefined;
   }
 
   getTsCompilers(): (Compiler | undefined)[] {
-    const { typeScriptConfigs } = this.getState().compiler;
-    if (!typeScriptConfigs || !this.isTsInUse()) return [];
     return [
       this.getTsBuildCompiler(),
-      //this.getTsWorkspaceCompiler() // TODO check if/when this should actually be created
+      //this.getTsWorkspaceCompiler(), // TODO check if/when this should actually be created
     ];
   }
 
   getTsBuildCompiler(): Compiler | undefined {
-    const buildOptions = this.getState().compiler.typeScriptConfigs?.tsBuildOptions;
-    if (!buildOptions) return undefined;
-
-    return this.createTsCompiler(defaultBuildTsConfig, buildOptions);
+    const buildOptions = this.getState().compiler.tsConfigs?.typeScriptBuildConfigs;
+    return buildOptions ? this.createTsCompiler(buildOptions) : undefined;
   }
 
   getTsWorkspaceCompiler(): Compiler | undefined {
-    const wsOptions = this.getState().compiler.typeScriptConfigs?.tsWorkspaceOptions;
-    if (!wsOptions) return undefined;
-
-    return this.createTsCompiler(defaultWsTsConfig, wsOptions);
+    const wsOptions = this.getState().compiler.tsConfigs?.typeScriptWsConfigs;
+    return wsOptions ? this.createTsCompiler(wsOptions) : undefined;
   }
 
-  createTsCompiler(
-    defaultConfig: TsConfigSourceFile,
-    tsOptions?: ExtendedTypescriptCompilerOptions
-  ): Compiler | undefined {
+  createTsCompiler(tsOptions?: TypeScriptCompilerOptions): Compiler | undefined {
     if (!tsOptions?.tsconfig) return undefined;
-    let { types: userTypes, tsconfig, overrideExistingConfig, ...compilerOptions } = tsOptions;
-    const mergedTsConfig = this.getTsConfig(defaultConfig, tsOptions);
+
+    let { types } = tsOptions;
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
-    userTypes = userTypes || [];
-    const mergedTypes = uniq([...userTypes, ...defaultTypes]).map((path) => resolve(pathToSource, path));
-    const tsModule = this.getState().compiler.typeScriptConfigs?.tsModule;
+    const resolvedTypes = uniq(types).map((path) => resolve(pathToSource, path));
+    const tsModule = this.getState().compiler.tsConfigs?.tsModule;
     return this.tsAspect.createCompiler(
       {
-        ...compilerOptions,
-        tsconfig: mergedTsConfig,
-        types: mergedTypes,
+        ...tsOptions,
+        types: resolvedTypes,
       },
       // @ts-ignore
       tsModule
     );
   }
 
-  createMdxCompiler(targetConfig?: any) {
-    return this.mdx.createCompiler({ opts: targetConfig });
-  }
-
   deprecatedCreateTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    const tsconfig = this.getTsConfig(defaultWsTsConfig, { tsconfig: targetConfig, types: [] });
+    const tsconfig = this.deprecatedGetTsConfig(defaultWsTsConfig, targetConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     return this.tsAspect.createCompiler(
       {
@@ -270,8 +236,8 @@ export class ReactEnv implements Environment {
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(defaultConfig: TsConfigSourceFile, tsOptions: ExtendedTypescriptCompilerOptions) {
-    return this.tsAspect.createSchemaExtractor(this.getTsConfig(defaultConfig, tsOptions));
+  getSchemaExtractor(defaultConfig: TsConfigSourceFile, targetConfig: TsConfigSourceFile) {
+    return this.tsAspect.createSchemaExtractor(this.deprecatedGetTsConfig(defaultConfig, targetConfig));
   }
 
   /**
@@ -400,7 +366,7 @@ export class ReactEnv implements Environment {
    */
   private deprecatedGetCompilerTask(tsconfig?: any) {
     // const targetConfig = this.getBuildTsConfig(tsconfig);
-    const targetConfig = this.getTsConfig(defaultBuildTsConfig, { tsconfig, types: [] });
+    const targetConfig = this.deprecatedGetTsConfig(defaultBuildTsConfig, tsconfig);
     return this.compiler.createTask('MultiCompiler', this.deprecatedGetCompiler(targetConfig));
   }
 
