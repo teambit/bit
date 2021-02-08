@@ -1,4 +1,3 @@
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 import findUp from 'find-up';
 import fs from 'fs';
 import gitignore from 'parse-gitignore';

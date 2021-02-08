@@ -62,11 +62,10 @@ function groupDependencyList(
       resultGroups.unidentifiedPackages.push(dependencyPath);
       return;
     }
-    const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
+
     // If the package is a component add it to the components (bits) list
     // @todo: currently, for author, the package.json doesn't have any version.
     // we might change this decision later. see https://github.com/teambit/bit/pull/2924
-    // if (!version) throw new Error(`unable to find the version for a package ${packagePath}`);
     if (resolvedPackage.componentId) {
       resultGroups.bits.push(resolvedPackage);
       return;
@@ -75,6 +74,7 @@ function groupDependencyList(
       resultGroups.bits.push(resolvedPackage);
       return;
     }
+    const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
     const packageWithVersion = {
       [resolvedPackage.name]: version,
     };
