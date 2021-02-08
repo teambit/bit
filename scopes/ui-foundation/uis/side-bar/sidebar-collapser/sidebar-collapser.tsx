@@ -1,16 +1,12 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import classNames from 'classnames';
 import React, { ReactNode } from 'react';
-import ReactTooltip from 'react-tooltip';
+import { Tooltip } from '@teambit/ui.tooltip';
 
 import styles from './sidebar-collapser.module.scss';
 
 type CollapserProps = {
   isOpen: boolean;
-  /**
-   * the id used for the tooltip [optional]
-   */
-  id?: string;
   /**
    * content to be placed in the tooltip
    */
@@ -23,7 +19,6 @@ type CollapserProps = {
 
 export function Collapser({
   isOpen,
-  id,
   tooltipContent,
   placement = 'right',
   onClick,
@@ -32,23 +27,18 @@ export function Collapser({
 }: CollapserProps) {
   const icon = `${placement}-rounded-corners`;
   return (
-    <div
-      {...rest}
-      onClick={onClick}
-      className={classNames(styles.collapser, styles[placement], isOpen && styles.open, className)}
-      data-tip=""
-      data-for={id}
-    >
-      <div className={styles.circle}>
-        <div>
-          <Icon of={icon} />
+    <Tooltip content={tooltipContent}>
+      <div
+        {...rest}
+        onClick={onClick}
+        className={classNames(styles.collapser, styles[placement], isOpen && styles.open, className)}
+      >
+        <div className={styles.circle}>
+          <div>
+            <Icon of={icon} />
+          </div>
         </div>
       </div>
-      <div className="--ssr-hidden">
-        <ReactTooltip place="top" id={id} effect="solid">
-          {tooltipContent}
-        </ReactTooltip>
-      </div>
-    </div>
+    </Tooltip>
   );
 }

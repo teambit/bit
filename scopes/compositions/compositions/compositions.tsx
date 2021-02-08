@@ -47,7 +47,6 @@ export function Compositions() {
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
-          id="compositionsCollapser"
           placement="left"
           isOpen={isSidebarOpen}
           onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag

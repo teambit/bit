@@ -58,7 +58,6 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
           <Pane className={styles.sidebar}>{sidebar}</Pane>
           <HoverSplitter className={styles.splitter}>
             <Collapser
-              id="workspaceSidebarCollapser"
               isOpen={isSidebarOpen}
               onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
               onClick={handleSidebarToggle}
