@@ -1,50 +1,35 @@
-import { ExtendedBabelOptions, emptyExtendedBabelOptions } from './babel/types';
-import { ExtendedTypescriptCompilerOptions, emptyExtendedTsCompilerOptions } from './typescript/types';
-import { ExtendedMdxOptions, emptyExtendedMdxOption } from './mdx/types';
+import ts from 'typescript';
+import { BabelCompilerOptions } from '@teambit/babel';
+import { TypeScriptCompilerOptions } from '@teambit/typescript';
+import { MdxCompilerOptions } from '@teambit/mdx';
 
-export type TypescriptCompilerConfigs = {
-  tsWorkspaceOptions: ExtendedTypescriptCompilerOptions;
-  tsBuildOptions: ExtendedTypescriptCompilerOptions;
-  /**
-   * User defined ts module, to set the ts version used by the environment
-   */
-  tsModule: any;
+const defaultWsTsConfig = require('./typescript/tsconfig.json');
+const defaultBuildTsConfig = require('./typescript/tsconfig.build.json');
+const defaultTypes = ['./typescript/style.d.ts', './typescript/asset.d.ts'];
+
+export const defaultReactState: ReactEnvState = {
+  compiler: {
+    tsConfigs: {
+      typeScriptWsConfigs: { tsconfig: defaultWsTsConfig, types: defaultTypes },
+      typeScriptBuildConfigs: { tsconfig: defaultBuildTsConfig, types: defaultTypes },
+      tsModule: ts,
+    },
+  },
 };
 
-export const emptyTypescriptCompilerConfigs: TypescriptCompilerConfigs = {
-  tsWorkspaceOptions: emptyExtendedTsCompilerOptions,
-  tsBuildOptions: emptyExtendedTsCompilerOptions,
-  tsModule: undefined,
-};
-
-export type BabelCompilerConfigs = {
-  babelOptions: ExtendedBabelOptions;
-  /**
-   * User defined @babel/core module, to set the @babel/core version used by the environment
-   */
-  babelModule: any;
-};
-
-export const emptyBabelCompilerConfigs: BabelCompilerConfigs = {
-  babelOptions: emptyExtendedBabelOptions,
-  babelModule: undefined,
-};
-
-export type MdxCompilerConfigs = {
-  mdxOptions: ExtendedMdxOptions;
-};
-
-export const emptyMdxCompilerConfigs: MdxCompilerConfigs = {
-  mdxOptions: emptyExtendedMdxOption,
+export type TsCompilerStateOptions = {
+  typeScriptWsConfigs?: TypeScriptCompilerOptions;
+  typeScriptBuildConfigs?: TypeScriptCompilerOptions;
+  tsModule?: any;
 };
 
 export type CompilerState = {
   /**
    * Various compiler configs
    */
-  typeScriptConfigs?: TypescriptCompilerConfigs;
-  babelConfigs?: BabelCompilerConfigs;
-  mdxConfigs?: MdxCompilerConfigs;
+  tsConfigs?: TsCompilerStateOptions;
+  babelConfigs?: BabelCompilerOptions;
+  mdxConfigs?: MdxCompilerOptions;
 };
 
 export type TesterState = {};
@@ -59,7 +44,12 @@ export type ReactEnvState = {
 
 export const emptyState: ReactEnvState = {
   compiler: {
-    typeScriptConfigs: emptyTypescriptCompilerConfigs,
-    babelConfigs: emptyBabelCompilerConfigs,
+    tsConfigs: {
+      typeScriptWsConfigs: undefined,
+      typeScriptBuildConfigs: undefined,
+      tsModule: undefined,
+    },
+    babelConfigs: undefined,
+    mdxConfigs: undefined,
   },
 };
