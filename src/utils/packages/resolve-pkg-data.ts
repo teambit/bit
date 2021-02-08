@@ -47,7 +47,10 @@ export function resolvePackageData(
 
 function enrichDataFromDependent(packageData: ResolvedPackageData, dependentDir: string) {
   const NODE_MODULES = 'node_modules';
-  const packageJsonInfo = readPkgUp.sync({ cwd: dependentDir });
+  // @todo: currently, the "normalize" makes sure that the package.json is valid, however, due to a
+  // bug, when importing snaps not from hub, it saves them in .dependencies and generate pkg.json
+  // with version that has the hash, which is invalid. later, this .dependencies will be gone.
+  const packageJsonInfo = readPkgUp.sync({ cwd: dependentDir, normalize: false });
   if (!packageJsonInfo) {
     return;
   }
