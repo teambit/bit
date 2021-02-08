@@ -44,7 +44,8 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
 export function calculatePipelineOrder(
   taskSlot: TaskSlot,
   envs: EnvDefinition[],
-  pipeNameOnEnv = 'getBuildPipe'
+  pipeNameOnEnv = 'getBuildPipe',
+  tasks: string[] = []
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
@@ -75,6 +76,11 @@ export function calculatePipelineOrder(
 
   const tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
+  if (tasks.length) {
+    return new TasksQueue(
+      ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
+    );
+  }
   return tasksQueue;
 }
 
