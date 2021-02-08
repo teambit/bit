@@ -19,6 +19,12 @@ type ExtendedReactEnvState = {
   };
 };
 
+/**
+ * Extender function for the react environment
+ * All functions return the Extender object to enable chaining any Use functions you wish to use
+ * At the end of the chain, always call getState() in order to return the final state that can be
+ * consumed by the environment
+ */
 export class ReactExtender {
   state: ReactEnvState;
   stateOverride: Partial<ExtendedReactEnvState> = {};
@@ -32,11 +38,6 @@ export class ReactExtender {
 
   updateStateOverride = (overrideStatePartial: Partial<ExtendedReactEnvState>) => {
     return merge(this.stateOverride, overrideStatePartial);
-  };
-
-  extend = (initialState?: ReactEnvState) => {
-    if (initialState) this.state = initialState;
-    return this;
   };
 
   useTypescript: UseExtenderFunction = (params: UseTypescriptParameters): ReactExtender => {
