@@ -124,7 +124,8 @@ export class Http implements Network {
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
     const route = 'api/scope/fetch';
-    logger.debug(`Http.fetch, url: ${this.url}/${route}`);
+    const scopeData = `scopeName: ${this.scopeName}, url: ${this.url}/${route}`;
+    logger.debug(`Http.fetch, ${scopeData}`);
     const body = JSON.stringify({
       ids,
       fetchOptions,
@@ -134,6 +135,7 @@ export class Http implements Network {
       body,
       headers: this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ }),
     });
+    logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
     const objectList = await ObjectList.fromTar(res.body);
     return objectList;
