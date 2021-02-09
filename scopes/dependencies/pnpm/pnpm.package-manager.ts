@@ -11,6 +11,7 @@ import {
   Registries,
   Registry,
   BIT_DEV_REGISTRY,
+  PackageManagerProxyConfig,
 } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { omit } from 'lodash';
@@ -67,7 +68,8 @@ export class PnpmPackageManager implements PackageManager {
     // turn off the logger because it interrupts the pnpm output
     this.logger.off();
     const registries = await this.depResolver.getRegistries();
-    await install(rootManifest, componentsManifests, storeDir, registries, this.logger);
+    const proxyConfig = await this.depResolver.getProxyConfig();
+    await install(rootManifest, componentsManifests, storeDir, registries, proxyConfig, this.logger);
     this.logger.on();
     // Make a divider row to improve output
     this.logger.console('-------------------------');
@@ -97,7 +99,14 @@ export class PnpmPackageManager implements PackageManager {
     const { resolveRemoteVersion } = require('./lynx');
     const storeDir = options?.cacheRootDir ? join(options?.cacheRootDir, '.pnpm-store') : defaultStoreDir;
     const registries = await this.depResolver.getRegistries();
-    return resolveRemoteVersion(packageName, options.rootDir, storeDir, registries);
+    const proxyConfig = await this.depResolver.getProxyConfig();
+    return resolveRemoteVersion(packageName, options.rootDir, storeDir, registries, proxyConfig);
+  }
+
+  async getProxyConfig?(): Promise<PackageManagerProxyConfig> {
+    // eslint-disable-next-line global-require, import/no-dynamic-require
+    const { getProxyConfig } = require('./get-proxy-config');
+    return getProxyConfig();
   }
 
   async getRegistries(): Promise<Registries> {

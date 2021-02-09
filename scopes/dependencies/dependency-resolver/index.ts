@@ -17,7 +17,11 @@ export type {
   DependencyResolverWorkspaceConfig,
   DependencyResolverVariantConfig,
 } from './dependency-resolver.main.runtime';
-export { BIT_DEV_REGISTRY, NPM_REGISTRY } from './dependency-resolver.main.runtime';
+export {
+  BIT_DEV_REGISTRY,
+  NPM_REGISTRY,
+  ProxyConfig as PackageManagerProxyConfig,
+} from './dependency-resolver.main.runtime';
 export { DependencyResolverAspect } from './dependency-resolver.aspect';
 export {
   DependencyLifecycleType,
