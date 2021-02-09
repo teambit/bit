@@ -126,11 +126,16 @@ export class ObjectList {
   }
 
   splitByScopeName(): { [scopeName: string]: ObjectList } {
-    const objectListPerScope = {};
+    const objectListPerScope: { [scopeName: string]: ObjectList } = {};
     this.objects.forEach((obj) => {
-      if (!obj.scope)
+      if (!obj.scope) {
         throw new Error(`ObjectList: unable to split by scopeName, the scopeName is missing for ${obj.ref.hash}`);
-      objectListPerScope[obj.scope] = obj;
+      }
+      if (objectListPerScope[obj.scope]) {
+        objectListPerScope[obj.scope].addIfNotExist([obj]);
+      } else {
+        objectListPerScope[obj.scope] = new ObjectList([obj]);
+      }
     });
     return objectListPerScope;
   }
