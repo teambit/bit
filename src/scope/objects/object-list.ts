@@ -119,6 +119,22 @@ export class ObjectList {
     return new ObjectList(objectItems);
   }
 
+  addScopeName(scopeName: string) {
+    this.objects.forEach((object) => {
+      object.scope = scopeName;
+    });
+  }
+
+  splitByScopeName(): { [scopeName: string]: ObjectList } {
+    const objectListPerScope = {};
+    this.objects.forEach((obj) => {
+      if (!obj.scope)
+        throw new Error(`ObjectList: unable to split by scopeName, the scopeName is missing for ${obj.ref.hash}`);
+      objectListPerScope[obj.scope] = obj;
+    });
+    return objectListPerScope;
+  }
+
   /**
    * helps debugging
    */

@@ -10,7 +10,7 @@ import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
-import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import { CENTRAL_BIT_HUB_NAME, CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
@@ -90,7 +90,7 @@ export class Http implements Network {
   }
 
   async pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
-    const route = 'api/scope/put';
+    const route = this.scopeName === CENTRAL_BIT_HUB_NAME ? 'api/put' : 'api/scope/put';
     logger.debug(`Http.pushMany, url: ${this.url}/${route}  total objects ${objectList.count()}`);
 
     const pack = objectList.toTar();

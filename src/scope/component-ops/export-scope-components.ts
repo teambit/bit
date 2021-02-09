@@ -127,6 +127,7 @@ export async function exportMany({
       : await mapSeries(Object.keys(idsGroupedByScope), (scopeName) =>
           getUpdatedObjectsToExport(scopeName, idsGroupedByScope[scopeName], lanesObjects)
         );
+    manyObjectsPerRemote = transformManyObjectsPerRemoteToCentral(manyObjectsPerRemote);
   }
 
   // @todo: make sure it works fine without pushing the flattened to the remote.
@@ -151,6 +152,25 @@ export async function exportMany({
     exported: BitIds.uniqFromArray(R.flatten(results.map((r) => r.exported))),
     updatedLocally: BitIds.uniqFromArray(R.flatten(results.map((r) => r.updatedLocally))),
   };
+
+  function transformManyObjectsPerRemoteToCentral(objectsPerRemote: ObjectsPerRemote[]): ObjectsPerRemote[] {
+    const centralHub = scopeRemotes.resolveCentralHub();
+    const objPerRemote: ObjectsPerRemote[] = [];
+    return objectsPerRemote.reduce((acc, current) => {
+      if (!scopeRemotes.isHub(current.remote.name)) {
+        acc.push(current);
+        return acc;
+      }
+      current.objectList.addScopeName(current.remote.name);
+      const existing = acc.find((o) => o.remote.name === centralHub.name);
+      if (existing) existing.objectList.mergeObjectList(current.objectList);
+      else {
+        const newObj: ObjectsPerRemote = { ...current, remote: centralHub };
+        acc.push(newObj);
+      }
+      return acc;
+    }, objPerRemote);
+  }
 
   async function getUpdatedObjectsToExportLegacy(
     remoteNameStr: string,
@@ -202,7 +222,11 @@ export async function exportMany({
       }
 
       const componentBuffer = await componentAndObject.component.compress();
-      const componentData = { ref: componentAndObject.component.hash(), buffer: componentBuffer };
+      const componentData: ObjectItem = {
+        ref: componentAndObject.component.hash(),
+        buffer: componentBuffer,
+        scope: componentAndObject.component.scope as string,
+      };
       const getObjectsData = async (): Promise<ObjectItem[]> => {
         // @todo currently, for lanes (componentAndObject.component.head) this optimization is skipped.
         // it should be enabled with a different mechanism

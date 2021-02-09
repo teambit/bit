@@ -461,3 +461,8 @@ export enum BuildStatus {
   Failed = 'failed',
   Succeed = 'succeed',
 }
+
+// @todo: change to the URL once live
+export const CENTRAL_BIT_HUB_URL = 'http://localhost:5000/scope-service';
+
+export const CENTRAL_BIT_HUB_NAME = 'bit.dev';

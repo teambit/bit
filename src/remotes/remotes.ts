@@ -2,6 +2,7 @@ import { groupBy, prop } from 'ramda';
 import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 
 import { BitId } from '../bit-id';
+import { CENTRAL_BIT_HUB_NAME, CENTRAL_BIT_HUB_URL } from '../constants';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
@@ -34,7 +35,11 @@ export default class Remotes extends Map<string, Remote> {
     });
   }
 
-  isHub(scope) {
+  resolveCentralHub(): Remote {
+    return new Remote(CENTRAL_BIT_HUB_URL, CENTRAL_BIT_HUB_NAME);
+  }
+
+  isHub(scope: string): boolean {
     // if a scope is listed as a remote, it doesn't go to the hub
     return !this.get(scope);
   }
