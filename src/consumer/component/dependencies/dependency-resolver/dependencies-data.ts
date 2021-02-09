@@ -3,7 +3,7 @@ import Dependency from '../dependency';
 import { AllDependencies, AllPackagesDependencies, Issues } from './dependencies-resolver';
 import { ManuallyChangedDependencies } from './overrides-dependencies';
 
-type OverridesDependenciesData = {
+export type OverridesDependenciesData = {
   manuallyRemovedDependencies: ManuallyChangedDependencies;
   manuallyAddedDependencies: ManuallyChangedDependencies;
   missingPackageDependencies: string[];

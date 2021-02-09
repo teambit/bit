@@ -70,7 +70,6 @@ export function Scope({
             <Pane className={styles.sidebar}>{sidebar}</Pane>
             <HoverSplitter className={styles.splitter}>
               <Collapser
-                id="scopeSidebarCollapser"
                 isOpen={isSidebarOpen}
                 onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
                 onClick={handleSidebarToggle}

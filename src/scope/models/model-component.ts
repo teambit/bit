@@ -122,6 +122,20 @@ export default class Component extends BitObject {
     return Object.values(this.versions);
   }
 
+  setVersion(tag: string, ref: Ref) {
+    this.versions[tag] = ref;
+    delete this.orphanedVersions[tag]; // just in case it's there.
+  }
+
+  setOrphanedVersion(tag: string, ref: Ref) {
+    if (this.versions[tag]) {
+      throw new Error(
+        `unable to save orphanedVersion "${tag}" for "${this.id()}" because this tag is already part of the versions prop`
+      );
+    }
+    this.orphanedVersions[tag] = ref;
+  }
+
   getRef(version: string): Ref | null {
     if (isHash(version)) {
       return new Ref(version);
@@ -398,7 +412,7 @@ export default class Component extends BitObject {
     return exactVersion || this.version(releaseType);
   }
 
-  isEqual(component: Component): boolean {
+  isEqual(component: Component, considerOrphanedVersions = true): boolean {
     if ((this.hasHead() && !component.hasHead()) || (!this.hasHead() && component.hasHead())) {
       return false; // only one of them has head
     }
@@ -412,13 +426,19 @@ export default class Component extends BitObject {
     const hasSameVersions = Object.keys(this.versions).every(
       (tag) => component.versions[tag] && component.versions[tag].isEqual(this.versions[tag])
     );
-    if (Object.keys(this.orphanedVersions).length !== Object.keys(component.orphanedVersions).length) {
-      return false;
+    if (considerOrphanedVersions) {
+      if (Object.keys(this.orphanedVersions).length !== Object.keys(component.orphanedVersions).length) {
+        return false;
+      }
+      const hasSameOrphanedVersions = Object.keys(this.orphanedVersions).every(
+        (tag) => component.orphanedVersions[tag] && component.orphanedVersions[tag].isEqual(this.orphanedVersions[tag])
+      );
+      if (!hasSameOrphanedVersions) {
+        return false;
+      }
     }
-    const hasSameOrphanedVersions = Object.keys(this.orphanedVersions).every(
-      (tag) => component.orphanedVersions[tag] && component.orphanedVersions[tag].isEqual(this.orphanedVersions[tag])
-    );
-    return hasSameVersions && hasSameOrphanedVersions;
+
+    return hasSameVersions;
   }
 
   getSnapToAdd() {
@@ -460,7 +480,7 @@ export default class Component extends BitObject {
     }
     if (!version.isLegacy) this.setHead(version.hash());
     if (isTag(versionToAdd)) {
-      this.versions[versionToAdd] = version.hash();
+      this.setVersion(versionToAdd, version.hash());
     }
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
@@ -630,7 +650,10 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
-      if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
+      if (!content)
+        throw new ShowDoctorError(
+          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`
+        );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;

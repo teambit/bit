@@ -326,10 +326,9 @@ export default class ManyComponentsWriter {
   _moveComponentsIfNeeded() {
     if (this.writeToPath && this.consumer) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
-        // $FlowFixMe componentWithDeps.component.componentMap is set
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore componentWithDeps.component.componentMap is set
         const componentMap: ComponentMap = componentWithDeps.component.componentMap;
-        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir) {
+        if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !componentMap.trackDir && !componentMap.rootDir) {
           throw new GeneralError(`unable to use "--path" flag.
 to move individual files, use bit move.
 to move all component files to a different directory, run bit remove and then bit import --path`);
@@ -337,17 +336,13 @@ to move all component files to a different directory, run bit remove and then bi
         const relativeWrittenPath = componentMap.trackDir
           ? componentMap.trackDir
           : componentWithDeps.component.writtenPath;
-        // $FlowFixMe relativeWrittenPath is set
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore relativeWrittenPath is set at this point
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
-        // $FlowFixMe this.writeToPath is set
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+        // @ts-ignore this.writeToPath is set at this point
         const absoluteWriteToPath = path.resolve(this.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
         if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
           const component = componentWithDeps.component;
-          // $FlowFixMe consumer is set here
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          // @ts-ignore consumer is set here
           moveExistingComponent(this.consumer, component, absoluteWrittenPath, absoluteWriteToPath);
         }
       });

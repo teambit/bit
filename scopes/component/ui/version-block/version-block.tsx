@@ -38,7 +38,6 @@ export function VersionBlock({
         <Labels isLatest={isLatest} isCurrent={false} />
         <NavLink className={styles.link} href={`~tests?version=${version}`}>
           Tests
-          {/* <StatusDot status="new" /> */}
         </NavLink>
         <NavLink className={styles.link} href={`~compositions?version=${version}`}>
           Compositions

@@ -129,6 +129,7 @@ export default class Scope {
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
+  static onPrePersistExport: (clientId: string, scope: string[]) => Promise<void>;
 
   /**
    * import components to the `Scope.

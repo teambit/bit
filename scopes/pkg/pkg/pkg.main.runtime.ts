@@ -149,9 +149,7 @@ export class PkgMain {
 
     PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
     // TODO: consider passing the pkg instead of packer
-    cli.register(new PackCmd(packer));
-    cli.register(new PublishCmd(publisher));
-
+    cli.register(new PackCmd(packer), new PublishCmd(publisher));
     return pkg;
   }
 
@@ -228,7 +226,7 @@ export class PkgMain {
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps = {};
-    const env = this.envs.getEnv(component)?.env;
+    const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);

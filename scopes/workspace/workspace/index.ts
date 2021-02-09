@@ -8,7 +8,7 @@ export type { WorkspaceMain } from './workspace.main.runtime';
 
 export * from './events';
 export type { WorkspaceUI } from './workspace.ui.runtime';
-export type { SerializableResults, OnComponentEventResult, ExtensionData } from './on-component-events';
+export type { SerializableResults, OnComponentEventResult } from './on-component-events';
 export { ComponentStatus } from './workspace-component';
 export { WorkspaceModelComponent } from './ui/workspace/workspace-model';
 export { WorkspaceContext } from './ui/workspace/workspace-context';

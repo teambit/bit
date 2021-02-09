@@ -167,10 +167,9 @@ jobs:
   set_npm_registries:
     <<: *defaults
     steps:
-      # npmjs regisry
-      - run:
-          name: setting npmjs regisry
-          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
+      # - run:
+      #     name: setting npmjs regisry
+      #     command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       # - run: npm whoami
       # prod registry
       - run: npm config set @bit:registry https://node.bit.dev
@@ -488,6 +487,8 @@ jobs:
             - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/yarn.lock
 
   bit_build:
     resource_class: large
@@ -515,6 +516,8 @@ jobs:
       - run:
           name: 'bit build'
           command: 'cd bit && bit build'
+          environment:
+            NODE_OPTIONS: --max_old_space_size=4096
 
   bit_tag:
     resource_class: large
@@ -534,7 +537,9 @@ jobs:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
-
+      - run:
+          name: setting npmjs registry with publishing permission
+          command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-bin-ver.js
       - run: cd bit && bit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/bit-bin/node_modules/@babel/core/node_modules/semver/bin/semver'""
