@@ -7,6 +7,8 @@ The Dependency Resolver auto-generates the dependency graph for components in a 
 It does so by integrating dependency configurations set by various extensions (primarily the workspace) with the component's parsed `import`/`require` statements.
 In addition to that, the Dependency Resolver offers an efficient API to manually modify the generated graph using policies that can be applied on groups of components.
 
+Dependencies are also installed via the Dependency Resolver which in turn, operates and directs your package manager of choice.
+
 #### Features
 
 - **Auto-generated dependency graph**:
@@ -20,8 +22,12 @@ In addition to that, the Dependency Resolver offers an efficient API to manually
 
 - **Smart dependency installation**
   The 'dependency-resolver' directs the [package manager](/docs/packages/overview) to install the right packages at the right place in the workspace file structure.
-  That includes installing multiple versions of the same package when different groups of components are set to use different versions.
-  The 'install' process includes importing components and linking them to the `node_modules` directory.
+  It searches for a common version that satisfies *most* components using the same dependency and installs it at the workspace root directory, where it can be shared by multiple dependent components.
+  (Versions that are used by a minority of components will be installed nested in each component directory). installing components...
+
+- **Programmatic API for extensions and environments** 
+  The Dependency Resolver allows other extensions and environments to use its API to register and configure their own dependencies.
+  For example, the [React environment](https://bit.dev/teambit/react/react) uses the Dependency Resolver to configure 'react-dom' as a peerDependency for all components using it.
 
 ## Quickstart & configuration
 
@@ -95,8 +101,10 @@ For example, to set the `1.0.0` version of `classnames` as a dependency of all c
   "teambit.workspace/variants": {
     "teambit.dependencies/dependency-resolver": {
       "policy": {
-        "components/react": {
-          "classnames": "1.0.0"
+        "dependencies": {
+          "components/react": {
+            "classnames": "1.0.0"
+        }
         }
       }
     }
@@ -185,7 +193,7 @@ to be used for development and will therefore be automatically registered as `de
 
 > `devDependencies` that are set by the Dependency Resolver will not be visible in its configuration. To validate a dependency is registered as `devDependencies`, use the `bit show <component>` command.
 
-The list of file extensions to be considered as development is determined by the various Bit aspects and extensions that are in use. For example, the `@teambit/react/react` environment lists all `*.spex.tsx` files as dev files.
+The list of file extensions to be considered as development is determined by the various Bit aspects and extensions that are in use. For example, the `@teambit/react/react` environment lists all `*.spec.tsx` files as dev files.
 Any component using that environment will have its `.spec.tsx` files considered as dev files and all these files' dependencies considered as `devDependencies`.
 
 ##### Register file patterns to be considered as dev files
@@ -275,8 +283,10 @@ To enforce the installation of the exact version specified in the policy, set th
 
 ### install
 
-> By default, the dependency-resolver installs packages from Bit.dev's registry (using your Bit.dev credentials).
-If your NPM is configured to use a registry different than NPM's - the Dependency Resolver will use that configured registry, instead.
+> By default, the dependency-resolver installs packages from Bit.dev's registry (using your Bit.dev token, listed in your `@bit` configuration, in the `.npmrc` file).  
+If your npm is configured to use a registry different than npmjs's - the Dependency Resolver will use that configured registry, instead.
+
+> The 'install' process includes importing components and linking them to the `node_modules` directory.
 
 ##### Install all dependencies listed in the Dependency Resolver configuration:
 
