@@ -7,6 +7,7 @@ export type ObjectItem = {
   ref: Ref;
   buffer: Buffer; // zlib deflated BitObject
   type?: string; // for future use. e.g. to be able to export only Component/Version types but not Source/Artifact, etc.
+  scope?: string; // used for the export process
 };
 
 export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
@@ -43,7 +44,7 @@ export class ObjectList {
   toTar(): NodeJS.ReadableStream {
     const pack = tarStream.pack();
     this.objects.forEach((obj) => {
-      pack.entry({ name: obj.ref.hash }, obj.buffer);
+      pack.entry({ name: this.combineScopeAndHash(obj) }, obj.buffer);
     });
     pack.finalize();
     return pack;
@@ -58,7 +59,7 @@ export class ObjectList {
           data = Buffer.concat([data, chunk]);
         });
         stream.on('end', () => {
-          objects.push({ ref: new Ref(header.name), buffer: data });
+          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: data });
           next(); // ready for next entry
         });
         stream.on('error', (err) => reject(err));
@@ -73,6 +74,25 @@ export class ObjectList {
       packStream.pipe(extract);
     });
     return new ObjectList(objectItems);
+  }
+
+  /**
+   * the opposite of this.combineScopeAndHash
+   */
+  static extractScopeAndHash(name: string): { scope?: string; ref: Ref } {
+    const nameSplit = name.split('/');
+    const hasScope = nameSplit.length > 1;
+    return {
+      scope: hasScope ? nameSplit[0] : undefined,
+      ref: new Ref(hasScope ? nameSplit[1] : nameSplit[0]),
+    };
+  }
+  /**
+   * the opposite of this.extractScopeAndHash
+   */
+  combineScopeAndHash(objectItem: ObjectItem): string {
+    const scope = objectItem.scope ? `${objectItem.scope}/` : '';
+    return `${scope}${objectItem.ref.hash}`;
   }
 
   addIfNotExist(objectItems: ObjectItem[]) {
