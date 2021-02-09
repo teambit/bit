@@ -410,10 +410,11 @@ export class DependencyResolverMain {
       registries = await systemPm.getRegistries();
     }
 
+    const bitScope = registries.scopes.bit;
+
     const getDefaultBitRegistry = (): Registry => {
       const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
 
-      const bitScope = registries.scopes.bit;
       const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
 
       let bitAuthHeaderValue = bitScope?.authHeaderValue;
