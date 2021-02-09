@@ -8,8 +8,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
-import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
+import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
@@ -29,6 +28,7 @@ import { BitId } from 'bit-bin/dist/bit-id';
 import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
 import { ROOT_NAME } from './dependencies/constants';
 import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
@@ -161,6 +161,8 @@ export class DependencyResolverMain {
     private configAspect: Config,
 
     private aspectLoader: AspectLoaderMain,
+
+    private globalConfig: GlobalConfigMain,
 
     /**
      * component aspect.
@@ -316,7 +318,7 @@ export class DependencyResolverMain {
   getInstaller(options: GetInstallerOptions = {}) {
     const packageManagerName = options.packageManager || this.config.packageManager;
     const packageManager = this.packageManagerSlot.get(packageManagerName);
-    const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
@@ -371,7 +373,7 @@ export class DependencyResolverMain {
 
   getVersionResolver(options: GetVersionResolverOptions = {}) {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
@@ -409,18 +411,35 @@ export class DependencyResolverMain {
     }
 
     const bitScope = registries.scopes.bit;
-    const bitAuthHeaderValue = bitScope?.authHeaderValue;
-    const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
-    const bitOriginalAuthType = bitScope?.originalAuthType;
-    const bitOriginalAuthValue = bitScope?.originalAuthValue;
-    const alwaysAuth = bitAuthHeaderValue !== undefined;
-    const bitDefaultRegistry = new Registry(
-      bitRegistry,
-      alwaysAuth,
-      bitAuthHeaderValue,
-      bitOriginalAuthType,
-      bitOriginalAuthValue
-    );
+
+    const getDefaultBitRegistry = (): Registry => {
+      const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+
+      const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
+
+      let bitAuthHeaderValue = bitScope?.authHeaderValue;
+      let bitOriginalAuthType = bitScope?.originalAuthType;
+      let bitOriginalAuthValue = bitScope?.originalAuthValue;
+
+      // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
+      if ((!bitScope || !bitScope.authHeaderValue) && bitGlobalConfigToken) {
+        bitOriginalAuthType = 'authToken';
+        bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
+        bitOriginalAuthValue = bitGlobalConfigToken;
+      }
+
+      const alwaysAuth = bitAuthHeaderValue !== undefined;
+      const bitDefaultRegistry = new Registry(
+        bitRegistry,
+        alwaysAuth,
+        bitAuthHeaderValue,
+        bitOriginalAuthType,
+        bitOriginalAuthValue
+      );
+      return bitDefaultRegistry;
+    };
+
+    const bitDefaultRegistry = getDefaultBitRegistry();
 
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
@@ -560,7 +579,15 @@ export class DependencyResolverMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect, GraphqlAspect];
+  static dependencies = [
+    EnvsAspect,
+    LoggerAspect,
+    ConfigAspect,
+    AspectLoaderAspect,
+    ComponentAspect,
+    GraphqlAspect,
+    GlobalConfigAspect,
+  ];
 
   static slots = [
     Slot.withType<VariantPolicyConfigObject>(),
@@ -584,13 +611,14 @@ export class DependencyResolverMain {
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql]: [
+    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, globalConfig]: [
       EnvsMain,
       LoggerMain,
       Config,
       AspectLoaderMain,
       ComponentMain,
-      GraphqlMain
+      GraphqlMain,
+      GlobalConfigMain
     ],
     config: DependencyResolverWorkspaceConfig,
     [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
@@ -610,6 +638,7 @@ export class DependencyResolverMain {
       logger,
       configMain,
       aspectLoader,
+      globalConfig,
       componentAspect,
       packageManagerSlot,
       dependencyFactorySlot,
