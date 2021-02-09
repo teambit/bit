@@ -6,9 +6,9 @@ import { ComponentModel } from '@teambit/component';
 import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
 import styles from './workspace-component-card.module.scss';
 
-type WorkspaceComponentCardProps = {
+interface WorkspaceComponentCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'aria-relevant'> {
   component: ComponentModel;
-} & React.HTMLAttributes<HTMLDivElement>;
+}
 
 export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponentCardProps) {
   const [shouldShowPreview, togglePreview] = useState(false);

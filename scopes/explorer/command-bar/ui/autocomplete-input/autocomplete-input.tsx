@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react';
 import classNames from 'classnames';
 import styles from './autocomplete-input.module.scss';
 
-type AutoCompleteInputProps = React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement> & {
+type AutoCompleteInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'aria-relevant'> & {
   onEscape?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onUp?: (e: React.KeyboardEvent<HTMLInputElement>) => void;

@@ -7,7 +7,7 @@ export type Assets = Partial<{
   json: Record<string, string>;
 }>;
 
-interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
+interface HtmlProps extends Omit<React.HtmlHTMLAttributes<HTMLHtmlElement>, 'aria-relevant'> {
   withDevTools?: boolean;
   assets?: Assets;
 }
