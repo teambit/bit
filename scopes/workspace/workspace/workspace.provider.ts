@@ -15,7 +15,7 @@ import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from 'bit-bin/dist/consumer/component/component-loader';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
