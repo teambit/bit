@@ -12,7 +12,6 @@ import { BEFORE_MIGRATION } from '../cli/loader/loader-messages';
 import {
   BIT_GIT_DIR,
   BIT_HIDDEN_DIR,
-  BIT_VERSION,
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
   COMPONENT_ORIGINS,
@@ -45,7 +44,7 @@ import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-p
 import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import { packageNameToComponentId } from '../utils/bit/package-name-to-component-id';
 import { PathAbsolute, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative, PathRelative } from '../utils/path';
-import BitMap from './bit-map/bit-map';
+import BitMap, { CURRENT_BITMAP_SCHEMA } from './bit-map/bit-map';
 import ComponentMap from './bit-map/component-map';
 import Component from './component';
 import { ComponentStatus, ComponentStatusLoader, ComponentStatusResult } from './component-ops/component-status-loader';
@@ -203,10 +202,8 @@ export default class Consumer {
     // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
     if (verbose) console.log('running migration process for consumer'); // eslint-disable-line
-    // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
-    const bitmapVersion = this.bitMap.version || '0.10.9';
-
-    if (semver.gte(bitmapVersion, BIT_VERSION)) {
+    const bitmapSchema = this.bitMap.schema;
+    if (semver.gte(bitmapSchema, CURRENT_BITMAP_SCHEMA)) {
       logger.trace('bit.map version is up to date');
       return {
         run: false,
@@ -215,15 +212,15 @@ export default class Consumer {
     loader.start(BEFORE_MIGRATION);
     logger.debugAndAddBreadCrumb(
       'consumer.migrate',
-      `start consumer migration. bitmapVersion version ${bitmapVersion}, bit version ${BIT_VERSION}`
+      `start consumer migration. bitmapSchema ${bitmapSchema}, current schema ${CURRENT_BITMAP_SCHEMA}`
     );
 
-    const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, this.bitMap, verbose);
-    result.bitMap.version = BIT_VERSION;
+    const result: ConsumerMigrationResult = await migrate(bitmapSchema, migratonManifest, this.bitMap, verbose);
+    result.bitMap.schema = CURRENT_BITMAP_SCHEMA;
     // mark the bitmap as changed to make sure it persist to FS
     result.bitMap.markAsChanged();
     // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
-    this.bitMap.version = result.bitMap.version;
+    this.bitMap.schema = result.bitMap.schema;
     await result.bitMap.write(this.componentFsCache);
 
     loader.stop();

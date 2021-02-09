@@ -7,7 +7,7 @@ import { BitError } from '@teambit/bit-error';
 import type { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { BitIdStr } from '../../bit-id/bit-id';
-import { BIT_MAP, BIT_VERSION, COMPONENT_ORIGINS, DEFAULT_LANE, OLD_BIT_MAP, VERSION_DELIMITER } from '../../constants';
+import { BIT_MAP, COMPONENT_ORIGINS, DEFAULT_LANE, OLD_BIT_MAP, VERSION_DELIMITER } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
@@ -29,6 +29,8 @@ export type GetBitMapComponentOptions = {
 };
 
 export const LANE_KEY = '_bit_lane';
+export const CURRENT_BITMAP_SCHEMA = '14.9.0';
+const SCHEMA_FIELD = '.bit.schema';
 
 /**
  * When working on lanes, a component version can be different than the master.
@@ -60,7 +62,7 @@ export default class BitMap {
   constructor(
     public projectRoot: string,
     private mapPath: string,
-    public version: string,
+    public schema: string,
     private isLegacy: boolean,
     public workspaceLane: WorkspaceLane | null,
     private remoteLaneName?: RemoteLaneId
@@ -131,7 +133,7 @@ export default class BitMap {
     const mapFileContent = BitMap.loadRawSync(dirPath);
     const workspaceLane = laneName && laneName !== DEFAULT_LANE ? WorkspaceLane.load(laneName, scopePath) : null;
     if (!mapFileContent || !currentLocation) {
-      return new BitMap(dirPath, defaultLocation, BIT_VERSION, isLegacy, workspaceLane);
+      return new BitMap(dirPath, defaultLocation, CURRENT_BITMAP_SCHEMA, isLegacy, workspaceLane);
     }
     let componentsJson;
     try {
@@ -140,13 +142,13 @@ export default class BitMap {
       logger.error(`invalid bitmap at ${currentLocation}`, e);
       throw new InvalidBitMap(currentLocation, e.message);
     }
-    const version = componentsJson.version;
+    const schema = componentsJson[SCHEMA_FIELD] || componentsJson.version;
     const remoteLaneName = componentsJson[LANE_KEY];
-    // Don't treat version like component
-    delete componentsJson.version;
+    // Don't treat schema like component
+    componentsJson[SCHEMA_FIELD] ? delete componentsJson[SCHEMA_FIELD] : delete componentsJson.version;
     delete componentsJson[LANE_KEY];
 
-    const bitMap = new BitMap(dirPath, currentLocation, version, isLegacy, workspaceLane, remoteLaneName);
+    const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneName);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles(consumer.componentFsCache);
     return bitMap;
@@ -873,7 +875,7 @@ export default class BitMap {
   }
 
   getContent(): Record<string, any> {
-    const bitMapContent = { ...this.toObjects(), version: this.version };
+    const bitMapContent = { ...this.toObjects(), [SCHEMA_FIELD]: this.schema };
     if (this.remoteLaneName) {
       bitMapContent[LANE_KEY] = this.remoteLaneName;
     }
