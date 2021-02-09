@@ -247,6 +247,9 @@ export const CFG_FEATURE_TOGGLE = 'features';
 
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
+export const CFG_PROXY = 'proxy';
+export const CFG_HTTPS_PROXY = 'https_proxy';
+
 /**
  * git hooks
  */
