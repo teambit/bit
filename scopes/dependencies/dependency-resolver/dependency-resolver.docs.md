@@ -3,35 +3,72 @@ description: Simplifies the dependency management of components in a Bit workspa
 labels: ['core aspect', 'dependencies']
 ---
 
-The Dependency Resolver auto-generates the dependency graph for components in a Bit workspace to spare us the tedious work of manually configuring it ourselves.
-It does so by integrating dependency configurations set by various extensions (primarily the workspace) with the component's parsed `import`/`require` statements.
+The Dependency Resolver configures and installs dependencies for components in a Bit workspace. It auto-generates the dependency graph for components to spare us the tedious work of manually configuring it ourselves.
+It does so by integrating the dependency policies set by various Bit extensions (primarily the workspace) with the components' parsed and analyzed `import`/`require` statements.
 In addition to that, the Dependency Resolver offers an efficient API to manually modify the generated graph using policies that can be applied on groups of components.
 
-Dependencies are also installed via the Dependency Resolver which in turn, operates and directs your package manager of choice.
 
 #### Features
 
 - **Auto-generated dependency graph**:
-  The Dependency Resolver saves us time and effort by generating the dependency graph for each component in the workspace. It does so by parsing out all `import` \ `require` statements in the component's files.
-  It then determines if they are packages, components or internal implementation files.
-  If the dependencies are external packages or components, it goes on to determine their version and the dependency-type (`dependencies`, `devDependencies`, `peerDependencies`).
+  The Dependency Resolver saves us time and effort by generating the dependency graph for each component handled by the workspace. It does so by parsing out all `import` \ `require` statements in the component's files.
+  It then determines if these dependencies are packages, components or internal implementation files.
+  If they are external components or packages, it goes on to determine their version and dependency-type (`dependencies`, `devDependencies`, `peerDependencies`).
 
-- **An efficient dependency configuration API**
-  The dependency-resolver strikes the right balance between automation and customization when used with its efficient configuration API. Use it in the workspace configuration file to manually determine the package version and dependency type for dependencies in the generated dependency graph.
-  When used in combination with [`@teambit.workspace/variant`](https://bit.dev/teambit/workspace/variants) it allows to define, in a cascading (CSS-like) way, different dependency policies for different sets of components and even add new dependencies (that were not already included in the generated dependency graph).
+- **An efficient dependency configuration API:**
+  The Dependency Resolver strikes the right balance between automation and customization by offering a simple and efficient configuration API.
+  Use it in the workspace configuration file to manually modify the version and dependency type of dependencies in the generated dependency graph.
+  When used in combination with [`@teambit.workspace/variant`](https://bit.dev/teambit/workspace/variants) it allows to define, in a cascading (CSS-like) way,
+  different dependency policies for different sets of components, and even to add or remove dependencies, altogether.
 
-- **Smart dependency installation**
-  The 'dependency-resolver' directs the [package manager](/docs/packages/overview) to install the right packages at the right place in the workspace file structure.
-  It searches for a common version that satisfies *most* components using the same dependency and installs it at the workspace root directory, where it can be shared by multiple dependent components.
-  (Versions that are used by a minority of components will be installed nested in each component directory). installing components...
+- **Optimized dependency installation:**
+  The Dependency Resolver directs the package manager to install the right packages at the right place in the workspace file structure.
+  When a dependency appears in the workspace dependency graph more than once, it searches for a common version that satisfies *most* dependent components and installs it at the workspace root directory, where it can be shared by all of them
+  (dependency versions that are used by a minority of components will be installed in each component's directory).
+
+- **A single 'install command for packages and components:** 
+  A single `bit install` command will not only install packages but will also import components listed in your `.bitmap` file.
+  These components will then be linked to your `node_modules` directory, to keep the same import pattern for both module types, components and packages.
 
 - **Programmatic API for extensions and environments** 
-  The Dependency Resolver allows other extensions and environments to use its API to register and configure their own dependencies.
-  For example, the [React environment](https://bit.dev/teambit/react/react) uses the Dependency Resolver to configure 'react-dom' as a peerDependency for all components using it.
+  The Dependency Resolver allows other extensions and environments to use its API to register their own dependency policies.
+  For example, the [React environment](https://bit.dev/teambit/react/react) uses the Dependency Resolver to set 'react-dom' as a peerDependency for all components using it.
 
 ## Quickstart & configuration
 
-### Selecting a package manager
+### Auto-registered dependency version and type
+
+Dependency policies define the version and dependency type of each package used by components in the workspace.
+When installing a package, the Dependency Resolver registers the package version in the dependency configuration (if a version is not specified upon installation, it will default to the latest version).
+
+```json
+// At the root-level of the workspace configuration JSON
+{
+  "@teambit.dependencies/dependency-resolver": {
+    "policy": {
+      "dependencies": {
+        "lodash": "4.17.0"
+      }. 
+    }
+  }
+}
+```
+
+## The dependency policies hierarchy
+
+The Dependency Resolver integrates dependency policies from various sources to determine the component's final dependency graph. 
+Cases of conflicting policies are resolved according to a hierarchy of source types, where the one at the top overrides the rest.
+
+The hierarchy in a descending order:
+
+1. Policies set by the `component.json` file of an "ejected" component (`bit eject-conf <component-id>`)
+2. Policies set by 'variants' (at the workspace configuration file, nested under 'variant')
+3. Policies set by the workspace (at the root-level)
+4. Policies set by various extensions/aspects (using `registerDependencyPolicy`)
+5. Policies set by the environment (using `getDependencies`)
+6. Bit’s internal dependency calculations
+
+### Select a package manager
 
 The Dependency resolver does not replace package managers - it uses them and directs them.
 To choose between '[Yarn](https://bit.dev/teambit/dependencies/yarn)' and '[pnpm](https://bit.dev/teambit/dependencies/pnpm)', set the `packageManager` property to either of the two:
@@ -48,27 +85,9 @@ To choose between '[Yarn](https://bit.dev/teambit/dependencies/yarn)' and '[pnpm
 }
 ```
 
-### Auto-registered dependency version and type
+### Apply policies on all relevant components
 
-Dependency policies define the version and dependency type of each package used by components in the workspace.
-Whenever you use the `bit install <package>` command, Bit registers the package version in the dependency configuration.
-
-```json
-// At the root-level of the workspace configuration JSON
-{
-  "@teambit.dependencies/dependency-resolver": {
-    "policy": {
-      "dependencies": {
-        "lodash": "4.17.0"
-      }
-    }
-  }
-}
-```
-
-### Applying policies on all relevant components
-
-A dependency policy set at the root level of the workspace configuration JSON will affect _all_ components that have the configured package as their dependency (i.e., components that have this module listed in their generated dependency graph).
+A dependency policy configured at the root level of the workspace configuration (JSON) will affect _all_ components that have that package as their dependency (i.e., components that have this module listed in their generated dependency graph).
 **Components that do not have this package as a dependency will not be affected.**
 
 For example:
@@ -90,11 +109,11 @@ For example:
 }
 ```
 
-### Applying policies on a selected group of components
+### Apply policies on a selected group of components
 
 Dependency policies can be applied on a specific group of components. This is done using the [`@teambit.workspace/variants`](https://bit.dev/workspace/variants) configuration API.
 
-For example, to set the `1.0.0` version of `classnames` as a dependency of all components located inside the `./components/react` directory (or any of its sub-directories):
+For example, to set version `1.0.0` of `classnames` as a dependency of all components located inside the `./components/react` directory (or any of its sub-directories):
 
 ```json
 {
@@ -114,10 +133,9 @@ For example, to set the `1.0.0` version of `classnames` as a dependency of all c
 
 > To learn how to select components using `@teambit.workspace/variants`, [see here](https://bit.dev/teambit/workspace/variants).
 
-
 ### Remove a dependency 
 
-Dependency policies can also be used to remove a dependency. That's especially useful when a dependency is not defined correctly.  
+Dependency policies can also be used to remove a dependency. That's especially useful when a dependency is not defined with the correct dependency type.  
 For example, a module can be "moved" from `dependencies` to `peerDependencies` by removing it from `dependencies` and listing it under `peerDependencies`.
 
 ```json
@@ -132,11 +150,11 @@ For example, a module can be "moved" from `dependencies` to `peerDependencies` b
     }
 ```
 
-### Overriding cascading policies
+### Override cascading policies
 
 Policies set on a specific group of components will override any conflicting policies that have cascaded from more general configurations.
 
-For example, the following configuration will set `classnames` version `1.0.0` on all component using the `react-ui` namespace. This policy will override the workspace-level policy that uses version `2.0.0` of that same package.
+For example, the following configuration will set `classnames` version `1.0.0` on all components using the `react-ui` namespace. This policy will override the workspace-level policy that uses version `2.0.0` of that same package.
 
 ```json
 // All components using the namespace 'react-ui' will use version 1.0.0 of "classnames"
@@ -183,17 +201,17 @@ In the below example, `classnames@1.0.0` will be "forcibly" added as a dependenc
   }
 ```
 
-### Setting dependency types
+### Set dependency types
 
-#### Setting dev dependencies
+#### dev dependencies
 
-Dev dependencies are determined by the type of file that consumes them.
+Dev dependencies are determined by the type of file that uses the dependency.
 If it is a development file (e.g, `doSomething.test.ts`) then the files consumed by it are also considered
-to be used for development and will therefore be automatically registered as `devDependencies`. In cases where a module is consumed by both a runtime file and a development file, the module will be considered a runtime (regular) dependency.
+to be used for development and will therefore be registered as `devDependencies`. In cases where a module is consumed by both a runtime file and a development file, the module will be considered as a runtime (regular) dependency.
 
-> `devDependencies` that are set by the Dependency Resolver will not be visible in its configuration. To validate a dependency is registered as `devDependencies`, use the `bit show <component>` command.
+> `devDependencies` that are set by the Dependency Resolver will not be visible in its configuration. To validate a dependency is registered as a dev dependency, use the `bit show <component>` command.
 
-The list of file extensions to be considered as development is determined by the various Bit aspects and extensions that are in use. For example, the `@teambit/react/react` environment lists all `*.spec.tsx` files as dev files.
+The list of file patterns to be considered as development files is determined by the various Bit extensions. For example, the `@teambit.react/react` environment lists all `*.spec.tsx` files as dev files.
 Any component using that environment will have its `.spec.tsx` files considered as dev files and all these files' dependencies considered as `devDependencies`.
 
 ##### Register file patterns to be considered as dev files
@@ -212,7 +230,7 @@ To learn more about the Dev File aspect, [see here](https://bit.dev/teambit/comp
 
 ##### Configure specific dependencies as devDependencies
 
-> Policies set at the workspace configuration root-level cannot have `devDependencies`. Either set `devFilePatterns` (see example above) or use the `@teambit.workspace/variants` config API to set a policy to a selected group of components (see example below).
+> Dependencies can be *directly* configured as `devDependencies` only by using the `variants` config API. 
 
 ```json
 {
@@ -230,7 +248,7 @@ To learn more about the Dev File aspect, [see here](https://bit.dev/teambit/comp
 }
 ```
 
-#### Setting peer dependencies
+#### peer dependencies
 
 Setting a package as a peer dependency ensures the package manager installs only a single version of that package. If that is not possible, if there is no single “agreed upon” version for all components in the workspace then an error will be thrown.
 
@@ -256,12 +274,11 @@ Bit may generate multiple "hosts", one for each environment being used, to run c
 That could translate into multiple versions of the same peer dependency, one for each environment.
 To manage multiple versions of a peer dependency [see here](/docs/faq/multiple-peer-dep-versions).
 
-## Enforce the installation of the specified package version
+## Enforce the installation of a specific package version
 The dependency resolver determines the package version that best fits the requirements of most components consuming the same package.
-It then installs it at the root of the workspace to make it available to all relevant components (those that cannot use it will have their version installed inside their directory).
-This is done in order to minimize the number of times the same package gets installed in the same workspace. 
+It then installs it at the root of the workspace to make it available to all components sharing the same package (those that cannot use it will have their dependency installed inside their own directory).
 
-It may happen that the package version installed by the dependency resolver is not the one specified in the Dependency Resolver policy. 
+It may happen that a package installed by the Dependency Resolver is not with the same version that was specified in the Dependency Resolver policy. 
 To enforce the installation of the exact version specified in the policy, set the `preserve` property to `true`.
 
 ```json
@@ -279,11 +296,32 @@ To enforce the installation of the exact version specified in the policy, set th
 }
 ```
 
+## Set a proxy for outgoing HTTP/HTTPS requests
+
+The package manager can be configured to use a proxy for outgoing network requests.
+
+`proxy` - A URL for a proxy to be used in both HTTP and HTTPS requests.
+
+`httpsProxy` - A URL specific for HTTPS requests (this will override the value set in `proxy` for HTTPS requests).
+
+
+```json
+{
+  "teambit.dependencies/dependency-resolver": {
+    "proxy": "http://domain-one.proxy.com:8080",
+    "httpsProxy": "http://domain-two.proxy.com:8080"
+  }
+}
+```
+
+
 ## CLI reference
 
 ### install
 
-> By default, the dependency-resolver installs packages from Bit.dev's registry (using your Bit.dev token, listed in your `@bit` configuration, in the `.npmrc` file).  
+> By default, the Dependency Resolver installs packages from Bit.dev's registry. The authentication for that is done using your Bit.dev token, listed under `@bit`, in your `.npmrc` file. 
+If that token cannot be found in the `.npmrc` file, it will look for it in your global Bit configurations (use the `bit config` command to output your `user.token` property).
+<br />
 If your npm is configured to use a registry different than npmjs's - the Dependency Resolver will use that configured registry, instead.
 
 > The 'install' process includes importing components and linking them to the `node_modules` directory.
