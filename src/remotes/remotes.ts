@@ -1,6 +1,6 @@
 import { groupBy, prop } from 'ramda';
+import pMap from 'p-map';
 import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
-
 import { BitId } from '../bit-id';
 import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
@@ -12,6 +12,7 @@ import { flatten, forEach, prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
+import { CONCURRENT_FETCH_LIMIT } from '../constants';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -56,8 +57,9 @@ export default class Remotes extends Map<string, Remote> {
     // fetching flattened dependencies (withoutDependencies=true), ignore this error
     const shouldThrowOnUnavailableScope = !fetchOptions.withoutDependencies;
     const objectListPerRemote = {};
-    const objectLists: ObjectList[] = await Promise.all(
-      Object.keys(idsGroupedByScope).map(async (scopeName) => {
+    const objectLists: ObjectList[] = await pMap(
+      Object.keys(idsGroupedByScope),
+      async (scopeName) => {
         const remote = await this.resolve(scopeName, thisScope);
         let objectList: ObjectList;
         try {
@@ -72,7 +74,8 @@ export default class Remotes extends Map<string, Remote> {
         }
         objectListPerRemote[scopeName] = objectList;
         return objectList;
-      })
+      },
+      { concurrency: CONCURRENT_FETCH_LIMIT }
     );
     logger.debug('[-] Returning from the remotes');
 
