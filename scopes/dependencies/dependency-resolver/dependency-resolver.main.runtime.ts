@@ -24,7 +24,7 @@ import {
 import { Version as VersionModel } from 'bit-bin/dist/scope/models';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import fs from 'fs-extra';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
