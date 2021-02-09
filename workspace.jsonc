@@ -44,6 +44,7 @@
         "@teambit/any-fs": "0.0.5",
         "@teambit/base-ui.constants.storage": "^0.5.9",
         "@teambit/base-ui.css-components.roundness": "^0.5.9",
+        "@teambit/base-ui.elements.dots-loader": "0.6.3",
         "@teambit/base-ui.elements.separator": "^0.5.9",
         "@teambit/base-ui.graph.tree.indent": "0.0.1",
         "@teambit/base-ui.graph.tree.inflate-paths": "0.0.1",
@@ -188,7 +189,6 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
-        // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
