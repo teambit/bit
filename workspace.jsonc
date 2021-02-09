@@ -133,8 +133,8 @@
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "^4.1.1",
         "@types/puppeteer": "^3.0.1",
-        "@types/react": "16.9.43",
-        "@types/react-dom": "16.9.10",
+        "@types/react": "17.0.1",
+        "@types/react-dom": "17.0.0",
         "@types/react-router-dom": "^5.1.5",
         "@types/react-tabs": "^2.3.2",
         "@types/react-transition-group": "^4.4.0",
@@ -234,10 +234,10 @@
         "pretty-time": "^1.1.0",
         "prism-react-renderer": "^1.1.1",
         "proper-lockfile": "^4.1.1",
-        "react": "^16.13.1",
+        "react": "^17.0.1",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "^10.2.1",
-        "react-dom": "^16.13.1",
+        "react-dom": "^17.0.1",
         "react-error-overlay": "^6.0.7",
         "react-flow-renderer": "8.3.7",
         "react-hot-loader": "^4.12.21",
@@ -288,8 +288,8 @@
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
-        "react": "^16.13.1",
-        "react-dom": "^16.13.1"
+        "react": "^16.0.0 || ^17.0.0",
+        "react-dom": "^16.0.0 || ^17.0.0"
       }
     },
     "packageManagerArgs": [],
@@ -339,9 +339,9 @@
             "bit-bin": "-"
           },
           "peerDependencies": {
-            "react": "^16.13.1",
             "bit-bin": "14.8.9-dev.289",
-            "react-dom": "^16.13.1"
+            "react": "^16.0.0 || ^17.0.0",
+            "react-dom": "^16.0.0 || ^17.0.0"
           }
         }
       },
@@ -473,8 +473,6 @@
         "policy": {
           "dependencies": {
             "bit-bin": "14.8.9-dev.289",
-            "react": "^16.13.1",
-            "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
             "browserslist": "^4",
             "reflect-metadata": "^0.1.13",
@@ -493,8 +491,8 @@
             "bit-bin": "-",
             "browserslist": "-",
             "graphql": "-",
-            "react": "-",
-            "react-dom": "-"
+            "react": "^16.0.0 || ^17.0.0",
+            "react-dom": "^16.0.0 || ^17.0.0",
           }
         }
       }
