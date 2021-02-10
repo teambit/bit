@@ -1,7 +1,7 @@
 import React from 'react';
-import { Hero } from './hero';
 import { CompositionCard } from '@teambit/ui.composition-card';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
+import { Hero } from './hero';
 
 const img = 'https://storage.googleapis.com/docs-images/jessica.jpg';
 

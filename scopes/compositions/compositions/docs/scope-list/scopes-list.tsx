@@ -2,7 +2,6 @@ import React from 'react';
 import classNames from 'classnames';
 import { ScopeCard } from './scope-card';
 import styles from './scopes-list.module.scss';
-import { ScopeDescriptor } from './scope-descriptor';
 
 export const ScopeList = ({ list, className, ...rest }: any) => {
   return (

@@ -1,45 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { UserHero } from './user-hero';
-import { ScopeList } from './scope-list/scopes-list';
 import { CompositionCard } from '@teambit/ui.composition-card';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { DotsLoader } from '@teambit/base-ui.elements.dots-loader';
-
-const UserProfile = () => {
-  return (
-    <>
-      <UserHero />
-      <ScopeList list={scopesData} />
-    </>
-  );
-};
-
-const UserProfileWithLoader = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const toggleWaitTimes = () => {
-    return isLoading ? 6000 : 800;
-  };
-  useEffect(() => {
-    setTimeout(() => setIsLoading((prev) => !prev), toggleWaitTimes());
-  }, [isLoading]);
-
-  return <div style={{ height: 600 }}>{isLoading ? <UserProfile /> : <DotsLoader />}</div>;
-};
-
-export const UserProfileExample = () => {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridGap: '20px',
-        gridTemplateColumns: 'repeat(auto-fill, 600px)',
-      }}
-    >
-      <CodeSnippet>{UserProfileString}</CodeSnippet>
-      <CompositionCard Composition={() => <UserProfileWithLoader />} name="User profile with scopes" />
-    </div>
-  );
-};
+import { UserHero } from './user-hero';
+import { ScopeList } from './scope-list/scopes-list';
 
 const scopesData = [
   {
@@ -105,3 +69,39 @@ export const UserProfileWithScopes = () => {
 
   
 `;
+
+const UserProfile = () => {
+  return (
+    <>
+      <UserHero />
+      <ScopeList list={scopesData} />
+    </>
+  );
+};
+
+const UserProfileWithLoader = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const toggleWaitTimes = () => {
+    return isLoading ? 6000 : 800;
+  };
+  useEffect(() => {
+    setTimeout(() => setIsLoading((prev) => !prev), toggleWaitTimes());
+  }, [isLoading]);
+
+  return <div style={{ height: 600 }}>{isLoading ? <UserProfile /> : <DotsLoader />}</div>;
+};
+
+export const UserProfileExample = () => {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridGap: '20px',
+        gridTemplateColumns: 'repeat(auto-fill, 600px)',
+      }}
+    >
+      <CodeSnippet>{UserProfileString}</CodeSnippet>
+      <CompositionCard Composition={() => <UserProfileWithLoader />} name="User profile with scopes" />
+    </div>
+  );
+};
