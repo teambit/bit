@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { BIT_MAP } from '../constants';
-import { LANE_KEY } from '../consumer/bit-map/bit-map';
+import { LANE_KEY, SCHEMA_FIELD } from '../consumer/bit-map/bit-map';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
 
@@ -22,7 +22,7 @@ export default class BitMapHelper {
 
   readComponentsMapOnly() {
     const bitMap = this.read();
-    delete bitMap.version;
+    bitMap[SCHEMA_FIELD] ? delete bitMap[SCHEMA_FIELD] : delete bitMap.version;
     delete bitMap[LANE_KEY];
     return bitMap;
   }

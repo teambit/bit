@@ -30,7 +30,7 @@ export type GetBitMapComponentOptions = {
 
 export const LANE_KEY = '_bit_lane';
 export const CURRENT_BITMAP_SCHEMA = '14.9.0';
-const SCHEMA_FIELD = '.bit.schema';
+export const SCHEMA_FIELD = '.bit.schema';
 
 /**
  * When working on lanes, a component version can be different than the master.
