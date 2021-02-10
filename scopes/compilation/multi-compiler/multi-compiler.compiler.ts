@@ -45,7 +45,8 @@ export class MultiCompiler implements Compiler {
   displayConfig() {
     return this.compilers
       .map((compiler) => {
-        return `${compiler.displayName}\n${compiler.displayConfig}\n`;
+        const output = compiler.displayConfig ? compiler.displayConfig() : undefined;
+        return `${compiler.displayName}\n${output}\n`;
       })
       .join('\n');
   }
