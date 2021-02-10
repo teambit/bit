@@ -4,6 +4,7 @@ export * from './events';
 export { UIRoot, PostStartOptions, ProxyEntry } from './ui-root';
 export type { UiMain } from './ui.main.runtime';
 export type { UiUI, ContextProps } from './ui.ui.runtime';
+export { StartPlugin, StartPluginOptions } from './start-plugin';
 export type { RenderLifecycle } from './render-lifecycle';
 export { UIRootUI, UIRootFactory } from './ui-root.ui';
 export type { UIServer } from './ui-server';

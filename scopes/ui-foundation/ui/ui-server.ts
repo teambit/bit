@@ -1,3 +1,4 @@
+import { flatten } from 'lodash';
 import { ExpressMain } from '@teambit/express';
 import { GraphqlMain } from '@teambit/graphql';
 import { Logger } from '@teambit/logger';
@@ -10,6 +11,7 @@ import { join } from 'path';
 import webpack from 'webpack';
 import WebpackDevServer from 'webpack-dev-server';
 import { createSsrMiddleware } from './ssr/render-middleware';
+import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
@@ -23,6 +25,7 @@ export type UIServerProps = {
   uiRootExtension: string;
   logger: Logger;
   publicDir: string;
+  startPlugins: StartPlugin[];
 };
 
 export type StartOptions = {
@@ -40,7 +43,8 @@ export class UIServer {
     private uiRoot: UIRoot,
     private uiRootExtension: string,
     private logger: Logger,
-    private publicDir: string
+    private publicDir: string,
+    private plugins: StartPlugin[]
   ) {}
 
   getName() {
@@ -117,7 +121,7 @@ export class UIServer {
   private async configureProxy(app: Express, server: Server) {
     const proxServer = httpProxy.createProxyServer();
     proxServer.on('error', (e) => this.logger.error(e.message));
-    const proxyEntries = this.uiRoot.getProxy ? await this.uiRoot.getProxy() : [];
+    const proxyEntries = await this.getProxyFromPlugins();
     server.on('upgrade', function (req, socket, head) {
       const entry = proxyEntries.find((proxy) => proxy.context.some((item) => item === req.url));
       if (!entry) return;
@@ -125,6 +129,7 @@ export class UIServer {
         target: entry.target,
       });
     });
+
     proxyEntries.forEach((entry) => {
       entry.context.forEach((route) => {
         app.use(`${route}/*`, (req, res) => {
@@ -154,8 +159,16 @@ export class UIServer {
     return getPort({ port: getPort.makeRange(3100, 3200) });
   }
 
+  private async getProxyFromPlugins() {
+    const proxiesByPlugin = this.plugins.map((plugin) => {
+      return plugin.getProxy ? plugin.getProxy() : [];
+    });
+
+    return flatten(await Promise.all(proxiesByPlugin));
+  }
+
   private async getProxy() {
-    const proxyEntries = (await this.uiRoot.getProxy?.()) || [];
+    const proxyEntries = await this.getProxyFromPlugins();
 
     const gqlProxies: ProxyEntry[] = [
       {
@@ -188,7 +201,8 @@ export class UIServer {
       props.uiRoot,
       props.uiRootExtension,
       props.logger,
-      props.publicDir
+      props.publicDir,
+      props.startPlugins
     );
   }
 }

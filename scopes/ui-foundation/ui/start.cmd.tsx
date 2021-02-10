@@ -36,6 +36,7 @@ export class StartCmd implements Command {
       dev,
       port,
       rebuild,
+      verbose,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<string> {
     const pattern = userPattern && userPattern.toString();
@@ -46,6 +47,7 @@ export class StartCmd implements Command {
       dev,
       port: port ? parseInt(port) : undefined,
       rebuild,
+      verbose,
     });
 
     return `Bit server has started on port ${uiServer.port}`;
@@ -80,6 +82,7 @@ export class StartCmd implements Command {
       dev,
       port: port ? parseInt(port) : undefined,
       rebuild,
+      verbose,
     });
 
     const startPlugins = this.ui.invokeOnStart();
