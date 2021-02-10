@@ -12,7 +12,8 @@ import {
 } from 'bit-bin/dist/scope/component-ops/tag-model-component';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { BuildStatus, LATEST } from 'bit-bin/dist/constants';
-import { BitIds, BitId } from 'bit-bin/dist/bit-id';
+import { BitIds } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { getValidVersionOrReleaseType } from 'bit-bin/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { exportMany } from 'bit-bin/dist/scope/component-ops/export-scope-components';

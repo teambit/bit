@@ -20,7 +20,7 @@ export type BuildServiceResults = {
   errors?: [];
 };
 
-export type BuilderServiceOptions = { seedersOnly: boolean };
+export type BuilderServiceOptions = { seedersOnly?: boolean; tasks?: string[] };
 
 export type BuilderDescriptor = { tasks: string[] };
 
@@ -62,7 +62,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
    */
   async runOnce(envsExecutionContext: ExecutionContext[], options: BuilderServiceOptions): Promise<TaskResultsList> {
     const envs = envsExecutionContext.map((executionContext) => executionContext.envDefinition);
-    const tasksQueue = calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv);
+    const tasksQueue = calculatePipelineOrder(this.taskSlot, envs, this.pipeNameOnEnv, options.tasks);
     tasksQueue.validate();
     this.logger.info(`going to run tasks in the following order:\n${tasksQueue.toString()}`);
     const title = `running ${this.displayPipeName} pipe for ${envs.length} environments, total ${tasksQueue.length} tasks`;

@@ -16,7 +16,7 @@ import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { BuilderService } from './builder.service';
+import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
@@ -175,11 +175,16 @@ export class BuilderMain {
    * in case of an error in a task, it stops the execution of that env and continue to the next
    * env. at the end, the results contain the data and errors per env.
    */
-  async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async build(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    builderOptions?: BuilderServiceOptions
+  ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
     const network = await this.isolator.isolateComponents(ids, isolateOptions);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
-    const buildResult = await envs.runOnce(this.buildService, { seedersOnly: isolateOptions?.seedersOnly });
+    const builderServiceOptions = { seedersOnly: isolateOptions?.seedersOnly, ...(builderOptions || {}) };
+    const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
   }
 
