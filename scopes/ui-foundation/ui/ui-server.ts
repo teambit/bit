@@ -116,7 +116,11 @@ export class UIServer {
     this.logger.info(`UI server of ${this.uiRootExtension} is listening to port ${selectedPort}`);
   }
 
-  onStart() {}
+  getPluginsComponents() {
+    return this.plugins.map((plugin) => {
+      return plugin.render();
+    });
+  }
 
   private async configureProxy(app: Express, server: Server) {
     const proxServer = httpProxy.createProxyServer();

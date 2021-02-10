@@ -1,8 +1,7 @@
 import { BundlerMain } from '@teambit/bundler';
 import { Component, ComponentID } from '@teambit/component';
-import { UIRoot, ProxyEntry } from '@teambit/ui';
+import { UIRoot } from '@teambit/ui';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import { flatten } from 'bit-bin/dist/utils';
 import { PathOsBased } from 'bit-bin/dist/utils/path';
 
 import { Workspace } from './workspace';
@@ -60,25 +59,5 @@ export class WorkspaceUIRoot implements UIRoot {
     options = { relative: false }
   ): PathOsBased {
     return this.workspace.componentDir(componentId, bitMapOptions, options);
-  }
-
-  async getProxy(): Promise<ProxyEntry[]> {
-    const servers = await this.getServers();
-
-    const proxyConfigs = servers.map((server) => {
-      return [
-        {
-          context: [`/preview/${server.context.envRuntime.id}`],
-          target: `http://localhost:${server.port}`,
-        },
-        {
-          context: [`/_hmr/${server.context.envRuntime.id}`],
-          target: `http://localhost:${server.port}`,
-          ws: true,
-        },
-      ];
-    });
-
-    return flatten(proxyConfigs);
   }
 }

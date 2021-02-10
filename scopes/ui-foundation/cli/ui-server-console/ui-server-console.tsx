@@ -1,4 +1,4 @@
-import React, { useEffect, useState, ComponentType } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Text, Newline } from 'ink';
 import type { UIServer } from '@teambit/ui';
 import { UIServerLoader } from '@teambit/cli.ui-server-loader';
@@ -13,16 +13,10 @@ export type UIServerConsoleProps = {
    * name of the app.
    */
   appName: string;
-
-  /**
-   * array of plugins of the command.
-   */
-  futureStartPlugins: Promise<ComponentType[]>;
 };
 
-export function UIServerConsole({ appName, futureUiServer, futureStartPlugins }: UIServerConsoleProps) {
+export function UIServerConsole({ appName, futureUiServer }: UIServerConsoleProps) {
   const [uiServer, setUiServer] = useState<UIServer>();
-  const [plugins, setPlugins] = useState<ComponentType[]>();
 
   useEffect(() => {
     futureUiServer
@@ -32,24 +26,16 @@ export function UIServerConsole({ appName, futureUiServer, futureStartPlugins }:
       .catch((err) => {
         throw err;
       });
-
-    futureStartPlugins
-      .then((startPlugins) => {
-        setPlugins(startPlugins);
-      })
-      .catch((err) => {
-        throw err;
-      });
   });
 
-  if (!uiServer || !plugins) return <UIServerLoader name={appName} />;
+  if (!uiServer) return <UIServerLoader name={appName} />;
+  const plugins = uiServer.getPluginsComponents();
 
   return (
     <>
-      {plugins &&
-        plugins.map((Plugin, key) => {
-          return <Plugin key={key} />;
-        })}
+      {plugins.map((Plugin, key) => {
+        return <Plugin key={key} />;
+      })}
       <Newline />
       <Text>
         You can now view '<Text color="cyan">{appName}</Text>' components in the browser.

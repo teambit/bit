@@ -85,10 +85,11 @@ export class StartCmd implements Command {
       verbose,
     });
 
-    const startPlugins = this.ui.invokeOnStart();
-
+    // DO NOT CHANGE THIS - this meant to be an async hook.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.ui.invokeOnStart();
     this.ui.clearConsole();
 
-    return <UIServerConsole appName={appName} futureUiServer={uiServer} futureStartPlugins={startPlugins} />;
+    return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
 }
