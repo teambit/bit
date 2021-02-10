@@ -700,7 +700,6 @@ export class ScopeMain implements ComponentFactory {
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
-      prePersistExportSlot,
       isolator,
       aspectLoader,
       config,

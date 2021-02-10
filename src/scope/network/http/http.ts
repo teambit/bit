@@ -90,7 +90,7 @@ export class Http implements Network {
   }
 
   async pushMany(objectList: ObjectList, pushOptions: PushOptions): Promise<string[]> {
-    const route = this.scopeName === CENTRAL_BIT_HUB_NAME ? 'api/put' : 'api/scope/put';
+    const route = 'api/scope/put';
     logger.debug(`Http.pushMany, url: ${this.url}/${route}  total objects ${objectList.count()}`);
 
     const pack = objectList.toTar();
@@ -103,6 +103,31 @@ export class Http implements Network {
     await this.throwForNonOkStatus(res);
     const ids = await this.getJsonResponse(res);
     return ids;
+  }
+
+  async pushToCentralHub(
+    objectList: ObjectList,
+    options: Record<string, any> = {}
+  ): Promise<{
+    successIds: string[];
+    failedScopes: string[];
+    exportId: string;
+    errors: { [scopeName: string]: string };
+  }> {
+    const route = 'api/put';
+    logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
+    const pack = objectList.toTar();
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'POST',
+      body: pack,
+      headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+    });
+    logger.debug(
+      `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    );
+    await this.throwForNonOkStatus(res);
+    const results = await this.getJsonResponse(res);
+    return results;
   }
 
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
