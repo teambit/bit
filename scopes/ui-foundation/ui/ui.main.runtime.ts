@@ -29,16 +29,15 @@ import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
+import { StartPlugin, StartPluginOptions } from './start-plugin';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
-export type OnStart = (options: StartOptions) => Promise<undefined | ComponentType<{}>>;
+export type OnStart = () => Promise<undefined | ComponentType<{}>>;
 
-export type StartOptions = {
-  verbose: boolean;
-};
+export type StartPluginSlot = SlotRegistry<StartPlugin>;
 
 export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
 
@@ -74,6 +73,11 @@ export type UIConfig = {
 };
 
 export type RuntimeOptions = {
+  /**
+   * determine whether to initiate on verbose mode.
+   */
+  verbose?: boolean;
+
   /**
    * name of the UI root to load.
    */
@@ -154,7 +158,9 @@ export class UiMain {
      */
     private logger: Logger,
 
-    private harmony: Harmony
+    private harmony: Harmony,
+
+    private startPluginSlot: StartPluginSlot
   ) {}
 
   async publicDir(uiRoot: UIRoot) {
@@ -190,11 +196,28 @@ export class UiMain {
     return compilerRun();
   }
 
+  registerStartPlugin(startPlugin: StartPlugin) {
+    this.startPluginSlot.register(startPlugin);
+    return this;
+  }
+
+  private async initiatePlugins(options: StartPluginOptions) {
+    const plugins = this.startPluginSlot.values();
+    await Promise.all(plugins.map((plugin) => plugin.initiate(options)));
+    return plugins;
+  }
+
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
+
+    const plugins = await this.initiatePlugins({
+      verbose,
+      pattern,
+    });
+
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
       express: this.express,
@@ -204,6 +227,7 @@ export class UiMain {
       ui: this,
       logger: this.logger,
       publicDir: await this.publicDir(uiRoot),
+      startPlugins: plugins,
     });
 
     const targetPort = await this.getPort(port);
@@ -435,16 +459,18 @@ export class UiMain {
     Slot.withType<OnStart>(),
     Slot.withType<PublicDirOverwriteSlot>(),
     Slot.withType<BuildMethodOverwriteSlot>(),
+    Slot.withType<StartPlugin>(),
   ];
 
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
-    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot]: [
+    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
       OnStartSlot,
       PublicDirOverwriteSlot,
-      BuildMethodOverwriteSlot
+      BuildMethodOverwriteSlot,
+      StartPluginSlot
     ],
     harmony: Harmony
   ) {
@@ -463,7 +489,8 @@ export class UiMain {
       componentExtension,
       cache,
       logger,
-      harmony
+      harmony,
+      proxyGetterSlot
     );
     cli.register(new StartCmd(ui, logger, pubsub), new UIBuildCmd(ui));
     return ui;
