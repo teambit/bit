@@ -58,7 +58,7 @@ export class DevServerService implements EnvService<ComponentServer> {
         if (!mainContext) mainContext = contextList[0];
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
-        const devServer: DevServer = devServerContext.env.getDevServer(devServerContext);
+        const devServer: DevServer = devServerContext.envRuntime.env.getDevServer(devServerContext);
         const port = await selectPort();
 
         return new ComponentServer(this.pubsub, devServerContext, port, devServer);
@@ -88,10 +88,11 @@ export class DevServerService implements EnvService<ComponentServer> {
     const uiRoot = this._uiRoot;
     if (!uiRoot) throw new Error('a root must be provided by UI root');
 
-    return Object.assign(context, {
+    context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
+    context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
+
+    return Object.assign({}, context, {
       entry: await getEntry(context, uiRoot, this.runtimeSlot),
-      relatedContexts: additionalContexts.map((ctx) => ctx.envDefinition.id),
-      components: context.components.concat(this.getComponentsFromContexts(additionalContexts)),
       rootPath: `/preview/${context.envRuntime.id}`,
       publicPath: `/public`,
     });

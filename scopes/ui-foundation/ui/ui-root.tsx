@@ -2,7 +2,6 @@ import { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentDir } from '@teambit/bundler';
 import { Component } from '@teambit/component';
 import { ProxyConfigArrayItem } from 'webpack-dev-server';
-// import { WebpackDevServer } from '../webpack/webpack.dev-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
 // would never have componentDir and as it has nothing to do with `UIRoot`.
