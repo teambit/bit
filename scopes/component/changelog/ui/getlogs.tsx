@@ -1,7 +1,7 @@
 import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 import { ComponentID } from '@teambit/component';
-import type { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
 const getChangeLogSnaps = gql`
   query getChangeLogSnaps($id: String!) {
@@ -22,7 +22,7 @@ const getChangeLogSnaps = gql`
 type SnapsResults = {
   getHost: {
     id: string;
-    logs: ComponentLog;
+    logs: LegacyComponentLog;
   };
 };
 

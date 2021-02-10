@@ -38,6 +38,7 @@ import Source from './source';
 import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
 type State = {
   versions?: {
@@ -51,14 +52,7 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type ComponentLog = {
-  message: string;
-  username?: string;
-  email?: string;
-  date?: string;
-  hash: string;
-  tag?: string;
-};
+export type ComponentLog = LegacyComponentLog;
 
 export type ComponentProps = {
   scope: string | null | undefined;
