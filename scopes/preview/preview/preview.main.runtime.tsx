@@ -1,5 +1,7 @@
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
+import React from 'react';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { PreviewServerStatus } from '@teambit/cli.preview-server-status';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
@@ -234,6 +236,20 @@ export class PreviewMain {
       builder,
       workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR
     );
+
+    uiMain.registerOnStart(async () => {
+      if (!workspace) return undefined;
+      const [, uiRoot] = uiMain.getUi();
+      // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
+      const previewServers = await bundler.devServer(await workspace.byPattern(''), uiRoot);
+      previewServers.forEach((server) => server.listen());
+      // DON'T add wait! this promise never resolve so it's stop all the start process!
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      workspace.watcher.watchAll();
+      return function PreviewPlugin() {
+        return <PreviewServerStatus previewServers={previewServers} />;
+      };
+    });
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([

@@ -1,4 +1,5 @@
 import type { AspectMain } from '@teambit/aspect';
+import { ComponentType } from 'react';
 import { AspectDefinition } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -33,7 +34,11 @@ export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMa
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
-export type OnStart = () => void;
+export type OnStart = (options: StartOptions) => Promise<undefined | ComponentType<{}>>;
+
+export type StartOptions = {
+  verbose: boolean;
+};
 
 export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
 
@@ -212,9 +217,6 @@ export class UiMain {
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
 
-    if (uiRoot.postStart) await uiRoot.postStart({ pattern });
-    await this.invokeOnStart();
-
     return uiServer;
   }
 
@@ -272,9 +274,10 @@ export class UiMain {
     return undefined;
   }
 
-  private async invokeOnStart(): Promise<void> {
+  async invokeOnStart(): Promise<ComponentType[]> {
     const promises = this.onStartSlot.values().map((fn) => fn());
-    await Promise.all(promises);
+    const startPlugins = await Promise.all(promises);
+    return startPlugins.filter((plugin) => !!plugin) as ComponentType[];
   }
 
   /**

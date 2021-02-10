@@ -47,6 +47,7 @@ export class BundlerMain {
    */
   async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
+    // TODO: this must be refactored away from here. this logic should be in the Preview.
     this.devService.uiRoot = root;
     const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
     if (!servers) throw new Error();
@@ -55,13 +56,6 @@ export class BundlerMain {
     this.indexByComponent();
     // @ts-ignore
     return this._componentServers;
-  }
-
-  /**
-   * can be used 
-   */
-  getDevServerSimilarity() {
-
   }
 
   /**

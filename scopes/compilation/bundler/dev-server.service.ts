@@ -56,7 +56,7 @@ export class DevServerService implements EnvService<ComponentServer> {
       Object.entries(byOriginalEnv).map(async ([id, contextList]) => {
         let mainContext = contextList.find((context) => context.envDefinition.id === id);
         if (!mainContext) mainContext = contextList[0];
-        const additionalContexts = contextList.filter((context) => context.envDefinition.id === id);
+        const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = devServerContext.env.getDevServer(devServerContext);
         const port = await selectPort();
@@ -71,9 +71,11 @@ export class DevServerService implements EnvService<ComponentServer> {
   mergeContext() {}
 
   private getComponentsFromContexts(contexts: ExecutionContext[]) {
-    return flatten(contexts.map((context) => {
-      return context.components;
-    }));
+    return flatten(
+      contexts.map((context) => {
+        return context.components;
+      })
+    );
   }
 
   /**
@@ -88,6 +90,7 @@ export class DevServerService implements EnvService<ComponentServer> {
 
     return Object.assign(context, {
       entry: await getEntry(context, uiRoot, this.runtimeSlot),
+      relatedContexts: additionalContexts.map((ctx) => ctx.envDefinition.id),
       components: context.components.concat(this.getComponentsFromContexts(additionalContexts)),
       rootPath: `/preview/${context.envRuntime.id}`,
       publicPath: `/public`,

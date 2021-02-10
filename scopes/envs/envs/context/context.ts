@@ -24,6 +24,8 @@ export class ExecutionContext {
     public components = envRuntime.components
   ) {}
 
+  relatedContexts: string[] = [];
+
   /**
    * extension ID of the environment
    */
