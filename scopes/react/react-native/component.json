@@ -35,15 +35,20 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "bit-bin": "-"
+          "bit-bin": "-",
+          "react": "^16.13.1",
+          "react-dom": "^16.13.1",
+          "react-native-web": "^0.14.8"
         },
         "devDependencies": {
-          "bit-bin": "-"
+          "bit-bin": "-",
+          "react": "-",
+          "react-dom": "-",
+          "@types/react": "^16.14.3",
+          "@types/react-dom": "^16.9.10"
         },
         "peerDependencies": {
-          "react": "^16.13.1",
-          "bit-bin": "14.8.9-dev.228",
-          "react-dom": "^16.13.1"
+          "bit-bin": "14.8.9-dev.228"
         }
       }
     },

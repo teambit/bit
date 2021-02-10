@@ -106,18 +106,24 @@ function getReactNativeDeps() {
   return {
     dependencies: {
       react: '-',
+      'react-dom': '-',
       'react-native': '-',
     },
     devDependencies: {
+      react: '-',
+      'react-dom': '-',
+      'react-native': '-',
+      
+      '@types/react': { version: '^16.14.3', resolveFromEnv: true },
+      '@types/react-dom': { version: '^16.9.10', resolveFromEnv: true },
       '@types/react-native': '^0.63.2',
       '@types/jest': '~26.0.9',
-      react: '-',
-      'react-native': '-',
-      'react-native-web': '0.14.8',
     },
     peerDependencies: {
-      react: '^16.13.1',
-      'react-native': '^0.63.3',
+      react: { version: '>=16.8.0 || <17.0.0', resolveFromEnv: true },
+      'react-dom': { version: '>=16.8.0 || <17.0.0', resolveFromEnv: true },
+      // TODO - ask the correct version from Josh 
+      'react-native-web': { version: '^0.14.0', resolveFromEnv: true },
     },
   };
 }
