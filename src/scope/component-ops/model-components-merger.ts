@@ -3,8 +3,11 @@ import { MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import { ModelComponent } from '../models';
 
+/**
+ * the base component to save is the existingComponent because it might contain local data that
+ * is not available in the remote component, such as the "state"/"orphanedVersions" properties.
+ */
 export class ModelComponentMerger {
-  mergedComponent: ModelComponent;
   mergedVersions: string[] = [];
   isExport: boolean;
   constructor(
@@ -16,9 +19,6 @@ export class ModelComponentMerger {
     private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
     private existingHeadIsMissingInIncomingComponent: boolean
   ) {
-    // the base component to save is the existingComponent because it might contain local data that
-    // is not available in the remote component, such as the "state" property.
-    this.mergedComponent = this.existingComponent;
     this.isExport = !this.isImport;
   }
 
@@ -39,12 +39,12 @@ export class ModelComponentMerger {
     this.setHead(locallyChanged);
     this.deleteOrphanedVersionsOnExport();
 
-    return { mergedComponent: this.mergedComponent, mergedVersions: this.mergedVersions };
+    return { mergedComponent: this.existingComponent, mergedVersions: this.mergedVersions };
   }
 
   private deleteOrphanedVersionsOnExport() {
     // makes sure that components received with orphanedVersions, this property won't be saved
-    if (this.isExport) this.mergedComponent.orphanedVersions = {};
+    if (this.isExport) this.existingComponent.orphanedVersions = {};
   }
 
   private addSnapsToMergedVersions() {
@@ -62,7 +62,7 @@ export class ModelComponentMerger {
       return;
     }
     if (this.isIncomingFromOrigin && !locallyChanged) {
-      this.mergedComponent.setHead(incomingHead);
+      this.existingComponent.setHead(incomingHead);
     }
   }
 
@@ -100,10 +100,9 @@ export class ModelComponentMerger {
     Object.keys(this.existingComponent.versions).forEach((existingVersion) => {
       if (
         this.incomingComponent.versions[existingVersion] &&
-        this.existingComponent.versions[existingVersion].toString() !==
-          this.incomingComponent.versions[existingVersion].toString()
+        !this.existingComponent.versions[existingVersion].isEqual(this.incomingComponent.versions[existingVersion])
       ) {
-        this.mergedComponent.versions[existingVersion] = this.incomingComponent.versions[existingVersion];
+        this.existingComponent.setVersion(existingVersion, this.incomingComponent.versions[existingVersion]);
         this.mergedVersions.push(existingVersion);
       }
     });
@@ -117,8 +116,9 @@ export class ModelComponentMerger {
         this.isIncomingFromOrigin &&
         !this.existingComponent.hasLocalTag(existingVersion)
       ) {
-        this.mergedComponent.orphanedVersions[existingVersion] = this.existingComponent.versions[existingVersion];
+        const ref = this.existingComponent.versions[existingVersion];
         delete this.existingComponent.versions[existingVersion];
+        this.existingComponent.setOrphanedVersion(existingVersion, ref);
       }
     });
   }
@@ -131,12 +131,10 @@ export class ModelComponentMerger {
       }
       if (this.isIncomingFromOrigin) {
         // it's legit, add the tag
-        this.mergedComponent.versions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
-        // if this tag was in orphaned (fetched previously from dependent-cache), remove it.
-        delete this.mergedComponent.orphanedVersions[incomingVersion];
+        this.existingComponent.setVersion(incomingVersion, this.incomingComponent.versions[incomingVersion]);
       } else {
         // happens when retrieved from the cache of the remote.
-        this.mergedComponent.orphanedVersions[incomingVersion] = this.incomingComponent.versions[incomingVersion];
+        this.existingComponent.setOrphanedVersion(incomingVersion, this.incomingComponent.versions[incomingVersion]);
       }
       this.mergedVersions.push(incomingVersion);
     });
@@ -152,7 +150,11 @@ export class ModelComponentMerger {
       return; // we shouldn't get any orphaned during export.
     }
     Object.keys(this.incomingComponent.orphanedVersions).forEach((incomingVersion) => {
-      this.mergedComponent.orphanedVersions[incomingVersion] = this.incomingComponent.orphanedVersions[incomingVersion];
+      if (this.existingComponent.versions[incomingVersion]) return; // no need to have the orphaned
+      this.existingComponent.setOrphanedVersion(
+        incomingVersion,
+        this.incomingComponent.orphanedVersions[incomingVersion]
+      );
       this.mergedVersions.push(incomingVersion);
     });
   }

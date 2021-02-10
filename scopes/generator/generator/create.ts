@@ -1,7 +1,7 @@
 /* eslint max-classes-per-file: 0 */
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '@teambit/workspace';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
 import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
 import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';

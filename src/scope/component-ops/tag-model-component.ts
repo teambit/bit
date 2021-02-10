@@ -84,8 +84,7 @@ async function setFutureVersions(
         if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
       }
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
-      // @ts-ignore usedVersion is needed only for this, that's why it's not declared on the instance
-      componentToTag.usedVersion = componentToTag.version;
+      componentToTag.previouslyUsedVersion = componentToTag.version;
       componentToTag.version = version;
     })
   );

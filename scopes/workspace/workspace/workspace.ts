@@ -12,6 +12,7 @@ import {
   ComponentID,
   ComponentMap,
   AspectList,
+  AspectData,
 } from '@teambit/component';
 import { ComponentScopeDirMap } from '@teambit/config';
 import {
@@ -36,7 +37,8 @@ import { link, importAction } from 'bit-bin/dist/api/consumer';
 import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
 import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
-import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import { BitIds } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
@@ -58,7 +60,6 @@ import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
-  ExtensionData,
   OnComponentAdd,
   OnComponentChange,
   OnComponentEventResult,
@@ -253,7 +254,7 @@ export class Workspace implements ComponentFactory {
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
     const hasModifiedDependencies = await this.hasModifiedDependencies(component);
-    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies, component.isOutdated());
   }
 
   /**
@@ -373,8 +374,8 @@ export class Workspace implements ComponentFactory {
   }
 
   // TODO: @gilad we should refactor this asap into to the envs aspect.
-  async getEnvSystemDescriptor(component: Component): Promise<ExtensionData> {
-    const env = this.envs.getEnv(component);
+  async getEnvSystemDescriptor(component: Component): Promise<AspectData> {
+    const env = this.envs.calculateEnv(component);
     if (env.env.__getDescriptor && typeof env.env.__getDescriptor === 'function') {
       const systemDescriptor = await env.env.__getDescriptor();
       // !important persist services only on the env itself.
