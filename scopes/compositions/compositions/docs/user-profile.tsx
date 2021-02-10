@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { UserHero } from './user-hero';
-import { ScopeList } from '@harmony-mfe/scopes.ui.scopes.scopes-list';
+import { ScopeList } from './scope-list/scopes-list';
 import { CompositionCard } from '@teambit/ui.composition-card';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { DotsLoader } from '@teambit/base-ui.elements.dots-loader';
@@ -69,18 +69,18 @@ const scopesData = [
 ];
 
 const UserProfileString = `
+// user-hero.compositions.jsx
+
+import { Hero } from './hero';
+
 import React, { useEffect } from 'react';
-import classNames from 'classnames';
 import { DotsLoader } from '@teambit/base-ui.elements.dots-loader';
 import { Error } from '@teambit/base-ui.input.error';
 import { ScopeList } from '@harmony-mfe/scopes.ui.scopes.scopes-list';
-import { Hero } from '@harmony-mfe/people.ui.user-profile.hero';
 import { useUser } from '@harmony-mfe/people.ui.hooks.use-user';
 import styles from './user-profile.module.scss';
 
-export type UserProfileProps = {} & React.HTMLAttributes<HTMLDivElement>;
-
-export const UserProfileWithScopes = ({ className, ...rest }: UserProfileProps) => {
+export const UserProfileWithScopes = () => {
   const [getUser, scopes, user, isLoading, error] = useUser();
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export const UserProfileWithScopes = ({ className, ...rest }: UserProfileProps) 
 
   if (isLoading) return <LoaderRibbon active={isLoading} />;
   return (
-    <div className={classNames(styles.userProfile, classNames)} {...rest}>
+    <div className={styles.userProfile} >
       <Hero
         title={user.title}
         description={user.description}
@@ -101,4 +101,7 @@ export const UserProfileWithScopes = ({ className, ...rest }: UserProfileProps) 
       {error !== '' ? <Error>{error}</Error> : <ScopeList list={scopes} />}
     </div>
   );
-}`;
+}
+
+  
+`;

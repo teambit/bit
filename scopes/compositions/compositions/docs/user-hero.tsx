@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hero } from '@harmony-mfe/people.ui.user-profile.hero';
+import { Hero } from './hero';
 import { CompositionCard } from '@teambit/ui.composition-card';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 
@@ -19,6 +19,9 @@ export const UserHero = () => {
 
 const UserHeroString = `
 // user-hero.compositions.jsx
+
+import { Hero } from './hero';
+
 const UserHeroWithDescription = () => {
   return (
     <Hero
