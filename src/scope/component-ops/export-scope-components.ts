@@ -141,10 +141,10 @@ export async function exportMany({
   const remotes = manyObjectsPerRemote.map((o) => o.remote);
   const clientId = resumeExportId || Date.now().toString();
   enrichContextFromGlobal(context);
-  await pushRemotesPendingDir();
-  await validateRemotes(remotes, clientId, Boolean(resumeExportId));
-  triggerPrePersistHook();
-  await persistRemotes(manyObjectsPerRemote, clientId);
+  await pushToRemotes();
+  // await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+  // triggerPrePersistHook();
+  // await persistRemotes(manyObjectsPerRemote, clientId);
   loader.start('updating data locally...');
   const results = await updateLocalObjects(lanesObjects);
   return {
@@ -356,7 +356,7 @@ export async function exportMany({
   //   });
   // }
 
-  async function pushRemotesPendingDir(): Promise<void> {
+  async function pushToRemotes(): Promise<void> {
     if (resumeExportId) {
       logger.debug('pushRemotesPendingDir - skip as the resumeClientId was passed');
       // no need to transfer the objects, they're already on the server. also, since this clientId
@@ -369,15 +369,16 @@ export async function exportMany({
       const { remote, objectList } = objectsPerRemote;
       loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
       try {
-        await remote.pushMany(objectList, pushOptions, context);
+        const exportedIds = await remote.pushMany(objectList, pushOptions, context);
         logger.debugAndAddBreadCrumb(
           'export-scope-components.pushRemotesPendingDir',
           'successfully pushed all objects to the pending-dir directory on the remote'
         );
+        objectsPerRemote.exportedIds = exportedIds;
         pushedRemotes.push(remote);
       } catch (err) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
-        await removePendingDirs(pushedRemotes, clientId);
+        // await removePendingDirs(pushedRemotes, clientId);
         throw err;
       }
     });
