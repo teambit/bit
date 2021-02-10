@@ -12,7 +12,7 @@ export type SideBarProps = {
   drawerSlot: DrawerSlot;
 
   itemSlot?: SidebarItemSlot;
-} & React.HTMLAttributes<HTMLDivElement>;
+} & Omit<React.HTMLAttributes<HTMLDivElement>, 'aria-relevant'>;
 
 /**
  * side bar component.

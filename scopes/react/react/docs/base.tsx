@@ -18,7 +18,7 @@ export type DocsSectionProps = {
   docs?: docsFile;
   compositions: React.ComponentType[];
   componentId: string;
-} & HTMLAttributes<HTMLDivElement>;
+} & Omit<HTMLAttributes<HTMLDivElement>, 'aria-relevant'>;
 
 const defaultDocs = {
   examples: [],
