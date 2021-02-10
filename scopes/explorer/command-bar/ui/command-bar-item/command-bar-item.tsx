@@ -8,7 +8,7 @@ import styles from './command-bar-item.module.scss';
 export type CommandItemProps = {
   active?: boolean;
   entry: CommanderSearchResult;
-} & Omit<React.HTMLAttributes<HTMLDivElement>, 'aria-relevant'>;
+} & React.HTMLAttributes<HTMLDivElement>
 
 export function CommandBarItem({ entry, className, active, ...rest }: CommandItemProps) {
   const { handler, displayName: name, icon, iconAlt, keybinding } = entry;

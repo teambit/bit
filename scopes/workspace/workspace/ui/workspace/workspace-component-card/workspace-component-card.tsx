@@ -6,7 +6,7 @@ import { ComponentModel } from '@teambit/component';
 import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
 import styles from './workspace-component-card.module.scss';
 
-interface WorkspaceComponentCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'aria-relevant'> {
+interface WorkspaceComponentCardProps extends React.HTMLAttributes<HTMLDivElement> {
   component: ComponentModel;
 }
 

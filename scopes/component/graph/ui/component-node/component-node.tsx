@@ -45,7 +45,7 @@ export function ComponentNode({ node, type = 'defaultNode', ...rest }: Component
   );
 }
 
-type BreadcrumbsProps = { componentId: ComponentID } & Omit<React.HTMLAttributes<HTMLDivElement>, 'aria-relevant'>;
+type BreadcrumbsProps = { componentId: ComponentID } & React.HTMLAttributes<HTMLDivElement>;
 
 function Breadcrumbs({ componentId, className, ...rest }: BreadcrumbsProps) {
   const { scope, namespace } = componentId;

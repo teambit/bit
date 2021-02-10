@@ -10,7 +10,7 @@ export type CompositionsPanelProps = {
   onSelectComposition: (composition: Composition) => void;
   active?: Composition;
   url: string;
-} & Omit<React.HTMLAttributes<HTMLUListElement>, 'aria-relevant'>;
+} & React.HTMLAttributes<HTMLUListElement>;
 
 export function CompositionsPanel({
   url,

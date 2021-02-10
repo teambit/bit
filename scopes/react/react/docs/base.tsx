@@ -18,7 +18,7 @@ export type DocsSectionProps = {
   docs?: docsFile;
   compositions: React.ComponentType[];
   componentId: string;
-} & Omit<HTMLAttributes<HTMLDivElement>, 'aria-relevant'>;
+} & HTMLAttributes<HTMLDivElement>;
 
 const defaultDocs = {
   examples: [],
@@ -62,7 +62,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, ...rest }:
         <Content />
       )}
 
-      {/* <CompositionsSummary compositions={compositions} className={styles.compositionSection} /> */}
+      <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
 
       <ExamplesOverview examples={Content.examples || examples} />
 

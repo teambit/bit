@@ -7,7 +7,7 @@ export type CompositionsPanelNodeProps = {
   name: string;
   onClick: (event: React.MouseEvent<HTMLAnchorElement>) => void;
   isActive: boolean;
-} & Omit<React.HTMLAttributes<HTMLLIElement>, 'aria-relevant'>;
+} & React.HTMLAttributes<HTMLLIElement>;
 
 export function CompositionsPanelNode({ name, onClick, isActive, ...rest }: CompositionsPanelNodeProps) {
   return (
