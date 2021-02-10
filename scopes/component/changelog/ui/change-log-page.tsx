@@ -34,10 +34,10 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       <Separator className={styles.separator} />
       {snaps.map((snap, index) => {
         const author = {
-          displayName: snap.username,
-          email: snap.email,
+          displayName: snap.username || '',
+          email: snap.email || '',
         };
-        const timeStamp = new Date(parseInt(snap.date)).toString();
+        const date = snap.date ? new Date(parseInt(snap.date)).toString() : new Date().toString(); // this is until we change the types so that date is required
 
         return (
           <VersionBlock
@@ -46,8 +46,8 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
             isLatest={latestVersion === snap.tag}
             message={snap.message}
             author={author}
-            timestamp={timeStamp}
-            version={snap.tag}
+            timestamp={date}
+            version={snap.tag || ''} // this is until we change the types so that tag is required
           />
         );
       })}

@@ -22,7 +22,7 @@ const getChangeLogSnaps = gql`
 type SnapsResults = {
   getHost: {
     id: string;
-    logs: LegacyComponentLog;
+    logs: LegacyComponentLog[];
   };
 };
 
@@ -32,6 +32,6 @@ export function useSnaps(componentId: ComponentID) {
     variables: { id },
   });
 
-  const snaps = data?.getHost.logs;
+  const snaps = data?.getHost?.logs;
   return { snaps, ...rest };
 }
