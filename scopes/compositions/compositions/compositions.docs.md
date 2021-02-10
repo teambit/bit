@@ -3,44 +3,22 @@ description: Renders component instances in isolation
 labels: ['ui', 'tests']
 ---
 
-import { Button } from '@teambit/evangelist.elements.button';
-import { CompositionCard } from '@teambit/ui.composition-card';
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
+import { UserHeroExample } from './docs/user-hero';
+import { UserProfileExample } from './docs/user-profile'
 
-A composition captures a rendered instance of a component in isolation. A composition can be rendered as a standalone instance of a component or in a specific context, such as another consuming component, theme, or even a page.
+The Compositions aspect renders component 'compositions' in isolation and displays them in the Workspace UI and Scope UI.
+'Compositions' are, essentially, small apps that exhibit and test a component in different contexts and variations.
 
-For example, as you develop a “button” component, you can use compositions to view how every change looks and behaves inside other dependant components like “form” or “menu”.
-
-The Compositions aspect is an essential tool to authoring independent components as it renders component instances in "controlled environments", isolated and un-affected by code that was not purposefully included. 
-This sterile environment provides accurate and comprehensive understanding of their look and behavior, for manual and automated testings.
+The Compositions aspect is an essential tool to authoring independent components as it renders component instances in "controlled environments", isolated and un-affected by code that was not purposefully included.
+This sterile environment provides an accurate understanding of their look and behavior, for manual and automated testings.
 
 Moreover, a component's composition is a way to demonstrate the component for other developers looking to use it, and non-developers, such as designers and product managers, looking to inspect it.
 
 #### Example
 
-<div style={{maxWidth: 750}}>
-<div style={{display: 'flex', justifyContent: 'space-between'}}>
-        <CodeSnippet>
-                {
-`// button.compositions.jsx
-import React from 'react'
-import { Button } from './button'
-import { IrisTheme } from '@my-org/design-system/iris-theme'
-        
-export const PrimaryVariantComposition = () => {
-    return (
-        <IrisTheme>
-            <Button importance="primary">
-                Primary
-            </Button>
-        </IrisTheme>
-    );
-};`
-                }
-        </CodeSnippet>
-    <CompositionCard Composition={() => <Button style={{ width: 120 }} importance="cta" >Primary</Button>} name="Primary variant composition" />
-</div>
-</div>
+<UserHeroExample />
+
+<UserProfileExample />
 
 #### Features
 
@@ -57,8 +35,8 @@ Place your examples in the component's `*.compositions.*` file to have them rend
 
 **Developer-Designers collaboration** - Make visual compositions accessible to designers (and everyone else) to include them in the development and release process of web applications, in a visual way.
 
-
 ## Quickstart & configurations
+
 Compositions require no configuration. Any `*.compositions.*` or `*.composition.*` file will be loaded and displayed in the workspace UI.
 Any tagged version of a component will have its composition included in its build artifacts, to be used as part of the component's preview.
 
@@ -74,6 +52,7 @@ To add your own file pattern for compositions (to be automatically loaded and di
 ```
 
 ## Creating compositions
+
 > This document uses React code as snippets.
 
 Writing a composition does not require any configuration. Import the component to the component's `*.compositions.tsx` file, use it to build a composition and export the new component (a.k.a, the composition) with a named export.
@@ -94,7 +73,7 @@ Then, we'll import the component and use it to create the compositions:
 ```javascript
 // button.compositions.jsx
 import React from 'react';
-import { IrisTheme } from '@my-organization/design-system/iris-theme'
+import { IrisTheme } from '@my-organization/design-system/iris-theme';
 import { Button } from './button';
 
 export const PrimaryButton = () => {
@@ -123,23 +102,6 @@ export const SecondaryButton = () => {
     <CompositionCard Composition={() => (<Button importance="ghost" style={{ width: 120 }} >Secondary</Button>)} name="Secondary" />
 </div>
 
-## Setting canvas size for compositions
-
-Compositions reveal a component's behavior in different contexts. That also includes, different screen sizes. To do that simply add the `canvas` property to your compositions.
-
-For example:
-
-```tsx
-export const PrimaryButton = () => {
-  return <Button variant="primary">Click Me</Button>;
-};
-
-PrimaryButton.canvas = {
-  height: 800,
-  width: 400,
-};
-```
-
 ## Loading compositions
 
 The ["Environment"](https://bit.dev/teambit/envs/envs) in use will automatically detect the composition file for each component and use it to load its compositions to the workspace UI.
@@ -164,18 +126,17 @@ import { PrimaryButton } from './button.compositions.tsx';
 
 describe('Button', () => {
   it('renders correctly as "primary"', () => {
-    const component = testRenderer.create(
-      <PrimaryButton>test primary variant</PrimaryButton>
-    );
+    const component = testRenderer.create(<PrimaryButton>test primary variant</PrimaryButton>);
     const tree = component.toJSON();
     expect(tree).toMatchSnapshot();
   });
 });
 ```
 
-## Setting providers for all your compositions 
+## Setting providers for all your compositions
+
 Extend the [React](https://bit.dev/teambit/react/react) environment to customize its list of providers with your own composition providers.
-The extended environment will then wrap every composition with these providers to make sure your themes or mock data are accessible to all of them, 
+The extended environment will then wrap every composition with these providers to make sure your themes or mock data are accessible to all of them,
 without you having to repeat that task ever again.
 
 ## Compositions and storybook
