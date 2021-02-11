@@ -3,7 +3,7 @@ description: Transforms spaceless composition IDs into readable names with space
 labels: ['string', 'utility']
 ---
 
-import { humanizeCompositionId } from './humanize.tsx'
+import { humanizeCompositionId } from './humanize'
 
 ```jsx live=true
 
