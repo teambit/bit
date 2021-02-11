@@ -1,8 +1,10 @@
 import { SemVer } from 'semver';
 
+import { Snap, SnapProps } from '../snap';
+
 export type TagProps = {
-  hash: string;
   version: string;
+  snap: SnapProps;
 };
 
 /**
@@ -11,9 +13,9 @@ export type TagProps = {
 export class Tag {
   constructor(
     /**
-     * tag hash, can be used to load it by component-factory.getSnap
+     * hash of the component `Snap`.
      */
-    readonly hash: string,
+    readonly snap: Snap,
 
     /**
      * sematic version of the snap.
@@ -21,17 +23,21 @@ export class Tag {
     readonly version: SemVer
   ) {}
 
+  get hash(): string {
+    return this.snap.hash;
+  }
+
   /**
    * create a plain tag object.
    */
   toObject(): TagProps {
     return {
-      hash: this.hash,
+      snap: this.snap.toObject(),
       version: this.version.raw,
     };
   }
 
   static fromObject(tag: TagProps) {
-    return new Tag(tag.hash, new SemVer(tag.version));
+    return new Tag(Snap.fromObject(tag.snap), new SemVer(tag.version));
   }
 }
