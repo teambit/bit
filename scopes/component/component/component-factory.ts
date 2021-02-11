@@ -1,4 +1,4 @@
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import type { AspectDefinition } from '@teambit/aspect-loader';

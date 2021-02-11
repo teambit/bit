@@ -2,7 +2,7 @@ import { PubsubMain } from '@teambit/pubsub';
 import { dirname } from 'path';
 import { ComponentID } from '@teambit/component';
 
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { BIT_MAP, COMPONENT_ORIGINS } from 'bit-bin/dist/constants';
 import { Consumer } from 'bit-bin/dist/consumer';

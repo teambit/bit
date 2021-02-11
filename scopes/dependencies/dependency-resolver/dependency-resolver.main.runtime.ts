@@ -8,7 +8,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from 'bit-bin/dist/constants';
+import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY, CFG_PROXY, CFG_HTTPS_PROXY } from 'bit-bin/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
@@ -24,7 +24,7 @@ import {
 import { Version as VersionModel } from 'bit-bin/dist/scope/models';
 import LegacyComponent from 'bit-bin/dist/consumer/component';
 import fs from 'fs-extra';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
@@ -78,6 +78,19 @@ export interface DependencyResolverWorkspaceConfig {
    * and totally removes the need of a 'node_modules' directory in your project.
    */
   packageManager: string;
+
+  /**
+   * A proxy server for out going network requests by the package manager
+   * Used for both http and https requests (unless the httpsProxy is defined)
+   */
+  proxy?: string;
+
+  /**
+   * A proxy server for outgoing https requests by the package manager (fallback to proxy server if not defined)
+   * Use this in case you want different proxy for http and https requests.
+   */
+  httpsProxy?: string;
+
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
@@ -126,6 +139,11 @@ export type GetLinkerOptions = {
 
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
+};
+
+export type ProxyConfig = {
+  httpProxy?: string;
+  httpsProxy?: string;
 };
 
 const defaultLinkingOptions: LinkingOptions = {
@@ -397,11 +415,51 @@ export class DependencyResolverMain {
     return packageManager;
   }
 
+  async getProxyConfig(): Promise<ProxyConfig> {
+    let proxy = this.config.proxy;
+    let httpsProxy = this.config.httpsProxy || proxy;
+
+    // Take config from the aspect config if defined
+    if (proxy || httpsProxy) {
+      this.logger.debug(`proxy config taken from the dep resolver config. proxy: ${proxy} httpsProxy: ${httpsProxy}`);
+      return {
+        httpProxy: proxy,
+        httpsProxy,
+      };
+    }
+
+    // Take config from the package manager (npmrc) config if defined
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    let proxyConfig: ProxyConfig = {};
+    if (packageManager?.getProxyConfig && typeof packageManager?.getProxyConfig === 'function') {
+      proxyConfig = await packageManager?.getProxyConfig();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getProxyConfig) throw new Error('system package manager must implement `getProxyConfig()`');
+      proxyConfig = await systemPm.getProxyConfig();
+    }
+    if (proxyConfig?.httpProxy || proxyConfig?.httpsProxy) {
+      this.logger.debug(
+        `proxy config taken from the package manager config (npmrc). proxy: ${proxyConfig.httpProxy} httpsProxy: ${proxyConfig.httpsProxy}`
+      );
+      return proxyConfig;
+    }
+
+    proxy = this.globalConfig.getSync(CFG_PROXY);
+    httpsProxy = this.globalConfig.getSync(CFG_HTTPS_PROXY) || proxy;
+    if (proxy || httpsProxy) {
+      this.logger.debug(`proxy config taken from the global bit config. proxy: ${proxy} httpsProxy: ${httpsProxy}`);
+      return {
+        httpProxy: proxy,
+        httpsProxy,
+      };
+    }
+    return {};
+  }
+
   async getRegistries(): Promise<Registries> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let registries;
-    // eslint-disable-next-line global-require, import/no-dynamic-require
-    // TODO: support getting from default package manager
     if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
       registries = await packageManager?.getRegistries();
     } else {
