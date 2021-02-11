@@ -10,7 +10,7 @@ import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
-import { CENTRAL_BIT_HUB_NAME, CFG_USER_TOKEN_KEY } from '../../../constants';
+import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';

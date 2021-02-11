@@ -19,7 +19,7 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
-// import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
+import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
@@ -130,15 +130,16 @@ export async function exportMany({
         );
   }
 
-  const clientId = resumeExportId || Date.now().toString();
-  if (shouldPushToCentralHub()) {
+  if (resumeExportId) {
+    const remotes = manyObjectsPerRemote.map((o) => o.remote);
+    await validateRemotes(remotes, resumeExportId);
+    await persistRemotes(manyObjectsPerRemote, resumeExportId);
+  } else if (shouldPushToCentralHub()) {
     await pushAllToCentralHub();
   } else {
-    enrichContextFromGlobal(context);
     await pushToRemotes();
   }
-  // await validateRemotes(remotes, clientId, Boolean(resumeExportId));
-  // await persistRemotes(manyObjectsPerRemote, clientId);
+
   loader.start('updating data locally...');
   const results = await updateLocalObjects(lanesObjects);
   return {
@@ -346,13 +347,8 @@ the following ids were exported: ${successIds.join(', ')}`);
   }
 
   async function pushToRemotes(): Promise<void> {
-    if (resumeExportId) {
-      logger.debug('pushRemotesPendingDir - skip as the resumeClientId was passed');
-      // no need to transfer the objects, they're already on the server. also, since this clientId
-      // exists already on the remote pending-dir, it'll cause a collision.
-      return;
-    }
-    const pushOptions = { clientId };
+    enrichContextFromGlobal(context);
+    const pushOptions = { persist: true };
     const pushedRemotes: Remote[] = [];
     await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote, objectList } = objectsPerRemote;
@@ -367,7 +363,6 @@ the following ids were exported: ${successIds.join(', ')}`);
         pushedRemotes.push(remote);
       } catch (err) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
-        // await removePendingDirs(pushedRemotes, clientId);
         throw err;
       }
     });
@@ -839,77 +834,61 @@ async function convertToCorrectScopeHarmony(
   }
 }
 
-// async function removePendingDirs(pushedRemotes: Remote[], clientId: string) {
-//   await Promise.all(pushedRemotes.map((remote) => remote.action(RemovePendingDir.name, { clientId })));
-// }
+async function validateRemotes(remotes: Remote[], clientId: string) {
+  loader.start('verifying that objects can be merged on the remotes...');
+  try {
+    await Promise.all(
+      remotes.map((remote) =>
+        remote.action(ExportValidate.name, {
+          clientId,
+          isResumingExport: true,
+        })
+      )
+    );
+  } catch (err) {
+    logger.errorAndAddBreadCrumb('validateRemotes', 'failed validating remotes', {}, err);
+    throw err;
+  }
+}
 
-// async function validateRemotes(remotes: Remote[], clientId: string, isResumingExport = false) {
-//   loader.start('verifying that objects can be merged on the remotes...');
-//   try {
-//     await Promise.all(remotes.map((remote) => remote.action(ExportValidate.name, { clientId, isResumingExport })));
-//   } catch (err) {
-//     logger.errorAndAddBreadCrumb('validateRemotes', 'failed validating remotes', {}, err);
-//     if (!isResumingExport) {
-//       // when resuming export, we don't want to delete the pending-objects because some scopes
-//       // have them persisted and some not. we want to persist to all failing scopes.
-//       await removePendingDirs(remotes, clientId);
-//     }
-//     throw err;
-//   }
-// }
+async function persistRemotes(manyObjectsPerRemote: RemotesForPersist[], clientId: string) {
+  const persistedRemotes: string[] = [];
+  await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: RemotesForPersist) => {
+    const { remote } = objectsPerRemote;
+    loader.start(`persisting data on the remote "${remote.name}"...`);
+    const maxRetries = 3;
+    let succeed = false;
+    let lastErrMsg = '';
+    for (let i = 0; i < maxRetries; i += 1) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const exportedIds: string[] = await remote.action(ExportPersist.name, { clientId });
+        objectsPerRemote.exportedIds = exportedIds;
+        succeed = true;
+        break;
+      } catch (err) {
+        lastErrMsg = err.message;
+        logger.errorAndAddBreadCrumb(
+          'persistRemotes',
+          `failed on remote ${remote.name}, attempt ${i + 1} out of ${maxRetries}`,
+          {},
+          err
+        );
+      }
+    }
+    if (!succeed) {
+      throw new PersistFailed([remote.name], { [remote.name]: lastErrMsg });
+    }
+    logger.debugAndAddBreadCrumb('persistRemotes', `successfully pushed all ids to the bare-scope ${remote.name}`);
+    persistedRemotes.push(remote.name);
+  });
+}
 
-// async function persistRemotes(
-//   manyObjectsPerRemote: RemotesForPersist[],
-//   clientId: string,
-//   triggeredByResumeExportCmd = false
-// ) {
-//   const persistedRemotes: string[] = [];
-//   await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: RemotesForPersist) => {
-//     const { remote } = objectsPerRemote;
-//     loader.start(`persisting data on the remote "${remote.name}"...`);
-//     const maxRetries = 3;
-//     let succeed = false;
-//     let lastErrMsg = '';
-//     for (let i = 0; i < maxRetries; i += 1) {
-//       try {
-//         // eslint-disable-next-line no-await-in-loop
-//         const exportedIds: string[] = await remote.action(ExportPersist.name, { clientId });
-//         objectsPerRemote.exportedIds = exportedIds;
-//         succeed = true;
-//         break;
-//       } catch (err) {
-//         lastErrMsg = err.message;
-//         logger.errorAndAddBreadCrumb(
-//           'persistRemotes',
-//           `failed on remote ${remote.name}, attempt ${i + 1} out of ${maxRetries}`,
-//           {},
-//           err
-//         );
-//       }
-//     }
-//     if (!succeed) {
-//       const notPersistedRemotes = manyObjectsPerRemote
-//         .map((r) => r.remote.name)
-//         .filter((r) => !persistedRemotes.includes(r));
-//       throw new PersistFailed(
-//         remote.name,
-//         persistedRemotes,
-//         notPersistedRemotes,
-//         clientId,
-//         lastErrMsg,
-//         triggeredByResumeExportCmd
-//       );
-//     }
-//     logger.debugAndAddBreadCrumb('persistRemotes', `successfully pushed all ids to the bare-scope ${remote.name}`);
-//     persistedRemotes.push(remote.name);
-//   });
-// }
-
-// export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
-//   const scopeRemotes: Remotes = await getScopeRemotes(scope);
-//   const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r, scope)));
-//   const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
-//   await validateRemotes(remotesObj, exportId, true);
-//   await persistRemotes(remotesForPersist, exportId, true);
-//   return R.flatten(remotesForPersist.map((r) => r.exportedIds));
-// }
+export async function resumeExport(scope: Scope, exportId: string, remotes: string[]): Promise<string[]> {
+  const scopeRemotes: Remotes = await getScopeRemotes(scope);
+  const remotesObj = await Promise.all(remotes.map((r) => scopeRemotes.resolve(r, scope)));
+  const remotesForPersist: RemotesForPersist[] = remotesObj.map((remote) => ({ remote }));
+  await validateRemotes(remotesObj, exportId);
+  await persistRemotes(remotesForPersist, exportId);
+  return R.flatten(remotesForPersist.map((r) => r.exportedIds));
+}
