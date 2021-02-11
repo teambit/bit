@@ -23,7 +23,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
   const author = useMemo(() => {
     return {
       displayName: username,
-      email: email,
+      email,
     };
   }, [snap]);
   const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);

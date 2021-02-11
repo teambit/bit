@@ -2,6 +2,7 @@ import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
   COMPILER_ENV_TYPE,
@@ -38,7 +39,6 @@ import Source from './source';
 import Version from './version';
 import { getLatestVersion } from '../../utils/semver-helper';
 import { ObjectItem } from '../objects/object-list';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
 type State = {
   versions?: {
