@@ -82,6 +82,7 @@ export async function getAllVersionsInfo({
           };
           if (parentVersion) {
             versionInfo.version = parentVersion;
+            await addParentsRecursively(parentVersion);
           } else {
             versionInfo.error = versionInfo.tag
               ? new VersionNotFound(versionInfo.tag, modelComponent.id())
@@ -89,7 +90,6 @@ export async function getAllVersionsInfo({
             if (throws) throw versionInfo.error;
           }
           results.push(versionInfo);
-          if (parentVersion) await addParentsRecursively(parentVersion);
         })
       );
     };

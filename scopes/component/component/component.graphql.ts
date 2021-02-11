@@ -42,16 +42,6 @@ export function componentSchema(componentExtension: ComponentMain) {
         message: String
       }
 
-      type LogEntry {
-        message: String!
-        username: String
-        email: String
-        date: String
-        hash: String!
-        tag: String
-        # id: String!
-      }
-
       type Author {
         # display name of the snapper.
         displayName: String!
@@ -107,9 +97,6 @@ export function componentSchema(componentExtension: ComponentMain) {
 
         # list components
         list(offset: Int, limit: Int): [Component]!
-
-        # get component logs(snaps)
-        logs(id: String!): [LogEntry]!
       }
 
       type Query {
@@ -152,11 +139,6 @@ export function componentSchema(componentExtension: ComponentMain) {
           } catch (error) {
             return null;
           }
-        },
-        logs: async (host: ComponentFactory, { id }: { id: string }) => {
-          const componentId = await host.resolveComponentId(id);
-          // return (await host.getLogs(componentId)).map(log => ({...log, id: log.hash}))
-          return host.getLogs(componentId);
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);
