@@ -8,7 +8,6 @@ RUN bbit config set no_warnings false
 RUN bbit config set interactive false
 RUN bbit config set error_reporting true
 RUN ln -s /usr/local/bin/bbit /usr/local/bin/bit
-RUN mkdir -p /root/Library/Caches/Bit/logs
 RUN ln -s /tmp/symphony/etc/.bitrc.jsonc ~/.bitrc.jsonc
 WORKDIR /tmp/scope-fs
 CMD bit start
