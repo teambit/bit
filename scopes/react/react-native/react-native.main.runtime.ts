@@ -58,7 +58,7 @@ export class ReactNativeMain {
    */
   overridePreviewConfig(config?: Configuration) {
     const mergedConfig = config
-      ? webpackMerge(config, ReactNativeMain.nativeWebpackConf)
+      ? webpackMerge(ReactNativeMain.nativeWebpackConf, config)
       : ReactNativeMain.nativeWebpackConf;
     return this.react.overridePreviewConfig(mergedConfig);
   }
@@ -68,7 +68,7 @@ export class ReactNativeMain {
    */
   overrideDevServerConfig(config: Configuration) {
     const mergedConfig = config
-      ? webpackMerge(config, ReactNativeMain.nativeWebpackConf)
+      ? webpackMerge(ReactNativeMain.nativeWebpackConf, config)
       : ReactNativeMain.nativeWebpackConf;
     return this.react.overrideDevServerConfig(mergedConfig);
   }
@@ -78,7 +78,7 @@ export class ReactNativeMain {
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies()),
+      getDependencies: () => merge(this.reactNativeEnv.getDependencies(), dependencyPolicy),
     });
   }
 

@@ -168,7 +168,7 @@ export class ReactEnv implements Environment {
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
     const defaultConfig = this.getWebpackConfig(context);
-    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
+    const config = targetConfig ? webpackMerge(defaultConfig, targetConfig) : defaultConfig;
 
     return this.webpack.createDevServer(context, config);
   }
@@ -190,8 +190,8 @@ export class ReactEnv implements Environment {
 
     delete targetConfig?.entry;
 
-    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
-    return this.webpack.createBundler(context, config as any);
+    const config = targetConfig ? webpackMerge(defaultConfig, targetConfig) : defaultConfig;
+    return this.webpack.createBundler(context, config);
   }
 
   private getEntriesFromWebpackConfig(config?: Configuration): string[] {
