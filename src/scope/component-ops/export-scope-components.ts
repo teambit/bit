@@ -19,7 +19,7 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
-import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
+import { ExportPersist, ExportValidate } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
