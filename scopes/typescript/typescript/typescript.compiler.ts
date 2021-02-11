@@ -42,7 +42,10 @@ export class TypescriptCompiler implements Compiler {
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
     }
-    const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(this.options.tsconfig, '.');
+    const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
+      (this.options.tsconfig as any).compilerOptions,
+      '.'
+    );
     if (compilerOptionsFromTsconfig.errors.length) {
       // :TODO @david replace to a more concrete error type and put in 'exceptions' directory here.
       const formattedErrors = this.tsModule.formatDiagnosticsWithColorAndContext(
@@ -222,7 +225,7 @@ export class TypescriptCompiler implements Compiler {
 
   private async writeTypes(dirs: string[]) {
     await Promise.all(
-      this.options.types.map(async (typePath) => {
+      (this.options.types || []).map(async (typePath) => {
         const contents = await fs.readFile(typePath, 'utf8');
         const filename = path.basename(typePath);
 
