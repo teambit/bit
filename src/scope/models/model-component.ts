@@ -2,6 +2,7 @@ import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
   COMPILER_ENV_TYPE,
@@ -51,14 +52,7 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type ComponentLog = {
-  message: string;
-  username?: string;
-  email?: string;
-  date?: string;
-  hash: string;
-  tag?: string;
-};
+export type ComponentLog = LegacyComponentLog;
 
 export type ComponentProps = {
   scope: string | null | undefined;

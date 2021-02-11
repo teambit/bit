@@ -583,7 +583,7 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying(versions, range);
+    return semver.maxSatisfying<string>(versions, range);
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
@@ -592,16 +592,10 @@ export class ScopeMain implements ComponentFactory {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
-      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects, false);
-      // TODO: what to return if no version in objects
-      if (version) {
-        const snap = this.createSnapFromVersion(version);
-        const tag = new Tag(snap, new SemVer(versionStr));
-        tagMap.set(tag.version, tag);
-      }
+    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
+      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
+      tagMap.set(tag.version, tag);
     });
-
     return tagMap;
   }
 
