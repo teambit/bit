@@ -179,5 +179,6 @@
   "teambit.workspace/ui/status@0.0.264": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/status"},
   "teambit.workspace/variants@0.0.265": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.272": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
-  "version": "14.8.9-dev.290"
+  "ui/hooks/use-snaps": {"mainFile":"index.ts","rootDir":"scopes/component/ui/hooks/use-snaps","exported":false},
+  "version": "14.8.9-dev.291"
 }

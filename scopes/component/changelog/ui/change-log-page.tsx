@@ -4,7 +4,7 @@ import { Separator } from '@teambit/documenter.ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
-import { useSnaps } from './getlogs';
+import { useSnaps } from '@teambit/ui.hooks.use-snaps';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';

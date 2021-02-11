@@ -3,8 +3,8 @@ import { gql } from '@apollo/client';
 import { ComponentID } from '@teambit/component';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 
-const getChangeLogSnaps = gql`
-  query getChangeLogSnaps($id: String!) {
+const getComponentSnaps = gql`
+  query getComponentSnaps($id: String!) {
     getHost {
       id # used for GQL caching
       logs(id: $id) {
@@ -19,7 +19,7 @@ const getChangeLogSnaps = gql`
   }
 `;
 
-type SnapsResults = {
+export type SnapsResults = {
   getHost: {
     id: string;
     logs: LegacyComponentLog[];
@@ -28,7 +28,7 @@ type SnapsResults = {
 
 export function useSnaps(componentId: ComponentID) {
   const id = componentId.toString();
-  const { data, ...rest } = useDataQuery<SnapsResults>(getChangeLogSnaps, {
+  const { data, ...rest } = useDataQuery<SnapsResults>(getComponentSnaps, {
     variables: { id },
   });
 
