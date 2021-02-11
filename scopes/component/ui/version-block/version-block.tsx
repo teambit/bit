@@ -19,7 +19,7 @@ export type VersionBlockProps = {
  */
 export function VersionBlock({ isLatest, className, snap, componentId, ...rest }: VersionBlockProps) {
   const { username, email, message, tag, hash, date } = snap;
-  const version = tag || hash; // we have an issue here with the 'v' prefix. do we still want it if its a hash?
+  const version = tag || hash;
   const author = useMemo(() => {
     return {
       displayName: username,
@@ -42,7 +42,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
       <div className={classNames(styles.right, className)} {...rest}>
         <NavLink className={styles.titleLink} href={`/${componentId}?v=${version}`}>
           <H3 size="xs" className={styles.versionTitle}>
-            v{version}
+            {tag ? `v${tag}` : hash}
           </H3>
         </NavLink>
         <Contributors contributors={[author || {}]} timestamp={timestamp} />
