@@ -27,6 +27,7 @@ export default function reactNativeWebpackConfFactory(): Configuration {
 
       // this is for resolving react from env and not from consuming project
       alias: {
+        // this overrides base config to use react-native-compatible react:
         react: require.resolve('react'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-native$': require.resolve('react-native-web'),
