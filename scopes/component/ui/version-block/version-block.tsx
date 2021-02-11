@@ -1,48 +1,53 @@
+import { Author } from '@teambit/component';
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/ui.contributors';
 import { NavLink } from '@teambit/ui.routing.nav-link';
 import { Labels } from '@teambit/ui.version-label';
 import classNames from 'classnames';
-import { LegacyComponentLog } from '@teambit/legacy-component-log';
-import React, { HTMLAttributes, useMemo } from 'react';
+import React, { HTMLAttributes } from 'react';
 
 import styles from './version-block.module.scss';
 
 export type VersionBlockProps = {
   componentId: string;
+  version: string;
+  hash: string;
+  timestamp: string;
+  parents: string[];
+  author?: Author;
+  message: string;
   isLatest: boolean;
-  snap: LegacyComponentLog;
 } & HTMLAttributes<HTMLDivElement>;
 /**
  * change log section
  * @name VersionBlock
  */
-export function VersionBlock({ isLatest, className, snap, componentId, ...rest }: VersionBlockProps) {
-  const { username, email, message, tag, hash, date } = snap;
-  const version = tag || hash;
-  const author = useMemo(() => {
-    return {
-      displayName: username,
-      email,
-    };
-  }, [snap]);
-  const timestamp = useMemo(() => (date ? new Date(parseInt(date)).toString() : new Date().toString()), [date]);
+export function VersionBlock({
+  version,
+  isLatest,
+  className,
+  timestamp,
+  author,
+  message,
+  componentId,
+  ...rest
+}: VersionBlockProps) {
   return (
-    <div className={classNames(styles.versionWrapper, className)}>
+    <div className={styles.versionWrapper}>
       <div className={styles.left}>
         <Labels isLatest={isLatest} isCurrent={false} />
-        <NavLink className={styles.link} href={`~tests?v=${version}`}>
+        <NavLink className={styles.link} href={`~tests?version=${version}`}>
           Tests
         </NavLink>
-        <NavLink className={styles.link} href={`~compositions?v=${version}`}>
+        <NavLink className={styles.link} href={`~compositions?version=${version}`}>
           Compositions
         </NavLink>
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
-        <NavLink className={styles.titleLink} href={`/${componentId}?v=${version}`}>
+        <NavLink className={styles.titleLink} href={`/${componentId}?version=${version}`}>
           <H3 size="xs" className={styles.versionTitle}>
-            {tag ? `v${tag}` : hash}
+            v{version}
           </H3>
         </NavLink>
         <Contributors contributors={[author || {}]} timestamp={timestamp} />
