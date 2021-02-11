@@ -23,6 +23,15 @@ const componentFields = gql`
     }
     tags {
       version
+      snap {
+        hash
+        author {
+          displayName
+          email
+        }
+        timestamp
+        message
+      }
     }
   }
 `;

@@ -2,7 +2,6 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from 'react-router-dom';
 import { Dropdown } from '@teambit/evangelist.surfaces.dropdown';
 import { VersionLabel } from '@teambit/ui.version-label';
-import { Ellipsis } from '@teambit/ui.styles.ellipsis';
 import classNames from 'classnames';
 import React from 'react';
 
@@ -59,7 +58,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
 function VersionPlaceholder({ currentVersion, className }: { currentVersion?: string; className?: string }) {
   return (
     <div className={classNames(styles.placeholder, className)}>
-      <Ellipsis>{currentVersion}</Ellipsis>
+      <div>{currentVersion}</div>
       <Icon of="fat-arrow-down" />
     </div>
   );

@@ -1,9 +1,9 @@
 import { BitId } from '@teambit/legacy-bit-id';
 import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import type { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
+
 import { Component } from './component';
 import { State } from './state';
 import { Snap } from './snap';
@@ -51,8 +51,6 @@ export interface ComponentFactory {
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
 
   getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
-
-  getLogs(id: ComponentID): Promise<ComponentLog[]>;
 
   /**
    * returns a specific state of a component by hash or semver.
