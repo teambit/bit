@@ -22,7 +22,8 @@ In addition to that, the Dependency Resolver offers an efficient API to manually
 
 - **Optimized dependency installation:**
   The Dependency Resolver directs the package manager to install the right packages at the right place in the workspace file structure.
-  When a dependency appears in the workspace dependency graph more than once, it searches for a common version that satisfies _most_ dependent components and installs it at the workspace root directory, where it can be shared by all of them
+  When a dependency appears in the workspace dependency graph more than once, it searches for a common version that satisfies _most_ dependent
+  components and installs it at the workspace root directory, where it can be shared by all relevant components.
   (dependency versions that are used by a minority of components will be installed in each component's directory).
 
 - **A single 'install command for packages and components:**
@@ -30,7 +31,7 @@ In addition to that, the Dependency Resolver offers an efficient API to manually
   These components will then be linked to your `node_modules` directory, to keep the same import pattern for both module types, components and packages.
 
 - **Programmatic API for extensions and environments**
-  The Dependency Resolver allows other extensions and environments to use its API to register their own dependency policies.
+  The Dependency Resolver provides other extensions and environments with an API that allows them to register their own dependency policies.
   For example, the [React environment](https://bit.dev/teambit/react/react) uses the Dependency Resolver to set 'react-dom' as a peerDependency for all components using it.
 
 ## Quickstart & configuration
@@ -38,7 +39,7 @@ In addition to that, the Dependency Resolver offers an efficient API to manually
 ### Auto-registered dependency version and type
 
 Dependency policies define the version and dependency type of each package used by components in the workspace.
-When installing a package, the Dependency Resolver registers the package version in the dependency configuration (if a version is not specified upon installation, it will default to the latest version).
+When installing a package, the Dependency Resolver registers its version in the dependency configuration (if a version is not specified upon installation, it will default to the latest one).
 
 ```json
 // At the root-level of the workspace configuration JSON
@@ -47,7 +48,7 @@ When installing a package, the Dependency Resolver registers the package version
     "policy": {
       "dependencies": {
         "lodash": "4.17.0"
-      }.
+      }
     }
   }
 }
@@ -60,12 +61,14 @@ Cases of conflicting policies are resolved according to a hierarchy of source ty
 
 The hierarchy in a descending order:
 
-1. Policies set by the `component.json` file of an "ejected" component (`bit eject-conf <component-id>`)
-2. Policies set by 'variants' (at the workspace configuration file, nested under 'variant')
-3. Policies set by the workspace (at the root-level)
-4. Policies set by various extensions/aspects (using `registerDependencyPolicy`)
-5. Policies set by the environment (using `getDependencies`)
-6. Bit’s internal dependency calculations
+1. Policies set by Variants (`@teambit/variants`) and the `component.json` files of "ejected" components (these two sources are merged by Variants).
+2. Policies set by various extensions/aspects (using `registerDependencyPolicy`)
+3. Policies set by the environment (using `getDependencies`)
+4. Bit’s automated dependency detections, and policies set by the Dependency Resolver at the workspace configuration root-level.
+
+> Learn more about how the Variants aspect selects and merges policies that were set using it, [here](https://bit.dev/teambit/workspace/variants)
+
+> Use the `bit dependencies <component-id>` command to understand the calculations and interactions that resolved in the generated dependency graph of a specific component.
 
 ### Select a package manager
 
@@ -314,7 +317,7 @@ The package manager can be configured to use a proxy for outgoing network reques
 }
 ```
 
-##### A proxy can also be set in Bit's global configuration
+##### A proxy can also be set in NPM's and Bit's global configurations
 
 To get the value for 'proxy'/'https-proxy':
 
@@ -331,6 +334,10 @@ $ bit config set proxy http://domain-one.proxy.com:8080
 
 $ bit config set https-proxy http://domain-one.proxy.com:8080
 ```
+
+Read about setting a proxy in NPM's global configuration [here](https://docs.npmjs.com/cli/v6/using-npm/config#https-proxy)
+
+> Notice the Dependency Resolver config will override _all_ other proxy configurations. The NPM config will override Bit's global proxy configurations.
 
 ## CLI reference
 
