@@ -133,8 +133,6 @@
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "^4.1.1",
         "@types/puppeteer": "^3.0.1",
-        "@types/react": "17.0.1",
-        "@types/react-dom": "17.0.0",
         "@types/react-router-dom": "^5.1.5",
         "@types/react-tabs": "^2.3.2",
         "@types/socket.io-client": "^1.4.33",
@@ -232,10 +230,8 @@
         "postcss-safe-parser": "^4.0.2",
         "pretty-time": "^1.1.0",
         "proper-lockfile": "^4.1.1",
-        "react": "^17.0.1",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "^10.2.1",
-        "react-dom": "^17.0.1",
         "react-error-overlay": "^6.0.7",
         "react-flow-renderer": "8.3.7",
         "react-router-dom": "^5.2.0",
@@ -335,9 +331,7 @@
             "bit-bin": "-"
           },
           "peerDependencies": {
-            "bit-bin": "14.8.9-dev.291",
-            "react": ">=16.8.0 || ^17.0.0",
-            "react-dom": ">=16.8.0 || ^17.0.0"
+            "bit-bin": "14.8.9-dev.291"
           }
         }
       },
@@ -478,7 +472,6 @@
             "graceful-fs": "4.2.4"
           },
           "devDependencies": {
-            "@types/react": "^16.9.43",
             "@types/mocha": "^5.2.7",
             // why this is needed? try to automate this
             "@types/node": "^12.12.27"
@@ -486,9 +479,7 @@
           "peerDependencies": {
             "bit-bin": "-",
             "browserslist": "-",
-            "graphql": "-",
-            "react": ">=16.8.0 || ^17.0.0",
-            "react-dom": ">=16.8.0 || ^17.0.0"
+            "graphql": "-"
           }
         }
       }
