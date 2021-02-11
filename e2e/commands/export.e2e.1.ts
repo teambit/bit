@@ -745,7 +745,9 @@ describe('bit export command', function () {
           expect(output).to.have.string('exported the following 2 component');
         });
       });
-      describe('circular dependencies between the scopes', () => {
+      // this doesn't work locally. on bit.dev there is a whole mechanism to handle export to
+      // multiple scopes (even when they have circular dependencies).
+      describe.skip('circular dependencies between the scopes', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);

@@ -84,6 +84,7 @@ export async function exportMany({
   codemod = false,
   lanesObjects = [],
   allVersions,
+  originDirectly,
   idsWithFutureScope,
   resumeExportId,
 }: {
@@ -97,6 +98,7 @@ export async function exportMany({
   codemod: boolean;
   lanesObjects?: Lane[];
   allVersions: boolean;
+  originDirectly: boolean;
   idsWithFutureScope: BitIds;
   resumeExportId?: string | undefined;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
@@ -158,7 +160,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy) return false;
+    if (isLegacy || originDirectly) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub

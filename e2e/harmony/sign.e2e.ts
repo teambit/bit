@@ -44,7 +44,7 @@ describe('sign command', function () {
       expect(comp1.buildStatus).to.equal('succeed');
     });
   });
-  describe('circular dependencies between two scopes', () => {
+  describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();

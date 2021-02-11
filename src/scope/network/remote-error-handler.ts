@@ -41,7 +41,7 @@ export function remoteErrorHandler(code: number, parsedError: Record<string, any
       return new ClientIdInUse((parsedError && parsedError.clientId) || err);
     }
     case 137: {
-      return new ServerIsBusy(parsedError.queueSize, parsedError.nextClientStale);
+      return new ServerIsBusy(parsedError.queueSize, parsedError.currentExportId);
     }
   }
 }
