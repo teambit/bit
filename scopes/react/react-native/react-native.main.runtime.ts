@@ -1,4 +1,4 @@
-import { Configuration } from 'webpack';
+import type { Configuration } from 'webpack';
 import { merge as webpackMerge } from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
@@ -9,8 +9,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-
-const webpackConfig = require('./webpack/webpack.config');
+import reactNativeWebpackConfFactory from './webpack/webpack.config';
 
 const jestConfig = require.resolve('./jest/jest.config');
 
@@ -57,8 +56,10 @@ export class ReactNativeMain {
   /**
    * override the preview config in the env.
    */
-  overridePreviewConfig(config: Configuration) {
-    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
+  overridePreviewConfig(config?: Configuration) {
+    const mergedConfig = config
+      ? webpackMerge(config, ReactNativeMain.nativeWebpackConf)
+      : ReactNativeMain.nativeWebpackConf;
     return this.react.overridePreviewConfig(mergedConfig);
   }
 
@@ -66,7 +67,9 @@ export class ReactNativeMain {
    * override the dev server configuration.
    */
   overrideDevServerConfig(config: Configuration) {
-    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
+    const mergedConfig = config
+      ? webpackMerge(config, ReactNativeMain.nativeWebpackConf)
+      : ReactNativeMain.nativeWebpackConf;
     return this.react.overrideDevServerConfig(mergedConfig);
   }
 
@@ -86,12 +89,18 @@ export class ReactNativeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactNativeEnv), transformers);
   }
 
+  // lazy because conf executes require.resolve() side effects.
+  // singleton because having more than one instance of plugins/aliases _might_ cause bugs.
+  private static _nativeWebpackConf: Configuration;
+  static get nativeWebpackConf() {
+    return ReactNativeMain._nativeWebpackConf || (ReactNativeMain._nativeWebpackConf = reactNativeWebpackConfFactory());
+  }
   static dependencies: Aspect[] = [ReactAspect, EnvsAspect];
   static runtime = MainRuntime;
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
     const reactNativeEnv = react.compose([
-      react.overrideDevServerConfig(webpackConfig),
-      react.overridePreviewConfig(webpackConfig),
+      react.overrideDevServerConfig(ReactNativeMain.nativeWebpackConf),
+      react.overridePreviewConfig(ReactNativeMain.nativeWebpackConf),
       react.overrideJestConfig(jestConfig),
       react.overrideDependencies(getReactNativeDeps()),
     ]);
@@ -113,7 +122,7 @@ function getReactNativeDeps() {
       react: '-',
       'react-dom': '-',
       'react-native': '-',
-      
+
       '@types/react': { version: '^16.14.3', resolveFromEnv: true },
       '@types/react-dom': { version: '^16.9.10', resolveFromEnv: true },
       '@types/react-native': '^0.63.2',
@@ -122,7 +131,7 @@ function getReactNativeDeps() {
     peerDependencies: {
       react: { version: '>=16.8.0 || <17.0.0', resolveFromEnv: true },
       'react-dom': { version: '>=16.8.0 || <17.0.0', resolveFromEnv: true },
-      // TODO - ask the correct version from Josh 
+      // TODO - ask the correct version from Josh
       'react-native-web': { version: '^0.14.0', resolveFromEnv: true },
     },
   };
