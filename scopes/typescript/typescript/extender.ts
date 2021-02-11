@@ -1,4 +1,5 @@
 import { merge } from 'lodash';
+import { TsConfigSourceFile } from 'typescript';
 import { UseExtenderFunction } from '@teambit/envs';
 import {
   ExtendedTypescriptCompilerOptions,
@@ -6,52 +7,52 @@ import {
   emptySingleExtendedTsCompilerOptions,
   SingleExtendedTypescriptCompilerOption,
   ExtenderOptions,
+  TypeScriptOptional,
 } from './compiler-options';
 
-type TypeScriptCompilersOptionsParameter = {
-  tsWorkspaceOptions: Partial<TypeScriptCompilerOptions>;
+type ExtendedTypeScriptOptions = {
+  baseTypeScriptOptions: TypeScriptOptional;
   tsBuildOptions?: Partial<TypeScriptCompilerOptions>;
-};
-
-type TypsecriptExtendOptionsParameter = {
-  tsExtenderOptions: ExtenderOptions;
-  buildExtenderOptions: ExtenderOptions;
+  overrideExistingBaseConfig: Boolean;
+  overrideExistingBuildConfig: Boolean;
 };
 
 export type UseTypescriptParameters = {
-  vendorConfigs: TypeScriptCompilersOptionsParameter;
-  options: TypsecriptExtendOptionsParameter;
+  vendorConfig: TsConfigSourceFile;
+  options?: ExtendedTypeScriptOptions;
   tsModule?: any;
 };
 
 /**
  * add ts compiler to the compilers array of an environment.
  * @param {UseTypescriptParameters} params object containing the following parameters:
- * @param {TypeScriptCompilersOptionsParameter} params.vendorConfigs ts options for workspace and build compilation, flat object. TsConfig is part of the options object.
- * note: if no build options are supplied workspace options will be applied during the build compilation
- * @param {TypsecriptExtendOptionsParameter} params.options extender options, such as overrideExisting
+ * @param {TsConfigSourceFile} params.vendorConfig baseTsConfig - if no build ts config is provided in the options parameter, this will be
+ * used for both workspace and build Ts compilation
+ * @param {ExtendedTypeScriptOptions} params.options extender options, includes options for the base ts config, full config options for
+ * build Ts config (if required separately to the base config), and whether to override existing base and/or build configs
  * @param {any} params.tsModule typeof `ts` module instance. If not passed, the env will use it's in-built ts module instance.
  */
 export const UseTypescript: UseExtenderFunction = ({
-  params,
-}: {
-  params: UseTypescriptParameters;
-}): ExtendedTypescriptCompilerOptions => {
+  vendorConfig,
+  options,
+  tsModule,
+}: UseTypescriptParameters): ExtendedTypescriptCompilerOptions => {
   const extendedWsOptions: SingleExtendedTypescriptCompilerOption = {
-    ...params.vendorConfigs.tsWorkspaceOptions,
-    ...params.options.tsExtenderOptions.overrideExistingConfig,
+    tsconfig: vendorConfig,
+    ...options?.baseTypeScriptOptions,
+    overrideExistingConfig: options?.overrideExistingBaseConfig,
   };
 
-  const extendedBuildOptions: SingleExtendedTypescriptCompilerOption = params.vendorConfigs.tsBuildOptions
+  const extendedBuildOptions: SingleExtendedTypescriptCompilerOption = options?.tsBuildOptions
     ? {
-        ...params.vendorConfigs.tsBuildOptions,
-        ...params.options.buildExtenderOptions.overrideExistingConfig,
+        overrideExistingConfig: options.overrideExistingBuildConfig,
+        ...options.tsBuildOptions,
       }
     : extendedWsOptions;
 
   return {
     tsWorkspaceOptions: merge(emptySingleExtendedTsCompilerOptions, extendedWsOptions),
     tsBuildOptions: merge(emptySingleExtendedTsCompilerOptions, extendedBuildOptions),
-    tsModule: params.tsModule,
+    tsModule: tsModule,
   };
 };

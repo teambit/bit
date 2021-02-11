@@ -24,13 +24,13 @@ export type ExtenderOptions = {
    * enable using both TS and Babel compilation on the environment
    */
   useBabelAndTypescript?: Boolean;
-};
+} & Partial<CompilerOptions>;
 
 export type ExtendedBabelOptions = {
   /**
    * If provided overrides the environments' @babel/core version
    */
-  module?: any;
+  babelModule?: any;
 } & Partial<BabelCompilerOptions> &
   ExtenderOptions;
 

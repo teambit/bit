@@ -4,7 +4,6 @@ import {
   UseTypescript,
   UseTypescriptParameters,
   ExtendedTypescriptCompilerOptions,
-  emptyExtendedTsCompilerOptions,
   TypeScriptCompilerOptions,
 } from '@teambit/typescript';
 import { UseBabel, UseBabelParameters, ExtendedBabelOptions, BabelCompilerOptions } from '@teambit/babel';
@@ -40,9 +39,14 @@ export class ReactExtender {
     return merge(this.stateOverride, overrideStatePartial);
   };
 
-  useTypescript: UseExtenderFunction = (params: UseTypescriptParameters): ReactExtender => {
-    const userDefinedTypeSriptConfig = UseTypescript(params.vendorConfigs, params.options, params.tsModule); // TODO work out how to pass the params as an object!
-    this.updateStateOverride(userDefinedTypeSriptConfig);
+  useTypescript = ({ vendorConfig, options, tsModule }: UseTypescriptParameters): this => {
+    const userDefinedTypeScriptConfig = UseTypescript(vendorConfig, options, tsModule); // TODO work out how to pass the params as an object!
+    const stateToMerge: ExtendedReactEnvState = {
+      compiler: {
+        extendedTsCompilerConfig: userDefinedTypeScriptConfig,
+      },
+    };
+    this.updateStateOverride(stateToMerge);
     return this;
   };
 
@@ -51,15 +55,25 @@ export class ReactExtender {
     return this.stateOverride.compiler?.extendedBabelCompilerConfig.useBabelAndTypescript ?? true;
   }
 
-  useBabel: UseExtenderFunction = (params: UseBabelParameters): ReactExtender => {
-    const userDefinedBabelConfig = UseBabel(params.vendorConfig, params.options, params.module);
-    this.updateStateOverride(userDefinedBabelConfig);
+  useBabel = ({ vendorConfig, options, babelModule }: UseBabelParameters): this => {
+    const userDefinedBabelConfig = UseBabel({ vendorConfig, options, babelModule });
+    const stateToMerge: ExtendedReactEnvState = {
+      compiler: {
+        extendedBabelCompilerConfig: userDefinedBabelConfig,
+      },
+    };
+    this.updateStateOverride(stateToMerge);
     return this;
   };
 
-  useMdx: UseExtenderFunction = (params: UseMdxParameters): ReactExtender => {
-    const userDefinedMdxConfig = UseMdx(params.vendorConfig, params.options, params.module);
-    this.updateStateOverride(userDefinedMdxConfig);
+  useMdx = (params: UseMdxParameters): ReactExtender => {
+    const userDefinedMdxConfig = UseMdx(params);
+    const stateToMerge: ExtendedReactEnvState = {
+      compiler: {
+        extendedMdxCompilerConfig: userDefinedMdxConfig,
+      },
+    };
+    this.updateStateOverride(stateToMerge);
     return this;
   };
 
@@ -126,7 +140,7 @@ export class ReactExtender {
     };
   }
 
-  getState(): ReactEnvState {
+  finally(): ReactEnvState {
     return this.buildState();
   }
 }

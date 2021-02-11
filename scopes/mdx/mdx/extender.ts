@@ -14,7 +14,7 @@ export type UseMdxParameters = {
  * @param options Extending options, such as overrideExisting
  * @param module typeof Mdx module instance
  */
-export const UseMdx: UseExtenderFunction = (params: UseMdxParameters): ExtendedMdxOptions => {
+export const UseMdx = (params: UseMdxParameters): ExtendedMdxOptions => {
   const extendedOptions = { ...params.vendorConfig, ...params.options, ...params.module };
   return merge(emptyExtendedMdxOptions, extendedOptions);
 };

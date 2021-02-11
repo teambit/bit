@@ -6,11 +6,13 @@ export type TypeScriptCompilerOptions = {
    * tsconfig to use during compilation.
    */
   tsconfig: TsConfigSourceFile;
+} & Partial<TypeScriptOptional>;
 
+export type TypeScriptOptional = {
   /**
    * path for .d.ts files to include during build.
    */
-  types: string[];
+  types?: string[];
 } & Partial<CompilerOptions>;
 
 export type ExtenderOptions = {
