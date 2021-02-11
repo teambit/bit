@@ -15,7 +15,9 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   const component = useContext(ComponentContext);
   const { snaps, loading } = useSnaps(component.id);
 
-  if (!snaps && !loading) {
+  if (!snaps) return null;
+
+  if (snaps.length === 0 && !loading) {
     return (
       <EmptyBox
         title="This component is new and doesn’t have a changelog yet."
@@ -25,29 +27,19 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     );
   }
 
-  if (!snaps) return null;
+  const latestVersion = snaps[0]?.tag;
 
-  const latestVersion = snaps[0].tag;
   return (
     <div className={classNames(styles.changeLogPage, className)}>
       <H1 className={styles.title}>History</H1>
       <Separator className={styles.separator} />
       {snaps.map((snap, index) => {
-        const author = {
-          displayName: snap.username || '',
-          email: snap.email || '',
-        };
-        const date = snap.date ? new Date(parseInt(snap.date)).toString() : new Date().toString(); // this is until we change the types so that date is required
-
         return (
           <VersionBlock
             key={index}
             componentId={component.id.fullName}
             isLatest={latestVersion === snap.tag}
-            message={snap.message}
-            author={author}
-            timestamp={date}
-            version={snap.tag || ''} // this is until we change the types so that tag is required
+            snap={snap}
           />
         );
       })}
