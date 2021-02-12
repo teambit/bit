@@ -98,7 +98,7 @@ export async function exportMany({
   codemod: boolean;
   lanesObjects?: Lane[];
   allVersions: boolean;
-  originDirectly: boolean;
+  originDirectly?: boolean;
   idsWithFutureScope: BitIds;
   resumeExportId?: string | undefined;
 }): Promise<{ exported: BitIds; updatedLocally: BitIds; newIdsOnRemote: BitId[] }> {
