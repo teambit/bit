@@ -8,7 +8,6 @@ import { CompilerAspect } from '@teambit/compiler';
 import { ComponentAspect } from '@teambit/component';
 import { CompositionsAspect } from '@teambit/compositions';
 import { ConfigAspect } from '@teambit/config';
-import { GlobalConfigAspect } from '@teambit/global-config';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
@@ -106,7 +105,6 @@ export const manifestsMap = {
   [ReactRouterAspect.id]: ReactRouterAspect,
   [TypescriptAspect.id]: TypescriptAspect,
   [PanelUiAspect.id]: PanelUiAspect,
-  [GlobalConfigAspect.id]: GlobalConfigAspect,
   [BabelAspect.id]: BabelAspect,
   [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
