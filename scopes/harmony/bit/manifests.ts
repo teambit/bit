@@ -57,6 +57,7 @@ import { BitDevAspect } from '@teambit/bit-dev';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
+import { ExportAspect } from '@teambit/export';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -118,6 +119,7 @@ export const manifestsMap = {
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [BitDevAspect.id]: BitDevAspect,
+  [ExportAspect.id]: ExportAspect,
 };
 
 export function isCoreAspect(id: string) {
