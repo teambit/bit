@@ -49,12 +49,10 @@ import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
-import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
-import { ResumeExportCmd } from './export/resume-export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -723,7 +721,6 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
