@@ -1,4 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
+
 import { exportAction } from 'bit-bin/dist/api/consumer';
 import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
 import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
