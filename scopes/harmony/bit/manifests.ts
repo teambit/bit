@@ -8,6 +8,7 @@ import { CompilerAspect } from '@teambit/compiler';
 import { ComponentAspect } from '@teambit/component';
 import { CompositionsAspect } from '@teambit/compositions';
 import { ConfigAspect } from '@teambit/config';
+import { GlobalConfigAspect } from '@teambit/global-config';
 import { DependencyResolverAspect } from '@teambit/dependency-resolver';
 import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
@@ -57,6 +58,7 @@ import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
+import { ExportAspect } from '@teambit/export';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -73,6 +75,7 @@ export const manifestsMap = {
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
+  [GlobalConfigAspect.id]: GlobalConfigAspect,
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
   [MultiCompilerAspect.id]: MultiCompilerAspect,
@@ -118,6 +121,7 @@ export const manifestsMap = {
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [BitDevAspect.id]: BitDevAspect,
+  [ExportAspect.id]: ExportAspect,
 };
 
 export function isCoreAspect(id: string) {

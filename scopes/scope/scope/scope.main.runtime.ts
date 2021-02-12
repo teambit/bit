@@ -28,7 +28,8 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
-import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version, Lane } from 'bit-bin/dist/scope/models';
 import { Ref, Repository } from 'bit-bin/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
@@ -48,12 +49,10 @@ import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
-import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
-import { ResumeExportCmd } from './export/resume-export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -589,10 +588,10 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
-  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying(versions, range);
+    return semver.maxSatisfying(versions, range)?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
@@ -722,7 +721,6 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);

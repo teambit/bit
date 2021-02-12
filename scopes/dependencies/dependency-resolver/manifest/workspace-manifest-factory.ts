@@ -195,10 +195,13 @@ function updateDependencyVersion(
 ): void {
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
-    const variantVersion = variantPolicy.getDepVersion(packageName);
+    const variantVersion = variantPolicy.getDepVersion(packageName, dependency.lifecycle);
     const variantVersionWithoutMinus = variantVersion && variantVersion !== '-' ? variantVersion : undefined;
     const version =
-      variantVersionWithoutMinus || rootPolicy.getDepVersion(packageName) || dependency.version || '0.0.1-new';
+      variantVersionWithoutMinus ||
+      rootPolicy.getDepVersion(packageName, dependency.lifecycle) ||
+      dependency.version ||
+      '0.0.1-new';
     dependency.setVersion(version);
   }
 }

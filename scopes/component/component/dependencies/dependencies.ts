@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { BitError } from '@teambit/bit-error';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 
 const DEV_ENV = 'development';
 const RUNTIME_ENV = 'runtime';
