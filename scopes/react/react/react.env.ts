@@ -158,11 +158,12 @@ export class ReactEnv implements Environment {
   }
 
   getDevEnvId(id?: string) {
+    if (typeof id !== 'string') return ReactAspect.id;
     return id || ReactAspect.id;
   }
 
   /**
-   * get a schema generator instan ce configured with the correct tsconfig.
+   * get a schema generator instance configured with the correct tsconfig.
    */
   getSchemaExtractor(tsconfig: TsConfigSourceFile) {
     return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
