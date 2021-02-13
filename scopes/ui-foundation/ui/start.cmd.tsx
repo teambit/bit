@@ -1,16 +1,10 @@
-import { Command, CommandOptions } from '@teambit/cli';
-import { PubsubMain } from '@teambit/pubsub';
-import { Logger } from '@teambit/logger';
-
 import React from 'react';
-import { render } from 'ink';
-
-import type { UiMain } from '../ui.main.runtime';
-import { CliOutput } from './cli-output';
-import { report } from './report';
+import { Command, CommandOptions } from '@teambit/cli';
+import { Logger } from '@teambit/logger';
+import { UIServerConsole } from '@teambit/cli.ui-server-console';
+import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
-  startingtimestamp;
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
@@ -30,9 +24,7 @@ export class StartCmd implements Command {
      */
     private ui: UiMain,
 
-    private logger: Logger,
-
-    private pubsub: PubsubMain
+    private logger: Logger
   ) {}
 
   async report(
@@ -41,20 +33,22 @@ export class StartCmd implements Command {
       dev,
       port,
       rebuild,
+      verbose,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<string> {
-    return report([uiRootName, userPattern], { dev, port, rebuild }, this.ui, this.logger, this.pubsub);
-  }
+    this.logger.off();
+    const pattern = userPattern && userPattern.toString();
 
-  private asyncRender(startingTimestamp, pubsub, commandFlags, uiServer) {
-    render(
-      <CliOutput
-        startingTimestamp={startingTimestamp}
-        pubsub={pubsub}
-        commandFlags={commandFlags}
-        uiServer={uiServer}
-      />
-    );
+    const uiServer = await this.ui.createRuntime({
+      uiRootName,
+      pattern,
+      dev,
+      port: port ? parseInt(port) : undefined,
+      rebuild,
+      verbose,
+    });
+
+    return `Bit server has started on port ${uiServer.port}`;
   }
 
   async render(
@@ -73,42 +67,27 @@ export class StartCmd implements Command {
       return processWrite(data, cb);
     };
 
-    this.startingtimestamp = Date.now();
+    // const startTime = Date.now();
 
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
-    this.ui
-      .createRuntime({
-        uiRootName,
-        pattern,
-        dev,
-        port: port ? parseInt(port) : undefined,
-        rebuild,
-      })
-      .then((uiServer) => {
-        this.ui.clearConsole();
-        const startingTimestamp = Date.now();
-        const pubsub = this.pubsub;
-        const commandFlags = { dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: true };
-        this.asyncRender(startingTimestamp, pubsub, commandFlags, uiServer);
-      })
-      .catch((e) => {
-        throw e;
-      });
+    const [, uiRoot] = this.ui.getUi();
+    const appName = uiRoot.name;
+    const uiServer = this.ui.createRuntime({
+      uiRootName,
+      pattern,
+      dev,
+      port: port ? parseInt(port) : undefined,
+      rebuild,
+      verbose,
+    });
 
+    // DO NOT CHANGE THIS - this meant to be an async hook.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
+    this.ui.invokeOnStart();
     this.ui.clearConsole();
 
-    return (
-      <>
-        <CliOutput
-          startingTimestamp={Date.now()}
-          pubsub={this.pubsub}
-          // make sure browser doesn't open until making it work constantly and correctly.
-          commandFlags={{ dev: !!dev, port, verbose: !!verbose, suppressBrowserLaunch: true }}
-          uiServer={null} // Didn't start yet
-        />
-      </>
-    );
+    return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
 }

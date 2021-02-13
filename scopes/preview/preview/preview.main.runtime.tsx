@@ -1,5 +1,6 @@
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { BundlerAspect, BundlerMain } from '@teambit/bundler';
+import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
@@ -20,6 +21,7 @@ import { PreviewTask } from './preview.task';
 import { BundlingStrategy } from './bundling-strategy';
 import { EnvBundlingStrategy, ComponentBundlingStrategy } from './strategies';
 import { RuntimeComponents } from './runtime-components';
+import { PreviewStartPlugin } from './preview.start-plugin';
 
 const noopResult = {
   results: [],
@@ -206,7 +208,15 @@ export class PreviewMain {
   static slots = [Slot.withType<PreviewDefinition>(), Slot.withType<BundlingStrategy>()];
 
   static runtime = MainRuntime;
-  static dependencies = [BundlerAspect, BuilderAspect, ComponentAspect, UIAspect, EnvsAspect, WorkspaceAspect];
+  static dependencies = [
+    BundlerAspect,
+    BuilderAspect,
+    ComponentAspect,
+    UIAspect,
+    EnvsAspect,
+    WorkspaceAspect,
+    PubsubAspect,
+  ];
 
   static defaultConfig = {
     bundlingStrategy: 'env',
@@ -214,13 +224,14 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace, pubsub]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
       UiMain,
       EnvsMain,
-      Workspace | undefined
+      Workspace | undefined,
+      PubsubMain
     ],
     config: PreviewConfig,
     [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
@@ -234,6 +245,8 @@ export class PreviewMain {
       builder,
       workspace?.getTempDir(PreviewAspect.id) || DEFAULT_TEMP_DIR
     );
+
+    if (workspace) uiMain.registerStartPlugin(new PreviewStartPlugin(workspace, bundler, uiMain, pubsub));
 
     componentExtension.registerRoute([new PreviewRoute(preview)]);
     bundler.registerTarget([

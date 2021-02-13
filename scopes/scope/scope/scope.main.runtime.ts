@@ -588,10 +588,10 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
-  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying(versions, range);
+    return semver.maxSatisfying(versions, range)?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {

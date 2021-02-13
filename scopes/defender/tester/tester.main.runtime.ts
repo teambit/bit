@@ -207,8 +207,9 @@ export class TesterMain {
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
       ui.registerOnStart(async () => {
-        if (!config.watchOnStart) return false;
-        return tester.uiWatch();
+        if (!config.watchOnStart) return undefined;
+        await tester.uiWatch();
+        return undefined;
       });
 
       cli.register(new TestCmd(tester, workspace, logger));
