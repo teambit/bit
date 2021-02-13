@@ -54,7 +54,7 @@ Runs the development serve (that includes running the Workspace UI).
 
 ```shell
 // run the dev server
-$ bbit start
+$ bit start
 ```
 
 _Learn more [here](https://bit.dev/teambit/compilation/bundler)._
@@ -64,7 +64,7 @@ _Learn more [here](https://bit.dev/teambit/compilation/bundler)._
 Runs the build pipeline (without tagging components with a new release version).
 
 ```shell
-$ bbit build
+$ bit build
 ```
 
 _Learn more [here](https://bit.dev/teambit/pipelines/builder)._
@@ -74,7 +74,7 @@ _Learn more [here](https://bit.dev/teambit/pipelines/builder)._
 Runs all tests.
 
 ```shell
-$ bbit test
+$ bit test
 ```
 
 _Learn more [here](https://bit.dev/teambit/defender/tester)._
@@ -84,7 +84,7 @@ _Learn more [here](https://bit.dev/teambit/defender/tester)._
 Compiles all components.
 
 ```shell
-$ bbit compile
+$ bit compile
 ```
 
 _Learn more [here](https://bit.dev/teambit/compilation/compiler)._
@@ -94,7 +94,7 @@ _Learn more [here](https://bit.dev/teambit/compilation/compiler)._
 Get lint results for all components.
 
 ```shell
-$ bbit lint
+$ bit lint
 ```
 
 _Learn more [here](https://bit.dev/teambit/defender/linter)_.
@@ -116,6 +116,11 @@ For example:
   }
 }
 ```
+> <p style={{color: '#c31313'}}>Never use the '*' wildcard in a workspace that uses multiple environments!</p> 
+Instead, use exclusive namespaces or directories to select and configure each group of components to use its own environment (see an example in the next section).
+<br />
+<br /> 
+To learn more, see the 'Troubleshooting' section.
 
 > A single component (with the same version) cannot use more than a single environment.
 
@@ -247,6 +252,8 @@ An environment extension uses the following Bit components to extend an existing
   2. Override a ["service handler"](TODO). This is done to replace a Bit component used by an environment service. For example, to set the "compiler" service handler to use Babel instead of TypeScript (see an example, [here](/docs/environments/build-environment#override-a-service-handler)).
 
 #### Override the config for a Bit component used by the environment
+
+> The current Envs API will soon be replaced. 
 
 The example below is of a React environment extension. This new environment overrides React's DevServer configuration by setting a new Webpack configuration file.
 
@@ -683,7 +690,7 @@ $ touch path/to/extension/env-extension.aspect.ts
 Place the following lines to register your environment as a multiple runtime extension (a.k.a, an Aspect):
 
 ```ts
-// env-extension.ts
+// env-extension.aspect.ts
 
 import { Aspect } from '@teambit/harmony';
 
@@ -703,22 +710,24 @@ Register each runtime extension to its corresponding runtime, using the `addRunt
 For example:
 
 ```typescript
-// react-with-providers.preview.ts
+// react-extension.preview.ts
 
-export class ReactWithProvidersPreview {
+import { PreviewRuntime } from '@teambit/preview';
+import { ReactAspect, ReactPreview } from '@teambit/react';
+import { ReactExtensionAspect } from './react-with-providers.aspect';
+
+
+export class ReactExtensionPreview {
   static runtime = PreviewRuntime;
 
-  // ...
+  static dependencies = [ReactAspect];
 
   static async provider([react]: [ReactPreview]) {
-    
-    // ...
-
-    return new ReactWithProvidersPreview();
+    return new ReactExtensionPreview();
   }
 }
 
-ReactWithProvidersAspect.addRuntime(ReactWithProvidersPreview);
+ReactExtensionAspect.addRuntime(ReactExtensionPreview);
 ```
 
 
@@ -737,28 +746,34 @@ The React environment TypeScript compiler will be extended in the main runtime.
 ```typescript
 // react-extension.main.ts
 
+import { MainRuntime } from '@teambit/cli';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactExtensionAspect } from './react-extension.aspect';
+
 const tsconfig = require('./typescript/tsconfig.json');
 
 export class ReactExtensionMain {
+  constructor(private react: ReactMain, private envs: EnvsMain) {}
 
-// ...
-
-  static dependencies = [ReactAspect, EnvsAspect];
+  icon() {
+    return 'https://static.bit.dev/extensions-icons/react.svg';
+  }
 
   static runtime = MainRuntime;
 
-  static async provider([envs, react]: [EnvsMain, ReactMain]) {
-    const newReactEnv = react.compose([
+  static dependencies = [ReactAspect, EnvsAspect];
+
+  static async provider([react, envs]: [ReactMain, EnvsMain]) {
+    const reactExtension= envs.compose(react, [
       react.overrideTsConfig(tsconfig)
     ]);
-
-    envs.registerEnv(newReactEnv);
-
-    return new ReactExtensionMain(react, envs);
-
+    envs.registerEnv(reactExtension);
+    return new ReactWithProvidersMain(react, envs);
+  }
 }
-  ReactExtensionMain.addRuntime(ReactExtensionMain);
-// ...
+
+ReactExtensionAspect.addRuntime(ReactExtensionMain);
 
 ```
 
@@ -779,19 +794,97 @@ These files are served by the environment's server, as part of the environment's
 A new composition provider that will "wrap" every composition using that environment will be added using the preview runtime since it is part of the component compositions (which are being served to the browser by the environment's server).
 
 ```typescript
-// react-with-providers.preview.ts
+// react-extension.preview.ts
 
-export class ReactWithProvidersPreview {
+import { PreviewRuntime } from '@teambit/preview';
+import { ReactAspect, ReactPreview } from '@teambit/react';
+import { ReactExtensionAspect } from './react-with-providers.aspect';
+import { Center } from './my-providers/center';
+
+export class ReactExtensionPreview {
   static runtime = PreviewRuntime;
 
   static dependencies = [ReactAspect];
 
   static async provider([react]: [ReactPreview]) {
-    react.registerProvider(Providers);
+    react.registerProvider(Center);
 
-    return new ReactWithProvidersPreview();
+    return new ReactExtensionPreview();
   }
 }
 
-ReactWithProvidersAspect.addRuntime(ReactWithProvidersPreview);
+ReactExtensionAspect.addRuntime(ReactExtensionPreview);
 ```
+
+## Troubleshooting
+
+**Problem:** Components that are configured to use a specific environment, use the workspace's default environment, instead.
+
+For example:
+
+```json
+{
+  "teambit.workspace/variants": {
+    "*": {
+      "teambit.react/react": {}
+    },
+    "components/utils": {
+      "teambit.harmony/node": {}
+    }
+  }
+}
+```
+
+In the above example, components in the `components/utils` directory are set to use the Node environment.
+Since that selection is more specific than the one done using the `*` wildcard selector, it is expected to override it.
+
+**Understanding the problem:** 
+To select the right configurations for each component, the [Variants](https://bit.dev/teambit/workspace/variants) aspect sorts all workspace configurations, from the most specific to the most general.
+The first configuration set on an aspect (the most specific one) will be the one that is selected for that aspect.
+That means, once Variants encounters configurations for an aspect, it stops looking for additional configurations for that specific aspect.
+
+Each environment is considered as a different aspect, even though they are all under the "environments" category and can only be used once per component.
+[Variants](https://bit.dev/teambit/workspace/variants) does not understand categories, only individual aspects and therefore, cannot override one environment with a different environment.
+
+**Solution #1:**
+
+Remove the `*` general selection and use only specific and exclusive selectors to configure environments
+(that means your workspace directories/ namespaces need to be structured in a way that enables complete selection of all components using selectors that are exclusive).
+
+For example:
+```json
+{
+  "teambit.workspace/variants": {
+    "components/react": {
+      "teambit.react/react": {}
+    },
+    "components/utils": {
+      "teambit.harmony/node": {}
+    }
+  }
+}
+```
+
+**Solution #2:**
+Configure the environment using the Envs config API.
+
+Example:
+
+```json
+{
+  "teambit.workspace/variants": {
+    "*": {
+      "teambit.react/react": {}
+    },
+    "components/utils": {
+      "teambit.harmony/node": {},
+      "teambit.envs/envs": {
+         "env": "teambit.harmony/node"
+       }
+    }
+  }
+}
+```
+> Notice how the Node environment was added also as a standalone aspect, to ensure that it is registered as a dependency of the selected components.
+
+---
