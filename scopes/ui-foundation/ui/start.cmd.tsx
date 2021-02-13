@@ -1,6 +1,5 @@
 import React from 'react';
 import { Command, CommandOptions } from '@teambit/cli';
-import { PubsubMain } from '@teambit/pubsub';
 import { Logger } from '@teambit/logger';
 import { UIServerConsole } from '@teambit/cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
@@ -25,9 +24,7 @@ export class StartCmd implements Command {
      */
     private ui: UiMain,
 
-    private logger: Logger,
-
-    private pubsub: PubsubMain
+    private logger: Logger
   ) {}
 
   async report(
@@ -91,6 +88,6 @@ export class StartCmd implements Command {
     this.ui.invokeOnStart();
     this.ui.clearConsole();
 
-    return <UIServerConsole appName={appName} futureUiServer={uiServer} pubsub={this.pubsub} />;
+    return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
 }

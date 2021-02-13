@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Text, Newline } from 'ink';
 import type { UIServer } from '@teambit/ui';
 import { UIServerLoader } from '@teambit/cli.ui-server-loader';
-import { PubsubMain } from '@teambit/pubsub';
 
 export type UIServerConsoleProps = {
   /**
@@ -14,13 +13,10 @@ export type UIServerConsoleProps = {
    * name of the app.
    */
   appName: string;
-
-  pubsub: PubsubMain;
 };
 
-export function UIServerConsole({ appName, futureUiServer, pubsub }: UIServerConsoleProps) {
+export function UIServerConsole({ appName, futureUiServer }: UIServerConsoleProps) {
   const [uiServer, setUiServer] = useState<UIServer>();
-  // const { errors, warnings, compiling } = usePreviewServer({ pubsub });
 
   useEffect(() => {
     futureUiServer
@@ -33,9 +29,6 @@ export function UIServerConsole({ appName, futureUiServer, pubsub }: UIServerCon
   });
 
   if (!uiServer) return <UIServerLoader name={appName} />;
-  // if (errors.length) return <Error errors={errors} level={ErrorLevel.ERROR} />;
-  // if (compiling) return <Text>Compiling...</Text>;
-  // if (warnings.length) return <Error errors={warnings} level={ErrorLevel.WARNING} />;
   const plugins = uiServer.getPluginsComponents();
 
   return (

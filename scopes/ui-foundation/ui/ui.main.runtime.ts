@@ -492,7 +492,7 @@ export class UiMain {
       harmony,
       proxyGetterSlot
     );
-    cli.register(new StartCmd(ui, logger, pubsub), new UIBuildCmd(ui));
+    cli.register(new StartCmd(ui, logger), new UIBuildCmd(ui));
     return ui;
   }
 }
