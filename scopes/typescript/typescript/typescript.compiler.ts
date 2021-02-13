@@ -43,7 +43,7 @@ export class TypescriptCompiler implements Compiler {
       return null; // file is not supported
     }
     const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
-      this.options.tsconfig.compilerOptions,
+      (this.options.tsconfig as any).compilerOptions,
       '.'
     );
     if (compilerOptionsFromTsconfig.errors.length) {
@@ -225,7 +225,7 @@ export class TypescriptCompiler implements Compiler {
 
   private async writeTypes(dirs: string[]) {
     await Promise.all(
-      this.options.types.map(async (typePath) => {
+      (this.options.types || []).map(async (typePath) => {
         const contents = await fs.readFile(typePath, 'utf8');
         const filename = path.basename(typePath);
 

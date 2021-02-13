@@ -2,17 +2,18 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
-import { merge } from 'lodash';
+import { merge, uniq, compact } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { CompilerMain, CompilerOptions } from '@teambit/compiler';
+import { CompilerMain, CompilerOptions, Compiler } from '@teambit/compiler';
 import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
-import { TypescriptMain } from '@teambit/typescript';
+import { TypescriptMain, TypeScriptCompilerOptions } from '@teambit/typescript';
+import { BabelMain, BabelCompilerOptions } from '@teambit/babel';
 import { WebpackMain } from '@teambit/webpack';
-import { MultiCompilerMain } from '@teambit/multi-compiler';
+import { MultiCompilerMain, MultiCompiler } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
@@ -24,12 +25,16 @@ import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
+import { ReactEnvState, defaultReactState } from './state';
 
 export const AspectEnvType = 'react';
-const jestM = require('jest');
-const defaultTsConfig = require('./typescript/tsconfig.json');
-const buildTsConfig = require('./typescript/tsconfig.build.json');
 
+// TODO move to state and remove from here
+const jestM = require('jest');
+
+// TODO remove these when getTsConfig has been deleted
+const defaultWsTsConfig = require('./typescript/tsconfig.json');
+const defaultBuildTsConfig = require('./typescript/tsconfig.build.json');
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
@@ -44,6 +49,11 @@ export class ReactEnv implements Environment {
      * typescript extension.
      */
     private tsAspect: TypescriptMain,
+
+    /**
+     * typescript extension.
+     */
+    private babelAspect: BabelMain,
 
     /**
      * compiler extension.
@@ -79,24 +89,61 @@ export class ReactEnv implements Environment {
     private mdx: MDXMain
   ) {}
 
-  getTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge({}, defaultTsConfig, targetTsConfig) : defaultTsConfig;
+  getState(): ReactEnvState {
+    return defaultReactState;
   }
 
-  getBuildTsConfig(targetTsConfig?: TsConfigSourceFile) {
-    return targetTsConfig ? merge({}, buildTsConfig, targetTsConfig) : buildTsConfig;
+  deprecatedGetTsConfig(defaultConfig: TsConfigSourceFile, targetConfig?: TsConfigSourceFile): TsConfigSourceFile {
+    return targetConfig ? merge({}, defaultConfig, targetConfig) : defaultConfig;
   }
 
-  /**
-   * returns a component tester.
-   */
-  getTester(jestConfigPath: string, jestModule = jestM): Tester {
-    const config = jestConfigPath || require.resolve('./jest/jest.config');
-    return this.jestAspect.createTester(config, jestModule);
+  getBabelCompiler(): Compiler | undefined {
+    const babelOptions = this.getState().compiler.babelConfigs;
+    if (!babelOptions?.babelTransformOptions) return undefined;
+    return this.babelAspect.createCompiler(babelOptions);
   }
 
-  createTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    const tsconfig = this.getTsConfig(targetConfig);
+  getMdxCompiler(): Compiler | undefined {
+    const { mdxConfigs } = this.getState().compiler;
+    return mdxConfigs ? this.mdx.createCompiler(mdxConfigs) : undefined;
+  }
+
+  getTsCompilers(): (Compiler | undefined)[] {
+    return [
+      this.getTsBuildCompiler(),
+      //this.getTsWorkspaceCompiler(), // TODO check if/when this should actually be created
+    ];
+  }
+
+  getTsBuildCompiler(): Compiler | undefined {
+    const buildOptions = this.getState().compiler.tsConfigs?.typeScriptBuildConfigs;
+    return buildOptions ? this.createTsCompiler(buildOptions) : undefined;
+  }
+
+  getTsWorkspaceCompiler(): Compiler | undefined {
+    const wsOptions = this.getState().compiler.tsConfigs?.typeScriptWsConfigs;
+    return wsOptions ? this.createTsCompiler(wsOptions) : undefined;
+  }
+
+  createTsCompiler(tsOptions?: TypeScriptCompilerOptions): Compiler | undefined {
+    if (!tsOptions?.tsconfig) return undefined;
+
+    let { types } = tsOptions;
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
+    const resolvedTypes = uniq(types).map((path) => resolve(pathToSource, path));
+    const tsModule = this.getState().compiler.tsConfigs?.tsModule;
+    return this.tsAspect.createCompiler(
+      {
+        ...tsOptions,
+        types: resolvedTypes,
+      },
+      // @ts-ignore
+      tsModule
+    );
+  }
+
+  deprecatedCreateTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
+    const tsconfig = this.deprecatedGetTsConfig(defaultWsTsConfig, targetConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     return this.tsAspect.createCompiler(
       {
@@ -110,13 +157,43 @@ export class ReactEnv implements Environment {
     );
   }
 
-  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    if (!this.config.mdx) return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
+  deprecatedGetCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
+    if (!this.config.mdx) return this.deprecatedCreateTsCompiler(targetConfig, compilerOptions, tsModule);
 
     return this.multiCompiler.createCompiler(
-      [this.createTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
+      [this.deprecatedCreateTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
       compilerOptions
     );
+  }
+
+  /**
+   * returns and configures the component compilers.
+   */
+  getCompiler(compilerOptions: Partial<CompilerOptions> = {}): MultiCompiler {
+    const compilers: (Compiler | undefined)[] = [
+      this.getBabelCompiler(),
+      ...this.getTsCompilers(),
+      this.getMdxCompiler(),
+    ];
+
+    return this.multiCompiler.createCompiler(compact(compilers), compilerOptions);
+  }
+
+  /**
+   * returns a component tester.
+   */
+  getTester(jestConfigPath: string, jestModule = jestM): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
+    return this.jestAspect.createTester(config, jestModule);
+  }
+
+  /**
+   * @deprecated
+   * returns a component tester.
+   */
+  deprecatedGetTester(jestConfigPath: string, jestModule = jestM): Tester {
+    const config = jestConfigPath || require.resolve('./jest/jest.config');
+    return this.jestAspect.createTester(config, jestModule);
   }
 
   /**
@@ -159,8 +236,8 @@ export class ReactEnv implements Environment {
   /**
    * get a schema generator instance configured with the correct tsconfig.
    */
-  getSchemaExtractor(tsconfig: TsConfigSourceFile) {
-    return this.tsAspect.createSchemaExtractor(this.getTsConfig(tsconfig));
+  getSchemaExtractor(defaultConfig: TsConfigSourceFile, targetConfig: TsConfigSourceFile) {
+    return this.tsAspect.createSchemaExtractor(this.deprecatedGetTsConfig(defaultConfig, targetConfig));
   }
 
   /**
@@ -267,13 +344,30 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
-    return [this.getCompilerTask(tsconfig), this.tester.task];
+  getBuildPipe(): BuildTask[] {
+    return [this.getCompilerTask(), this.tester.task];
   }
 
-  private getCompilerTask(tsconfig?: TsConfigSourceFile) {
-    const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('MultiCompiler', this.getCompiler(targetConfig));
+  /**
+   * returns the component build pipeline.
+   */
+  deprecatedGetBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
+    return [this.deprecatedGetCompilerTask(tsconfig), this.tester.task];
+  }
+
+  private getCompilerTask() {
+    // TODO make sure this creates the correct tasks for all compilers in the multi-compiler
+    return this.compiler.createTask('MultiCompiler', this.getCompiler());
+  }
+
+  /**
+   * @deprecated
+   * @param tsconfig
+   */
+  private deprecatedGetCompilerTask(tsconfig?: any) {
+    // const targetConfig = this.getBuildTsConfig(tsconfig);
+    const targetConfig = this.deprecatedGetTsConfig(defaultBuildTsConfig, tsconfig);
+    return this.compiler.createTask('MultiCompiler', this.deprecatedGetCompiler(targetConfig));
   }
 
   async __getDescriptor() {

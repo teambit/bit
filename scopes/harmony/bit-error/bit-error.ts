@@ -1,4 +1,3 @@
-
 export class BitError extends Error {
   isUserError = true; // user errors are not reported to Sentry
 

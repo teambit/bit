@@ -8,3 +8,4 @@ export { EnvsAspect } from './environments.aspect';
 export { EnvsExecutionResult } from './runtime/envs-execution-result';
 export type { EnvServiceList } from './env-service-list';
 export { EnvDefinition } from './env-definition';
+export { UseExtenderFunction } from './types';

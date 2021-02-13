@@ -3,15 +3,17 @@ import { outputFileSync } from 'fs-extra';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
 import { compileSync } from '@teambit/modules.mdx-compiler';
+import { MdxCompilerOptions } from './compiler-options';
 
 export class MDXCompiler implements Compiler {
+  shouldCopyNonSupportedFiles: boolean | undefined;
+  distDir: string;
   displayName = 'MDX';
 
-  shouldCopyNonSupportedFiles = true;
-
-  distDir = 'dist';
-
-  constructor(readonly id: string, readonly config: any) {}
+  constructor(readonly id: string, readonly config: MdxCompilerOptions) {
+    this.distDir = config.distDir || 'dist';
+    this.shouldCopyNonSupportedFiles = config.shouldCopyNonSupportedFiles ?? true;
+  }
 
   displayConfig() {
     return JSON.stringify(this.config, null, 2);
@@ -82,7 +84,8 @@ export class MDXCompiler implements Compiler {
    * only supported files matching get compiled. others, are copied to the dist dir.
    */
   isFileSupported(filePath: string): boolean {
-    return filePath.endsWith('.mdx') || filePath.endsWith('.md');
+    return this.config.extensions.some((ext) => filePath.endsWith(ext));
+    // return filePath.endsWith('.mdx') || filePath.endsWith('.md');
   }
 
   /**

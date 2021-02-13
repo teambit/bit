@@ -16,6 +16,8 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
+import type { BabelMain } from '@teambit/babel';
+import { BabelAspect } from '@teambit/babel';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { MDXAspect, MDXMain } from '@teambit/mdx';
@@ -23,17 +25,20 @@ import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
-import ts, { TsConfigSourceFile } from 'typescript';
+import ts, { TsConfigSourceFile, JsonSourceFile } from 'typescript';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { ReactEnvState } from './state';
+import { ReactExtender } from './react.extender';
 
 type ReactDeps = [
   EnvsMain,
   JestMain,
   TypescriptMain,
+  BabelMain,
   CompilerMain,
   WebpackMain,
   Workspace,
@@ -44,6 +49,11 @@ type ReactDeps = [
   MultiCompilerMain,
   MDXMain
 ];
+
+enum ConfigTargets {
+  workspace = 'workspace',
+  build = 'build',
+}
 
 export type ReactMainConfig = {
   /**
@@ -83,34 +93,50 @@ export class ReactMain {
 
   readonly env = this.reactEnv;
 
-  private tsConfigOverride: TsConfigSourceFile | undefined;
+  /**
+   * Used to override environment configs
+   * @param {ReactEnvState} initialState optional initial state to override environment's default states
+   */
+  extend(initialState?: ReactEnvState): ReactExtender {
+    return new ReactExtender(initialState);
+  }
+
+  override(newState: ReactEnvState): Environment {
+    const overrideState = this.envs.override({
+      getState: () => {
+        return newState;
+      },
+    });
+    return this.compose([overrideState]);
+  }
 
   /**
+   * @deprecated replaced by useTsConfig
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
   overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
-    this.tsConfigOverride = tsconfig;
-
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
+        return this.reactEnv.deprecatedGetCompiler(tsconfig, {}, tsModule);
       },
     });
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the build tsconfig.
    */
   overrideBuildTsConfig(tsconfig) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig);
+        return this.reactEnv.deprecatedGetBuildPipe(tsconfig);
       },
     });
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the dev server webpack config.
    */
   overrideDevServerConfig(config: Configuration) {
@@ -122,11 +148,12 @@ export class ReactMain {
   /**
    * create a new composition of the react environment.
    */
-  compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
+  compose(transformers: EnvTransformer[], targetEnv: Environment = {}): Environment {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactEnv), transformers);
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the preview webpack config.
    */
   overridePreviewConfig(config: Configuration) {
@@ -136,6 +163,7 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the jest configuration.
    * @param jestConfigPath {typeof jest} absolute path to jest.config.json.
    */
@@ -143,13 +171,6 @@ export class ReactMain {
     return this.envs.override({
       getTester: () => this.reactEnv.getTester(jestConfigPath, jestModule),
     });
-  }
-
-  /**
-   * return the computed tsconfig.
-   */
-  getTsConfig() {
-    return this.reactEnv.getTsConfig(this.tsConfigOverride);
   }
 
   /**
@@ -162,10 +183,13 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
-    const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
+    const pipeWithoutCompiler = this.reactEnv
+      .deprecatedGetBuildPipe()
+      .filter((task) => task.aspectId !== CompilerAspect.id);
 
     return this.envs.override({
       getBuildPipe: () => [...tasks, ...pipeWithoutCompiler],
@@ -182,6 +206,7 @@ export class ReactMain {
   }
 
   /**
+   * @deprecated now using env state to manage overrides
    * override the workspace compiler.
    */
   overrideCompiler(compiler: Compiler) {
@@ -243,6 +268,7 @@ export class ReactMain {
     EnvsAspect,
     JestAspect,
     TypescriptAspect,
+    BabelAspect,
     CompilerAspect,
     WebpackAspect,
     WorkspaceAspect,
@@ -259,6 +285,7 @@ export class ReactMain {
       envs,
       jestAspect,
       tsAspect,
+      babelAspect,
       compiler,
       webpack,
       workspace,
@@ -274,6 +301,7 @@ export class ReactMain {
     const reactEnv = new ReactEnv(
       jestAspect,
       tsAspect,
+      babelAspect,
       compiler,
       webpack,
       workspace,
