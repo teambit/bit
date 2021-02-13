@@ -355,6 +355,11 @@
       },
       "teambit.harmony/node": {}
     },
+    "{cli/*}": {
+      "teambit.envs/envs": {
+        "env": "teambit.react/react"
+      }
+    },
     "{babel/*}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"

@@ -2,11 +2,17 @@ import React from 'react';
 import { flatten } from 'lodash';
 import { PreviewServerStatus } from '@teambit/cli.preview-server-status';
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
+import { PubsubMain } from '@teambit/pubsub';
 import { StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
 
 export class PreviewStartPlugin implements StartPlugin {
-  constructor(private workspace: Workspace, private bundler: BundlerMain, private ui: UiMain) {}
+  constructor(
+    private workspace: Workspace,
+    private bundler: BundlerMain,
+    private ui: UiMain,
+    private pubsub: PubsubMain
+  ) {}
 
   previewServers: ComponentServer[] = [];
 
@@ -18,7 +24,16 @@ export class PreviewStartPlugin implements StartPlugin {
     previewServers.forEach((server) => server.listen());
     // DON'T add wait! this promise never resolve so it's stop all the start process!
     // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.workspace.watcher.watchAll();
+    this.workspace.watcher.watchAll({
+      msgs: {
+        onAll: () => {},
+        onStart: () => {},
+        onReady: () => {},
+        onChange: () => {},
+        onAdd: () => {},
+        onError: () => {},
+      },
+    });
     this.previewServers = this.previewServers.concat(previewServers);
   }
 
@@ -42,8 +57,9 @@ export class PreviewStartPlugin implements StartPlugin {
 
   render() {
     const previewServers = this.previewServers;
+    const pubsub = this.pubsub;
     return function PreviewPlugin() {
-      return <PreviewServerStatus previewServers={previewServers} />;
+      return <PreviewServerStatus previewServers={previewServers} pubsub={pubsub} />;
     };
   }
 }

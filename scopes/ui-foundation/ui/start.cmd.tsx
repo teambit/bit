@@ -39,6 +39,7 @@ export class StartCmd implements Command {
       verbose,
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<string> {
+    this.logger.off();
     const pattern = userPattern && userPattern.toString();
 
     const uiServer = await this.ui.createRuntime({
@@ -90,6 +91,6 @@ export class StartCmd implements Command {
     this.ui.invokeOnStart();
     this.ui.clearConsole();
 
-    return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
+    return <UIServerConsole appName={appName} futureUiServer={uiServer} pubsub={this.pubsub} />;
   }
 }

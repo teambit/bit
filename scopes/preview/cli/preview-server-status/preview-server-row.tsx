@@ -8,7 +8,6 @@ export type PreviewServerRowProps = {
 };
 
 export function PreviewServerRow({ previewServer, verbose }: PreviewServerRowProps) {
-  // const {} = useDev
   return (
     <Box>
       <Box width="40%">
