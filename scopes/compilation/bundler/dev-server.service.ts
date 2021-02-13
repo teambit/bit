@@ -42,7 +42,7 @@ export class DevServerService implements EnvService<ComponentServer> {
   async runOnce(contexts: ExecutionContext[]): Promise<ComponentServer[]> {
     // de-duping dev servers by the amount of type the dev server configuration was overridden by envs.
     const byOriginalEnv = contexts.reduce<{ [key: string]: ExecutionContext[] }>((acc, context) => {
-      const envId = context.env?.getDevEnvId();
+      const envId = context.env?.getDevEnvId(context);
       if (acc[envId]) {
         acc[envId].push(context);
         return acc;

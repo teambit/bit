@@ -12,8 +12,16 @@ export function PreviewServerRow({ previewServer, verbose }: PreviewServerRowPro
     <Box>
       <Box width="40%">
         <Text color="cyan">
-          {previewServer.context.envRuntime.id} on behalf of
-          {stringifyIncludedEnvs(previewServer.context.relatedContexts, verbose)}
+          {previewServer.context.envRuntime.id}
+          {previewServer.context.relatedContexts.length ? (
+            <Text>
+              {' '}
+              on behalf of
+              {stringifyIncludedEnvs(previewServer.context.relatedContexts, verbose)}
+            </Text>
+          ) : (
+            <></>
+          )}
         </Text>
       </Box>
       <Box width="40%">
