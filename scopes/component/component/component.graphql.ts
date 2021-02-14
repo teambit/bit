@@ -109,7 +109,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         list(offset: Int, limit: Int): [Component]!
 
         # get component logs(snaps)
-        snaps(componentId: String!): [LogEntry]!
+        snaps(id: String!): [LogEntry]!
       }
 
       type Query {
@@ -153,10 +153,10 @@ export function componentSchema(componentExtension: ComponentMain) {
             return null;
           }
         },
-        snaps: async (host: ComponentFactory, { componentId }: { componentId: string }) => {
-          const id = await host.resolveComponentId(componentId);
+        snaps: async (host: ComponentFactory, { id }: { id: string }) => {
+          const componentId = await host.resolveComponentId(id);
           // return (await host.getLogs(componentId)).map(log => ({...log, id: log.hash}))
-          return host.getLogs(id);
+          return host.getLogs(componentId);
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);

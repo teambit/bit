@@ -7,7 +7,7 @@ const getComponentSnaps = gql`
   query getComponentSnaps($id: String!) {
     getHost {
       id # used for GQL caching
-      snaps(componentId: $componentId) {
+      snaps(id: $id) {
         message
         username
         email
@@ -29,7 +29,7 @@ export type SnapsResults = {
 export function useSnaps(componentId: ComponentID) {
   const id = componentId.toString();
   const { data, ...rest } = useDataQuery<SnapsResults>(getComponentSnaps, {
-    variables: { componentId: id },
+    variables: { id },
   });
 
   const snaps = data?.getHost?.snaps;
