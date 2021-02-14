@@ -2,7 +2,7 @@ export type LegacyComponentLog = {
   message: string;
   username?: string;
   email?: string;
-  date?: string; // why is this optional?
+  date?: string;
   hash: string;
-  tag?: string; // why is this optional?
+  tag?: string;
 };

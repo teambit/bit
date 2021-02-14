@@ -108,7 +108,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         # list components
         list(offset: Int, limit: Int): [Component]!
 
-        # get component logs(snaps)
+        # get component logs(snaps) by component id
         snaps(id: String!): [LogEntry]!
       }
 
