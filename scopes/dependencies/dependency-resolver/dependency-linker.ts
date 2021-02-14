@@ -276,6 +276,8 @@ export class DependencyLinker {
     });
 
     await Promise.all(componentsNeedLinksP);
+    // Stop if there are not components needs to be linked
+    if (!componentsNeedLinks || !componentsNeedLinks.length) return [];
     const envsStringIds = componentsNeedLinks.map((obj) => obj.env.id);
     const uniqEnvIds = uniq(envsStringIds);
     const host = this.componentAspect.getHost();
