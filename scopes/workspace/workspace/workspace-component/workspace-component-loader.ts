@@ -1,5 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact } from 'ramda-adjunct';

@@ -1,7 +1,6 @@
 import fetch from 'node-fetch';
-import { setContext } from 'apollo-link-context';
 import { HttpLink } from 'apollo-link-http';
-import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
+import { makeRemoteExecutableSchema, introspectSchema,  } from 'apollo-server';
 import { WebSocketLink } from 'apollo-link-ws';
 import { split } from 'apollo-link';
 import { getMainDefinition } from 'apollo-utilities';
@@ -11,17 +10,12 @@ import { GraphQLServer } from '../graphql-server';
 
 async function getRemoteSchema({ uri, subscriptionsUri }) {
   // @ts-ignore
-  const http = new HttpLink({ uri, fetch });
-  const httpLink = setContext((request, previousContext) => {
-    return {
-      headers: previousContext?.graphqlContext?.headers,
-    };
-  }).concat(http);
-
+  const httpLink = new HttpLink({ uri, fetch });
+  
   if (!subscriptionsUri) {
     return makeRemoteExecutableSchema({
-      schema: await introspectSchema(httpLink),
-      link: httpLink,
+      schema: await introspectSchema(httpLink), 
+      link: httpLink 
     });
   }
 
@@ -32,17 +26,19 @@ async function getRemoteSchema({ uri, subscriptionsUri }) {
   // Using the ability to split links, we can send data to each link
   // depending on what kind of operation is being sent
   const link = split(
-    (operation) => {
-      const definition = getMainDefinition(operation.query);
-      return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+    operation => {
+      const definition = getMainDefinition(operation.query)
+      return (
+        definition.kind === 'OperationDefinition' &&
+        definition.operation === 'subscription'
+      )
     },
-    wsLink,
-    httpLink
+    wsLink,  
+    httpLink 
   );
 
   return makeRemoteExecutableSchema({
-    schema: await introspectSchema(httpLink),
-    link,
+    schema: await introspectSchema(httpLink), link
   });
 }
 
@@ -50,7 +46,7 @@ export async function createRemoteSchemas(servers: GraphQLServer[]) {
   const schemasP = servers.map(async (server) => {
     return getRemoteSchema({
       uri: server.uri,
-      subscriptionsUri: server.subscriptionsUri,
+      subscriptionsUri: server.subscriptionsUri
     });
   });
 

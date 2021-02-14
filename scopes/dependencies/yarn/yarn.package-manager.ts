@@ -251,6 +251,7 @@ export class YarnPackageManager implements PackageManager {
   // TODO: implement this to automate configuration.
   private async computeConfiguration(rootDirPath: PortablePath, cacheFolder: string): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
+    const proxyConfig = await this.depResolver.getProxyConfig();
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries(registries);
@@ -267,6 +268,8 @@ export class YarnPackageManager implements PackageManager {
       virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
+      httpProxy: proxyConfig?.httpProxy,
+      httpsProxy: proxyConfig?.httpsProxy,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
     };

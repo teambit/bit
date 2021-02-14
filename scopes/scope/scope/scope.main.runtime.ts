@@ -28,7 +28,8 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
-import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version, Lane } from 'bit-bin/dist/scope/models';
 import { Ref, Repository } from 'bit-bin/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
@@ -48,12 +49,10 @@ import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
-import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
-import { ResumeExportCmd } from './export/resume-export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -63,17 +62,17 @@ export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<On
 type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
-type OnPrePersistData = { clientId: string; scopes: string[] };
+type OnPrePersistExportData = { clientId: string; scopes: string[] };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
-type OnPrePersist = RemoteEvent<OnPrePersistData>;
+type OnPrePersistExport = RemoteEvent<OnPrePersistExportData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
-export type OnPrePersistSlot = SlotRegistry<OnPrePersist>;
+export type OnPrePersistExportSlot = SlotRegistry<OnPrePersistExport>;
 
 export type ScopeConfig = {
   description: string;
@@ -107,7 +106,7 @@ export class ScopeMain implements ComponentFactory {
 
     private postObjectsPersist: OnPostObjectsPersistSlot,
 
-    private prePersistSlot: OnPrePersistSlot,
+    private prePersistExportSlot: OnPrePersistExportSlot,
 
     private isolator: IsolatorMain,
 
@@ -148,16 +147,16 @@ export class ScopeMain implements ComponentFactory {
     const host = this.componentExtension.getHost();
 
     // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
-    const getAspectsIdsWithoutRootIds = (): string[] => {
-      const allIds = this.harmony.extensionsIds;
+    const getUserAspectsIdsWithoutRootIds = (): string[] => {
+      const allUserAspectIds = this.aspectLoader.getUserAspects();
       const rootIds = Object.keys(this.harmony.config.toObject());
-      const diffIds = difference(allIds, rootIds);
+      const diffIds = difference(allUserAspectIds, rootIds);
       return diffIds;
     };
 
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
     const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
-      const harmonyIds = getAspectsIdsWithoutRootIds();
+      const harmonyIds = getUserAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
         const newId = await host.resolveComponentId(component.id);
@@ -240,8 +239,8 @@ export class ScopeMain implements ComponentFactory {
     return this;
   }
 
-  registerOnPrePersist(prePersistFn: OnPrePersist) {
-    this.prePersistSlot.register(prePersistFn);
+  registerOnPrePersistExport(prePersistFn: OnPrePersistExport) {
+    this.prePersistExportSlot.register(prePersistFn);
     return this;
   }
 
@@ -589,10 +588,12 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
-  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying(versions, range);
+    // TODO - @david
+    return semver.maxSatisfying(versions, range)?.toString();
+    // return semver.maxSatisfying<string>(versions, range);
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
@@ -601,16 +602,10 @@ export class ScopeMain implements ComponentFactory {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
-      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects, false);
-      // TODO: what to return if no version in objects
-      if (version) {
-        const snap = this.createSnapFromVersion(version);
-        const tag = new Tag(snap, new SemVer(versionStr));
-        tagMap.set(tag.version, tag);
-      }
+    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
+      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
+      tagMap.set(tag.version, tag);
     });
-
     return tagMap;
   }
 
@@ -661,6 +656,7 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
+    Slot.withType<OnPrePersistExportSlot>(),
   ];
   static runtime = MainRuntime;
 
@@ -687,12 +683,12 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, prePersistSlot]: [
+    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, prePersistExportSlot]: [
       TagRegistry,
       OnPostPutSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
-      OnPrePersistSlot
+      OnPrePersistExportSlot
     ],
     harmony: Harmony
   ) {
@@ -711,7 +707,7 @@ export class ScopeMain implements ComponentFactory {
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
-      prePersistSlot,
+      prePersistExportSlot,
       isolator,
       aspectLoader,
       config,
@@ -721,7 +717,6 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
@@ -762,19 +757,19 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
-    const onPrePersistHook = async (clientId: string, scopes: string[]): Promise<void> => {
+    const onPrePersistExportHook = async (clientId: string, scopes: string[]): Promise<void> => {
       const data = { clientId, scopes };
-      logger.debug(`onPrePersistHook, started`, data);
-      const fns = prePersistSlot.values();
+      logger.debug(`onPrePersistExportHook, started`, data);
+      const fns = prePersistExportSlot.values();
       const metadata = { auth: getAuthData() };
       await Promise.all(fns.map(async (fn) => fn(data, metadata)));
-      logger.debug(`onPrePersistHook, completed`);
+      logger.debug(`onPrePersistExportHook, completed`);
     };
 
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
-    Scope.onPrePersist = onPrePersistHook;
+    Scope.onPrePersistExport = onPrePersistExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([

@@ -1,4 +1,3 @@
-import type { Component } from '@teambit/component';
 import { EnvDefinition } from '../env-definition';
 
 import { EnvRuntime, Runtime } from '../runtime';
@@ -17,21 +16,21 @@ export class ExecutionContext {
     /**
      * runtime instance of the environment.
      */
-    readonly envRuntime: EnvRuntime
+    readonly envRuntime: EnvRuntime,
+
+    /**
+     * components applied in the execution context.
+     */
+    public components = envRuntime.components
   ) {}
+
+  relatedContexts: string[] = [];
 
   /**
    * extension ID of the environment
    */
   get id() {
     return this.envRuntime.id;
-  }
-
-  /**
-   * components applied in the execution context.
-   */
-  get components(): Component[] {
-    return this.envRuntime.components;
   }
 
   /**

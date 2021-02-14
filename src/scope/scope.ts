@@ -129,7 +129,7 @@ export default class Scope {
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
-  static onPrePersist: (clientId: string, scope: string[]) => Promise<void>;
+  static onPrePersistExport: (clientId: string, scope: string[]) => Promise<void>;
 
   /**
    * import components to the `Scope.
@@ -631,7 +631,8 @@ export default class Scope {
   }
 
   async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
-    const componentModel = await this.getModelComponent(id);
+    const componentModel = await this.getModelComponentIfExist(id);
+    if (!componentModel) return [];
     const logs = await componentModel.collectLogs(this.objects);
     return logs;
   }

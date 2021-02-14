@@ -10,6 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@teambit/bit": "0.0.267"
+    "@teambit/bit": "0.0.273"
   }
 }

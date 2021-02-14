@@ -360,11 +360,11 @@ export async function exportMany({
   }
 
   function triggerPrePersistHook() {
-    Scope.onPrePersist(
+    Scope.onPrePersistExport(
       clientId,
       remotes.map((r) => r.name)
     ).catch((err) => {
-      logger.error('fatal: onPrePersistHook encountered an error (this error does not stop the process)', err);
+      logger.error('fatal: onPrePersistExportHook encountered an error (this error does not stop the process)', err);
     });
   }
 
@@ -488,8 +488,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
   const mergedLanesComponents = mergeLaneResults.filter(({ mergedVersions }) => mergedVersions.length);
   const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
     mergedVersions.map((version) => mergedComponent.toBitId().changeVersion(version));
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  return BitIds.fromArray(R.flatten([...mergedComponents, ...mergedLanesComponents].map(getMergedIds)));
+  return BitIds.uniqFromArray(R.flatten([...mergedComponents, ...mergedLanesComponents].map(getMergedIds)));
 }
 
 /**

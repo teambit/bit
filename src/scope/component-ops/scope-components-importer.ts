@@ -102,6 +102,40 @@ export default class ScopeComponentsImporter {
     return versionDeps;
   }
 
+  /**
+   * as opposed to importMany, which imports from dependents only.
+   * needed mostly for cases when importMany doesn't work due to corrupted cache or the cache
+   * doesn't exist yet.
+   *
+   * the downside is that a flattened-dependency could be on a dependent only and not on the
+   * original scope, so it won't be retrieved by this method, however, next time the component is
+   * imported,
+   */
+  async importManyFromOriginalScopes(ids: BitIds) {
+    logger.debugAndAddBreadCrumb('importManyFromOriginalScopes', `ids: {ids}`, { ids: ids.toString() });
+    const idsToImport = compact(ids);
+    if (R.isEmpty(idsToImport)) return [];
+
+    const externalsToFetch: BitId[] = [];
+    const localDefs = await this.sources.getMany(idsToImport);
+    const versionDeps = await mapSeries(localDefs, ({ id, component }) => {
+      if (!component) {
+        if (id.isLocal(this.scope.name)) throw new ComponentNotFound(id.toString());
+        externalsToFetch.push(id);
+        return null;
+      }
+      return this.componentToVersionDependencies(component, id);
+    });
+    const remotes = await getScopeRemotes(this.scope);
+    const versionDepsWithoutNull = compact(versionDeps);
+    logger.debugAndAddBreadCrumb(
+      'importManyFromOriginalScopes',
+      'successfully fetched local components and their dependencies. Going to fetch externals'
+    );
+    const externalDeps = await this.getExternalMany(externalsToFetch, remotes);
+    return [...versionDepsWithoutNull, ...externalDeps];
+  }
+
   async importWithoutDeps(ids: BitIds, cache = true): Promise<ComponentVersion[]> {
     if (!ids.length) return [];
     logger.debugAndAddBreadCrumb('importWithoutDeps', `ids: {ids}`, {
@@ -175,10 +209,10 @@ export default class ScopeComponentsImporter {
    */
   async importManyDeltaWithoutDeps(ids: BitIds): Promise<void> {
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', `Ids: {ids}`, { ids: ids.toString() });
-    const idsWithoutNils = removeNils(ids);
+    const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
 
-    const compDef = await this.sources.getMany(idsWithoutNils);
+    const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest());
     const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
       if (!component) {
         // remove the version to fetch it with all versions.
@@ -207,10 +241,11 @@ export default class ScopeComponentsImporter {
     loader.start(statusMsg);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
     const remotes = await getScopeRemotes(this.scope);
-    const { objectListPerRemote } = await remotes.fetch(groupedIds, this.scope, {
+    const { objectList, objectListPerRemote } = await remotes.fetch(groupedIds, this.scope, {
       type: 'component-delta',
       withoutDependencies: true,
     });
+    loader.start(`got ${objectList.count()} objects from the remotes, merging them and writing to the filesystem`);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', 'writing them to the model');
     await this.scope.writeManyObjectListToModel(objectListPerRemote, true, idsToFetch);
   }

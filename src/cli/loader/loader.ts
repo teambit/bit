@@ -79,7 +79,7 @@ export class Loader {
 
   private createNewSpinner(): Ora {
     // for some reason the stream defaults to stderr.
-    return ora({ spinner: SPINNER_TYPE, text: '', stream: process.stdout });
+    return ora({ spinner: SPINNER_TYPE, text: '', stream: process.stdout, discardStdin: false, hideCursor: false });
   }
 }
 

@@ -38,7 +38,7 @@ export async function createSsrMiddleware({ root, port, title, logger }: ssrRend
       return;
     }
 
-    if (query.rendering !== 'server') {
+    if (query.rendering === 'client') {
       logger.debug(`[ssr] skipping ${url}`);
       next();
       return;

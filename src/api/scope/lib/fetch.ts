@@ -27,7 +27,7 @@ export default async function fetch(
   fetchOptions: FETCH_OPTIONS,
   headers?: Record<string, any> | null | undefined
 ): Promise<ObjectList> {
-  logger.debug(`scope.fetch started, path ${path}`);
+  logger.debug(`scope.fetch started, path ${path}, options: ${fetchOptions}`);
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
   const args = { path, ids, ...fetchOptions };
   // This might be undefined in case of fork process like during bit test command
