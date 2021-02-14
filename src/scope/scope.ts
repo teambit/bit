@@ -631,7 +631,8 @@ export default class Scope {
   }
 
   async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
-    const componentModel = await this.getModelComponent(id);
+    const componentModel = await this.getModelComponentIfExist(id);
+    if (!componentModel) return [];
     const logs = await componentModel.collectLogs(this.objects);
     return logs;
   }
