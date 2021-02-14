@@ -39,7 +39,7 @@ export function VersionDropdown({ versions, currentVersion }: VersionDropdownPro
               const isCurrent = version === currentVersion;
               return (
                 <NavLink
-                  to={`?v=${version}`}
+                  to={`?version=${version}`}
                   key={index}
                   className={classNames(styles.versionLine, isCurrent && styles.currentVersion)}
                 >

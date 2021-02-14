@@ -7,7 +7,7 @@ const getComponentSnaps = gql`
   query getComponentSnaps($id: String!) {
     getHost {
       id # used for GQL caching
-      logs(id: $id) {
+      snaps(componentId: $componentId) {
         message
         username
         email
@@ -22,16 +22,16 @@ const getComponentSnaps = gql`
 export type SnapsResults = {
   getHost: {
     id: string;
-    logs: LegacyComponentLog[];
+    snaps: LegacyComponentLog[];
   };
 };
 
 export function useSnaps(componentId: ComponentID) {
   const id = componentId.toString();
   const { data, ...rest } = useDataQuery<SnapsResults>(getComponentSnaps, {
-    variables: { id },
+    variables: { componentId: id },
   });
 
-  const snaps = data?.getHost?.logs;
+  const snaps = data?.getHost?.snaps;
   return { snaps, ...rest };
 }

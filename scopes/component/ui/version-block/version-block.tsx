@@ -40,7 +40,7 @@ export function VersionBlock({ isLatest, className, snap, componentId, ...rest }
         <div className={styles.placeholder} />
       </div>
       <div className={classNames(styles.right, className)} {...rest}>
-        <NavLink className={styles.titleLink} href={`/${componentId}?v=${version}`}>
+        <NavLink className={styles.titleLink} href={`/${componentId}?version=${version}`}>
           <H3 size="xs" className={styles.versionTitle}>
             {tag ? `v${tag}` : hash}
           </H3>
