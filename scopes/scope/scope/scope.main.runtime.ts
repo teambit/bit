@@ -147,16 +147,16 @@ export class ScopeMain implements ComponentFactory {
     const host = this.componentExtension.getHost();
 
     // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
-    const getAspectsIdsWithoutRootIds = (): string[] => {
-      const allIds = this.harmony.extensionsIds;
+    const getUserAspectsIdsWithoutRootIds = (): string[] => {
+      const allUserAspectIds = this.aspectLoader.getUserAspects();
       const rootIds = Object.keys(this.harmony.config.toObject());
-      const diffIds = difference(allIds, rootIds);
+      const diffIds = difference(allUserAspectIds, rootIds);
       return diffIds;
     };
 
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
     const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
-      const harmonyIds = getAspectsIdsWithoutRootIds();
+      const harmonyIds = getUserAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
         const newId = await host.resolveComponentId(component.id);
