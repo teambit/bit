@@ -22,6 +22,17 @@ export class NodeMain {
   }
 
   /**
+   * override the configs of the environment.
+   */
+  extend = this.react.extend.bind(this.react);
+
+  /**
+   * override the jest config of the environment.
+   */
+  override = this.react.override.bind(this.react);
+
+  /**
+   * @deprecated - please use extend for all config overrides
    * override the TS config of the environment.
    */
   overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
