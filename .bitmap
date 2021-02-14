@@ -8,6 +8,7 @@
   "cli/webpack/error": {"mainFile":"index.ts","rootDir":"scopes/compilation/cli/webpack/error","exported":false},
   "e2e/workspace": {"mainFile":"index.ts","rootDir":"scopes/workspace/e2e/workspace","exported":false},
   "export": {"mainFile":"index.ts","rootDir":"scopes/scope/export","exported":false},
+  "legacy-component-log": {"mainFile":"index.ts","rootDir":"scopes/component/legacy-component-log","exported":false},
   "teambit.code/ui/code-tab-page@0.0.266": {"mainFile":"index.ts","rootDir":"scopes/code/ui/code-tab-page"},
   "teambit.code/ui/code-tab-tree@0.0.266": {"mainFile":"index.ts","rootDir":"scopes/code/ui/code-tab-tree"},
   "teambit.code/ui/code-view@0.0.265": {"mainFile":"index.ts","rootDir":"scopes/code/ui/code-view"},
