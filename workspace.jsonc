@@ -154,7 +154,6 @@
         "@yarnpkg/plugin-npm": "2.4.0",
         "@yarnpkg/plugin-pack": "2.2.3",
         "ansi-to-html": "^0.6.14",
-        "apollo-link-context": "1.0.20",
         "apollo-link-http": "1.5.17",
         "apollo-link-ws": "1.0.20",
         "apollo-server": "2.19.2",
@@ -289,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.290",
+        "bit-bin": "14.8.9-dev.294",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -341,7 +340,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.290",
+            "bit-bin": "14.8.9-dev.294",
             "react-dom": "^16.13.1"
           }
         }
@@ -356,6 +355,11 @@
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
+    },
+    "{cli/*}": {
+      "teambit.envs/envs": {
+        "env": "teambit.react/react"
+      }
     },
     "{babel/*}": {
       "teambit.envs/envs": {
@@ -471,7 +475,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.290",
+            "bit-bin": "14.8.9-dev.294",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
