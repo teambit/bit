@@ -39,10 +39,10 @@ function getOriginalAuthConfigByUri(config: Record<string, any>, uri: string): O
 
   const creds = getScopedCredentials(nerfed, `${nerfed}:`, config);
   if (nerfed !== defnerf) return creds;
-
+  const defaultCredentials = getScopedCredentials(nerfed, '', config);
   return {
-    ...getScopedCredentials(nerfed, '', config),
-    ...creds,
+    originalAuthType: creds.originalAuthType || defaultCredentials.originalAuthType,
+    originalAuthValue: creds.originalAuthValue || defaultCredentials.originalAuthValue,
   };
 }
 
@@ -55,6 +55,8 @@ function getScopedCredentials(nerfed: string, scope: string, config: Record<stri
       originalAuthValue: token,
     };
   }
+  console.log('config', config);
+  console.log('scope====>>>>>>>', `${scope}_auth`);
 
   const auth = config[`${scope}_auth`];
 
