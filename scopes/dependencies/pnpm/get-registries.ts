@@ -55,8 +55,6 @@ function getScopedCredentials(nerfed: string, scope: string, config: Record<stri
       originalAuthValue: token,
     };
   }
-  console.log('config', config);
-  console.log('scope====>>>>>>>', `${scope}_auth`);
 
   const auth = config[`${scope}_auth`];
 
