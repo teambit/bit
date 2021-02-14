@@ -23,7 +23,7 @@ export const UserHeroExample = () => {
   return (
     <ExampleLayout>
       <CodeSnippet>{userHeroString}</CodeSnippet>
-      <CompositionCard Composition={() => <UserHero />} name="User hero with description" />
+      <CompositionCard Composition={() => <UserHero />} name="User hero" />
     </ExampleLayout>
   );
 };

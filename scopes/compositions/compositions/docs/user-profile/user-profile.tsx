@@ -32,7 +32,7 @@ export const UserProfileExample = () => {
   return (
     <ExampleLayout>
       <CodeSnippet>{userProfileString}</CodeSnippet>
-      <CompositionCard Composition={() => <UserProfileWithLoader />} name="User profile with scopes" />
+      <CompositionCard Composition={() => <UserProfileWithLoader />} name="User hero with scope list" />
     </ExampleLayout>
   );
 };
