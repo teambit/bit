@@ -154,7 +154,7 @@ export class ReactEnv implements Environment {
   getWebpackConfig(context: DevServerContext): Configuration {
     const fileMapPath = this.writeFileMap(context.components);
 
-    return webpackConfigFactory(context.id, fileMapPath);
+    return webpackConfigFactory(context.envRuntime.id, fileMapPath);
   }
 
   getDevEnvId(id?: string) {
