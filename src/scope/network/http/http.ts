@@ -174,7 +174,7 @@ export class Http implements Network {
     }
     logger.error(`parsed error from HTTP, url: ${res.url}`, jsonResponse);
     const error = jsonResponse?.error?.code ? jsonResponse?.error : jsonResponse;
-    if (!error.message && jsonResponse.message) error.message = jsonResponse.message;
+    if (error && !error.message && jsonResponse.message) error.message = jsonResponse.message;
     const err = remoteErrorHandler(
       error?.code,
       error,
