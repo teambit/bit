@@ -326,22 +326,29 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
+      {
+        baseDir: this.path,
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
 
     const capsules = network.seedersCapsules;
 
     return capsules.map((capsule) => {
-      // return RequireableComponent.fromCapsule(capsule);
-      return new RequireableComponent(capsule.component, () => {
-        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
-          file.relative.includes('.scope.runtime.')
-        );
+      return new RequireableComponent(capsule.component, async () => {
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
+        const aspect = require(capsule.path);
+        const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
+        const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
+        const runtimePath = scopeRuntime || mainRuntime;
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(capsule.path);
+        if (runtimePath) require(runtimePath);
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return aspect;
       });
     });
   }
@@ -498,6 +505,10 @@ export class ScopeMain implements ComponentFactory {
       return id.isEqual(componentId);
     });
     return !!found;
+  }
+
+  async hasIdNested(componentId: ComponentID, includeCache = false): Promise<boolean> {
+    return this.hasId(componentId, includeCache);
   }
 
   /**
