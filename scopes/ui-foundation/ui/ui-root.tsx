@@ -1,8 +1,7 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
-import { ComponentServer, ComponentDir } from '@teambit/bundler';
+import { ComponentDir } from '@teambit/bundler';
 import { Component } from '@teambit/component';
 import { ProxyConfigArrayItem } from 'webpack-dev-server';
-// import { WebpackDevServer } from '../webpack/webpack.dev-server';
 
 // TODO: remove this extends "ComponentDir", this should be part of the workspace alone since scope
 // would never have componentDir and as it has nothing to do with `UIRoot`.
@@ -21,11 +20,6 @@ export interface UIRoot extends ComponentDir {
    * name of the UI root config file.
    */
   configFile: string;
-
-  /**
-   * list of the Dev Servers.
-   */
-  devServers: Promise<ComponentServer[]>;
 
   buildOptions?: {
     ssr?: boolean;
@@ -50,8 +44,6 @@ export interface UIRoot extends ComponentDir {
    * determine whether UI should get a priority.
    */
   priority?: boolean;
-
-  getProxy?: () => Promise<ProxyEntry[]>;
 }
 
 export type ProxyEntry = ProxyConfigArrayItem & {

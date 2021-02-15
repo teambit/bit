@@ -21,7 +21,7 @@ function wrap(Component: ComponentType, WrapperComponent?: ComponentType): Compo
 /**
  * HOC to wrap and mount all registered providers into the DOM.
  */
-function withProviders(providers: ComponentType[] = []) {
+export function withProviders(providers: ComponentType[] = []) {
   return providers.reduce<ComponentType>(
     (MainProvider, Provider) => {
       if (!MainProvider) return wrap(Provider);

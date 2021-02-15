@@ -44,6 +44,7 @@
         "@teambit/any-fs": "0.0.5",
         "@teambit/base-ui.constants.storage": "^0.5.9",
         "@teambit/base-ui.css-components.roundness": "^0.5.9",
+        "@teambit/base-ui.elements.dots-loader": "0.6.3",
         "@teambit/base-ui.elements.separator": "^0.5.9",
         "@teambit/base-ui.graph.tree.indent": "0.0.1",
         "@teambit/base-ui.graph.tree.inflate-paths": "0.0.1",
@@ -51,6 +52,8 @@
         "@teambit/base-ui.graph.tree.root-node": "0.0.1",
         "@teambit/base-ui.graph.tree.tree-context": "0.0.1",
         "@teambit/base-ui.input.error": "^0.5.9",
+        "@teambit/base-ui.elements.image": "^0.6.3",
+        "@teambit/base-ui.elements.label": "^0.6.3",
         "@teambit/base-ui.layout.breakpoints": "^0.5.9",
         "@teambit/base-ui.layout.grid-component": "^0.5.9",
         "@teambit/base-ui.layout.page-frame": "^0.5.9",
@@ -58,6 +61,7 @@
         "@teambit/base-ui.surfaces.card": "^0.5.9",
         "@teambit/base-ui.surfaces.split-pane.hover-splitter": "^0.5.9",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "0.6.1",
+        "@teambit/base-ui.text.heading": "^0.6.3",
         "@teambit/base-ui.text.muted-text": "^0.5.9",
         "@teambit/base-ui.text.paragraph": "^0.5.9",
         "@teambit/base-ui.text.themed-text": "^0.5.9",
@@ -110,6 +114,7 @@
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
         "@teambit/evangelist.theme.icon-font": "0.5.5",
         "@teambit/harmony": "0.2.11",
+        "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "^5.9.0",
         "@testing-library/react": "11.0.4",
         "@tippyjs/react": "^4.2.0",
@@ -149,7 +154,6 @@
         "@yarnpkg/plugin-npm": "2.4.0",
         "@yarnpkg/plugin-pack": "2.2.3",
         "ansi-to-html": "^0.6.14",
-        "apollo-link-context": "1.0.20",
         "apollo-link-http": "1.5.17",
         "apollo-link-ws": "1.0.20",
         "apollo-server": "2.19.2",
@@ -284,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.292",
+        "bit-bin": "14.8.9-dev.295",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -340,7 +344,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.292",
+            "bit-bin": "14.8.9-dev.295",
             "react-dom": "^16.13.1"
           }
         }
@@ -355,6 +359,11 @@
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
+    },
+    "{cli/*}": {
+      "teambit.envs/envs": {
+        "env": "teambit.react/react"
+      }
     },
     "{babel/*}": {
       "teambit.envs/envs": {
@@ -472,7 +481,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.292",
+            "bit-bin": "14.8.9-dev.295",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

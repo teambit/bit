@@ -1,0 +1,18 @@
+.scopeCard {
+  display: inline-flex;
+  justify-content: space-between;
+  min-width: 350px;
+  width: auto;
+
+  .textHolder {
+    display: flex;
+    flex-direction: column;
+  }
+  .scopeName,
+  .scopeDescription {
+    line-height: 1.7;
+  }
+  .scopeDescription {
+    font-size: 14px;
+  }
+}
