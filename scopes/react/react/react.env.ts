@@ -24,6 +24,7 @@ import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
+import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
 const jestM = require('jest');
@@ -154,6 +155,11 @@ export class ReactEnv implements Environment {
     const fileMapPath = this.writeFileMap(context.components);
 
     return webpackConfigFactory(context.id, fileMapPath);
+  }
+
+  getDevEnvId(id?: string) {
+    if (typeof id !== 'string') return ReactAspect.id;
+    return id || ReactAspect.id;
   }
 
   /**

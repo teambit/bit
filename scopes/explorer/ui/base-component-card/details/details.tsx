@@ -1,5 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
+import { Ellipsis } from '@teambit/ui.styles.ellipsis';
 
 import styles from './details.module.scss';
 
@@ -19,7 +20,8 @@ export function ComponentDetails({ id, version, description, className, ...rest 
         <div className={styles.nameSpace}>{nameSpace}</div>
         <div className={styles.name}>
           <span>{name}</span>
-          {version && <span>v{version}</span>}
+          {/* do we still want the 'v' here if its a hash? looks weird */}
+          {version && <Ellipsis>v{version}</Ellipsis>}
         </div>
         <div className={styles.description}>{description}</div>
       </div>

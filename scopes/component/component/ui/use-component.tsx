@@ -16,7 +16,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
     params: { componentId },
   } = useRouteMatch();
   const query = useQuery();
-  const version = query.get('v') || undefined;
+  const version = query.get('version') || undefined;
 
   const targetId = id || componentId;
 

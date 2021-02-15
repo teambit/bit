@@ -36,7 +36,7 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   const envTooltip = (
     <>
       <div className={styles.componentEnvTitle}>Environment</div>
-      <div className={styles.componentEnv}>{component.environment?.id}</div>
+      <div>{component.environment?.id}</div>
     </>
   );
 
