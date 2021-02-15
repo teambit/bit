@@ -185,5 +185,5 @@
   "teambit.workspace/ui/status@0.0.265": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/status"},
   "teambit.workspace/variants@0.0.266": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.273": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
-  "version": "14.8.9-dev.293"
+  "version": "14.8.9-dev.294"
 }
