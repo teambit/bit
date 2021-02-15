@@ -20,7 +20,6 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
   const shouldPreviewButton = !shouldShowPreview && component.compositions.length > 0;
   const componentVersion = component.version === 'new' ? undefined : component.version;
   return (
-    // @ts-ignore remove all rest to divs in react 17
     <div {...rest} className={styles.wrapper}>
       <ComponentCard
         id={component.id.fullName}

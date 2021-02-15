@@ -52,7 +52,6 @@ function Breadcrumbs({ componentId, className, ...rest }: BreadcrumbsProps) {
   const showSep = !!scope && !!namespace;
 
   return (
-    // @ts-ignore remove all rest to divs in react 17
     <div {...rest} className={classnames(styles.breadcrumbs, ellipsis, className)}>
       {scope}
       {showSep && '/'}

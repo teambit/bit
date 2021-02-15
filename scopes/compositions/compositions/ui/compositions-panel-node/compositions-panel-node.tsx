@@ -11,7 +11,6 @@ export type CompositionsPanelNodeProps = {
 
 export function CompositionsPanelNode({ name, onClick, isActive, ...rest }: CompositionsPanelNodeProps) {
   return (
-    // @ts-ignore remove all rest to li in react 17
     <li {...rest}>
       <div className={classNames(styles.linkWrapper, { [styles.active]: isActive })}>
         <a className={styles.panelLink} onClick={onClick}>

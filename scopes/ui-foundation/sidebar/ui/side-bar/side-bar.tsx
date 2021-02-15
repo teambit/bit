@@ -31,7 +31,6 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
   };
 
   return (
-    // @ts-ignore remove all rest to divs in react 17
     <div {...rest} className={styles.sidebar}>
       <MenuSection items={items} />
       {drawerSlot.toArray().map(([id, drawer]) => {

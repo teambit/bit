@@ -57,6 +57,5 @@ export function AutoCompleteInput({
     [onEscape, onDown, onUp, onEnter]
   );
 
-  // @ts-ignore remove all rest to divs in react 17
   return <input {...rest} ref={inputRef} className={classNames(styles.input, className)} onKeyDown={handleKeyDown} />;
 }

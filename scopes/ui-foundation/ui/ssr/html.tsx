@@ -14,7 +14,6 @@ interface HtmlProps extends React.HtmlHTMLAttributes<HTMLHtmlElement> {
 
 export function Html({ assets = {}, withDevTools = false, children, ...rest }: HtmlProps) {
   return (
-    // @ts-ignore remove all rest to divs in react 17
     <html lang="en" {...rest}>
       <head>
         <meta charSet="utf-8" />

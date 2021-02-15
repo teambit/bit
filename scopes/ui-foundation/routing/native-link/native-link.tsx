@@ -30,6 +30,5 @@ export function NativeLink({ href = '', external, replace, onClick, ...rest }: L
     [href, replace, onClick]
   );
 
-  // @ts-ignore remove all rest to <a> in react 17
   return <a {...rest} {...externalProps} onClick={handleClick} href={href} />;
 }

@@ -13,7 +13,6 @@ export type DrawerProps = {
 export function DrawerUI({ name, children, className, isOpen, onToggle, ...rest }: DrawerProps) {
   if (!name) return null;
   return (
-    // @ts-ignore remove all rest to divs in react 17
     <div {...rest} className={classNames(styles.drawer, className)}>
       <div className={classNames(styles.drawerName, { [styles.open]: isOpen })}>
         <div onClick={onToggle}>
