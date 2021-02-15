@@ -27,7 +27,7 @@ module.exports = {
       react: require.resolve('react'),
       'react-dom/server': require.resolve('react-dom/server'),
       'react-native$': require.resolve('react-native-web'),
-      // 'react-dom/unstable-native-dependencies': require.resolve('react-dom/unstable-native-dependencies'),
+      'react-dom/unstable-native-dependencies': require.resolve('react-dom/unstable-native-dependencies'),
       // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
     },
   },
