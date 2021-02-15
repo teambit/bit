@@ -116,6 +116,7 @@ export class ReactMain {
   overrideDevServerConfig(config: Configuration) {
     return this.envs.override({
       getDevServer: (context: DevServerContext) => this.reactEnv.getDevServer(context, config),
+      getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id)
     });
   }
 

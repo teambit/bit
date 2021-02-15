@@ -240,7 +240,7 @@ function getAuthConfig(registries: Registries): Record<string, any> {
   if (registries.defaultRegistry.alwaysAuth) {
     res['always-auth'] = true;
   }
-  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry);
+  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry, true);
   defaultAuthTokens.forEach(({ keyName, val }) => {
     res[keyName] = val;
   });
