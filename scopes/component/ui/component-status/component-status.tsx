@@ -7,7 +7,7 @@ export type ComponentStatusProps = {
   status?: StatusTypes;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export type StatusTypes = 'modified' | 'error' | 'new' | 'staged' | 'pending';
+export type StatusTypes = 'modified' | 'error' | 'new' | 'staged' | 'dependency' | 'updates';
 
 export function ComponentStatus({ status, className, ...rest }: ComponentStatusProps) {
   if (!status) return null;
