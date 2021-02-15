@@ -1,5 +1,5 @@
 ---
-description: Renders component instances in isolation
+description: Renders component instances as part of different compositions.
 labels: ['ui', 'tests']
 ---
 
@@ -126,7 +126,9 @@ import { PrimaryButton } from './button.compositions.tsx';
 
 describe('Button', () => {
   it('renders correctly as "primary"', () => {
-    const component = testRenderer.create(<PrimaryButton>test primary variant</PrimaryButton>);
+    const component = testRenderer.create(
+      <PrimaryButton>test primary variant</PrimaryButton>
+    );
     const tree = component.toJSON();
     expect(tree).toMatchSnapshot();
   });
@@ -141,9 +143,9 @@ without you having to repeat that task ever again.
 
 ## Compositions and storybook
 
-Storybook is a tool designed for managing stories for design systems as a single project and not optimized for individual components.
-While you can use the storybook extension for Bit (**currently in development**) instead of or alongside compositions, compositions are more efficient when managing individual components as they:
+Storybook displays individual components in different states and variations.
+It is designed to help in authoring and displaying standalone components, each of which is usually part of a design system.
+In contrast, 'Compositions' is mainly about examining how an independent component looks and behaves when used with other components.
+These component integrations serve as a way to examine compositions that are likely to be part of real applications, using manual and automated testing.
 
-- Use the same configuration pipeline and environments.
-- Are rendered using the same build pipelines as the components would during CI.
-- Do not require a separate process or configuration to render components.
+If you're looking for a Storybook-like solution, you can find that either in the Storybook extension (currently in development) or by using 'Compositions' for that use-case as well.

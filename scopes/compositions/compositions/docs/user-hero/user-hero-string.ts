@@ -1,14 +1,16 @@
 export const userHeroString = `
 // user-hero.compositions.jsx
 
-import { Hero } from './hero';
+import { Hero } from './user-hero';
 
-const UserHeroWithDescription = () => {
+const profileImage = 'https://storage.googleapis.com/docs-images/jessica.jpg';
+
+const UserHero = () => {
   return (
     <Hero
       title="Jessica Pegula"
       description="Frontend developer and designer."
-      profileImage={img}
+      profileImage={profileImage}
       data-testid="test-hero"
       userName="jessica"
     />
