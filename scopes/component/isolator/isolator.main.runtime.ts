@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { compact } from 'lodash';
+import { compact, pick } from 'lodash';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
 import { getComponentPackageVersion } from '@teambit/component-package-version';
@@ -55,7 +55,14 @@ export type IsolateComponentsInstallOptions = {
   installTeambitBit?: boolean;
 };
 
-export type IsolateComponentsOptions = {
+type CreateGraphOptions = {
+  /**
+   * include components that exists in nested hosts. for example include components that exist in scope but not in the workspace
+   */
+  includeFromNestedHosts?: boolean;
+};
+
+export type IsolateComponentsOptions = CreateGraphOptions & {
   name?: string;
   /**
    * the capsule root-dir based on a *hash* of this baseDir, not on the baseDir itself.
@@ -147,7 +154,10 @@ export class IsolatorMain {
     const host = this.componentAspect.getHost();
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const componentsToIsolate = opts.seedersOnly ? await host.getMany(seeders) : await this.createGraph(seeders);
+    const createGraphOpts = pick(opts, 'includeFromNestedHosts');
+    const componentsToIsolate = opts.seedersOnly
+      ? await host.getMany(seeders)
+      : await this.createGraph(seeders, createGraphOpts);
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
     longProcessLogger.end();
@@ -155,7 +165,7 @@ export class IsolatorMain {
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
   }
 
-  private async createGraph(seeders: ComponentID[]): Promise<Component[]> {
+  private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
     const host = this.componentAspect.getHost();
     const graph = await this.graphBuilder.getGraph(seeders);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
@@ -163,7 +173,12 @@ export class IsolatorMain {
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
     const existingCompsP = compsAndDeps.map(async (c) => {
-      const existing = await host.hasIdNested(c.id);
+      let existing;
+      if (opts.includeFromNestedHosts) {
+        existing = await host.hasIdNested(c.id);
+      } else {
+        existing = await host.hasId(c.id);
+      }
       if (existing) return c;
       return undefined;
     });

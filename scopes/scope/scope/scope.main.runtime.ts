@@ -326,7 +326,13 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
+      {
+        baseDir: this.path,
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
 
