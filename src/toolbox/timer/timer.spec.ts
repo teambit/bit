@@ -5,12 +5,12 @@ import { TimerAlreadyRunning, TimerNotStarted } from './exceptions';
 import { Timer } from './timer';
 
 describe('Timer', () => {
-  it('should stop after 100ms', async () => {
+  it('should stop after 300ms', async () => {
     const timer = Timer.create();
     timer.start();
     await sleep(50);
     const { elapsed } = timer.stop();
-    expect(elapsed < 100).to.equal(true);
+    expect(elapsed < 300).to.equal(true);
   });
 
   it('should return elapsed in seconds', async () => {

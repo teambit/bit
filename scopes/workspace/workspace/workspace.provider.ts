@@ -1,7 +1,7 @@
 import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
-import { CLIMain } from '@teambit/cli';
+import { CLIMain, CommandList } from '@teambit/cli';
 import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
@@ -15,7 +15,7 @@ import type { VariantsMain } from '@teambit/variants';
 import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
 import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
 import LegacyComponentLoader from 'bit-bin/dist/consumer/component/component-loader';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
@@ -185,20 +185,22 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  cli.register(new InstallCmd(workspace, logger));
-  cli.register(new EjectConfCmd(workspace));
-
   const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
   const capsuleCreateCmd = new CapsuleCreateCmd(workspace, isolator);
-  cli.register(capsuleListCmd);
-  cli.register(capsuleCreateCmd);
+  const commands: CommandList = [
+    new InstallCmd(workspace, logger),
+    new EjectConfCmd(workspace),
+    capsuleListCmd,
+    capsuleCreateCmd,
+  ];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(pubsub, logger, watcher));
+    commands.push(new WatchCommand(pubsub, logger, watcher));
     cli.unregister('link');
-    cli.register(new LinkCommand(workspace, logger));
+    commands.push(new LinkCommand(workspace, logger));
   }
+  cli.register(...commands);
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {

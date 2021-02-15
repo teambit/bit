@@ -69,8 +69,7 @@ describe('toPreviewServer()', () => {
   it('should use explicit server url, when available', () => {
     const result = toPreviewServer(componentWithExplicitServer);
 
-    // TODO - check trailing slash
-    expect(result).to.equal('/preview/teambit.bit/overview');
+    expect(result).to.equal('/preview/teambit.bit/overview/');
   });
 
   it('should make from component without version (latest), when explicit url is not available', () => {
@@ -127,7 +126,7 @@ describe('toPreviewUrl()', () => {
     const result = toPreviewUrl(componentWithExplicitServer, 'overview', 'who=ami');
 
     expect(result).to.equal(
-      '/preview/teambit.bit/overview#teambit.base-ui/input/button@0.6.2?preview=overview&who=ami'
+      '/preview/teambit.bit/overview/#teambit.base-ui/input/button@0.6.2?preview=overview&who=ami'
     );
   });
 

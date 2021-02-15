@@ -42,7 +42,7 @@ export function registerDefaultScopeGetter(func: DefaultScopeGetter) {
   getDefaultScope = func;
 }
 
-export default (async function exportAction(params: {
+type ExportParams = {
   ids: string[];
   remote: string | null | undefined;
   eject: boolean;
@@ -53,7 +53,10 @@ export default (async function exportAction(params: {
   codemod: boolean;
   force: boolean;
   lanes: boolean;
-}) {
+  resumeExportId: string | undefined;
+};
+
+export default async function exportAction(params: ExportParams) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
   const { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes } = await exportComponents(params);
   let ejectResults;
@@ -72,7 +75,7 @@ export default (async function exportAction(params: {
     });
   }
   return exportResults;
-});
+}
 
 async function exportComponents({
   ids,
@@ -84,17 +87,8 @@ async function exportComponents({
   force,
   lanes,
   allVersions,
-}: {
-  ids: string[];
-  remote: string | null | undefined;
-  includeDependencies: boolean;
-  setCurrentScope: boolean;
-  includeNonStaged: boolean;
-  codemod: boolean;
-  allVersions: boolean;
-  force: boolean;
-  lanes: boolean;
-}): Promise<{
+  resumeExportId,
+}: ExportParams): Promise<{
   updatedIds: BitId[];
   nonExistOnBitMap: BitId[];
   missingScope: BitId[];
@@ -134,6 +128,7 @@ async function exportComponents({
     lanesObjects,
     allVersions,
     idsWithFutureScope,
+    resumeExportId,
   });
   if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);

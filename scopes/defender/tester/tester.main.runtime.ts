@@ -136,9 +136,9 @@ export class TesterMain {
 
   async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
+    const componentStatus = await this.workspace?.getComponentStatus(component);
     const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
-    const isModified = await component.isModified();
-    if ((entry || data) && !isModified) {
+    if ((entry || data) && !componentStatus?.modifyInfo?.hasModifiedFiles) {
       return { testsResults: data?.tests || entry?.data.tests, loading: false };
     }
     return this.getTestsResultsFromState(component);
@@ -169,7 +169,7 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: ['**/*.spec.*', '**/*.test.*'],
+    patterns: ['**/*.spec.+(js|ts|jsx|tsx)', '**/*.test.+(js|ts|jsx|tsx)'],
 
     /**
      * determine whether to watch on start.
@@ -207,8 +207,9 @@ export class TesterMain {
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
       ui.registerOnStart(async () => {
-        if (!config.watchOnStart) return false;
-        return tester.uiWatch();
+        if (!config.watchOnStart) return undefined;
+        await tester.uiWatch();
+        return undefined;
       });
 
       cli.register(new TestCmd(tester, workspace, logger));

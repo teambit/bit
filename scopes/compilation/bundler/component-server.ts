@@ -10,6 +10,7 @@ import { ComponentsServerStartedEvent } from './events';
 import { BundlerAspect } from './bundler.aspect';
 
 export class ComponentServer {
+  // why is this here
   errors?: Error[];
   constructor(
     /**
@@ -66,6 +67,8 @@ export class ComponentServer {
 
     return hostname;
   }
+
+  private onChange() {}
 
   private createComponentsServerStartedEvent: (
     DevServer,

@@ -1,32 +1,50 @@
 import fetch from 'node-fetch';
-import { wrapSchema, introspectSchema, AsyncExecutor } from 'graphql-tools';
-import { print } from 'graphql';
+import { HttpLink } from 'apollo-link-http';
+import { makeRemoteExecutableSchema, introspectSchema } from 'apollo-server';
+import { WebSocketLink } from 'apollo-link-ws';
+import { split } from 'apollo-link';
+import { getMainDefinition } from 'apollo-utilities';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+import ws from 'ws';
 import { GraphQLServer } from '../graphql-server';
 
-export function getExecutor(uri: string): AsyncExecutor {
-  return async ({ document, variables, context }) => {
-    const query = print(document);
-    const fetchResult = await fetch(uri, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        // eslint-disable-next-line dot-notation
-        Cookie: context ? context['headers'].cookie : '',
-        // eslint-disable-next-line dot-notation
-        Authorization: context ? context['headers'].authorization : '',
-      },
-      body: JSON.stringify({ query, variables }),
+async function getRemoteSchema({ uri, subscriptionsUri }) {
+  // @ts-ignore
+  const httpLink = new HttpLink({ uri, fetch });
+
+  if (!subscriptionsUri) {
+    return makeRemoteExecutableSchema({
+      schema: await introspectSchema(httpLink),
+      link: httpLink,
     });
-    return fetchResult.json();
-  };
+  }
+
+  // Create WebSocket link with custom client
+  const client = new SubscriptionClient(subscriptionsUri, { reconnect: true }, ws);
+  const wsLink = new WebSocketLink(client);
+
+  // Using the ability to split links, we can send data to each link
+  // depending on what kind of operation is being sent
+  const link = split(
+    (operation) => {
+      const definition = getMainDefinition(operation.query);
+      return definition.kind === 'OperationDefinition' && definition.operation === 'subscription';
+    },
+    wsLink,
+    httpLink
+  );
+
+  return makeRemoteExecutableSchema({
+    schema: await introspectSchema(httpLink),
+    link,
+  });
 }
 
 export async function createRemoteSchemas(servers: GraphQLServer[]) {
   const schemasP = servers.map(async (server) => {
-    const executor = getExecutor(server.uri);
-    return wrapSchema({
-      schema: await introspectSchema(executor),
-      executor,
+    return getRemoteSchema({
+      uri: server.uri,
+      subscriptionsUri: server.subscriptionsUri,
     });
   });
 

@@ -5,7 +5,7 @@ import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
-import ReactTooltip from 'react-tooltip';
+import { Tooltip } from '@teambit/ui.tooltip';
 import { ComponentModel } from '@teambit/component';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';
@@ -32,7 +32,13 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
   );
 
   if (!(component instanceof ComponentModel)) return null;
-  const componentId = `sidebar-${component.id.toString()}`;
+
+  const envTooltip = (
+    <>
+      <div className={styles.componentEnvTitle}>Environment</div>
+      <div className={styles.componentEnv}>{component.environment?.id}</div>
+    </>
+  );
 
   return (
     <NavLink
@@ -42,16 +48,11 @@ export function ComponentView(props: ComponentViewProps<PayloadType>) {
       onClick={handleClick}
     >
       <div className={styles.left}>
-        <EnvIcon component={component} className={styles.envIcon} data-tip="" data-for={componentId} />
+        <Tooltip className={styles.componentEnvTooltip} placement="right" content={envTooltip}>
+          <EnvIcon component={component} className={styles.envIcon} />
+        </Tooltip>
+
         <span>{getName(node.id)}</span>
-        <div className="--ssr-hidden">
-          <ReactTooltip place="bottom" id={componentId} effect="solid">
-            <div className={styles.componentEnvTooltip}>
-              <div className={styles.componentEnvTitle}>Environment</div>
-              <div className={styles.componentEnv}>{component.environment?.id}</div>
-            </div>
-          </ReactTooltip>
-        </div>
       </div>
 
       <div className={styles.right}>

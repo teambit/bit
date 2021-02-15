@@ -1,5 +1,5 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact } from 'ramda-adjunct';
@@ -167,6 +167,7 @@ export class WorkspaceComponentLoader {
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
+
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
@@ -176,8 +177,8 @@ export class WorkspaceComponentLoader {
       policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
     promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
 
     await Promise.all(promises);
 

@@ -2,6 +2,7 @@ import { ComponentMap } from '@teambit/component';
 import { Registries } from './registry';
 import { DepsFilterFn } from './manifest';
 import { WorkspacePolicy } from './policy';
+import { ProxyConfig } from './dependency-resolver.main.runtime';
 
 export type PackageManagerInstallOptions = {
   cacheRootDir?: string;
@@ -49,4 +50,6 @@ export interface PackageManager {
   ): Promise<ResolvedPackageVersion>;
 
   getRegistries?(): Promise<Registries>;
+
+  getProxyConfig?(): Promise<ProxyConfig>;
 }

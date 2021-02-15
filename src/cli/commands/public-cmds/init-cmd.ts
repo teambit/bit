@@ -27,6 +27,7 @@ export default class Init implements LegacyCommand {
       'do not nest component store within .git directory and do not write config data inside package.json',
     ],
     ['r', 'reset', 'write missing or damaged Bit files'],
+    ['', 'reset-new', 'reset .bitmap file as if the components were newly added and remove all model data (objects)'],
     [
       '',
       'reset-hard',
@@ -56,6 +57,7 @@ export default class Init implements LegacyCommand {
       shared,
       standalone,
       reset,
+      resetNew,
       resetHard,
       force,
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -84,7 +86,7 @@ export default class Init implements LegacyCommand {
       componentsDefaultDirectory: defaultDirectory,
       packageManager,
     };
-    return init(path, standalone, reset, resetHard, force, workspaceConfigFileProps).then(
+    return init(path, standalone, reset, resetNew, resetHard, force, workspaceConfigFileProps).then(
       ({ created, addedGitHooks, existingGitHooks }) => {
         return {
           created,

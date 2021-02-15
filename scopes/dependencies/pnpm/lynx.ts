@@ -13,7 +13,13 @@ import { createNewStoreController } from '@pnpm/store-connection-manager';
 // it's not taken from there since it's not exported.
 // here is a bug in pnpm about it https://github.com/pnpm/pnpm/issues/2748
 import { CreateNewStoreControllerOptions } from '@pnpm/store-connection-manager/lib/createNewStoreController';
-import { ResolvedPackageVersion, Registries, NPM_REGISTRY, Registry } from '@teambit/dependency-resolver';
+import {
+  ResolvedPackageVersion,
+  Registries,
+  NPM_REGISTRY,
+  Registry,
+  PackageManagerProxyConfig,
+} from '@teambit/dependency-resolver';
 // import execa from 'execa';
 // import createFetcher from '@pnpm/tarball-fetcher';
 import { MutatedProject, mutateModules } from 'supi';
@@ -21,7 +27,7 @@ import { MutatedProject, mutateModules } from 'supi';
 // import { createResolver } from './create-resolver';
 // import {isValidPath} from 'bit-bin/dist/utils';
 // import {createResolver} from '@pnpm/default-resolver';
-import createResolverAndFetcher from '@pnpm/client';
+import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';
 import { Logger } from '@teambit/logger';
 import toNerfDart from 'nerf-dart';
@@ -40,7 +46,11 @@ type RegistriesMap = {
 //   });
 // }
 
-async function createStoreController(storeDir: string, registries: Registries): Promise<StoreController> {
+async function createStoreController(
+  storeDir: string,
+  registries: Registries,
+  proxyConfig: PackageManagerProxyConfig = {}
+): Promise<StoreController> {
   // const fetchFromRegistry = createFetchFromRegistry({});
   // const getCredentials = () => ({ authHeaderValue: '', alwaysAuth: false });
   // const resolver: ResolveFunction = createResolver(fetchFromRegistry, getCredentials, {
@@ -66,17 +76,25 @@ async function createStoreController(storeDir: string, registries: Registries): 
     storeDir,
     rawConfig: authConfig,
     verifyStoreIntegrity: true,
+    httpProxy: proxyConfig?.httpProxy,
+    httpsProxy: proxyConfig?.httpsProxy,
   };
   const { ctrl } = await createNewStoreController(opts);
   return ctrl;
 }
 
-async function generateResolverAndFetcher(storeDir: string, registries: Registries) {
+async function generateResolverAndFetcher(
+  storeDir: string,
+  registries: Registries,
+  proxyConfig: PackageManagerProxyConfig = {}
+) {
   const pnpmConfig = await readConfig();
   const authConfig = getAuthConfig(registries);
-  const opts = {
+  const opts: ClientOptions = {
     authConfig: Object.assign({}, pnpmConfig.config.rawConfig, authConfig),
     storeDir,
+    httpProxy: proxyConfig?.httpProxy,
+    httpsProxy: proxyConfig?.httpsProxy,
   };
   const result = createResolverAndFetcher(opts);
   return result;
@@ -87,6 +105,7 @@ export async function install(
   pathsToManifests,
   storeDir: string,
   registries: Registries,
+  proxyConfig: PackageManagerProxyConfig = {},
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   logger?: Logger
 ) {
@@ -125,7 +144,7 @@ export async function install(
   });
   const registriesMap = getRegistriesMap(registries);
   const authConfig = getAuthConfig(registries);
-  const storeController = await createStoreController(storeDir, registries);
+  const storeController = await createStoreController(storeDir, registries, proxyConfig);
   const opts = {
     storeDir,
     dir: rootPathToManifest.rootDir,
@@ -157,9 +176,10 @@ export async function resolveRemoteVersion(
   packageName: string,
   rootDir: string,
   storeDir: string,
-  registries: Registries
+  registries: Registries,
+  proxyConfig: PackageManagerProxyConfig = {}
 ): Promise<ResolvedPackageVersion> {
-  const { resolve } = await generateResolverAndFetcher(storeDir, registries);
+  const { resolve } = await generateResolverAndFetcher(storeDir, registries, proxyConfig);
   const resolveOpts = {
     projectDir: rootDir,
     registry: '',
@@ -220,7 +240,7 @@ function getAuthConfig(registries: Registries): Record<string, any> {
   if (registries.defaultRegistry.alwaysAuth) {
     res['always-auth'] = true;
   }
-  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry);
+  const defaultAuthTokens = getAuthTokenForRegistry(registries.defaultRegistry, true);
   defaultAuthTokens.forEach(({ keyName, val }) => {
     res[keyName] = val;
   });
