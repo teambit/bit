@@ -28,7 +28,8 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
-import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
 import { ModelComponent, Version, Lane } from 'bit-bin/dist/scope/models';
 import { Ref, Repository } from 'bit-bin/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
@@ -48,12 +49,10 @@ import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
-import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
-import { ResumeExportCmd } from './export/resume-export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -148,16 +147,16 @@ export class ScopeMain implements ComponentFactory {
     const host = this.componentExtension.getHost();
 
     // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
-    const getAspectsIdsWithoutRootIds = (): string[] => {
-      const allIds = this.harmony.extensionsIds;
+    const getUserAspectsIdsWithoutRootIds = (): string[] => {
+      const allUserAspectIds = this.aspectLoader.getUserAspects();
       const rootIds = Object.keys(this.harmony.config.toObject());
-      const diffIds = difference(allIds, rootIds);
+      const diffIds = difference(allUserAspectIds, rootIds);
       return diffIds;
     };
 
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
     const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
-      const harmonyIds = getAspectsIdsWithoutRootIds();
+      const harmonyIds = getUserAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
         const newId = await host.resolveComponentId(component.id);
@@ -589,10 +588,12 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
-  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying(versions, range);
+    // TODO - @david
+    return semver.maxSatisfying(versions, range)?.toString();
+    // return semver.maxSatisfying<string>(versions, range);
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
@@ -601,16 +602,10 @@ export class ScopeMain implements ComponentFactory {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
-      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects, false);
-      // TODO: what to return if no version in objects
-      if (version) {
-        const snap = this.createSnapFromVersion(version);
-        const tag = new Tag(snap, new SemVer(versionStr));
-        tagMap.set(tag.version, tag);
-      }
+    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
+      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
+      tagMap.set(tag.version, tag);
     });
-
     return tagMap;
   }
 
@@ -722,7 +717,6 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);

@@ -23,7 +23,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
     const profileImageWithParams = addQueryParams(profileImage, imageSize);
-    const colors = avatarColors[firstLetter.toLowerCase()];
+    const colors = firstLetter && avatarColors[firstLetter.toLowerCase()];
     return (
       <div className={classNames(colors, styles.avatar, className)} style={{ width: `${size}px`, height: `${size}px` }}>
         {profileImageWithParams && (
@@ -34,7 +34,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
             {getInitials(displayName || name)}
           </span>
         )}
-        {!displayName && !name && !profileImageWithParams && (
+        {!displayName && !name && !profileImageWithParams && !firstLetter && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}
       </div>

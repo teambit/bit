@@ -5,7 +5,7 @@ import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
 import path from 'path';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import loader from 'bit-bin/dist/cli/loader';
 import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';

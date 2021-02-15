@@ -37,7 +37,8 @@ import { link, importAction } from 'bit-bin/dist/api/consumer';
 import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
 import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
 import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
-import { BitId, BitIds } from 'bit-bin/dist/bit-id';
+import { BitIds } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
 import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
 import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
@@ -56,6 +57,7 @@ import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
 import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import type { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -315,6 +317,10 @@ export class Workspace implements ComponentFactory {
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
     const ids = await this.componentList.listTagPendingComponents();
     return this.resolveMultipleComponentIds(ids);
+  }
+
+  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
+    return this.scope.getLogs(id);
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {

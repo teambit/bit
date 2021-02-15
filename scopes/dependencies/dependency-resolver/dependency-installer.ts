@@ -1,4 +1,6 @@
 import mapSeries from 'p-map-series';
+import path from 'path';
+import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
@@ -96,10 +98,21 @@ export class DependencyInstaller {
       });
     }
 
+    // remove node modules dir for all components dirs, since it might contain left overs from previous install
+    await this.cleanCompsNodeModules(componentDirectoryMap);
+
     // TODO: the cache should be probably passed to the package manager constructor not to the install function
     await this.packageManager.install(finalRootDir, rootPolicy, componentDirectoryMap, calculatedPmOpts);
     await this.runPrePostSubscribers(this.postInstallSubscriberList, 'post', args);
     return componentDirectoryMap;
+  }
+
+  private async cleanCompsNodeModules(componentDirectoryMap: ComponentMap<string>) {
+    const promises = componentDirectoryMap.toArray().map(([, dir]) => {
+      const nmDir = path.join(dir, 'node_modules');
+      return fs.remove(nmDir);
+    });
+    return Promise.all(promises);
   }
 
   private async runPrePostSubscribers(
