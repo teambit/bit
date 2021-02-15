@@ -101,7 +101,7 @@ class BitLogger implements IBitLogger {
   }
 
   fatal(message: string, ...meta: any[]) {
-    this.logger.error(message, ...meta);
+    this.logger.fatal(message, ...meta);
   }
 
   get isJsonFormat() {
