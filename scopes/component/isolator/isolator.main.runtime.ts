@@ -163,11 +163,12 @@ export class IsolatorMain {
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
     const existingCompsP = compsAndDeps.map(async (c) => {
-      const existing = await host.hasId(c.id);
+      const existing = await host.hasIdNested(c.id);
       if (existing) return c;
       return undefined;
     });
-    return compact(await Promise.all(existingCompsP));
+    const existingComps = await Promise.all(existingCompsP);
+    return compact(existingComps);
   }
 
   /**

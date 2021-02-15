@@ -84,6 +84,12 @@ export interface ComponentFactory {
   hasId(componentId: ComponentID): Promise<boolean>;
 
   /**
+   * Check if the host has the id, if no, search for the id in inner host (for example, workspace will search in the scope)
+   * @param componentId
+   */
+  hasIdNested(componentId: ComponentID): Promise<boolean>;
+
+  /**
    * determine whether host should be the prior one in case multiple hosts persist.
    */
   priority?: boolean;
