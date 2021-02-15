@@ -47,7 +47,8 @@ export function CodeTabTree({
       const urlParams = useCodeParams();
       const children = props.node.children;
       const { selected } = useContext(TreeContext);
-      const href = `/${urlParams.componentId}/~code/${props.node.id}`;
+      const version = urlParams.version ? `?version=${urlParams.version}` : '';
+      const href = `/${urlParams.componentId}/~code/${props.node.id}${version}`;
       const widgets = getWidgets(props.node.id, mainFile, devFiles);
       if (!children) {
         return (
