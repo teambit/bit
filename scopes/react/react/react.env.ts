@@ -258,8 +258,8 @@ export class ReactEnv implements Environment {
         'react-dom': '-',
         'core-js': '^3.6.5',
         '@types/node': '^12.12.27',
-        '@types/react': { version: '^17.0.0', resolveFromEnv: true },
-        '@types/react-dom': { version: '^17.0.0', resolveFromEnv: true },
+        '@types/react': { version: '^17.0.2', resolveFromEnv: true },
+        '@types/react-dom': { version: '^17.0.1', resolveFromEnv: true },
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
         '@types/react-router-dom': '^5.1.5',
@@ -268,8 +268,8 @@ export class ReactEnv implements Environment {
       },
       // TODO: take version from config
       peerDependencies: {
-        react: { version: '>=16.8.0 || ^17.0.0', resolveFromEnv: true },
-        'react-dom': { version: '>=16.8.0 || ^17.0.0', resolveFromEnv: true },
+        react: { version: '^17.0.1', resolveFromEnv: true },
+        'react-dom': { version: '^17.0.1', resolveFromEnv: true },
       },
     };
   }
