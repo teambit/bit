@@ -3,7 +3,7 @@ import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { ComponentID } from '@teambit/component';
 
 const getFile = gql`
-  query($id: String!, $path: String) {
+  query getFile($id: String!, $path: String) {
     getHost {
       id # used for GQL caching
       get(id: $id) {
@@ -34,7 +34,7 @@ type FileResult = {
 };
 
 export function useFileContent(componentId: ComponentID, filePath?: string) {
-  const id = componentId._legacy.name;
+  const id = componentId.toString();
   const { data, ...rest } = useDataQuery<FileResult>(getFile, {
     variables: { id, path: filePath },
     skip: filePath === undefined,
