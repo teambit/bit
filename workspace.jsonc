@@ -449,6 +449,11 @@
         "env": "teambit.harmony/node"
       }
     },
+    "scopes/component/legacy-bit-log": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
     "scopes/ui-foundation": {
       "defaultScope": "teambit.ui-foundation"
     },

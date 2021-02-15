@@ -12,8 +12,8 @@ export type ComponentStatusResolverProps = {
 };
 
 export function ComponentStatusResolver({ status, issuesCount = 0 }: ComponentStatusResolverProps) {
-  const isModified = status && (status.modifyInfo.hasModifiedDependencies || status.modifyInfo.hasModifiedFiles);
   if (!status) return null;
+  const isModified = status.modifyInfo.hasModifiedFiles;
   const colorOverride = getOverrideColor({ issuesCount, isModified, isNew: status.isNew });
 
   return (
@@ -21,14 +21,16 @@ export function ComponentStatusResolver({ status, issuesCount = 0 }: ComponentSt
       <div className={styles.statusLine}>
         {issuesCount > 0 && (
           <div className={classNames(styles.errorBlock, styles.error)}>
-            <span>{issuesCount}</span>,
+            <span>{issuesCount}</span>
           </div>
         )}
         {status.isNew && !status.isOutdated && <ComponentStatus className={styles[colorOverride]} status="new" />}
         {isModified && !status.isNew && <ComponentStatus className={styles[colorOverride]} status="modified" />}
-        {isModified && status.isStaged && <span className={styles[colorOverride]}>,</span>}
         {status.isStaged && <ComponentStatus className={styles[colorOverride]} status="staged" />}
-        {status.isOutdated && <ComponentStatus className={styles[colorOverride]} status="pending" />}
+        {status.isOutdated && <ComponentStatus className={styles[colorOverride]} status="updates" />}
+        {status.modifyInfo.hasModifiedDependencies && (
+          <ComponentStatus className={styles[colorOverride]} status="dependency" />
+        )}
       </div>
     </StatusTooltip>
   );

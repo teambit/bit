@@ -23,6 +23,9 @@ export class Logger implements IBitLogger {
   error(message: string, ...meta: any[]) {
     logger.error(this.colorMessage(message), ...meta);
   }
+  fatal(message: string, ...meta: any[]) {
+    logger.fatal(this.colorMessage(message), ...meta);
+  }
 
   get isLoaderStarted() {
     return loader.isStarted;
