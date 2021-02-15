@@ -50,7 +50,6 @@ export class BundlerMain {
     // TODO: this must be refactored away from here. this logic should be in the Preview.
     this.devService.uiRoot = root;
     const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
-    if (!servers) throw new Error();
     this._componentServers = servers;
 
     this.indexByComponent();
