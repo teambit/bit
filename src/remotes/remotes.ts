@@ -13,6 +13,7 @@ import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { CONCURRENT_FETCH_LIMIT } from '../constants';
+import { UnexpectedNetworkError } from '../scope/network/exceptions';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -57,6 +58,7 @@ export default class Remotes extends Map<string, Remote> {
     // fetching flattened dependencies (withoutDependencies=true), ignore this error
     const shouldThrowOnUnavailableScope = !fetchOptions.withoutDependencies;
     const objectListPerRemote = {};
+    const failedScopes: { [scopeName: string]: Error } = {};
     const objectLists: ObjectList[] = await pMap(
       Object.keys(idsGroupedByScope),
       async (scopeName) => {
@@ -68,6 +70,10 @@ export default class Remotes extends Map<string, Remote> {
           if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
             logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
             objectList = new ObjectList();
+          } else if (err instanceof UnexpectedNetworkError) {
+            logger.error(`failed fetching from ${scopeName}`, err);
+            failedScopes[scopeName] = err;
+            objectList = new ObjectList();
           } else {
             throw err;
           }
@@ -77,6 +83,17 @@ export default class Remotes extends Map<string, Remote> {
       },
       { concurrency: CONCURRENT_FETCH_LIMIT }
     );
+    if (Object.keys(failedScopes).length) {
+      if (Object.keys(failedScopes).length === 1) throw failedScopes[0];
+      const failedScopesErr = Object.keys(failedScopes).map(
+        (failedScope) => `${failedScope} - ${failedScopes[failedScope].message}`
+      );
+      throw new Error(`unexpected network error has occurred during fetching scopes: ${Object.keys(failedScopes).join(
+        ', '
+      )}
+server responded with the following error messages:
+${failedScopesErr.join('\n')}`);
+    }
     logger.debug('[-] Returning from the remotes');
 
     return { objectList: ObjectList.mergeMultipleInstances(objectLists), objectListPerRemote };
