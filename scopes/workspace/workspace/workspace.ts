@@ -287,6 +287,16 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * Check if a specific id exist in the workspace or in the scope
+   * @param componentId
+   */
+  async hasIdNested(componentId: ComponentID): Promise<boolean> {
+    const found = await this.hasId(componentId);
+    if (found) return found;
+    return this.scope.hasIdNested(componentId, true);
+  }
+
+  /**
    * list all modified components in the workspace.
    */
   async modified() {
@@ -828,11 +838,10 @@ export class Workspace implements ComponentFactory {
       }
       return data.type === 'aspect';
     });
-
     // no need to filter core aspects as they are not included in the graph
     // here we are trying to load extensions from the workspace.
-    const requireableExtensions: any = await this.requireComponents(aspects);
     try {
+      const requireableExtensions: any = await this.requireComponents(aspects);
       await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
     } catch (err) {
       // if extensions does not exist on workspace, try and load them from the local scope.

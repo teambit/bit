@@ -13,7 +13,7 @@ import {
 
 it('should render a modified status with modified dependencies', () => {
   const { getByText } = render(<ComponentStatusResolverWithModifiedDependencies />);
-  const textStatus = getByText(/^M$/);
+  const textStatus = getByText(/^D$/);
 
   textStatus.parentElement && fireEvent.mouseEnter(textStatus.parentElement);
   const textTooltip = getByText(/^Modified dependencies$/);

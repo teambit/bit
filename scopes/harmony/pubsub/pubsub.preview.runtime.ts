@@ -26,7 +26,7 @@ export class PubsubPreview {
     }
   }
 
-  private connectToParentPubSub = (retries = 3) => {
+  private connectToParentPubSub = (retries = 10) => {
     if (retries <= 0) return undefined;
 
     return connectToParent<ParentMethods>({ timeout: 300 })
@@ -56,8 +56,9 @@ export class PubsubPreview {
 
   static async provider() {
     const pubsubPreview = new PubsubPreview();
+
     if (pubsubPreview.inIframe()) {
-      window.addEventListener('load', () => pubsubPreview.connectToParentPubSub());
+      return pubsubPreview.connectToParentPubSub();
     }
 
     return pubsubPreview;
