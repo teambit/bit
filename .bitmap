@@ -187,7 +187,7 @@
   "teambit.workspace/ui/status@0.0.267": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/status"},
   "teambit.workspace/variants@0.0.268": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.275": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
-  "ui/load-preview": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/load-preview","exported":false},
-  "ui/workspace-component-card": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card","exported":false},
+  "teambit.workspace/ui/load-preview@0.0.1": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/load-preview"},
+  "teambit.workspace/ui/workspace-component-card0.0.1": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card"},
   "version": "14.8.9-dev.295"
 }
