@@ -290,10 +290,10 @@ export class Workspace implements ComponentFactory {
    * Check if a specific id exist in the workspace or in the scope
    * @param componentId
    */
-  async hasIdNested(componentId: ComponentID): Promise<boolean> {
+  async hasIdNested(componentId: ComponentID, includeCache = true): Promise<boolean> {
     const found = await this.hasId(componentId);
     if (found) return found;
-    return this.scope.hasIdNested(componentId, true);
+    return this.scope.hasIdNested(componentId, includeCache);
   }
 
   /**
