@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
 import { compact, flatten } from 'lodash';
 // import { runCLI } from 'jest';
