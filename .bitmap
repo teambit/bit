@@ -189,5 +189,5 @@
   "teambit.workspace/ui/workspace-component-card@0.0.1": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card"},
   "teambit.workspace/variants@0.0.269": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.276": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
-  "version": "14.8.9-dev.295"
+  "version": "14.8.9-dev.296"
 }
