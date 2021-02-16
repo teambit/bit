@@ -14,19 +14,22 @@ export function usePreviewServer({ pubsub }: UsePreviewServerProps) {
 
   useEffect(() => {
     pubsub.sub(WebpackAspect.id, (event: BitBaseEvent<any>) => {
-      if (event.type === WebpackCompilationDoneEvent.TYPE) {
+      if (event.type === WebpackCompilationDoneEvent.TYPE && compiling) {
         setErrors(event.data.stats.compilation.errors);
         setWarnings(event.data.stats.compilation.warnings);
         setCompiling(false);
         setCompilingServers(removeFromArray(event.data.devServerID, compilingServers));
       }
 
-      if (event.type === WebpackCompilationStartedEvent.TYPE) {
+      if (event.type === WebpackCompilationStartedEvent.TYPE && !compiling) {
         setErrors([]);
-        setWarnings([]);
         setCompiling(true);
         setCompilingServers(compilingServers.concat([event.data.devServerID]));
       }
+
+      return () => {
+        pubsub.unsubscribeAll(WebpackAspect.id);
+      };
     });
   });
 
