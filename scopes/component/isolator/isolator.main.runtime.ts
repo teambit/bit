@@ -175,7 +175,7 @@ export class IsolatorMain {
     const existingCompsP = compsAndDeps.map(async (c) => {
       let existing;
       if (opts.includeFromNestedHosts) {
-        existing = await host.hasIdNested(c.id);
+        existing = await host.hasIdNested(c.id, true);
       } else {
         existing = await host.hasId(c.id);
       }
