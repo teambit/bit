@@ -83,22 +83,6 @@ To set React to compile MDX components (so that they can be shared as a distribu
 
 > The above configuration does not affect the compilation of MDX documentation files (`*.doc.mdx`).
 
-### Use a different React Version
-
-The React environment is set to use version `^17.0.0` of React. To use a different version set the `reactVersion` property with a new version number.
-
-```json
-{
-  "teambit.workspace/variants": {
-    "*": {
-      "teambit.react/react-native": {
-        "reactVersion": "16.0.0"
-      }
-    }
-  }
-}
-```
-
 ## Extending React Native
 
 Use the React Native environment extension API to create your own customized environment extension. The extension component can then be exported to a remote scope to make it available for reuse by other workspaces. Doing so is not only a way to save time (otherwise lost on setting up a dev environment) but also a way to maintain a consistent development environment for independent React Native components authored in various decoupled workspaces.
