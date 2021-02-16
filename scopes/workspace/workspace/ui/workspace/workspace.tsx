@@ -6,7 +6,6 @@ import { Corner } from '@teambit/ui.corner';
 import { Collapser } from '@teambit/ui.side-bar';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { DotsLoader } from '@teambit/base-ui.elements.dots-loader';
 import { TopBar } from '@teambit/ui.top-bar';
 
 import { useWorkspace } from './use-workspace';
@@ -35,11 +34,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   onSidebarTogglerChange(handleSidebarToggle);
 
   if (!workspace) {
-    return (
-      <div className={styles.emptyContainer}>
-        <DotsLoader />
-      </div>
-    );
+    return <div className={styles.emptyContainer}></div>;
   }
 
   workspaceUI.setComponents(workspace.components);
