@@ -16,6 +16,9 @@ export class PubsubUI {
       methods: this.pubsubMethods,
     });
 
+    // absorb valid errors like 'connection destroyed'
+    connection.promise.catch(() => {});
+
     const destroy = () => {
       connection && connection.destroy();
     };
