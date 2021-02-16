@@ -1,5 +1,5 @@
 import { Export, Module, Parser } from '@teambit/schema';
-import { readFileSync } from 'fs';
+import { readFileSync } from 'fs-extra';
 import ts, { isFunctionDeclaration, isVariableStatement, SourceFile, VariableStatement } from 'typescript';
 
 export class TypeScriptParser implements Parser {
