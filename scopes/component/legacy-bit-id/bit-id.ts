@@ -279,7 +279,8 @@ export default class BitId {
 
   static getValidIdChunk(chunk: string): string {
     if (!isValidIdChunk(chunk)) {
-      chunk = chunk.replace(/\./g, '');
+      chunk = chunk.replace(/\./g, ''); // remove "."
+      chunk = chunk.replace(/ /g, '-'); // replace a space with a dash.
       chunk = decamelize(chunk, '-');
     }
     return chunk;
