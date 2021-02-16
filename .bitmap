@@ -188,6 +188,6 @@
   "teambit.workspace/variants@0.0.268": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.275": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
   "teambit.workspace/ui/load-preview@0.0.1": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/load-preview"},
-  "teambit.workspace/ui/workspace-component-card0.0.1": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card"},
+  "teambit.workspace/ui/workspace-component-card@0.0.1": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card"},
   "version": "14.8.9-dev.295"
 }
