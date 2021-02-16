@@ -109,6 +109,10 @@ describe('Bit-id', () => {
       const global = 'CSS!!####@comp';
       expect(BitId.getValidBitId(global, bitName).toString()).to.equal('css!!####@comp/app-bar');
     });
+    it('should convert app bar to app-bar', () => {
+      const bitName = 'app bar';
+      expect(BitId.getValidBitId(undefined, bitName).toString()).to.equal('app-bar');
+    });
   });
   describe('toString', () => {
     it('should not contain the version as latest', () => {
