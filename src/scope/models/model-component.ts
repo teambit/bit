@@ -367,7 +367,10 @@ export default class Component extends BitObject {
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log,
+        ...log, // @ts-ignore
+        username: log?.username || 'unknown',
+        // @ts-ignore
+        email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: versionInfo.ref.toString(),
       };

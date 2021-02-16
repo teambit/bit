@@ -188,7 +188,7 @@ export default class ComponentWriter {
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
 
-      if (!this.consumer?.isLegacy && this.applyPackageJsonTransformers) {
+      if ((!this.consumer?.isLegacy || !this.scope?.isLegacy) && this.applyPackageJsonTransformers) {
         await this._applyTransformers(this.component, packageJson);
       }
 
