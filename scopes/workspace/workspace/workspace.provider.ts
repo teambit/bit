@@ -57,21 +57,6 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
-export type WorkspaceCoreConfig = {
-  /**
-   * sets the default location of components.
-   */
-  componentsDefaultDirectory: string;
-
-  /**
-   * default scope for components to be exported to. absolute require paths for components
-   * will be generated accordingly.
-   */
-  defaultScope: string;
-
-  defaultOwner: string;
-};
-
 export default async function provideWorkspace(
   [
     pubsub,
