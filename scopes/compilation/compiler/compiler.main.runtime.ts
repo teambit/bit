@@ -6,7 +6,7 @@ import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
-import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { CompilerService } from './compiler.service';
 import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';

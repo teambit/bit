@@ -1,6 +1,6 @@
 import { Component, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 
 export interface PreviewDefinition {
   /**

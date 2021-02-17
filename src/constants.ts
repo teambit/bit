@@ -443,6 +443,7 @@ export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
 
 export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time
+export const CONCURRENT_COMPONENTS_LIMIT = 50; // limit number of components to load at the same time
 export const CONCURRENT_FETCH_LIMIT = 10; // limit number of scopes to fetch from at the same time
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir

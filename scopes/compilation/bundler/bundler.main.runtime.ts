@@ -50,7 +50,6 @@ export class BundlerMain {
     // TODO: this must be refactored away from here. this logic should be in the Preview.
     this.devService.uiRoot = root;
     const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
-    if (!servers) throw new Error();
     this._componentServers = servers;
 
     this.indexByComponent();
@@ -64,7 +63,8 @@ export class BundlerMain {
    */
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
-    const server = this._componentServers.find((componentServer) => componentServer.hasComponent(component));
+    const envId = this.envs.getEnvId(component);
+    const server = this._componentServers.find((componentServer) => componentServer.context.id === envId);
 
     return server;
   }

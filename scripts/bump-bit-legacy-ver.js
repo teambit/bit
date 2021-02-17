@@ -7,29 +7,29 @@ const cwd = path.resolve(__dirname, '..');
 const WAIT_FOR_NPM_IN_SEC = 10;
 const MAX_NPM_ATTEMPTS = 50;
 
-const shouldBump = shouldBumpBitBin();
+const shouldBump = shouldBumpBitLegacy();
 if (!shouldBump) {
-  console.log('there was no change on legacy bit-bin that requires bumping its version');
+  console.log('there was no change on legacy @teambit/legacy that requires bumping its version');
   return;
 }
 
-const currentBitBinVersionInCode = require('../package.json').version;
-console.log('currentBitBinVersionInCode', currentBitBinVersionInCode);
-const currentBitBinVersionInNpm = getCurrentBitBinVerFromNpm();
-const nextBitBinVersion = getNextBitBinVersion();
+const currentBitLegacyVersionInCode = require('../package.json').version;
+console.log('currentBitLegacyVersionInCode', currentBitLegacyVersionInCode);
+const currentBitLegacyVersionInNpm = getCurrentBitLegacyVerFromNpm();
+const nextBitLegacyVersion = getNextBitLegacyVersion();
 
 replaceVersionOccurrencesInCode();
 gitCommitChanges();
 gitPush();
-publishBitBin();
+publishBitLegacy();
 waitUntilShownInNpm().then(() => console.log('bump has completed!'));
 
 async function waitUntilShownInNpm() {
   let shouldWait = true;
   let numOfAttempts = 0;
   while (shouldWait) {
-    const currentVer = getCurrentBitBinVerFromNpm();
-    if (currentVer == nextBitBinVersion) {
+    const currentVer = getCurrentBitLegacyVerFromNpm();
+    if (currentVer == nextBitLegacyVersion) {
       console.log('NPM is up to date!');
       shouldWait = false;
     } else if (numOfAttempts < MAX_NPM_ATTEMPTS) {
@@ -49,57 +49,59 @@ async function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function getCurrentBitBinVerFromNpm() {
-  return exec('npm view bit-bin@dev version').trim();
+function getCurrentBitLegacyVerFromNpm() {
+  return exec('npm view @teambit/legacy version').trim();
 }
 
-function publishBitBin() {
-  exec('npm publish --tag dev');
+function publishBitLegacy() {
+  exec('npm publish');
 }
 
-function shouldBumpBitBin() {
+function shouldBumpBitLegacy() {
   // run git log and grab the first line
-  const gitLogCmd = 'git log --oneline | grep "bump bit-bin version to" | head -n 1';
+  const gitLogCmd = 'git log --oneline | grep "bump @teambit/legacy version to" | head -n 1';
   const gitLogResult = execSync(gitLogCmd, { cwd }).toString();
   if (!gitLogResult) throw new Error('failed running bit-log');
   console.log('git log message', gitLogResult);
-  const lastVer = gitLogResult.split(' ').filter((s) => s.startsWith('14'));
+  const lastVer = gitLogResult.split(' ').filter((s) => s.startsWith('1.'));
   console.log('last version extracted from the log message', lastVer);
   const commitOfLastVer = gitLogResult.split(' ')[0];
   // diff since the last version only for "src" and "package.json", we don't care about the rest.
   const gitDiff = `git diff --quiet ${commitOfLastVer} HEAD -- src package.json`;
   try {
-    // if there is no diff, it exits with code 0, in which case, we don't want to bump bit-bin.
+    // if there is no diff, it exits with code 0, in which case, we don't want to bump @teambit/legacy.
     const diffResult = execSync(gitDiff, { cwd });
     return false;
   } catch (err) {
-    // if there is a diff, it exits with code 1, in which case, we want to bump bit-bin.
+    // if there is a diff, it exits with code 1, in which case, we want to bump @teambit/legacy.
     return true;
   }
 }
 
-function getNextBitBinVersion() {
-  console.log('currentBitBinVersionInNpm', currentBitBinVersionInNpm);
-  const currentBitBinVersionInNpmSemver = new SemVer(currentBitBinVersionInNpm);
-  const nextBitBinSemVer = currentBitBinVersionInNpmSemver.inc('prerelease');
-  const nextBitBinVersion = nextBitBinSemVer.version;
-  console.log('nextBitBinVersion', nextBitBinVersion);
-  return nextBitBinVersion;
+function getNextBitLegacyVersion() {
+  console.log('currentBitLegacyVersionInNpm', currentBitLegacyVersionInNpm);
+  const currentBitLegacyVersionInNpmSemver = new SemVer(currentBitLegacyVersionInNpm);
+  const nextBitLegacySemVer = currentBitLegacyVersionInNpmSemver.inc('patch');
+  const nextBitLegacyVersion = nextBitLegacySemVer.version;
+  console.log('nextBitLegacyVersion', nextBitLegacyVersion);
+  return nextBitLegacyVersion;
 }
 
 function replaceVersionOccurrencesInCode() {
   const isMac = platform === 'darwin';
   const sedBase = isMac ? `sed -i ''` : `sed -i`;
-  const sed = `${sedBase} "s/${currentBitBinVersionInCode}/${nextBitBinVersion}/g"`;
-  execSync(`${sed} package.json`, { cwd });
-  execSync(`${sed} workspace.jsonc`, { cwd });
-  execSync(`find scopes -name component.json -exec ${sed} {} \\;`, { cwd });
+  const sed = `${sedBase} "s/${currentBitLegacyVersionInCode}/${nextBitLegacyVersion}/g"`;
+  const sedPackageJson = `s/\\"version\\": \\"${currentBitLegacyVersionInCode}\\",/\\"version\\": \\"${nextBitLegacyVersion}\\",/g`;
+  const sedWorkspaceJson = `s/legacy\\": \\"${currentBitLegacyVersionInCode}\\"/legacy\\": \\"${nextBitLegacyVersion}\\"/g`;
+  execSync(`${sedBase} "${sedPackageJson}" package.json`, { cwd });
+  execSync(`${sedBase} "${sedWorkspaceJson}" workspace.jsonc`, { cwd });
+  execSync(`find scopes -name component.json -exec ${sedBase} "${sedWorkspaceJson}" {} \\;`, { cwd });
 
-  console.log(`completed changing all occurrences of "${currentBitBinVersionInCode}" to "${nextBitBinVersion}"`);
+  console.log(`completed changing all occurrences of "${currentBitLegacyVersionInCode}" to "${nextBitLegacyVersion}"`);
 }
 
 function gitCommitChanges() {
-  exec(`git commit -am "bump bit-bin version to ${nextBitBinVersion} [skip ci]"`);
+  exec(`git commit -am "bump @teambit/legacy version to ${nextBitLegacyVersion} [skip ci]"`);
 }
 
 function gitPush() {

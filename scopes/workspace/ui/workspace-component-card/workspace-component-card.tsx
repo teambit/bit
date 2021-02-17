@@ -1,12 +1,11 @@
-import { ComponentCard } from '@teambit/ui.gallery.component-card';
-import classNames from 'classnames';
-import { Icon } from '@teambit/evangelist.elements.icon';
 import React, { useState } from 'react';
+import { ComponentCard } from '@teambit/ui.gallery.component-card';
 import { ComponentModel } from '@teambit/component';
 import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
+import { LoadPreview } from '@teambit/ui.load-preview';
 import styles from './workspace-component-card.module.scss';
 
-type WorkspaceComponentCardProps = {
+export type WorkspaceComponentCardProps = {
   component: ComponentModel;
 } & React.HTMLAttributes<HTMLDivElement>;
 
@@ -29,17 +28,6 @@ export function WorkspaceComponentCard({ component, ...rest }: WorkspaceComponen
         preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
       />
       {shouldPreviewButton && <LoadPreview onClick={showPreview} />}
-    </div>
-  );
-}
-
-type LoadPreviewProps = {} & React.HTMLAttributes<HTMLDivElement>;
-
-function LoadPreview({ onClick }: LoadPreviewProps) {
-  return (
-    <div className={classNames(styles.loadPreview)} onClick={onClick}>
-      <Icon of="fat-arrow-down" className={styles.icon} />
-      <span>Live preview</span>
     </div>
   );
 }

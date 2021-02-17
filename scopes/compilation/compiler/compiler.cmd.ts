@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import type { PubsubMain, BitBaseEvent } from '@teambit/pubsub';
 import chalk from 'chalk';
 import prettyTime from 'pretty-time';
-import type ConsumerComponent from 'bit-bin/dist/consumer/component';
+import type ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { formatCompileResults } from './output-formatter';
 import { CompileError, WorkspaceCompiler, CompileOptions } from './workspace-compiler';
 

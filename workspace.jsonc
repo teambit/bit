@@ -45,6 +45,8 @@
         "@teambit/base-ui.constants.storage": "^0.5.9",
         "@teambit/base-ui.css-components.roundness": "^0.5.9",
         "@teambit/base-ui.elements.dots-loader": "0.6.3",
+        "@teambit/base-ui.elements.image": "^0.6.3",
+        "@teambit/base-ui.elements.label": "^0.6.3",
         "@teambit/base-ui.elements.separator": "^0.5.9",
         "@teambit/base-ui.graph.tree.indent": "0.0.1",
         "@teambit/base-ui.graph.tree.inflate-paths": "0.0.1",
@@ -52,8 +54,6 @@
         "@teambit/base-ui.graph.tree.root-node": "0.0.1",
         "@teambit/base-ui.graph.tree.tree-context": "0.0.1",
         "@teambit/base-ui.input.error": "^0.5.9",
-        "@teambit/base-ui.elements.image": "^0.6.3",
-        "@teambit/base-ui.elements.label": "^0.6.3",
         "@teambit/base-ui.layout.breakpoints": "^0.5.9",
         "@teambit/base-ui.layout.grid-component": "^0.5.9",
         "@teambit/base-ui.layout.page-frame": "^0.5.9",
@@ -154,6 +154,7 @@
         "@yarnpkg/plugin-npm": "2.4.0",
         "@yarnpkg/plugin-pack": "2.2.3",
         "ansi-to-html": "^0.6.14",
+        "apollo-link-context": "1.0.20",
         "apollo-link-http": "1.5.17",
         "apollo-link-ws": "1.0.20",
         "apollo-server": "2.19.2",
@@ -192,7 +193,6 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
-        // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
@@ -288,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.295",
+        "@teambit/legacy": "1.0.1",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -336,15 +336,15 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "-"
+            "@teambit/legacy": "-"
           },
           "devDependencies": {
             "@types/mocha": "^5.2.7",
-            "bit-bin": "-"
+            "@teambit/legacy": "-"
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.295",
+            "@teambit/legacy": "1.0.1",
             "react-dom": "^16.13.1"
           }
         }
@@ -449,6 +449,11 @@
         "env": "teambit.harmony/node"
       }
     },
+    "scopes/component/legacy-component-log": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
     "scopes/ui-foundation": {
       "defaultScope": "teambit.ui-foundation"
     },
@@ -481,7 +486,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.295",
+            "@teambit/legacy": "1.0.1",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
@@ -499,7 +504,7 @@
             "@types/node": "^12.12.27"
           },
           "peerDependencies": {
-            "bit-bin": "-",
+            "@teambit/legacy": "-",
             "browserslist": "-",
             "graphql": "-",
             "react": "-",

@@ -330,7 +330,7 @@ export default class Version extends BitObject {
   }
 
   async collectManyObjects(repo: Repository, refs: Ref[]): Promise<ObjectItem[]> {
-    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+    return repo.loadManyRaw(refs);
   }
 
   toObject() {
@@ -419,7 +419,6 @@ export default class Version extends BitObject {
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return Buffer.from(str);
   }
-
   /**
    * used by the super class BitObject
    */

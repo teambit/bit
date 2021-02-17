@@ -1,7 +1,9 @@
 import tarStream from 'tar-stream';
+import pMap from 'p-map';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
+import { CONCURRENT_IO_LIMIT } from '../../constants';
 
 export type ObjectItem = {
   ref: Ref;
@@ -104,17 +106,21 @@ export class ObjectList {
   }
 
   async toBitObjects(): Promise<BitObjectList> {
-    const bitObjects = await Promise.all(this.objects.map((object) => BitObject.parseObject(object.buffer)));
+    const bitObjects = await pMap(this.objects, (object) => BitObject.parseObject(object.buffer), {
+      concurrency: CONCURRENT_IO_LIMIT,
+    });
     return new BitObjectList(bitObjects);
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
-    const objectItems = await Promise.all(
-      bitObjects.map(async (obj) => ({
+    const objectItems = await pMap(
+      bitObjects,
+      async (obj) => ({
         ref: obj.hash(),
         buffer: await obj.compress(),
         type: obj.getType(),
-      }))
+      }),
+      { concurrency: CONCURRENT_IO_LIMIT }
     );
     return new ObjectList(objectItems);
   }

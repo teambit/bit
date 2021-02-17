@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { MainAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { ComponentMap } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { PathAbsolute } from 'bit-bin/dist/utils/path';
+import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { MainAspectNotInstallable, RootDirNotDefined } from './exceptions';
 import { PackageManager, PackageManagerInstallOptions } from './package-manager';
 import { WorkspacePolicy } from './policy';

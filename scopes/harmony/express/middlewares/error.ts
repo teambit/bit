@@ -1,5 +1,5 @@
 import * as express from 'express';
-import logger from 'bit-bin/dist/logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 
 interface ResponseError {
   status?: number;

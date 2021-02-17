@@ -1,7 +1,7 @@
 import { MainDropdown, MenuItemSlot } from '@teambit/ui.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
 import { VersionDropdown } from '@teambit/ui.version-dropdown';
-import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import { Link } from '@teambit/ui.routing.link';
 import { flatten, groupBy } from 'lodash';
 import classnames from 'classnames';
