@@ -320,8 +320,7 @@ export class Workspace implements ComponentFactory {
    */
   getAllComponentIds(): Promise<ComponentID[]> {
     const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
-    const ids = bitIds.map((id) => this.resolveComponentId(id));
-    return Promise.all(ids);
+    return this.resolveMultipleComponentIds(bitIds);
   }
 
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
@@ -352,8 +351,7 @@ export class Workspace implements ComponentFactory {
    * @todo: remove the string option, use only BitId
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
-    const componentIdsP = ids.map((id) => this.resolveComponentId(id));
-    const componentIds = await Promise.all(componentIdsP);
+    const componentIds = await this.resolveMultipleComponentIds(ids);
     const components = await this.getMany(componentIds);
     const network = await this.isolator.isolateComponents(components.map((c) => c.id));
     const resolvedComponents = components.map((component) => {
@@ -773,10 +771,10 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
-  async getGraphWithoutCore(components: Component[]) {
+  getGraphWithoutCore(components: Component[]) {
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
+    const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
@@ -807,7 +805,7 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetMany(componentIds);
-    const graph: any = await this.getGraphWithoutCore(components);
+    const graph: any = this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);

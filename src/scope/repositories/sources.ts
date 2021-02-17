@@ -1,7 +1,8 @@
 import R from 'ramda';
+import pMap from 'p-map';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -53,14 +54,16 @@ export default class SourceRepository {
   async getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
     if (!ids.length) return [];
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
-    return Promise.all(
-      ids.map(async (id) => {
+    return pMap(
+      ids,
+      async (id) => {
         const component = await this.get(id);
         return {
           id,
           component,
         };
-      })
+      },
+      { concurrency: CONCURRENT_COMPONENTS_LIMIT }
     );
   }
 
