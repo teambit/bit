@@ -33,29 +33,31 @@ import { isMatchNamespacePatternItem } from '@teambit/modules.match-pattern';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { ResolvedComponent } from '@teambit/modules.resolved-component';
 import type { VariantsMain } from '@teambit/variants';
-import { link, importAction } from 'bit-bin/dist/api/consumer';
-import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
-import { ImportOptions } from 'bit-bin/dist/consumer/component-ops/import-components';
-import { NothingToImport } from 'bit-bin/dist/consumer/exceptions';
-import { BitId, BitIds } from 'bit-bin/dist/bit-id';
-import { Consumer, loadConsumer } from 'bit-bin/dist/consumer';
-import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import AddComponents from 'bit-bin/dist/consumer/component-ops/add-components';
-import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
-import ComponentsList from 'bit-bin/dist/consumer/component/components-list';
-import { NoComponentDir } from 'bit-bin/dist/consumer/component/exceptions/no-component-dir';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { buildOneGraphForComponents } from 'bit-bin/dist/scope/graph/components-graph';
-import { pathIsInside } from 'bit-bin/dist/utils';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { link, importAction } from '@teambit/legacy/dist/api/consumer';
+import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
+import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
+import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
+import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
+import { AddActionResults } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
+import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { buildOneGraphForComponents } from '@teambit/legacy/dist/scope/graph/components-graph';
+import { pathIsInside } from '@teambit/legacy/dist/utils';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { slice, groupBy, uniqBy } from 'lodash';
 import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
 import { DependencyTypeNotSupportedInPolicy } from './exceptions';
 import {
@@ -253,7 +255,7 @@ export class Workspace implements ComponentFactory {
   async getComponentStatus(component: Component): Promise<ComponentStatus> {
     const status = await this.consumer.getComponentStatusById(component.id._legacy);
     const hasModifiedDependencies = await this.hasModifiedDependencies(component);
-    return ComponentStatus.fromLegacy(status, hasModifiedDependencies);
+    return ComponentStatus.fromLegacy(status, hasModifiedDependencies, component.isOutdated());
   }
 
   /**
@@ -285,6 +287,16 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * Check if a specific id exist in the workspace or in the scope
+   * @param componentId
+   */
+  async hasIdNested(componentId: ComponentID, includeCache = true): Promise<boolean> {
+    const found = await this.hasId(componentId);
+    if (found) return found;
+    return this.scope.hasIdNested(componentId, includeCache);
+  }
+
+  /**
    * list all modified components in the workspace.
    */
   async modified() {
@@ -308,13 +320,16 @@ export class Workspace implements ComponentFactory {
    */
   getAllComponentIds(): Promise<ComponentID[]> {
     const bitIds = this.consumer.bitMap.getAuthoredAndImportedBitIds();
-    const ids = bitIds.map((id) => this.resolveComponentId(id));
-    return Promise.all(ids);
+    return this.resolveMultipleComponentIds(bitIds);
   }
 
   async getNewAndModifiedIds(): Promise<ComponentID[]> {
     const ids = await this.componentList.listTagPendingComponents();
     return this.resolveMultipleComponentIds(ids);
+  }
+
+  async getLogs(id: ComponentID): Promise<ComponentLog[]> {
+    return this.scope.getLogs(id);
   }
 
   async getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph> {
@@ -336,8 +351,7 @@ export class Workspace implements ComponentFactory {
    * @todo: remove the string option, use only BitId
    */
   async load(ids: Array<BitId | string>): Promise<ResolvedComponent[]> {
-    const componentIdsP = ids.map((id) => this.resolveComponentId(id));
-    const componentIds = await Promise.all(componentIdsP);
+    const componentIds = await this.resolveMultipleComponentIds(ids);
     const components = await this.getMany(componentIds);
     const network = await this.isolator.isolateComponents(components.map((c) => c.id));
     const resolvedComponents = components.map((component) => {
@@ -760,7 +774,7 @@ export class Workspace implements ComponentFactory {
   async getGraphWithoutCore(components: Component[]) {
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
-    const coreAspectsComponentIds = await Promise.all(coreAspectsStringIds.map((id) => BitId.parse(id, true)));
+    const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
     const coreAspectsBitIds = BitIds.fromArray(coreAspectsComponentIds.map((id) => id.changeScope(null)));
     // const aspectsIds = components.reduce((acc, curr) => {
     //   const currIds = curr.state.aspects.ids;
@@ -791,7 +805,7 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetMany(componentIds);
-    const graph: any = await this.getGraphWithoutCore(components);
+    const graph = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
@@ -822,11 +836,10 @@ export class Workspace implements ComponentFactory {
       }
       return data.type === 'aspect';
     });
-
     // no need to filter core aspects as they are not included in the graph
     // here we are trying to load extensions from the workspace.
-    const requireableExtensions: any = await this.requireComponents(aspects);
     try {
+      const requireableExtensions: any = await this.requireComponents(aspects);
       await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
     } catch (err) {
       // if extensions does not exist on workspace, try and load them from the local scope.

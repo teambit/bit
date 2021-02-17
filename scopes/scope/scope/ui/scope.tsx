@@ -5,7 +5,7 @@ import { Corner } from '@teambit/ui.corner';
 import { Collapser } from '@teambit/ui.side-bar';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui.top-bar';
-import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { ScopeOverview } from './scope-overview';
@@ -70,7 +70,6 @@ export function Scope({
             <Pane className={styles.sidebar}>{sidebar}</Pane>
             <HoverSplitter className={styles.splitter}>
               <Collapser
-                id="scopeSidebarCollapser"
                 isOpen={isSidebarOpen}
                 onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
                 onClick={handleSidebarToggle}

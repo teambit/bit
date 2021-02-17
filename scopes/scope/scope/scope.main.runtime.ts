@@ -28,32 +28,31 @@ import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
-import { BitId, BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
-import { ModelComponent, Version, Lane } from 'bit-bin/dist/scope/models';
-import { Ref, Repository } from 'bit-bin/dist/scope/objects';
-import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
-import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
-import { PersistOptions } from 'bit-bin/dist/scope/types';
-import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
-import { ExportPersist, PostSign } from 'bit-bin/dist/scope/actions';
-import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
-import { Remotes } from 'bit-bin/dist/remotes';
-import { Scope } from 'bit-bin/dist/scope';
-import { Http, DEFAULT_AUTH_TYPE, AuthData } from 'bit-bin/dist/scope/network/http/http';
-import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { resumeExport } from 'bit-bin/dist/scope/component-ops/export-scope-components';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+import { BitId } from '@teambit/legacy-bit-id';
+import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
+import { ModelComponent, Version, Lane } from '@teambit/legacy/dist/scope/models';
+import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
+import { PersistOptions } from '@teambit/legacy/dist/scope/types';
+import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { Remotes } from '@teambit/legacy/dist/remotes';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { Http, DEFAULT_AUTH_TYPE, AuthData } from '@teambit/legacy/dist/scope/network/http/http';
+import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
-import { ExportCmd } from './export/export-cmd';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
-import { ResumeExportCmd } from './export/resume-export-cmd';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -148,16 +147,16 @@ export class ScopeMain implements ComponentFactory {
     const host = this.componentExtension.getHost();
 
     // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
-    const getAspectsIdsWithoutRootIds = (): string[] => {
-      const allIds = this.harmony.extensionsIds;
+    const getUserAspectsIdsWithoutRootIds = (): string[] => {
+      const allUserAspectIds = this.aspectLoader.getUserAspects();
       const rootIds = Object.keys(this.harmony.config.toObject());
-      const diffIds = difference(allIds, rootIds);
+      const diffIds = difference(allUserAspectIds, rootIds);
       return diffIds;
     };
 
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
     const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
-      const harmonyIds = getAspectsIdsWithoutRootIds();
+      const harmonyIds = getUserAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
         const newId = await host.resolveComponentId(component.id);
@@ -327,22 +326,29 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
+      {
+        baseDir: this.path,
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
 
     const capsules = network.seedersCapsules;
 
     return capsules.map((capsule) => {
-      // return RequireableComponent.fromCapsule(capsule);
-      return new RequireableComponent(capsule.component, () => {
-        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
-          file.relative.includes('.scope.runtime.')
-        );
+      return new RequireableComponent(capsule.component, async () => {
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
+        const aspect = require(capsule.path);
+        const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
+        const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
+        const runtimePath = scopeRuntime || mainRuntime;
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(capsule.path);
+        if (runtimePath) require(runtimePath);
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return aspect;
       });
     });
   }
@@ -501,6 +507,10 @@ export class ScopeMain implements ComponentFactory {
     return !!found;
   }
 
+  async hasIdNested(componentId: ComponentID, includeCache = false): Promise<boolean> {
+    return this.hasId(componentId, includeCache);
+  }
+
   /**
    * determine whether a component exists in the scope.
    */
@@ -589,10 +599,12 @@ export class ScopeMain implements ComponentFactory {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 
-  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | null> {
+  async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    return semver.maxSatisfying(versions, range);
+    // TODO - @david
+    return semver.maxSatisfying(versions, range)?.toString();
+    // return semver.maxSatisfying<string>(versions, range);
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
@@ -601,16 +613,10 @@ export class ScopeMain implements ComponentFactory {
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
     const tagMap = new TagMap();
-    await mapSeries(Object.keys(modelComponent.versions), async (versionStr: string) => {
-      const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects, false);
-      // TODO: what to return if no version in objects
-      if (version) {
-        const snap = this.createSnapFromVersion(version);
-        const tag = new Tag(snap, new SemVer(versionStr));
-        tagMap.set(tag.version, tag);
-      }
+    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
+      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
+      tagMap.set(tag.version, tag);
     });
-
     return tagMap;
   }
 
@@ -722,7 +728,6 @@ export class ScopeMain implements ComponentFactory {
       if (hasWorkspace) return;
       await scope.loadAspects(aspectLoader.getNotLoadedConfiguredExtensions());
     });
-    cli.register(new ResumeExportCmd(scope), new ExportCmd());
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);

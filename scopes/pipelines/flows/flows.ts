@@ -3,8 +3,8 @@
 import { ComponentID } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { Workspace } from '@teambit/workspace';
-import { BitId } from 'bit-bin/dist/bit-id';
-import logger from 'bit-bin/dist/logger/logger';
+import { BitId } from '@teambit/legacy-bit-id';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { EventEmitter } from 'events';
 
 import { getExecutionCache } from './cache';

@@ -12,13 +12,13 @@ import { LoggerMain } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
-import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
-import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
-import LegacyComponentLoader from 'bit-bin/dist/consumer/component/component-loader';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { registerDefaultScopeGetter } from '@teambit/legacy/dist/api/consumer';
+import { BitId } from '@teambit/legacy-bit-id';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
@@ -56,21 +56,6 @@ export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
-
-export type WorkspaceCoreConfig = {
-  /**
-   * sets the default location of components.
-   */
-  componentsDefaultDirectory: string;
-
-  /**
-   * default scope for components to be exported to. absolute require paths for components
-   * will be generated accordingly.
-   */
-  defaultScope: string;
-
-  defaultOwner: string;
-};
 
 export default async function provideWorkspace(
   [

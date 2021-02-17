@@ -1,6 +1,6 @@
 import getCredentialsByURI from 'credentials-by-uri';
 import { RegistriesMap } from '@teambit/dependency-resolver';
-import { stripTrailingChar } from 'bit-bin/dist/utils';
+import { stripTrailingChar } from '@teambit/legacy/dist/utils';
 import { isEmpty } from 'ramda';
 import toNerfDart from 'nerf-dart';
 import { readConfig } from './read-config';
@@ -39,10 +39,10 @@ function getOriginalAuthConfigByUri(config: Record<string, any>, uri: string): O
 
   const creds = getScopedCredentials(nerfed, `${nerfed}:`, config);
   if (nerfed !== defnerf) return creds;
-
+  const defaultCredentials = getScopedCredentials(nerfed, '', config);
   return {
-    ...getScopedCredentials(nerfed, '', config),
-    ...creds,
+    originalAuthType: creds.originalAuthType || defaultCredentials.originalAuthType,
+    originalAuthValue: creds.originalAuthValue || defaultCredentials.originalAuthValue,
   };
 }
 

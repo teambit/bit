@@ -1,5 +1,5 @@
-import loader from 'bit-bin/dist/cli/loader';
-import logger, { IBitLogger } from 'bit-bin/dist/logger/logger';
+import loader from '@teambit/legacy/dist/cli/loader';
+import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 import stc from 'string-to-color';
 
@@ -22,6 +22,9 @@ export class Logger implements IBitLogger {
   }
   error(message: string, ...meta: any[]) {
     logger.error(this.colorMessage(message), ...meta);
+  }
+  fatal(message: string, ...meta: any[]) {
+    logger.fatal(this.colorMessage(message), ...meta);
   }
 
   get isLoaderStarted() {

@@ -2,6 +2,7 @@ import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import { BitId } from '../../bit-id';
 import {
   COMPILER_ENV_TYPE,
@@ -51,14 +52,7 @@ type State = {
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type ComponentLog = {
-  message: string;
-  username?: string;
-  email?: string;
-  date?: string;
-  hash: string;
-  tag?: string;
-};
+export type ComponentLog = LegacyComponentLog;
 
 export type ComponentProps = {
   scope: string | null | undefined;
@@ -373,7 +367,10 @@ export default class Component extends BitObject {
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log,
+        ...log, // @ts-ignore
+        username: log?.username || 'unknown',
+        // @ts-ignore
+        email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: versionInfo.ref.toString(),
       };
@@ -571,7 +568,7 @@ export default class Component extends BitObject {
     };
     const refs = await collectRefs();
     try {
-      return await Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+      return await repo.loadManyRaw(refs);
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"

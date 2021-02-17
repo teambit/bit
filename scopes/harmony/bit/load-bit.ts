@@ -26,11 +26,11 @@ import { Config } from '@teambit/harmony/dist/harmony-config';
 // TODO: expose this type from harmony
 import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
 import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { getConsumerInfo } from 'bit-bin/dist/consumer';
-import { ConsumerInfo } from 'bit-bin/dist/consumer/consumer-locator';
-import BitMap from 'bit-bin/dist/consumer/bit-map';
-import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';

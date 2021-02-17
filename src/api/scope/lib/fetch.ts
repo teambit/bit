@@ -35,7 +35,9 @@ export default async function fetch(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
-  const scope: Scope = await loadScope(path);
+  // DO NOT use the cached scope. otherwise, multiple http "fetch" requests adding and persisting
+  // to the repository at the same time, which opens a can of worms.
+  const scope: Scope = await loadScope(path, false);
   const objectList = new ObjectList();
   switch (fetchOptions.type) {
     case 'component': {

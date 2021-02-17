@@ -47,16 +47,15 @@ export class BundlerMain {
    */
   async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
+    // TODO: this must be refactored away from here. this logic should be in the Preview.
     this.devService.uiRoot = root;
-    const executionResults = await envRuntime.run<ComponentServer>(this.devService);
-    executionResults.throwErrorsIfExist();
-    this._componentServers = executionResults.results.map((res) => res.data as ComponentServer);
+    const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    this._componentServers = servers;
 
     this.indexByComponent();
+    // @ts-ignore
     return this._componentServers;
   }
-
-  getPublicPath() {}
 
   /**
    * get a dev server instance containing a component.
@@ -64,7 +63,8 @@ export class BundlerMain {
    */
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
-    const server = this._componentServers.find((componentServer) => componentServer.hasComponent(component));
+    const envId = this.envs.getEnvId(component);
+    const server = this._componentServers.find((componentServer) => componentServer.context.id === envId);
 
     return server;
   }

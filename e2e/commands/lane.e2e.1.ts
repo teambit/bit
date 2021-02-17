@@ -222,7 +222,7 @@ describe('bit lane command', function () {
         helper.command.switchRemoteLane('dev');
       });
       it('should write the component to the filesystem with the same version as the lane', () => {
-        const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
+        const fileContent = helper.fs.readFile(`${helper.scopes.remote}/bar/foo/foo.js`);
         expect(fileContent).to.equal(fixtures.fooFixtureV2);
       });
       it('.bitmap should save the remote lane', () => {
@@ -249,7 +249,7 @@ describe('bit lane command', function () {
       describe('changing the component and running bit diff', () => {
         let diff;
         before(() => {
-          helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+          helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
           diff = helper.command.diff();
         });
         it('should show the diff between the filesystem and the lane', () => {
@@ -262,7 +262,7 @@ describe('bit lane command', function () {
       });
       describe("snapping the component (so, it's an imported lane with local snaps)", () => {
         before(() => {
-          helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+          helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
           helper.command.snapAllComponents();
         });
         it('bit status should show the component as staged', () => {
@@ -601,7 +601,7 @@ describe('bit lane command', function () {
       helper.command.importComponent('bar/foo@0.0.1');
 
       helper.command.createLane();
-      helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+      helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
       helper.command.snapAllComponents();
 
       helper.command.switchLocalLane('master');

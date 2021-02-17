@@ -1,4 +1,4 @@
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 
 export type Serializable = {

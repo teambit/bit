@@ -1,6 +1,6 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
-import { ObjectList } from 'bit-bin/dist/scope/objects/object-list';
-import { put } from 'bit-bin/dist/api/scope';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { put } from '@teambit/legacy/dist/api/scope';
 import { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
 
 export class PutRoute implements Route {

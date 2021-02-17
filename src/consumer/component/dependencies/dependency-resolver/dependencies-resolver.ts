@@ -77,6 +77,23 @@ export type Issues = {
   missingBits: { [filePath: string]: BitId[] }; // temporarily. it's combined later with missingComponents. see combineIssues
 };
 
+export type DebugDependencies = {
+  components: DebugComponentsDependency[];
+  unidentifiedPackages?: string[];
+};
+
+export type DebugComponentsDependency = {
+  id: BitId;
+  importSource?: string;
+  dependencyPackageJsonPath?: string;
+  dependentPackageJsonPath?: string;
+  // can be resolved here or can be any one of the strategies in dependencies-version-resolver
+  versionResolvedFrom?: 'DependencyPkgJson' | 'DependentPkgJson' | 'BitMap' | 'Model' | string;
+  version?: string;
+  componentIdResolvedFrom?: 'DependencyPkgJson' | 'DependencyPath' | 'LegacyUnknown';
+  packageName?: string;
+};
+
 type WorkspacePolicyGetter = () => {
   dependencies?: Record<string, string>;
   peerDependencies?: Record<string, string>;
@@ -101,6 +118,7 @@ export default class DependencyResolver {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   testerFiles: PathLinux[];
   overridesDependencies: OverridesDependencies;
+  debugDependenciesData: DebugDependencies;
 
   static getWorkspacePolicy: WorkspacePolicyGetter;
   static registerWorkspacePolicyGetter(func: WorkspacePolicyGetter) {
@@ -149,6 +167,7 @@ export default class DependencyResolver {
       missingBits: {},
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
+    this.debugDependenciesData = { components: [] };
   }
 
   setTree(tree: Tree) {
@@ -668,7 +687,11 @@ either, use the ignore file syntax or change the require statement to have a mod
         existingDepRelativePaths.importSource = depsPaths.importSource;
       }
     } else {
-      this.pushToDependenciesArray(currentComponentsDeps, fileType);
+      const depDebug: DebugComponentsDependency = {
+        id: currentComponentsDeps.id,
+        importSource: depFileObject.importSource,
+      };
+      this.pushToDependenciesArray(currentComponentsDeps, fileType, depDebug);
     }
     return false;
   }
@@ -721,25 +744,50 @@ either, use the ignore file syntax or change the require statement to have a mod
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
-      const version =
-        this.getValidVersion(bitDep.concreteVersion) || this.getValidVersion(bitDep.versionUsedByDependent);
       let componentId = this.getComponentIdByResolvedPackageData(bitDep);
-      if (componentId && version) {
+      const depDebug: DebugComponentsDependency = {
+        id: componentId,
+        dependencyPackageJsonPath: bitDep.packageJsonPath,
+        dependentPackageJsonPath: bitDep.dependentPackageJsonPath,
+        componentIdResolvedFrom: this.consumer.isLegacy ? 'LegacyUnknown' : 'DependencyPkgJson',
+        packageName: bitDep.name,
+      };
+      const getVersionFromPkgJson = (): string | null => {
+        const versionFromDependencyPkgJson = this.getValidVersion(bitDep.concreteVersion);
+        if (versionFromDependencyPkgJson) {
+          depDebug.versionResolvedFrom = 'DependencyPkgJson';
+          return versionFromDependencyPkgJson;
+        }
+        const versionFromDependentPkgJson = this.getValidVersion(bitDep.versionUsedByDependent);
+        if (versionFromDependentPkgJson) {
+          depDebug.versionResolvedFrom = 'DependentPkgJson';
+          return versionFromDependentPkgJson;
+        }
+        return null;
+      };
+      const version = getVersionFromPkgJson();
+      if (version) {
         componentId = componentId.changeVersion(version);
       }
-      if (componentId && this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+      if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
         return;
       }
       const getExistingId = (): BitId | undefined => {
         const existingIds = this.consumer.bitmapIdsFromCurrentLane.filterWithoutVersion(componentId);
-        if (existingIds.length === 1) return existingIds[0];
+        if (existingIds.length === 1) {
+          depDebug.versionResolvedFrom = 'BitMap';
+          return existingIds[0];
+        }
         if (this.componentFromModel) {
           const modelDep = this.componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
-          if (modelDep) return modelDep;
+          if (modelDep) {
+            depDebug.versionResolvedFrom = 'Model';
+            return modelDep;
+          }
         }
         return undefined;
       };
-      const existingId = componentId && version ? componentId : getExistingId();
+      const existingId = version ? componentId : getExistingId();
       if (existingId) {
         if (existingId.isEqual(this.componentId)) {
           // happens when one of the component files requires another using module path
@@ -747,13 +795,14 @@ either, use the ignore file syntax or change the require statement to have a mod
           return;
         }
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
-        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType);
+        this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);
       }
     });
   }
-  getValidVersion(version: string | undefined) {
+
+  private getValidVersion(version: string | undefined) {
     if (!version) return null;
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
     return version.replace(/[^0-9.]/g, '');
@@ -944,7 +993,8 @@ either, use the ignore file syntax or change the require statement to have a mod
    */
   processUnidentifiedPackages(originFile: PathLinuxRelative, fileType: FileType) {
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
-    if (!unidentifiedPackages) return;
+    if (!unidentifiedPackages || !unidentifiedPackages.length) return;
+    this.debugDependenciesData.unidentifiedPackages = unidentifiedPackages;
     if (!this.componentFromModel) return; // not relevant, the component is not imported
     const getDependencies = (): Dependencies => {
       if (fileType.isTestFile) return this.componentFromModel.devDependencies;
@@ -968,12 +1018,17 @@ either, use the ignore file syntax or change the require statement to have a mod
           // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
           relativePaths: clonedDependencies.getById(dependencyId).relativePaths,
         };
-        this._pushToDependenciesIfNotExist(currentComponentDeps, fileType);
+        const depData: DebugComponentsDependency = { id: dependencyId, importSource: foundImportSource };
+        this._pushToDependenciesIfNotExist(currentComponentDeps, fileType, depData);
       }
     });
   }
 
-  private _pushToDependenciesIfNotExist(dependency: Dependency, fileType: FileType) {
+  private _pushToDependenciesIfNotExist(
+    dependency: Dependency,
+    fileType: FileType,
+    depDebug: DebugComponentsDependency
+  ) {
     const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, dependency.id);
     const existingDevDependency = this.getExistingDependency(this.allDependencies.devDependencies, dependency.id);
     // no need to enter dev dependency to devDependencies if it exists already in dependencies
@@ -983,15 +1038,16 @@ either, use the ignore file syntax or change the require statement to have a mod
     // at this point, either, it doesn't exist at all and should be entered.
     // or it exists in devDependencies but now it comes from non-dev file, which should be entered
     // as non-dev.
-    this.pushToDependenciesArray(dependency, fileType);
+    this.pushToDependenciesArray(dependency, fileType, depDebug);
   }
 
-  pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {
+  pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType, depDebug: DebugComponentsDependency) {
     if (fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
     } else {
       this.allDependencies.dependencies.push(currentComponentsDeps);
     }
+    this.debugDependenciesData.components.push(depDebug);
   }
 
   /**

@@ -1,17 +1,17 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { BitId } from '@teambit/legacy-bit-id';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact } from 'ramda-adjunct';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
-import { getLatestVersionNumber } from 'bit-bin/dist/utils';
-import { ComponentNotFound } from 'bit-bin/dist/scope/exceptions';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';

@@ -4,6 +4,7 @@ import { gql } from '@apollo/client';
 
 import { BundlerMain } from './bundler.main.runtime';
 
+// TODO: this has to be refactored to the Preview aspect. with the entire preview logic here.
 export function devServerSchema(bundler: BundlerMain): Schema {
   return {
     typeDefs: gql`

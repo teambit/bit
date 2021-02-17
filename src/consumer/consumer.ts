@@ -405,7 +405,7 @@ export default class Consumer {
       }
       throw err;
     }
-    loader.start(`import ${ids.length} components with their dependencies if missing`);
+    loader.start(`import ${ids.length} components with their dependencies (if missing)`);
     const versionDependenciesArr: VersionDependencies[] = fromOriginalScope
       ? await scopeComponentsImporter.importManyFromOriginalScopes(ids)
       : await scopeComponentsImporter.importMany(ids);
@@ -753,18 +753,23 @@ export default class Consumer {
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      const component =
-        unknownComponent instanceof Component ? unknownComponent : await this.loadComponent(unknownComponent.toBitId());
-      const availableOnMaster = await isAvailableOnMaster(component);
+      const availableOnMaster = await isAvailableOnMaster(unknownComponent);
       if (!availableOnMaster) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);
       componentMap.clearNextVersion();
-      const packageJsonDir = getPackageJsonDir(componentMap, component, id);
-      return packageJsonDir // if it has package.json, it's imported, which must have a version
-        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
-        : Promise.resolve();
+      if (this.isLegacy) {
+        // on Harmony, components don't have package.json
+        const component =
+          unknownComponent instanceof Component
+            ? unknownComponent
+            : await this.loadComponent(unknownComponent.toBitId());
+        const packageJsonDir = getPackageJsonDir(componentMap, component, id);
+        packageJsonDir // if it has package.json, it's imported, which must have a version
+          ? await packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
+          : await Promise.resolve();
+      }
     };
     // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
     // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is

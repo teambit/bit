@@ -1,4 +1,4 @@
-import { getLatestVersion } from 'bit-bin/dist/utils/semver-helper';
+import { getLatestVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import { SemVer } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';
@@ -10,7 +10,7 @@ export class TagMap extends Map<SemVer, Tag> {
    * get snap by hash.
    */
   byHash(hash: Hash) {
-    const tag = Array.from(this.values()).find((currTag) => currTag.snap.hash === hash);
+    const tag = Array.from(this.values()).find((currTag) => currTag.hash === hash);
     return tag;
   }
 
@@ -43,6 +43,11 @@ export class TagMap extends Map<SemVer, Tag> {
    */
   toArray() {
     return Array.from(this.values());
+  }
+
+  byVersion(version: string): Tag | undefined {
+    const versions = this.toArray().map((tag) => tag);
+    return versions.find((tag) => tag.version.raw === version);
   }
 
   static fromArray(tags: Tag[]) {

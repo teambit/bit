@@ -478,7 +478,7 @@ jobs:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
       - run:
-          name: 'Build bit-bin types'
+          name: 'Build bit-legacy types'
           command: 'cd bit && npm run build:types'
       - persist_to_workspace:
           root: .
@@ -487,6 +487,8 @@ jobs:
             - .pnpm-store
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
+      - store_artifacts:
+          path: bit/yarn.lock
 
   bit_build:
     resource_class: large
@@ -538,9 +540,9 @@ jobs:
       - run:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
-      - run: cd bit && node scripts/bump-bit-bin-ver.js
+      - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: cd bit && bit status
-      # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/bit-bin/node_modules/@babel/core/node_modules/semver/bin/semver'""
+      # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
       - run: cd bit && rm -rf node_modules
       - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
       # since we removed the node_modules we need to make sure we compile, install and link everything again

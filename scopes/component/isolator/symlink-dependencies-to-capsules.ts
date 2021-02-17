@@ -1,9 +1,9 @@
 import { ComponentID } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { BitId } from 'bit-bin/dist/bit-id';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import Symlink from 'bit-bin/dist/links/symlink';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { BitId } from '@teambit/legacy-bit-id';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import Symlink from '@teambit/legacy/dist/links/symlink';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import path from 'path';
 
 import { Capsule } from './capsule';

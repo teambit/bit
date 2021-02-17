@@ -3,8 +3,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
-import { pipeOutput } from 'bit-bin/dist/utils/child_process';
-import createSymlinkOrCopy from 'bit-bin/dist/utils/fs/create-symlink-or-copy';
+import { pipeOutput } from '@teambit/legacy/dist/utils/child_process';
+import createSymlinkOrCopy from '@teambit/legacy/dist/utils/fs/create-symlink-or-copy';
 import { EventEmitter } from 'events';
 import execa from 'execa';
 import fs from 'fs-extra';
@@ -68,7 +68,7 @@ export default class PackageManager {
           this.logger.error(`${componentId}, ${e}`);
         });
         await installProc;
-        linkBitBinInCapsule(capsule);
+        linkBitLegacyInCapsule(capsule);
       });
     } else {
       throw new Error(`unsupported package manager ${packageManager}`);
@@ -112,20 +112,20 @@ export default class PackageManager {
   }
 }
 
-function linkBitBinInCapsule(capsule) {
-  const bitBinPath = path.join(capsule.wrkDir, './node_modules/bit-bin');
-  const getLocalBitBinPath = () => {
+function linkBitLegacyInCapsule(capsule) {
+  const bitLegacyPath = path.join(capsule.wrkDir, './node_modules/@teambit/legacy');
+  const getLocalBitLegacyPath = () => {
     const pathOutsideNodeModules = path.join(__dirname, '../..');
     if (pathOutsideNodeModules.endsWith(`${path.sep}dist`)) {
       return pathOutsideNodeModules;
     }
     if (__dirname.includes('build-harmony')) {
-      // for bit-bin development, the cli extension is installed as a package in build-harmony directory
+      // for @teambit/legacy development, the cli extension is installed as a package in build-harmony directory
       return path.join(__dirname.split('build-harmony')[0], 'dist');
     }
-    throw new Error('unable to link bit-bin to the capsule, the location of bit-bin is unknown');
+    throw new Error('unable to link @teambit/legacy to the capsule, the location of @teambit/legacy is unknown');
   };
-  const localBitBinPath = getLocalBitBinPath();
+  const localBitLegacyPath = getLocalBitLegacyPath();
   // if there are no deps, sometimes the node_modules folder is not created
   // and we need it in order to perform the linking
   try {
@@ -136,6 +136,6 @@ function linkBitBinInCapsule(capsule) {
   // we use fs directly here rather than the capsule.fs because there are some edge cases
   // that the capusle fs does not deal with well (eg. identifying and deleting
   // a symlink rather than the what the symlink links to)
-  fs.removeSync(bitBinPath);
-  createSymlinkOrCopy(localBitBinPath, bitBinPath);
+  fs.removeSync(bitLegacyPath);
+  createSymlinkOrCopy(localBitLegacyPath, bitLegacyPath);
 }

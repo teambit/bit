@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { sortObject } from 'bit-bin/dist/utils';
+import { sortObject } from '@teambit/legacy/dist/utils';
 import { Policy, PolicyEntry, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, DependencyLifecycleType } from '../../dependencies';
 import { EntryAlreadyExist } from './exceptions';
@@ -76,9 +76,11 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return new WorkspacePolicy(filtered);
   }
 
-  find(depId: string): WorkspacePolicyEntry | undefined {
+  find(depId: string, lifecycleType?: DependencyLifecycleType): WorkspacePolicyEntry | undefined {
     const matchedEntry = this.entries.find((entry) => {
-      return entry.dependencyId === depId;
+      const idEqual = entry.dependencyId === depId;
+      const lifecycleEqual = lifecycleType ? entry.lifecycleType === lifecycleType : true;
+      return idEqual && lifecycleEqual;
     });
     return matchedEntry;
   }
@@ -90,8 +92,8 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
     return new WorkspacePolicy(entries);
   }
 
-  getDepVersion(depId: string): WorkspacePolicyEntryVersion | undefined {
-    const entry = this.find(depId);
+  getDepVersion(depId: string, lifecycleType?: DependencyLifecycleType): WorkspacePolicyEntryVersion | undefined {
+    const entry = this.find(depId, lifecycleType);
     if (!entry) {
       return undefined;
     }

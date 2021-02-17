@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
+import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
@@ -10,13 +10,13 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { BuilderService } from './builder.service';
+import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
@@ -175,11 +175,16 @@ export class BuilderMain {
    * in case of an error in a task, it stops the execution of that env and continue to the next
    * env. at the end, the results contain the data and errors per env.
    */
-  async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
+  async build(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    builderOptions?: BuilderServiceOptions
+  ): Promise<TaskResultsList> {
     const ids = components.map((c) => c.id);
     const network = await this.isolator.isolateComponents(ids, isolateOptions);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
-    const buildResult = await envs.runOnce(this.buildService, { seedersOnly: isolateOptions?.seedersOnly });
+    const builderServiceOptions = { seedersOnly: isolateOptions?.seedersOnly, ...(builderOptions || {}) };
+    const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
   }
 

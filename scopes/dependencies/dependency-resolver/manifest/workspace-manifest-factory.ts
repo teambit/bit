@@ -1,5 +1,5 @@
 import { Component } from '@teambit/component';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { SemVer } from 'semver';
 import { ComponentDependency, DependencyList, Dependency, PackageName } from '../dependencies';
 import { VariantPolicy, WorkspacePolicy } from '../policy';
@@ -93,7 +93,7 @@ export class WorkspaceManifestFactory {
       }
       depList = filterResolvedFromEnv(depList, componentPolicy);
       // Remove bit bin from dep list
-      depList = depList.filter((dep) => dep.id !== 'bit-bin');
+      depList = depList.filter((dep) => dep.id !== '@teambit/legacy');
       if (dependencyFilterFn) {
         depList = dependencyFilterFn(depList);
       }
@@ -195,10 +195,13 @@ function updateDependencyVersion(
 ): void {
   if (dependency.getPackageName) {
     const packageName = dependency.getPackageName();
-    const variantVersion = variantPolicy.getDepVersion(packageName);
+    const variantVersion = variantPolicy.getDepVersion(packageName, dependency.lifecycle);
     const variantVersionWithoutMinus = variantVersion && variantVersion !== '-' ? variantVersion : undefined;
     const version =
-      variantVersionWithoutMinus || rootPolicy.getDepVersion(packageName) || dependency.version || '0.0.1-new';
+      variantVersionWithoutMinus ||
+      rootPolicy.getDepVersion(packageName, dependency.lifecycle) ||
+      dependency.version ||
+      '0.0.1-new';
     dependency.setVersion(version);
   }
 }
