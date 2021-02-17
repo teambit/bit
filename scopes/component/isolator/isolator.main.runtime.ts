@@ -33,7 +33,7 @@ import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/cons
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
-import { copyBitLegacyToCapsuleRoot } from './symlink-bit-legacy-to-capsules';
+import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
 
@@ -289,7 +289,7 @@ export class IsolatorMain {
     await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
     // TODO: remove this after exporting core extensions as components
-    await copyBitLegacyToCapsuleRoot(capsulesWithModifiedPackageJson, this.logger);
+    await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
     // await copyBitLegacyToCapsuleRoot(capsulesDir, this.logger);
   }
 
