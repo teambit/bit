@@ -771,7 +771,7 @@ export class Workspace implements ComponentFactory {
     return componentConfigFile;
   }
 
-  getGraphWithoutCore(components: Component[]) {
+  async getGraphWithoutCore(components: Component[]) {
     const ids = components.map((component) => component.id._legacy);
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
     const coreAspectsComponentIds = coreAspectsStringIds.map((id) => BitId.parse(id, true));
@@ -805,7 +805,7 @@ export class Workspace implements ComponentFactory {
     const idsWithoutCore: string[] = difference(notLoadedIds, coreAspectsStringIds);
     const componentIds = await this.resolveMultipleComponentIds(idsWithoutCore);
     const components = await this.importAndGetMany(componentIds);
-    const graph: any = this.getGraphWithoutCore(components);
+    const graph = await this.getGraphWithoutCore(components);
 
     const allIdsP = graph.nodes().map(async (id) => {
       return this.resolveComponentId(id);
