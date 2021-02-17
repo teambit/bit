@@ -58,6 +58,7 @@ function publishBitLegacy() {
 }
 
 function shouldBumpBitLegacy() {
+  return true;
   // run git log and grab the first line
   const gitLogCmd = 'git log --oneline | grep "bump @teambit/legacy version to" | head -n 1';
   const gitLogResult = execSync(gitLogCmd, { cwd }).toString();
@@ -91,9 +92,12 @@ function replaceVersionOccurrencesInCode() {
   const isMac = platform === 'darwin';
   const sedBase = isMac ? `sed -i ''` : `sed -i`;
   const sed = `${sedBase} "s/${currentBitLegacyVersionInCode}/${nextBitLegacyVersion}/g"`;
-  execSync(`${sed} package.json`, { cwd });
-  execSync(`${sed} workspace.jsonc`, { cwd });
-  execSync(`find scopes -name component.json -exec ${sed} {} \\;`, { cwd });
+  const sedPackageJson = `s/\\"version\\": \\"${currentBitLegacyVersionInCode}\\",/\\"version\\": \\"${nextBitLegacyVersion}\\",/g`;
+  const sedWorkspaceJson = `s/legacy\\": \\"${currentBitLegacyVersionInCode}\\"/legacy\\": \\"${nextBitLegacyVersion}\\"/g`;
+  console.log('sedWorkspaceJson', sedWorkspaceJson);
+  execSync(`${sedBase} "${sedPackageJson}" package.json`, { cwd });
+  execSync(`${sedBase} "${sedWorkspaceJson}" workspace.jsonc`, { cwd });
+  execSync(`find scopes -name component.json -exec ${sedBase} "${sedWorkspaceJson}" {} \\;`, { cwd });
 
   console.log(`completed changing all occurrences of "${currentBitLegacyVersionInCode}" to "${nextBitLegacyVersion}"`);
 }
