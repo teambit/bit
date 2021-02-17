@@ -14,7 +14,7 @@ import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
-import { EnvNotFound } from './exceptions';
+import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -152,7 +152,9 @@ export class EnvsMain {
    */
   getEnvId(component: Component): string {
     const envsData = this.getEnvData(component);
-    return envsData.id;
+    const withVersion = this.resolveEnv(component, envsData.id);
+    if (!withVersion) throw new EnvNotConfiguredForComponent(envsData.id, component.id.toString());
+    return withVersion.toString();
   }
 
   /**
@@ -179,6 +181,14 @@ export class EnvsMain {
       icon: envsData.icon,
       services: envsData.services,
     };
+  }
+
+  resolveEnv(component: Component, id: string) {
+    const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
+      return id === aspectEntry.id.toString() || id === aspectEntry.id.toString({ ignoreVersion: true });
+    });
+
+    return matchedEntry?.id;
   }
 
   /**

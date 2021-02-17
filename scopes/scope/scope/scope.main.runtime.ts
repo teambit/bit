@@ -378,7 +378,7 @@ export class ScopeMain implements ComponentFactory {
   async resolveAspects(runtimeName?: string, componentIds?: ComponentID[]): Promise<AspectDefinition[]> {
     const userAspectsIds = componentIds || (await this.resolveMultipleComponentIds(this.aspectLoader.getUserAspects()));
     const withoutLocalAspects = userAspectsIds.filter((aspectId) => {
-      return this.localAspects.includes(aspectId.fullName.replace('/', '.'));
+      return !this.localAspects.includes(aspectId.fullName.replace('/', '.'));
     });
     const userAspectsDefs = await this.resolveUserAspects(runtimeName, withoutLocalAspects);
     const localResolved = await this.resolveLocalAspects(this.localAspects, runtimeName);
