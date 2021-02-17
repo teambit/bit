@@ -134,7 +134,7 @@ export default class Repository {
 
   async list(): Promise<BitObject[]> {
     const refs = await this.listRefs();
-    return Promise.all(refs.map((ref) => this.load(ref)));
+    return pMap(refs, (ref) => this.load(ref), { concurrency: CONCURRENT_IO_LIMIT });
   }
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
@@ -147,8 +147,9 @@ export default class Repository {
 
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
-    return Promise.all(
-      refs.map(async (ref) => {
+    return pMap(
+      refs,
+      async (ref) => {
         try {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
@@ -157,7 +158,8 @@ export default class Repository {
           logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
           return null;
         }
-      })
+      },
+      { concurrency: CONCURRENT_IO_LIMIT }
     );
   }
 
@@ -218,6 +220,10 @@ export default class Repository {
     // Run hook to transform content pre reading
     const transformedContent = this.onRead(raw);
     return transformedContent;
+  }
+
+  async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
+    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency: CONCURRENT_IO_LIMIT });
   }
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {

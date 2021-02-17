@@ -568,7 +568,7 @@ export default class Component extends BitObject {
     };
     const refs = await collectRefs();
     try {
-      return await Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+      return await repo.loadManyRaw(refs);
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"
