@@ -108,7 +108,6 @@
   "teambit.mdx/ui/mdx-layout@0.0.270": {"mainFile":"index.ts","rootDir":"scopes/mdx/ui/mdx-layout"},
   "teambit.mdx/ui/mdx-scope-context@0.0.270": {"mainFile":"index.ts","rootDir":"scopes/mdx/ui/mdx-scope-context"},
   "teambit.pipelines/builder@0.0.279": {"mainFile":"index.ts","rootDir":"scopes/pipelines/builder"},
-  "teambit.pipelines/flows@0.0.279": {"mainFile":"index.ts","rootDir":"scopes/pipelines/flows"},
   "teambit.pipelines/modules/merge-component-results@0.0.270": {"mainFile":"index.ts","rootDir":"scopes/pipelines/modules/merge-component-results"},
   "teambit.pkg/pkg@0.0.279": {"mainFile":"index.ts","rootDir":"scopes/pkg/pkg"},
   "teambit.preview/cli/preview-server-status@0.0.5": {"mainFile":"index.ts","rootDir":"scopes/preview/cli/preview-server-status"},
