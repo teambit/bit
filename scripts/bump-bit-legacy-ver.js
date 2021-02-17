@@ -58,7 +58,6 @@ function publishBitLegacy() {
 }
 
 function shouldBumpBitLegacy() {
-  return true;
   // run git log and grab the first line
   const gitLogCmd = 'git log --oneline | grep "bump @teambit/legacy version to" | head -n 1';
   const gitLogResult = execSync(gitLogCmd, { cwd }).toString();
