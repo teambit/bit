@@ -32,6 +32,7 @@ export class PreviewStartPlugin implements StartPlugin {
         onChange: () => {},
         onAdd: () => {},
         onError: () => {},
+        onUnlink: () => {},
       },
     });
     this.previewServers = this.previewServers.concat(previewServers);
