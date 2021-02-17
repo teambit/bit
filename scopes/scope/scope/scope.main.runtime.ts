@@ -328,7 +328,7 @@ export class ScopeMain implements ComponentFactory {
       components.map((c) => c.id),
       // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
       {
-        baseDir: this.path,
+        baseDir: this.getAspectCapsulePath(),
         skipIfExists: true,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
@@ -353,12 +353,16 @@ export class ScopeMain implements ComponentFactory {
     });
   }
 
+  getAspectCapsulePath() {
+    return `${this.path}-aspects`;
+  }
+
   private async resolveUserAspects(runtimeName?: string, userAspectsIds?: ComponentID[]): Promise<AspectDefinition[]> {
     if (!userAspectsIds || !userAspectsIds.length) return [];
     const components = await this.getMany(userAspectsIds);
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
-      { baseDir: this.path, skipIfExists: true },
+      { baseDir: this.getAspectCapsulePath(), skipIfExists: true },
       this.legacyScope
     );
     const capsules = network.seedersCapsules;

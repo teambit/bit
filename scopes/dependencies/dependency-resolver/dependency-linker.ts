@@ -1,5 +1,5 @@
 import path from 'path';
-import { uniq, compact, flatten } from 'lodash';
+import { uniq, compact, flatten, head } from 'lodash';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from 'bit-bin/dist/api/consumer';
@@ -507,7 +507,13 @@ function resolveModuleFromDir(fromDir: string, moduleId: string, silent = true):
 // TODO: extract to new component
 function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string): string {
   const NM = 'node_modules';
-  return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+  if (resolvedModulePath.includes(NM)) {
+    return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+  }
+
+  const [start, end] = resolvedModulePath.split('@');
+  const versionStr = head(end.split('/'));
+  return `${start}@${versionStr}`;
 }
 
 function isPathSymlink(folderPath: string): boolean | undefined {
