@@ -1,6 +1,15 @@
 import { MainRuntime } from '@teambit/cli';
-import { del, delSync, get, getSync, list, listSync, set, setSync } from 'bit-bin/dist/api/consumer/lib/global-config';
-import { GlobalConfig } from 'bit-bin/dist/global-config';
+import {
+  del,
+  delSync,
+  get,
+  getSync,
+  list,
+  listSync,
+  set,
+  setSync,
+} from '@teambit/legacy/dist/api/consumer/lib/global-config';
+import { GlobalConfig } from '@teambit/legacy/dist/global-config';
 import { GlobalConfigAspect } from './global-config.aspect';
 
 export class GlobalConfigMain {

@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
+import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
 import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
 

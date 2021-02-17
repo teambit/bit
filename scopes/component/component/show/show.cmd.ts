@@ -2,8 +2,8 @@ import { Command, CommandOptions } from '@teambit/cli';
 // import { Logger } from '@teambit/logger';
 // import chalk from 'chalk';
 import Table from 'tty-table';
-import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
-import LegacyShow from 'bit-bin/dist/cli/commands/public-cmds/show-cmd';
+import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import LegacyShow from '@teambit/legacy/dist/cli/commands/public-cmds/show-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
 export class ShowCmd implements Command {

@@ -1,9 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
 
-import { exportAction } from 'bit-bin/dist/api/consumer';
-import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
-import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
-import GeneralError from 'bit-bin/dist/error/general-error';
+import { exportAction } from '@teambit/legacy/dist/api/consumer';
+import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
+import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
 import chalk from 'chalk';
 import R from 'ramda';
 

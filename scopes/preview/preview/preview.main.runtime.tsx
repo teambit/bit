@@ -6,7 +6,7 @@ import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } 
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
-import { CACHE_ROOT } from 'bit-bin/dist/constants';
+import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import objectHash from 'object-hash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';

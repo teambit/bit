@@ -1,7 +1,7 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
-import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import chalk from 'chalk';
 
 import { BuilderMain } from './builder.main.runtime';

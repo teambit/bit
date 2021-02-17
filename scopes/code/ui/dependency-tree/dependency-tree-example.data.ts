@@ -56,8 +56,8 @@ export const exampleData = [
     __typename: 'PackageDependency',
   },
   {
-    id: 'bit-bin',
-    version: '14.8.9-dev.253',
+    id: '@teambit/legacy',
+    version: '1.0.0',
     lifecycle: 'peer',
     packageName: null,
     __typename: 'PackageDependency',

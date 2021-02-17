@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { sortObject } from 'bit-bin/dist/utils';
+import { sortObject } from '@teambit/legacy/dist/utils';
 import { Policy, PolicyEntry, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, DependencyLifecycleType } from '../../dependencies';
 import { EntryAlreadyExist } from './exceptions';

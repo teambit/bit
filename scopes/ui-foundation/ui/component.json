@@ -31,18 +31,18 @@
           "sass-loader": "^10.1.0",
           "less": "^3.12.2",
           "less-loader": "^7.0.2",
-          "bit-bin": "-"
+          "@teambit/legacy": "-"
         },
         "devDependencies": {
           "@types/mocha": "^5.2.7",
           "@types/node": "^12.12.27",
           "react-dom": "-",
-          "bit-bin": "-"
+          "@teambit/legacy": "-"
         },
         "peerDependencies": {
           "react": "^16.13.1",
           "react-dom": "^16.13.1",
-          "bit-bin": "14.8.9-dev.298"
+          "@teambit/legacy": "1.0.1"
         }
       }
     }

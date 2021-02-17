@@ -1,27 +1,27 @@
 ---
-description: A plugin to add metadata on React components for showcase and debugging.
+description: A Babel plugin that adds metadata to React components.
 labels: ['babel', 'react', 'component-id']
 ---
 
-The Bit React MDX transformer adds selected component metadata from Bit on React components.
-All metadata is added as static props on the Components.
+The Bit React transformer is a Babel plugin thar adds the component id (as it determined by Bit) as a static property of the React component (both classes and functions).
 
-This supports both function and class components.
+Having the added metadata is useful for debbuging and [showcasing](/ui/component-highlighter).
 
-input:
+### Example
+
+#### Input
 ```ts
 export function Button() {
   return <div></div>;
 }
 ```
 
-output:
+#### Output
 ```ts
 export function Button() {
   return <div></div>;
 }
 
+// (assuming this is the component-id)
 Button.componentId = 'teambit.base-ui/button@1.0.0';
 ```
-
-This plugin powers Bit's inline component navigation.

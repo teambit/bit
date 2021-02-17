@@ -1,5 +1,5 @@
 import { BitIdStr } from '@teambit/legacy-bit-id';
-import logger from 'bit-bin/dist/logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { alg, Graph } from 'graphlib';
 
 type Level = {

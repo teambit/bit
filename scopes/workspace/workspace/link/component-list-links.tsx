@@ -1,6 +1,6 @@
 import { Text, Box } from 'ink';
 import React from 'react';
-import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
+import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
 
