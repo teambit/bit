@@ -93,7 +93,6 @@ function replaceVersionOccurrencesInCode() {
   const sed = `${sedBase} "s/${currentBitLegacyVersionInCode}/${nextBitLegacyVersion}/g"`;
   const sedPackageJson = `s/\\"version\\": \\"${currentBitLegacyVersionInCode}\\",/\\"version\\": \\"${nextBitLegacyVersion}\\",/g`;
   const sedWorkspaceJson = `s/legacy\\": \\"${currentBitLegacyVersionInCode}\\"/legacy\\": \\"${nextBitLegacyVersion}\\"/g`;
-  console.log('sedWorkspaceJson', sedWorkspaceJson);
   execSync(`${sedBase} "${sedPackageJson}" package.json`, { cwd });
   execSync(`${sedBase} "${sedWorkspaceJson}" workspace.jsonc`, { cwd });
   execSync(`find scopes -name component.json -exec ${sedBase} "${sedWorkspaceJson}" {} \\;`, { cwd });
