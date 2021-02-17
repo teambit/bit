@@ -68,7 +68,7 @@ function printBitVersionIfAsked() {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
       const harmonyVersion = getHarmonyVersion();
       if (harmonyVersion) {
-        console.log(`${harmonyVersion} (bit-bin: ${BIT_VERSION})`); // eslint-disable-line no-console
+        console.log(`${harmonyVersion} (@teambit/legacy: ${BIT_VERSION})`); // eslint-disable-line no-console
       } else {
         console.log(BIT_VERSION); // eslint-disable-line no-console
       }

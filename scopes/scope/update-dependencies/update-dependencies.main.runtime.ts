@@ -9,15 +9,15 @@ import {
   getPublishedPackages,
   updateComponentsByTagResult,
   addFlattenedDependenciesToComponents,
-} from 'bit-bin/dist/scope/component-ops/tag-model-component';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { BuildStatus, LATEST } from 'bit-bin/dist/constants';
-import { BitIds } from 'bit-bin/dist/bit-id';
+} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import { getValidVersionOrReleaseType } from 'bit-bin/dist/utils/semver-helper';
+import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { exportMany } from 'bit-bin/dist/scope/component-ops/export-scope-components';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
 

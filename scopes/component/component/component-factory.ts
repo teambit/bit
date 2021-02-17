@@ -1,7 +1,7 @@
 import { BitId } from '@teambit/legacy-bit-id';
-import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import type { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
+import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
 import { Component } from './component';

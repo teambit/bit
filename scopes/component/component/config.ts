@@ -1,9 +1,9 @@
-import { Compilers, Testers } from 'bit-bin/dist/consumer/config/abstract-config';
-import { ComponentOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { PathLinux } from 'bit-bin/dist/utils/path';
-// import { CustomResolvedPath } from 'bit-bin/dist/consumer/component/consumer-component';
-// import { ComponentOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
+import { Compilers, Testers } from '@teambit/legacy/dist/consumer/config/abstract-config';
+import { ComponentOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { PathLinux } from '@teambit/legacy/dist/utils/path';
+// import { CustomResolvedPath } from '@teambit/legacy/dist/consumer/component/consumer-component';
+// import { ComponentOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 
 type LegacyConfigProps = {
   lang?: string;

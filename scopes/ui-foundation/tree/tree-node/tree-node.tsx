@@ -1,5 +1,5 @@
 import { NavLink } from '@teambit/ui.routing.nav-link';
-import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
+import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { ComponentType } from 'react';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';

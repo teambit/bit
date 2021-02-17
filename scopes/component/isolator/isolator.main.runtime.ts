@@ -15,26 +15,25 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import legacyLogger from 'bit-bin/dist/logger/logger';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { BitIds } from 'bit-bin/dist/bit-id';
-import LegacyScope from 'bit-bin/dist/scope/scope';
-import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from 'bit-bin/dist/constants';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
-import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
-import { Scope } from 'bit-bin/dist/scope';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { Scope } from '@teambit/legacy/dist/scope';
 import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
 import { equals, map } from 'ramda';
-import BitMap from 'bit-bin/dist/consumer/bit-map';
-import ComponentWriter, { ComponentWriterProps } from 'bit-bin/dist/consumer/component-ops/component-writer';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
-// import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
-import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
+import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
 
@@ -290,8 +289,8 @@ export class IsolatorMain {
     await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
     // TODO: remove this after exporting core extensions as components
-    await symlinkBitBinToCapsules(capsulesWithModifiedPackageJson, this.logger);
-    // await copyBitBinToCapsuleRoot(capsulesDir, this.logger);
+    await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
+    // await copyBitLegacyToCapsuleRoot(capsulesDir, this.logger);
   }
 
   private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {

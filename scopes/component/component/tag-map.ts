@@ -1,4 +1,4 @@
-import { getLatestVersion } from 'bit-bin/dist/utils/semver-helper';
+import { getLatestVersion } from '@teambit/legacy/dist/utils/semver-helper';
 import { SemVer } from 'semver';
 
 import { CouldNotFindLatest } from './exceptions';

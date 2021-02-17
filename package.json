@@ -1,9 +1,54 @@
 {
-  "name": "bit-bin",
-  "version": "14.8.9-dev.298",
+  "name": "@teambit/legacy",
+  "version": "1.0.0",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
+  "private": false,
+  "files": [
+    "/bin",
+    "/legacy-capsule",
+    "/dist"
+  ],
+  "engines": {
+    "node": ">=12.15.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,js,tsx,css,scss}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "pkg": {
+    "assets": [
+      "dist/analytics/analytics-sender.js",
+      "dist/specs-runner/worker.js"
+    ]
+  },
+  "bin": {
+    "bit": "bin/bit.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teambit/bit"
+  },
+  "keywords": [
+    "bit",
+    "components",
+    "collaboration",
+    "web",
+    "react",
+    "react-components",
+    "angular",
+    "angular-components",
+    "vue",
+    "vue-components"
+  ],
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "ts-coverage": "type-coverage",
@@ -37,14 +82,14 @@
     "build": "npm run build:src",
     "build:types": "./scripts/build-types.bash",
     "install-harmony": "cd build-harmony && yarn",
-    "link-bit-bin": "rm -rf node_modules/bit-bin && ln -sf `pwd` node_modules/bit-bin",
+    "link-bit-legacy": "rm -rf node_modules/@teambit/legacy && ln -sf `pwd` node_modules/@teambit/legacy",
     "import-harmony": "build-harmony/node_modules/.bin/bbit import",
     "status-harmony": "build-harmony/node_modules/.bin/bbit status",
-    "build-harmony": "build-harmony/node_modules/.bin/bbit install && npm run link-bit-bin && build-harmony/node_modules/.bin/bbit compile",
-    "build-harmony-skip-import": "build-harmony/node_modules/.bin/bbit install --skip-import && npm run link-bit-bin && build-harmony/node_modules/.bin/bbit compile",
+    "build-harmony": "build-harmony/node_modules/.bin/bbit install && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
+    "build-harmony-skip-import": "build-harmony/node_modules/.bin/bbit install --skip-import && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
     "link-harmony": "build-harmony/node_modules/.bin/bbit link",
     "full-setup": "npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
-    "full-setup:bbit": "rm -rf node_modules/bit-bin && bbit install && ln -sf `pwd` node_modules/bit-bin && bbit compile && npm run build && npm run build:types",
+    "full-setup:bbit": "rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
@@ -56,10 +101,10 @@
     "watch": "babel --watch src -d dist --verbose --source-maps --extensions \".ts,.tsx,.js\" --copy-files",
     "build-debug": "babel src -d dist --source-maps --extensions \".ts\"",
     "prepublishOnly": "npm run clean && npm run build && npm run build:types",
-    "pre-release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease",
-    "release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos",
-    "release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos -y",
-    "pre-release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos -y --prerelease",
+    "pre-release": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos --prerelease",
+    "release": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos",
+    "release:circle": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos -y",
+    "pre-release:circle": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos -y --prerelease",
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
@@ -71,31 +116,6 @@
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
   },
-  "pkg": {
-    "assets": [
-      "dist/analytics/analytics-sender.js",
-      "dist/specs-runner/worker.js"
-    ]
-  },
-  "bin": {
-    "bit": "bin/bit.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/teambit/bit"
-  },
-  "keywords": [
-    "bit",
-    "components",
-    "collaboration",
-    "web",
-    "react",
-    "react-components",
-    "angular",
-    "angular-components",
-    "vue",
-    "vue-components"
-  ],
   "dependencies": {
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
@@ -276,24 +296,5 @@
     "type-coverage": "^2.4.2",
     "typescript": "4.1.2",
     "verdaccio": "^4.5.1"
-  },
-  "files": [
-    "/bin",
-    "/legacy-capsule",
-    "/dist"
-  ],
-  "engines": {
-    "node": ">=12.15.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,js,tsx,css,scss}": [
-      "prettier --write",
-      "git add"
-    ]
   }
 }

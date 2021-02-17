@@ -5,7 +5,7 @@ import { Bundler, BundlerContext, BundlerMain, Target } from '@teambit/bundler';
 import { Compiler } from '@teambit/compiler';
 import { ComponentMap } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { flatten } from 'lodash';
 import { PreviewDefinition } from './preview-definition';
 import { PreviewMain } from './preview.main.runtime';
