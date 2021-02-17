@@ -288,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "bit-bin": "14.8.9-dev.298",
+        "@teambit/legacy": "1.0.0",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -336,15 +336,15 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "-"
+            "@teambit/legacy": "-"
           },
           "devDependencies": {
             "@types/mocha": "^5.2.7",
-            "bit-bin": "-"
+            "@teambit/legacy": "-"
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "bit-bin": "14.8.9-dev.298",
+            "@teambit/legacy": "1.0.0",
             "react-dom": "^16.13.1"
           }
         }
@@ -486,7 +486,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "bit-bin": "14.8.9-dev.298",
+            "@teambit/legacy": "1.0.0",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
@@ -504,7 +504,7 @@
             "@types/node": "^12.12.27"
           },
           "peerDependencies": {
-            "bit-bin": "-",
+            "@teambit/legacy": "-",
             "browserslist": "-",
             "graphql": "-",
             "react": "-",

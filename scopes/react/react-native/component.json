@@ -35,14 +35,14 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "bit-bin": "-"
+          "@teambit/legacy": "-"
         },
         "devDependencies": {
-          "bit-bin": "-"
+          "@teambit/legacy": "-"
         },
         "peerDependencies": {
           "react": "^16.13.1",
-          "bit-bin": "14.8.9-dev.228",
+          "@teambit/legacy": "1.0.0",
           "react-dom": "^16.13.1"
         }
       }
