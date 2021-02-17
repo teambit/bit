@@ -561,7 +561,7 @@ describe('dependencyTree', function () {
 
   // skipping the webpack unit tests for now as it's not easy to wire up all the files together.
   // originally, in dependency-tree, the webpack.config.js is in the same directory of the index.js.
-  // doing the same here will be confusing. instead, we have already e2e-tests in bit-bin of custom
+  // doing the same here will be confusing. instead, we have already e2e-tests in bit legacy of custom
   // module resolution, which takes advantage of the webpack config.
   describe.skip('webpack', () => {
     beforeEach(() => {
