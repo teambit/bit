@@ -1,7 +1,7 @@
 import { BitId } from '@teambit/legacy-bit-id';
-import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import type { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
+import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
 import { Component } from './component';
@@ -82,6 +82,12 @@ export interface ComponentFactory {
   listIds(): Promise<ComponentID[]>;
 
   hasId(componentId: ComponentID): Promise<boolean>;
+
+  /**
+   * Check if the host has the id, if no, search for the id in inner host (for example, workspace will search in the scope)
+   * @param componentId
+   */
+  hasIdNested(componentId: ComponentID, includeCache?: boolean): Promise<boolean>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.

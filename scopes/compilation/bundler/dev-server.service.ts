@@ -91,7 +91,7 @@ export class DevServerService implements EnvService<ComponentServer> {
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
 
-    return Object.assign({}, context, {
+    return Object.assign(context, {
       entry: await getEntry(context, uiRoot, this.runtimeSlot),
       rootPath: `/preview/${context.envRuntime.id}`,
       publicPath: `/public`,

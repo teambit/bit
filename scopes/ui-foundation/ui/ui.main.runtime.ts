@@ -12,7 +12,7 @@ import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-import { sha1 } from 'bit-bin/dist/utils';
+import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
 import { join, resolve } from 'path';

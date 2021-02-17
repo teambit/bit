@@ -1,8 +1,8 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { buildRegistry } from 'bit-bin/dist/cli';
-import { Command } from 'bit-bin/dist/cli/command';
-import { register } from 'bit-bin/dist/cli/command-registry';
-import LegacyLoadExtensions from 'bit-bin/dist/legacy-extensions/extensions-loader';
+import { buildRegistry } from '@teambit/legacy/dist/cli';
+import { Command } from '@teambit/legacy/dist/cli/command';
+import { register } from '@teambit/legacy/dist/cli/command-registry';
+import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
 import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';

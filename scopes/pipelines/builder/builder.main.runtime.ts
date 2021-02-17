@@ -1,5 +1,5 @@
 import { flatten } from 'lodash';
-import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
+import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
@@ -10,8 +10,8 @@ import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
-import { OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';

@@ -44,7 +44,7 @@
           "sass-loader": "^10.1.0",
           "less": "^3.12.2",
           "less-loader": "^7.0.2",
-          "bit-bin": "-",
+          "@teambit/legacy": "-",
           "@babel/runtime": "^7.11.2"
         },
         "devDependencies": {
@@ -52,12 +52,12 @@
           "@types/react-dom": "^17.0.1",
           "@types/mocha": "^5.2.7",
           "@types/node": "^12.12.27",
-          "bit-bin": "-",
+          "@teambit/legacy": "-",
           "react": "-",
           "react-dom": "-"
         },
         "peerDependencies": {
-          "bit-bin": "14.8.9-dev.291"
+          "@teambit/legacy": "1.0.0"
         }
       }
     }

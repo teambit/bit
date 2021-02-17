@@ -29,23 +29,23 @@ import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { BitId } from '@teambit/legacy-bit-id';
-import { BitIds as ComponentsIds } from 'bit-bin/dist/bit-id';
-import { ModelComponent, Version, Lane } from 'bit-bin/dist/scope/models';
-import { Ref, Repository } from 'bit-bin/dist/scope/objects';
-import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ComponentLog } from 'bit-bin/dist/scope/models/model-component';
-import { loadScopeIfExist } from 'bit-bin/dist/scope/scope-loader';
-import { PersistOptions } from 'bit-bin/dist/scope/types';
-import LegacyGraph from 'bit-bin/dist/scope/graph/graph';
-import { ExportPersist, PostSign } from 'bit-bin/dist/scope/actions';
-import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
-import { Remotes } from 'bit-bin/dist/remotes';
-import { Scope } from 'bit-bin/dist/scope';
-import { Http, DEFAULT_AUTH_TYPE, AuthData } from 'bit-bin/dist/scope/network/http/http';
-import { buildOneGraphForComponentsUsingScope } from 'bit-bin/dist/scope/graph/components-graph';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { resumeExport } from 'bit-bin/dist/scope/component-ops/export-scope-components';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
+import { ModelComponent, Version, Lane } from '@teambit/legacy/dist/scope/models';
+import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
+import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
+import { PersistOptions } from '@teambit/legacy/dist/scope/types';
+import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { Remotes } from '@teambit/legacy/dist/remotes';
+import { Scope } from '@teambit/legacy/dist/scope';
+import { Http, DEFAULT_AUTH_TYPE, AuthData } from '@teambit/legacy/dist/scope/network/http/http';
+import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
 import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
@@ -326,22 +326,29 @@ export class ScopeMain implements ComponentFactory {
     if (!components.length) return [];
     const network = await this.isolator.isolateComponents(
       components.map((c) => c.id),
-      { baseDir: this.path, skipIfExists: true, installOptions: { copyPeerToRuntimeOnRoot: true } },
+      // includeFromNestedHosts - to support case when you are in a workspace, trying to load aspect defined in the workspace.jsonc but not part of the workspace
+      {
+        baseDir: this.path,
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
 
     const capsules = network.seedersCapsules;
 
     return capsules.map((capsule) => {
-      // return RequireableComponent.fromCapsule(capsule);
-      return new RequireableComponent(capsule.component, () => {
-        const scopeRuntime = capsule.component.state.filesystem.files.find((file) =>
-          file.relative.includes('.scope.runtime.')
-        );
+      return new RequireableComponent(capsule.component, async () => {
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        if (scopeRuntime) return require(join(capsule.path, 'dist', this.toJs(scopeRuntime.relative)));
+        const aspect = require(capsule.path);
+        const scopeRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, 'scope');
+        const mainRuntime = await this.aspectLoader.getRuntimePath(capsule.component, capsule.path, MainRuntime.name);
+        const runtimePath = scopeRuntime || mainRuntime;
         // eslint-disable-next-line global-require, import/no-dynamic-require
-        return require(capsule.path);
+        if (runtimePath) require(runtimePath);
+        // eslint-disable-next-line global-require, import/no-dynamic-require
+        return aspect;
       });
     });
   }
@@ -498,6 +505,10 @@ export class ScopeMain implements ComponentFactory {
       return id.isEqual(componentId);
     });
     return !!found;
+  }
+
+  async hasIdNested(componentId: ComponentID, includeCache = false): Promise<boolean> {
+    return this.hasId(componentId, includeCache);
   }
 
   /**

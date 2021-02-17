@@ -8,21 +8,26 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY, CFG_PROXY, CFG_HTTPS_PROXY } from 'bit-bin/dist/constants';
+import {
+  CFG_PACKAGE_MANAGER_CACHE,
+  CFG_USER_TOKEN_KEY,
+  CFG_PROXY,
+  CFG_HTTPS_PROXY,
+} from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { DetectorHook } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
-} from 'bit-bin/dist/scope/component-ops/tag-model-component';
+} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
 import {
   registerUpdateDependenciesOnExport,
   OnExportIdTransformer,
-} from 'bit-bin/dist/scope/component-ops/export-scope-components';
-import { Version as VersionModel } from 'bit-bin/dist/scope/models';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
+} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
 import { BitId } from '@teambit/legacy-bit-id';
 import { flatten } from 'ramda';

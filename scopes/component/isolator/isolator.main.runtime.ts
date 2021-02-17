@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { compact } from 'lodash';
+import { compact, pick } from 'lodash';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
 import type { ComponentMain } from '@teambit/component';
 import { getComponentPackageVersion } from '@teambit/component-package-version';
@@ -15,26 +15,25 @@ import {
   ComponentDependency,
   KEY_NAME_BY_LIFECYCLE_TYPE,
 } from '@teambit/dependency-resolver';
-import legacyLogger from 'bit-bin/dist/logger/logger';
+import legacyLogger from '@teambit/legacy/dist/logger/logger';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { BitIds } from 'bit-bin/dist/bit-id';
-import LegacyScope from 'bit-bin/dist/scope/scope';
-import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from 'bit-bin/dist/constants';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
-import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
-import { Scope } from 'bit-bin/dist/scope';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import LegacyScope from '@teambit/legacy/dist/scope/scope';
+import { CACHE_ROOT, DEPENDENCIES_FIELDS, PACKAGE_JSON } from '@teambit/legacy/dist/constants';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { Scope } from '@teambit/legacy/dist/scope';
 import fs from 'fs-extra';
 import hash from 'object-hash';
 import path from 'path';
 import { equals, map } from 'ramda';
-import BitMap from 'bit-bin/dist/consumer/bit-map';
-import ComponentWriter, { ComponentWriterProps } from 'bit-bin/dist/consumer/component-ops/component-writer';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import ComponentWriter, { ComponentWriterProps } from '@teambit/legacy/dist/consumer/component-ops/component-writer';
 import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 import { IsolatorAspect } from './isolator.aspect';
-// import { copyBitBinToCapsuleRoot } from './symlink-bit-bin-to-capsules';
-import { symlinkBitBinToCapsules } from './symlink-bit-bin-to-capsules';
+import { symlinkBitLegacyToCapsules } from './symlink-bit-legacy-to-capsules';
 import { symlinkOnCapsuleRoot, symlinkDependenciesToCapsules } from './symlink-dependencies-to-capsules';
 import { Network } from './network';
 
@@ -55,7 +54,14 @@ export type IsolateComponentsInstallOptions = {
   installTeambitBit?: boolean;
 };
 
-export type IsolateComponentsOptions = {
+type CreateGraphOptions = {
+  /**
+   * include components that exists in nested hosts. for example include components that exist in scope but not in the workspace
+   */
+  includeFromNestedHosts?: boolean;
+};
+
+export type IsolateComponentsOptions = CreateGraphOptions & {
   name?: string;
   /**
    * the capsule root-dir based on a *hash* of this baseDir, not on the baseDir itself.
@@ -147,7 +153,10 @@ export class IsolatorMain {
     const host = this.componentAspect.getHost();
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
     legacyLogger.debug(`isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const componentsToIsolate = opts.seedersOnly ? await host.getMany(seeders) : await this.createGraph(seeders);
+    const createGraphOpts = pick(opts, 'includeFromNestedHosts');
+    const componentsToIsolate = opts.seedersOnly
+      ? await host.getMany(seeders)
+      : await this.createGraph(seeders, createGraphOpts);
     opts.baseDir = opts.baseDir || host.path;
     const capsuleList = await this.createCapsules(componentsToIsolate, opts, legacyScope);
     longProcessLogger.end();
@@ -155,7 +164,7 @@ export class IsolatorMain {
     return new Network(capsuleList, seeders, this.getCapsulesRootDir(opts.baseDir));
   }
 
-  private async createGraph(seeders: ComponentID[]): Promise<Component[]> {
+  private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
     const host = this.componentAspect.getHost();
     const graph = await this.graphBuilder.getGraph(seeders);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
@@ -163,11 +172,17 @@ export class IsolatorMain {
     // do not ignore the version here. a component might be in .bitmap with one version and
     // installed as a package with another version. we don't want them both.
     const existingCompsP = compsAndDeps.map(async (c) => {
-      const existing = await host.hasId(c.id);
+      let existing;
+      if (opts.includeFromNestedHosts) {
+        existing = await host.hasIdNested(c.id, true);
+      } else {
+        existing = await host.hasId(c.id);
+      }
       if (existing) return c;
       return undefined;
     });
-    return compact(await Promise.all(existingCompsP));
+    const existingComps = await Promise.all(existingCompsP);
+    return compact(existingComps);
   }
 
   /**
@@ -274,8 +289,8 @@ export class IsolatorMain {
     await symlinkDependenciesToCapsules(capsulesWithModifiedPackageJson, capsuleList, this.logger);
     // TODO: this is a hack to have access to the bit bin project in order to access core extensions from user extension
     // TODO: remove this after exporting core extensions as components
-    await symlinkBitBinToCapsules(capsulesWithModifiedPackageJson, this.logger);
-    // await copyBitBinToCapsuleRoot(capsulesDir, this.logger);
+    await symlinkBitLegacyToCapsules(capsulesWithModifiedPackageJson, this.logger);
+    // await copyBitLegacyToCapsuleRoot(capsulesDir, this.logger);
   }
 
   private getCapsulesWithModifiedPackageJson(capsulesWithPackagesData: CapsulePackageJsonData[]) {

@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import { BitBaseEvent } from '@teambit/pubsub';
-import type ConsumerComponent from 'bit-bin/dist/consumer/component';
+import type ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { CompileError } from '../workspace-compiler';
 
 class ComponentCompilationOnDoneEventData {

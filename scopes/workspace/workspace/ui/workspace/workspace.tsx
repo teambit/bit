@@ -1,14 +1,12 @@
 import 'reset-css';
-
-import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
+import React, { useReducer } from 'react';
+import { Route } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { Corner } from '@teambit/ui.corner';
 import { Collapser } from '@teambit/ui.side-bar';
+import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui.top-bar';
-import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
-import React, { ReactNode, useReducer } from 'react';
-import { Route } from 'react-router-dom';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';
@@ -36,11 +34,7 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
   onSidebarTogglerChange(handleSidebarToggle);
 
   if (!workspace) {
-    return (
-      <div className={styles.emptyContainer}>
-        <FullLoader />
-      </div>
-    );
+    return <div className={styles.emptyContainer}></div>;
   }
 
   workspaceUI.setComponents(workspace.components);
@@ -75,7 +69,3 @@ export function Workspace({ routeSlot, menuSlot, sidebar, workspaceUI, onSidebar
     </WorkspaceProvider>
   );
 }
-
-export type WorkspaceContextProps = {
-  children: ReactNode;
-};

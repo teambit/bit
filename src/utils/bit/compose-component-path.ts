@@ -10,7 +10,13 @@ export function composeComponentPath(
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   componentsDefaultDirectory?: string = DEFAULT_COMPONENTS_DIR_PATH
 ): string {
-  return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
+  let defaultDir = componentsDefaultDirectory;
+  // Prevent case where for example {scope}/{name} becomes /my-comp (in case the scope is empty)
+  if (componentsDefaultDirectory.includes('{scope}/') && !bitId.scope) {
+    defaultDir = componentsDefaultDirectory.replace('{scope}/', '');
+  }
+  const result = format(defaultDir, { name: bitId.name, scope: bitId.scope });
+  return result;
 }
 
 export function composeDependencyPath(

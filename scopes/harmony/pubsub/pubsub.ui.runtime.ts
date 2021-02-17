@@ -1,7 +1,6 @@
 import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
 
 import { connectToChild } from 'penpal';
-import type { Connection } from 'penpal/lib/types';
 
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
@@ -11,28 +10,14 @@ import { createProvider } from './pubsub-context';
 export class PubsubUI {
   private topicMap = {};
 
-  private connectToIframeWithRetry = (iframe: HTMLIFrameElement, update: (c: Connection) => void, retries = 3) => {
+  private connectToIframe = (iframe: HTMLIFrameElement) => {
     const connection = connectToChild({
-      timeout: 500,
       iframe,
       methods: this.pubsubMethods,
     });
 
-    connection.promise.catch((e) => {
-      // make sure not to retry when code === "ConnectionDestroyed"
-      if (e.code !== 'ConnectionTimeout') return;
-
-      if (retries <= 0) return;
-      this.connectToIframeWithRetry(iframe, update, retries - 1); // recursion!
-    });
-
-    update(connection);
-  };
-
-  private connectToIframe = (iframe: HTMLIFrameElement) => {
-    let connection: Connection;
-
-    this.connectToIframeWithRetry(iframe, (c) => (connection = c));
+    // absorb valid errors like 'connection destroyed'
+    connection.promise.catch(() => {});
 
     const destroy = () => {
       connection && connection.destroy();

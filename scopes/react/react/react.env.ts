@@ -15,7 +15,7 @@ import { WebpackMain } from '@teambit/webpack';
 import { MultiCompilerMain } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
-import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
