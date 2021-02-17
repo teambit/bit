@@ -1,4 +1,4 @@
-import { getAuthDataFromHeader } from 'bit-bin/dist/scope/network/http/http';
+import { getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 
 export class Registry {
   constructor(

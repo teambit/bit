@@ -1,5 +1,5 @@
-import loader from 'bit-bin/dist/cli/loader';
-import logger, { IBitLogger } from 'bit-bin/dist/logger/logger';
+import loader from '@teambit/legacy/dist/cli/loader';
+import logger, { IBitLogger } from '@teambit/legacy/dist/logger/logger';
 import chalk from 'chalk';
 import stc from 'string-to-color';
 

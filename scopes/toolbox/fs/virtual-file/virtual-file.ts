@@ -1,4 +1,4 @@
-// @TODO david we need to build this component to consolidate the decouple from bit-bin.
+// @TODO david we need to build this component to consolidate the decouple from @teambit/legacy.
 // /**
 //  * virtual file format for the Bit toolchain.
 //  */

@@ -1,8 +1,8 @@
 import { BundlerMain } from '@teambit/bundler';
 import { Component, ComponentID } from '@teambit/component';
 import { UIRoot } from '@teambit/ui';
-import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import { PathOsBased } from 'bit-bin/dist/utils/path';
+import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { PathOsBased } from '@teambit/legacy/dist/utils/path';
 
 import { Workspace } from './workspace';
 

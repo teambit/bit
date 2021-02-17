@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import { Command, CommandOptions } from '@teambit/cli';
 import { ComponentID } from '@teambit/component';
 import { ScopeMain } from '@teambit/scope';
-import { BuildStatus } from 'bit-bin/dist/constants';
+import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
 import { SignMain } from './sign.main.runtime';
 

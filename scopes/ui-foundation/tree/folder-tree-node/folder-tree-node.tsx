@@ -1,5 +1,5 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
+import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useState } from 'react';
 import AnimateHeight from 'react-animate-height';

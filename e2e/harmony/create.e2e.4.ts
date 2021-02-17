@@ -30,7 +30,7 @@ describe.skip('create extension', function () {
       helper.command.addComponent('react-create-template');
       helper.extensions.addExtensionToWorkspace('my-scope/react-create-template', {});
       helper.extensions.addExtensionToWorkspace('teambit.generator/generator', { template: 'react-create-template' });
-      helper.scopeHelper.linkBitBin();
+      helper.scopeHelper.linkBitLegacy();
       helper.command.link();
       helper.command.create(COMPONENT_NAME);
       const compDir = path.join(helper.scopes.localPath, `components/${COMPONENT_NAME}`);

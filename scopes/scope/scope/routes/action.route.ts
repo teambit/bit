@@ -1,6 +1,6 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
-import { action } from 'bit-bin/dist/api/scope/lib/action';
-import { getAuthDataFromHeader } from 'bit-bin/dist/scope/network/http/http';
+import { action } from '@teambit/legacy/dist/api/scope/lib/action';
+import { getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
 import { ScopeMain } from '../scope.main.runtime';
 
 export class ActionRoute implements Route {
