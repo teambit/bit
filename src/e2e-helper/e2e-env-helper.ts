@@ -225,4 +225,16 @@ export default class EnvHelper {
     this.command.compile();
     return EXTENSIONS_BASE_FOLDER;
   }
+
+  setCustomEnv(): string {
+    const EXTENSIONS_BASE_FOLDER = 'node-env';
+    this.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
+    this.command.addComponent(EXTENSIONS_BASE_FOLDER);
+    this.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
+    this.scopeHelper.linkBitBin();
+    this.command.link();
+    this.command.install();
+    this.command.compile();
+    return EXTENSIONS_BASE_FOLDER;
+  }
 }
