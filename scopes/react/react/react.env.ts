@@ -250,9 +250,12 @@ export class ReactEnv implements Environment {
     return {
       dependencies: {
         react: '-',
+        'react-dom': '-',
       },
       // TODO: add this only if using ts
       devDependencies: {
+        react: '-',
+        'react-dom': '-',
         '@types/node': '^12.12.27',
         'core-js': '^3.6.5',
         '@types/react': '16.9.43',

@@ -28,6 +28,8 @@
           "eslint-plugin-jsx-a11y": "^6.3.1",
           "react-app-polyfill": "^1.0.6",
           "resolve-url-loader": "^3.1.1",
+          "react": "^16.13.1",
+          "react-dom": "^16.13.1",
           "file-loader": "^6.0.0",
           "jest-environment-jsdom-fourteen": "^1.0.1",
           "react-native-web": "^0.12.2",
@@ -38,7 +40,6 @@
           "babel-loader": "^8.1.0",
           "babel-preset-react-app": "^9.1.2",
           "style-loader": "^1.2.1",
-          "react-dom": "-",
           "css-loader": "^3.6.0",
           "postcss-loader": "^3.0.0",
           "sass-loader": "^10.1.0",
@@ -50,13 +51,14 @@
         "devDependencies": {
           "@types/mocha": "^5.2.7",
           "@types/node": "^12.12.27",
+          "@types/react": "16.9.43",
+          "@types/react-dom": "16.9.10",
           "@teambit/legacy": "-",
+          "react": "-",
           "react-dom": "-"
         },
         "peerDependencies": {
-          "react": "^16.13.1",
-          "@teambit/legacy": "1.0.2",
-          "react-dom": "^16.13.1"
+          "@teambit/legacy": "1.0.2"
         }
       }
     }

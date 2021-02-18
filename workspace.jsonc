@@ -138,7 +138,6 @@
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "^4.1.1",
         "@types/puppeteer": "^3.0.1",
-        "@types/react": "16.9.43",
         "@types/react-dom": "16.9.10",
         "@types/react-router-dom": "^5.1.5",
         "@types/react-tabs": "^2.3.2",
@@ -238,10 +237,8 @@
         "pretty-time": "^1.1.0",
         "prism-react-renderer": "^1.1.1",
         "proper-lockfile": "^4.1.1",
-        "react": "^16.13.1",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "^10.2.1",
-        "react-dom": "^16.13.1",
         "react-error-overlay": "^6.0.7",
         "react-flow-renderer": "8.3.7",
         "react-hot-loader": "^4.12.21",
@@ -343,9 +340,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "react": "^16.13.1",
-            "@teambit/legacy": "1.0.2",
-            "react-dom": "^16.13.1"
+            "@teambit/legacy": "1.0.2"
           }
         }
       },
@@ -487,8 +482,6 @@
         "policy": {
           "dependencies": {
             "@teambit/legacy": "1.0.2",
-            "react": "^16.13.1",
-            "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
             "browserslist": "^4",
             "reflect-metadata": "^0.1.13",
@@ -498,7 +491,6 @@
             "graceful-fs": "4.2.4"
           },
           "devDependencies": {
-            "@types/react": "^16.9.43",
             "@types/mocha": "^5.2.7",
             // why this is needed? try to automate this
             "@types/node": "^12.12.27"
@@ -506,9 +498,7 @@
           "peerDependencies": {
             "@teambit/legacy": "-",
             "browserslist": "-",
-            "graphql": "-",
-            "react": "-",
-            "react-dom": "-"
+            "graphql": "-"
           }
         }
       }
