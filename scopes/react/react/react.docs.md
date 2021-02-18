@@ -1,27 +1,25 @@
 ---
-labels: ['react native', 'typescript', 'env', 'extension']
-description: 'A React Native extension'
+description: A Bit development environment for React Components
+labels: ['react', 'env', 'typescript', 'extension']
 ---
 
-The React Native environment spares you the overhead of setting up your own development environment for React Native components in a Bit workspace.
+The React environment spares you the overhead of setting up your own development environment for React components in a Bit workspace.
 Instead, this pre-configured environment can be added to your workspace to let you instantly start working on your components.
 
-As with any other Bit environment, the React Native environment is easily extendable so that you can customize it to your own needs and share it with your team to speed up development and standardize it across various decoupled workspaces.
-The React Native environment uses various services, provided by other Bit extensions, to handle the life events of React Native components, managed in a Bit workspace.
-
-> The React Native environment uses [react-native-web](https://github.com/necolas/react-native-web) to display React Native components on the web.
+As with any other Bit environment, the React environment is easily extendable so that you can customize it to your own needs and share it with your team to speed up development and standardize it across various decoupled workspaces.
+The React environment uses various services, provided by other Bit extensions, to handle the life events of React components, managed in a Bit workspace.
 
 #### Features
 
-- **Blazing fast environment setup**: Setting up the React Native environment requires nothing more than configuring a workspace to use a Bit extension.
+- **Blazing fast environment setup**: Setting up the React environment requires nothing more than configuring a workspace to use this Bit extension.
   Get started in seconds and focus on the thing that matters most - delivering great features.
 
-- **Less to learn**: Using the React Native environment means you don't have to get into all the details of your build tooling.
+- **Less to learn**: Using the React environment means you don't have to get into all the details of your build tooling.
   That's a especially important when onboarding a new developer to your team.
 
-- **Customizable and extensible**: React Native can be extended to add or override configurations.
-  Quickly add your own modifications to get a React Native environment "flavour" that best suits your needs.
-  Export your React Native environment extension to a remote scope to have it available to all your team.
+- **Customizable and extensible**: React can be extended to add or override configurations.
+  Quickly add your own modifications to get a React environment "flavour" that best suits your needs.
+  Export your React environment extension to a remote scope to have it available to all your team.
 
 - **Standardized development**: Use the React environment to maintain consistency in development across multiple decoupled Bit workspaces.
 
@@ -39,7 +37,7 @@ Apply the React environment on all components in the workspace, using the wildca
 {
   "teambit.workspace/variants": {
     "*": {
-      "teambit.react/react-native": {}
+      "teambit.react/react": {}
     }
   }
 }
@@ -52,8 +50,8 @@ Apply the React environment on a limited set of components. For example, all com
 ```json
 {
     "teambit.workspace/variants": {
-    "*": {
-        "teambit.react/react-native": {}
+      "components/react-ui": {
+          "teambit.react/react": {}
         }
     }
 }
@@ -65,35 +63,21 @@ _Learn more about configuring a selected set of components, [here](https://bit.d
 
 ### Set the React environment to compile MDX components
 
-The React environment has built-in support for MDX.
+> Coming Soon.
 
-To set React to compile MDX components (so that they can be shared as a distributable code), set the `mdx` property to `true`.
+> The MDX configuration does not affect the compilation of MDX documentation files (`*.doc.mdx`), which will happen regardless.
 
-```json
-{
-  "teambit.workspace/variants": {
-    "*": {
-      "teambit.react/react-native": {
-        "mdx": true
-      }
-    }
-  }
-}
-```
+## Extending React
 
-> The above configuration does not affect the compilation of MDX documentation files (`*.doc.mdx`).
+Use the React environment extension API to create your own customized environment extension. The extension component can then be exported to a remote scope to make it available for reuse by other workspaces. Doing so is not only a way to save time (otherwise lost on setting up a dev environment) but also a way to maintain a consistent development environment for independent React components authored in various decoupled workspaces.
 
-## Extending React Native
-
-Use the React Native environment extension API to create your own customized environment extension. The extension component can then be exported to a remote scope to make it available for reuse by other workspaces. Doing so is not only a way to save time (otherwise lost on setting up a dev environment) but also a way to maintain a consistent development environment for independent React Native components authored in various decoupled workspaces.
-
-This page lists React Native's Environment Transformers. These are the 'override' methods that allow to add or override React Native's default configurations.
+This page lists React's Environment Transformers. These are the 'override' methods that allow to add or override React's default configurations.
 
 > #### Learn how to create a new environment extension, [here](https://bit.dev/teambit/envs/envs).
 
 ### Environment transformers
 
-React Native's environment transformers enable merging new configurations for different [Bit aspects used by the React Native environment](/docs/environments/environment-services).
+React's environment transformers enable merging new configurations for different [Bit extensions used by the React environment](/docs/environments/environment-services).
 
 The process of 'merging' or 'overriding' adds new properties to the existing configurations. In case of a conflict between two properties, the extension's configurations will override the extended environment's defaults.
 
@@ -112,13 +96,13 @@ For example:
 
 const tsconfig = require('./typescript/tsconfig.json');
 
-export class ReactNativeExtension {
+export class ReactExtension {
 
 // ...
 
-  static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
-    const newReactNative = reactNative.compose([
-      reactNative.overrideTsConfig(tsconfig)
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+    const newReactEnv = react.compose([
+      react.overrideTsConfig(tsconfig)
     ]);
 
 
@@ -142,13 +126,13 @@ For example:
 
 const webpackConfig = require('./webpack/webpack.config');
 
-export class ReactNativeExtension {
+export class ReactExtension {
 
 // ...
 
-  static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
-    const newReactNative = reactNative.compose([
-      React Native.overridePreviewConfig(webpackConfig)
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+    const newReactEnv = react.compose([
+      react.overridePreviewConfig(webpackConfig)
     ]);
 
 
@@ -172,13 +156,13 @@ For example:
 
 const webpackConfig = require('./webpack/webpack.config');
 
-export class ReactNativeExtension {
+export class ReactExtension {
 
 // ...
 
-  static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
-    const newReactNative = reactNative.compose([
-      reactNative.overrideDevServerConfig(webpackConfig)
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+    const newReactEnv = react.compose([
+      react.overrideDevServerConfig(webpackConfig)
     ]);
 
 
@@ -200,13 +184,13 @@ For example:
 ```ts
 // ...
 
-export class ReactNativeExtension {
+export class ReactExtension {
 
 // ...
 
-  static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
-    const newReactNative = reactNative.compose([
-      reactNative.overrideJestConfig(require.resolve('./jest/jest.config'))
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+    const newReactEnv = react.compose([
+      react.overrideJestConfig(require.resolve('./jest/jest.config'))
     ]);
 
 
@@ -232,30 +216,30 @@ For example:
 // ...
 
 const newDependencies = {
-    dependencies: {
-      react: '-',
-      'react-native': '-',
-    },
-    devDependencies: {
-      '@types/react-native': '^0.63.2',
-      '@types/jest': '~26.0.9',
-      '@types/mocha': '-',
-    },
-    peerDependencies: {
-      react: '^16.13.1',
-      'react-native': '^0.63.3',
-    },
-  };
+      dependencies: {
+        react: '-',
+      },
+      devDependencies: {
+        '@types/react': '16.9.43',
+        '@types/jest': '~26.0.9',
+        '@types/mocha': '-',
+        '@types/react-router-dom': '^5.1.5',
+      },
+      peerDependencies: {
+        react: '^16.13.1',
+        'react-dom': '^16.13.1',
+      },
+    };
 }
 
-export class CustomReactNative {
+export class CustomReact {
 
   // ...
 
-  static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
 
-    const newReactNative = React Native.compose([
-      reactNative.overrideDependencies(newDependencies)
+    const newReactEnv = react.compose([
+      react.overrideDependencies(newDependencies)
     ]);
 
     // ...
@@ -264,7 +248,7 @@ export class CustomReactNative {
 }
 ```
 
-> The above example shows the 'react-native' library being removed as a (runtime) dependency and added as a peer dependency.
+> The above example shows the 'react' library being removed as a (runtime) dependency and added as a peer dependency.
 
 ##### Handling multiple peer dependencies in a workspace with multiple environments
 
@@ -308,13 +292,68 @@ const newPackageProps = {
   types: '{main}.ts',
 };
 
-export class CustomReactNative {
+export class CustomReact {
   // ...
 
-  static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
-    const newReactNative = reactNative.compose([reactNative.overridePackageJsonProps(newPackageProps)]);
+  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+    const newReactEnv = react.compose([react.overridePackageJsonProps(newPackageProps)]);
 
     // ...
   }
 }
 ```
+
+## Add composition providers
+
+The React environment "wraps" every composition with an array of providers.
+These providers can be used to render compositions in a common context (e.g, a specific canvas size), a common theme, or to provide access to mock data.
+
+A Provider is any React component that accepts compositions as children. This component is registered using the `registerProvider`.
+
+> Providers are part of the component compositions and documentation bundle that is served by the environment's server and rendered by the browser.
+> As such, they run in the environment's **Preview** runtime and not the **Main** runtime. To learn more about runtime environments, [see here](https://bit.dev/teambit/envs/envs)
+
+For example:
+
+A provider that centers compositions in their rendering page, will look like so:
+
+```tsx
+import React, { ReactNode, ReactElement } from 'react';
+
+const style = {
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '100vh',
+};
+
+export const Center = ({ children }: { children: ReactNode }): ReactElement => {
+  return <div style={style}>{children}</div>;
+};
+```
+
+This provider will be registered using the `registerProvider` method in the React extension `*.preview.runtime.tsx` file:
+
+```ts
+// react-with-providers.preview.runtime.tsx
+
+import { PreviewRuntime } from '@teambit/preview';
+import { ReactAspect, ReactPreview } from '@teambit/react';
+import { ReactWithProvidersAspect } from './react-with-providers.aspect';
+import { Center } from './composition-providers/center';
+
+export class ReactWithProvidersPreview {
+  static runtime = PreviewRuntime;
+  static dependencies = [ReactAspect];
+
+  static async provider([react]: [ReactPreview]) {
+    react.registerProvider([Center]);
+
+    return ReactWithProvidersPreview;
+  }
+}
+
+ReactWithProvidersAspect.addRuntime(ReactWithProvidersPreview);
+```
+
+**See the full demo project [here](https://github.com/teambit/react-env-with-providers)\***

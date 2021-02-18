@@ -419,7 +419,6 @@ export default class Version extends BitObject {
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return Buffer.from(str);
   }
-
   /**
    * used by the super class BitObject
    */

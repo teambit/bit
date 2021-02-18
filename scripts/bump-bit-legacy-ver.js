@@ -91,9 +91,11 @@ function replaceVersionOccurrencesInCode() {
   const isMac = platform === 'darwin';
   const sedBase = isMac ? `sed -i ''` : `sed -i`;
   const sed = `${sedBase} "s/${currentBitLegacyVersionInCode}/${nextBitLegacyVersion}/g"`;
-  execSync(`${sed} package.json`, { cwd });
-  execSync(`${sed} workspace.jsonc`, { cwd });
-  execSync(`find scopes -name component.json -exec ${sed} {} \\;`, { cwd });
+  const sedPackageJson = `s/\\"version\\": \\"${currentBitLegacyVersionInCode}\\",/\\"version\\": \\"${nextBitLegacyVersion}\\",/g`;
+  const sedWorkspaceJson = `s/legacy\\": \\"${currentBitLegacyVersionInCode}\\"/legacy\\": \\"${nextBitLegacyVersion}\\"/g`;
+  execSync(`${sedBase} "${sedPackageJson}" package.json`, { cwd });
+  execSync(`${sedBase} "${sedWorkspaceJson}" workspace.jsonc`, { cwd });
+  execSync(`find scopes -name component.json -exec ${sedBase} "${sedWorkspaceJson}" {} \\;`, { cwd });
 
   console.log(`completed changing all occurrences of "${currentBitLegacyVersionInCode}" to "${nextBitLegacyVersion}"`);
 }
