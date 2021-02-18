@@ -64,7 +64,10 @@ export class BundlerMain {
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
     const envId = this.envs.getEnvId(component);
-    const server = this._componentServers.find((componentServer) => componentServer.context.id === envId);
+    const server = this._componentServers.find(
+      (componentServer) =>
+        componentServer.context.relatedContexts.includes(envId) || componentServer.context.id === envId
+    );
 
     return server;
   }

@@ -56,6 +56,7 @@ import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
+import { E2eWorkspaceAspect } from '@teambit/e2e.workspace';
 import { ExportAspect } from '@teambit/export';
 import { BitAspect } from './bit.aspect';
 
@@ -118,6 +119,7 @@ export const manifestsMap = {
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
+  [E2eWorkspaceAspect.id]: E2eWorkspaceAspect,
 };
 
 export function isCoreAspect(id: string) {
