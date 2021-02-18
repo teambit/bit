@@ -1,5 +1,5 @@
 import { Configuration } from 'webpack';
-import { merge } from 'lodash';
+import { mergeDeepLeft } from 'ramda';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -178,7 +178,10 @@ export class ReactMain {
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
+      getDependencies: async () => {
+        const reactDeps = await this.reactEnv.getDependencies();
+        return mergeDeepLeft(dependencyPolicy, reactDeps);
+      },
     });
   }
 
