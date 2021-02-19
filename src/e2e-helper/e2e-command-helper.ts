@@ -172,6 +172,9 @@ export default class CommandHelper {
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
   }
+  tagScopeWithoutBuild(version = '', options = '') {
+    return this.runCmd(`bit tag -s ${version} ${options}`, undefined, undefined, BUILD_ON_CI);
+  }
   softTag(options = '') {
     return this.runCmd(`bit tag --soft ${options}`);
   }
