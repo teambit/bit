@@ -589,6 +589,8 @@ jobs:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
+      # temporarily to understand the issue with the "EMFILE, too many open files" error.
+      - ulimit -a
       - run:
           name: export components
           command: cd bit && bit export
