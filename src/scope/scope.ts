@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
+import pMap from 'p-map';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -23,6 +24,7 @@ import {
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
+  CONCURRENT_COMPONENTS_LIMIT,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
@@ -129,7 +131,6 @@ export default class Scope {
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
-  static onPrePersistExport: (clientId: string, scope: string[]) => Promise<void>;
 
   /**
    * import components to the `Scope.
@@ -455,9 +456,9 @@ export default class Scope {
     const components = bitObjectList.getComponents();
     const versions = bitObjectList.getVersions();
     const laneObjects = bitObjectList.getLanes();
-    await mapSeries(components, (component: ModelComponent) =>
-      this.mergeModelComponent(component, versions, remoteName)
-    );
+    await pMap(components, (component: ModelComponent) => this.mergeModelComponent(component, versions, remoteName), {
+      concurrency: CONCURRENT_COMPONENTS_LIMIT,
+    });
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
       laneObjects.map(async (lane) => {

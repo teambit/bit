@@ -36,7 +36,7 @@ describe('export functionality on Harmony', function () {
       expect(() => helper.command.export('--all-versions')).not.to.throw();
     });
   });
-  describe('export to multiple scope with circular between the scopes', () => {
+  describe.skip('export to multiple scope with circular between the scopes', () => {
     let anotherRemote;
     let exportOutput;
     before(() => {
@@ -78,7 +78,7 @@ describe('export functionality on Harmony', function () {
    * this way, we could create tests using the extracted remote-scopes with the pending-objects
    * directories.
    */
-  describe('recover from persist-error during export', () => {
+  describe.skip('recover from persist-error during export', () => {
     let remote1Name: string;
     let remote2Name: string;
     let remote1Path: string;

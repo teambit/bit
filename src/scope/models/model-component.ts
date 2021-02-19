@@ -386,14 +386,15 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versionsIncludeOrphaned).find((versionRef) =>
-      this.versionsIncludeOrphaned[versionRef].isEqual(ref)
-    );
+  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
+    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
+    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
+    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
+    const allTags = this.versionsIncludeOrphaned;
+    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
   }
 
   /**

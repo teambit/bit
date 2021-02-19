@@ -52,7 +52,6 @@ import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
-import { BitDevAspect } from '@teambit/bit-dev';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
@@ -119,7 +118,6 @@ export const manifestsMap = {
   [ComponentTreeAspect.id]: ComponentTreeAspect,
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
-  [BitDevAspect.id]: BitDevAspect,
   [ExportAspect.id]: ExportAspect,
   [E2eWorkspaceAspect.id]: E2eWorkspaceAspect,
 };
