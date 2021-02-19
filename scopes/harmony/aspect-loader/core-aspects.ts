@@ -22,7 +22,8 @@ export function getAspectDistDir(id: string) {
 }
 
 export function getCoreAspectName(id: string): string {
-  const aspectName = id.split('/')[1];
+  const [, ...name] = id.split('/');
+  const aspectName = name.join('.');
   return aspectName;
 }
 
