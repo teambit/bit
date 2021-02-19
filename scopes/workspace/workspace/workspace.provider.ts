@@ -1,7 +1,7 @@
 import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
-import { CLIMain } from '@teambit/cli';
+import { CLIMain, CommandList } from '@teambit/cli';
 import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
@@ -12,13 +12,13 @@ import { LoggerMain } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
-import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
-import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
-import LegacyComponentLoader from 'bit-bin/dist/consumer/component/component-loader';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { registerDefaultScopeGetter } from '@teambit/legacy/dist/api/consumer';
+import { BitId } from '@teambit/legacy-bit-id';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
@@ -56,21 +56,6 @@ export type OnComponentChangeSlot = SlotRegistry<OnComponentChange>;
 export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
-
-export type WorkspaceCoreConfig = {
-  /**
-   * sets the default location of components.
-   */
-  componentsDefaultDirectory: string;
-
-  /**
-   * default scope for components to be exported to. absolute require paths for components
-   * will be generated accordingly.
-   */
-  defaultScope: string;
-
-  defaultOwner: string;
-};
 
 export default async function provideWorkspace(
   [
@@ -185,20 +170,22 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  cli.register(new InstallCmd(workspace, logger));
-  cli.register(new EjectConfCmd(workspace));
-
   const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
   const capsuleCreateCmd = new CapsuleCreateCmd(workspace, isolator);
-  cli.register(capsuleListCmd);
-  cli.register(capsuleCreateCmd);
+  const commands: CommandList = [
+    new InstallCmd(workspace, logger),
+    new EjectConfCmd(workspace),
+    capsuleListCmd,
+    capsuleCreateCmd,
+  ];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(pubsub, logger, watcher));
+    commands.push(new WatchCommand(pubsub, logger, watcher));
     cli.unregister('link');
-    cli.register(new LinkCommand(workspace, logger));
+    commands.push(new LinkCommand(workspace, logger));
   }
+  cli.register(...commands);
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {

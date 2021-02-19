@@ -8,7 +8,7 @@ import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-dis
 import GeneralError from '../../../error/general-error';
 import { RemoteLaneId } from '../../../lane-id/lane-id';
 
-export default async function fetch(ids: string[], lanes: boolean, components: boolean) {
+export default async function fetch(ids: string[], lanes: boolean, components: boolean, fromOriginalScope: boolean) {
   if (!lanes && !components) {
     throw new GeneralError(
       `please provide the type of objects you would like to pull, the options are --components and --lanes`
@@ -29,6 +29,7 @@ export default async function fetch(ids: string[], lanes: boolean, components: b
     writeDists: false,
     override: false,
     installNpmPackages: false,
+    fromOriginalScope,
   };
   const importComponents = new ImportComponents(consumer, importOptions);
   if (lanes) {

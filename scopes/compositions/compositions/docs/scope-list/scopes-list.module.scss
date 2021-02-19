@@ -1,0 +1,8 @@
+.scopeList {
+  display: flex;
+  flex-direction: column;
+  max-width: 500px;
+  > div {
+    margin-top: 15px;
+  }
+}

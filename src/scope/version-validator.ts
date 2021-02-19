@@ -69,14 +69,6 @@ export default function validateVersionInstance(version: Version): void {
   };
 
   const _validatePackageDependencyValue = (packageValue, packageName) => {
-    if (typeof packageValue !== 'string') {
-      validateType(message, packageValue, `value of "${packageName}"`, 'object');
-      validateType(message, packageValue.version, `value.version of "${packageName}"`, 'string');
-      if (packageValue.resolveFromEnv !== undefined) {
-        validateType(message, packageValue.resolveFromEnv, `value.resolveFromEnv of "${packageName}"`, 'boolean');
-      }
-      return;
-    }
     // don't use semver.valid and semver.validRange to validate the package version because it
     // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
     validateType(message, packageValue, `version of "${packageName}"`, 'string');

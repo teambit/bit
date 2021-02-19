@@ -7,22 +7,25 @@ import { EmptyScope } from '@teambit/ui.empty-scope';
 import { ComponentModel } from '@teambit/component';
 import { ScopeContext } from '../scope-context';
 import styles from './scope-overview.module.scss';
-import { ScopeBadgeSlot } from '../../scope.ui.runtime';
+import type { ScopeBadgeSlot, OverviewLineSlot } from '../../scope.ui.runtime';
 
 export type ScopeOverviewProps = {
   badgeSlot: ScopeBadgeSlot;
+  overviewSlot: OverviewLineSlot;
 };
 
-export function ScopeOverview({ badgeSlot }: ScopeOverviewProps) {
+export function ScopeOverview({ badgeSlot, overviewSlot }: ScopeOverviewProps) {
   const scope = useContext(ScopeContext);
   const { components } = scope;
   if (!components || components.length === 0) return <EmptyScope name={scope.name} />;
+
   return (
     <div className={styles.container}>
       <ScopeDetails
         scopeName={scope.name}
         icon={scope.icon}
-        badgeSlot={badgeSlot} // visibility should be extended by a slot registered by bit.dev
+        badgeSlot={badgeSlot}
+        overviewSlot={overviewSlot}
         description={scope.description}
         componentCount={scope.components.length}
       />
@@ -50,6 +53,7 @@ export function ScopeComponentCard({ component }: ScopeComponentCardProps) {
       id={component.id.fullName}
       envIcon={component.environment?.icon}
       description={component.description}
+      version={component.version}
       preview={<PreviewPlaceholder component={component} shouldShowPreview={shouldShowPreview} />}
     />
   );

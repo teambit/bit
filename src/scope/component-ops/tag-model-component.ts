@@ -84,8 +84,7 @@ async function setFutureVersions(
         if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
       }
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
-      // @ts-ignore usedVersion is needed only for this, that's why it's not declared on the instance
-      componentToTag.usedVersion = componentToTag.version;
+      componentToTag.previouslyUsedVersion = componentToTag.version;
       componentToTag.version = version;
     })
   );
@@ -280,6 +279,7 @@ export default async function tagModelComponent({
   } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    emptyBuilderData(allComponentsToTag);
     addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
     validateDirManipulation(allComponentsToTag);
@@ -314,6 +314,13 @@ async function addComponentsToScope(consumer: Consumer, components: Component[],
       lane,
       resolveUnmerged,
     });
+  });
+}
+
+function emptyBuilderData(components: Component[]) {
+  components.forEach((component) => {
+    const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
+    if (existingBuilder) existingBuilder.data = {};
   });
 }
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
-import { CheckBox } from '@teambit/ui.input.check-box';
+import { CheckboxLabel } from '@teambit/evangelist.input.checkbox.label';
 
 type GraphFilters = {
   isFiltered: boolean;
@@ -13,10 +13,14 @@ export function GraphFilters({ onChangeFilter, isFiltered, disable, ...rest }: G
     <Card {...rest}>
       <div>
         {/* show non-runtime === !isFiltered */}
-        <CheckBox checked={!isFiltered} disabled={disable} onChange={(e) => onChangeFilter(!e.target.checked)}>
+        <CheckboxLabel
+          checked={!isFiltered}
+          disabled={disable}
+          onInputChanged={(e) => onChangeFilter(!e.target.checked)}
+        >
           {' '}
           show non-runtime
-        </CheckBox>
+        </CheckboxLabel>
       </div>
     </Card>
   );

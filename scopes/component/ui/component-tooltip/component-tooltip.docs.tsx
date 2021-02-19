@@ -1,7 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/documenter.ui.section';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import { StatusTooltip } from './component-tooltip';
@@ -21,12 +20,14 @@ Overview.abstract = 'Tooltip status';
 
 Overview.labels = ['react', 'typescript', 'tooltip'];
 
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center', margin: 8 };
+
 Overview.examples = [
   {
     scope: {
       StatusProps,
-      ThemeCompositions,
       StatusTooltip,
+      style,
     },
     title: 'New status',
     description: 'Using the Component Tooltip with new status',
@@ -41,12 +42,11 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <ThemeCompositions style={{ minHeight: 150 }}>
-          <div data-tip="" data-for="1">
-            N
-            <StatusTooltip status={compStatus} name="1" />
-          </div>
-        </ThemeCompositions>
+        <div style={style}>
+            <StatusTooltip status={compStatus}>
+              N
+            </StatusTooltip>
+        </div>
       );
     }
       `,
@@ -54,8 +54,8 @@ Overview.examples = [
   {
     scope: {
       StatusProps,
-      ThemeCompositions,
       StatusTooltip,
+      style,
     },
     title: 'Staged status',
     description: 'Using the Component Tooltip with staged status',
@@ -70,12 +70,11 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <ThemeCompositions style={{ minHeight: 150 }}>
-          <div data-tip="" data-for="2">
+        <div style={style}>
+          <StatusTooltip status={compStatus} >
             S
-            <StatusTooltip status={compStatus} name="2" />
-          </div>
-        </ThemeCompositions>
+          </StatusTooltip>
+        </div>
       );
     }
       `,
@@ -83,8 +82,8 @@ Overview.examples = [
   {
     scope: {
       StatusProps,
-      ThemeCompositions,
       StatusTooltip,
+      style,
     },
     title: 'Modified files and dependencies status',
     description: 'Using the Component Tooltip with modified status',
@@ -99,12 +98,11 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <ThemeCompositions style={{ minHeight: 150 }}>
-          <div data-tip="" data-for="3">
+        <div style={style}>
+          <StatusTooltip status={compStatus} >
             M
-            <StatusTooltip status={compStatus} name="3" />
-          </div>
-        </ThemeCompositions>
+          </StatusTooltip>
+        </div>
       );
     }
       `,
@@ -112,8 +110,8 @@ Overview.examples = [
   {
     scope: {
       StatusProps,
-      ThemeCompositions,
       StatusTooltip,
+      style,
     },
     title: 'Modified files status and issues',
     description: 'Using the Component Tooltip with modified files and issues',
@@ -128,12 +126,11 @@ Overview.examples = [
       const nested = false;
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
-        <ThemeCompositions style={{ minHeight: 150 }}>
-          <div data-tip="" data-for="4">
+        <div style={style}>
+          <StatusTooltip status={compStatus} issuesCount={2} >
             M
-            <StatusTooltip status={compStatus} name="4" issuesCount={2} />
-          </div>
-        </ThemeCompositions>
+          </StatusTooltip>
+        </div>
       );
     }
       `,

@@ -1,6 +1,6 @@
 import { Text } from 'ink';
 import React from 'react';
-import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
+import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
 
 type RewireRowProps = {
   legacyCodemodResults?: CodemodResult[];

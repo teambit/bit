@@ -1,3 +1,5 @@
+import mapSeries from 'p-map-series';
+import { flatten } from 'lodash';
 import { BitIds } from '../../../bit-id';
 import { POST_SEND_OBJECTS, PRE_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
@@ -6,11 +8,16 @@ import logger from '../../../logger/logger';
 import { loadScope, Scope } from '../../../scope';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
+import { CollectObjectsOpts } from '../../../scope/component-version';
 import { Ref } from '../../../scope/objects';
 import { ObjectList, ObjectItem } from '../../../scope/objects/object-list';
 
-export type FETCH_TYPE = 'component' | 'lane' | 'object';
-export type FETCH_OPTIONS = { type: FETCH_TYPE; withoutDependencies: boolean; includeArtifacts: boolean };
+export type FETCH_TYPE = 'component' | 'lane' | 'object' | 'component-delta';
+export type FETCH_OPTIONS = {
+  type: FETCH_TYPE;
+  withoutDependencies: boolean;
+  includeArtifacts: boolean;
+};
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -20,7 +27,7 @@ export default async function fetch(
   fetchOptions: FETCH_OPTIONS,
   headers?: Record<string, any> | null | undefined
 ): Promise<ObjectList> {
-  logger.debug(`scope.fetch started, path ${path}`);
+  logger.debug(`scope.fetch started, path ${path}, options: ${fetchOptions}`);
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
   const args = { path, ids, ...fetchOptions };
   // This might be undefined in case of fork process like during bit test command
@@ -28,7 +35,9 @@ export default async function fetch(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
-  const scope: Scope = await loadScope(path);
+  // DO NOT use the cached scope. otherwise, multiple http "fetch" requests adding and persisting
+  // to the repository at the same time, which opens a can of worms.
+  const scope: Scope = await loadScope(path, false);
   const objectList = new ObjectList();
   switch (fetchOptions.type) {
     case 'component': {
@@ -36,8 +45,8 @@ export default async function fetch(
       const { withoutDependencies, includeArtifacts } = fetchOptions;
       const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
       const importedComponents = withoutDependencies
-        ? await scopeComponentsImporter.importManyWithoutDependencies(bitIds, false)
-        : await scopeComponentsImporter.importMany(bitIds);
+        ? await scopeComponentsImporter.fetchWithoutDeps(bitIds)
+        : await scopeComponentsImporter.fetchWithDeps(bitIds);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const clientVersion = headers ? headers.version : null;
       const collectParents = !withoutDependencies;
@@ -48,6 +57,24 @@ export default async function fetch(
         includeArtifacts
       );
       objectList.addIfNotExist(componentObjects);
+      break;
+    }
+    case 'component-delta': {
+      const bitIdsWithHashToStop: BitIds = BitIds.deserialize(ids);
+      const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+      const bitIdsLatest = bitIdsWithHashToStop.toVersionLatest();
+      const importedComponents = await scopeComponentsImporter.fetchWithoutDeps(bitIdsLatest);
+      const options: CollectObjectsOpts = {
+        collectParents: true,
+        collectArtifacts: fetchOptions.includeArtifacts,
+      };
+      const clientVersion = headers ? headers.version : null;
+      const allObjects = await mapSeries(importedComponents, (component) => {
+        const hashToStop = bitIdsWithHashToStop.searchWithoutVersion(component.id)?.version;
+        options.collectParentsUntil = hashToStop ? Ref.from(hashToStop) : null;
+        return component.collectObjects(scope.objects, clientVersion, options);
+      });
+      objectList.addIfNotExist(flatten(allObjects));
       break;
     }
     case 'lane': {

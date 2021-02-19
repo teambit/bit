@@ -1,4 +1,4 @@
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 
 export type Serializable = {
@@ -7,6 +7,10 @@ export type Serializable = {
 
 export type SerializableMap = {
   [key: string]: Serializable;
+};
+
+export type AspectData = {
+  [key: string]: any;
 };
 
 export class AspectEntry {

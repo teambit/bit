@@ -1,4 +1,4 @@
-import { Drawer } from '@teambit/sidebar';
+import type { DrawerType } from '@teambit/ui.tree.drawer';
 import { FullLoader } from '@teambit/ui.full-loader';
 import {
   ComponentTree,
@@ -15,7 +15,7 @@ import React, { useCallback, useContext } from 'react';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { WorkspaceContext } from './ui/workspace/workspace-context';
 
-export class WorkspaceComponentsDrawer implements Drawer {
+export class WorkspaceComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
 
   name = 'COMPONENTS';

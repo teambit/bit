@@ -15,15 +15,16 @@ import { WebpackMain } from '@teambit/webpack';
 import { MultiCompilerMain } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
-import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
-import webpackMerge from 'webpack-merge';
+import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import webpackConfigFactory from './webpack/webpack.config';
 import previewConfigFactory from './webpack/webpack.preview.config';
 import eslintConfig from './eslint/eslintrc';
+import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
 const jestM = require('jest');
@@ -97,11 +98,12 @@ export class ReactEnv implements Environment {
 
   createTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
     const tsconfig = this.getTsConfig(targetConfig);
+    const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
     return this.tsAspect.createCompiler(
       {
         tsconfig,
         // TODO: @david please remove this line and refactor to be something that makes sense.
-        types: [resolve(pathNormalizeToLinux(__dirname).replace('/dist/', '/src/'), './typescript/style.d.ts')],
+        types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
         ...compilerOptions,
       },
       // @ts-ignore
@@ -150,15 +152,14 @@ export class ReactEnv implements Environment {
    * get the default react webpack config.
    */
   getWebpackConfig(context: DevServerContext): Configuration {
-    // @ts-ignore due to issue with component ID types. TODO: make sure all types are aligned to one.
     const fileMapPath = this.writeFileMap(context.components);
 
-    // TODO: add a react method for getting the dev server config in the aspect and move this away from here.
-    const packagePaths = context.components
-      .map((comp) => this.pkg.getPackageName(comp))
-      .map((packageName) => join(this.workspace.path, 'node_modules', packageName));
+    return webpackConfigFactory(context.id, fileMapPath);
+  }
 
-    return webpackConfigFactory(this.workspace.path, packagePaths, context.id, fileMapPath);
+  getDevEnvId(id?: string) {
+    if (typeof id !== 'string') return ReactAspect.id;
+    return id || ReactAspect.id;
   }
 
   /**
@@ -174,18 +175,49 @@ export class ReactEnv implements Environment {
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
     const defaultConfig = this.getWebpackConfig(context);
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
-    const withDocs = Object.assign(context, {
-      entry: context.entry.concat([require.resolve('./docs')]),
-    });
 
-    return this.webpack.createDevServer(withDocs, config);
+    return this.webpack.createDevServer(context, config);
   }
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
     const defaultConfig = previewConfigFactory(path);
+
+    if (targetConfig?.entry) {
+      const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
+
+      const targetsWithGlobalEntries = context.targets.map((target) => {
+        // Putting the additionalEntries first to support globals defined there (like regenerator-runtime)
+        target.entries = additionalEntries.concat(target.entries);
+        return target;
+      });
+      context.targets = targetsWithGlobalEntries;
+    }
+
+    delete targetConfig?.entry;
+
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
     return this.webpack.createBundler(context, config as any);
+  }
+
+  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
+    if (!config || !config.entry) {
+      return [];
+    }
+    if (typeof config.entry === 'string') {
+      return [config.entry];
+    }
+    if (Array.isArray(config.entry)) {
+      let entries: string[] = [];
+      entries = config.entry.reduce((acc, entry) => {
+        if (typeof entry === 'string') {
+          acc.push(entry);
+        }
+        return acc;
+      }, entries);
+      return entries;
+    }
+    return [];
   }
 
   /**

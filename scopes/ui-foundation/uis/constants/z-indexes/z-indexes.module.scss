@@ -1,0 +1,9 @@
+// 5 < z < 20 - internal for components (if cannot be avoided)
+
+// 20 < z < 100 - internal for pages / sections
+
+// 100 < z < 1000 - navigation / hud
+$nav-z-index: 100;
+
+// 5000 < z < 6000 - modals and overlays
+$modal-z-index: 5000;

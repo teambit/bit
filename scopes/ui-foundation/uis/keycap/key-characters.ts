@@ -4,7 +4,7 @@ const macKeySymbols = {
   // modifiers
   shift: '⇧',
   ctrl: '⌃',
-  alt: '⎇',
+  alt: '⌥',
   command: '⌘',
   meta: '⌘',
   mod: '⌘',

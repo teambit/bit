@@ -8,12 +8,12 @@ import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-json-transformer';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
@@ -149,9 +149,7 @@ export class PkgMain {
 
     PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
     // TODO: consider passing the pkg instead of packer
-    cli.register(new PackCmd(packer));
-    cli.register(new PublishCmd(publisher));
-
+    cli.register(new PackCmd(packer), new PublishCmd(publisher));
     return pkg;
   }
 
@@ -228,7 +226,7 @@ export class PkgMain {
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps = {};
-    const env = this.envs.getEnv(component)?.env;
+    const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);

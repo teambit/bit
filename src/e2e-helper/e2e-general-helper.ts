@@ -20,7 +20,6 @@ export default class GeneralHelper {
     this.npm = npmHelper;
     this.command = commandHelper;
   }
-
   indexJsonPath() {
     return path.join(this.scopes.localPath, '.bit/index.json');
   }
@@ -36,6 +35,13 @@ export default class GeneralHelper {
   }
   getRemoteRefPath(lane = DEFAULT_LANE, remote = this.scopes.remote) {
     return path.join(this.scopes.localPath, BIT_HIDDEN_DIR, REMOTE_REFS_DIR, remote, lane);
+  }
+  getHashPathOfComponent(compId: string, cwd = this.scopes.localPath): string {
+    const scope = this.command.catScope(true, cwd);
+    const comp3 = scope.find((item) => item.name === compId);
+    if (!comp3) throw new Error(`getHashPathOfComponent unable to find ${compId} in the scope`);
+    const hash = comp3.hash;
+    return path.join(hash.slice(0, 2), hash.slice(2));
   }
   installAndGetTypeScriptCompilerDir(): string {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -98,5 +104,9 @@ export default class GeneralHelper {
 
   generateRandomTmpDirName() {
     return path.join(this.scopes.e2eDir, generateRandomStr());
+  }
+
+  getExtension(component, extName: string) {
+    return component.extensions.find((e) => e.name === extName);
   }
 }

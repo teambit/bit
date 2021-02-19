@@ -5,8 +5,6 @@ description: 'Text highlighter.'
 
 import { HighlightedTextSpan } from './highlighted-text-span';
 
-### Overview
-
 An inline text highlighter.  
 Example:
 

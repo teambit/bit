@@ -1,9 +1,54 @@
 {
-  "name": "bit-bin",
-  "version": "14.8.9-dev.256",
+  "name": "@teambit/legacy",
+  "version": "1.0.4",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
+  "private": false,
+  "files": [
+    "/bin",
+    "/legacy-capsule",
+    "/dist"
+  ],
+  "engines": {
+    "node": ">=12.15.0"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{ts,js,tsx,css,scss}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "pkg": {
+    "assets": [
+      "dist/analytics/analytics-sender.js",
+      "dist/specs-runner/worker.js"
+    ]
+  },
+  "bin": {
+    "bit": "bin/bit.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teambit/bit"
+  },
+  "keywords": [
+    "bit",
+    "components",
+    "collaboration",
+    "web",
+    "react",
+    "react-components",
+    "angular",
+    "angular-components",
+    "vue",
+    "vue-components"
+  ],
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "ts-coverage": "type-coverage",
@@ -37,13 +82,14 @@
     "build": "npm run build:src",
     "build:types": "./scripts/build-types.bash",
     "install-harmony": "cd build-harmony && yarn",
-    "link-bit-bin": "ln -sf `pwd` node_modules/bit-bin",
+    "link-bit-legacy": "rm -rf node_modules/@teambit/legacy && ln -sf `pwd` node_modules/@teambit/legacy",
     "import-harmony": "build-harmony/node_modules/.bin/bbit import",
     "status-harmony": "build-harmony/node_modules/.bin/bbit status",
-    "build-harmony": "build-harmony/node_modules/.bin/bbit install && rm -rf node_modules/bit-bin && ln -s `pwd` node_modules/bit-bin && build-harmony/node_modules/.bin/bbit compile",
+    "build-harmony": "build-harmony/node_modules/.bin/bbit install && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
+    "build-harmony-skip-import": "build-harmony/node_modules/.bin/bbit install --skip-import && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
     "link-harmony": "build-harmony/node_modules/.bin/bbit link",
     "full-setup": "npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
-    "full-setup:bbit": "rm -rf node_modules/bit-bin && bbit install && ln -sf `pwd` node_modules/bit-bin && bbit compile && npm run build && npm run build:types",
+    "full-setup:bbit": "rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
     "doc-gen": "node ./scripts/doc-generator.js",
@@ -55,10 +101,10 @@
     "watch": "babel --watch src -d dist --verbose --source-maps --extensions \".ts,.tsx,.js\" --copy-files",
     "build-debug": "babel src -d dist --source-maps --extensions \".ts\"",
     "prepublishOnly": "npm run clean && npm run build && npm run build:types",
-    "pre-release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos --prerelease",
-    "release": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos",
-    "release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos -y",
-    "pre-release:circle": "gh-release -a releases/bit-bin-linux,releases/bit-bin-win.exe,releases/bit-bin-macos -y --prerelease",
+    "pre-release": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos --prerelease",
+    "release": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos",
+    "release:circle": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos -y",
+    "pre-release:circle": "gh-release -a releases/bit-legacy-linux,releases/bit-legacy-win.exe,releases/bit-legacy-macos -y --prerelease",
     "pre-release:inc-pack": "npm run pkg:all && npm run pre-release",
     "release:inc-pack": "npm run pkg:all && npm run release",
     "brew-bump:dry-run": "BIT_VERSION=$(cat ./package.json | jq .version -r) && brew bump-formula-pr bit --url='https://registry.npmjs.org/bit-bin/-/bit-bin-${BIT_VERSION}.tgz' --message='version bump' --dry-run",
@@ -70,36 +116,10 @@
     "build:pjson": "cp package.json dist/",
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
   },
-  "pkg": {
-    "assets": [
-      "dist/analytics/analytics-sender.js",
-      "dist/specs-runner/worker.js"
-    ]
-  },
-  "bin": {
-    "bit": "bin/bit.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/teambit/bit"
-  },
-  "keywords": [
-    "bit",
-    "components",
-    "collaboration",
-    "web",
-    "react",
-    "react-components",
-    "angular",
-    "angular-components",
-    "vue",
-    "vue-components"
-  ],
   "dependencies": {
     "@babel/core": "^7.9.6",
     "@babel/runtime": "^7.8.4",
     "gitconfig": "^2.0.8",
-    "@typescript-eslint/typescript-estree": "^4.8.2",
     "@vuedoc/parser": "^2.3.0",
     "acorn": "^6.0.0",
     "ajv": "^6.11.0",
@@ -124,14 +144,15 @@
     "doctrine": "^2.0.2",
     "enhanced-resolve": "^4.1.1",
     "execa": "^2.1.0",
-    "find-up": "^2.1.0",
+    "find-up": "^5.0.0",
     "firstline": "^2.0.2",
     "fs-extra": "^9.0.1",
     "glob": "^7.1.6",
     "graphlib": "^2.1.8",
-    "graphql-request": "3.0.0",
+    "graphql-request": "3.4.0",
     "graphviz": "0.0.9",
     "group-array": "^1.0.0",
+    "https-proxy-agent": "5.0.0",
     "ignore": "^3.3.7",
     "ini-builder": "^1.1.1",
     "ink": "^3.0.5",
@@ -150,7 +171,6 @@
     "lodash.set": "^4.3.2",
     "lodash.toarray": "^4.4.0",
     "lodash.unionby": "^4.8.0",
-    "lodash.uniqby": "^4.7.0",
     "make-fetch-happen": "^4.0.1",
     "memfs": "2.15.5",
     "minimatch": "^3.0.4",
@@ -168,12 +188,12 @@
     "open": "^7.2.0",
     "ora": "^4.0.3",
     "p-event": "^4.1.0",
+    "p-map": "^4.0.0",
     "p-map-series": "^2.1.0",
     "p-queue": "^6.2.1",
     "p-series": "^2.1.0",
     "package-json-validator": "^0.6.3",
     "pad-right": "^0.2.2",
-    "parents": "^1.0.1",
     "parse-gitignore": "^1.0.1",
     "pino": "^6.7.0",
     "pino-pretty": "^4.3.0",
@@ -183,6 +203,7 @@
     "ramda-adjunct": "^2.25.0",
     "react-docgen": "^5.3.0",
     "react-docgen-typescript": "^1.18.0",
+    "read-pkg-up": "^7.0.1",
     "readable-stream": "^3.6.0",
     "regenerator-runtime": "^0.11.0",
     "resolve": "^1.5.0",
@@ -231,7 +252,7 @@
     "@types/chai-fs": "^2.0.2",
     "@types/chai-string": "^1.4.2",
     "@types/fs-extra": "^9.0.5",
-    "@types/graphlib": "^2.1.5",
+    "@types/graphlib": "^2.1.7",
     "@types/mocha": "^5.2.7",
     "@types/node": "^12.12.27",
     "@types/node-fetch": "2.5.7",
@@ -240,8 +261,9 @@
     "@types/sass": "^1.16.0",
     "@types/semver": "^7.3.1",
     "@types/uuid": "^3.4.0",
-    "@typescript-eslint/eslint-plugin": "^4.8.2",
-    "@typescript-eslint/parser": "^4.8.2",
+    "@typescript-eslint/eslint-plugin": "4.13.0",
+    "@typescript-eslint/parser": "4.13.0",
+    "@typescript-eslint/typescript-estree": "4.13.0",
     "babel-eslint": "^9.0.0",
     "babel-plugin-transform-typescript-metadata": "^0.2.2",
     "chai": "^4.1.2",
@@ -274,24 +296,5 @@
     "type-coverage": "^2.4.2",
     "typescript": "4.1.2",
     "verdaccio": "^4.5.1"
-  },
-  "files": [
-    "/bin",
-    "/legacy-capsule",
-    "/dist"
-  ],
-  "engines": {
-    "node": ">=12.15.0"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,js,tsx,css,scss}": [
-      "prettier --write",
-      "git add"
-    ]
   }
 }

@@ -1,17 +1,16 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { Icon } from '@teambit/evangelist.elements.icon';
-import styles from './changelog.module.scss';
+import { MenuWidgetIcon } from '@teambit/ui.menu-widget-icon';
 import { ChangeLogPage } from './ui/change-log-page';
 
 export class ChangelogSection implements Section {
   route = {
     path: '~changelog',
-    children: <ChangeLogPage className={styles.changeLog} />,
+    children: <ChangeLogPage />,
   };
   navigationLink = {
     href: '~changelog',
-    children: <Icon of="changelog" className={styles.icon} />,
+    children: <MenuWidgetIcon icon="changelog" tooltipContent="Change log" />,
   };
   order = 30;
 }

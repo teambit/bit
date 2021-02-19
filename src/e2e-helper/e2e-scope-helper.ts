@@ -80,12 +80,12 @@ export default class ScopeHelper {
 
   /**
    * This will re init a workspace as harmony
-   * link bit-bin in node_modules
+   * link @teambit/legacy in node_modules
    * link the core aspect in node_modules
    */
   reInitLocalWorkspaceHarmonyForNewAspects() {
     this.reInitLocalScopeHarmony();
-    this.linkBitBin();
+    this.linkBitLegacy();
   }
 
   initLocalScope() {
@@ -201,6 +201,14 @@ export default class ScopeHelper {
     const scopeWithoutOwner = scopeName.replace(prefix, '');
     return { scopeName, scopePath, scopeWithoutOwner };
   }
+
+  getNewBareScopeWithSpecificName(scopeName: string) {
+    const scopePath = path.join(this.scopes.e2eDir, scopeName);
+    fs.emptyDirSync(scopePath);
+    this.command.runCmd('bit init --bare', scopePath);
+    return scopePath;
+  }
+
   /**
    * Sometimes many tests need to do the exact same steps to init the local-scope, such as importing compiler/tester.
    * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
@@ -256,11 +264,11 @@ export default class ScopeHelper {
     this.initHarmonyWorkspace();
   }
 
-  linkBitBin() {
-    const bitBinPath = path.join(this.scopes.localPath, './node_modules/bit-bin');
-    const localBitBinPath = path.join(__dirname, '../..');
-    fs.removeSync(bitBinPath);
-    createSymlinkOrCopy(localBitBinPath, bitBinPath);
+  linkBitLegacy() {
+    const bitLegacyPath = path.join(this.scopes.localPath, './node_modules/@teambit/legacy');
+    const localBitLegacyPath = path.join(__dirname, '../..');
+    fs.removeSync(bitLegacyPath);
+    createSymlinkOrCopy(localBitLegacyPath, bitLegacyPath);
     this.linkCoreAspects();
   }
 

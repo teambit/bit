@@ -1,4 +1,5 @@
 import type { AspectMain } from '@teambit/aspect';
+import { ComponentType } from 'react';
 import { AspectDefinition } from '@teambit/aspect-loader';
 import { CacheAspect, CacheMain } from '@teambit/cache';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
@@ -11,7 +12,7 @@ import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-import { sha1 } from 'bit-bin/dist/utils';
+import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
 import { join, resolve } from 'path';
@@ -28,12 +29,15 @@ import { UIAspect, UIRuntime } from './ui.aspect';
 import { OpenBrowser } from './open-browser';
 import createWebpackConfig from './webpack/webpack.browser.config';
 import createSsrWebpackConfig from './webpack/webpack.ssr.config';
+import { StartPlugin, StartPluginOptions } from './start-plugin';
 
 export type UIDeps = [PubsubMain, CLIMain, GraphqlMain, ExpressMain, ComponentMain, CacheMain, LoggerMain, AspectMain];
 
 export type UIRootRegistry = SlotRegistry<UIRoot>;
 
-export type OnStart = () => void;
+export type OnStart = () => Promise<undefined | ComponentType<{}>>;
+
+export type StartPluginSlot = SlotRegistry<StartPlugin>;
 
 export type PublicDirOverwrite = (uiRoot: UIRoot) => Promise<string | undefined>;
 
@@ -69,6 +73,11 @@ export type UIConfig = {
 };
 
 export type RuntimeOptions = {
+  /**
+   * determine whether to initiate on verbose mode.
+   */
+  verbose?: boolean;
+
   /**
    * name of the UI root to load.
    */
@@ -149,7 +158,9 @@ export class UiMain {
      */
     private logger: Logger,
 
-    private harmony: Harmony
+    private harmony: Harmony,
+
+    private startPluginSlot: StartPluginSlot
   ) {}
 
   async publicDir(uiRoot: UIRoot) {
@@ -185,11 +196,28 @@ export class UiMain {
     return compilerRun();
   }
 
+  registerStartPlugin(startPlugin: StartPlugin) {
+    this.startPluginSlot.register(startPlugin);
+    return this;
+  }
+
+  private async initiatePlugins(options: StartPluginOptions) {
+    const plugins = this.startPluginSlot.values();
+    await Promise.all(plugins.map((plugin) => plugin.initiate(options)));
+    return plugins;
+  }
+
   /**
    * create a Bit UI runtime.
    */
-  async createRuntime({ uiRootName, pattern, dev, port, rebuild }: RuntimeOptions) {
+  async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
     const [name, uiRoot] = this.getUi(uiRootName);
+
+    const plugins = await this.initiatePlugins({
+      verbose,
+      pattern,
+    });
+
     this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
       express: this.express,
@@ -199,6 +227,7 @@ export class UiMain {
       ui: this,
       logger: this.logger,
       publicDir: await this.publicDir(uiRoot),
+      startPlugins: plugins,
     });
 
     const targetPort = await this.getPort(port);
@@ -211,9 +240,6 @@ export class UiMain {
     }
 
     this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
-
-    if (uiRoot.postStart) await uiRoot.postStart({ pattern });
-    await this.invokeOnStart();
 
     return uiServer;
   }
@@ -272,9 +298,10 @@ export class UiMain {
     return undefined;
   }
 
-  private async invokeOnStart(): Promise<void> {
+  async invokeOnStart(): Promise<ComponentType[]> {
     const promises = this.onStartSlot.values().map((fn) => fn());
-    await Promise.all(promises);
+    const startPlugins = await Promise.all(promises);
+    return startPlugins.filter((plugin) => !!plugin) as ComponentType[];
   }
 
   /**
@@ -432,16 +459,18 @@ export class UiMain {
     Slot.withType<OnStart>(),
     Slot.withType<PublicDirOverwriteSlot>(),
     Slot.withType<BuildMethodOverwriteSlot>(),
+    Slot.withType<StartPlugin>(),
   ];
 
   static async provider(
     [pubsub, cli, graphql, express, componentExtension, cache, loggerMain]: UIDeps,
     config,
-    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot]: [
+    [uiRootSlot, onStartSlot, publicDirOverwriteSlot, buildMethodOverwriteSlot, proxyGetterSlot]: [
       UIRootRegistry,
       OnStartSlot,
       PublicDirOverwriteSlot,
-      BuildMethodOverwriteSlot
+      BuildMethodOverwriteSlot,
+      StartPluginSlot
     ],
     harmony: Harmony
   ) {
@@ -460,10 +489,10 @@ export class UiMain {
       componentExtension,
       cache,
       logger,
-      harmony
+      harmony,
+      proxyGetterSlot
     );
-    cli.register(new StartCmd(ui, logger, pubsub));
-    cli.register(new UIBuildCmd(ui));
+    cli.register(new StartCmd(ui, logger), new UIBuildCmd(ui));
     return ui;
   }
 }

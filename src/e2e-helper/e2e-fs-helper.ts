@@ -70,9 +70,10 @@ export default class FsHelper {
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
-  modifyFile(filePath: string) {
-    const content = fs.readFileSync(filePath);
-    fs.outputFileSync(filePath, `\n${content}`);
+  modifyFile(filePath: string, basePath = this.scopes.localPath) {
+    const absPath = basePath ? path.join(basePath, filePath) : filePath;
+    const content = fs.readFileSync(absPath);
+    fs.outputFileSync(absPath, `\n${content}`);
   }
 
   deletePath(relativePathToLocalScope: string) {

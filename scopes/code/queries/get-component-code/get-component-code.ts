@@ -1,11 +1,18 @@
-import { useDataQuery } from '@teambit/ui';
-import { gql } from 'apollo-boost';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
 import { ComponentID } from '@teambit/component';
 
 const getCode = gql`
   query getCode($id: String!) {
     getHost {
+      id # used for GQL caching
       get(id: $id) {
+        id {
+          # used for GQL caching
+          name
+          version
+          scope
+        }
         fs
         mainFile
         devFiles
@@ -31,6 +38,7 @@ export type DependencyType = {
 
 type CodeResults = {
   getHost: {
+    id: string;
     get: {
       fs?: string[];
       mainFile?: string;
@@ -41,7 +49,7 @@ type CodeResults = {
 };
 
 export function useCode(componentId: ComponentID) {
-  const id = componentId._legacy.name;
+  const id = componentId.toString();
   const { data, ...rest } = useDataQuery<CodeResults>(getCode, {
     variables: { id },
   });

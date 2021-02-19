@@ -1,5 +1,5 @@
 import { ComponentConfig, ComponentFS } from '@teambit/component';
-import { PathLinux } from 'bit-bin/dist/utils/path';
+import { PathLinux } from '@teambit/legacy/dist/utils/path';
 
 import { ComponentManifest } from './manifest/component-manifest';
 import { PackageName } from './dependencies';

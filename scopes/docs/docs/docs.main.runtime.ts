@@ -8,8 +8,8 @@ import { ExecutionContext } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { DocsAspect } from './docs.aspect';
 import { DocsPreviewDefinition } from './docs.preview-definition';
@@ -113,7 +113,7 @@ export class DocsMain {
         const doc = await docReader.read(docFile.relative, docFile.contents, component);
         return doc;
       } catch (err) {
-        this.logger.error(err);
+        this.logger.error('docs.main.runtime.computeDoc caught an error', err);
         return null;
       }
     }

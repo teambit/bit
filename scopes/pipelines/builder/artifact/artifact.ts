@@ -1,4 +1,4 @@
-import type { ArtifactFiles, ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import type { ArtifactFiles, ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import type { BuildTask } from '../build-task';
 import type { StorageResolver } from '../storage';
 import type { ArtifactDefinition } from './artifact-definition';

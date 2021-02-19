@@ -11,6 +11,7 @@ import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
 import { GraphFromFsBuilder } from './build-graph-from-fs';
+import ScopeComponentsImporter from '../component-ops/scope-components-importer';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
@@ -77,10 +78,9 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
 }
 
 /**
+ * Note - this gets called from Harmony only.
  * returns one graph that includes all dependencies types. each edge has a label of the dependency
  * type. the nodes content is the Component object.
- * note that the graph only includes the dependencies of the gives ids, but not the dependents,
- * regardless the `direction` parameter.
  */
 export async function buildOneGraphForComponents(
   ids: BitId[],
@@ -102,11 +102,11 @@ export async function buildOneGraphForComponentsUsingScope(
   direction: 'normal' | 'reverse' = 'normal'
 ): Promise<Graph> {
   const components = await scope.getManyConsumerComponents(ids);
-  const loadFlattened = async (component: Component): Promise<Component[]> => {
-    return scope.getManyConsumerComponents(component.getAllFlattenedDependencies());
-  };
-  const dependencies = await Promise.all(components.map((component) => loadFlattened(component)));
-  const allComponents: Component[] = [...components, ...R.flatten(dependencies)];
+  const allFlattened = components.map((component) => component.getAllFlattenedDependencies()).flat();
+  const scopeComponentImporter = new ScopeComponentsImporter(scope);
+  await scopeComponentImporter.importMany(BitIds.uniqFromArray(allFlattened));
+  const dependencies = await scope.getManyConsumerComponents(allFlattened);
+  const allComponents: Component[] = [...components, ...dependencies];
 
   return buildGraphFromComponentsObjects(allComponents, direction);
 }

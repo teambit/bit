@@ -1,3 +1,5 @@
+@import '~@teambit/ui.constants.z-indexes/z-indexes.module.scss';
+
 .commandBar {
   display: none;
   flex-direction: column;
@@ -22,7 +24,7 @@
 
 .commandBar {
   padding: 0px;
-  z-index: 8001;
+  z-index: $modal-z-index;
 }
 
 .input {

@@ -1,4 +1,4 @@
-import { PathAbsolute } from 'bit-bin/dist/utils/path';
+import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 
 import { PackageManager, PackageManagerResolveRemoteVersionOptions, ResolvedPackageVersion } from './package-manager';
 

@@ -23,5 +23,6 @@ export const MDXLayoutSecondExample = () => (
 );
 
 MDXLayoutSecondExample.canvas = {
+  overflow: 'scroll',
   height: 200,
 };

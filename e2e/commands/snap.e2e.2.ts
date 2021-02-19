@@ -673,9 +673,10 @@ describe('bit snap command', function () {
         helper.command.importComponent('*');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
+        const compPath = `./${helper.scopes.remote}/comp1`;
         fs.outputFileSync(
           path.join(helper.scopes.localPath, 'app.js'),
-          `const comp1 = require('./components/comp1');\nconsole.log(comp1())`
+          `const comp1 = require('${compPath}');\nconsole.log(comp1())`
         );
         const result = helper.command.runCmd('node app.js');
         // notice the "v2" (!)

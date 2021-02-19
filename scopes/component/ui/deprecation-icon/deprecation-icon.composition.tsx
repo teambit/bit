@@ -15,16 +15,3 @@ export const DeprecationIconIsDeprecate = () => {
     </ThemeCompositions>
   );
 };
-
-export const DeprecationIconIsNotDeprecate = () => {
-  const deprecation = {
-    isDeprecate: false,
-  };
-  // @ts-ignore
-  const component = new ComponentModel(null, null, null, null, null, null, null, null, deprecation, null, null);
-  return <DeprecationIcon component={component} />;
-};
-
-DeprecationIconIsDeprecate.canvas = {
-  height: 90,
-};

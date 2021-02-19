@@ -1,17 +1,17 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { BitId } from '@teambit/legacy-bit-id';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
 import { compact } from 'ramda-adjunct';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
-import { getLatestVersionNumber } from 'bit-bin/dist/utils';
-import { ComponentNotFound } from 'bit-bin/dist/scope/exceptions';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
@@ -62,7 +62,10 @@ export class WorkspaceComponentLoader {
     useCache = true,
     storeInCache = true
   ): Promise<Component> {
-    const bitIdWithVersion: BitId = getLatestVersionNumber(this.workspace.consumer.bitmapIds, componentId._legacy);
+    const bitIdWithVersion: BitId = getLatestVersionNumber(
+      this.workspace.consumer.bitmapIdsFromCurrentLane,
+      componentId._legacy
+    );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, forCapsule);
     if (fromCache && useCache) {
@@ -164,6 +167,7 @@ export class WorkspaceComponentLoader {
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
+
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
@@ -173,8 +177,8 @@ export class WorkspaceComponentLoader {
       policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
     promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
 
     await Promise.all(promises);
 

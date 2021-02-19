@@ -5,7 +5,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ConfigAspect, Config } from '@teambit/config';
 import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';

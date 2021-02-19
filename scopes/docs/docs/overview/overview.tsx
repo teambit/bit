@@ -1,5 +1,5 @@
 import { ComponentContext } from '@teambit/component';
-import { ComponentPreview } from '@teambit/preview';
+import { ComponentPreview } from '@teambit/ui.component-preview';
 import React, { useContext } from 'react';
 
 export function Overview() {

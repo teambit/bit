@@ -3,7 +3,6 @@ labels: ['react', 'typescript', 'avatar', 'icon']
 description: 'An avatar for all occasions'
 ---
 
-import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { DefaultAvatar, OrgAvatar, UserAvatar } from './index';
 
 ### Overview
@@ -23,7 +22,7 @@ An avatar component, consisting of 3 different types of Avatar:
   };
 
   return (
-    <ThemeCompositions style={{ minHeight: 300, flexDirection: 'column' }}>
+    <div>
       <div>
         Basic default avatar:
         <DefaultAvatar size={32} account={accounts.defAccount} />
@@ -36,7 +35,7 @@ An avatar component, consisting of 3 different types of Avatar:
         User avatar
         <UserAvatar size={32} account={accounts.userAccount} />
       </div>
-    </ThemeCompositions>
+    </div>
   );
 };
 ```

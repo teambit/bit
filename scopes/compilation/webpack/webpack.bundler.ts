@@ -3,7 +3,7 @@ import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
 import mapSeries from 'p-map-series';
 import webpack, { Compiler, Configuration } from 'webpack';
-import merge from 'webpack-merge';
+import { merge } from 'webpack-merge';
 
 import configFactory from './config/webpack.config';
 
@@ -34,7 +34,7 @@ export class WebpackBundler implements Bundler {
         return compiler.run((err, stats) => {
           if (err) {
             return resolve({
-              errors: [err],
+              errors: [`${err.toString()}\n${err.stack}`],
               components,
             });
           }

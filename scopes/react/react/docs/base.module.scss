@@ -38,18 +38,12 @@
   margin-right: 10px;
 }
 
-.enhancedText {
-  code {
-    background-color: var(--muted-color);
-    padding: 4px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 14px;
-  }
+.compositionSection {
+  margin-top: 40px;
 }
 
 .mdx {
-  font-size: 14px;
+  font-size: 16px;
   // to allow user to control culumn alignment via mdx table
   table,
   th,
@@ -67,7 +61,7 @@
       text-align: end;
     }
   }
-  // > * {
-  //   margin-bottom: 16px;
-  // }
+  > * {
+    margin-bottom: 16px;
+  }
 }

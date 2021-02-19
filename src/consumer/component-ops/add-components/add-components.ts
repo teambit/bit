@@ -600,7 +600,7 @@ you can add the directory these files are located at and it'll change the root d
 
         const filteredMatches = this.gitIgnore.filter(matches);
 
-        if (!filteredMatches.length) throw new EmptyDirectory();
+        if (!filteredMatches.length) throw new EmptyDirectory(componentPath);
 
         let filteredMatchedFiles = filteredMatches.map((match: PathOsBased) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
@@ -926,7 +926,7 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     nodir: true,
   });
   const filteredMatches = gitIgnore.filter(matches);
-  if (!filteredMatches.length) throw new EmptyDirectory();
+  if (!filteredMatches.length) throw new EmptyDirectory(dir);
   return filteredMatches.map((match: PathOsBased) => {
     const normalizedPath = pathNormalizeToLinux(match);
     // the path is relative to consumer. remove the rootDir.

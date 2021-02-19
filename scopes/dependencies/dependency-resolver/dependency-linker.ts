@@ -1,17 +1,17 @@
 import path from 'path';
-import { uniq, compact, flatten } from 'lodash';
+import { uniq, compact, flatten, head } from 'lodash';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
-import { link as legacyLink } from 'bit-bin/dist/api/consumer';
+import { link as legacyLink } from '@teambit/legacy/dist/api/consumer';
 import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { PathAbsolute } from 'bit-bin/dist/utils/path';
+import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
-import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
-import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
-import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import Symlink from 'bit-bin/dist/links/symlink';
+import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
+import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
+import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import Symlink from '@teambit/legacy/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
@@ -276,6 +276,8 @@ export class DependencyLinker {
     });
 
     await Promise.all(componentsNeedLinksP);
+    // Stop if there are not components needs to be linked
+    if (!componentsNeedLinks || !componentsNeedLinks.length) return [];
     const envsStringIds = componentsNeedLinks.map((obj) => obj.env.id);
     const uniqEnvIds = uniq(envsStringIds);
     const host = this.componentAspect.getHost();
@@ -505,7 +507,13 @@ function resolveModuleFromDir(fromDir: string, moduleId: string, silent = true):
 // TODO: extract to new component
 function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string): string {
   const NM = 'node_modules';
-  return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+  if (resolvedModulePath.includes(NM)) {
+    return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+  }
+
+  const [start, end] = resolvedModulePath.split('@');
+  const versionStr = head(end.split('/'));
+  return `${start}@${versionStr}`;
 }
 
 function isPathSymlink(folderPath: string): boolean | undefined {

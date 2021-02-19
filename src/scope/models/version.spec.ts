@@ -202,7 +202,7 @@ describe('Version', () => {
     // });
     it('should throw for an invalid package version', () => {
       version.packageDependencies = { lodash: 34 };
-      expect(validateFunc).to.throw('expected value of "lodash" to be object, got number');
+      expect(validateFunc).to.throw('expected version of "lodash" to be string, got number');
     });
     it('should not throw for a package version which is a git url', () => {
       version.packageDependencies = { userLib: 'gitreadonly ssh://git@git.bit.io' };

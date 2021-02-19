@@ -1,7 +1,8 @@
 import R from 'ramda';
+import pMap from 'p-map';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS, Extensions } from '../../constants';
+import { COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -11,8 +12,8 @@ import GeneralError from '../../error/general-error';
 import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import ComponentObjects from '../component-objects';
-import { getAllVersionHashes, getAllVersionsInfo } from '../component-ops/traverse-versions';
-import { ComponentNotFound, MergeConflict } from '../exceptions';
+import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
+import { ComponentNotFound } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
 import { ModelComponent, Source, Symlink, Version } from '../models';
@@ -21,6 +22,8 @@ import { ComponentProps } from '../models/model-component';
 import { BitObject, Ref } from '../objects';
 import Repository from '../objects/repository';
 import Scope from '../scope';
+import { ExportMissingVersions } from '../exceptions/export-missing-versions';
+import { ModelComponentMerger } from '../component-ops/model-components-merger';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -48,17 +51,19 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+  async getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+    if (!ids.length) return [];
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
-    return Promise.all(
-      ids.map((id) => {
-        return this.get(id).then((component) => {
-          return {
-            id,
-            component,
-          };
-        });
-      })
+    return pMap(
+      ids,
+      async (id) => {
+        const component = await this.get(id);
+        return {
+          id,
+          component,
+        };
+      },
+      { concurrency: CONCURRENT_COMPONENTS_LIMIT }
     );
   }
 
@@ -80,12 +85,13 @@ export default class SourceRepository {
         return foundComponent;
       }
       // @ts-ignore
-      if (!foundComponent.hasTag(bitId.version)) {
+      if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return undefined;
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const version = await this.objects().load(foundComponent.versions[bitId.version]);
+      const versionHash = foundComponent.versionsIncludeOrphaned[bitId.version];
+      const version = await this.objects().load(versionHash);
       if (!version) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return undefined;
@@ -400,22 +406,24 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const repo: Repository = this.objects();
     repo.add(component);
 
-    const isObjectShouldBeAdded = (obj) => {
-      // don't add a component if it's already exist locally with more versions
-      if (obj instanceof ModelComponent) {
-        const loaded = repo.loadSync(obj.hash(), false);
-        if (loaded) {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
-            return false;
-          }
-        }
-      }
-      return true;
-    };
+    // const isObjectShouldBeAdded = (obj) => {
+    //   // don't add a component if it's already exist locally with more versions
+    //   if (obj instanceof ModelComponent) {
+    //     const loaded = repo.loadSync(obj.hash(), false);
+    //     if (loaded) {
+    //       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    //       if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
+    //         return false;
+    //       }
+    //     }
+    //   }
+    //   return true;
+    // };
 
     objects.forEach((obj) => {
-      if (isObjectShouldBeAdded(obj)) repo.add(obj);
+      // @todo: do we need this?
+      // if (isObjectShouldBeAdded(obj)) repo.add(obj);
+      repo.add(obj);
     });
     return component;
   }
@@ -500,55 +508,9 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * merge the existing component with the data from the incoming component
-   * here, we assume that there is no conflict between the two, otherwise, this.merge() would throw
-   * a MergeConflict exception.
-   */
-  mergeTwoComponentsObjects(
-    existingComponent: ModelComponent,
-    incomingComponent: ModelComponent,
-    existingComponentTagsAndSnaps: string[],
-    incomingComponentTagsAndSnaps: string[]
-  ): { mergedComponent: ModelComponent; mergedVersions: string[] } {
-    // the base component to save is the existingComponent because it might contain local data that
-    // is not available in the remote component, such as the "state" property.
-    const mergedComponent = existingComponent;
-    const mergedVersions: string[] = [];
-    // in case the existing version hash is different than incoming version hash, use the incoming
-    // version because we hold the incoming component from a remote as the source of truth
-    Object.keys(existingComponent.versions).forEach((existingVersion) => {
-      if (
-        incomingComponent.versions[existingVersion] &&
-        existingComponent.versions[existingVersion].toString() !==
-          incomingComponent.versions[existingVersion].toString()
-      ) {
-        mergedComponent.versions[existingVersion] = incomingComponent.versions[existingVersion];
-        mergedVersions.push(existingVersion);
-      }
-    });
-    // in case the incoming component has versions that are not in the existing component, copy them
-    Object.keys(incomingComponent.versions).forEach((incomingVersion) => {
-      if (!existingComponent.versions[incomingVersion]) {
-        mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
-        mergedVersions.push(incomingVersion);
-      }
-    });
-    if (incomingComponent.hasHead()) {
-      const mergedSnaps = incomingComponentTagsAndSnaps.filter(
-        (tagOrSnap) => !existingComponentTagsAndSnaps.includes(tagOrSnap) && !mergedVersions.includes(tagOrSnap)
-      );
-      mergedVersions.push(...mergedSnaps);
-    }
-
-    return { mergedComponent, mergedVersions };
-  }
-
-  /**
    * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
    *
-   * When this function gets called originally from import command, the 'local' parameter is true. Otherwise, if it was
-   * originated from export command, it'll be false.
-   * If the 'local' is true and the existing component wasn't changed locally, it doesn't check for
+   * If the 'isImport' is true and the existing component wasn't changed locally, it doesn't check for
    * discrepancies, but simply override the existing component.
    * In this context, "discrepancy" means, same version but different hashes.
    * When using import command, it makes sense to override a component in case of discrepancies because the source of
@@ -564,65 +526,58 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * hasn't changed.
    */
   async merge(
-    component: ModelComponent,
+    incomingComp: ModelComponent,
     versionObjects: Version[],
-    local = true
+    remoteName: string | undefined, // not available on export (isImport = false)
+    isImport = true
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
-    const existingComponent: ModelComponent | null | undefined = await this._findComponent(component);
-    // @ts-ignore
-    // const versionObjects: Version[] = objects.filter((o) => o instanceof Version);
+    const isExport = !isImport;
+    const existingComp = await this._findComponent(incomingComp);
+    if (existingComp && incomingComp.isEqual(existingComp)) {
+      return { mergedComponent: incomingComp, mergedVersions: [] };
+    }
     // don't throw if not found because on export not all objects are sent to the remote
-    const allVersionsInfo = await getAllVersionsInfo({ modelComponent: component, throws: false, versionObjects });
+    const allVersionsInfo = await getAllVersionsInfo({ modelComponent: incomingComp, throws: false, versionObjects });
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
-    const tagsAndSnaps = component.switchHashesWithTagsIfExist(allHashes);
-    if (!existingComponent) {
-      this.putModelComponent(component);
-      return { mergedComponent: component, mergedVersions: tagsAndSnaps };
+    const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
+    if (!existingComp) {
+      if (isExport) this.throwForMissingVersions(allVersionsInfo, incomingComp);
+      this.putModelComponent(incomingComp);
+      return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
     const hashesOfHistoryGraph = allVersionsInfo
       .map((v) => (v.isPartOfHistory ? v.ref : null))
       .filter((ref) => ref) as Ref[];
-    const existingComponentHead = existingComponent.getHead();
-    const existingHeadIsMissingInIncomingComponent =
-      component.hasHead() &&
-      existingComponentHead &&
-      !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead));
-    if (
-      !local &&
-      existingHeadIsMissingInIncomingComponent &&
-      component.compatibleWith(existingComponent, local) // otherwise, it should throw MergeConflict below
-    ) {
-      // @ts-ignore
-      throw new ComponentNeedsUpdate(component.id(), existingComponentHead.toString());
-    }
-    // @todo lanes: should we pass the local lane to `isLocallyChanged`?
-    const locallyChanged = await existingComponent.isLocallyChanged();
-    if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
-      logger.debug(`sources.merge component ${component.id()}`);
-      const repo: Repository = this.objects();
-      const existingComponentHashes = await getAllVersionHashes(existingComponent, repo, false);
-      const existingComponentTagsAndSnaps = existingComponent.switchHashesWithTagsIfExist(existingComponentHashes);
-      const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(
-        existingComponent,
-        component,
-        existingComponentTagsAndSnaps,
-        tagsAndSnaps
-      );
-      const componentHead = component.getHead();
-      if (componentHead) {
-        // when importing (local), do not override the head unless the incoming is ahead.
-        if (!local || !existingHeadIsMissingInIncomingComponent) {
-          mergedComponent.setHead(componentHead);
-        }
-        if (local) mergedComponent.remoteHead = componentHead;
-      }
+    const existingComponentHead = existingComp.getHead();
+    const existingHeadIsMissingInIncomingComponent = Boolean(
+      incomingComp.hasHead() &&
+        existingComponentHead &&
+        !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
+    );
+    const existingComponentHashes = await getAllVersionHashes(existingComp, this.objects(), false);
+    const existingTagsAndSnaps = existingComp.switchHashesWithTagsIfExist(existingComponentHashes);
+    // for export, currently it'll always be true. later, we might want to support exporting
+    // dependencies from other scopes and then isIncomingFromOrigin could be false
+    const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
+    const modelComponentMerger = new ModelComponentMerger(
+      existingComp,
+      incomingComp,
+      existingTagsAndSnaps,
+      incomingTagsAndSnaps,
+      isImport,
+      isIncomingFromOrigin,
+      existingHeadIsMissingInIncomingComponent
+    );
+    const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
+    this.putModelComponent(mergedComponent);
+    return { mergedComponent, mergedVersions };
+  }
 
-      this.putModelComponent(mergedComponent);
-      return { mergedComponent, mergedVersions };
+  private throwForMissingVersions(allVersionsInfo: VersionInfo[], component: ModelComponent) {
+    const missingVersions = allVersionsInfo.filter((c) => !c.version).map((c) => c.tag || c.ref.toString());
+    if (missingVersions.length) {
+      throw new ExportMissingVersions(component.id(), missingVersions);
     }
-
-    const conflictVersions = component.diffWith(existingComponent, local);
-    throw new MergeConflict(component.id(), conflictVersions);
   }
 
   /**

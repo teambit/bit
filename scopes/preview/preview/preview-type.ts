@@ -9,12 +9,11 @@ export interface PreviewType {
 
   /**
    * preview render method.
-   * :TODO @uri type this properly
    */
   render(
     componentId: string,
-    linkedModules: { [key: string]: any },
-    includedPreviews: any[],
+    linkedModules: PreviewModule<any>,
+    includedPreviews: string[],
     renderingContext: RenderingContext
   ): void;
 

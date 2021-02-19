@@ -37,7 +37,7 @@ function ExampleSection({ example, className, ...rest }: ExampleSectionProps) {
 
   return (
     <Section {...rest} className={classNames(className, styles.exampleSection)}>
-      {example.title && <LinkedHeading link="/~compositions">{example.title}</LinkedHeading>}
+      {example.title && <LinkedHeading>{example.title}</LinkedHeading>}
       {example.description && <div>{example.description}</div>}
       <Playground code={code} scope={example.scope} />
     </Section>

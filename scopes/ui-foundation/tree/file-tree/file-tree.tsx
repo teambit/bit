@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, HTMLAttributes } from 'react';
 import { inflateToTree } from '@teambit/base-ui.graph.tree.inflate-paths';
 import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
@@ -10,16 +10,20 @@ type FileTreeProps = {
   selected?: string;
   files: string[];
   TreeNode: TreeNodeRenderer<any>; // - is this ok?
-};
+} & HTMLAttributes<HTMLDivElement>;
 
-export function FileTree({ files, onSelect, selected, TreeNode }: FileTreeProps) {
+/**
+ *
+ * Renders a tree of folders and files from an array of file path's
+ */
+export function FileTree({ files, onSelect, selected, TreeNode, ...rest }: FileTreeProps) {
   const rootNode = useMemo(() => {
     const tree = inflateToTree(files, (c) => c);
     return tree;
   }, [files]);
 
   return (
-    <div style={indentStyle(1)}>
+    <div style={{ ...indentStyle(1), ...rest.style }} {...rest}>
       <TreeNodeContext.Provider value={TreeNode}>
         <TreeContextProvider onSelect={onSelect} selected={selected}>
           <RootNode node={rootNode} depth={1} />

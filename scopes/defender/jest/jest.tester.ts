@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
 import { compact, flatten } from 'lodash';
 // import { runCLI } from 'jest';
@@ -18,7 +18,7 @@ import {
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
 
@@ -203,7 +203,7 @@ export class JestTester implements Tester {
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);
       } catch (err) {
-        this.logger.error(err);
+        this.logger.error('jest.tester.watch() caught an error', err);
       }
     });
   }

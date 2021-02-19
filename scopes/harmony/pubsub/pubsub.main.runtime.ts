@@ -20,6 +20,10 @@ export class PubsubMain {
     this.topicMap[topicUUID].forEach((callback) => callback(event));
   }
 
+  unsubscribeAll(topicId: string) {
+    delete this.topicMap[topicId];
+  }
+
   static runtime = MainRuntime;
 
   static async provider() {

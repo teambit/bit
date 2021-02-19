@@ -218,13 +218,15 @@ export default (async function initInteractive() {
     actualCompiler = undefined;
   }
   answers.compiler = actualCompiler;
-  return init(undefined, false, false, false, false, answers).then(({ created, addedGitHooks, existingGitHooks }) => {
-    return {
-      created,
-      addedGitHooks,
-      existingGitHooks,
-      reset: false,
-      resetHard: false,
-    };
-  });
+  return init(undefined, false, false, false, false, false, answers).then(
+    ({ created, addedGitHooks, existingGitHooks }) => {
+      return {
+        created,
+        addedGitHooks,
+        existingGitHooks,
+        reset: false,
+        resetHard: false,
+      };
+    }
+  );
 });

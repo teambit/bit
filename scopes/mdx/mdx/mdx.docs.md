@@ -1,51 +1,76 @@
 ---
-description: Integrates MDX with Bit.
+description: A Bit-MDX integration for simple & powerful component documentation and independent content composition
 labels: ['mdx', 'bit', 'docs', 'md', 'markdown', 'ui']
 ---
 
 import _ from 'lodash';
 import { Button } from '@teambit/evangelist.elements.button';
 
-The MDX aspect integrates [MDX](https://mdxjs.com/) with Bit to provide an enjoyable and flexible content creation in a Bit workspace.
+The MDX aspect integrates [MDX](https://mdxjs.com/) with Bit to enable the authoring of component documentation and standalone content components, using the MDX format.   
+The MDX format joins together the ease-of-use and readability of the Markdown syntax with the endless possibilities that are offered by JSX. 
+The modularity that's offered by both technologies (MDX and Bit) enables MDX files to be exported to a remote scope and imported to other web projects, just like any other Bit component.
 
-MDX can be used to author documentation for Bit components, or to create independent content components that can be used across web projects.
+#### Example
+````md
+---
+displayName: Login form
+description: A simple login form
+labels: ['react', 'ui', 'form']
+---
 
-### Documenting components
+import { LoginForm } from './login-form'
 
-The MDX format is perfect for writing documentation for components as it joins together the ease-of-use and readability of the Markdown syntax with the flexibility that comes when integrating code into it. In addition to that, the modularity that's offered by both technologies (MDX and Bit) enables importing and integrating segments of content from the documentation of other components, into a single documentation file. This can be done to document your components in a way that reflects the way they are built - through a composition of components. That will help in keeping your docs always up-to-date as changes made to a sub-component will propagate to the component's docs. Links to other pages should only be used when the page they reference is expected to be read by only a small percentage of readers.
+## A live example
 
-To start writing your docs with MDX, add a `*.docs.mdx` or `*.docs.md` file to the component's directory and Bit will render it in the component's 'Overview' tab, in the Workspace UI (and later on, after it is exported, in the Scope UI). Bit's development server will hot-reload your documentation to reflect any changes made to it, in real time.
+A simple example of live example:
 
+```jsx live=true
+<LoginForm><LoginForm/>
+```
+````
 
 ```
-// An example documented component file-structure
+// An example of a documented component file-structure
 
 ├── login-form
     ├── index.tsx
     ├── login-form.compositions.tsx
-    ├── login-form.docs.mdx
+    ├── login-form.docs.md
     ├── login-form.spec.tsx
     └── login-form.tsx
 ```
-<br />
 
-> Make sure the Bit environment used by your component supports MDX!
+#### Features
 
-#### Bit-MDX integration
+* __Powerful component composition__: Author clear and engaging documentation that integrates readable Markdown syntax, Bit's live playground and your own customized components.
+* __Docs that look and feel like Bit__: Component docs written with MDX (like the one you're reading right now) are themed using Bit's [Documenter design system](https://bit.dev/teambit/documenter) to provide a look-and-feel that is consistent with the Workspace/Scope UI.
+* __Bit component frontmatter__: Use Bit's YAML frontmatter to add or override metadata to the component being documented.
+* __A simple-to-use live playground__: Use MDX's user-friendly syntax to add live examples of code. No need to worry about dependencies - any module used by the doc file will also be available to code running in the live playground.
+* __Independent MDX components__: Author consumable independent content components that can be shared across web projects. Use it to maintain a consistent "voice & tone" and to keep your content always up-to-date.
 
-Bit wraps your MDX with its own (customizable) layout to integrate it with the rest of the Workspace/Scope UI. This is done in a few ways:
 
-1. Bit themes your MDX using Bit's [Documenter design system](https://bit.dev/teambit/documenter), to give it a look-and-feel that is consistent with the rest of the Workspace/Scope UI.
-2. Bit offers an API to override the component's meta-data (this is done using the frontmatter block at the top of the file).
-3. Bit provides a live playground that can be easily integrated into your documentation using the MDX syntax, for live demonstrations of code.
+## Quick start
+The MDX aspect is used by various Bit environments. To use it, set your workspace configuration to use an MDX supported environment.
+
+As a default, MDX will only be used for component documentation. To enable the compilation of MDX components, set the `mdx` property to `true`.
+
+```json
+{
+  "teambit.workspace/variants": {
+    "*": {
+      "teambit.react/react": {
+        "mdx": true
+      }
+    }
+  }
+}
+```
+
+## Usage
 
 #### Using the frontmatter API
-
-Bit parses your code to generate metadata for your components. This metadata is presented in the component's documentation and is used by Bit.dev's search engine.
-
+Bit parses your code to generate metadata for your components. This metadata is presented in the component's documentation and is used by Bit.dev's search engine.  
 To override it, use Bit's frontmatter properties, at the top of your MDX file.
-
-For example:
 
 ```md
 ---
@@ -60,10 +85,7 @@ labels: ['react', 'typescript', 'ui', 'form']
 - `labels` _string[]_ overrides the component labels/tags.
 
 #### Using the live playground
-
 To use Bit's live playground add `live=true` to your codeblock.
-
-For example:
 
 ````jsx
 ```jsx live=true
@@ -81,7 +103,7 @@ The above MDX snippet will be rendered like so:
 };
 ```
 
-##### Live playground dependencies
+#### Using the live playground with external modules
 The live playground can access the docs file dependencies. To use an external module, first import it to the docs file.
 
 For example:
@@ -109,6 +131,40 @@ The above MDX snippet will be rendered like so:
 };
 ```
 
+## Use-cases and best practices
+
+
+### Documenting components
+
+The MDX format is perfect for writing documentation for components as it joins together the ease-of-use and readability
+of the Markdown syntax with the great flexibility that's offered by integrating code into it.
+In addition to that, the modularity that's offered by both technologies (MDX and Bit) enables importing and integrating
+segments of content from the documentation of other components, into a single documentation file.
+This can be done to document your components in a way that reflects the way they are built - through a composition of components.
+That will help in keeping your docs always up-to-date as changes made to a sub-component will propagate to the component's docs.
+
+> Linking to external pages is, in  many cases,  the  result of technological limitations and not the preferred solution.
+If most people reading your docs need to visit an external page in order for them to get the full explanation,
+then it makes more sense to have that external text integrated into your docs (by importing it).
+<br/>
+Now that we have MDX and Bit, that can be done quite easily.
+
+To start writing your docs with MDX, add a `*.docs.mdx` or `*.docs.md` file to the component's directory and Bit will render it in the component's 'Overview' tab, in the Workspace UI (and later on, after it is exported, in the Scope UI). Bit's development server will hot-reload your documentation to reflect any changes made to it, in real time.
+
+
+```
+// An example documented component file-structure
+
+├── login-form
+    ├── index.tsx
+    ├── login-form.compositions.tsx
+    ├── login-form.docs.mdx
+    ├── login-form.spec.tsx
+    └── login-form.tsx
+```
+<br />
+
+> Make sure the Bit environment used by your component supports MDX!
 
 ### Independent MDX components
 

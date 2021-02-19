@@ -1,9 +1,10 @@
 import { Component } from '@teambit/component';
 import { Schema } from '@teambit/graphql';
-import gql from 'graphql-tag';
+import { gql } from '@apollo/client';
 
 import { BundlerMain } from './bundler.main.runtime';
 
+// TODO: this has to be refactored to the Preview aspect. with the entire preview logic here.
 export function devServerSchema(bundler: BundlerMain): Schema {
   return {
     typeDefs: gql`

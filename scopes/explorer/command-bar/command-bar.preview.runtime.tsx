@@ -11,7 +11,10 @@ export class CommandBarPreview {
   }
 
   handleKeyEvent = (e: KeyboardEvent) => {
-    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e));
+    const { target } = e;
+    if (!target || isEditable(target as HTMLElement)) return;
+
+    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e))?.catch(() => {});
   };
 
   static dependencies = [PubsubAspect];
@@ -20,6 +23,11 @@ export class CommandBarPreview {
     const pubsubPreview = new CommandBarPreview(pubSub);
     return pubsubPreview;
   }
+}
+
+const editableTags = ['INPUT', 'SELECT', 'TEXTAREA'];
+function isEditable(element: HTMLElement) {
+  return editableTags.includes(element.tagName) || element.isContentEditable;
 }
 
 CommandBarAspect.addRuntime(CommandBarPreview);

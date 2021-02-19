@@ -1,11 +1,18 @@
-import { useDataQuery } from '@teambit/ui';
-import { gql } from 'apollo-boost';
+import { gql } from '@apollo/client';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { ComponentID } from '@teambit/component';
 
 const getFile = gql`
-  query($id: String!, $path: String) {
+  query getFile($id: String!, $path: String) {
     getHost {
+      id # used for GQL caching
       get(id: $id) {
+        id {
+          # used for GQL caching
+          name
+          version
+          scope
+        }
         getFile(path: $path)
       }
     }
@@ -14,14 +21,20 @@ const getFile = gql`
 
 type FileResult = {
   getHost: {
+    id: string;
     get: {
+      id: {
+        name: string;
+        version: string;
+        scope: string;
+      };
       getFile?: string;
     };
   };
 };
 
 export function useFileContent(componentId: ComponentID, filePath?: string) {
-  const id = componentId._legacy.name;
+  const id = componentId.toString();
   const { data, ...rest } = useDataQuery<FileResult>(getFile, {
     variables: { id, path: filePath },
     skip: filePath === undefined,

@@ -2,7 +2,7 @@ import { humanizeCompositionId } from '@teambit/model.composition-id';
 
 export type CompositionProps = {
   identifier: string;
-  filepath: string;
+  filepath?: string;
 };
 
 export class Composition {
@@ -15,7 +15,7 @@ export class Composition {
     /**
      * file path in which the composition is contained.
      */
-    readonly filepath: string
+    readonly filepath?: string
   ) {}
 
   get displayName() {

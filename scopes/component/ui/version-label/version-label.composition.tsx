@@ -17,11 +17,3 @@ export const VersionLabelCheckedOut = () => {
     </ThemeCompositions>
   );
 };
-
-VersionLabelLatest.canvas = {
-  height: 90,
-};
-
-VersionLabelCheckedOut.canvas = {
-  height: 90,
-};

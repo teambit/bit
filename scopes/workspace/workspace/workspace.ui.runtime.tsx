@@ -90,7 +90,7 @@ export class WorkspaceUI {
       id: 'sidebar.toggle', // TODO - extract to a component!
       handler: () => {},
       displayName: 'Toggle component list',
-      keybinding: 's',
+      keybinding: 'alt+s',
     });
     this.setKeyBindHandler = setKeyBindHandler;
 
@@ -122,7 +122,7 @@ export class WorkspaceUI {
     {
       category: 'general',
       title: 'Toggle component list',
-      keyChar: 's',
+      keyChar: 'alt+s',
       handler: () => this.commandBarUI?.run('sidebar.toggle'),
     },
   ];
@@ -185,7 +185,7 @@ export class WorkspaceUI {
     workspaceUI.registerMenuItem(workspaceUI.menuItems);
 
     workspaceUI.registerSidebarLink(() => (
-      <MenuLinkItem exact href="/" icon="">
+      <MenuLinkItem exact href="/" icon="comps">
         Overview
       </MenuLinkItem>
     ));

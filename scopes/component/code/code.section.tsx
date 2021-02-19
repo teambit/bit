@@ -1,18 +1,17 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { Icon } from '@teambit/evangelist.elements.icon';
-import styles from './code.module.scss';
+import { MenuWidgetIcon } from '@teambit/ui.menu-widget-icon';
 import type { CodeUI } from './code.ui.runtime';
 
 export class CodeSection implements Section {
   constructor(private codeUI: CodeUI) {}
   route = {
-    path: '~code',
+    path: '~code/:file*',
     children: this.codeUI.getCodePage(),
   };
   navigationLink = {
     href: '~code',
-    children: <Icon of="Code" className={styles.icon} />,
+    children: <MenuWidgetIcon icon="Code" tooltipContent="Code" />,
   };
   order = 30;
 }

@@ -51,6 +51,8 @@ describe('sign command', function () {
       helper.bitJsonc.setupDefault();
       const secondRemote = helper.scopeHelper.getNewBareScope();
       helper.scopeHelper.addRemoteScope(secondRemote.scopePath);
+      helper.scopeHelper.addRemoteScope(secondRemote.scopePath, helper.scopes.remotePath);
+      helper.scopeHelper.addRemoteScope(helper.scopes.remotePath, secondRemote.scopePath);
       helper.fs.outputFile('comp1/index.js', `require('@${secondRemote.scopeName}/comp2');`);
       helper.fs.outputFile('comp2/index.js', `require('@${helper.scopes.remote}/comp1');`);
       helper.command.addComponent('comp1');

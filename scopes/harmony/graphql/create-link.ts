@@ -1,14 +1,13 @@
-import { HttpLink } from 'apollo-boost';
-import { split } from 'apollo-link';
-import { WebSocketLink } from 'apollo-link-ws';
-import { getMainDefinition } from 'apollo-utilities';
+import { HttpLink, split } from '@apollo/client';
+import { getMainDefinition } from '@apollo/client/utilities';
+import type { WebSocketLink } from '@apollo/client/link/ws';
 
 /**
  * create a link which splits routes data depending on type of operation.
  * @param httpLink http link for apollo graphql
  * @param wsLink web socket link for apollo graphql
  */
-export function createLink(httpLink: HttpLink, wsLink: WebSocketLink) {
+export function createSplitLink(httpLink: HttpLink, wsLink: WebSocketLink) {
   return split(
     // split based on operation type
     ({ query }) => {

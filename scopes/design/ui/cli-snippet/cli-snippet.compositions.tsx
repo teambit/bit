@@ -12,7 +12,3 @@ export const CliSnippetExample = () => {
     </ThemeCompositions>
   );
 };
-
-CliSnippetExample.canvas = {
-  height: 90,
-};

@@ -78,7 +78,7 @@ export class ExpressMain {
     ];
   }
 
-  createApp(expressApp?: Express): Express {
+  createApp(expressApp?: Express, options?: { disableBodyParser: true }): Express {
     const internalRoutes = this.createRootRoutes();
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
@@ -88,10 +88,7 @@ export class ExpressMain {
       this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
       return next();
     });
-    app.use(bodyParser.text({ limit: '5000mb' }));
-    app.use(bodyParser.json({ limit: '5000mb' }));
-    app.use(bodyParser.raw({ type: 'application/octet-stream', limit: '5000mb' }));
-    // app.use(cors());
+    if (!options?.disableBodyParser) this.bodyParser(app);
 
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
@@ -132,6 +129,11 @@ export class ExpressMain {
 
   private catchErrorsMiddlewares(middlewares: Middleware[]) {
     return middlewares.map((middleware) => catchErrors(middleware));
+  }
+
+  private bodyParser(app: Express) {
+    app.use(bodyParser.json({ limit: '5000mb' }));
+    app.use(bodyParser.raw({ type: 'application/octet-stream', limit: '5000mb' }));
   }
 
   static slots = [Slot.withType<Route[]>(), Slot.withType<MiddlewareManifest[]>()];

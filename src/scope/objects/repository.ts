@@ -1,12 +1,13 @@
 import fs from 'fs-extra';
-import uniqBy from 'lodash.uniqby';
+import { uniqBy } from 'lodash';
 import * as path from 'path';
 import R from 'ramda';
-
-import { OBJECTS_DIR } from '../../constants';
+import pMap from 'p-map';
+import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
+import { ChownOptions } from '../../utils/fs-write-file';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import RemoteLanes from '../lanes/remote-lanes';
@@ -133,7 +134,7 @@ export default class Repository {
 
   async list(): Promise<BitObject[]> {
     const refs = await this.listRefs();
-    return Promise.all(refs.map((ref) => this.load(ref)));
+    return pMap(refs, (ref) => this.load(ref), { concurrency: CONCURRENT_IO_LIMIT });
   }
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
@@ -146,8 +147,9 @@ export default class Repository {
 
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
-    return Promise.all(
-      refs.map(async (ref) => {
+    return pMap(
+      refs,
+      async (ref) => {
         try {
           const buffer = await this.loadRaw(ref);
           const bitRawObject = await BitRawObject.fromDeflatedBuffer(buffer, ref.hash);
@@ -156,7 +158,8 @@ export default class Repository {
           logger.error(`Couldn't load the ref ${ref} this object is probably corrupted and should be delete`);
           return null;
         }
-      })
+      },
+      { concurrency: CONCURRENT_IO_LIMIT }
     );
   }
 
@@ -217,6 +220,10 @@ export default class Repository {
     // Run hook to transform content pre reading
     const transformedContent = this.onRead(raw);
     return transformedContent;
+  }
+
+  async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
+    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency: CONCURRENT_IO_LIMIT });
   }
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
@@ -357,7 +364,7 @@ export default class Repository {
     if (!this.objectsToRemove.length) return;
     const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
-    await Promise.all(uniqRefs.map((ref) => this._deleteOne(ref)));
+    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency: CONCURRENT_IO_LIMIT });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -366,7 +373,10 @@ export default class Repository {
     if (R.isEmpty(this.objects)) return;
     logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
     // @TODO handle failures
-    await Promise.all(Object.keys(this.objects).map((hash) => this._writeOne(this.objects[hash])));
+    await pMap(Object.keys(this.objects), (hash) => this._writeOne(this.objects[hash]), {
+      concurrency: CONCURRENT_IO_LIMIT,
+    });
+    logger.debug(`Repository._writeMany: completed writing ${Object.keys(this.objects).length} objects successfully`);
     const added = this.scopeIndex.addMany(R.values(this.objects));
     if (added) await this.scopeIndex.write();
   }
@@ -389,8 +399,7 @@ export default class Repository {
    */
   async _writeOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
-    const options = {};
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.trace(`repository._writeOne: ${objectPath}`);
@@ -401,10 +410,12 @@ export default class Repository {
   }
 
   async writeObjectsToPendingDir(objectList: ObjectList, pendingDir: PathOsBasedAbsolute) {
+    const options: ChownOptions = {};
+    if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
     await Promise.all(
       objectList.objects.map(async (object) => {
         const objPath = path.join(pendingDir, this.hashPath(object.ref));
-        await fs.outputFile(objPath, object.buffer);
+        await writeFile(objPath, object.buffer, options);
       })
     );
   }

@@ -2,8 +2,8 @@
 import { Component, ComponentID } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { Workspace } from '@teambit/workspace';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { Consumer } from 'bit-bin/dist/consumer';
+import { BitId } from '@teambit/legacy-bit-id';
+import { Consumer } from '@teambit/legacy/dist/consumer';
 import { Graph } from 'graphlib';
 import { ReplaySubject } from 'rxjs';
 

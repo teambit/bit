@@ -19,8 +19,8 @@
         "dependencies": {
           "@babel/preset-env": "^7.10.1",
           "@babel/preset-react": "^7.12.10",
-          "@typescript-eslint/parser": "^4.8.2",
-          "@typescript-eslint/eslint-plugin": "^4.8.2",
+          "@typescript-eslint/parser": "4.13.0",
+          "@typescript-eslint/eslint-plugin": "4.13.0",
           "eslint-plugin-jest": "24.1.3",
           "eslint-plugin-import": "^2.22.0",
           "eslint-plugin-react-hooks": "^4.0.8",
@@ -44,18 +44,18 @@
           "sass-loader": "^10.1.0",
           "less": "^3.12.2",
           "less-loader": "^7.0.2",
-          "bit-bin": "-",
+          "@teambit/legacy": "-",
           "@babel/runtime": "^7.11.2"
         },
         "devDependencies": {
           "@types/mocha": "^5.2.7",
           "@types/node": "^12.12.27",
-          "bit-bin": "-",
+          "@teambit/legacy": "-",
           "react-dom": "-"
         },
         "peerDependencies": {
           "react": "^16.13.1",
-          "bit-bin": "14.8.9-dev.256",
+          "@teambit/legacy": "1.0.4",
           "react-dom": "^16.13.1"
         }
       }

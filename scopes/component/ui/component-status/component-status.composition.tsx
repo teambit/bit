@@ -33,7 +33,3 @@ export const StagedComponentStatus = () => {
     </ThemeCompositions>
   );
 };
-
-const compositions = [ErrorComponentStatus, ModifiedComponentStatus, NewComponentStatus, StagedComponentStatus];
-// @ts-ignore
-compositions.map((comp) => (comp.canvas = { height: 90 }));

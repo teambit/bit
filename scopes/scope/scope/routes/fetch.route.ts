@@ -1,5 +1,5 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
-import { fetch } from 'bit-bin/dist/api/scope';
+import { fetch } from '@teambit/legacy/dist/api/scope';
 import { ScopeMain } from '../scope.main.runtime';
 
 export class FetchRoute implements Route {
