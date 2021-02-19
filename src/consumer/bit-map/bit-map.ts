@@ -279,7 +279,13 @@ export default class BitMap {
         componentFromJson.exported = true;
         return true;
       };
-      componentFromJson.id = BitId.parse(componentId, idHasScope());
+      const bitId = BitId.parse(componentId, idHasScope());
+      if (bitId.hasScope() && !bitId.hasVersion()) {
+        throw new BitError(
+          `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
+        );
+      }
+      componentFromJson.id = bitId;
       const componentMap = ComponentMap.fromJson(componentFromJson);
       componentMap.updatePerLane(this.remoteLaneName, this.workspaceLane ? this.workspaceLane.ids : null);
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
