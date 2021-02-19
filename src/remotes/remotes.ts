@@ -36,7 +36,7 @@ export default class Remotes extends Map<string, Remote> {
     });
   }
 
-  isHub(scope) {
+  isHub(scope: string): boolean {
     // if a scope is listed as a remote, it doesn't go to the hub
     return !this.get(scope);
   }
