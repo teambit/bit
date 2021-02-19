@@ -280,7 +280,7 @@ export default class BitMap {
         return true;
       };
       const bitId = BitId.parse(componentId, idHasScope());
-      if (bitId.hasScope() && !bitId.hasVersion()) {
+      if (bitId.hasScope() && !bitId.hasVersion() && !componentFromJson.lanes) {
         throw new BitError(
           `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
         );
