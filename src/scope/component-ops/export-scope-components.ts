@@ -19,11 +19,12 @@ import Scope from '../scope';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import { ObjectItem, ObjectList } from '../objects/object-list';
-import { ExportPersist, ExportValidate } from '../actions';
+import { ExportPersist, ExportValidate, RemovePendingDir } from '../actions';
 import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
+import { EXPORT_CENTRAL, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -139,7 +140,8 @@ export async function exportMany({
   } else if (shouldPushToCentralHub()) {
     await pushAllToCentralHub();
   } else {
-    await pushToRemotes();
+    // await pushToRemotes();
+    await pushToRemotesCarefully();
   }
 
   loader.start('updating data locally...');
@@ -160,7 +162,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy || originDirectly) return false;
+    if (isLegacy || originDirectly || !isFeatureEnabled(EXPORT_CENTRAL)) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
@@ -348,6 +350,7 @@ the following ids were exported: ${successIds.join(', ')}`);
     return modelComponent.switchHashesWithTagsIfExist(allHashes);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function pushToRemotes(): Promise<void> {
     enrichContextFromGlobal(context);
     const pushOptions = { persist: true };
@@ -365,6 +368,41 @@ the following ids were exported: ${successIds.join(', ')}`);
         pushedRemotes.push(remote);
       } catch (err) {
         logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
+        throw err;
+      }
+    });
+  }
+
+  async function pushToRemotesCarefully() {
+    const remotes = manyObjectsPerRemote.map((o) => o.remote);
+    const clientId = resumeExportId || Date.now().toString();
+    await pushRemotesPendingDir(clientId);
+    await validateRemotes(remotes, clientId, Boolean(resumeExportId));
+    await persistRemotes(manyObjectsPerRemote, clientId);
+  }
+
+  async function pushRemotesPendingDir(clientId: string): Promise<void> {
+    if (resumeExportId) {
+      logger.debug('pushRemotesPendingDir - skip as the resumeClientId was passed');
+      // no need to transfer the objects, they're already on the server. also, since this clientId
+      // exists already on the remote pending-dir, it'll cause a collision.
+      return;
+    }
+    const pushOptions = { clientId };
+    const pushedRemotes: Remote[] = [];
+    await mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
+      const { remote, objectList } = objectsPerRemote;
+      loader.start(`transferring ${objectList.count()} objects to the remote "${remote.name}"...`);
+      try {
+        await remote.pushMany(objectList, pushOptions, context);
+        logger.debugAndAddBreadCrumb(
+          'export-scope-components.pushRemotesPendingDir',
+          'successfully pushed all objects to the pending-dir directory on the remote'
+        );
+        pushedRemotes.push(remote);
+      } catch (err) {
+        logger.warnAndAddBreadCrumb('exportMany', 'failed pushing objects to the remote');
+        await removePendingDirs(pushedRemotes, clientId);
         throw err;
       }
     });
@@ -836,7 +874,7 @@ async function convertToCorrectScopeHarmony(
   }
 }
 
-async function validateRemotes(remotes: Remote[], clientId: string) {
+async function validateRemotes(remotes: Remote[], clientId: string, isResumingExport = true) {
   loader.start('verifying that objects can be merged on the remotes...');
   try {
     await Promise.all(
@@ -849,6 +887,11 @@ async function validateRemotes(remotes: Remote[], clientId: string) {
     );
   } catch (err) {
     logger.errorAndAddBreadCrumb('validateRemotes', 'failed validating remotes', {}, err);
+    if (!isResumingExport) {
+      // when resuming export, we don't want to delete the pending-objects because some scopes
+      // have them persisted and some not. we want to persist to all failing scopes.
+      await removePendingDirs(remotes, clientId);
+    }
     throw err;
   }
 }
@@ -893,4 +936,8 @@ export async function resumeExport(scope: Scope, exportId: string, remotes: stri
   await validateRemotes(remotesObj, exportId);
   await persistRemotes(remotesForPersist, exportId);
   return R.flatten(remotesForPersist.map((r) => r.exportedIds));
+}
+
+async function removePendingDirs(pushedRemotes: Remote[], clientId: string) {
+  await Promise.all(pushedRemotes.map((remote) => remote.action(RemovePendingDir.name, { clientId })));
 }
