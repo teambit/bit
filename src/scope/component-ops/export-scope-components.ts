@@ -350,6 +350,7 @@ the following ids were exported: ${successIds.join(', ')}`);
     return modelComponent.switchHashesWithTagsIfExist(allHashes);
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async function pushToRemotes(): Promise<void> {
     enrichContextFromGlobal(context);
     const pushOptions = { persist: true };
@@ -378,10 +379,6 @@ the following ids were exported: ${successIds.join(', ')}`);
     await pushRemotesPendingDir(clientId);
     await validateRemotes(remotes, clientId, Boolean(resumeExportId));
     await persistRemotes(manyObjectsPerRemote, clientId);
-  }
-
-  async function removePendingDirs(pushedRemotes: Remote[], clientId: string) {
-    await Promise.all(pushedRemotes.map((remote) => remote.action(RemovePendingDir.name, { clientId })));
   }
 
   async function pushRemotesPendingDir(clientId: string): Promise<void> {
@@ -939,4 +936,8 @@ export async function resumeExport(scope: Scope, exportId: string, remotes: stri
   await validateRemotes(remotesObj, exportId);
   await persistRemotes(remotesForPersist, exportId);
   return R.flatten(remotesForPersist.map((r) => r.exportedIds));
+}
+
+async function removePendingDirs(pushedRemotes: Remote[], clientId: string) {
+  await Promise.all(pushedRemotes.map((remote) => remote.action(RemovePendingDir.name, { clientId })));
 }
