@@ -133,7 +133,7 @@
     "cli-spinners": "^1.0.0",
     "commander": "^2.20.3",
     "comment-json": "^3.0.2",
-    "core-js": "^3.6.5",
+    "core-js": "3.8.3",
     "css-tree": "^1.0.0-alpha.39",
     "debug": "^4.1.1",
     "decamelize": "^1.2.0",
