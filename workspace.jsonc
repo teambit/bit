@@ -237,7 +237,6 @@
         "pretty-time": "1.1.0",
         "prism-react-renderer": "1.2.0",
         "proper-lockfile": "4.1.2",
-        "react": "16.14.0",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "10.2.1",
         "react-dom": "16.14.0",
@@ -288,7 +287,7 @@
         "version": "5.1.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.8",
+        "@teambit/legacy": "1.0.9",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -344,7 +343,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.8",
+            "@teambit/legacy": "1.0.9",
             "react-dom": "16.13.1"
           }
         }
@@ -486,7 +485,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.8",
+            "@teambit/legacy": "1.0.9",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",

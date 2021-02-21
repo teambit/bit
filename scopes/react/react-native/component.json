@@ -41,9 +41,9 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "react": "^16.13.1",
-          "@teambit/legacy": "1.0.8",
-          "react-dom": "^16.13.1"
+          "react": "16.13.1",
+          "@teambit/legacy": "1.0.9",
+          "react-dom": "16.13.1"
         }
       }
     },
