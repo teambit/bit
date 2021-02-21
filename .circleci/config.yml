@@ -464,7 +464,7 @@ jobs:
           key: bitsrc-registry8
       - run:
           name: 'install husky globally'
-          command: 'npm i -g husky'
+          command: 'sudo npm i -g husky'
       - run:
           name: 'install harmony'
           command: 'cd bit && npm run install-harmony'
