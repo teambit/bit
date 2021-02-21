@@ -15,6 +15,7 @@
   "resolutions": {
     "@teambit/bit/core-js": "3.8.3",
     "@teambit/bit/ramda-adjunct": "2.30.0",
-    "@teambit/legacy/ramda-adjunct": "2.30.0"
+    "@teambit/legacy/ramda-adjunct": "2.30.0",
+    "ramda-adjunct": "2.30.0"
   }
 }
