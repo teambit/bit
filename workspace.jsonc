@@ -171,7 +171,7 @@
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "copy-to-clipboard": "^3.3.1",
-        "core-js": "^3.6.5",
+        "core-js": "3.8.3",
         "cors": "^2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-fetch": "3.0.6",
@@ -288,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.6",
+        "@teambit/legacy": "1.0.7",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -344,7 +344,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "@teambit/legacy": "1.0.6",
+            "@teambit/legacy": "1.0.7",
             "react-dom": "^16.13.1"
           }
         }
@@ -486,7 +486,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.6",
+            "@teambit/legacy": "1.0.7",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",

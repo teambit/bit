@@ -250,11 +250,11 @@ export class ReactEnv implements Environment {
     return {
       dependencies: {
         react: '-',
+        'core-js': '3.8.3',
       },
       // TODO: add this only if using ts
       devDependencies: {
         '@types/node': '^12.12.27',
-        'core-js': '^3.6.5',
         '@types/react': '16.9.43',
         '@types/jest': '~26.0.9',
         '@types/mocha': '-',
