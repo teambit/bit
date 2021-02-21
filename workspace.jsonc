@@ -5,7 +5,6 @@
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
-    // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
