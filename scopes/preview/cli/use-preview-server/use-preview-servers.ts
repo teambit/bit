@@ -24,7 +24,9 @@ export function usePreviewServer({ pubsub }: UsePreviewServerProps) {
       if (event.type === WebpackCompilationStartedEvent.TYPE && !compiling) {
         setErrors([]);
         setCompiling(true);
-        setCompilingServers(compilingServers.concat([event.data.devServerID]));
+        if (!compilingServers.includes(event.data.serverId)) {
+          setCompilingServers(compilingServers.concat([event.data.devServerID]));
+        }
       }
 
       return () => {
