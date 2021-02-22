@@ -5,7 +5,6 @@
     "icon": "https://static.bit.dev/bit-logo.svg",
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
-    // "vendorDirectory": "vendor",
   },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
@@ -193,6 +192,7 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
+        //TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
@@ -288,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.7",
+        "@teambit/legacy": "1.0.9",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -344,7 +344,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "@teambit/legacy": "1.0.7",
+            "@teambit/legacy": "1.0.9",
             "react-dom": "^16.13.1"
           }
         }
@@ -486,7 +486,9 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.7",
+            "@teambit/legacy": "1.0.9",
+            // TODO: remove this later
+            "core-js": "3.8.3",
             "react": "^16.13.1",
             "react-dom": "^16.13.1",
             "graphql": "^14.3.1",
