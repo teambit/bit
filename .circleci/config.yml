@@ -627,24 +627,24 @@ jobs:
       - set_git_credentials
       # temporarily to understand the issue with the "EMFILE, too many open files" error.
       - run: ulimit -a
-      - run:
-          name: export components
-          command: cd bit && bit export
-          no_output_timeout: '20m'
-      - run:
-          name: backup bit objects (after export)
-          command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
-      - run: cd bit && git commit -am "bump teambit version to `npm show @teambit/bit version` [skip ci]"
-      # git pull first in case another commit entered to master so then the push could work with no errors.
-      - run: cd bit && GIT_MERGE_AUTOEDIT=no git pull origin master
-      # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
-      - run: cd bit && git push origin master
-      - store_artifacts:
-          path: ~/Library/Caches/Bit/logs
-      - store_artifacts:
-          path: bit/objects-after-export.tar
-      - store_artifacts:
-          path: bit/.bitmap
+      # - run:
+      #     name: export components
+      #     command: cd bit && bit export
+      #     no_output_timeout: '20m'
+      # - run:
+      #     name: backup bit objects (after export)
+      #     command: cd bit && tar -zcvf objects-after-export.tar .git/bit/objects
+      # - run: cd bit && git commit -am "bump teambit version to `npm show @teambit/bit version` [skip ci]"
+      # # git pull first in case another commit entered to master so then the push could work with no errors.
+      # - run: cd bit && GIT_MERGE_AUTOEDIT=no git pull origin master
+      # # we use master here instead of ${CIRCLE_BRANCH} because we want to support running this from tag (manual nightly) as well
+      # - run: cd bit && git push origin master
+      # - store_artifacts:
+      #     path: ~/Library/Caches/Bit/logs
+      # - store_artifacts:
+      #     path: bit/objects-after-export.tar
+      # - store_artifacts:
+      #     path: bit/.bitmap
 
   harmony_deploy_approval_job:
     <<: *defaults
