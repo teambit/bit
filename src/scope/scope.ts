@@ -24,7 +24,6 @@ import {
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
-  CONCURRENT_COMPONENTS_LIMIT,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
