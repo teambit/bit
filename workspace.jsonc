@@ -336,7 +336,9 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "-"
+            "@teambit/legacy": "-",
+            // TODO: remove this later
+            "core-js": "3.8.3"
           },
           "devDependencies": {
             "@types/mocha": "^5.2.7",
