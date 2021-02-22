@@ -12,6 +12,7 @@ export class ActionRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
+      req.setTimeout(this.scope.config.httpTimeOut);
       const authData = getAuthDataFromHeader(req.headers.authorization);
       const result = await action(this.scope.path, req.body.name, req.body.options, authData);
       // in case the result is empty, send `{}` to make it a valid json.

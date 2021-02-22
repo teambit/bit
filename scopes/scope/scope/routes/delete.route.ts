@@ -11,6 +11,7 @@ export class DeleteRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
+      req.setTimeout(this.scope.config.httpTimeOut);
       const result = await remove({
         path: this.scope.path,
         ids: req.body.ids,
