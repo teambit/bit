@@ -116,8 +116,8 @@ function getReactNativeDeps() {
       'react-native-web': '0.14.8',
     },
     peerDependencies: {
-      react: '16.13.1',
-      'react-native': '0.63.4',
+      react: '^16.8.0',
+      'react-dom': '^16.8.0',
     },
   };
 }

@@ -137,8 +137,8 @@
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "4.1.1",
         "@types/puppeteer": "3.0.5",
-        "@types/react": "16.9.43",
-        "@types/react-dom": "16.9.10",
+        "@types/react": "^16.14.4",
+        "@types/react-dom": "^16.9.11",
         "@types/react-router-dom": "5.1.7",
         "@types/react-tabs": "2.3.2",
         "@types/react-transition-group": "4.4.1",
@@ -239,6 +239,7 @@
         "proper-lockfile": "4.1.2",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "10.2.1",
+        "react": "16.14.0",
         "react-dom": "16.14.0",
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
@@ -289,9 +290,7 @@
         "@teambit/legacy": "1.0.10",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
-        "mz": "2.7.0",
-        "react": "16.13.1",
-        "react-dom": "16.13.1"
+        "mz": "2.7.0"
       }
     },
     "packageManagerArgs": [],
@@ -343,9 +342,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "react": "16.13.1",
-            "@teambit/legacy": "1.0.10",
-            "react-dom": "16.13.1"
+            "@teambit/legacy": "1.0.10"
           }
         }
       },
@@ -489,8 +486,6 @@
             "@teambit/legacy": "1.0.10",
             // TODO: remove this later
             "core-js": "3.8.3",
-            "react": "16.13.1",
-            "react-dom": "16.13.1",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -500,7 +495,6 @@
             "graceful-fs": "4.2.4"
           },
           "devDependencies": {
-            "@types/react": "16.14.4",
             "@types/mocha": "5.2.7",
             // why this is needed? try to automate this
             "@types/node": "12.20.4"
@@ -509,8 +503,6 @@
             "@teambit/legacy": "-",
             "browserslist": "-",
             "graphql": "-",
-            "react": "-",
-            "react-dom": "-"
           }
         }
       }

@@ -7,7 +7,9 @@
   "propagate": false,
   "extensions": {
     "teambit.pkg/pkg": {
-      "packageManagerPublishArgs": ["--access public"],
+      "packageManagerPublishArgs": [
+        "--access public"
+      ],
       "packageJson": {
         "name": "@teambit/{name}",
         "private": false,
@@ -41,9 +43,9 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "react": "16.13.1",
-          "@teambit/legacy": "1.0.10",
-          "react-dom": "16.13.1"
+          "react": "^16.8.0",
+          "react-dom": "^16.8.0",
+          "@teambit/legacy": "1.0.10"
         }
       }
     },
