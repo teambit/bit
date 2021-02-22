@@ -575,6 +575,39 @@ jobs:
       - store_artifacts:
           path: bit/objects-before-export.tar
 
+  harmony_publish_to_jfrog:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: Install jFrog CLI
+          command: curl -fL https://getcli.jfrog.io | sh
+      - run:
+          name: create empty folder
+          command: mkdir bit-${BIT_VERSION}
+      - run:
+          name: install bit
+          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+      - run:
+          name: remove leftovers
+          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
+      - run:
+          name: compress bit
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: Configure jfrog auth
+          command: ./jfrog rt config --url $jfrogUrl --user $jfrogUser --access-token $jfrogAcessToken --interactive=false
+      - run:
+          name: Upload tar file
+          command: ./jfrog rt u "bit-${BIT_VERSION}.tar.gz" bvm/dev/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz --flat=false
+
   bit_export:
     <<: *defaults
     environment:
@@ -1113,6 +1146,10 @@ workflows:
           <<: *master_only_filter
           requires:
             - setup_harmony
+      - harmony_publish_to_jfrog:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1149,6 +1186,11 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
+      - harmony_publish_to_jfrog:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
       - bit_export:
           <<: *master_only_filter
           requires:
