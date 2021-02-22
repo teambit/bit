@@ -457,7 +457,8 @@ export default class Scope {
     const versions = bitObjectList.getVersions();
     const laneObjects = bitObjectList.getLanes();
     await pMap(components, (component: ModelComponent) => this.mergeModelComponent(component, versions, remoteName), {
-      concurrency: CONCURRENT_COMPONENTS_LIMIT,
+      // concurrency: CONCURRENT_COMPONENTS_LIMIT,
+      concurrency: 3, // temporarily limit the concurrency to a minimal number, optimize it ASAP
     });
     let nonLaneIds: BitId[] = ids;
     await Promise.all(
