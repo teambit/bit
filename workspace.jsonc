@@ -192,6 +192,7 @@
         "fuse.js": "6.4.6",
         "get-port": "5.1.1",
         "globby": "11.0.1",
+	// TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
@@ -283,8 +284,7 @@
         "webpack-merge": "5.7.3",
         "workbox-webpack-plugin": "5.1.4",
         "ws": "7.4.2",
-        "yaml": "1.10.0",
-        "version": "5.1.0"
+        "yaml": "1.10.0"
       },
       "peerDependencies": {
         "@teambit/legacy": "1.0.9",
@@ -335,7 +335,9 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "-"
+            "@teambit/legacy": "-",
+            // TODO: remove this later
+            "core-js": "3.8.3"
           },
           "devDependencies": {
             "@types/mocha": "5.2.7",
