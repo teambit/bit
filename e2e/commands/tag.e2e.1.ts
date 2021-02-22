@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import chai, { expect } from 'chai';
 import * as path from 'path';
 
@@ -8,7 +7,6 @@ import MissingFilesFromComponent from '../../src/consumer/component/exceptions/m
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { VersionAlreadyExists } from '../../src/scope/exceptions';
-import { Extensions } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 
