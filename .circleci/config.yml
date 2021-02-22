@@ -1146,6 +1146,10 @@ workflows:
           <<: *master_only_filter
           requires:
             - setup_harmony
+      - harmony_publish_to_jfrog:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1182,6 +1186,11 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
+      - harmony_publish_to_jfrog:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1192,9 +1201,3 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-  harmony_publish_test:
-    jobs:
-      - harmony_publish_to_jfrog:
-          filters:
-            branches:
-              only: upload-to-jfrog
