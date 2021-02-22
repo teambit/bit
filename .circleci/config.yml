@@ -585,7 +585,7 @@ jobs:
           command: npm view @teambit/bit version
       - run:
           name: Setup bit version environment variables
-          command: cd bit && echo "export BIT_VERSION=$(npm view @teambit/legacy version)" >> $BASH_ENV && source $BASH_ENV
+          command: echo "export BIT_VERSION=$(npm view @teambit/legacy version)" >> $BASH_ENV && source $BASH_ENV
       - run:
           name: Install jFrog CLI
           command: curl -fL https://getcli.jfrog.io | sh
