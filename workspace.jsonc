@@ -192,6 +192,7 @@
         "fuse.js": "^6.4.1",
         "get-port": "^5.1.1",
         "globby": "11.0.1",
+        //TODO: remove this once  this is merged https://github.com/isaacs/node-graceful-fs/pull/202
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "^1.1.0",
         "graphql-tag": "^2.10.3",
@@ -287,7 +288,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.9",
+        "@teambit/legacy": "1.0.10",
         "browserslist": "^4",
         "graphql": "^14.3.1",
         "mz": "^2.7.0",
@@ -296,18 +297,14 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": [
-      "**/*.spec.ts"
-    ],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -345,7 +342,7 @@
           },
           "peerDependencies": {
             "react": "^16.13.1",
-            "@teambit/legacy": "1.0.9",
+            "@teambit/legacy": "1.0.10",
             "react-dom": "^16.13.1"
           }
         }
@@ -473,9 +470,7 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": [
-            "--access public"
-          ],
+          "packageManagerPublishArgs": ["--access public"],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -487,7 +482,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.9",
+            "@teambit/legacy": "1.0.10",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "^16.13.1",
