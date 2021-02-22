@@ -47,6 +47,14 @@
   box-sizing: border-box;
 }
 
+.isOwner {
+  border: 2px solid var(--steel-color);
+  position: absolute;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  border-radius: 50%;
+}
+
 :export {
   //text without hash
   defaultAvatarBgColor: str-slice(inspect(var(--border-color)), 2);

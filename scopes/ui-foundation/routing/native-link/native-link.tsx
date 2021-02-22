@@ -30,5 +30,6 @@ export function NativeLink({ href = '', external, replace, onClick, ...rest }: L
     [href, replace, onClick]
   );
 
+  // @ts-ignore TOOD: @Uri please check this
   return <a {...rest} {...externalProps} onClick={handleClick} href={href} />;
 }
