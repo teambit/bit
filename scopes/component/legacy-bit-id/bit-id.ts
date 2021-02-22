@@ -1,6 +1,6 @@
 import decamelize from 'decamelize';
 import * as path from 'path';
-import R from 'ramda';
+import * as R from 'ramda';
 import * as semver from 'semver';
 import { versionParser, isHash, LATEST_VERSION } from '@teambit/component-version';
 import isValidIdChunk from './utils/is-valid-id-chunk';

@@ -14,11 +14,20 @@ type UserAvatarProps = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
+  isOwner?: boolean;
 };
 
 export class UserAvatar extends PureComponent<UserAvatarProps> {
   render() {
-    const { account, size, imageSize = size, fontSize = Math.round(size * 0.4), className, imgClassName } = this.props;
+    const {
+      account,
+      size,
+      imageSize = size,
+      fontSize = Math.round(size * 0.4),
+      className,
+      imgClassName,
+      isOwner = false,
+    } = this.props;
 
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
@@ -26,6 +35,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
     const colors = firstLetter && avatarColors[firstLetter.toLowerCase()];
     return (
       <div className={classNames(colors, styles.avatar, className)} style={{ width: `${size}px`, height: `${size}px` }}>
+        {isOwner && <div className={styles.isOwner} />}
         {profileImageWithParams && (
           <img src={profileImageWithParams} className={classNames(styles.avatarImg, imgClassName)} />
         )}
