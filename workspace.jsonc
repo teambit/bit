@@ -13,7 +13,7 @@
         "@apollo/client": "3.3.6",
         "@babel/core": "7.11.6",
         "@babel/preset-react": "7.12.7",
-        "@babel/preset-typescript": "7.10.4",
+        "@babel/preset-typescript": "7.12.7",
         "@graphql-modules/core": "0.7.17",
         "@jest/test-result": "26.6.2",
         "@mdx-js/loader": "1.6.21",
@@ -286,7 +286,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.11",
+        "@teambit/legacy": "1.0.12",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -344,7 +344,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.11",
+            "@teambit/legacy": "1.0.12",
             "react-dom": "16.13.1"
           }
         }
@@ -486,7 +486,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.11",
+            "@teambit/legacy": "1.0.12",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",
@@ -535,7 +535,8 @@
             "@babel/plugin-transform-runtime": "7.12.17",
             "@babel/preset-env": "7.12.17",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
-            "@babel/preset-react": "7.12.13"
+            "@babel/preset-react": "7.12.13",
+            "@babel/preset-typescript": "7.12.7"
           }
         }
       }

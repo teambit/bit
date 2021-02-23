@@ -1,11 +1,11 @@
-import { Icon } from '@teambit/evangelist.elements.icon';
-import classNames from 'classnames';
 import React, { PureComponent } from 'react';
-
+import classNames from 'classnames';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { addAvatarQueryParams } from '@teambit/url.add-avatar-query-params';
+import { getInitials } from '@teambit/string.get-initials';
 import { AccountObj } from './avatar';
 import avatarColors from './avatar-colors.module.scss';
 import styles from './styles.module.scss';
-import { addQueryParams, getInitials } from './utils';
 
 type UserAvatarProps = {
   account: AccountObj;
@@ -31,7 +31,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
 
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
-    const profileImageWithParams = addQueryParams(profileImage, imageSize);
+    const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
     const colors = firstLetter && avatarColors[firstLetter.toLowerCase()];
     return (
       <div className={classNames(colors, styles.avatar, className)} style={{ width: `${size}px`, height: `${size}px` }}>
