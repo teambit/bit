@@ -72,8 +72,9 @@ export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
 
 export type ScopeConfig = {
-  description: string;
-  icon: string;
+  httpTimeOut: number;
+  description?: string;
+  icon?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -95,6 +96,9 @@ export class ScopeMain implements ComponentFactory {
     /**
      * slot registry for subscribing to build
      */
+
+    readonly config: ScopeConfig,
+
     private tagRegistry: TagRegistry,
 
     private postPutSlot: OnPostPutSlot,
@@ -107,8 +111,6 @@ export class ScopeMain implements ComponentFactory {
 
     private aspectLoader: AspectLoaderMain,
 
-    private config: ScopeConfig,
-
     private logger: Logger
   ) {}
 
@@ -119,11 +121,11 @@ export class ScopeMain implements ComponentFactory {
     return this.legacyScope.name;
   }
 
-  get icon(): string {
+  get icon(): string | undefined {
     return this.config.icon;
   }
 
-  get description(): string {
+  get description(): string | undefined {
     return this.config.description;
   }
 
@@ -677,6 +679,10 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
   ];
 
+  static defaultConfig: ScopeConfig = {
+    httpTimeOut: 600000,
+  };
+
   static async provider(
     [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
       ComponentMain,
@@ -708,13 +714,13 @@ export class ScopeMain implements ComponentFactory {
       harmony,
       legacyScope,
       componentExt,
+      config,
       tagSlot,
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
       isolator,
       aspectLoader,
-      config,
       logger
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
