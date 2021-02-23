@@ -10,6 +10,6 @@ describe('getInitials()', () => {
   });
 
   it('should return undefined if the word is empty', () => {
-    expect(getInitials('')).toEqual(undefined);
+    expect(getInitials('')).toBeUndefined();
   });
 });
