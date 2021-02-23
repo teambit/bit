@@ -11,9 +11,6 @@ import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
-in Harmony workspace, without "--persist" flag, it does "soft-tag", which only keeps note of the changes to be made
-bit tag --persist, tags all the changes recorded by the previous soft-tag, this normally executed by the CI.
-bit tag [id] --persist or bit tag --all --persist, executes the persist on the given id or all.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
@@ -21,7 +18,7 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
     ['a', 'all [version]', 'tag all new and modified components'],
-    ['s', 'scope <version>', 'tag all components of the current scope'],
+    ['s', 'scope [version]', 'tag all components of the current scope'],
     ['p', 'patch', 'increment the patch version number'],
     ['', 'minor', 'increment the minor version number'],
     ['', 'major', 'increment the major version number'],
@@ -67,13 +64,13 @@ bit tag [id] --persist or bit tag --all --persist, executes the persist on the g
       major?: boolean;
       ignoreMissingDependencies?: boolean;
       ignoreUnresolvedDependencies?: boolean;
-      scope?: string;
+      scope?: string | boolean;
     } & Partial<BasicTagParams>
   ): Promise<any> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     if (soft) build = false;
     function getVersion(): string | undefined {
-      if (scope) return scope;
+      if (scope && isString(scope)) return scope;
       if (all && isString(all)) return all;
       return version;
     }
