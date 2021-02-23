@@ -12,6 +12,7 @@ export class PutRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
+      req.setTimeout(this.scope.config.httpTimeOut);
       const pushOptionsStr = req.headers['push-options'];
       if (!pushOptionsStr) throw new Error('http is missing the push-options header');
       const pushOptions = JSON.parse(pushOptionsStr as string);
