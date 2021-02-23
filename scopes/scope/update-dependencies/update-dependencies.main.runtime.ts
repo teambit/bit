@@ -158,9 +158,10 @@ export class UpdateDependenciesMain {
   }
 
   private async parseDevUpdatesItems(depsUpdateItemsRaw: DepUpdateItemRaw[]): Promise<DepUpdateItem[]> {
+    this.logger.setStatusLine(`loading ${depsUpdateItemsRaw.length} components and their aspects...`);
     return mapSeries(depsUpdateItemsRaw, async (depUpdateItemRaw) => {
       const componentId = ComponentID.fromString(depUpdateItemRaw.componentId);
-      const component = await this.scope.get(componentId);
+      const component = await this.scope.load(componentId);
       if (!component) throw new ComponentNotFound(componentId);
       const dependencies = await Promise.all(
         depUpdateItemRaw.dependencies.map((dep) => this.getDependencyWithExactVersion(dep))
@@ -181,6 +182,7 @@ export class UpdateDependenciesMain {
   }
 
   private async updateFutureVersion() {
+    this.logger.setStatusLine(`updateFutureVersion...`);
     await mapSeries(this.depsUpdateItems, async (depUpdateItem) => {
       const legacyComp: ConsumerComponent = depUpdateItem.component.state._consumer;
       const modelComponent = await this.scope.legacyScope.getModelComponent(legacyComp.id);
