@@ -414,7 +414,11 @@ the following ids were exported: ${successIds.join(', ')}`);
     return mapSeries(manyObjectsPerRemote, async (objectsPerRemote: ObjectsPerRemote) => {
       const { remote, idsToChangeLocally, componentsAndObjects, exportedIds } = objectsPerRemote;
       const remoteNameStr = remote.name;
-      await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id)));
+      // on Harmony, version hashes don't change, the new versions will replace the old ones.
+      // on the legacy, even when the hash changed, it's fine to have the old objects laying around.
+      // (could be removed in the future by some garbage collection).
+      const removeComponentVersions = false;
+      await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id, removeComponentVersions)));
       // @ts-ignore
       idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
       componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
