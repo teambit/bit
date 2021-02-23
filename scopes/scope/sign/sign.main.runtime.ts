@@ -114,7 +114,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     componentsToSign: ComponentID[];
   }> {
     // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
-    this.logger.setStatusLine(`loading ${ids.length} components and their extensions...`);
+    this.logger.setStatusLine(`loading ${ids.length} components and their aspects...`);
     const components = await this.scope.loadMany(ids);
     this.logger.clearStatusLine();
     const componentsToSign: ComponentID[] = [];

@@ -526,20 +526,11 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * load components from a scope and load its aspects.
+   * load components from a scope and load their aspects
    */
-  async loadMany(ids: ComponentID[]) {
-    // get all components.
-    const components = await this.getMany(ids);
-    // load all component aspects.
-    await Promise.all(
-      components.map(async (component) => {
-        const aspectIds = component.state.aspects.ids;
-        await this.loadAspects(aspectIds, true);
-      })
-    );
-
-    return components;
+  async loadMany(ids: ComponentID[]): Promise<Component[]> {
+    const components = await mapSeries(ids, (id) => this.load(id));
+    return compact(components);
   }
 
   /**
@@ -655,7 +646,17 @@ export class ScopeMain implements ComponentFactory {
     return getScopeRemotes(this.legacyScope);
   }
 
-  load() {}
+  /**
+   * get a component and load its aspect
+   */
+  async load(id: ComponentID): Promise<Component | undefined> {
+    const component = await this.get(id);
+    if (!component) return undefined;
+    const aspectIds = component.state.aspects.ids;
+    await this.loadAspects(aspectIds, true);
+
+    return component;
+  }
 
   /**
    * declare the slots of scope extension.
