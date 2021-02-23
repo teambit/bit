@@ -1,96 +1,68 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
 import { Frame } from './frame';
 import { Label } from './label';
+import { MouseHoverSelector } from './mouse-hover-selector';
+import { isBitComponent } from './bit-react-component';
 
-export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {}
+export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {
+  disabled?: boolean;
+}
 
-export function ComponentHighlighter({ children }: ComponentHighlightProps) {
+export function ComponentHighlighter({ children, disabled, ...rest }: ComponentHighlightProps) {
   const [text, setText] = useState<string | undefined>(undefined);
-  const [highlighted, setHighlighted] = useState<HTMLElement | null>(null);
+  const [target, setTarget] = useState<HTMLElement | null>(null);
 
-  const handleEnter = useCallback((event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    const { target } = event;
-    if (!target) return;
-
-    const element = target as HTMLElement;
-    const [componentElement, componentId] = findComponentAncestor(element) || [];
-
-    if (componentElement) {
-      setHighlighted(componentElement);
-      setText(componentId);
+  const handleElement = useCallback((element: HTMLElement | null) => {
+    if (!element) {
+      setTarget(null);
+      setText(undefined);
+      return;
     }
+
+    const bitComponent = bubbleToBitComponent(element, (elem) => !elem.hasAttribute('data-ignore-component-highlight'));
+    if (!bitComponent) return;
+
+    setText(bitComponent.id);
+    setTarget(bitComponent.element);
   }, []);
 
-  const handleLeave = useCallback(() => {
-    setHighlighted(null);
-  }, []);
+  useEffect(() => {
+    if (!disabled) {
+      setTarget(null);
+      setText(undefined);
+    }
+  }, [disabled]);
 
   return (
-    <div
-      onMouseOver={handleEnter}
-      onMouseLeave={handleLeave}
+    <MouseHoverSelector
+      {...rest}
+      onElementChange={handleElement}
+      disabled={disabled}
       style={{ fontFamily: 'sans-serif' }}
       data-ignore-component-highlight
     >
       {children}
-      <Frame targetRef={highlighted} />
-      {text && <Label targetRef={highlighted} offset={[0, 8]} placement="top" componentId={text} />}
-    </div>
+      <Frame targetRef={target} />
+      {text && <Label targetRef={target} offset={[0, 8]} placement="top" componentId={text} />}
+    </MouseHoverSelector>
   );
 }
 
-function findComponentAncestor(target: HTMLElement | null): [HTMLElement, string] | undefined {
-  console.log('finding ancestor...');
-  let counter = 0;
-  //   debugger;
-  for (let elem = target; elem; elem = elem ? elem.parentElement : null) {
-    // ignore by attribute
-    if (elem.hasAttribute('data-ignore-component-highlight')) return undefined;
+function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Element) => boolean) {
+  for (let current = element; current; current = current.parentElement) {
+    current = toRootElement(current);
+    if (!current || filter?.(current) === false) return undefined;
 
-    const component = domToReact(target);
-    console.log('trying component', counter++, elem, component?.name, component?.componentId);
-    if (component && isValidComponentID(component.componentId)) return [elem, component.componentId];
+    const component = domToReact(current);
 
-    // const legacyId = elem.getAttribute('data-bit-id');
-    // if (legacyId) return [elem, legacyId];
+    if (isBitComponent(component))
+      return {
+        element: current,
+        component,
+        id: component.componentId,
+      };
   }
 
   return undefined;
 }
-
-/**
- * a function that returns the React component of a given
- * DOM node.
- * This supports React 15 and 16+.
- */
-function domToReact(element: HTMLElement | null) {
-  // console.log("react version", React.version);
-
-  if (!element) return null;
-
-  return domToReact17(element) || domToReact16(element);
-}
-
-function domToReact17(element: HTMLElement) {
-  const reactInstanceKey = Object.keys(element).find((key) => key.startsWith('__reactFiber'));
-
-  if (!reactInstanceKey) return undefined;
-  // @ts-ignore
-  const fiberNode = element[reactInstanceKey];
-  return fiberNode?._debugOwner?.elementType;
-  //  return fiberNode?.return?.type;
-}
-
-function domToReact16(element: HTMLElement) {
-  const reactInstanceKey = Object.keys(element).find((key) => key.startsWith('__reactInternalInstance'));
-
-  if (!reactInstanceKey) return undefined;
-  // @ts-ignore
-  const fiberNode = element[reactInstanceKey];
-
-  //   return fiberNode?._debugOwner?.elementType;
-  return fiberNode?.return?.type;
-}
-
-const bitIdRegex = /^([^./@]+)\.([^./@]+)(\/([^.@]+))(@([^@]*))?$/;
-const isValidComponentID = (str?: string) => !!str && bitIdRegex.test(str);

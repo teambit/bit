@@ -2,8 +2,8 @@ import React, { ComponentType, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import { RenderingContext } from '@teambit/preview';
 import { StandaloneNotFoundPage } from '@teambit/ui.pages.standalone-not-found-page';
+import { ComponentHighlighter } from '@teambit/component-highlighter';
 import { ReactAspect } from './react.aspect';
-import { ComponentHighlighter } from '@teambit/comp-highlighter';
 
 function wrap(Component: ComponentType, WrapperComponent?: ComponentType): ComponentType {
   function Wrapper({ children }: { children?: ReactNode }) {
