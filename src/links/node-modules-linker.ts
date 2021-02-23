@@ -1,5 +1,6 @@
 import fs from 'fs-extra';
 import glob from 'glob';
+import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -56,24 +57,23 @@ export default class NodeModuleLinker {
   async getLinks(): Promise<DataToPersist> {
     this.dataToPersist = new DataToPersist();
     await this._populateShouldDependenciesSavedAsComponentsData();
-    await Promise.all(
-      this.components.map((component) => {
-        const componentId = component.id.toString();
-        logger.debug(`linking component to node_modules: ${componentId}`);
-        const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
-        component.componentMap = componentMap;
-        switch (componentMap.origin) {
-          case COMPONENT_ORIGINS.IMPORTED:
-            return this._populateImportedComponentsLinks(component);
-          case COMPONENT_ORIGINS.NESTED:
-            return this._populateNestedComponentsLinks(component);
-          case COMPONENT_ORIGINS.AUTHORED:
-            return this._populateAuthoredComponentsLinks(component);
-          default:
-            throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
-        }
-      })
-    );
+    // don't use Promise.all because down the road it calls transformPackageJson of pkg aspect, which loads components
+    await pMapSeries(this.components, (component) => {
+      const componentId = component.id.toString();
+      logger.debug(`linking component to node_modules: ${componentId}`);
+      const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
+      component.componentMap = componentMap;
+      switch (componentMap.origin) {
+        case COMPONENT_ORIGINS.IMPORTED:
+          return this._populateImportedComponentsLinks(component);
+        case COMPONENT_ORIGINS.NESTED:
+          return this._populateNestedComponentsLinks(component);
+        case COMPONENT_ORIGINS.AUTHORED:
+          return this._populateAuthoredComponentsLinks(component);
+        default:
+          throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
+      }
+    });
 
     return this.dataToPersist;
   }

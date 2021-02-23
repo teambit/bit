@@ -69,7 +69,7 @@ path: ${err.path}`);
 
   async collectRaw(repo: Repository): Promise<ObjectItem[]> {
     const refs = await this.collectRefs(repo);
-    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+    return repo.loadManyRaw(refs);
   }
 
   asRaw(repo: Repository): Promise<Buffer> {

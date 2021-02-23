@@ -310,7 +310,8 @@ export class AspectLoaderMain {
         if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
         return isValid;
       });
-      await this.harmony.load(this.prepareManifests(manifests));
+      const preparedManifests = this.prepareManifests(manifests);
+      await this.harmony.load(preparedManifests);
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts

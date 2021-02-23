@@ -367,7 +367,10 @@ export default class Component extends BitObject {
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log,
+        ...log, // @ts-ignore
+        username: log?.username || 'unknown',
+        // @ts-ignore
+        email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: versionInfo.ref.toString(),
       };
@@ -383,14 +386,15 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versionsIncludeOrphaned).find((versionRef) =>
-      this.versionsIncludeOrphaned[versionRef].isEqual(ref)
-    );
+  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
+    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
+    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
+    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
+    const allTags = this.versionsIncludeOrphaned;
+    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
   }
 
   /**
@@ -565,7 +569,7 @@ export default class Component extends BitObject {
     };
     const refs = await collectRefs();
     try {
-      return await Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+      return await repo.loadManyRaw(refs);
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"

@@ -3,8 +3,8 @@ import { Component, ComponentAspect, ComponentMain, ComponentID, AspectData } fr
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ExtensionDataList, ExtensionDataEntry } from 'bit-bin/dist/consumer/config/extension-data';
-import findDuplications from 'bit-bin/dist/utils/array/find-duplications';
+import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
+import findDuplications from '@teambit/legacy/dist/utils/array/find-duplications';
 import { EnvService } from './services';
 import { Environment } from './environment';
 import { EnvsAspect } from './environments.aspect';
@@ -14,7 +14,7 @@ import { EnvDefinition } from './env-definition';
 import { EnvServiceList } from './env-service-list';
 import { EnvsCmd } from './envs.cmd';
 import { EnvFragment } from './env.fragment';
-import { EnvNotFound } from './exceptions';
+import { EnvNotFound, EnvNotConfiguredForComponent } from './exceptions';
 
 export type EnvsRegistry = SlotRegistry<Environment>;
 
@@ -152,7 +152,15 @@ export class EnvsMain {
    */
   getEnvId(component: Component): string {
     const envsData = this.getEnvData(component);
-    return envsData.id;
+    const withVersion = this.resolveEnv(component, envsData.id);
+    const exactMatch = this.envSlot.toArray().find(([envId]) => {
+      return envsData.id === envId;
+    });
+
+    const exactMatchId = exactMatch?.[0];
+    if (exactMatchId) return exactMatchId;
+    if (!withVersion) throw new EnvNotConfiguredForComponent(envsData.id, component.id.toString());
+    return withVersion.toString();
   }
 
   /**
@@ -179,6 +187,14 @@ export class EnvsMain {
       icon: envsData.icon,
       services: envsData.services,
     };
+  }
+
+  resolveEnv(component: Component, id: string) {
+    const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
+      return id === aspectEntry.id.toString() || id === aspectEntry.id.toString({ ignoreVersion: true });
+    });
+
+    return matchedEntry?.id;
   }
 
   /**

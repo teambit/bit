@@ -1,11 +1,11 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { EmptyWorkspace } from './empty-workspace';
 
 export const EmptyWorkspaceExample = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <EmptyWorkspace name="bit.workspace" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };

@@ -1,5 +1,5 @@
 import { ComponentID } from '@teambit/component';
-import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import CapsuleList from './capsule-list';
 
 export class Network {

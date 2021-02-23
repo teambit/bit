@@ -2,12 +2,12 @@
 import { ExtensionManifest, Harmony } from '@teambit/harmony';
 import { Workspace } from '@teambit/workspace';
 import { BitId } from '@teambit/legacy-bit-id';
-import { AddActionResults } from 'bit-bin/dist/consumer/component-ops/add-components/add-components';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
-import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
-import { composeComponentPath } from 'bit-bin/dist/utils/bit/compose-component-path';
-import { PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import { AddActionResults } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
+import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import path from 'path';
 import Vinyl from 'vinyl';
 

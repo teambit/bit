@@ -1,6 +1,12 @@
 .statusLine {
   display: flex;
   align-items: baseline;
+  > div:not(:last-of-type) {
+    margin-right: 2px;
+    &:after {
+      content: ',';
+    }
+  }
   .modified {
     color: #ff8b00 !important;
   }

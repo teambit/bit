@@ -115,6 +115,31 @@ export class Http implements Network {
     return ids;
   }
 
+  async pushToCentralHub(
+    objectList: ObjectList,
+    options: Record<string, any> = {}
+  ): Promise<{
+    successIds: string[];
+    failedScopes: string[];
+    exportId: string;
+    errors: { [scopeName: string]: string };
+  }> {
+    const route = 'api/put';
+    logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
+    const pack = objectList.toTar();
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'POST',
+      body: pack,
+      headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+    });
+    logger.debug(
+      `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    );
+    await this.throwForNonOkStatus(res);
+    const results = await this.getJsonResponse(res);
+    return results;
+  }
+
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
     const route = 'api/scope/action';
     logger.debug(`Http.action, url: ${this.url}/${route}`);
@@ -329,7 +354,7 @@ export class Http implements Network {
 
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
-    return Object.assign(headers, authHeader);
+    return Object.assign(headers, authHeader, { connection: 'keep-alive' });
   }
 
   private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

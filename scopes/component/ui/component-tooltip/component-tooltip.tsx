@@ -18,12 +18,12 @@ export function StatusTooltip({ status, issuesCount, children }: any) {
 
   const content = (
     <ul className={styles.list}>
-      {isOutdated && <li>Pending for update</li>}
-      {isNew && !isOutdated && <li>New component</li>}
-      {isStaged && <li>Staged component</li>}
-      {hasModifiedFiles && <li>Modified files</li>}
-      {hasModifiedDependencies && <li>Modified dependencies</li>}
       {issuesCount > 0 && <li>{`${issuesCount} issue${issuesCount > 1 ? `s` : ''} found`}</li>}
+      {isNew && !isOutdated && <li>New component</li>}
+      {hasModifiedFiles && <li>Modified files</li>}
+      {isStaged && <li>Staged component</li>}
+      {isOutdated && <li>Updates pending</li>}
+      {hasModifiedDependencies && <li>Modified dependencies</li>}
     </ul>
   );
 

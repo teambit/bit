@@ -1,6 +1,6 @@
 import getCredentialsByURI from 'credentials-by-uri';
 import { RegistriesMap } from '@teambit/dependency-resolver';
-import { stripTrailingChar } from 'bit-bin/dist/utils';
+import { stripTrailingChar } from '@teambit/legacy/dist/utils';
 import { isEmpty } from 'ramda';
 import toNerfDart from 'nerf-dart';
 import { readConfig } from './read-config';

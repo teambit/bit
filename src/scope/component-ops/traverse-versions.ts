@@ -57,23 +57,27 @@ export async function getAllVersionsInfo({
     return modelComponent.laneHeadLocal || modelComponent.getHead();
   };
   const laneHead = getRefToStartFrom();
+  let stopped = false;
   if (laneHead) {
     const headInfo: VersionInfo = { ref: laneHead, tag: modelComponent.getTagOfRefIfExists(laneHead) };
     const head = await getVersionObj(laneHead);
     if (head) {
+      if (stopAt && stopAt.isEqual(head.hash())) {
+        return [];
+      }
       headInfo.version = head;
     } else {
       headInfo.error = new HeadNotFound(modelComponent.id(), laneHead.toString());
       if (throws) throw headInfo.error;
     }
     results.push(headInfo);
-
     const addParentsRecursively = async (version: Version) => {
-      if (stopAt && version.hash().isEqual(stopAt)) {
-        return;
-      }
       await Promise.all(
         version.parents.map(async (parent) => {
+          if (stopAt && stopAt.isEqual(parent)) {
+            stopped = true;
+            return;
+          }
           const parentVersion = await getVersionObj(parent);
           const versionInfo: VersionInfo = {
             ref: parent,
@@ -95,6 +99,7 @@ export async function getAllVersionsInfo({
     };
     if (head) await addParentsRecursively(head);
   }
+  if (stopped) return results;
   // backward compatibility.
   // components created before v15, might not have head.
   // even if they do have head (as a result of tag/snap after v15), they

@@ -1,5 +1,5 @@
 import { Route, Verb, Request, Response } from '@teambit/express';
-import { remove } from 'bit-bin/dist/api/scope';
+import { remove } from '@teambit/legacy/dist/api/scope';
 import { ScopeMain } from '../scope.main.runtime';
 
 export class DeleteRoute implements Route {
@@ -11,6 +11,7 @@ export class DeleteRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
+      req.setTimeout(this.scope.config.httpTimeOut);
       const result = await remove({
         path: this.scope.path,
         ids: req.body.ids,

@@ -8,12 +8,12 @@ import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-json-transformer';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
 import { BitError } from '@teambit/bit-error';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
@@ -365,7 +365,7 @@ export class PkgMain {
   ): Promise<Record<string, any>> {
     // const newId = await this.workspace.resolveComponentId(component.id);
     // const newComponent = await this.workspace.get(newId);
-    const host = await this.componentAspect.getHost();
+    const host = this.componentAspect.getHost();
     const id = await host.resolveComponentId(legacyComponent.id);
     const newComponent = await host.get(id);
     if (!newComponent) throw new Error(`cannot transform package.json of component: ${legacyComponent.id.toString()}`);

@@ -1,18 +1,22 @@
-import { Analytics } from 'bit-bin/dist/analytics/analytics';
-import { HARMONY_FEATURE, isFeatureEnabled, isHarmonyEnabled } from 'bit-bin/dist/api/consumer/lib/feature-toggle';
-import { COMPILER_ENV_TYPE, DEFAULT_LANGUAGE, WORKSPACE_JSONC } from 'bit-bin/dist/constants';
-import { ResolveModulesConfig } from 'bit-bin/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
-import { ExtensionDataList, ILegacyWorkspaceConfig } from 'bit-bin/dist/consumer/config';
-import { Compilers, Testers } from 'bit-bin/dist/consumer/config/abstract-config';
-import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
+import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import {
+  HARMONY_FEATURE,
+  isFeatureEnabled,
+  isHarmonyEnabled,
+} from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
+import { COMPILER_ENV_TYPE, DEFAULT_LANGUAGE, WORKSPACE_JSONC } from '@teambit/legacy/dist/constants';
+import { ResolveModulesConfig } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { ExtensionDataList, ILegacyWorkspaceConfig } from '@teambit/legacy/dist/consumer/config';
+import { Compilers, Testers } from '@teambit/legacy/dist/consumer/config/abstract-config';
+import { InvalidBitJson } from '@teambit/legacy/dist/consumer/config/exceptions';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigProps as LegacyWorkspaceConfigProps,
-} from 'bit-bin/dist/consumer/config/workspace-config';
-import { EnvType } from 'bit-bin/dist/legacy-extensions/env-extension-types';
-import logger from 'bit-bin/dist/logger/logger';
-import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+} from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { EnvType } from '@teambit/legacy/dist/legacy-extensions/env-extension-types';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';

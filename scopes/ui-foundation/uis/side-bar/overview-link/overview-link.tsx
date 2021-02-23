@@ -1,8 +1,8 @@
 import { Separator } from '@teambit/documenter.ui.separator';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink } from '@teambit/ui.routing.nav-link';
-import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
-import { hoverable } from 'bit-bin/dist/to-eject/css-components/hoverable';
+import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
+import { hoverable } from '@teambit/legacy/dist/to-eject/css-components/hoverable';
 import classNames from 'classnames';
 import React from 'react';
 

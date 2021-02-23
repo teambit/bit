@@ -67,8 +67,6 @@ export class StartCmd implements Command {
       return processWrite(data, cb);
     };
 
-    // const startTime = Date.now();
-
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
 
