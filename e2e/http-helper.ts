@@ -30,7 +30,7 @@ export class HttpHelper {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
-        if (!this.shouldIgnoreHttpError(data)) {
+        if (!this.shouldIgnoreHttpError(data.toString())) {
           reject(new Error(`http failed with the following stderr ${data}`));
         }
       });
