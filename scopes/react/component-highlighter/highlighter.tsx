@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
+import { MouseHoverSelector } from '@teambit/ui.mouse-hover-selector';
 import { Frame } from './frame';
 import { Label } from './label';
-import { MouseHoverSelector } from './mouse-hover-selector';
 import { isBitComponent } from './bit-react-component';
 
 export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -43,7 +43,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       data-ignore-component-highlight
     >
       {children}
-      <Frame targetRef={target} />
+      <Frame targetRef={target} data-ignore-component-highlight />
       {text && <Label targetRef={target} offset={[0, 8]} placement="top" componentId={text} />}
     </MouseHoverSelector>
   );
