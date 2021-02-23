@@ -1,5 +1,6 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
+import readLine from 'readline';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
@@ -135,9 +136,11 @@ export class Http implements Network {
     logger.debug(
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
-    await this.throwForNonOkStatus(res);
-    const results = await this.getJsonResponse(res);
-    return results;
+
+    const results = await this.readPutCentralStream(res.body);
+    // await this.throwForNonOkStatus(res);
+    // const results = await this.getJsonResponse(res);
+    return results.data;
   }
 
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
@@ -221,6 +224,28 @@ export class Http implements Network {
       // should not be here. it's just in case
       throw err;
     }
+  }
+
+  private async readPutCentralStream(body: NodeJS.ReadableStream): Promise<any> {
+    const rl = readLine.createInterface({
+      input: body,
+      crlfDelay: Infinity,
+    });
+
+    const pipe: any[] = [];
+    rl.on('line', (line) => {
+      const json = JSON.parse(line);
+      pipe.push(json);
+      // TODO: david print push status.
+      // console.log(json.message);
+    });
+
+    return new Promise((resolve, reject) => {
+      rl.on('close', () => {
+        const end = pipe.find((obj) => obj.end);
+        resolve(end);
+      });
+    });
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
