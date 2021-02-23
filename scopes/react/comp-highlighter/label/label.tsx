@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { usePopper } from 'react-popper';
 import { ComponentID } from '@teambit/component-id';
+import useAnimationFrame from 'use-animation-frame';
 import type { Placement, Modifier } from '@popperjs/core';
 import '@popperjs/core';
 
@@ -40,10 +41,12 @@ LabelProps) {
     offset,
   ]);
 
-  const { styles, attributes } = usePopper(targetRef, sourceRef, {
+  const { styles, attributes, update } = usePopper(targetRef, sourceRef, {
     modifiers,
     placement,
   });
+
+  useAnimationFrame(() => update?.(), [update]);
 
   if (!targetRef) return null;
 

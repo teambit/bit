@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { usePopper, Modifier } from 'react-popper';
+import useAnimationFrame from 'use-animation-frame';
 import classnames from 'classnames';
 import '@popperjs/core';
 
@@ -34,10 +35,12 @@ export interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
 export function Frame({ targetRef }: FrameProps) {
   const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null);
 
-  const { styles, attributes } = usePopper(targetRef, referenceElement, {
+  const { styles, attributes, update } = usePopper(targetRef, referenceElement, {
     modifiers: popperModifiers,
     placement: 'top-start',
   });
+
+  useAnimationFrame(() => update?.(), [update]);
 
   if (!targetRef) return null;
 
