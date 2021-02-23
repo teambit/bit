@@ -479,30 +479,24 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
 
   /**
    * @see this.removeComponent()
-   *
    */
-  async removeComponentById(bitId: BitId): Promise<void> {
-    logger.debug(`sources.removeComponentById: ${bitId.toString()}`);
+  async removeComponentById(bitId: BitId, includeVersions = true): Promise<void> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}, includeVersions: ${includeVersions}`);
     const component = await this.get(bitId);
     if (!component) return;
-    this.removeComponent(component);
+    this.removeComponent(component, includeVersions);
   }
 
   /**
-   * remove all versions objects of the component from local scope.
-   * if deepRemove is true, it removes also the refs associated with the removed versions.
-   * finally, it removes the component object itself
+   * remove a component (and all versions objects if includeVersions=true) from local scope.
    * it doesn't physically delete from the filesystem.
    * the actual delete is done at a later phase, once Repository.persist() is called.
-   *
-   * @param {ModelComponent} component
-   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
    */
-  removeComponent(component: ModelComponent): void {
+  removeComponent(component: ModelComponent, includeVersions = true): void {
     const repo = this.objects();
     logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
-    const objectRefs = component.versionArray;
-    objectRefs.push(component.hash());
+    const objectRefs = [component.hash()];
+    if (includeVersions) objectRefs.push(...component.versionArray);
     repo.removeManyObjects(objectRefs);
     repo.unmergedComponents.removeComponent(component.name);
   }
