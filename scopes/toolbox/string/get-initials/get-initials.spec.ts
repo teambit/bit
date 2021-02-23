@@ -9,7 +9,7 @@ describe('getInitials()', () => {
     expect(getInitials('scope')).toEqual('sc');
   });
 
-  it('should return ? if the word is empty', () => {
-    expect(getInitials('')).toEqual('?');
+  it('should return undefined if the word is empty', () => {
+    expect(getInitials('')).toEqual(undefined);
   });
 });

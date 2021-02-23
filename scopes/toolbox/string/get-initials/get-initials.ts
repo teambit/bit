@@ -3,7 +3,7 @@
  * @param name string to get initials from
  */
 export function getInitials(name: string) {
-  if (!name) return '?';
+  if (!name) return undefined;
 
   const words = name.split(' ');
   if (words.length > 1) {
