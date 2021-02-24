@@ -8,6 +8,7 @@
   text-align: center;
   text-transform: uppercase;
   font-weight: bold;
+  border: 1px solid var(--border-color);
 
   .tooltip {
     white-space: nowrap;
@@ -44,6 +45,14 @@
   background-color: var(--border-color);
   border: 1px solid var(--border-color);
   box-sizing: border-box;
+}
+
+.isOwner {
+  border: 2px solid var(--steel-color);
+  position: absolute;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  border-radius: 50%;
 }
 
 :export {

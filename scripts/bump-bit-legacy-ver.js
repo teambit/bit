@@ -17,9 +17,11 @@ const currentBitLegacyVersionInCode = require('../package.json').version;
 console.log('currentBitLegacyVersionInCode', currentBitLegacyVersionInCode);
 const currentBitLegacyVersionInNpm = getCurrentBitLegacyVerFromNpm();
 const nextBitLegacyVersion = getNextBitLegacyVersion();
-
+gitStatus(); // to debug errors with git-pull
+gitPull();
 replaceVersionOccurrencesInCode();
 gitCommitChanges();
+gitPull();
 gitPush();
 publishBitLegacy();
 waitUntilShownInNpm().then(() => console.log('bump has completed!'));
@@ -105,8 +107,15 @@ function gitCommitChanges() {
 }
 
 function gitPush() {
-  exec('GIT_MERGE_AUTOEDIT=no git pull origin master');
   exec('git push origin master');
+}
+
+function gitPull() {
+  exec('GIT_MERGE_AUTOEDIT=no git pull origin master');
+}
+
+function gitStatus() {
+  exec('git status');
 }
 
 function exec(command) {

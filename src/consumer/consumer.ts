@@ -400,7 +400,7 @@ export default class Consumer {
     } catch (err) {
       loader.stop();
       // @todo: remove once the server is deployed with this new "component-delta" type
-      if (err.message && err.message.includes('type component-delta was not implemented')) {
+      if (err && err.message && err.message.includes('type component-delta was not implemented')) {
         return this.importComponents(ids.toVersionLatest(), true);
       }
       throw err;
@@ -425,7 +425,7 @@ export default class Consumer {
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
       return {
         id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope),
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope as string),
       };
     });
     return shouldDependenciesSavedAsComponents;

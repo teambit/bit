@@ -36,7 +36,7 @@ export default class Remotes extends Map<string, Remote> {
     });
   }
 
-  isHub(scope) {
+  isHub(scope: string): boolean {
     // if a scope is listed as a remote, it doesn't go to the hub
     return !this.get(scope);
   }
@@ -84,7 +84,6 @@ export default class Remotes extends Map<string, Remote> {
       { concurrency: CONCURRENT_FETCH_LIMIT }
     );
     if (Object.keys(failedScopes).length) {
-      if (Object.keys(failedScopes).length === 1) throw failedScopes[0];
       const failedScopesErr = Object.keys(failedScopes).map(
         (failedScope) => `${failedScope} - ${failedScopes[failedScope].message}`
       );

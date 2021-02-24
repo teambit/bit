@@ -112,4 +112,29 @@ describe('import functionality on Harmony', function () {
       expect(() => helper.command.exportAllComponents()).to.not.throw();
     });
   });
+  describe('import delta (bit import without ids) when local is behind', () => {
+    let afterFirstExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      helper.command.importAllComponents(); // to save all refs.
+      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      const bitMap = helper.bitMap.read();
+      helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+      helper.bitMap.write(bitMap);
+    });
+    it('should not fetch existing versions, only the missing', () => {
+      const importOutput = helper.command.import();
+      expect(importOutput).to.not.include('new versions: 0.0.1, 0.0.2, 0.0.3');
+      expect(importOutput).to.include('new versions: 0.0.3');
+    });
+  });
 });

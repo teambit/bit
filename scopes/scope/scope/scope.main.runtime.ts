@@ -62,21 +62,19 @@ export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<On
 type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
-type OnPrePersistExportData = { clientId: string; scopes: string[] };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
-type OnPrePersistExport = RemoteEvent<OnPrePersistExportData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
-export type OnPrePersistExportSlot = SlotRegistry<OnPrePersistExport>;
 
 export type ScopeConfig = {
-  description: string;
-  icon: string;
+  httpTimeOut: number;
+  description?: string;
+  icon?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
@@ -98,6 +96,9 @@ export class ScopeMain implements ComponentFactory {
     /**
      * slot registry for subscribing to build
      */
+
+    readonly config: ScopeConfig,
+
     private tagRegistry: TagRegistry,
 
     private postPutSlot: OnPostPutSlot,
@@ -106,13 +107,9 @@ export class ScopeMain implements ComponentFactory {
 
     private postObjectsPersist: OnPostObjectsPersistSlot,
 
-    private prePersistExportSlot: OnPrePersistExportSlot,
-
     private isolator: IsolatorMain,
 
     private aspectLoader: AspectLoaderMain,
-
-    private config: ScopeConfig,
 
     private logger: Logger
   ) {}
@@ -124,11 +121,11 @@ export class ScopeMain implements ComponentFactory {
     return this.legacyScope.name;
   }
 
-  get icon(): string {
+  get icon(): string | undefined {
     return this.config.icon;
   }
 
-  get description(): string {
+  get description(): string | undefined {
     return this.config.description;
   }
 
@@ -236,11 +233,6 @@ export class ScopeMain implements ComponentFactory {
 
   registerOnPostObjectsPersist(postObjectsPersistFn: OnPostObjectsPersist) {
     this.postObjectsPersist.register(postObjectsPersistFn);
-    return this;
-  }
-
-  registerOnPrePersistExport(prePersistFn: OnPrePersistExport) {
-    this.prePersistExportSlot.register(prePersistFn);
     return this;
   }
 
@@ -534,20 +526,11 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * load components from a scope and load its aspects.
+   * load components from a scope and load their aspects
    */
-  async loadMany(ids: ComponentID[]) {
-    // get all components.
-    const components = await this.getMany(ids);
-    // load all component aspects.
-    await Promise.all(
-      components.map(async (component) => {
-        const aspectIds = component.state.aspects.ids;
-        await this.loadAspects(aspectIds, true);
-      })
-    );
-
-    return components;
+  async loadMany(ids: ComponentID[]): Promise<Component[]> {
+    const components = await mapSeries(ids, (id) => this.load(id));
+    return compact(components);
   }
 
   /**
@@ -663,7 +646,17 @@ export class ScopeMain implements ComponentFactory {
     return getScopeRemotes(this.legacyScope);
   }
 
-  load() {}
+  /**
+   * get a component and load its aspect
+   */
+  async load(id: ComponentID): Promise<Component | undefined> {
+    const component = await this.get(id);
+    if (!component) return undefined;
+    const aspectIds = component.state.aspects.ids;
+    await this.loadAspects(aspectIds, true);
+
+    return component;
+  }
 
   /**
    * declare the slots of scope extension.
@@ -673,7 +666,6 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
-    Slot.withType<OnPrePersistExportSlot>(),
   ];
   static runtime = MainRuntime;
 
@@ -688,6 +680,10 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
   ];
 
+  static defaultConfig: ScopeConfig = {
+    httpTimeOut: 600000,
+  };
+
   static async provider(
     [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
       ComponentMain,
@@ -700,12 +696,11 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, prePersistExportSlot]: [
+    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot]: [
       TagRegistry,
       OnPostPutSlot,
       OnPostExportSlot,
-      OnPostObjectsPersistSlot,
-      OnPrePersistExportSlot
+      OnPostObjectsPersistSlot
     ],
     harmony: Harmony
   ) {
@@ -720,14 +715,13 @@ export class ScopeMain implements ComponentFactory {
       harmony,
       legacyScope,
       componentExt,
+      config,
       tagSlot,
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
-      prePersistExportSlot,
       isolator,
       aspectLoader,
-      config,
       logger
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
@@ -774,19 +768,9 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
-    const onPrePersistExportHook = async (clientId: string, scopes: string[]): Promise<void> => {
-      const data = { clientId, scopes };
-      logger.debug(`onPrePersistExportHook, started`, data);
-      const fns = prePersistExportSlot.values();
-      const metadata = { auth: getAuthData() };
-      await Promise.all(fns.map(async (fn) => fn(data, metadata)));
-      logger.debug(`onPrePersistExportHook, completed`);
-    };
-
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
-    Scope.onPrePersistExport = onPrePersistExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([

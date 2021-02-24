@@ -1,5 +1,6 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
+import readLine from 'readline';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
@@ -20,6 +21,8 @@ import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
+import loader from '../../../cli/loader';
+import { UnexpectedNetworkError } from '../exceptions';
 
 export enum Verb {
   WRITE = 'write',
@@ -115,6 +118,36 @@ export class Http implements Network {
     return ids;
   }
 
+  async pushToCentralHub(
+    objectList: ObjectList,
+    options: Record<string, any> = {}
+  ): Promise<{
+    successIds: string[];
+    failedScopes: string[];
+    exportId: string;
+    errors: { [scopeName: string]: string };
+  }> {
+    const route = 'api/put';
+    logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
+    const pack = objectList.toTar();
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'POST',
+      body: pack,
+      headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+    });
+    logger.debug(
+      `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    );
+
+    const results = await this.readPutCentralStream(res.body);
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(res);
+    return results.data;
+  }
+
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
     const route = 'api/scope/action';
     logger.debug(`Http.action, url: ${this.url}/${route}`);
@@ -196,6 +229,30 @@ export class Http implements Network {
       // should not be here. it's just in case
       throw err;
     }
+  }
+
+  private async readPutCentralStream(body: NodeJS.ReadableStream): Promise<any> {
+    const readline = readLine.createInterface({
+      input: body,
+      crlfDelay: Infinity,
+    });
+
+    let results: Record<string, any> = {};
+    readline.on('line', (line) => {
+      const json = JSON.parse(line);
+      if (json.end) results = json;
+      loader.start(json.message);
+    });
+
+    return new Promise((resolve, reject) => {
+      readline.on('close', () => {
+        resolve(results);
+      });
+      readline.on('error', (err) => {
+        logger.error('readLine failed with error', err);
+        reject(new Error(`readline failed with error, ${err?.message}`));
+      });
+    });
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
@@ -329,7 +386,7 @@ export class Http implements Network {
 
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
-    return Object.assign(headers, authHeader);
+    return Object.assign(headers, authHeader, { connection: 'keep-alive' });
   }
 
   private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

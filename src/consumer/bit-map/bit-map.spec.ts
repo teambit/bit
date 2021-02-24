@@ -123,6 +123,18 @@ describe('BitMap', function () {
       };
       expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(DuplicateRootDir);
     });
+    it('should throw when a component has scope but not version', () => {
+      const invalidBitMap = {
+        'scope/comp1': {
+          mainFile: 'index.js',
+          rootDir: 'comp1',
+          exported: true,
+        },
+      };
+      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(
+        '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
+      );
+    });
   });
   describe('getAuthoredExportedComponents', async () => {
     it('should return an empty array when there are no authored components', async () => {
