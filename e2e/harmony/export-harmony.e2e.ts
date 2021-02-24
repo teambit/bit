@@ -36,6 +36,27 @@ describe('export functionality on Harmony', function () {
       expect(() => helper.command.export('--all-versions')).not.to.throw();
     });
   });
+  describe('export, tag and export', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      helper.fixtures.populateComponents(1, undefined, '-v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+    });
+    it('should not delete the first version', () => {
+      expect(() => helper.command.catComponent('comp1@0.0.1')).not.to.throw();
+    });
+    it('should enable un-tagging after a new tag', () => {
+      // before it used to throw VersionNotFound
+      helper.fixtures.populateComponents(1, undefined, '-v3');
+      helper.command.tagAllWithoutBuild();
+      expect(() => helper.command.untag('comp1')).not.to.throw();
+    });
+  });
   describe.skip('export to multiple scope with circular between the scopes', () => {
     let anotherRemote;
     let exportOutput;
