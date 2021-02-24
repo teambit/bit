@@ -56,12 +56,12 @@ export class ObjectList {
     const objectItems: ObjectItem[] = await new Promise((resolve, reject) => {
       const objects: ObjectItem[] = [];
       extract.on('entry', (header, stream, next) => {
-        let data = Buffer.from('');
+        const data: Buffer[] = [];
         stream.on('data', (chunk) => {
-          data = Buffer.concat([data, chunk]);
+          data.push(chunk);
         });
         stream.on('end', () => {
-          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: data });
+          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: Buffer.concat(data) });
           next(); // ready for next entry
         });
         stream.on('error', (err) => reject(err));
