@@ -64,9 +64,9 @@ const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 type HasIdOpts = {
-  includeSymlink: boolean;
-  includeOrphaned: boolean;
-  includeVersion: boolean;
+  includeSymlink?: boolean;
+  includeOrphaned?: boolean;
+  includeVersion?: boolean;
 };
 
 export type ScopeDescriptor = {
