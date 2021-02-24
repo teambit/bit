@@ -57,6 +57,7 @@
   "teambit.design/ui/error-page@0.0.283": {"mainFile":"index.ts","rootDir":"scopes/design/ui/error-page"},
   "teambit.design/ui/external-link@0.0.283": {"mainFile":"index.ts","rootDir":"scopes/design/ui/external-link"},
   "teambit.design/ui/label@0.0.283": {"mainFile":"index.ts","rootDir":"scopes/design/ui/label"},
+  "teambit.design/ui/owner-avatar@0.0.1": {"mainFile":"index.ts","rootDir":"scopes/design/ui/owner-avatar"},
   "teambit.design/ui/pages/not-found@0.0.284": {"mainFile":"index.ts","rootDir":"scopes/design/ui/not-found-page"},
   "teambit.design/ui/pages/server-error@0.0.284": {"mainFile":"index.ts","rootDir":"scopes/design/ui/server-error-page"},
   "teambit.design/ui/pages/standalone-not-found-page@0.0.284": {"mainFile":"index.ts","rootDir":"scopes/design/ui/pages/standalone-not-found-page"},
