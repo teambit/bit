@@ -244,6 +244,7 @@ export default class ScopeComponentsImporter {
     const { objectList, objectListPerRemote } = await remotes.fetch(groupedIds, this.scope, {
       type: 'component-delta',
       withoutDependencies: true,
+      concurrency: 10,
     });
     loader.start(`got ${objectList.count()} objects from the remotes, merging them and writing to the filesystem`);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', 'writing them to the model');
