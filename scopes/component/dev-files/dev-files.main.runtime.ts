@@ -94,6 +94,7 @@ export class DevFilesMain {
 
   /**
    * get all dev patterns registered.
+   * If you want to use this during onLoad event you might need to use computeDevFiles instead, since the component might not include this data yet
    */
   getDevFiles(component: Component): DevFiles {
     const entry = component.state.aspects.get(DevFilesAspect.id);
