@@ -474,6 +474,7 @@ jobs:
       - run:
           name: 'build harmony'
           command: 'cd bit && npm run build-harmony'
+          no_output_timeout: '20m'
       - run:
           name: 'status harmony'
           command: 'cd bit && npm run status-harmony'
