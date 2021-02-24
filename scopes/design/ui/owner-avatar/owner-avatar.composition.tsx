@@ -6,6 +6,11 @@ const userAccount = { name: 'defaultAccount', type: 'user', profileImage: 'https
 
 export const OwnerAvatarExample = () => (
   <ThemeCompositions>
-    <OwnerAvatar size={32} account={userAccount} />
+    <OwnerAvatar
+      avatarProps={{
+        size: 32,
+        account: userAccount,
+      }}
+    />
   </ThemeCompositions>
 );
