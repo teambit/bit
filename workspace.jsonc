@@ -286,7 +286,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.14",
+        "@teambit/legacy": "1.0.15",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -344,7 +344,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.14",
+            "@teambit/legacy": "1.0.15",
             "react-dom": "16.13.1"
           }
         }
@@ -486,7 +486,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.14",
+            "@teambit/legacy": "1.0.15",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",
