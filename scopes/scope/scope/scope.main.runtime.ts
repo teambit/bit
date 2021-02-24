@@ -498,11 +498,13 @@ export class ScopeMain implements ComponentFactory {
    * @param componentId
    */
   async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
-    const ids = await this.listIds(includeCache);
-    const found = ids.find((id) => {
-      return id.isEqual(componentId);
-    });
-    return !!found;
+    if (!includeCache && componentId.scope !== this.name) return false;
+    const opts = {
+      includeOrphaned: true,
+      includeVersion: true,
+    };
+
+    return this.legacyScope.hasId(componentId._legacy, opts);
   }
 
   async hasIdNested(componentId: ComponentID, includeCache = false): Promise<boolean> {

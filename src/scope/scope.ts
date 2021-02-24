@@ -63,6 +63,12 @@ import { BitObjectList } from './objects/bit-object-list';
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
+type HasIdOpts = {
+  includeSymlink: boolean;
+  includeOrphaned: boolean;
+  includeVersion: boolean;
+};
+
 export type ScopeDescriptor = {
   name: string;
 };
@@ -271,6 +277,23 @@ export default class Scope {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .map((c) => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
     );
+  }
+
+  async hasId(id: BitId, opts: HasIdOpts) {
+    const filter = (comp: ComponentItem) => {
+      const symlinkCond = opts.includeSymlink ? true : !comp.isSymlink;
+      const idMatch = comp.id.scope === id.scope && comp.id.name === id.name;
+      return symlinkCond && idMatch;
+    };
+    const modelComponentList = await this.objects.listObjectsFromIndex(IndexType.components, filter);
+    if (!modelComponentList || !modelComponentList.length) return false;
+    if (!opts.includeVersion || !id.version) return true;
+    if (id.getVersion().latest) return true;
+    const modelComponent = modelComponentList[0] as ModelComponent;
+    if (opts.includeOrphaned) {
+      return modelComponent.hasTagIncludeOrphaned(id.version);
+    }
+    return modelComponent.hasTag(id.version);
   }
 
   async list(): Promise<ModelComponent[]> {
