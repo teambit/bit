@@ -94,6 +94,7 @@ export class DevFilesMain {
 
   /**
    * get all dev patterns registered.
+   * If you want to use this during onLoad event you might need to use computeDevFiles instead, since the component might not include this data yet
    */
   getDevFiles(component: Component): DevFiles {
     const entry = component.state.aspects.get(DevFilesAspect.id);
@@ -144,7 +145,8 @@ export class DevFilesMain {
 
       DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
         const componentId = await workspace.resolveComponentId(consumerComponent.id);
-        const component = await workspace.get(componentId, false, consumerComponent);
+        // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
+        const component = await workspace.get(componentId, false, consumerComponent, true, false);
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         const computedDevFiles = devFiles.computeDevFiles(component);
         return computedDevFiles.list();
