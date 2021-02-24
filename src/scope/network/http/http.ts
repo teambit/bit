@@ -21,6 +21,8 @@ import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
+import loader from '../../../cli/loader';
+import { UnexpectedNetworkError } from '../exceptions';
 
 export enum Verb {
   WRITE = 'write',
@@ -138,8 +140,11 @@ export class Http implements Network {
     );
 
     const results = await this.readPutCentralStream(res.body);
-    // await this.throwForNonOkStatus(res);
-    // const results = await this.getJsonResponse(res);
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(res);
     return results.data;
   }
 
@@ -227,23 +232,25 @@ export class Http implements Network {
   }
 
   private async readPutCentralStream(body: NodeJS.ReadableStream): Promise<any> {
-    const rl = readLine.createInterface({
+    const readline = readLine.createInterface({
       input: body,
       crlfDelay: Infinity,
     });
 
-    const pipe: any[] = [];
-    rl.on('line', (line) => {
+    let results: Record<string, any> = {};
+    readline.on('line', (line) => {
       const json = JSON.parse(line);
-      pipe.push(json);
-      // TODO: david print push status.
-      // console.log(json.message);
+      if (json.end) results = json;
+      loader.start(json.message);
     });
 
     return new Promise((resolve, reject) => {
-      rl.on('close', () => {
-        const end = pipe.find((obj) => obj.end);
-        resolve(end);
+      readline.on('close', () => {
+        resolve(results);
+      });
+      readline.on('error', (err) => {
+        logger.error('readLine failed with error', err);
+        reject(new Error(`readline failed with error, ${err?.message}`));
       });
     });
   }
