@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import semver from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
@@ -550,9 +551,7 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    // TODO - @david
-    return semver.maxSatisfying(versions, range)?.toString();
-    // return semver.maxSatisfying<string>(versions, range);
+    return semver.maxSatisfying<string>(versions, range)?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
