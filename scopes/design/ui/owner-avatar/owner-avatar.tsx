@@ -4,13 +4,13 @@ import { UserAvatar, UserAvatarProps } from '@teambit/ui.avatar';
 import styles from './owner-avatar.module.scss';
 
 export type OwnerAvatarProps = {
-  avatarProps: UserAvatarProps;
-} & React.HTMLAttributes<HTMLElement>;
+  ownerClassName?: string;
+} & UserAvatarProps;
 
-export function OwnerAvatar({ avatarProps, className }: OwnerAvatarProps) {
+export function OwnerAvatar({ ownerClassName, ...rest }: OwnerAvatarProps) {
   return (
-    <div className={classNames(styles.isOwner, className)}>
-      <UserAvatar {...avatarProps} />
+    <div className={classNames(styles.isOwner, ownerClassName)}>
+      <UserAvatar {...rest} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ description: 'An owner avatar component'
 
 import { OwnerAvatar } from './owner-avatar';
 
-An owner avatar component that envelope the Avatar component.
+An owner avatar component that envelopes the UserAvatar component.
 
 ```js live
 () => {
