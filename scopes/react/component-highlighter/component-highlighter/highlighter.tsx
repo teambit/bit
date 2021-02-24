@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
 import { MouseHoverSelector } from '@teambit/ui.mouse-hover-selector';
-import { Frame } from './frame';
-import { Label } from './label';
+import { Frame } from '../frame';
+import { Label } from '../label';
 import { isBitComponent } from './bit-react-component';
 
 export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -56,11 +56,13 @@ function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Eleme
 
     const component = domToReact(current);
 
-    if (isBitComponent(component))
+    // if (component)
+    if(isBitComponent(component))
       return {
         element: current,
         component,
-        id: component.componentId,
+        // @ts-ignore
+        id: component.componentId || component.name || 'unknown', // component.componentId,
       };
   }
 

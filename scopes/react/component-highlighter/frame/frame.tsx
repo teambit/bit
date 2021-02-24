@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { usePopper, Modifier } from 'react-popper';
 import useAnimationFrame from 'use-animation-frame';
 import classnames from 'classnames';
@@ -30,15 +30,39 @@ const popperModifiers: Modifier<any>[] = [
 
 export interface FrameProps extends React.HTMLAttributes<HTMLDivElement> {
   targetRef: HTMLElement | null;
+  stylesClass?: string;
+  motionTracking?: boolean;
 }
 
-export function Frame({ targetRef }: FrameProps) {
+export function Frame({
+  targetRef,
+  motionTracking,
+  className,
+  stylesClass = classStyles.overlayBorder,
+  style,
+}: FrameProps) {
   const [referenceElement, setReferenceElement] = useState<HTMLDivElement | null>(null);
 
   const { styles, attributes, update } = usePopper(targetRef, referenceElement, {
     modifiers: popperModifiers,
     placement: 'top-start',
   });
+
+  useEffect(() => {
+    const refocus = update;
+    if (!refocus || !motionTracking) return () => {};
+
+    let fid = 0;
+    const f = () => {
+      refocus().catch(() => {});
+      fid = window.requestAnimationFrame(f);
+    };
+    f();
+
+    return () => {
+      if (fid > -1) window.cancelAnimationFrame(fid);
+    };
+  }, [update, motionTracking]);
 
   useAnimationFrame(() => update?.(), [update]);
 
@@ -47,10 +71,9 @@ export function Frame({ targetRef }: FrameProps) {
   return (
     <div
       ref={setReferenceElement}
-      className={classnames(classStyles.overlayBorder)}
-      style={styles.popper}
+      className={classnames(className, stylesClass)}
+      style={{ ...styles.popper, ...style }}
       {...attributes.popper}
-      data-ignore-component-highlight
     ></div>
   );
 }
