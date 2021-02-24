@@ -190,5 +190,6 @@
   "teambit.workspace/ui/workspace-component-card@0.0.15": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card"},
   "teambit.workspace/variants@0.0.283": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.294": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
+  "ui/owner-avatar": {"mainFile":"index.ts","rootDir":"scopes/design/ui/owner-avatar","exported":false},
   "version": "14.8.9-dev.298"
 }
