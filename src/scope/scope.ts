@@ -24,6 +24,7 @@ import {
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
+  CONCURRENT_COMPONENTS_LIMIT,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
@@ -479,8 +480,7 @@ export default class Scope {
     const versions = bitObjectList.getVersions();
     const laneObjects = bitObjectList.getLanes();
     await pMap(components, (component: ModelComponent) => this.mergeModelComponent(component, versions, remoteName), {
-      // concurrency: CONCURRENT_COMPONENTS_LIMIT,
-      concurrency: 7, // temporarily limit the concurrency to a minimal number, optimize it ASAP
+      concurrency: CONCURRENT_COMPONENTS_LIMIT,
     });
     let nonLaneIds: BitId[] = ids;
     await Promise.all(

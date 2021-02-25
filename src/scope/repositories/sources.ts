@@ -542,29 +542,49 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const hashesOfHistoryGraph = allVersionsInfo
       .map((v) => (v.isPartOfHistory ? v.ref : null))
       .filter((ref) => ref) as Ref[];
-    const existingComponentHead = existingComp.getHead();
+    const existingComponentHead = existingComp.getHead()?.clone();
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
-    const existingComponentHashes = await getAllVersionHashes(existingComp, this.objects(), false);
-    const existingTagsAndSnaps = existingComp.switchHashesWithTagsIfExist(existingComponentHashes);
     // for export, currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
     const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,
-      existingTagsAndSnaps,
-      incomingTagsAndSnaps,
       isImport,
       isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
+    if (existingComponentHead && isExport) {
+      // for import, we don't care about the mergedVersions much.
+      const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
+      mergedVersions.push(...mergedSnaps);
+    }
+
     this.putModelComponent(mergedComponent);
     return { mergedComponent, mergedVersions };
+  }
+
+  private async getMergedSnaps(
+    existingHead: Ref,
+    incomingComp: ModelComponent,
+    versionObjects: Version[]
+  ): Promise<string[]> {
+    const allIncomingVersionsInfoUntilExistingHead = await getAllVersionsInfo({
+      modelComponent: incomingComp,
+      throws: false,
+      versionObjects,
+      stopAt: existingHead,
+    });
+    const hashesOnly = allIncomingVersionsInfoUntilExistingHead
+      .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion
+      .map((v) => v.ref)
+      .filter((ref) => ref) as Ref[];
+    return hashesOnly.map((hash) => hash.toString());
   }
 
   private throwForMissingVersions(allVersionsInfo: VersionInfo[], component: ModelComponent) {
