@@ -1,4 +1,6 @@
 FROM node:12.18.3
+ARG MAX_OLD_SPACE_SIZE=4096
+ENV NODE_OPTIONS=--max-old-space-size=${MAX_OLD_SPACE_SIZE}
 RUN adduser --disabled-password --gecos '' user
 RUN chown -R user /usr/local/
 USER user
