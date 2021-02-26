@@ -44,7 +44,7 @@ export default class Remotes extends Map<string, Remote> {
   async fetch(
     idsGroupedByScope: { [scopeName: string]: string[] }, // option.type determines the id: component-id/lane-id/object-id (hash)
     thisScope: Scope,
-    options: Partial<FETCH_OPTIONS> = {},
+    options: Partial<FETCH_OPTIONS> & { concurrency?: number } = {},
     context?: Record<string, any>
   ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
     const fetchOptions: FETCH_OPTIONS = {
@@ -81,10 +81,9 @@ export default class Remotes extends Map<string, Remote> {
         objectListPerRemote[scopeName] = objectList;
         return objectList;
       },
-      { concurrency: CONCURRENT_FETCH_LIMIT }
+      { concurrency: options.concurrency || CONCURRENT_FETCH_LIMIT }
     );
     if (Object.keys(failedScopes).length) {
-      if (Object.keys(failedScopes).length === 1) throw failedScopes[0];
       const failedScopesErr = Object.keys(failedScopes).map(
         (failedScope) => `${failedScope} - ${failedScopes[failedScope].message}`
       );

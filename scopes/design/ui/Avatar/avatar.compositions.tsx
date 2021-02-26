@@ -8,6 +8,7 @@ const accounts = {
   userAccount: { name: 'defaultAccount', type: 'user', profileImage: 'https://static.bit.dev/harmony/github.svg' },
   noPicOrgAccount: { name: 'defaultAccount', type: 'organization' },
   noPicUserAccount: { name: 'defaultAccount', type: 'user' },
+  noNameAccount: { name: '', type: 'user' },
 };
 
 export const DefaultAvatarExample = () => (
@@ -43,5 +44,11 @@ export const NoSetIconOrgAvatar = () => (
 export const NoSetIconUserAvatar = () => (
   <ThemeCompositions>
     <UserAvatar size={32} account={accounts.noPicUserAccount} />
+  </ThemeCompositions>
+);
+
+export const NoUserNameAvatarExample = () => (
+  <ThemeCompositions>
+    <UserAvatar size={32} account={accounts.noNameAccount} />
   </ThemeCompositions>
 );

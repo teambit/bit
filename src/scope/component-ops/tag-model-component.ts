@@ -80,12 +80,14 @@ async function setFutureVersions(
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
       if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
-        if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
-        if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
+        componentToTag.version = modelComponent.getVersionToAdd(
+          exactVersionOrReleaseType.releaseType,
+          exactVersionOrReleaseType.exactVersion
+        );
+      } else {
+        componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       }
-      const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       componentToTag.previouslyUsedVersion = componentToTag.version;
-      componentToTag.version = version;
     })
   );
 }

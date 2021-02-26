@@ -11,6 +11,7 @@ export class FetchRoute implements Route {
 
   middlewares = [
     async (req: Request, res: Response) => {
+      req.setTimeout(this.scope.config.httpTimeOut);
       const objectList = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions);
       const pack = objectList.toTar();
       pack.pipe(res as any);

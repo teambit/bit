@@ -250,22 +250,22 @@ export class ReactEnv implements Environment {
     return {
       dependencies: {
         react: '-',
+        'core-js': '3.8.3',
       },
       // TODO: add this only if using ts
       devDependencies: {
-        '@types/node': '^12.12.27',
-        'core-js': '^3.6.5',
+        '@types/node': '12.20.4',
         '@types/react': '16.9.43',
-        '@types/jest': '~26.0.9',
+        '@types/jest': '26.0.20',
         '@types/mocha': '-',
-        '@types/react-router-dom': '^5.1.5',
+        '@types/react-router-dom': '5.1.7',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '^7.11.2',
+        '@babel/runtime': '7.12.18',
       },
       // TODO: take version from config
       peerDependencies: {
-        react: '^16.13.1' || this.config.reactVersion,
-        'react-dom': '^16.13.1',
+        react: '16.13.1',
+        'react-dom': '16.13.1',
       },
     };
   }
