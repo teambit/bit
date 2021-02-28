@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import semver from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
@@ -7,18 +8,7 @@ import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain, ComponentMap } from '@teambit/component';
-import {
-  Component,
-  ComponentAspect,
-  ComponentFactory,
-  ComponentFS,
-  ComponentID,
-  Config,
-  Snap,
-  State,
-  Tag,
-  TagMap,
-} from '@teambit/component';
+import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -30,8 +20,8 @@ import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
-import { ModelComponent, Version, Lane } from '@teambit/legacy/dist/scope/models';
-import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
+import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
@@ -47,12 +37,12 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
-import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
+import { ScopeComponentLoader } from './scope-component-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
@@ -78,6 +68,7 @@ export type ScopeConfig = {
 };
 
 export class ScopeMain implements ComponentFactory {
+  componentLoader: ScopeComponentLoader;
   constructor(
     /**
      * private reference to the instance of Harmony.
@@ -112,7 +103,9 @@ export class ScopeMain implements ComponentFactory {
     private aspectLoader: AspectLoaderMain,
 
     private logger: Logger
-  ) {}
+  ) {
+    this.componentLoader = new ScopeComponentLoader(this, this.logger);
+  }
 
   /**
    * name of the scope
@@ -427,44 +420,12 @@ export class ScopeMain implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  /**
-   * get a component.
-   * @param id component id
-   */
   async get(id: ComponentID): Promise<Component | undefined> {
-    const legacyId = id._legacy;
-    let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
-    // Search with scope name for bare scopes
-    if (!modelComponent && !legacyId.scope) {
-      id = id.changeScope(this.name);
-      modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
-    }
-    if (!modelComponent) return undefined;
-
-    // :TODO move to head snap once we have it merged, for now using `latest`.
-    const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
-    const newId = id.changeVersion(versionStr);
-    const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
-    const snap = this.createSnapFromVersion(version);
-    const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
-
-    return new Component(newId, snap, state, tagMap, this);
+    return this.componentLoader.get(id);
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
-    const legacyId = consumerComponent.id;
-    const modelComponent = await this.legacyScope.getModelComponent(legacyId);
-    // :TODO move to head snap once we have it merged, for now using `latest`.
-    const id = await this.resolveComponentId(legacyId);
-    const version =
-      consumerComponent.pendingVersion ||
-      (await modelComponent.loadVersion(legacyId.version as string, this.legacyScope.objects));
-    const snap = this.createSnapFromVersion(version);
-    const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
-
-    return new Component(id, snap, state, tagMap, this);
+    return this.componentLoader.getFromConsumerComponent(consumerComponent);
   }
 
   /**
@@ -498,11 +459,13 @@ export class ScopeMain implements ComponentFactory {
    * @param componentId
    */
   async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
-    const ids = await this.listIds(includeCache);
-    const found = ids.find((id) => {
-      return id.isEqual(componentId);
-    });
-    return !!found;
+    if (!includeCache && componentId.scope !== this.name) return false;
+    const opts = {
+      includeOrphaned: true,
+      includeVersion: true,
+    };
+
+    return this.legacyScope.hasId(componentId._legacy, opts);
   }
 
   async hasIdNested(componentId: ComponentID, includeCache = false): Promise<boolean> {
@@ -549,14 +512,11 @@ export class ScopeMain implements ComponentFactory {
    * @param hash state hash.
    */
   async getState(id: ComponentID, hash: string): Promise<State> {
-    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
-    return this.createStateFromVersion(id, version);
+    return this.componentLoader.getState(id, hash);
   }
 
   async getSnap(id: ComponentID, hash: string): Promise<Snap> {
-    // TODO: add cache by hash
-    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
-    return this.createSnapFromVersion(version);
+    return this.componentLoader.getSnap(id, hash);
   }
 
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
@@ -591,49 +551,11 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    // TODO - @david
-    return semver.maxSatisfying(versions, range)?.toString();
-    // return semver.maxSatisfying<string>(versions, range);
+    return semver.maxSatisfying<string>(versions, range)?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
     return resumeExport(this.legacyScope, exportId, remotes);
-  }
-
-  private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
-    const tagMap = new TagMap();
-    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
-      tagMap.set(tag.version, tag);
-    });
-    return tagMap;
-  }
-
-  private createSnapFromVersion(version: Version): Snap {
-    return new Snap(
-      version.hash().toString(),
-      new Date(parseInt(version.log.date)),
-      version.parents.map((p) => p.toString()),
-      {
-        displayName: version.log.username || 'unknown',
-        email: version.log.email || 'unknown@anywhere',
-      },
-      version.log.message
-    );
-  }
-
-  private async createStateFromVersion(id: ComponentID, version: Version): Promise<State> {
-    const consumerComponent = await this.legacyScope.getConsumerComponent(id._legacy);
-    const state = new State(
-      // We use here the consumerComponent.extensions instead of version.extensions
-      // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
-      new Config(version.mainFile, consumerComponent.extensions),
-      this.componentExtension.createAspectList(consumerComponent.extensions, this.name),
-      ComponentFS.fromVinyls(consumerComponent.files),
-      version.dependencies,
-      consumerComponent
-    );
-    return state;
   }
 
   async resolveId(id: string): Promise<ComponentID> {
@@ -731,6 +653,7 @@ export class ScopeMain implements ComponentFactory {
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
+      scope.componentLoader.clearCache();
       const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postPutSlot.values();
       const data = {
