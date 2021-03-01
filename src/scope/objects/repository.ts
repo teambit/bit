@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { Mutex } from 'async-mutex';
 import { uniqBy } from 'lodash';
 import * as path from 'path';
 import R from 'ramda';
@@ -37,6 +38,7 @@ export default class Repository {
   _cache: { [key: string]: BitObject } = {};
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
+  persistMutex = new Mutex();
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
@@ -310,12 +312,18 @@ export default class Repository {
    * call this function only once after you added and removed all applicable objects.
    */
   async persist(validate = true): Promise<void> {
-    logger.debug(`Repository.persist, validate = ${validate.toString()}`);
-    await this._deleteMany();
-    this._validateObjects(validate);
-    await this._writeMany();
-    await this.remoteLanes.write();
-    await this.unmergedComponents.write();
+    // do not let two requests enter this critical area, otherwise, refs/index.json/objects could
+    // be corrupted
+    logger.debug(`Repository.persist, going to acquire a lock`);
+    await this.persistMutex.runExclusive(async () => {
+      logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
+      await this._deleteMany();
+      this._validateObjects(validate);
+      await this._writeMany();
+      await this.remoteLanes.write();
+      await this.unmergedComponents.write();
+    });
+    logger.debug(`Repository.persist, completed. the lock has been released`);
     this.clearObjects();
     if (Repository.onPostObjectsPersist) {
       Repository.onPostObjectsPersist().catch((err) => {
