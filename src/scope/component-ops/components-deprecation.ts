@@ -24,7 +24,7 @@ export async function undeprecateMany(scope: Scope, bitIds: BitIds): Promise<Dep
 
 export async function deprecateRemote(
   remotes: Remotes,
-  scope: Scope | null | undefined,
+  scope: Scope | undefined,
   bitIds: Array<BitId>
 ): Promise<DeprecationResult[]> {
   return _deprecationRemote(remotes, scope, bitIds, true);
@@ -32,7 +32,7 @@ export async function deprecateRemote(
 
 export async function undeprecateRemote(
   remotes: Remotes,
-  scope: Scope | null | undefined,
+  scope: Scope | undefined,
   bitIds: Array<BitId>
 ): Promise<DeprecationResult[]> {
   return _deprecationRemote(remotes, scope, bitIds, false);
@@ -49,7 +49,7 @@ async function _deprecationMany(scope: Scope, ids: BitIds, deprecationAction: Fu
 
 async function _deprecationRemote(
   remotes: Remotes,
-  scope: Scope | null | undefined,
+  scope: Scope | undefined,
   bitIds: Array<BitId>,
   deprecate: boolean
 ): Promise<DeprecationResult[]> {

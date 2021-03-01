@@ -158,7 +158,6 @@ export default class Scope {
     return this.scopeJson.groupName;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this.scopeJson.name;
   }

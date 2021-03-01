@@ -18,8 +18,7 @@ export async function deprecate({ ids, remote }: { ids: string[]; remote: boolea
     const consumer = await loadConsumerIfExist();
     const bitIds = getBitIdsForRemote(ids);
     const remotes = await getRemotes(consumer);
-    const scope = consumer ? consumer.scope : null;
-    return deprecateRemote(remotes, scope, bitIds);
+    return deprecateRemote(remotes, consumer?.scope, bitIds);
   }
   const consumer = await loadConsumer();
   const bitIds = getBitIdsForLocal(ids, consumer);
@@ -32,8 +31,7 @@ export async function undeprecate({ ids, remote }: { ids: string[]; remote: bool
     const consumer = await loadConsumerIfExist();
     const bitIds = getBitIdsForRemote(ids);
     const remotes = await getRemotes(consumer);
-    const scope = consumer ? consumer.scope : null;
-    return undeprecateRemote(remotes, scope, bitIds);
+    return undeprecateRemote(remotes, consumer?.scope, bitIds);
   }
   const consumer = await loadConsumer();
   const bitIds = getBitIdsForLocal(ids, consumer);
