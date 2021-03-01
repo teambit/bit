@@ -71,9 +71,8 @@ async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitId
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const context = {};
   enrichContextFromGlobal(context);
-  const scope = consumer ? consumer.scope : null;
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, scope);
+    const resolvedRemote = await remotes.resolve(key, consumer?.scope);
     const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });

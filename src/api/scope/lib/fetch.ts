@@ -27,7 +27,7 @@ export default async function fetch(
   fetchOptions: FETCH_OPTIONS,
   headers?: Record<string, any> | null | undefined
 ): Promise<ObjectList> {
-  logger.debug(`scope.fetch started, path ${path}, options: ${fetchOptions}`);
+  logger.debug(`scope.fetch started, path ${path}, options`, fetchOptions);
   if (!fetchOptions.type) fetchOptions.type = 'component'; // for backward compatibility
   const args = { path, ids, ...fetchOptions };
   // This might be undefined in case of fork process like during bit test command
@@ -35,9 +35,12 @@ export default async function fetch(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
-  // DO NOT use the cached scope. otherwise, multiple http "fetch" requests adding and persisting
-  // to the repository at the same time, which opens a can of worms.
-  const scope: Scope = await loadScope(path, false);
+  // it should be safe to use the cached scope. when fetching without deps, there is no risk as it
+  // just fetches local objects. when fetching with deps, there is a lock mechanism that allows
+  // only one fetch at a time. the reason for not creating a new scope instance here is the high
+  // memory consumption it causes as it caches many objects in-memory.
+  const useCachedScope = true;
+  const scope: Scope = await loadScope(path, useCachedScope);
   const objectList = new ObjectList();
   switch (fetchOptions.type) {
     case 'component': {

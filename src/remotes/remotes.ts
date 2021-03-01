@@ -27,13 +27,11 @@ export default class Remotes extends Map<string, Remote> {
     return this.forEach((remote) => remote.validate());
   }
 
-  resolve(scopeName: string, thisScope?: Scope | null | undefined): Promise<Remote> {
+  async resolve(scopeName: string, thisScope?: Scope | undefined): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remoteResolver(scopeName, thisScope).then((scopeHost) => {
-      return new Remote(scopeHost, scopeName);
-    });
+    const scopeHost = await remoteResolver(scopeName, thisScope);
+    return new Remote(scopeHost, scopeName, undefined, thisScope?.name);
   }
 
   isHub(scope: string): boolean {
@@ -49,7 +47,7 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
-      withoutDependencies: false,
+      withoutDependencies: true,
       includeArtifacts: false,
       ...options,
     };
@@ -144,26 +142,24 @@ ${failedScopesErr.join('\n')}`);
     return object;
   }
 
-  static getScopeRemote(scopeName: string): Promise<Remote> {
-    return Remotes.getGlobalRemotes().then((remotes) => remotes.resolve(scopeName));
+  static async getScopeRemote(scopeName: string): Promise<Remote> {
+    const remotes = await Remotes.getGlobalRemotes();
+    return remotes.resolve(scopeName);
   }
 
-  static getGlobalRemotes(): Promise<Remotes> {
-    return GlobalRemotes.load()
-      .then((globalRemotes) => globalRemotes.toPlainObject())
-      .then((remotes) => Remotes.load(remotes));
+  static async getGlobalRemotes(): Promise<Remotes> {
+    const globalRemotes = await GlobalRemotes.load();
+    const remotes = globalRemotes.toPlainObject();
+    return Remotes.load(remotes);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static load(remotes: { [key: string]: string }): Remotes {
+  static load(remotes: { [key: string]: string }, thisScope?: Scope): Remotes {
     const models = [];
 
     if (!remotes) return new Remotes();
 
     forEach(remotes, (name, host) => {
-      const remote = Remote.load(name, host);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const remote = Remote.load(name, host, thisScope);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       models.push([remote.name, remote]);
     });
