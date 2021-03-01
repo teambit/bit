@@ -273,7 +273,9 @@ export default class ComponentLoader {
       return null; // probably doesn't exist
     }
     const bitObjectsList = await objectList.toBitObjects();
-    return bitObjectsList.getComponents()[0];
+    const components = bitObjectsList.getComponents();
+    if (!components.length) return null; // probably doesn't exist
+    return components[0];
   }
 
   private _isAngularProject(): boolean {

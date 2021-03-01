@@ -49,7 +49,7 @@ export default class Remotes extends Map<string, Remote> {
   ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
-      withoutDependencies: false,
+      withoutDependencies: true,
       includeArtifacts: false,
       ...options,
     };
