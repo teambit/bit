@@ -5,7 +5,7 @@ import { Tooltip } from '@teambit/ui.tooltip';
 
 import styles from './collapser-button.module.scss';
 
-type CollapserProps = {
+export type CollapserProps = {
   isOpen: boolean;
   /**
    * content to be placed in the tooltip

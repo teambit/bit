@@ -3,7 +3,7 @@ import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { Corner } from '@teambit/ui.corner';
-import { Collapser } from '@teambit/ui.collapser-button';
+import { Collapser } from '@teambit/ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui.top-bar';
