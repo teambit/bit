@@ -13,14 +13,21 @@ export default function hashErrorIfNeeded(error: Error) {
   } catch (e) {
     logger.warn('could not clone error', error);
   }
+
   const shouldHash = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
   if (!shouldHash) return clonedError;
   const fields = Object.getOwnPropertyNames(clonedError);
   const fieldToHash = fields.filter((field) => !systemFields.includes(field) && field !== 'message');
   if (!fieldToHash.length) return clonedError;
+
   fieldToHash.forEach((field) => {
-    clonedError[field] = hashValue(clonedError[field]);
+    try {
+      clonedError[field] = hashValue(clonedError[field]);
+    } catch (e) {
+      logger.debug(`could not hash field ${field}`);
+    }
   });
+
   return clonedError;
 }
 
