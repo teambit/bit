@@ -47,7 +47,7 @@ export type ComponentStatus = {
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-export default (async function checkoutVersion(
+export default async function checkoutVersion(
   consumer: Consumer,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResults> {
@@ -82,17 +82,19 @@ export default (async function checkoutVersion(
     .map((c) => c.component)
     .filter((c) => c) as ComponentWithDependencies[];
 
-  const manyComponentsWriter = new ManyComponentsWriter({
-    consumer,
-    componentsWithDependencies,
-    installNpmPackages: !checkoutProps.skipNpmInstall,
-    override: true,
-    verbose: checkoutProps.verbose,
-    writeDists: !checkoutProps.ignoreDist,
-    writeConfig: checkoutProps.writeConfig,
-    writePackageJson: !checkoutProps.ignorePackageJson,
-  });
-  await manyComponentsWriter.writeAll();
+  if (componentsWithDependencies.length) {
+    const manyComponentsWriter = new ManyComponentsWriter({
+      consumer,
+      componentsWithDependencies,
+      installNpmPackages: !checkoutProps.skipNpmInstall,
+      override: true,
+      verbose: checkoutProps.verbose,
+      writeDists: !checkoutProps.ignoreDist,
+      writeConfig: checkoutProps.writeConfig,
+      writePackageJson: !checkoutProps.ignorePackageJson,
+    });
+    await manyComponentsWriter.writeAll();
+  }
 
   const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
@@ -111,7 +113,7 @@ export default (async function checkoutVersion(
       throw err;
     }
   }
-});
+}
 
 async function getComponentStatus(
   consumer: Consumer,
