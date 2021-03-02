@@ -632,7 +632,7 @@ jobs:
       - run: ulimit -a
       - run:
           name: export components
-          command: cd bit && bit export
+          command: cd bit && BIT_FEATURES=export-central bit export
           no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
