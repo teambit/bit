@@ -114,7 +114,7 @@ describe('tag components on Harmony', function () {
           expect(componentMap).to.not.have.property('nextVersion');
         });
         const ids = Object.keys(bitMap);
-        ids.forEach((id) => expect(id).to.include('0.0.1'));
+        ids.forEach((id) => expect(bitMap[id].version).to.equal('0.0.1'));
       });
       it('bit status should not show as soft-tagged', () => {
         const status = helper.command.status();
@@ -127,8 +127,8 @@ describe('tag components on Harmony', function () {
         });
         it('should save the nextVersion data into potential auto-tag bitmap entries', () => {
           const bitMap = helper.bitMap.readComponentsMapOnly();
-          expect(bitMap['comp2@0.0.1']).to.have.property('nextVersion');
-          expect(bitMap['comp1@0.0.1']).to.have.property('nextVersion');
+          expect(bitMap.comp2).to.have.property('nextVersion');
+          expect(bitMap.comp1).to.have.property('nextVersion');
         });
       });
     });
