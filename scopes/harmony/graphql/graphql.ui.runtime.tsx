@@ -23,7 +23,17 @@ export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
  * */
 export type GraphQLClient<T> = ApolloClient<T>;
 
-type ClientOptions = { state?: NormalizedCacheObject };
+type ClientOptions = {
+  /** Preset in-memory cache with state (e.g. continue state from SSR) */
+  state?: NormalizedCacheObject;
+  /** endpoint for websocket connections */
+  subscriptionUri?: string;
+
+  /** TEMPORARY! Use old api.
+   * @default true
+   */
+  legacy?: boolean;
+};
 
 export class GraphqlUI {
   constructor(private remoteServerSlot: GraphQLServerSlot) {}
@@ -49,9 +59,18 @@ export class GraphqlUI {
     return this.client.query(options);
   }
 
-  createClient(host: string, { state }: ClientOptions = {}) {
+  createClient(uri: string, { state, subscriptionUri, legacy = true }: ClientOptions = {}) {
+    if (legacy) {
+      const client = new ApolloClient({
+        link: this.createLinkLegacy(uri),
+        cache: this.createCache({ state }),
+      });
+
+      return client;
+    }
+
     const client = new ApolloClient({
-      link: this.createLink(host),
+      link: this.createLink(uri, { subscriptionUri }),
       cache: this.createCache({ state }),
     });
 
@@ -90,16 +109,32 @@ export class GraphqlUI {
     return cache;
   }
 
-  // unused
+  /** @deprecated (unused) */
   createLinks() {
     const servers = this.remoteServerSlot.values();
 
     return servers.map((server) => {
-      return this.createLink(server.uri);
+      return this.createLinkLegacy(server.uri);
     });
   }
 
-  private createLink(host: string) {
+  private createLink(uri: string, { subscriptionUri }: { subscriptionUri?: string } = {}) {
+    const httpLink = new HttpLink({ credentials: 'include', uri });
+    const subsLink = subscriptionUri
+      ? new WebSocketLink({
+          uri: subscriptionUri,
+          options: { reconnect: true },
+        })
+      : undefined;
+
+    const hybridLink = subsLink ? createSplitLink(httpLink, subsLink) : httpLink;
+    const errorLogger = onError(logError);
+
+    return ApolloLink.from([errorLogger, hybridLink]);
+  }
+
+  /** @deprecated */
+  private createLinkLegacy(host: string) {
     const httpLink = this.createHttpLink(host);
     const wsLink = this.createWsLink(host);
     const hybridLink = createSplitLink(httpLink, wsLink);
@@ -108,6 +143,7 @@ export class GraphqlUI {
     return ApolloLink.from([errorLogger, hybridLink]);
   }
 
+  /** @deprecated */
   private createHttpLink(host: string) {
     return new HttpLink({
       credentials: 'include',
@@ -115,6 +151,7 @@ export class GraphqlUI {
     });
   }
 
+  /** @deprecated */
   private createWsLink(host: string) {
     return new WebSocketLink({
       uri: `${(window.location.protocol === 'https:' ? 'wss://' : 'ws://') + host}/subscriptions`,
