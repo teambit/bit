@@ -10,7 +10,8 @@ import { Http } from './http';
 export default function connect(
   host: string,
   name: string,
-  strategiesNames?: SSHConnectionStrategyName[]
+  strategiesNames?: SSHConnectionStrategyName[],
+  localScopeName?: string
 ): Promise<Network> {
   if (host.startsWith('ssh://') || host.startsWith('bit://')) {
     logger.debug(`Establishing a new SSH connection to ${host}`);
@@ -25,7 +26,7 @@ export default function connect(
   }
 
   if (host.startsWith('http://') || host.startsWith('https://')) {
-    return Http.connect(host, name);
+    return Http.connect(host, name, localScopeName);
   }
 
   throw new ProtocolNotSupported();

@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { getDataFromTree } from '@apollo/client/react/ssr';
-import { NormalizedCacheObject } from '@apollo/client';
+import type { NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
 import { isBrowser } from '@teambit/ui.is-browser';
@@ -64,7 +64,11 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
   };
 
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
-    const client = this.graphqlUI.createClient(window.location.host, { state });
+    const { location } = window;
+    const isInsecure = location.protocol === 'http:';
+    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
+
+    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl, legacy: false });
 
     this.graphqlUI._setClient(client);
 

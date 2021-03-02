@@ -1,4 +1,5 @@
 import { filter } from 'bluebird';
+import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
@@ -31,6 +32,7 @@ export default class ScopeComponentsImporter {
   scope: Scope;
   sources: SourcesRepository;
   repo: Repository;
+  fetchWithDepsMutex = new Mutex();
   constructor(scope: Scope) {
     if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
     this.scope = scope;
@@ -309,14 +311,20 @@ export default class ScopeComponentsImporter {
   }
 
   async fetchWithDeps(ids: BitIds): Promise<VersionDependencies[]> {
-    logger.debugAndAddBreadCrumb('fetchWithDependencies', `ids: {ids}`, { ids: ids.toString() });
+    logger.debugAndAddBreadCrumb('fetchWithDeps', `ids: {ids}`, { ids: ids.toString() });
     this.throwIfExternalFound(ids);
-    const localDefs: ComponentDef[] = await this.sources.getMany(ids);
-    const versionDeps = await mapSeries(localDefs, async (compDef) => {
-      if (!compDef.component) return null;
-      return this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id);
+    // avoid race condition of getting multiple "fetch" requests, which later translates into
+    // multiple getExternalMany calls, which saves objects and write refs files at the same time
+    return this.fetchWithDepsMutex.runExclusive(async () => {
+      logger.debug('fetchWithDeps, acquiring a lock');
+      const localDefs: ComponentDef[] = await this.sources.getMany(ids);
+      const versionDeps = await mapSeries(localDefs, async (compDef) => {
+        if (!compDef.component) return null;
+        return this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id);
+      });
+      logger.debug('fetchWithDeps, releasing the lock');
+      return compact(versionDeps);
     });
-    return compact(versionDeps);
   }
 
   async componentToVersionDependencies(
@@ -343,7 +351,8 @@ export default class ScopeComponentsImporter {
         } not found, going to fetch from a remote`
       );
       const remotes = await getScopeRemotes(this.scope);
-      return this.getExternal({ id, remotes, localFetch: false });
+      const versionDeps = await this.getExternalMany([id], remotes);
+      return versionDeps.length ? versionDeps[0] : null;
     }
 
     logger.debug(
@@ -400,6 +409,7 @@ export default class ScopeComponentsImporter {
   }
 
   /**
+   * get multiple components from remotes with their dependencies.
    * never checks if exist locally. always fetches from remote and then, save into the model.
    */
   private async getExternalMany(
@@ -418,7 +428,12 @@ export default class ScopeComponentsImporter {
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
-    const { objectListPerRemote } = await remotes.fetch(groupByScopeName(ids), this.scope, undefined, context);
+    const { objectListPerRemote } = await remotes.fetch(
+      groupByScopeName(ids),
+      this.scope,
+      { withoutDependencies: false },
+      context
+    );
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter.getExternalMany', 'writing them to the model');
     const nonLaneIds = await this.scope.writeManyObjectListToModel(objectListPerRemote, persist, ids);
     const componentDefs = await this.sources.getMany(nonLaneIds);
@@ -431,59 +446,6 @@ export default class ScopeComponentsImporter {
       versionDepsNoNull.forEach((verDep) => verDep.throwForMissingDependencies());
     }
     return versionDepsNoNull;
-  }
-
-  /**
-   * fetch from external with dependencies.
-   * if the component is not in the local scope, fetch it from a remote and save into the local
-   * scope. (objects directory).
-   */
-  private async getExternal({
-    id,
-    remotes,
-    localFetch = true,
-    context = {},
-  }: {
-    id: BitId;
-    remotes: Remotes;
-    localFetch: boolean;
-    context?: Record<string, any>;
-  }): Promise<VersionDependencies> {
-    enrichContextFromGlobal(context);
-    const component = await this.sources.get(id);
-    if (component && localFetch) {
-      const versionDeps = await this.componentToVersionDependencies(component, id, true);
-      return versionDeps as VersionDependencies;
-    }
-    const { objectList } = await remotes.fetch(groupByScopeName([id]), this.scope, undefined, context);
-    await this.scope.writeObjectListToModel(objectList, id.scope as string, true, [id]);
-    return this.getExternal({ id, remotes, localFetch: true });
-  }
-
-  private async getExternalWithoutDependencies({
-    id,
-    remotes,
-    localFetch = true,
-    context = {},
-  }: {
-    id: BitId;
-    remotes: Remotes;
-    localFetch: boolean;
-    context?: Record<string, any>;
-  }): Promise<ComponentVersion> {
-    const component = await this.sources.get(id);
-    if (component && localFetch) {
-      return component.toComponentVersion(id.version as string);
-    }
-    const { objectList } = await remotes.fetch(
-      groupByScopeName([id]),
-      this.scope,
-      { withoutDependencies: true },
-      context
-    );
-    await this.scope.writeObjectListToModel(objectList, id.scope as string, true, [id]);
-    const versionDependencies = await this.getExternal({ id, remotes, localFetch: true });
-    return versionDependencies.component;
   }
 
   private async getExternalManyWithoutDeps(
@@ -526,7 +488,9 @@ export default class ScopeComponentsImporter {
   private async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.scope.name)) {
       const remotes = await getScopeRemotes(this.scope);
-      return this.getExternalWithoutDependencies({ id, remotes, localFetch: true });
+      const componentVersions = await this.getExternalManyWithoutDeps([id], remotes, true);
+      if (!componentVersions.length) throw new GeneralError(`unable to find ${id.toString()} in its remote`);
+      return componentVersions[0];
     }
 
     return this.sources.get(id).then((component) => {
