@@ -1,9 +1,8 @@
 import React, { ReactNode } from 'react';
-import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 
 import { InMemoryCache, ApolloClient, ApolloLink, HttpLink, createHttpLink } from '@apollo/client';
-import type { NormalizedCacheObject, ApolloQueryResult, QueryOptions } from '@apollo/client';
+import type { NormalizedCacheObject } from '@apollo/client';
 import { WebSocketLink } from '@apollo/client/link/ws';
 import { onError } from '@apollo/client/link/error';
 
@@ -11,12 +10,10 @@ import crossFetch from 'cross-fetch';
 
 import { createSplitLink } from './create-link';
 import { GraphQLProvider } from './graphql-provider';
-import { GraphQLServer } from './graphql-server';
 import { GraphqlAspect } from './graphql.aspect';
 import { GraphqlRenderLifecycle } from './render-lifecycle';
 import { logError } from './logging';
 
-export type GraphQLServerSlot = SlotRegistry<GraphQLServer>;
 /**
  * Type of gql client.
  * Used to abstract Apollo client, so consumers could import the type from graphql.ui, and not have to depend on @apollo/client directly
