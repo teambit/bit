@@ -24,7 +24,6 @@ import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
-import { EXPORT_CENTRAL, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -162,7 +161,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy || originDirectly || !isFeatureEnabled(EXPORT_CENTRAL)) return false;
+    if (isLegacy || originDirectly) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
