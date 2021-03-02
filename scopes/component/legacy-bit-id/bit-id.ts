@@ -131,6 +131,13 @@ export default class BitId {
     return isHash(this.version);
   }
 
+  validate() {
+    if (!isValidIdChunk(this.name)) throw new InvalidName(this.name);
+    if (this.scope && !isValidScopeName(this.scope)) {
+      throw new InvalidScopeName(this.scope, this.toString());
+    }
+  }
+
   /**
    * Get a string id and return a string without the version part
    * @param {string} id

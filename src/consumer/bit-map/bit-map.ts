@@ -260,26 +260,8 @@ export default class BitMap {
       if (!this.isLegacy) {
         componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
       }
-      const idHasScope = (): boolean => {
-        if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
-        if ('exported' in componentFromJson) {
-          if (typeof componentFromJson.exported !== 'boolean') {
-            throw new BitError(
-              `fatal: .bitmap record of "${componentId}" is invalid, the exported property must be boolean, got "${typeof componentFromJson.exported}" instead.`
-            );
-          }
-          return componentFromJson.exported;
-        }
-        if (this.isLegacy) {
-          // backward compatibility
-          return BitId.parseObsolete(componentId).hasScope();
-        }
-        // on Harmony, if there is no "exported" we default to "true" as this is the most commonly
-        // used. so it's better to have as little as possible of these props.
-        componentFromJson.exported = true;
-        return true;
-      };
-      const bitId = BitId.parse(componentId, idHasScope());
+
+      const bitId = this.getBitIdFromComponentJson(componentId, componentFromJson);
       if (bitId.hasScope() && !bitId.hasVersion() && !componentFromJson.lanes) {
         throw new BitError(
           `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
@@ -291,6 +273,41 @@ export default class BitMap {
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.components.push(componentMap);
     });
+  }
+
+  getBitIdFromComponentJson(componentId: string, componentFromJson: Record<string, any>): BitId {
+    // on Harmony, to parse the id, the old format used "exported" prop, the current format
+    // uses "scope" and "version" props.
+    const newHarmonyFormat = 'scope' in componentFromJson;
+    if (newHarmonyFormat) {
+      const bitId = new BitId({
+        scope: componentFromJson.scope,
+        name: componentId,
+        version: componentFromJson.version,
+      });
+      bitId.validate();
+      return bitId;
+    }
+    const idHasScope = (): boolean => {
+      if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
+      if ('exported' in componentFromJson) {
+        if (typeof componentFromJson.exported !== 'boolean') {
+          throw new BitError(
+            `fatal: .bitmap record of "${componentId}" is invalid, the exported property must be boolean, got "${typeof componentFromJson.exported}" instead.`
+          );
+        }
+        return componentFromJson.exported;
+      }
+      if (this.isLegacy) {
+        // backward compatibility
+        return BitId.parseObsolete(componentId).hasScope();
+      }
+      // on Harmony, if there is no "exported" we default to "true" as this is the most commonly
+      // used. so it's better to have as little as possible of these props.
+      componentFromJson.exported = true;
+      return true;
+    };
+    return BitId.parse(componentId, idHasScope());
   }
 
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): ComponentMap[] {
@@ -821,19 +838,24 @@ export default class BitMap {
     const components = {};
     this.components.forEach((componentMap) => {
       const componentMapCloned = componentMap.clone();
-      if (componentMapCloned.origin === COMPONENT_ORIGINS.AUTHORED) {
-        componentMapCloned.exported = componentMapCloned.id.hasScope();
+      let idStr = componentMapCloned.id.toString();
+      if (this.isLegacy) {
+        if (componentMapCloned.origin === COMPONENT_ORIGINS.AUTHORED) {
+          componentMapCloned.exported = componentMapCloned.id.hasScope();
+        }
+      } else {
+        // no need for "exported" property as there are scope and version props
+        // if not exist, we still need these properties so we know later to parse them correctly.
+        componentMapCloned.scope = componentMapCloned.id.scope || '';
+        componentMapCloned.version = componentMapCloned.id.version || '';
+        // change back the id to the master id, so the local lanes data won't be saved in .bitmap
+        if (componentMapCloned.defaultVersion) {
+          componentMapCloned.version = componentMapCloned.defaultVersion;
+        }
+        idStr = componentMapCloned.id.name;
       }
-      // change back the id to the master id, so the local lanes data won't be saved in .bitmap
-      const id = componentMapCloned.defaultVersion
-        ? componentMapCloned.id.changeVersion(componentMapCloned.defaultVersion)
-        : componentMapCloned.id;
-      const idStr = id.toString();
       // @ts-ignore
       delete componentMapCloned?.id;
-      if (!this.isLegacy && componentMapCloned.exported) {
-        delete componentMapCloned.exported;
-      }
       components[idStr] = componentMapCloned.toPlainObject(this.isLegacy);
     });
 
@@ -864,18 +886,8 @@ export default class BitMap {
     this.hasChanged = false;
   }
 
-  /**
-   * instead of `JSON.stringify(this.getContent(), null, 4)`
-   * format the file to have each object key in its own line. it makes it easier to resolve git conflicts
-   */
   private contentToString() {
-    const bitMapContent = this.getContent();
-    const records = Object.keys(bitMapContent)
-      .map((key) => {
-        return `  "${key}": ${JSON.stringify(bitMapContent[key])}`;
-      })
-      .join(',\n');
-    return `{\n${records}\n}`;
+    return JSON.stringify(this.getContent(), null, 4);
   }
 
   getContent(): Record<string, any> {
