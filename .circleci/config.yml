@@ -1181,7 +1181,7 @@ workflows:
           <<: *master_only_filter
           requires:
             - setup_harmony
-      - harmony_publish_to_jfrog:
+      - publish_to_gcloud:
           <<: *master_only_filter
           requires:
             - bit_tag
@@ -1221,7 +1221,7 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
-      - harmony_publish_to_jfrog:
+      - publish_to_gcloud:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
@@ -1236,9 +1236,3 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-  publish_to_gcloud:
-    jobs:
-      - harmony_publish_to_gcloud:
-            filters:
-              branches:
-                only: gcloud-upload
