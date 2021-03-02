@@ -142,14 +142,18 @@ export default class BitMap {
     }
     const version = componentsJson.version;
     const remoteLaneName = componentsJson[LANE_KEY];
-    // Don't treat version like component
-    delete componentsJson.version;
-    delete componentsJson[LANE_KEY];
+    BitMap.removeNonComponentFields(componentsJson);
 
     const bitMap = new BitMap(dirPath, currentLocation, version, isLegacy, workspaceLane, remoteLaneName);
     bitMap.loadComponents(componentsJson);
     await bitMap.loadFiles(consumer.componentFsCache);
     return bitMap;
+  }
+
+  static removeNonComponentFields(componentsJson: Record<string, any>) {
+    // Don't treat version like component
+    delete componentsJson.version;
+    delete componentsJson[LANE_KEY];
   }
 
   async loadFiles(componentFsCache: ComponentFsCache) {
@@ -261,7 +265,7 @@ export default class BitMap {
         componentFromJson.origin = COMPONENT_ORIGINS.AUTHORED;
       }
 
-      const bitId = this.getBitIdFromComponentJson(componentId, componentFromJson);
+      const bitId = BitMap.getBitIdFromComponentJson(componentId, componentFromJson, this.isLegacy);
       if (bitId.hasScope() && !bitId.hasVersion() && !componentFromJson.lanes) {
         throw new BitError(
           `.bitmap entry of "${componentId}" is invalid, it has a scope-name "${bitId.scope}", however, it does not have any version`
@@ -275,7 +279,11 @@ export default class BitMap {
     });
   }
 
-  getBitIdFromComponentJson(componentId: string, componentFromJson: Record<string, any>): BitId {
+  static getBitIdFromComponentJson(
+    componentId: string,
+    componentFromJson: Record<string, any>,
+    isLegacy = false
+  ): BitId {
     // on Harmony, to parse the id, the old format used "exported" prop, the current format
     // uses "scope" and "version" props.
     const newHarmonyFormat = 'scope' in componentFromJson;
@@ -285,8 +293,8 @@ export default class BitMap {
         name: componentId,
         version: componentFromJson.version,
       });
-      bitId.validate();
-      return bitId;
+      // it needs to be parsed for 1) validation 2) adding "latest" to the version if needed.
+      return BitId.parse(bitId.toString(), bitId.hasScope());
     }
     const idHasScope = (): boolean => {
       if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
@@ -298,7 +306,7 @@ export default class BitMap {
         }
         return componentFromJson.exported;
       }
-      if (this.isLegacy) {
+      if (isLegacy) {
         // backward compatibility
         return BitId.parseObsolete(componentId).hasScope();
       }
@@ -846,8 +854,8 @@ export default class BitMap {
       } else {
         // no need for "exported" property as there are scope and version props
         // if not exist, we still need these properties so we know later to parse them correctly.
-        componentMapCloned.scope = componentMapCloned.id.scope || '';
-        componentMapCloned.version = componentMapCloned.id.version || '';
+        componentMapCloned.scope = componentMapCloned.id.hasScope() ? componentMapCloned.id.scope : '';
+        componentMapCloned.version = componentMapCloned.id.hasVersion() ? componentMapCloned.id.version : '';
         // change back the id to the master id, so the local lanes data won't be saved in .bitmap
         if (componentMapCloned.defaultVersion) {
           componentMapCloned.version = componentMapCloned.defaultVersion;
