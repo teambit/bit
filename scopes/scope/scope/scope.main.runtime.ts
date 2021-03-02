@@ -347,7 +347,12 @@ export class ScopeMain implements ComponentFactory {
     const components = await this.getMany(userAspectsIds);
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
-      { baseDir: this.getAspectCapsulePath(), skipIfExists: true },
+      {
+        baseDir: this.getAspectCapsulePath(),
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
     const capsules = network.seedersCapsules;
