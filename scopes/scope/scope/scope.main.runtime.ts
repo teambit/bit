@@ -444,6 +444,7 @@ export class ScopeMain implements ComponentFactory {
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
+    this.logger.debug(`modelComponents is: ${JSON.stringify(modelComponents)}`);
     if (!includeCache) {
       modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
     }
@@ -451,6 +452,7 @@ export class ScopeMain implements ComponentFactory {
     const componentsIds = modelComponents.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
     );
+    this.logger.debug(`componentsIds after filter scope: ${JSON.stringify(componentsIds)}`);
     return componentsIds;
   }
 
