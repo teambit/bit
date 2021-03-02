@@ -192,5 +192,6 @@
   "teambit.workspace/ui/workspace-component-card@0.0.301": {"mainFile":"index.ts","rootDir":"scopes/workspace/ui/workspace-component-card"},
   "teambit.workspace/variants@0.0.301": {"mainFile":"index.ts","rootDir":"scopes/workspace/variants"},
   "teambit.workspace/workspace@0.0.302": {"mainFile":"index.ts","rootDir":"scopes/workspace/workspace"},
+  "tests-results": {"mainFile":"index.ts","rootDir":"scopes/defender/tests-results","exported":false},
   "version": "14.8.9-dev.298"
 }

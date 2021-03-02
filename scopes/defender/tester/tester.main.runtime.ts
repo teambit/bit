@@ -8,9 +8,9 @@ import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { TestsResult } from '@teambit/tests-results';
 
 import { ComponentsResults, CallbackFn } from './tester';
-import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
