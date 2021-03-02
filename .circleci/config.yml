@@ -637,7 +637,7 @@ jobs:
       - run: echo "bit" >> bit.txt  
       - run:
           name: Configure gcloud auth
-          command: echo $COMMAND_GCLOUD_AUTHENTICATE > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
       - run:
           name: Upload tar file
           command: gsutil cp bit.txt gs://bvm.bit.dev
