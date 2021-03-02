@@ -68,14 +68,14 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
     const isInsecure = location.protocol === 'http:';
     const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
 
-    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl, legacy: false });
-
-    this.graphqlUI._setClient(client);
+    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl });
 
     return { client };
   };
 
   private BrowserGqlProvider = ({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) => {
+    if (!renderCtx?.client) throw new TypeError('GQL client is not initialized, make sure `.browserInit()` executes');
+
     return <this.graphqlUI.getProvider client={renderCtx?.client}>{children}</this.graphqlUI.getProvider>;
   };
 
@@ -83,7 +83,8 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
 }
 
 function ServerGqlProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {
-  if (!renderCtx?.client) throw new TypeError('Gql client is has not been initialized during SSR');
+  if (!renderCtx?.client)
+    throw new TypeError('GQL client has not been initialized during SSR, make sure `.serverInit()` executes');
 
   const { client } = renderCtx;
   return <GraphQLProvider client={client}>{children}</GraphQLProvider>;

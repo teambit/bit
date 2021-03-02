@@ -547,13 +547,15 @@ jobs:
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
       - run: cd bit && bit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
-      # - run: cd bit && rm -rf node_modules
-      # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
-      - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
+      - run: cd bit && rm -rf node_modules
+      - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
+      # - run: cd bit && rm -rf node_modules/@teambit/legacy
+      # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
+      # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
-      # - run:
-      #     name: 'build harmony'
-      #     command: 'cd bit && npm run build-harmony-skip-import'
+      - run:
+          name: 'build harmony'
+          command: 'cd bit && npm run build-harmony-skip-import'
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
@@ -662,7 +664,7 @@ jobs:
       - run: ulimit -a
       - run:
           name: export components
-          command: cd bit && bit export
+          command: cd bit && BIT_FEATURES=export-central bit export
           no_output_timeout: '20m'
       - run:
           name: backup bit objects (after export)
