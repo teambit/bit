@@ -613,7 +613,7 @@ jobs:
 
   harmony_publish_to_gcloud:
     docker:
-      - image: google/cloud-sdk
+      - image: bitcli/node-gcloud-sdk
     <<: *defaults
     steps:
       - run:
@@ -625,21 +625,22 @@ jobs:
       - run:
           name: create empty folder
           command: mkdir bit-${BIT_VERSION}
-      - run:
-          name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
-      - run:
-          name: remove leftovers
-          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
-      - run:
-          name: compress bit
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      # - run:
+      #     name: install bit
+      #     command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+      # - run:
+      #     name: remove leftovers
+      #     command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
+      # - run:
+      #     name: compress bit
+      #     command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run: echo "bit" >> bit.txt  
       - run:
           name: Configure gcloud auth
-          command: echo 'todo'
+          command: echo $${COMMAND_GCLOUD_AUTHENTICATE} > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
       - run:
           name: Upload tar file
-          command: echo 'todo'
+          command: gsutil cp bit.txt gs://bvm.bit.dev
 
   bit_export:
     <<: *defaults
