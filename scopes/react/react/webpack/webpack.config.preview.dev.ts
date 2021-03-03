@@ -8,6 +8,11 @@ import * as mdxLoader from '@teambit/modules.mdx-loader';
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/babel.bit-react-transformer';
 
+/*
+ * Webpack config for Preview Dev mode,
+ * i.e. bundle docs & compositions for react components in a local workspace.
+ */
+
 const moduleFileExtensions = [
   'web.js',
   'js',
@@ -24,10 +29,7 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (
-  envId: string,
-  fileMapPath: string
-): WebpackConfigWithDevServer {
+export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
