@@ -297,7 +297,7 @@ export default class BitMap {
       return BitId.parse(bitId.toString(), bitId.hasScope());
     }
     const idHasScope = (): boolean => {
-      if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
+      if (componentFromJson.origin && componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
       if ('exported' in componentFromJson) {
         if (typeof componentFromJson.exported !== 'boolean') {
           throw new BitError(
