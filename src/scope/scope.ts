@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
-import pMap from 'p-map';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -24,7 +23,6 @@ import {
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
-  CONCURRENT_COMPONENTS_LIMIT,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
@@ -59,7 +57,6 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
-import { BitObjectList } from './objects/bit-object-list';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -454,21 +451,6 @@ export default class Scope {
       return { componentId: component.id, missingDistSpecs, specs, pass };
     };
     return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
-  }
-
-  async mergeModelComponent(component: ModelComponent, versions: Version[], remoteName: string) {
-    const { mergedComponent } = await this.sources.merge(component, versions, remoteName);
-    const isIncomingFromOrigin = remoteName === component.scope;
-    if (isIncomingFromOrigin && component.head) {
-      mergedComponent.remoteHead = component.head;
-      // when importing a component, save the remote head into the remote master ref file.
-      // unless this component arrived as a cache of the dependent, which its head might be wrong
-      await this.objects.remoteLanes.addEntry(
-        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
-        mergedComponent.toBitId(),
-        mergedComponent.remoteHead
-      );
-    }
   }
 
   getObject(hash: string): Promise<BitObject> {

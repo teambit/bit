@@ -15,7 +15,7 @@ export class ModelComponentMerger {
     private incomingComponent: ModelComponent,
     private isImport: boolean,
     private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
-    private existingHeadIsMissingInIncomingComponent: boolean
+    private existingHeadIsMissingInIncomingComponent?: boolean // needed for export only
   ) {
     this.isExport = !this.isImport;
   }

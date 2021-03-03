@@ -27,6 +27,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
 import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
 import { BitObjectList } from '../objects/bit-object-list';
+import { ModelComponentMerger } from './model-components-merger';
 
 const removeNils = R.reject(R.isNil);
 
@@ -405,36 +406,71 @@ export default class ScopeComponentsImporter {
       const bitObjectList = bitObjectsPerRemote[remoteName];
       return this.addObjectListToRepo(bitObjectList, remoteName, ids);
     });
-    await this.repo.persist();
+    await this.repo.writeRemoteLanes();
     return BitIds.uniqFromArray(R.flatten(bitIds));
   }
 
+  /**
+   * this has been changed to be efficient in terms of memory and less error-prone.
+   * first, write all immutable objects, such as files/sources/versions into the filesystem.
+   * even if the process will crush later and the component-object won't be written, there is no
+   * harm of writing these objects.
+   * then, merge the component objects and write them to the filesystem. the index.json is written
+   * as well to make sure they're indexed immediately, even if the process crushes on the next remote.
+   * finally, take care of the lanes. the remote-lanes are not written at this point, only once all
+   * remotes are processed. see @writeManyObjectListToModel.
+   */
   private async addObjectListToRepo(bitObjectList: BitObjectList, remoteName: string, ids: BitId[]): Promise<BitId[]> {
+    const immutableObjects = bitObjectList.getAllExceptComponentsAndLanes();
+    await this.repo.writeObjectsToTheFS(immutableObjects);
+
     const components = bitObjectList.getComponents();
-    const versions = bitObjectList.getVersions();
-    const laneObjects = bitObjectList.getLanes();
-    await pMap(
-      components,
-      (component: ModelComponent) => this.scope.mergeModelComponent(component, versions, remoteName),
-      {
-        concurrency: CONCURRENT_COMPONENTS_LIMIT,
-      }
-    );
+    const mergedComponents = await pMap(components, (component) => this.mergeModelComponent(component, remoteName), {
+      concurrency: CONCURRENT_COMPONENTS_LIMIT,
+    });
+    await this.repo.writeObjectsToTheFS(mergedComponents);
+
     let nonLaneIds: BitId[] = ids;
-    await Promise.all(
-      laneObjects.map(async (lane) => {
-        if (!lane.scope) {
-          throw new Error(`scope.addObjectListToRepo scope is missing from a lane ${lane.name}`);
-        }
-        await this.repo.remoteLanes.syncWithLaneObject(lane.scope, lane);
-        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-        nonLaneIds.push(...lane.components.map((c) => c.id));
-      })
-    );
-    // components and lanes were merged previously, add the rest.
-    const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
-    this.sources.putObjects(objectsToAdd);
+    const laneObjects = bitObjectList.getLanes();
+    await mapSeries(laneObjects, async (lane) => {
+      if (!lane.scope) {
+        throw new Error(`scope.addObjectListToRepo scope is missing from a lane ${lane.name}`);
+      }
+      await this.repo.remoteLanes.syncWithLaneObject(lane.scope, lane);
+      nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
+      nonLaneIds.push(...lane.components.map((c) => c.id));
+    });
+
     return nonLaneIds;
+  }
+
+  private async mergeModelComponent(incomingComp: ModelComponent, remoteName: string): Promise<ModelComponent> {
+    const isIncomingFromOrigin = remoteName === incomingComp.scope;
+    const merge = async () => {
+      const existingComp = await this.sources._findComponent(incomingComp);
+      if (!existingComp || (existingComp && incomingComp.isEqual(existingComp))) {
+        return incomingComp;
+      }
+      const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
+      const { mergedComponent } = await modelComponentMerger.merge();
+      return mergedComponent;
+    };
+
+    const mergedComponent = await merge();
+
+    if (isIncomingFromOrigin && incomingComp.head) {
+      console.log('must be here ', incomingComp.name);
+      mergedComponent.remoteHead = incomingComp.head;
+      // when importing a component, save the remote head into the remote master ref file.
+      // unless this component arrived as a cache of the dependent, which its head might be wrong
+      await this.repo.remoteLanes.addEntry(
+        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
+        mergedComponent.toBitId(),
+        mergedComponent.remoteHead
+      );
+    }
+
+    return mergedComponent;
   }
 
   private async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {

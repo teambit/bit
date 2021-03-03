@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-
+import { Mutex } from 'async-mutex';
 import { BitId } from '../../bit-id';
 import { REMOTE_REFS_DIR } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
@@ -18,6 +18,7 @@ type Lanes = { [laneName: string]: LaneComponent[] };
 export default class RemoteLanes {
   basePath: string;
   remotes: { [remoteName: string]: Lanes };
+  writeMutex = new Mutex();
   constructor(scopePath: string) {
     this.basePath = path.join(scopePath, REMOTE_REFS_DIR);
     this.remotes = {};
@@ -101,7 +102,9 @@ export default class RemoteLanes {
   }
 
   async write() {
-    return Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)));
+    await this.writeMutex.runExclusive(() =>
+      Promise.all(Object.keys(this.remotes).map((remoteName) => this.writeRemoteLanes(remoteName)))
+    );
   }
 
   private async writeRemoteLanes(remoteName: string) {
