@@ -33,6 +33,11 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
+      stats: {
+        // - for webpack-dev-server, this property needs to be in the devServer configuration object.
+        // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
+        warningsFilter: [/Failed to parse source map/],
+      },
     },
     module: {
       rules: [
@@ -45,7 +50,7 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
         {
           test: /\.js$/,
           enforce: 'pre',
-          exclude: /node_modules/,
+          include: /node_modules/,
           use: [require.resolve('source-map-loader')],
         },
         {
