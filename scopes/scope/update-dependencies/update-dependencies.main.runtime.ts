@@ -79,6 +79,7 @@ export class UpdateDependenciesMain {
     this.addBuildStatus();
     await this.addComponentsToScope();
     await this.updateComponents();
+    await this.scope.reloadAspectsWithNewVersion(this.legacyComponents);
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       this.components,
       { throwOnError: true }, // we might change it later to not throw.
