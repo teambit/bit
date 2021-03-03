@@ -1,9 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { GraphBuilder } from '@teambit/graph';
-import { Box, Text } from 'ink';
-import React from 'react';
-
-import NoDataForInsight from '../exceptions/no-data-for-insight';
 import { Insight, InsightResult, RawResult } from '../insight';
 
 export const INSIGHT_NAME = 'cyclic dependencies';
@@ -36,22 +31,12 @@ export default class FindCycles implements Insight {
     };
   }
 
-  _renderData(data: any) {
+  _renderData(data: RawResult) {
     if (data.data.length === 0) {
-      return (
-        <Box>
-          <Text>No cyclic dependencies</Text>
-        </Box>
-      );
+      return 'No cyclic dependencies';
     }
-    return (
-      <Box>
-        <Box key="data">
-          <Box>{data.message}</Box>
-          <Box>{data.data}</Box>
-        </Box>
-      </Box>
-    );
+    const string = `(${data.data.join(', ')})`;
+    return string;
   }
 
   async run(): Promise<InsightResult> {
@@ -63,6 +48,7 @@ export default class FindCycles implements Insight {
         description: this.description,
       },
       data: bareResult.data,
+      message: bareResult.message,
       renderedData,
     };
 

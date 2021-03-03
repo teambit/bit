@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { GraphBuilder, VersionSubgraph } from '@teambit/graph';
-import { Box, Newline, Text } from 'ink';
-import React from 'react';
 
 import { Insight, InsightResult, RawResult } from '../insight';
 // import NoDataForInsight from '../exceptions/no-data-for-insight';
@@ -32,7 +30,7 @@ export default class DuplicateDependencies implements Insight {
     const graph = await this.graphBuilder.getGraph();
     if (!graph) {
       return {
-        message: '',
+        message: 'No graph found',
         data: undefined,
       };
     }
@@ -77,35 +75,47 @@ export default class DuplicateDependencies implements Insight {
   }
 
   _renderData(data: FormattedEntry[]) {
-    const element = (
-      <Box>
-        {data.map(function (mainDependency) {
-          return (
-            <Box key={mainDependency.dependencyId}>
-              <Text>dependency: {mainDependency.dependencyId}</Text>
-              <Newline />
-              <Text>latest version: {mainDependency.latestVersion}</Text>
-              <Newline />
-              <Box>
-                <Text>dependents that do not use latest version:</Text>
-                {mainDependency.dependents.map(function (dependent) {
-                  return (
-                    <Box key={dependent.id}>
-                      <Text>
-                        <Text color="redBright">{dependent.id}</Text> uses{' '}
-                        <Text color="redBright">{dependent.usedVersion}</Text>
-                      </Text>
-                      <Newline />
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
-    );
-    return element;
+    // type FormattedEntry = {
+    //   dependencyId: string;
+    //   latestVersion: string;
+    //   dependents: {
+    //     id: string;
+    //     usedVersion: string;
+    //   }[];
+    // };
+    const strings = data.map((datum) => {
+      return JSON.stringify(datum);
+    });
+    return JSON.stringify(strings);
+    // const element2 = (
+    //   <Box>
+    //     {data.map(function (mainDependency) {
+    //       return (
+    //         <Box key={mainDependency.dependencyId}>
+    //           <Text>dependency: {mainDependency.dependencyId}</Text>
+    //           <Newline />
+    //           <Text>latest version: {mainDependency.latestVersion}</Text>
+    //           <Newline />
+    //           <Box>
+    //             <Text>dependents that do not use latest version:</Text>
+    //             {mainDependency.dependents.map(function (dependent) {
+    //               return (
+    //                 <Box key={dependent.id}>
+    //                   <Text>
+    //                     <Text color="redBright">{dependent.id}</Text> uses{' '}
+    //                     <Text color="redBright">{dependent.usedVersion}</Text>
+    //                   </Text>
+    //                   <Newline />
+    //                 </Box>
+    //               );
+    //             })}
+    //           </Box>
+    //         </Box>
+    //       );
+    //     })}
+    //   </Box>
+    // );
+    // return element;
   }
 
   async run(): Promise<InsightResult> {
@@ -118,6 +128,7 @@ export default class DuplicateDependencies implements Insight {
         description: this.description,
       },
       data: bareResult.data,
+      message: bareResult.message,
       renderedData,
     };
 
