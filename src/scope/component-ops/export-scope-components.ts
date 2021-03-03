@@ -24,7 +24,6 @@ import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
-import { EXPORT_CENTRAL, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -162,7 +161,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy || originDirectly || !isFeatureEnabled(EXPORT_CENTRAL)) return false;
+    if (isLegacy || originDirectly) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
@@ -183,12 +182,7 @@ export async function exportMany({
     const exportedBitIds = successIds.map((id) => BitId.parse(id, true));
     manyObjectsPerRemote.forEach((objectPerRemote) => {
       const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
-      if (!idsPerScope.length) {
-        throw new Error(`fatal: the exported ids received from the central hub don't contain any id for the scope "${
-          objectPerRemote.remote.name
-        }".
-the following ids were exported: ${successIds.join(', ')}`);
-      }
+      // it's possible that idsPerScope is an empty array, in case the objects were exported already before
       objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
     });
   }
