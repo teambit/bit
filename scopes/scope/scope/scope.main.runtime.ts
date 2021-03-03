@@ -589,6 +589,11 @@ export class ScopeMain implements ComponentFactory {
     return component;
   }
 
+  async loadComponentsAspect(component: Component) {
+    const aspectIds = component.state.aspects.ids;
+    await this.loadAspects(aspectIds, true);
+  }
+
   /**
    * declare the slots of scope extension.
    */
