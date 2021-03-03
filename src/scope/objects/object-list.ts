@@ -99,7 +99,10 @@ export class ObjectList {
 
   addIfNotExist(objectItems: ObjectItem[]) {
     objectItems.forEach((objectItem) => {
-      if (!this.objects.find((object) => object.ref.isEqual(objectItem.ref))) {
+      const exists = this.objects.find(
+        (object) => object.ref.isEqual(objectItem.ref) && object.scope === objectItem.scope
+      );
+      if (!exists) {
         this.objects.push(objectItem);
       }
     });
