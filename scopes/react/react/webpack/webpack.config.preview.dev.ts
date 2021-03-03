@@ -8,6 +8,11 @@ import * as mdxLoader from '@teambit/modules.mdx-loader';
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/babel.bit-react-transformer';
 
+/*
+ * Webpack config for Preview Dev mode,
+ * i.e. bundle docs & compositions for react components in a local workspace.
+ */
+
 const moduleFileExtensions = [
   'web.js',
   'js',
@@ -24,13 +29,15 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (
-  envId: string,
-  fileMapPath: string
-): WebpackConfigWithDevServer {
+export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
+      stats: {
+        // - for webpack-dev-server, this property needs to be in the devServer configuration object.
+        // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
+        warningsFilter: [/Failed to parse source map/],
+      },
     },
     module: {
       rules: [
@@ -43,7 +50,7 @@ export default function (
         {
           test: /\.js$/,
           enforce: 'pre',
-          exclude: /node_modules/,
+          include: /node_modules/,
           use: [require.resolve('source-map-loader')],
         },
         {
