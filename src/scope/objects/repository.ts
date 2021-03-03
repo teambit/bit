@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { uniqBy } from 'lodash';
 import * as path from 'path';
-import R from 'ramda';
 import pMap from 'p-map';
 import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';

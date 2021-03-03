@@ -16,7 +16,6 @@ import {
   COMPONENT_ORIGINS,
   CURRENT_UPSTREAM,
   DEFAULT_BIT_VERSION,
-  DEFAULT_LANE,
   DOT_GIT_DIR,
   LATEST,
   NODE_PATH_SEPARATOR,
@@ -31,7 +30,7 @@ import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
+import LaneId from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';

@@ -459,7 +459,6 @@ export default class ScopeComponentsImporter {
     const mergedComponent = await merge();
 
     if (isIncomingFromOrigin && incomingComp.head) {
-      console.log('must be here ', incomingComp.name);
       mergedComponent.remoteHead = incomingComp.head;
       // when importing a component, save the remote head into the remote master ref file.
       // unless this component arrived as a cache of the dependent, which its head might be wrong
