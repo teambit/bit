@@ -48,7 +48,7 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   const mergedIds: BitIds = await mergeObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
+  await scopeComponentsImporter.importManyFromOriginalScopes(mergedIds); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
