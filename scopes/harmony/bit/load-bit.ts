@@ -112,7 +112,7 @@ function getVersionFromBitMapIds(allBitmapIds: BitIds, aspectId: string): string
   // while in the aspect id it will have the default scope
   const found =
     allBitmapIds.searchWithoutVersion(aspectBitId) || allBitmapIds.searchWithoutScopeAndVersion(aspectBitId);
-  return found ? found.version : undefined;
+  return found && found.hasVersion() ? found.version : undefined;
 }
 
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
