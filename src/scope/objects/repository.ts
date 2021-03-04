@@ -408,7 +408,7 @@ export default class Repository {
   }
 
   /**
-   * always prefer this.persist().
+   * always prefer this.persist() or this.writeObjectsToTheFS()
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
@@ -416,7 +416,9 @@ export default class Repository {
     const contents = await object.compress();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
-    const objectPath = this.objectPath(object.hash());
+    const hash = object.hash();
+    if (this._cache[hash.toString()]) this._cache[hash.toString()] = object; // update the cache
+    const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);
