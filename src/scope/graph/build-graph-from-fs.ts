@@ -71,7 +71,6 @@ export class GraphFromFsBuilder {
     await scopeComponentsImporter.importMany(
       BitIds.uniqFromArray(allDepsWithScope),
       undefined,
-      undefined,
       this.shouldThrowOnMissingDep
     );
     const allDependencies = await mapSeries(components, (component) => this.processOneComponent(component));
