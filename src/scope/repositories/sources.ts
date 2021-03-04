@@ -521,11 +521,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async merge(
     incomingComp: ModelComponent,
-    versionObjects: Version[],
-    remoteName: string | undefined, // not available on export (isImport = false)
-    isImport = true
+    versionObjects: Version[]
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
-    const isExport = !isImport;
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -535,7 +532,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
     if (!existingComp) {
-      if (isExport) this.throwForMissingVersions(allVersionsInfo, incomingComp);
+      this.throwForMissingVersions(allVersionsInfo, incomingComp);
       this.putModelComponent(incomingComp);
       return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
@@ -548,19 +545,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         existingComponentHead &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
-    // for export, currently it'll always be true. later, we might want to support exporting
+    // currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
-    const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
+    const isIncomingFromOrigin = incomingComp.scope === this.scope.name;
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,
-      isImport,
+      false,
       isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
-    if (existingComponentHead && isExport) {
-      // for import, we don't care about the mergedVersions much.
+    if (existingComponentHead) {
       const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
       mergedVersions.push(...mergedSnaps);
     }
