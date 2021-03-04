@@ -6,7 +6,7 @@ import { BitId } from '../../bit-id';
 import { REMOTE_REFS_DIR } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import { glob } from '../../utils';
-import { Lane } from '../models';
+import { Lane, ModelComponent } from '../models';
 import { LaneComponent } from '../models/lane';
 import { Ref } from '../objects';
 
@@ -27,12 +27,24 @@ export default class RemoteLanes {
     if (!remoteLaneId) throw new TypeError('addEntry expects to get remoteLaneId');
     if (!head) return; // do nothing
     const remoteLane = await this.getRemoteLane(remoteLaneId);
+    this.pushToRemoteLane(remoteLane, componentId, head);
+  }
+
+  private pushToRemoteLane(remoteLane: LaneComponent[], componentId: BitId, head: Ref) {
     const existingComponent = remoteLane.find((n) => n.id.isEqualWithoutVersion(componentId));
     if (existingComponent) {
       existingComponent.head = head;
     } else {
       remoteLane.push({ id: componentId, head });
     }
+  }
+
+  async addEntriesFromModelComponents(remoteLaneId: RemoteLaneId, components: ModelComponent[]) {
+    const remoteLane = await this.getRemoteLane(remoteLaneId);
+    components.forEach((component) => {
+      if (!component.remoteHead) return;
+      this.pushToRemoteLane(remoteLane, component.toBitId(), component.remoteHead);
+    });
   }
 
   async getRef(remoteLaneId: RemoteLaneId, bitId: BitId): Promise<Ref | null> {
