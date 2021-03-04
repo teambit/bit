@@ -429,6 +429,10 @@ export default class ScopeComponentsImporter {
       concurrency: CONCURRENT_COMPONENTS_LIMIT,
     });
     await this.repo.writeObjectsToTheFS(mergedComponents);
+    await this.repo.remoteLanes.addEntriesFromModelComponents(
+      RemoteLaneId.from(DEFAULT_LANE, remoteName),
+      mergedComponents
+    );
 
     let nonLaneIds: BitId[] = ids;
     const laneObjects = bitObjectList.getLanes();
@@ -444,31 +448,21 @@ export default class ScopeComponentsImporter {
     return nonLaneIds;
   }
 
+  /**
+   * merge the imported component with the existing component in the local scope.
+   * when importing a component, save the remote head into the remote master ref file.
+   * unless this component arrived as a cache of the dependent, which its head might be wrong
+   */
   private async mergeModelComponent(incomingComp: ModelComponent, remoteName: string): Promise<ModelComponent> {
     const isIncomingFromOrigin = remoteName === incomingComp.scope;
-    const merge = async () => {
-      const existingComp = await this.sources._findComponent(incomingComp);
-      if (!existingComp || (existingComp && incomingComp.isEqual(existingComp))) {
-        return incomingComp;
-      }
-      const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
-      const { mergedComponent } = await modelComponentMerger.merge();
-      return mergedComponent;
-    };
-
-    const mergedComponent = await merge();
-
-    if (isIncomingFromOrigin && incomingComp.head) {
-      mergedComponent.remoteHead = incomingComp.head;
-      // when importing a component, save the remote head into the remote master ref file.
-      // unless this component arrived as a cache of the dependent, which its head might be wrong
-      await this.repo.remoteLanes.addEntry(
-        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
-        mergedComponent.toBitId(),
-        mergedComponent.remoteHead
-      );
+    const existingComp = await this.sources._findComponent(incomingComp);
+    if (!existingComp || (existingComp && incomingComp.isEqual(existingComp))) {
+      if (isIncomingFromOrigin) incomingComp.remoteHead = incomingComp.head;
+      return incomingComp;
     }
-
+    const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
+    const { mergedComponent } = await modelComponentMerger.merge();
+    if (isIncomingFromOrigin) mergedComponent.remoteHead = incomingComp.head;
     return mergedComponent;
   }
 
