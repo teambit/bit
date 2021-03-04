@@ -6,6 +6,7 @@ import { BitIdStr } from '../../bit-id/bit-id';
 import enrichContextFromGlobal from '../../hooks/utils/enrich-context-from-global';
 import logger from '../../logger/logger';
 import Remotes from '../../remotes/remotes';
+import { ModelComponent } from '../models';
 
 export type DeprecationResult = {
   bitIds: BitIdStr[];
@@ -38,12 +39,17 @@ export async function undeprecateRemote(
   return _deprecationRemote(remotes, scope, bitIds, false);
 }
 
-async function _deprecationMany(scope: Scope, ids: BitIds, deprecationAction: Function): Promise<DeprecationResult> {
+async function _deprecationMany(
+  scope: Scope,
+  ids: BitIds,
+  deprecationAction: DeprecationFunction
+): Promise<DeprecationResult> {
   const { missingComponents, foundComponents } = await scope.filterFoundAndMissingComponents(ids);
-  const bitIdsP = foundComponents.map((bitId) => deprecationAction(scope, bitId));
-  const bitIds = await Promise.all(bitIdsP);
-  await scope.objects.persist();
+  const modelComponentsP = foundComponents.map((bitId) => deprecationAction(scope, bitId));
+  const modelComponents = await Promise.all(modelComponentsP);
+  await scope.objects.writeObjectsToTheFS(modelComponents);
   const missingComponentsStrings = missingComponents.map((id) => id.toStringWithoutVersion());
+  const bitIds = modelComponents.map((comp) => comp.id());
   return { bitIds, missingComponents: missingComponentsStrings };
 }
 
@@ -68,16 +74,16 @@ async function _deprecationRemote(
   return Promise.all(deprecateP);
 }
 
-async function _deprecateSingle(scope: Scope, bitId: BitId): Promise<BitIdStr> {
+async function _deprecateSingle(scope: Scope, bitId: BitId): Promise<ModelComponent> {
   const component = await scope.getModelComponent(bitId);
   component.deprecated = true;
-  scope.objects.add(component);
-  return bitId.toStringWithoutVersion();
+  return component;
 }
 
-async function _undeprecateSingle(scope: Scope, bitId: BitId): Promise<BitIdStr> {
+async function _undeprecateSingle(scope: Scope, bitId: BitId): Promise<ModelComponent> {
   const component = await scope.getModelComponent(bitId);
   component.deprecated = false;
-  scope.objects.add(component);
-  return bitId.toStringWithoutVersion();
+  return component;
 }
+
+type DeprecationFunction = (scope: Scope, bitId: BitId) => Promise<ModelComponent>;
