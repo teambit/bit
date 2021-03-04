@@ -48,7 +48,7 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   const mergedIds: BitIds = await mergeObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
+  await scopeComponentsImporter.importManyFromOriginalScopes(mergedIds); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
@@ -487,7 +487,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
   const mergeResults = await Promise.all(
     components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(component, versions, undefined, false);
+        const result = await scope.sources.merge(component, versions);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {

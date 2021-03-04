@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { uniqBy } from 'lodash';
 import * as path from 'path';
-import R from 'ramda';
 import pMap from 'p-map';
 import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
@@ -319,8 +318,8 @@ export default class Repository {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
       await this._deleteMany();
       this._validateObjects(validate);
-      await this._writeMany();
-      await this.remoteLanes.write();
+      await this.writeObjectsToTheFS(Object.values(this.objects));
+      await this.writeRemoteLanes();
       await this.unmergedComponents.write();
     });
     logger.debug(`Repository.persist, completed. the lock has been released`);
@@ -330,6 +329,10 @@ export default class Repository {
         logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
       });
     }
+  }
+
+  async writeRemoteLanes() {
+    await this.remoteLanes.write();
   }
 
   /**
@@ -377,15 +380,19 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
-  async _writeMany(): Promise<void> {
-    if (R.isEmpty(this.objects)) return;
-    logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
-    // @TODO handle failures
-    await pMap(Object.keys(this.objects), (hash) => this._writeOne(this.objects[hash]), {
+  /**
+   * write all objects to the FS and index the components/lanes/symlink objects
+   */
+  async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
+    const count = objects.length;
+    if (!count) return;
+    logger.debug(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
+    await pMap(objects, (obj) => this._writeOne(obj), {
       concurrency: CONCURRENT_IO_LIMIT,
     });
-    logger.debug(`Repository._writeMany: completed writing ${Object.keys(this.objects).length} objects successfully`);
-    const added = this.scopeIndex.addMany(R.values(this.objects));
+    logger.debug(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
+
+    const added = this.scopeIndex.addMany(objects);
     if (added) await this.scopeIndex.write();
   }
 

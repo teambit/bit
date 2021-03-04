@@ -1,5 +1,6 @@
 /* eslint max-classes-per-file: 0 */
 import fs from 'fs-extra';
+import { Mutex } from 'async-mutex';
 import * as path from 'path';
 import R from 'ramda';
 
@@ -48,6 +49,7 @@ type Index = { [IndexType.components]: ComponentItem[]; [IndexType.lanes]: LaneI
 export default class ScopeIndex {
   indexPath: string;
   index: Index;
+  writeIndexMutex = new Mutex();
   constructor(indexPath: string, index: Index = { [IndexType.components]: [], [IndexType.lanes]: [] }) {
     this.indexPath = indexPath;
     this.index = index;
@@ -87,7 +89,8 @@ export default class ScopeIndex {
     await fs.remove(indexPath);
   }
   async write() {
-    return fs.writeJson(this.indexPath, this.index, { spaces: 2 });
+    // write only one at a time to avoid corrupting the json file.
+    await this.writeIndexMutex.runExclusive(() => fs.writeJson(this.indexPath, this.index, { spaces: 2 }));
   }
   getAll(): IndexItem[] {
     return R.flatten(Object.values(this.index));

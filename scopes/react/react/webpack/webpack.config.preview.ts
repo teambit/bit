@@ -4,7 +4,7 @@ import postcssNormalize from 'postcss-normalize';
 import safePostCssParser from 'postcss-safe-parser';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import TerserPlugin from 'terser-webpack-plugin';
-import webpack, { Configuration, EnvironmentPlugin } from 'webpack';
+import webpack, { Configuration } from 'webpack';
 import ManifestPlugin from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 // Make sure the bit-react-transformer is a dependency
@@ -430,7 +430,6 @@ export default function (fileMapPath: string): Configuration {
       ],
     },
     plugins: [
-      new EnvironmentPlugin(['NODE_ENV', 'production']),
       new MiniCssExtractPlugin({
         // Options similar to the same options in webpackOptions.output
         // both options are optional

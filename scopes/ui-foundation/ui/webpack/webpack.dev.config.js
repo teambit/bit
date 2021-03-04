@@ -8,6 +8,11 @@ const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
 const { default: html } = require('./html');
 
+/*
+ * Webpack config for the bit ui
+ * i.e. `bit start --dev`,
+ */
+
 const sockHost = process.env.WDS_SOCKET_HOST;
 const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const sockPort = process.env.WDS_SOCKET_PORT;
@@ -129,6 +134,12 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
 
       // Public path is root of content base
       publicPath: publicUrlOrPath.slice(0, -1),
+
+      stats: {
+        // - for webpack-dev-server, this property needs to be in the devServer configuration object.
+        // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
+        warningsFilter: [/Failed to parse source map/],
+      },
     },
 
     resolve: {
@@ -156,7 +167,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.js$/,
           enforce: 'pre',
-          exclude: /node_modules/,
+          include: /node_modules/,
           use: [require.resolve('source-map-loader')],
         },
         {
