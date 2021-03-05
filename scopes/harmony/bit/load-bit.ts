@@ -149,7 +149,25 @@ function getMainAspect() {
   };
 }
 
+/**
+ * Bit may crush during the aspect loading phase or workspace/consumer initialization.
+ * normally, this is the desired behavior, however, some commands are there to help overcome these
+ * errors, such as "bit clear-cache". for these commands we're better off loading the bare minimum,
+ * which is only the CLI aspect.
+ *
+ * at this stage we don't have the commands objects, so we can't check the command/flags from there
+ * instead, we have to check the `process.argv.` directly instead, which is not 100% accurate.
+ */
+function shouldLoadInSafeMode() {
+  const currentCommand = process.argv[2];
+  const safeModeCommands = ['cc', 'clear-cache', 'init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane'];
+  const hasSafeModeFlag = process.argv[3] === '--safe-mode';
+  const isSafeModeCommand = safeModeCommands.includes(currentCommand);
+  return isSafeModeCommand || hasSafeModeFlag;
+}
+
 export async function loadBit(path = process.cwd()) {
+  const loadCLIOnly = shouldLoadInSafeMode();
   const config = await getConfig(path);
   registerCoreExtensions();
   await loadLegacyConfig(config);
@@ -159,8 +177,13 @@ export async function loadBit(path = process.cwd()) {
     cwd: path,
   };
 
-  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, configMap);
+  const aspectsToLoad = [CLIAspect];
+  if (!loadCLIOnly) {
+    aspectsToLoad.push(BitAspect);
+  }
+  const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  if (loadCLIOnly) return harmony;
 
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
