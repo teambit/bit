@@ -306,6 +306,11 @@ export default class Repository {
   }
 
   /**
+   * important! use this method only for commands that are non running on an http server.
+   *
+   * it's better to remove/delete objects directly and not using the `objects` member.
+   * it helps to avoid multiple processes running concurrently on an http server.
+   *
    * persist objects changes (added and removed) into the filesystem
    * do not call this function multiple times in parallel, otherwise, it'll damage the index.json file.
    * call this function only once after you added and removed all applicable objects.
