@@ -316,7 +316,7 @@ export default class Repository {
     logger.debug(`Repository.persist, going to acquire a lock`);
     await this.persistMutex.runExclusive(async () => {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
-      await this._deleteMany();
+      await this.deleteObjectsFromFS(this.objectsToRemove);
       this._validateObjects(validate);
       await this.writeObjectsToTheFS(Object.values(this.objects));
       await this.writeRemoteLanes();
@@ -371,9 +371,9 @@ export default class Repository {
     });
   }
 
-  async _deleteMany(): Promise<void> {
-    if (!this.objectsToRemove.length) return;
-    const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
+  async deleteObjectsFromFS(refs: Ref[]): Promise<void> {
+    if (!refs.length) return;
+    const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
     await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency: CONCURRENT_IO_LIMIT });
     const removed = this.scopeIndex.removeMany(uniqRefs);

@@ -412,7 +412,10 @@ export async function exportMany({
       // on the legacy, even when the hash changed, it's fine to have the old objects laying around.
       // (could be removed in the future by some garbage collection).
       const removeComponentVersions = false;
-      await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id, removeComponentVersions)));
+      const refsToRemove = await Promise.all(
+        idsToChangeLocally.map((id) => scope.sources.removeComponentById(id, removeComponentVersions))
+      );
+      scope.objects.removeManyObjects(refsToRemove.flat());
       // @ts-ignore
       idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
       componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));

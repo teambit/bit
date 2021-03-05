@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import R from 'ramda';
 
@@ -7,6 +8,7 @@ import ConsumerComponent from '../../consumer/component';
 import Consumer from '../../consumer/consumer';
 import logger from '../../logger/logger';
 import { Lane, ModelComponent, Symlink } from '../models';
+import { Ref } from '../objects';
 import RemovedObjects from '../removed-components';
 import Scope from '../scope';
 
@@ -38,8 +40,11 @@ export default class RemoveModelComponents {
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
       const removedComponents = await mapSeries(foundComponents, (bitId) => this._removeSingle(bitId));
-      if (this.currentLane) await this.scope.lanes.saveLane(this.currentLane);
-      await this.scope.objects.persist();
+      const refsToRemoveAll = removedComponents.map((removed) => removed.refsToRemove).flat();
+      if (this.currentLane) {
+        await this.scope.objects.writeObjectsToTheFS([this.currentLane]);
+      }
+      await this.scope.objects.deleteObjectsFromFS(refsToRemoveAll);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const ids = new BitIds(...removedComponents.map((x) => x.bitId));
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -56,7 +61,7 @@ export default class RemoveModelComponents {
    * @param {BitId} bitId - list of remote component ids to delete
    * @param {boolean} removeSameOrigin - remove component dependencies from same origin
    */
-  async _removeSingle(bitId: BitId): Promise<{ bitId: BitId; removedDependencies: BitIds }> {
+  async _removeSingle(bitId: BitId): Promise<{ bitId: BitId; removedDependencies: BitIds; refsToRemove: Ref[] }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
@@ -69,17 +74,21 @@ export default class RemoveModelComponents {
       bitId.version !== LATEST_BIT_VERSION
     );
 
-    const removedDependencies = await this._removeComponentsDependencies(
+    const { ids: removedDependencies, refs: depsRefs } = await this._removeComponentsDependencies(
       dependentBits,
       componentList,
       consumerComponentToRemove,
       bitId
     );
 
-    await this._removeComponent(bitId, componentList);
+    const componentsRefs = await this._removeComponent(bitId, componentList);
     const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
 
-    return { bitId: bitId.changeVersion(version), removedDependencies };
+    return {
+      bitId: bitId.changeVersion(version),
+      removedDependencies,
+      refsToRemove: [...componentsRefs, ...depsRefs],
+    };
   }
 
   async _removeComponentsDependencies(
@@ -87,8 +96,9 @@ export default class RemoveModelComponents {
     componentList: Array<ModelComponent | Symlink>,
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId
-  ): Promise<BitIds> {
-    const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
+  ): Promise<{ ids: BitIds; refs: Ref[] }> {
+    const refsToRemove: Ref[] = [];
+    const removedDependenciesP = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
       const dependentsIds: BitId[] = dependentBits[dependencyId.toStringWithoutVersion()];
       const relevantDependents = R.reject(
         (dependent) => dependent.isEqual(bitId) || dependent.scope !== dependencyId.scope,
@@ -111,27 +121,27 @@ export default class RemoveModelComponents {
         (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
         isNested
       ) {
-        await this._removeComponent(dependencyId, componentList);
+        const refs = await this._removeComponent(dependencyId, componentList);
+        refsToRemove.push(...refs);
         return dependencyId;
       }
       return null;
     });
-    let removedDependencies = await Promise.all(removedComponents);
-    removedDependencies = removedDependencies.filter((x) => !R.isNil(x));
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return BitIds.fromArray(removedDependencies);
+    const removedDependencies = await Promise.all(removedDependenciesP);
+    return { ids: BitIds.fromArray(compact(removedDependencies)), refs: refsToRemove };
   }
 
-  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>) {
+  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>): Promise<Ref[]> {
     if (this.currentLane) {
       const result = this.currentLane.removeComponent(id);
       if (!result) throw new Error(`failed deleting ${id.toString()}, the component was not found on the lane`);
-      return;
+      return [];
     }
-    const symlink = componentList.filter(
+    const symlink = componentList.find(
       (component) => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
-    await this.scope.sources.removeComponentById(id);
-    if (!R.isEmpty(symlink)) this.scope.objects.removeObject(symlink[0].hash());
+    const refs = await this.scope.sources.removeComponentById(id);
+    if (symlink) refs.push(symlink.hash());
+    return refs;
   }
 }
