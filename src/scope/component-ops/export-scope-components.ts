@@ -413,7 +413,7 @@ export async function exportMany({
       // (could be removed in the future by some garbage collection).
       const removeComponentVersions = false;
       const refsToRemove = await Promise.all(
-        idsToChangeLocally.map((id) => scope.sources.removeComponentById(id, removeComponentVersions))
+        idsToChangeLocally.map((id) => scope.sources.getRefsForComponentRemoval(id, removeComponentVersions))
       );
       scope.objects.removeManyObjects(refsToRemove.flat());
       // @ts-ignore

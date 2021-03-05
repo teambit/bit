@@ -380,6 +380,11 @@ export default class Repository {
     if (removed) await this.scopeIndex.write();
   }
 
+  async deleteRecordsFromUnmergedComponents(componentNames: string[]) {
+    this.unmergedComponents.removeMultipleComponents(componentNames);
+    await this.unmergedComponents.write();
+  }
+
   /**
    * write all objects to the FS and index the components/lanes/symlink objects
    */

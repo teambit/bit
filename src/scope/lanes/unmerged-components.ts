@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { compact } from 'lodash';
 import path from 'path';
 import R from 'ramda';
 
@@ -72,6 +73,14 @@ export default class UnmergedComponents {
     const found = this.getEntry(componentName);
     if (!found) return false;
     this.unmerged = R.without([found], this.unmerged);
+    this.hasChanged = true;
+    return true;
+  }
+
+  removeMultipleComponents(componentNames: string[]): boolean {
+    const found = compact(componentNames.map((comp) => this.getEntry(comp)));
+    if (!found.length) return false;
+    this.unmerged = R.without(found, this.unmerged);
     this.hasChanged = true;
     return true;
   }

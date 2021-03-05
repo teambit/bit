@@ -478,19 +478,14 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * remove a component (and all versions objects if includeVersions=true) from local scope.
-   * it doesn't physically delete from the filesystem.
-   * the actual delete is done at a later phase, once Repository.persist() is called.
+   * get hashes needed for removing a component from a local scope.
    */
-  async removeComponentById(bitId: BitId, includeVersions = true): Promise<Ref[]> {
+  async getRefsForComponentRemoval(bitId: BitId, includeVersions = true): Promise<Ref[]> {
     logger.debug(`sources.removeComponentById: ${bitId.toString()}, includeVersions: ${includeVersions}`);
     const component = await this.get(bitId);
     if (!component) return [];
-    const repo = this.objects();
-    logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
     const objectRefs = [component.hash()];
     if (includeVersions) objectRefs.push(...component.versionArray);
-    repo.unmergedComponents.removeComponent(component.name);
     return objectRefs;
   }
 
