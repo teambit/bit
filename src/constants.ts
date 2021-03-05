@@ -467,6 +467,6 @@ export enum BuildStatus {
   Succeed = 'succeed',
 }
 
-export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/scope-service`;
+export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
 
 export const CENTRAL_BIT_HUB_NAME = 'bit.dev';
