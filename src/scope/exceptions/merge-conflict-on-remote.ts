@@ -19,7 +19,7 @@ to resolve this conflict and merge your remote and local changes, please do the 
 3) bit checkout [version] [id]
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
     }
-    if (idsNeedUpdate) {
+    if (idsNeedUpdate.length) {
       output += `error: merge error occurred when exporting the component(s) ${idsNeedUpdate
         .map((i) => `${chalk.bold(i.id)}${i.lane ? ` (lane: ${i.lane})` : ''}`)
         .join(', ')} to the remote scope.
