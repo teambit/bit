@@ -271,7 +271,9 @@ export default class ScopeComponentsImporter {
   /**
    * currently used for import artifacts, but can be used to import any arbitrary array of hashes.
    * it takes care to remove any duplications and check whether the object exists locally before
-   * going to the remote
+   * going to the remote.
+   * just make sure not to use it for components/lanes, as they require a proper "merge" before
+   * persisting them to the filesystem. this method is good for immutable objects.
    */
   async importManyObjects(groupedHashes: { [scopeName: string]: string[] }) {
     const groupedHashedMissing = {};
@@ -288,8 +290,7 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const { objectList } = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
     const bitObjectsList = await objectList.toBitObjects();
-    this.repo.addMany(bitObjectsList.getAll());
-    await this.repo.persist();
+    await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
   async fetchWithoutDeps(ids: BitIds): Promise<ComponentVersion[]> {

@@ -28,9 +28,8 @@ export default class Lanes {
     return (await this.objects.load(new Ref(hash))) as Lane;
   }
 
-  async saveLane(laneObject: Lane, persist = false) {
-    this.objects.add(laneObject);
-    if (persist) await this.objects.persist();
+  async saveLane(laneObject: Lane) {
+    await this.objects.writeObjectsToTheFS([laneObject]);
   }
 
   getCurrentLaneName(): string {
@@ -83,8 +82,7 @@ export default class Lanes {
         })
       );
     }
-    this.objects.removeManyObjects(lanesToRemove.map((l) => l.hash()));
-    await this.objects.persist();
+    await this.objects.deleteObjectsFromFS(lanesToRemove.map((l) => l.hash()));
     return lanes;
   }
 
