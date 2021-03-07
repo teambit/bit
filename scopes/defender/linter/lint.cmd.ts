@@ -1,4 +1,4 @@
-import { Timer } from 'bit-bin/dist/toolbox/timer';
+import { Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { Command } from '@teambit/cli';
 import { ComponentFactory } from '@teambit/component';
 import { Logger } from '@teambit/logger';

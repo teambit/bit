@@ -1,12 +1,15 @@
 import tarStream from 'tar-stream';
+import pMap from 'p-map';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
+import { CONCURRENT_IO_LIMIT } from '../../constants';
 
 export type ObjectItem = {
   ref: Ref;
   buffer: Buffer; // zlib deflated BitObject
   type?: string; // for future use. e.g. to be able to export only Component/Version types but not Source/Artifact, etc.
+  scope?: string; // used for the export process
 };
 
 export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
@@ -43,7 +46,7 @@ export class ObjectList {
   toTar(): NodeJS.ReadableStream {
     const pack = tarStream.pack();
     this.objects.forEach((obj) => {
-      pack.entry({ name: obj.ref.hash }, obj.buffer);
+      pack.entry({ name: this.combineScopeAndHash(obj) }, obj.buffer);
     });
     pack.finalize();
     return pack;
@@ -53,12 +56,12 @@ export class ObjectList {
     const objectItems: ObjectItem[] = await new Promise((resolve, reject) => {
       const objects: ObjectItem[] = [];
       extract.on('entry', (header, stream, next) => {
-        let data = Buffer.from('');
+        const data: Buffer[] = [];
         stream.on('data', (chunk) => {
-          data = Buffer.concat([data, chunk]);
+          data.push(chunk);
         });
         stream.on('end', () => {
-          objects.push({ ref: new Ref(header.name), buffer: data });
+          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: Buffer.concat(data) });
           next(); // ready for next entry
         });
         stream.on('error', (err) => reject(err));
@@ -75,28 +78,75 @@ export class ObjectList {
     return new ObjectList(objectItems);
   }
 
+  /**
+   * the opposite of this.combineScopeAndHash
+   */
+  static extractScopeAndHash(name: string): { scope?: string; ref: Ref } {
+    const nameSplit = name.split('/');
+    const hasScope = nameSplit.length > 1;
+    return {
+      scope: hasScope ? nameSplit[0] : undefined,
+      ref: new Ref(hasScope ? nameSplit[1] : nameSplit[0]),
+    };
+  }
+  /**
+   * the opposite of this.extractScopeAndHash
+   */
+  combineScopeAndHash(objectItem: ObjectItem): string {
+    const scope = objectItem.scope ? `${objectItem.scope}/` : '';
+    return `${scope}${objectItem.ref.hash}`;
+  }
+
   addIfNotExist(objectItems: ObjectItem[]) {
     objectItems.forEach((objectItem) => {
-      if (!this.objects.find((object) => object.ref.isEqual(objectItem.ref))) {
+      const exists = this.objects.find(
+        (object) => object.ref.isEqual(objectItem.ref) && object.scope === objectItem.scope
+      );
+      if (!exists) {
         this.objects.push(objectItem);
       }
     });
   }
 
   async toBitObjects(): Promise<BitObjectList> {
-    const bitObjects = await Promise.all(this.objects.map((object) => BitObject.parseObject(object.buffer)));
+    const bitObjects = await pMap(this.objects, (object) => BitObject.parseObject(object.buffer), {
+      concurrency: CONCURRENT_IO_LIMIT,
+    });
     return new BitObjectList(bitObjects);
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
-    const objectItems = await Promise.all(
-      bitObjects.map(async (obj) => ({
+    const objectItems = await pMap(
+      bitObjects,
+      async (obj) => ({
         ref: obj.hash(),
         buffer: await obj.compress(),
         type: obj.getType(),
-      }))
+      }),
+      { concurrency: CONCURRENT_IO_LIMIT }
     );
     return new ObjectList(objectItems);
+  }
+
+  addScopeName(scopeName: string) {
+    this.objects.forEach((object) => {
+      object.scope = scopeName;
+    });
+  }
+
+  splitByScopeName(): { [scopeName: string]: ObjectList } {
+    const objectListPerScope: { [scopeName: string]: ObjectList } = {};
+    this.objects.forEach((obj) => {
+      if (!obj.scope) {
+        throw new Error(`ObjectList: unable to split by scopeName, the scopeName is missing for ${obj.ref.hash}`);
+      }
+      if (objectListPerScope[obj.scope]) {
+        objectListPerScope[obj.scope].addIfNotExist([obj]);
+      } else {
+        objectListPerScope[obj.scope] = new ObjectList([obj]);
+      }
+    });
+    return objectListPerScope;
   }
 
   /**

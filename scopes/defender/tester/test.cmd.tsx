@@ -1,8 +1,8 @@
 import { Command, CommandOptions, Flags } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
-import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
-import { Timer } from 'bit-bin/dist/toolbox/timer';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { Box, Text } from 'ink';
 import React from 'react';
 import { NoMatchingComponents } from './exceptions';

@@ -5,7 +5,7 @@ import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
-import { Collapser } from '@teambit/ui.side-bar';
+import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import head from 'lodash.head';
@@ -47,7 +47,6 @@ export function Compositions() {
       </Pane>
       <HoverSplitter className={styles.splitter}>
         <Collapser
-          id="compositionsCollapser"
           placement="left"
           isOpen={isSidebarOpen}
           onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag

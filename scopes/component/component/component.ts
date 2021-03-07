@@ -13,6 +13,7 @@ import { Snap } from './snap';
 import { State } from './state';
 import { TagMap } from './tag-map';
 import { Tag } from './tag';
+import { CouldNotFindLatest } from './exceptions';
 // import { Author } from './types';
 
 type SnapsIterableOpts = {
@@ -80,7 +81,14 @@ export class Component {
 
   get latest(): string | undefined {
     if (!this.head) return undefined;
-    return this.tags.getLatest();
+    try {
+      return this.tags.getLatest();
+    } catch (err) {
+      if (err instanceof CouldNotFindLatest) {
+        return this.head.toString();
+      }
+      throw err;
+    }
   }
 
   stringify(): string {
@@ -125,6 +133,17 @@ export class Component {
     if (!this.head) return Promise.resolve(true);
     return Promise.resolve(this.state.isModified);
     // return Promise.resolve(this.state.hash !== this.head.hash);
+  }
+
+  /**
+   * is component isOutdated
+   */
+  isOutdated(): boolean {
+    if (!this.latest) return false;
+    const latestTag = this.tags.byVersion(this.latest);
+    if (!latestTag) return false;
+    if (this.head?.hash !== latestTag?.hash) return true;
+    return false;
   }
 
   /**

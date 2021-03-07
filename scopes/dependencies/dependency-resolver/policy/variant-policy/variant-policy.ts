@@ -1,7 +1,7 @@
 import R from 'ramda';
-import { DependenciesOverridesData } from 'bit-bin/dist/consumer/config/component-overrides';
+import { DependenciesOverridesData } from '@teambit/legacy/dist/consumer/config/component-overrides';
 import { Policy, PolicyConfigKeys, PolicyEntry, SemverVersion } from '../policy';
-import { KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
+import { DependencyLifecycleType, KEY_NAME_BY_LIFECYCLE_TYPE } from '../../dependencies';
 
 export type VariantPolicyConfigObject = Partial<Record<keyof PolicyConfigKeys, VariantPolicyLifecycleConfigObject>>;
 
@@ -41,9 +41,11 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     return this.entries.length;
   }
 
-  find(depId: string): VariantPolicyEntry | undefined {
+  find(depId: string, lifecycleType?: DependencyLifecycleType): VariantPolicyEntry | undefined {
     const matchedEntry = this.entries.find((entry) => {
-      return entry.dependencyId === depId;
+      const idEqual = entry.dependencyId === depId;
+      const lifecycleEqual = lifecycleType ? entry.lifecycleType === lifecycleType : true;
+      return idEqual && lifecycleEqual;
     });
     return matchedEntry;
   }
@@ -62,8 +64,8 @@ export class VariantPolicy implements Policy<VariantPolicyConfigObject> {
     });
   }
 
-  getDepVersion(depId: string): VariantPolicyEntryVersion | undefined {
-    const entry = this.find(depId);
+  getDepVersion(depId: string, lifecycleType?: DependencyLifecycleType): VariantPolicyEntryVersion | undefined {
+    const entry = this.find(depId, lifecycleType);
     if (!entry) {
       return undefined;
     }

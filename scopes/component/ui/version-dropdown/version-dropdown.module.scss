@@ -65,6 +65,9 @@
   > span {
     display: none;
   }
+  > div {
+    max-width: 80px;
+  }
 }
 
 .withVersions {

@@ -1,4 +1,4 @@
-import { deprecate, undeprecate } from 'bit-bin/dist/api/scope';
+import { deprecate, undeprecate } from '@teambit/legacy/dist/api/scope';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';

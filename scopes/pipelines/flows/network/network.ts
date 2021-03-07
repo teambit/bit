@@ -1,8 +1,8 @@
 import { ComponentID } from '@teambit/component';
 import { Capsule } from '@teambit/isolator';
 import { Workspace } from '@teambit/workspace';
-import { Consumer } from 'bit-bin/dist/consumer';
-import DependencyGraph from 'bit-bin/dist/scope/graph/scope-graph';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import DependencyGraph from '@teambit/legacy/dist/scope/graph/scope-graph';
 import { EventEmitter } from 'events';
 import { Graph } from 'graphlib';
 import { from, ReplaySubject } from 'rxjs';

@@ -6,7 +6,7 @@ export class NodeEnv implements Environment {
   getDependencies() {
     return {
       devDependencies: {
-        '@types/jest': '~26.0.9',
+        '@types/jest': '26.0.20',
       },
     };
   }

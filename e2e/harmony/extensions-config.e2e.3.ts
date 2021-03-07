@@ -9,7 +9,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('harmony extension config', function () {
   this.timeout(0);
   let helper: Helper;
@@ -185,6 +184,28 @@ describe('harmony extension config', function () {
           expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
         });
       });
+    });
+  });
+  describe('changing config after the component had been cached', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      const depResolverConfig = {
+        policy: {
+          dependencies: {
+            'lodash.get': '4.0.0',
+          },
+        },
+      };
+      helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
+      helper.command.status(); // to cache the component.
+      depResolverConfig.policy.dependencies['lodash.get'] = '5.0.0';
+      helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
+    });
+    it('should show the updated dependency data and not the old data from the cache', () => {
+      const bar = helper.command.showComponentParsed('bar/foo');
+      expect(bar.packageDependencies['lodash.get']).to.equal('5.0.0');
     });
   });
 });

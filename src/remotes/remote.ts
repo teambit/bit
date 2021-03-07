@@ -4,6 +4,7 @@ import { BitId } from '../bit-id';
 import { ListScopeResult } from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
+import type { Scope } from '../scope';
 import ComponentObjects from '../scope/component-objects';
 import DependencyGraph from '../scope/graph/scope-graph';
 import { LaneData } from '../scope/lanes/lanes';
@@ -27,14 +28,14 @@ export default class Remote {
   host: string;
   name: string;
 
-  constructor(host: string, name?: string, primary = false) {
+  constructor(host: string, name?: string, primary = false, private localScopeName?: string) {
     this.name = name || '';
     this.host = host;
     this.primary = primary;
   }
 
   connect(strategiesNames?: SSHConnectionStrategyName[]): Promise<Network> {
-    return connect(this.host, this.name, strategiesNames);
+    return connect(this.host, this.name, strategiesNames, this.localScopeName);
   }
 
   toPlainObject() {
@@ -134,10 +135,10 @@ export default class Remote {
     return results;
   }
 
-  static load(name: string, host: string): Remote {
+  static load(name: string, host: string, thisScope?: Scope): Remote {
     const primary = isPrimary(name);
     if (primary) name = cleanBang(name);
 
-    return new Remote(name, host, primary);
+    return new Remote(name, host, primary, thisScope?.name);
   }
 }

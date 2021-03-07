@@ -69,16 +69,15 @@ export class YarnPackageManager implements PackageManager {
     const config = await this.computeConfiguration(rootDirPath, cacheDir);
 
     const project = new Project(rootDirPath, { configuration: config });
+
+    const rootManifest = workspaceManifest.toJson({
+      includeDir: true,
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+    }).manifest;
+
     // @ts-ignore
     project.setupResolutions();
-    const rootWs = await this.createWorkspace(
-      rootDir,
-      project,
-      workspaceManifest.toJson({
-        includeDir: true,
-        copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
-      }).manifest
-    );
+    const rootWs = await this.createWorkspace(rootDir, project, rootManifest);
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
     const manifests = this.computeComponents(
@@ -86,6 +85,9 @@ export class YarnPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
+
+    this.logger.debug('root manifest for installation', rootManifest);
+    this.logger.debug('components manifests for installation', manifests);
 
     const workspacesP = Object.keys(manifests).map(async (path) => {
       const manifest = manifests[path];
@@ -251,6 +253,7 @@ export class YarnPackageManager implements PackageManager {
   // TODO: implement this to automate configuration.
   private async computeConfiguration(rootDirPath: PortablePath, cacheFolder: string): Promise<Configuration> {
     const registries = await this.depResolver.getRegistries();
+    const proxyConfig = await this.depResolver.getProxyConfig();
     const pluginConfig = getPluginConfiguration();
     const config = await Configuration.find(rootDirPath, pluginConfig);
     const scopedRegistries = await this.getScopedRegistries(registries);
@@ -267,6 +270,8 @@ export class YarnPackageManager implements PackageManager {
       virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
+      httpProxy: proxyConfig?.httpProxy,
+      httpsProxy: proxyConfig?.httpsProxy,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
     };

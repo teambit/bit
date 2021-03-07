@@ -222,7 +222,7 @@ describe('bit lane command', function () {
         helper.command.switchRemoteLane('dev');
       });
       it('should write the component to the filesystem with the same version as the lane', () => {
-        const fileContent = helper.fs.readFile('components/bar/foo/foo.js');
+        const fileContent = helper.fs.readFile(`${helper.scopes.remote}/bar/foo/foo.js`);
         expect(fileContent).to.equal(fixtures.fooFixtureV2);
       });
       it('.bitmap should save the remote lane', () => {
@@ -249,7 +249,7 @@ describe('bit lane command', function () {
       describe('changing the component and running bit diff', () => {
         let diff;
         before(() => {
-          helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+          helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
           diff = helper.command.diff();
         });
         it('should show the diff between the filesystem and the lane', () => {
@@ -262,7 +262,7 @@ describe('bit lane command', function () {
       });
       describe("snapping the component (so, it's an imported lane with local snaps)", () => {
         before(() => {
-          helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+          helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
           helper.command.snapAllComponents();
         });
         it('bit status should show the component as staged', () => {
@@ -355,7 +355,8 @@ describe('bit lane command', function () {
         expect(defaultLane.components).to.have.lengthOf(0);
       });
     });
-    describe('importing a remote lane which is ahead of the local lane', () => {
+    // @todo: fix as soon as the import is working properly on Harmony
+    describe.skip('importing a remote lane which is ahead of the local lane', () => {
       before(() => {
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
@@ -369,13 +370,11 @@ describe('bit lane command', function () {
         helper.scopeHelper.getClonedLocalScope(importedScope);
         helper.command.fetchRemoteLane('dev');
       });
-      // @todo: fix as soon as the import is working properly on Harmony
-      it.skip('bit status should show all components as pending update', () => {
+      it('bit status should show all components as pending update', () => {
         const status = helper.command.statusJson();
         expect(status.outdatedComponents).to.have.lengthOf(3);
       });
-      // @todo: fix as soon as the import is working properly on Harmony
-      describe.skip('merging the remote lane', () => {
+      describe('merging the remote lane', () => {
         let mergeOutput;
         before(() => {
           mergeOutput = helper.command.merge(`${helper.scopes.remote} dev --lane`);
@@ -601,14 +600,13 @@ describe('bit lane command', function () {
       helper.command.importComponent('bar/foo@0.0.1');
 
       helper.command.createLane();
-      helper.fs.outputFile('components/bar/foo/foo.js', fixtures.fooFixtureV3);
+      helper.fs.outputFile(`${helper.scopes.remote}/bar/foo/foo.js`, fixtures.fooFixtureV3);
       helper.command.snapAllComponents();
 
       helper.command.switchLocalLane('master');
     });
     it('should checkout to the same version the origin branch had before the switch', () => {
-      const bitMap = helper.bitMap.read();
-      expect(bitMap).to.have.property(`${helper.scopes.remote}/bar/foo@0.0.1`);
+      helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1');
     });
     it('bit status should not show the component as modified only as pending update', () => {
       const status = helper.command.statusJson();
@@ -771,9 +769,8 @@ describe('bit lane command', function () {
         lane.components.forEach((c) => expect(c.id.name).to.not.have.string('comp1'));
       });
       it('should not remove the component from .bitmap', () => {
-        const bitMap = helper.bitMap.read();
         const head = helper.command.getHead('comp1');
-        expect(bitMap).to.have.property(`${helper.scopes.remote}/comp1@${head}`);
+        helper.bitMap.expectToHaveIdHarmony('comp1', head, helper.scopes.remote);
       });
       it('should not delete the files from the filesystem', () => {
         expect(path.join(helper.scopes.localPath, 'comp1/index.js')).to.be.a.file();

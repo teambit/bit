@@ -1,8 +1,8 @@
 import { ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
-import { latestVersions } from 'bit-bin/dist/api/scope';
-import log from 'bit-bin/dist/api/scope/lib/log';
-import list from 'bit-bin/dist/api/scope/lib/scope-list';
+import { latestVersions } from '@teambit/legacy/dist/api/scope';
+import log from '@teambit/legacy/dist/api/scope/lib/log';
+import list from '@teambit/legacy/dist/api/scope/lib/scope-list';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {

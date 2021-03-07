@@ -3,7 +3,7 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import { flatten } from 'lodash';
 import { ComponentMap } from '@teambit/component';
 import { Compiler } from '@teambit/compiler';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
 import { BuildContext, ComponentResult } from '@teambit/builder';
 import { BundlerResult, BundlerContext } from '@teambit/bundler';

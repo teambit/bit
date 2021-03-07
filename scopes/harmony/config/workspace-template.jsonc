@@ -20,6 +20,11 @@
     "icon": "https://static.bit.dev/bit-logo.svg",
 
     /**
+     * default directory for all components in workspace.
+     **/
+    "defaultDirectory": "{scope}/{name}",
+
+    /**
      * default scope for all components in workspace.
      **/
     "defaultScope": "my-scope"
@@ -34,7 +39,11 @@
      */
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
-      "dependencies": { }
+      "dependencies": { },
+      "peerDependencies": {
+        "react": "16.13.1",
+        "react-dom": "16.13.1"
+      }
     }
   },
 

@@ -13,11 +13,9 @@ export class ModelComponentMerger {
   constructor(
     private existingComponent: ModelComponent,
     private incomingComponent: ModelComponent,
-    private existingTagsAndSnaps: string[],
-    private incomingTagsAndSnaps: string[],
     private isImport: boolean,
     private isIncomingFromOrigin: boolean, // import: incoming from original scope. export: component belong to current scope
-    private existingHeadIsMissingInIncomingComponent: boolean
+    private existingHeadIsMissingInIncomingComponent?: boolean // needed for export only
   ) {
     this.isExport = !this.isImport;
   }
@@ -33,7 +31,6 @@ export class ModelComponentMerger {
     this.throwMergeConflictIfNeeded(locallyChanged);
     this.replaceTagHashIfDifferentOnIncoming();
     this.moveTagToOrphanedIfNotExistOnOrigin();
-    this.addSnapsToMergedVersions();
     this.addNonExistTagFromIncoming();
     this.addOrphanedVersionFromIncoming();
     this.setHead(locallyChanged);
@@ -45,15 +42,6 @@ export class ModelComponentMerger {
   private deleteOrphanedVersionsOnExport() {
     // makes sure that components received with orphanedVersions, this property won't be saved
     if (this.isExport) this.existingComponent.orphanedVersions = {};
-  }
-
-  private addSnapsToMergedVersions() {
-    if (this.incomingComponent.hasHead()) {
-      const mergedSnaps = this.incomingTagsAndSnaps.filter(
-        (tagOrSnap) => !this.existingTagsAndSnaps.includes(tagOrSnap) && !this.mergedVersions.includes(tagOrSnap)
-      );
-      this.mergedVersions.push(...mergedSnaps);
-    }
   }
 
   private setHead(locallyChanged: boolean) {

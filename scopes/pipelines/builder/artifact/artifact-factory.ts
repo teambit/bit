@@ -1,7 +1,7 @@
 import { join } from 'path';
 import globby from 'globby';
 import { flatten } from 'lodash';
-import { ArtifactFiles } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import { ArtifactFiles } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Component, ComponentMap } from '@teambit/component';
 import type { StorageResolverSlot } from '../builder.main.runtime';
 import { ArtifactDefinition } from './artifact-definition';

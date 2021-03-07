@@ -133,9 +133,7 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should sync .bitmap according to the scope', () => {
         helper.command.expectStatusToBeClean();
-        const bitMap = helper.bitMap.read();
-        const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
-        expect(bitMap).to.have.property(newId);
+        helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1', helper.scopes.remote);
       });
     });
   });

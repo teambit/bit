@@ -379,7 +379,7 @@ describe('bit export command', function () {
       helper.scopeHelper.addRemoteScope(scopePath);
       helper.command.exportComponent('utils/is-string2', remote2, true, '--force');
     });
-    // doesn't happen currently on bit-bin, it'll be part of bit-dev.
+    // doesn't happen currently on @teambit/legacy, it'll be part of bit-dev.
     it.skip('should have is-type@0.0.2 on that remote', () => {
       const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.2`, remote2Path);
       expect(isType).to.have.property('files');
@@ -409,7 +409,7 @@ describe('bit export command', function () {
       it('should show a successful message', () => {
         expect(output).to.have.string('exported 1 components to scope');
       });
-      // doesn't happen currently on bit-bin, it'll be part of bit-dev.
+      // doesn't happen currently on @teambit/legacy, it'll be part of bit-dev.
       it.skip('should fetch is-type@0.0.1 from remote1', () => {
         const isType = helper.command.catComponent(`${helper.scopes.remote}/utils/is-type@0.0.1`, remote2Path);
         expect(isType).to.have.property('files');
@@ -745,7 +745,9 @@ describe('bit export command', function () {
           expect(output).to.have.string('exported the following 2 component');
         });
       });
-      describe('circular dependencies between the scopes', () => {
+      // this doesn't work locally. on bit.dev there is a whole mechanism to handle export to
+      // multiple scopes (even when they have circular dependencies).
+      describe.skip('circular dependencies between the scopes', () => {
         let output;
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScopeBefore);

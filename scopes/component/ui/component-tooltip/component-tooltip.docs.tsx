@@ -20,7 +20,7 @@ Overview.abstract = 'Tooltip status';
 
 Overview.labels = ['react', 'typescript', 'tooltip'];
 
-const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center', margin: 8 };
 
 Overview.examples = [
   {
@@ -43,10 +43,9 @@ Overview.examples = [
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
         <div style={style}>
-          <div data-tip="" data-for="1">
-            N
-            <StatusTooltip status={compStatus} name="1" />
-          </div>
+            <StatusTooltip status={compStatus}>
+              N
+            </StatusTooltip>
         </div>
       );
     }
@@ -72,10 +71,9 @@ Overview.examples = [
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
         <div style={style}>
-          <div data-tip="" data-for="2">
+          <StatusTooltip status={compStatus} >
             S
-            <StatusTooltip status={compStatus} name="2" />
-          </div>
+          </StatusTooltip>
         </div>
       );
     }
@@ -101,10 +99,9 @@ Overview.examples = [
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
         <div style={style}>
-          <div data-tip="" data-for="3">
+          <StatusTooltip status={compStatus} >
             M
-            <StatusTooltip status={compStatus} name="3" />
-          </div>
+          </StatusTooltip>
         </div>
       );
     }
@@ -130,10 +127,9 @@ Overview.examples = [
       const compStatus = new StatusProps(modifyInfo, isNew, isDeleted, isStaged, isInWorkspace, isInScope, nested);
       return (
         <div style={style}>
-          <div data-tip="" data-for="4">
+          <StatusTooltip status={compStatus} issuesCount={2} >
             M
-            <StatusTooltip status={compStatus} name="4" issuesCount={2} />
-          </div>
+          </StatusTooltip>
         </div>
       );
     }

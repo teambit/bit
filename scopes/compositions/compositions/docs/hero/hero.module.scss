@@ -1,0 +1,15 @@
+.hero {
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  .title {
+    font-size: var(--h-lg, 36px);
+    white-space: nowrap;
+  }
+  .heroDetails {
+    flex-direction: column;
+    justify-content: center;
+    display: flex;
+    padding-left: 15px;
+  }
+}

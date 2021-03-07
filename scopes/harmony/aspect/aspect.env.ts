@@ -24,15 +24,6 @@ export class AspectEnv implements Environment {
     };
   }
 
-  async getDependencies() {
-    return {
-      dependencies: {
-        'core-js': '^3.6.5',
-        '@babel/runtime': '^7.8.4',
-      },
-    };
-  }
-
   getTsConfig(tsConfig: TsConfigSourceFile) {
     const targetConf = merge(tsconfig, tsConfig);
     return targetConf;

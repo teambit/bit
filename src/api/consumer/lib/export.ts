@@ -49,6 +49,7 @@ type ExportParams = {
   includeDependencies: boolean;
   setCurrentScope: boolean;
   allVersions: boolean;
+  originDirectly: boolean;
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
@@ -87,6 +88,7 @@ async function exportComponents({
   force,
   lanes,
   allVersions,
+  originDirectly,
   resumeExportId,
 }: ExportParams): Promise<{
   updatedIds: BitId[];
@@ -127,6 +129,7 @@ async function exportComponents({
     codemod,
     lanesObjects,
     allVersions,
+    originDirectly,
     idsWithFutureScope,
     resumeExportId,
   });

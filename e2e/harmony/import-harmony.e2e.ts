@@ -71,10 +71,10 @@ describe('import functionality on Harmony', function () {
           helper.command.importComponent('comp1');
         });
         it('should not save the dependencies as components', () => {
+          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1', helper.scopes.remote);
           const bitMap = helper.bitMap.readComponentsMapOnly();
-          expect(bitMap).to.have.property(`${helper.scopes.remote}/comp1@0.0.1`);
-          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp2@0.0.1`);
-          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp3@0.0.1`);
+          expect(bitMap).not.to.have.property(`comp2`);
+          expect(bitMap).not.to.have.property(`comp3`);
         });
         it('bit status should be clean with no errors', () => {
           helper.command.expectStatusToBeClean();
@@ -89,10 +89,52 @@ describe('import functionality on Harmony', function () {
         it('should import to the specified path', () => {
           expect(path.join(helper.scopes.localPath, 'src')).to.be.a.directory();
           const bitMap = helper.bitMap.read();
-          const bitMapEntry = bitMap[`${helper.scopes.remote}/comp1@0.0.1`];
+          const bitMapEntry = bitMap.comp1;
           expect(bitMapEntry.rootDir).to.equal('src');
         });
       });
+    });
+  });
+  describe('tag, export, clean scope objects, tag and export', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.disablePreview();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.git.mimicGitCloneLocalProjectHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.command.importAllComponents();
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.command.tagAllComponents();
+    });
+    it('should export with no errors about missing artifacts (pkg file) from the first tag', () => {
+      expect(() => helper.command.exportAllComponents()).to.not.throw();
+    });
+  });
+  describe('import delta (bit import without ids) when local is behind', () => {
+    let afterFirstExport: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.fixtures.populateComponents(1, undefined, ' v2');
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      helper.command.importAllComponents(); // to save all refs.
+      afterFirstExport = helper.scopeHelper.cloneLocalScope();
+      helper.fixtures.populateComponents(1, undefined, ' v3');
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      const bitMap = helper.bitMap.read();
+      helper.scopeHelper.getClonedLocalScope(afterFirstExport);
+      helper.bitMap.write(bitMap);
+    });
+    it('should not fetch existing versions, only the missing', () => {
+      const importOutput = helper.command.import();
+      expect(importOutput).to.not.include('new versions: 0.0.1, 0.0.2, 0.0.3');
+      expect(importOutput).to.include('new versions: 0.0.3');
     });
   });
 });
