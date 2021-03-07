@@ -347,7 +347,12 @@ export class ScopeMain implements ComponentFactory {
     const components = await this.getMany(userAspectsIds);
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
-      { baseDir: this.getAspectCapsulePath(), skipIfExists: true },
+      {
+        baseDir: this.getAspectCapsulePath(),
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
     const capsules = network.seedersCapsules;
@@ -444,6 +449,8 @@ export class ScopeMain implements ComponentFactory {
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
+    const ids = modelComponents.map((component) => ComponentID.fromLegacy(component.toBitIdWithLatestVersion()));
+    this.logger.debug(`scope listIds: modelComponents ids: ${JSON.stringify(ids)}`);
     if (!includeCache) {
       modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
     }
@@ -451,6 +458,7 @@ export class ScopeMain implements ComponentFactory {
     const componentsIds = modelComponents.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
     );
+    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(componentsIds)}`);
     return componentsIds;
   }
 

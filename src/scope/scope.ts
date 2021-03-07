@@ -1,6 +1,5 @@
 import fs from 'fs-extra';
 import mapSeries from 'p-map-series';
-import pMap from 'p-map';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
@@ -17,14 +16,12 @@ import {
   COMPONENT_ORIGINS,
   CURRENT_UPSTREAM,
   DEFAULT_BIT_VERSION,
-  DEFAULT_LANE,
   DOT_GIT_DIR,
   LATEST,
   NODE_PATH_SEPARATOR,
   OBJECTS_DIR,
   SCOPE_JSON,
   PENDING_OBJECTS_DIR,
-  CONCURRENT_COMPONENTS_LIMIT,
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
@@ -33,7 +30,7 @@ import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
+import LaneId from '../lane-id/lane-id';
 import logger from '../logger/logger';
 import { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
@@ -59,7 +56,6 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
-import { BitObjectList } from './objects/bit-object-list';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -141,8 +137,8 @@ export default class Scope {
   /**
    * import components to the `Scope.
    */
-  async import(ids: BitIds, cache = true, persist = true): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany(ids, cache, persist);
+  async import(ids: BitIds, cache = true): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany(ids, cache);
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -454,76 +450,6 @@ export default class Scope {
       return { componentId: component.id, missingDistSpecs, specs, pass };
     };
     return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
-  }
-
-  async writeManyObjectListToModel(
-    objectListPerRemote: { [remoteName: string]: ObjectList },
-    persist = true,
-    ids: BitId[]
-  ): Promise<BitId[]> {
-    const bitObjectsPerRemote: { [remoteName: string]: BitObjectList } = {};
-    await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
-      const objectList = objectListPerRemote[remoteName];
-      bitObjectsPerRemote[remoteName] = await objectList.toBitObjects();
-    });
-    const bitIds = await mapSeries(Object.keys(bitObjectsPerRemote), async (remoteName) => {
-      const bitObjectList = bitObjectsPerRemote[remoteName];
-      return this.addObjectListToRepo(bitObjectList, remoteName, ids);
-    });
-    if (persist) await this.objects.persist();
-    return BitIds.uniqFromArray(R.flatten(bitIds));
-  }
-
-  private async addObjectListToRepo(bitObjectList: BitObjectList, remoteName: string, ids: BitId[]): Promise<BitId[]> {
-    const components = bitObjectList.getComponents();
-    const versions = bitObjectList.getVersions();
-    const laneObjects = bitObjectList.getLanes();
-    await pMap(components, (component: ModelComponent) => this.mergeModelComponent(component, versions, remoteName), {
-      concurrency: CONCURRENT_COMPONENTS_LIMIT,
-    });
-    let nonLaneIds: BitId[] = ids;
-    await Promise.all(
-      laneObjects.map(async (lane) => {
-        if (!lane.scope) {
-          throw new Error(`scope.addObjectListToRepo scope is missing from a lane ${lane.name}`);
-        }
-        await this.objects.remoteLanes.syncWithLaneObject(lane.scope, lane);
-        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-        nonLaneIds.push(...lane.components.map((c) => c.id));
-      })
-    );
-    // components and lanes were merged previously, add the rest.
-    const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
-    this.sources.putObjects(objectsToAdd);
-    return nonLaneIds;
-  }
-
-  async writeObjectListToModel(
-    objectList: ObjectList,
-    remoteName: string,
-    persist = true,
-    ids: BitId[]
-  ): Promise<BitId[]> {
-    logger.debugAndAddBreadCrumb('scope.writeManyComponentsToModel', `total objects ${objectList.objects.length}`);
-    const bitObjectList = await objectList.toBitObjects();
-    const nonLaneIds = await this.addObjectListToRepo(bitObjectList, remoteName, ids);
-    if (persist) await this.objects.persist();
-    return nonLaneIds;
-  }
-
-  async mergeModelComponent(component: ModelComponent, versions: Version[], remoteName: string) {
-    const { mergedComponent } = await this.sources.merge(component, versions, remoteName);
-    const isIncomingFromOrigin = remoteName === component.scope;
-    if (isIncomingFromOrigin && component.head) {
-      mergedComponent.remoteHead = component.head;
-      // when importing a component, save the remote head into the remote master ref file.
-      // unless this component arrived as a cache of the dependent, which its head might be wrong
-      await this.objects.remoteLanes.addEntry(
-        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
-        mergedComponent.toBitId(),
-        mergedComponent.remoteHead
-      );
-    }
   }
 
   getObject(hash: string): Promise<BitObject> {

@@ -2,7 +2,6 @@ import fs from 'fs-extra';
 import { Mutex } from 'async-mutex';
 import { uniqBy } from 'lodash';
 import * as path from 'path';
-import R from 'ramda';
 import pMap from 'p-map';
 import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
@@ -307,6 +306,11 @@ export default class Repository {
   }
 
   /**
+   * important! use this method only for commands that are non running on an http server.
+   *
+   * it's better to remove/delete objects directly and not using the `objects` member.
+   * it helps to avoid multiple processes running concurrently on an http server.
+   *
    * persist objects changes (added and removed) into the filesystem
    * do not call this function multiple times in parallel, otherwise, it'll damage the index.json file.
    * call this function only once after you added and removed all applicable objects.
@@ -317,10 +321,10 @@ export default class Repository {
     logger.debug(`Repository.persist, going to acquire a lock`);
     await this.persistMutex.runExclusive(async () => {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
-      await this._deleteMany();
+      await this.deleteObjectsFromFS(this.objectsToRemove);
       this._validateObjects(validate);
-      await this._writeMany();
-      await this.remoteLanes.write();
+      await this.writeObjectsToTheFS(Object.values(this.objects));
+      await this.writeRemoteLanes();
       await this.unmergedComponents.write();
     });
     logger.debug(`Repository.persist, completed. the lock has been released`);
@@ -330,6 +334,10 @@ export default class Repository {
         logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
       });
     }
+  }
+
+  async writeRemoteLanes() {
+    await this.remoteLanes.write();
   }
 
   /**
@@ -368,24 +376,33 @@ export default class Repository {
     });
   }
 
-  async _deleteMany(): Promise<void> {
-    if (!this.objectsToRemove.length) return;
-    const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
+  async deleteObjectsFromFS(refs: Ref[]): Promise<void> {
+    if (!refs.length) return;
+    const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
     await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency: CONCURRENT_IO_LIMIT });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
 
-  async _writeMany(): Promise<void> {
-    if (R.isEmpty(this.objects)) return;
-    logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
-    // @TODO handle failures
-    await pMap(Object.keys(this.objects), (hash) => this._writeOne(this.objects[hash]), {
+  async deleteRecordsFromUnmergedComponents(componentNames: string[]) {
+    this.unmergedComponents.removeMultipleComponents(componentNames);
+    await this.unmergedComponents.write();
+  }
+
+  /**
+   * write all objects to the FS and index the components/lanes/symlink objects
+   */
+  async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
+    const count = objects.length;
+    if (!count) return;
+    logger.debug(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
+    await pMap(objects, (obj) => this._writeOne(obj), {
       concurrency: CONCURRENT_IO_LIMIT,
     });
-    logger.debug(`Repository._writeMany: completed writing ${Object.keys(this.objects).length} objects successfully`);
-    const added = this.scopeIndex.addMany(R.values(this.objects));
+    logger.debug(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
+
+    const added = this.scopeIndex.addMany(objects);
     if (added) await this.scopeIndex.write();
   }
 
@@ -401,7 +418,7 @@ export default class Repository {
   }
 
   /**
-   * always prefer this.persist().
+   * always prefer this.persist() or this.writeObjectsToTheFS()
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
@@ -409,7 +426,9 @@ export default class Repository {
     const contents = await object.compress();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
-    const objectPath = this.objectPath(object.hash());
+    const hash = object.hash();
+    if (this._cache[hash.toString()]) this._cache[hash.toString()] = object; // update the cache
+    const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);

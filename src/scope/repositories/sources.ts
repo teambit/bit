@@ -478,27 +478,15 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * @see this.removeComponent()
+   * get hashes needed for removing a component from a local scope.
    */
-  async removeComponentById(bitId: BitId, includeVersions = true): Promise<void> {
+  async getRefsForComponentRemoval(bitId: BitId, includeVersions = true): Promise<Ref[]> {
     logger.debug(`sources.removeComponentById: ${bitId.toString()}, includeVersions: ${includeVersions}`);
     const component = await this.get(bitId);
-    if (!component) return;
-    this.removeComponent(component, includeVersions);
-  }
-
-  /**
-   * remove a component (and all versions objects if includeVersions=true) from local scope.
-   * it doesn't physically delete from the filesystem.
-   * the actual delete is done at a later phase, once Repository.persist() is called.
-   */
-  removeComponent(component: ModelComponent, includeVersions = true): void {
-    const repo = this.objects();
-    logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
+    if (!component) return [];
     const objectRefs = [component.hash()];
     if (includeVersions) objectRefs.push(...component.versionArray);
-    repo.removeManyObjects(objectRefs);
-    repo.unmergedComponents.removeComponent(component.name);
+    return objectRefs;
   }
 
   /**
@@ -521,11 +509,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async merge(
     incomingComp: ModelComponent,
-    versionObjects: Version[],
-    remoteName: string | undefined, // not available on export (isImport = false)
-    isImport = true
+    versionObjects: Version[]
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
-    const isExport = !isImport;
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -535,7 +520,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
     if (!existingComp) {
-      if (isExport) this.throwForMissingVersions(allVersionsInfo, incomingComp);
+      this.throwForMissingVersions(allVersionsInfo, incomingComp);
       this.putModelComponent(incomingComp);
       return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
@@ -548,19 +533,18 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         existingComponentHead &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
-    // for export, currently it'll always be true. later, we might want to support exporting
+    // currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
-    const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
+    const isIncomingFromOrigin = incomingComp.scope === this.scope.name;
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,
-      isImport,
+      false,
       isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
-    if (existingComponentHead && isExport) {
-      // for import, we don't care about the mergedVersions much.
+    if (existingComponentHead) {
       const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
       mergedVersions.push(...mergedSnaps);
     }

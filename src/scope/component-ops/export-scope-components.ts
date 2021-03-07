@@ -24,7 +24,6 @@ import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
-import { EXPORT_CENTRAL, isFeatureEnabled } from '../../api/consumer/lib/feature-toggle';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -49,7 +48,7 @@ export async function exportManyBareScope(scope: Scope, objectList: ObjectList):
   const mergedIds: BitIds = await mergeObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
+  await scopeComponentsImporter.importManyFromOriginalScopes(mergedIds); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
@@ -162,7 +161,7 @@ export async function exportMany({
   }
 
   function shouldPushToCentralHub(): boolean {
-    if (isLegacy || originDirectly || !isFeatureEnabled(EXPORT_CENTRAL)) return false;
+    if (isLegacy || originDirectly) return false;
     const hubRemotes = manyObjectsPerRemote.filter((m) => scopeRemotes.isHub(m.remote.name));
     if (!hubRemotes.length) return false;
     if (hubRemotes.length === manyObjectsPerRemote.length) return true; // all are hub
@@ -183,12 +182,7 @@ export async function exportMany({
     const exportedBitIds = successIds.map((id) => BitId.parse(id, true));
     manyObjectsPerRemote.forEach((objectPerRemote) => {
       const idsPerScope = exportedBitIds.filter((id) => id.scope === objectPerRemote.remote.name);
-      if (!idsPerScope.length) {
-        throw new Error(`fatal: the exported ids received from the central hub don't contain any id for the scope "${
-          objectPerRemote.remote.name
-        }".
-the following ids were exported: ${successIds.join(', ')}`);
-      }
+      // it's possible that idsPerScope is an empty array, in case the objects were exported already before
       objectPerRemote.exportedIds = idsPerScope.map((id) => id.toString());
     });
   }
@@ -418,7 +412,10 @@ the following ids were exported: ${successIds.join(', ')}`);
       // on the legacy, even when the hash changed, it's fine to have the old objects laying around.
       // (could be removed in the future by some garbage collection).
       const removeComponentVersions = false;
-      await Promise.all(idsToChangeLocally.map((id) => scope.sources.removeComponentById(id, removeComponentVersions)));
+      const refsToRemove = await Promise.all(
+        idsToChangeLocally.map((id) => scope.sources.getRefsForComponentRemoval(id, removeComponentVersions))
+      );
+      scope.objects.removeManyObjects(refsToRemove.flat());
       // @ts-ignore
       idsToChangeLocally.forEach((id) => scope.createSymlink(id, remoteNameStr));
       componentsAndObjects.forEach((componentObject) => scope.sources.put(componentObject));
@@ -493,7 +490,7 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
   const mergeResults = await Promise.all(
     components.map(async (component) => {
       try {
-        const result = await scope.sources.merge(component, versions, undefined, false);
+        const result = await scope.sources.merge(component, versions);
         return result;
       } catch (err) {
         if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
