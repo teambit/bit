@@ -34,7 +34,7 @@ export default class InsightsCmd implements Command {
 function template(results: InsightResult[]): string {
   const elements = results
     .map((result) => {
-      return `${chalk.cyan.bold(result.message)}
+      return `\n${chalk.cyan.bold(result.message)}
   ${chalk.cyan(result.renderedData)}`;
     })
     .join('\n');

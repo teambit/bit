@@ -10,7 +10,7 @@ export default class FindCycles implements Insight {
   constructor(graphBuilder: GraphBuilder) {
     this.graphBuilder = graphBuilder;
   }
-  async _runInsight(): Promise<RawResult> {
+  private async runInsight(): Promise<RawResult> {
     const graph = await this.graphBuilder.getGraph();
     if (!graph) {
       return {
@@ -31,17 +31,23 @@ export default class FindCycles implements Insight {
     };
   }
 
-  _renderData(data: RawResult) {
+  private renderData(data: RawResult) {
     if (data.data.length === 0) {
       return 'No cyclic dependencies';
     }
-    const string = `(${data.data.join(', ')})`;
+    const string = data.data
+      .map((cycle) => {
+        return `\nCyclic dependency
+-----------------
+- ${cycle.join('\n- ')}`;
+      })
+      .join('\n');
     return string;
   }
 
   async run(): Promise<InsightResult> {
-    const bareResult = await this._runInsight();
-    const renderedData = this._renderData(bareResult);
+    const bareResult = await this.runInsight();
+    const renderedData = this.renderData(bareResult);
     const result: InsightResult = {
       metaData: {
         name: this.name,
