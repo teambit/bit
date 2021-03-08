@@ -35,10 +35,14 @@ export function Compositions() {
   }, [component]);
   const isMobile = useIsMobile();
   const showSidebar = useMemo(() => !isMobile && component.compositions.length > 0, [component.compositions.length]);
-  const [isSidebarOpen, setSidebarOpenness] = useReducer((x) => !x, showSidebar);
+  const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
+
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
+
+  // collapse sidebar when empty, reopen when not
+  useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
@@ -50,7 +54,7 @@ export function Compositions() {
           placement="left"
           isOpen={isSidebarOpen}
           onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={() => setSidebarOpenness()}
+          onClick={() => setSidebarOpenness((x) => !x)}
           tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
           className={styles.collapser}
         />
