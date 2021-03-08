@@ -1,9 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { GraphBuilder } from '@teambit/graph';
-import { Box, Text } from 'ink';
-import React from 'react';
-
-import NoDataForInsight from '../exceptions/no-data-for-insight';
 import { Insight, InsightResult, RawResult } from '../insight';
 
 export const INSIGHT_NAME = 'cyclic dependencies';
@@ -15,7 +10,7 @@ export default class FindCycles implements Insight {
   constructor(graphBuilder: GraphBuilder) {
     this.graphBuilder = graphBuilder;
   }
-  async _runInsight(): Promise<RawResult> {
+  private async runInsight(): Promise<RawResult> {
     const graph = await this.graphBuilder.getGraph();
     if (!graph) {
       return {
@@ -36,33 +31,30 @@ export default class FindCycles implements Insight {
     };
   }
 
-  _renderData(data: any) {
+  private renderData(data: RawResult) {
     if (data.data.length === 0) {
-      return (
-        <Box>
-          <Text>No cyclic dependencies</Text>
-        </Box>
-      );
+      return 'No cyclic dependencies';
     }
-    return (
-      <Box>
-        <Box key="data">
-          <Box>{data.message}</Box>
-          <Box>{data.data}</Box>
-        </Box>
-      </Box>
-    );
+    const string = data.data
+      .map((cycle) => {
+        return `\nCyclic dependency
+-----------------
+- ${cycle.join('\n- ')}`;
+      })
+      .join('\n');
+    return string;
   }
 
   async run(): Promise<InsightResult> {
-    const bareResult = await this._runInsight();
-    const renderedData = this._renderData(bareResult);
+    const bareResult = await this.runInsight();
+    const renderedData = this.renderData(bareResult);
     const result: InsightResult = {
       metaData: {
         name: this.name,
         description: this.description,
       },
       data: bareResult.data,
+      message: bareResult.message,
       renderedData,
     };
 

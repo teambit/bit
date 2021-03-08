@@ -5,13 +5,13 @@ export type InsightMetaData = {
 
 export type InsightResult = {
   metaData: InsightMetaData;
-  message?: string;
+  message: string;
   data: any;
-  renderedData: React.ReactElement;
+  renderedData: string;
 };
 
 export type RawResult = {
-  message?: string;
+  message: string;
   data: any;
 };
 

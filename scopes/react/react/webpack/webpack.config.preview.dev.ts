@@ -29,7 +29,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
+type Options = { envId: string; fileMapPath: string; distPaths: string[] };
+
+export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -50,7 +52,7 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
         {
           test: /\.js$/,
           enforce: 'pre',
-          include: /node_modules/,
+          include: distPaths,
           use: [require.resolve('source-map-loader')],
         },
         {
