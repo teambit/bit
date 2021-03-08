@@ -14,7 +14,7 @@ import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_HTTPS_PROXY, CFG_PROXY, CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
-import { ObjectList } from '../../objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { PushOptions } from '../../../api/scope/lib/put';
@@ -168,7 +168,7 @@ export class Http implements Network {
     return results;
   }
 
-  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
     const scopeData = `scopeName: ${this.scopeName}, url: ${this.url}/${route}`;
     logger.debug(`Http.fetch, ${scopeData}`);
@@ -185,8 +185,9 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    const objectList = await ObjectList.fromTar(res.body);
-    return objectList;
+    const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
+
+    return objectListReadable;
   }
 
   private async getJsonResponse(res: Response) {

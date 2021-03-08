@@ -4,9 +4,8 @@ import * as path from 'path';
 import { BitId, BitIds } from '../../bit-id';
 import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
 import logger from '../../logger/logger';
+import ScopeComponentsImporter from '../../scope/component-ops/scope-components-importer';
 import { ModelComponent } from '../../scope/models';
-import { ObjectList } from '../../scope/objects/object-list';
-import { getScopeRemotes } from '../../scope/scope-remotes';
 import { getLatestVersionNumber } from '../../utils';
 import { getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
@@ -264,18 +263,8 @@ export default class ComponentLoader {
   }
 
   private async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
-    const remotes = await getScopeRemotes(this.consumer.scope);
-    let objectList: ObjectList;
-    try {
-      const fetchResults = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.consumer.scope);
-      objectList = fetchResults.objectList;
-    } catch (err) {
-      return null; // probably doesn't exist
-    }
-    const bitObjectsList = await objectList.toBitObjects();
-    const components = bitObjectsList.getComponents();
-    if (!components.length) return null; // probably doesn't exist
-    return components[0];
+    const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
+    return scopeComponentsImporter.getRemoteComponent(id);
   }
 
   private _isAngularProject(): boolean {

@@ -3,7 +3,6 @@ import merge from 'lodash.merge';
 import * as os from 'os';
 import R from 'ramda';
 import SSH2 from 'ssh2';
-
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import * as globalConfig from '../../../api/consumer/lib/global-config';
@@ -26,7 +25,7 @@ import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import { AuthenticationFailed, RemoteScopeNotFound, SSHInvalidResponse } from '../exceptions';
 import { Network } from '../network';
 import keyGetter from './key-getter';
-import { FETCH_FORMAT_OBJECT_LIST, ObjectList } from '../../objects/object-list';
+import { FETCH_FORMAT_OBJECT_LIST, ObjectItemsStream, ObjectList } from '../../objects/object-list';
 import CompsAndLanesObjects from '../../comps-and-lanes-objects';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
@@ -477,7 +476,11 @@ export default class SSH implements Network {
     });
   }
 
-  async fetch(idsStr: string[], fetchOptions: FETCH_OPTIONS, context?: Record<string, any>): Promise<ObjectList> {
+  async fetch(
+    idsStr: string[],
+    fetchOptions: FETCH_OPTIONS,
+    context?: Record<string, any>
+  ): Promise<ObjectItemsStream> {
     let options = '';
     const { type, withoutDependencies, includeArtifacts } = fetchOptions;
     if (type !== 'component') options = ` --type ${type}`;
@@ -498,10 +501,10 @@ export default class SSH implements Network {
     if (!format) {
       // this is an old version that doesn't have the "format" header
       const componentObjects = CompsAndLanesObjects.fromString(payload);
-      return componentObjects.toObjectList();
+      return componentObjects.toObjectList().toReadableStream();
     }
     if (format === FETCH_FORMAT_OBJECT_LIST) {
-      return ObjectList.fromJsonString(payload);
+      return ObjectList.fromJsonString(payload).toReadableStream();
     }
     throw new Error(`ssh.fetch, format "${format}" is not supported`);
   }
