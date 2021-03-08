@@ -410,7 +410,9 @@ export class Workspace implements ComponentFactory {
   }
 
   clearCache() {
+    this.logger.debug('clearing the workspace and scope caches');
     this.componentLoader.clearCache();
+    this.scope.clearCache();
     this.componentList = new ComponentsList(this.consumer);
   }
 
