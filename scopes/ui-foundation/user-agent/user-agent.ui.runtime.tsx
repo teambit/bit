@@ -4,7 +4,7 @@ import UAParser from 'ua-parser-js';
 import { UserAgentProvider } from '@teambit/ui.hooks.use-user-agent';
 import { UserAgentAspect } from './user-agent.aspect';
 
-export type UserAgentRenderCtx = {
+type UserAgentRenderCtx = {
   userAgent?: UAParser;
 };
 
