@@ -745,11 +745,23 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-in-out-transition"
     },
+    "ui/hooks/use-is-mobile": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/hooks/use-is-mobile"
+    },
     "ui/hooks/use-snaps": {
         "scope": "teambit.component",
         "version": "0.0.308",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/ui/hooks/use-snaps"
+    },
+    "ui/hooks/use-user-agent": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
     },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
@@ -1122,6 +1134,12 @@
         "version": "0.0.308",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/url/query-string"
+    },
+    "user-agent": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/user-agent"
     },
     "variants": {
         "scope": "teambit.workspace",
