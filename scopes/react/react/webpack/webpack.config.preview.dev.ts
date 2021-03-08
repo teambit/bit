@@ -31,7 +31,7 @@ const moduleFileExtensions = [
 
 type Options = { envId: string; fileMapPath: string; distPaths: string[] };
 
-export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
+export default function ({ envId /* , fileMapPath, distPaths */ }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
