@@ -35,7 +35,7 @@ function template(results: InsightResult[]): string {
   const elements = results
     .map((result) => {
       return `\n${chalk.cyan.bold(result.message)}
-  ${chalk.cyan(result.renderedData)}`;
+  ${result.renderedData}`;
     })
     .join('\n');
   return elements;
