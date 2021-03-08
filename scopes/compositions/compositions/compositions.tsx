@@ -8,6 +8,7 @@ import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
+import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import head from 'lodash.head';
 import React, { useContext, useEffect, useState, useRef } from 'react';
 
@@ -32,13 +33,16 @@ export function Compositions() {
 
     selectComposition(next);
   }, [component]);
+  const isMobile = useIsMobile();
+  const showSidebar = !isMobile && component.compositions.length > 0;
+  const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
 
-  const [isSidebarOpen, setSidebarOpenness] = useState(component.compositions.length > 0);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-  // collapse sidebar when empty, reopen when not
-  useEffect(() => setSidebarOpenness(component.compositions.length > 0), [component.compositions.length]);
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
+
+  // collapse sidebar when empty, reopen when not
+  useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
