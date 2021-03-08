@@ -11,6 +11,7 @@ import type { FileIconSlot } from '@teambit/code';
 import { CodeView } from '@teambit/ui.code-view';
 import { CodeTabTree } from '@teambit/ui.code-tab-tree';
 import { useCodeParams } from '@teambit/ui.hooks.use-code-params';
+import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import styles from './code-tab-page.module.scss';
 
 type CodePageProps = {
@@ -27,8 +28,8 @@ export function CodePage({ className, fileIconSlot }: CodePageProps) {
   }, [fileName]);
 
   const currentFile = fileFromUrl || mainFile;
-
-  const [isSidebarOpen, setSidebarOpenness] = useState(true);
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setSidebarOpenness] = useState(!isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
   const fileIconMatchers: FileIconMatch[] = useMemo(() => flatten(fileIconSlot?.values()), [fileIconSlot]);
   const icon = getFileIcon(fileIconMatchers, currentFile);

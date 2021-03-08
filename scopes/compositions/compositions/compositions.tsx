@@ -8,8 +8,9 @@ import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
+import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import head from 'lodash.head';
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useRef, useMemo, useReducer } from 'react';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -32,11 +33,10 @@ export function Compositions() {
 
     selectComposition(next);
   }, [component]);
-
-  const [isSidebarOpen, setSidebarOpenness] = useState(component.compositions.length > 0);
+  const isMobile = useIsMobile();
+  const showSidebar = useMemo(() => !isMobile && component.compositions.length > 0, [component.compositions.length]);
+  const [isSidebarOpen, setSidebarOpenness] = useReducer((x) => !x, showSidebar);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-  // collapse sidebar when empty, reopen when not
-  useEffect(() => setSidebarOpenness(component.compositions.length > 0), [component.compositions.length]);
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
 
@@ -50,7 +50,7 @@ export function Compositions() {
           placement="left"
           isOpen={isSidebarOpen}
           onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={() => setSidebarOpenness((x) => !x)}
+          onClick={() => setSidebarOpenness()}
           tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
           className={styles.collapser}
         />
