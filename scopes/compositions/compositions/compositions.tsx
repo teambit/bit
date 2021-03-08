@@ -10,7 +10,7 @@ import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import head from 'lodash.head';
-import React, { useContext, useEffect, useState, useRef, useMemo, useReducer } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -34,7 +34,7 @@ export function Compositions() {
     selectComposition(next);
   }, [component]);
   const isMobile = useIsMobile();
-  const showSidebar = useMemo(() => !isMobile && component.compositions.length > 0, [component.compositions.length]);
+  const showSidebar = !isMobile && component.compositions.length > 0;
   const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
 
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
