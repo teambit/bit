@@ -195,6 +195,11 @@ export class ScopeMain implements ComponentFactory {
     return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
   }
 
+  clearCache() {
+    this.componentLoader.clearCache();
+    this.legacyScope.objects.clearCache();
+  }
+
   builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
     const builderDataToLegacyExtension = (component: Component, builderData: BuilderData) => {
       const existingBuilder = component.state.aspects.get(BuilderAspect.id)?.legacy;
