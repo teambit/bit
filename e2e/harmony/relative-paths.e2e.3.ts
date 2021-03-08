@@ -54,7 +54,7 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         it('bitmap record should have rootDir and files relative to the rootDir', () => {
           const bitMap = helper.bitMap.read();
-          const componentMap = bitMap['comp1@0.0.1'];
+          const componentMap = bitMap.comp1;
           expect(componentMap.rootDir).to.equal('comp1');
           expect(componentMap.mainFile).to.equal('index.js');
         });

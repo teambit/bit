@@ -42,7 +42,8 @@ export class Http implements Network {
     private _token: string | undefined | null,
     private url: string,
     private scopeName: string,
-    private proxyAgent?: HttpsProxyAgent
+    private proxyAgent?: HttpsProxyAgent,
+    private localScopeName?: string
   ) {}
 
   static getToken() {
@@ -386,7 +387,8 @@ export class Http implements Network {
 
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
-    return Object.assign(headers, authHeader, { connection: 'keep-alive' });
+    const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    return Object.assign(headers, authHeader, localScope, { connection: 'keep-alive' });
   }
 
   private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
@@ -394,13 +396,13 @@ export class Http implements Network {
     return optsWithProxy;
   }
 
-  static async connect(host: string, scopeName: string) {
+  static async connect(host: string, scopeName: string, localScopeName?: string) {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
     const proxyUrl = Http.getProxyUrl();
     const proxyAgent = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
     const graphClient = new GraphQLClient(`${host}/graphql`, { headers, fetch: getFetcherWithProxy() });
-    return new Http(graphClient, token, host, scopeName, proxyAgent);
+    return new Http(graphClient, token, host, scopeName, proxyAgent, localScopeName);
   }
 }
 

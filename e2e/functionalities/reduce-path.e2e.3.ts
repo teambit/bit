@@ -106,7 +106,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         });
         it('should replace trackDir by rootDir', () => {
           const bitMap = helper.bitMap.read();
-          const componentMap = bitMap['foo@0.0.1'];
+          const componentMap = bitMap.foo;
           expect(componentMap).to.not.have.property('trackDir');
           expect(componentMap).to.have.property('rootDir');
           expect(componentMap.rootDir).to.equal('src');

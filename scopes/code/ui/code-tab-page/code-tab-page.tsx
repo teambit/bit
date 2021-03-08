@@ -4,7 +4,7 @@ import React, { useContext, useState, HTMLAttributes, useMemo } from 'react';
 import { flatten } from 'lodash';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { Collapser } from '@teambit/ui.side-bar';
+import { Collapser } from '@teambit/ui.buttons.collapser';
 import { useCode } from '@teambit/ui.queries.get-component-code';
 import { getFileIcon, FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import type { FileIconSlot } from '@teambit/code';
