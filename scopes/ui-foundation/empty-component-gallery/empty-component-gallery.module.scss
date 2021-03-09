@@ -21,10 +21,16 @@
   > span:last-child {
     font-weight: bold;
   }
-  .purpleLink {
-    color: var(--base-highlight);
-    text-decoration: none;
-    cursor: pointer;
+}
+
+.purpleLink {
+  color: var(--base-highlight);
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  .text {
+    margin-right: 5px;
   }
 }
 
