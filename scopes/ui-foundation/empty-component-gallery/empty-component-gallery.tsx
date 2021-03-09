@@ -22,7 +22,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
       <img src="https://static.bit.dev/harmony/no-components.svg" />
       {children}
       <div className={styles.title}>
-        <span>New to Harmony?</span>&nbsp;
+        <span>New to Harmony?</span> &nbsp;
         <ExternalLink href="https://harmony-docs.bit.dev/tutorial/install-bit/" className={styles.purpleLink}>
           <span className={styles.text}>Start tutorial</span>
           <Icon of="right_arrow" className={classNames(styles.icon, textSize.xxs)} />
