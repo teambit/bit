@@ -21,6 +21,11 @@
   > span:last-child {
     font-weight: bold;
   }
+  .purpleLink {
+    color: var(--base-highlight);
+    text-decoration: none;
+    cursor: pointer;
+  }
 }
 
 .bottomText {
