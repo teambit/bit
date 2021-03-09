@@ -6,7 +6,6 @@ import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
 import DependencyGraph from '../scope/graph/scope-graph';
-import { ObjectList } from '../scope/objects/object-list';
 import Scope from '../scope/scope';
 import { flatten, forEach, prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
@@ -14,6 +13,7 @@ import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { CONCURRENT_FETCH_LIMIT } from '../constants';
 import { UnexpectedNetworkError } from '../scope/network/exceptions';
+import { ObjectItemsStream } from '../scope/objects/object-list';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -44,7 +44,7 @@ export default class Remotes extends Map<string, Remote> {
     thisScope: Scope,
     options: Partial<FETCH_OPTIONS> & { concurrency?: number } = {},
     context?: Record<string, any>
-  ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
+  ): Promise<{ [remoteName: string]: ObjectItemsStream }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
       withoutDependencies: true,
@@ -55,29 +55,28 @@ export default class Remotes extends Map<string, Remote> {
     // when importing directly from a remote scope, throw for ScopeNotFound. otherwise, when
     // fetching flattened dependencies (withoutDependencies=true), ignore this error
     const shouldThrowOnUnavailableScope = !fetchOptions.withoutDependencies;
-    const objectListPerRemote = {};
+    const objectsStreamPerRemote = {};
     const failedScopes: { [scopeName: string]: Error } = {};
-    const objectLists: ObjectList[] = await pMap(
+    await pMap(
       Object.keys(idsGroupedByScope),
       async (scopeName) => {
         const remote = await this.resolve(scopeName, thisScope);
-        let objectList: ObjectList;
+        let objectsStream: ObjectItemsStream;
         try {
-          objectList = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+          objectsStream = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+          objectsStreamPerRemote[scopeName] = objectsStream;
+          return objectsStream;
         } catch (err) {
           if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
             logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
-            objectList = new ObjectList();
           } else if (err instanceof UnexpectedNetworkError) {
             logger.error(`failed fetching from ${scopeName}`, err);
             failedScopes[scopeName] = err;
-            objectList = new ObjectList();
           } else {
             throw err;
           }
+          return null;
         }
-        objectListPerRemote[scopeName] = objectList;
-        return objectList;
       },
       { concurrency: options.concurrency || CONCURRENT_FETCH_LIMIT }
     );
@@ -93,7 +92,7 @@ ${failedScopesErr.join('\n')}`);
     }
     logger.debug('[-] Returning from the remotes');
 
-    return { objectList: ObjectList.mergeMultipleInstances(objectLists), objectListPerRemote };
+    return objectsStreamPerRemote;
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
