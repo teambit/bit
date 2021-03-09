@@ -3,6 +3,7 @@ import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
+import chalk from 'chalk';
 import { compact, flatten } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
@@ -395,11 +396,24 @@ export default class ScopeComponentsImporter {
     return this.loadRemoteComponent(id);
   }
 
+  /**
+   * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
+   * until this point, no data was fetched from a remote, only the connection was established,
+   * once the readable piped into the ObjectsWritable, the data starts flowing.
+   * the remotes are processed in sequence, not in parallel. mostly because two remotes can bring
+   * the same component and if both components executing the "merge" operation at the same time,
+   * the result is unpredictable. (see model-component-merger). for other objects file it's
+   * probably also safer to not write potentially the same file from two different remote at the
+   * same time.
+   * ideally, we'd maintain a queue, which allows concurrent of say, 100, and make sure that no two
+   * identical files are written at the same time.
+   */
   async writeManyObjectListToModel(
     objectListPerRemote: { [remoteName: string]: ObjectItemsStream },
     ids: BitId[]
   ): Promise<BitId[]> {
     const bitIds = await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
+      loader.start(`streaming objects from ${chalk.bold(remoteName)} into the filesystem`);
       const objectList = objectListPerRemote[remoteName];
       return new Promise((resolve, reject) => {
         const writable = new ObjectsWritable(this.repo, this.sources, remoteName);
