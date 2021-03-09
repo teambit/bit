@@ -12,7 +12,7 @@ import { ComponentLog } from '../scope/models/model-component';
 import { connect } from '../scope/network';
 import { Network } from '../scope/network/network';
 import { DEFAULT_READ_STRATEGIES, SSHConnectionStrategyName } from '../scope/network/ssh/ssh';
-import { ObjectList } from '../scope/objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../scope/objects/object-list';
 import { cleanBang, isBitUrl } from '../utils';
 import { InvalidRemote } from './exceptions';
 
@@ -78,7 +78,7 @@ export default class Remote {
     fetchOptions: FETCH_OPTIONS,
     context?: Record<string, any>,
     strategiesNames: SSHConnectionStrategyName[] = DEFAULT_READ_STRATEGIES
-  ): Promise<ObjectList> {
+  ): Promise<ObjectItemsStream> {
     return this.connect(strategiesNames).then((network) => network.fetch(ids, fetchOptions, context));
   }
 

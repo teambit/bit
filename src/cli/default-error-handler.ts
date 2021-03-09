@@ -81,7 +81,6 @@ import {
   HeadNotFound,
   InvalidIndexJson,
   MergeConflict,
-  MergeConflictOnRemote,
   OutdatedIndexJson,
   ParentNotFound,
   ResolutionException,
@@ -231,30 +230,6 @@ to resolve it and merge your local and remote changes, please do the following:
 2) bit import
 3) bit checkout ${err.versions.join(' ')} ${err.id}
 once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`,
-  ],
-  [
-    MergeConflictOnRemote,
-    (err) => {
-      let output = '';
-      if (err.idsAndVersions.length) {
-        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
-          .map((i) => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
-          .join(', ')} to the remote scope.
-  to resolve this conflict and merge your remote and local changes, please do the following:
-  1) bit untag [id] [version]
-  2) bit import
-  3) bit checkout [version] [id]
-  once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
-      }
-      if (err.idsNeedUpdate) {
-        output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
-          .map((i) => `${chalk.bold(i.id)}${i.lane ? ` (lane: ${i.lane})` : ''}`)
-          .join(', ')} to the remote scope.
-to resolve this error, please re-import the above components.
-if the component is up to date, run "bit status" to make sure it's not merge-pending`;
-      }
-      return output;
-    },
   ],
   [
     OutdatedIndexJson,

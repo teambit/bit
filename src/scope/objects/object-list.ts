@@ -1,5 +1,6 @@
 import tarStream from 'tar-stream';
 import pMap from 'p-map';
+import { Readable, PassThrough } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
@@ -13,6 +14,11 @@ export type ObjectItem = {
 };
 
 export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
+
+/**
+ * Stream.Readable that operates with objectMode, while each 'data' event emits one ObjectItem object.
+ */
+export type ObjectItemsStream = Readable;
 
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}
@@ -51,6 +57,9 @@ export class ObjectList {
     pack.finalize();
     return pack;
   }
+  toReadableStream(): ObjectItemsStream {
+    return Readable.from(this.objects);
+  }
   static async fromTar(packStream: NodeJS.ReadableStream): Promise<ObjectList> {
     const extract = tarStream.extract();
     const objectItems: ObjectItem[] = await new Promise((resolve, reject) => {
@@ -76,6 +85,50 @@ export class ObjectList {
       packStream.pipe(extract);
     });
     return new ObjectList(objectItems);
+  }
+
+  static fromTarToObjectStream(packStream: NodeJS.ReadableStream): ObjectItemsStream {
+    const passThrough = new PassThrough({ objectMode: true });
+    const extract = tarStream.extract();
+    extract.on('entry', (header, stream, next) => {
+      const data: Buffer[] = [];
+      stream.on('data', (chunk) => {
+        data.push(chunk);
+      });
+      stream.on('end', () => {
+        passThrough.write({ ...ObjectList.extractScopeAndHash(header.name), buffer: Buffer.concat(data) });
+        next(); // ready for next entry
+      });
+      stream.on('error', (err) => {
+        passThrough.emit('error', err);
+      });
+
+      stream.resume(); // just auto drain the stream
+    });
+
+    extract.on('finish', () => {
+      passThrough.end();
+    });
+
+    packStream.pipe(extract);
+
+    return passThrough;
+  }
+
+  static async fromReadableStream(readable: ObjectItemsStream): Promise<ObjectList> {
+    const allObjects: ObjectItem[] = await new Promise((resolve, reject) => {
+      const objectItems: ObjectItem[] = [];
+      readable.on('data', (obj) => {
+        objectItems.push(obj);
+      });
+      readable.on('end', () => {
+        resolve(objectItems);
+      });
+      readable.on('error', (err) => {
+        reject(err);
+      });
+    });
+    return new ObjectList(allObjects);
   }
 
   /**

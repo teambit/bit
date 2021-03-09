@@ -135,11 +135,11 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       // Public path is root of content base
       publicPath: publicUrlOrPath.slice(0, -1),
 
-      stats: {
-        // - for webpack-dev-server, this property needs to be in the devServer configuration object.
-        // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
-        warningsFilter: [/Failed to parse source map/],
-      },
+      // stats: {
+      //   // - for webpack-dev-server, this property needs to be in the devServer configuration object.
+      //   // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
+      //   warningsFilter: [/Failed to parse source map/],
+      // },
     },
 
     resolve: {
@@ -164,12 +164,12 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
 
     module: {
       rules: [
-        {
-          test: /\.js$/,
-          enforce: 'pre',
-          include: /node_modules/,
-          use: [require.resolve('source-map-loader')],
-        },
+        // {
+        //   test: /\.js$/,
+        //   enforce: 'pre',
+        //   include: /node_modules/,
+        //   use: [require.resolve('source-map-loader')],
+        // },
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,

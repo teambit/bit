@@ -29,7 +29,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
+type Options = { envId: string; fileMapPath: string; distPaths: string[] };
+
+export default function ({ envId /* , fileMapPath, distPaths */ }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -47,12 +49,12 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
           include: /node_modules/,
           type: 'javascript/auto',
         },
-        {
-          test: /\.js$/,
-          enforce: 'pre',
-          include: /node_modules/,
-          use: [require.resolve('source-map-loader')],
-        },
+        // {
+        //   test: /\.js$/,
+        //   enforce: 'pre',
+        //   include: distPaths,
+        //   use: [require.resolve('source-map-loader')],
+        // },
         {
           test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
@@ -68,12 +70,12 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
             plugins: [
               require.resolve('react-refresh/babel'),
               // for component highlighting in preview.
-              [
-                require.resolve('@teambit/babel.bit-react-transformer'),
-                {
-                  componentFilesPath: fileMapPath,
-                },
-              ],
+              // [
+              //   require.resolve('@teambit/babel.bit-react-transformer'),
+              //   {
+              //     componentFilesPath: fileMapPath,
+              //   },
+              // ],
             ],
           },
         },

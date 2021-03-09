@@ -1,13 +1,7 @@
 import chalk from 'chalk';
-import fs from 'fs-extra';
-// it's a hack, but I didn't find a better way to access the getCacheDir() function
-import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
-import { loadConsumerIfExist } from '../../../consumer';
-import { loadScopeIfExist } from '../../../scope/scope-loader';
-
+import { clearCache } from '../../../api/consumer';
 import { LegacyCommand } from '../../legacy-command';
-
-const { BASE_DOCS_DOMAIN } = require('../../../constants');
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class ClearCache implements LegacyCommand {
   name = 'clear-cache';
@@ -17,23 +11,8 @@ export default class ClearCache implements LegacyCommand {
   loader = false;
   skipWorkspace = true;
 
-  async action(): Promise<any> {
-    const cacheCleared: string[] = [];
-    const cacheDir = v8CompileCache.getCacheDir();
-    fs.removeSync(cacheDir);
-    cacheCleared.push('v8-compile-cache code');
-    const consumer = await loadConsumerIfExist();
-    if (consumer) {
-      const componentCachePath = consumer.componentFsCache.basePath;
-      fs.removeSync(componentCachePath);
-      cacheCleared.push('components cache on the filesystem');
-    }
-    const scope = await loadScopeIfExist();
-    if (scope) {
-      await scope.objects.scopeIndex.deleteFile();
-      cacheCleared.push('scope-index file');
-    }
-    return cacheCleared;
+  async action(): Promise<string[]> {
+    return clearCache();
   }
 
   report(cacheCleared: string[]): string {

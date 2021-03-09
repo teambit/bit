@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.23",
+  "version": "1.0.28",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,

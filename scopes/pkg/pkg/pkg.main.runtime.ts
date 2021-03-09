@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { compact } from 'ramda-adjunct';
+import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -16,6 +17,7 @@ import { BitError } from '@teambit/bit-error';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -158,6 +160,15 @@ export class PkgMain {
    */
   getPackageName(component: Component) {
     return componentIdToPackageName(component.state._consumer);
+  }
+
+  /**
+   * returns the package path in the /node_modules/ folder
+   */
+  getModulePath(component: Component) {
+    const pgkName = this.getPackageName(component);
+    const path = join('node_modules', pgkName);
+    return path;
   }
 
   /**

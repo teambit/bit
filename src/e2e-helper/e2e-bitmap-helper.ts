@@ -1,4 +1,5 @@
 import json from 'comment-json';
+import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
@@ -64,5 +65,12 @@ export default class BitMapHelper {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filesStr = files.map((f) => f.name).join(', ');
     return `Files in bitmap file: ${filesStr}`;
+  }
+
+  expectToHaveIdHarmony(name: string, version?: string, scope?: string) {
+    const bitMap = this.read();
+    expect(bitMap).to.have.property(name);
+    if (scope) expect(bitMap[name].scope).to.equal(scope);
+    if (version) expect(bitMap[name].version).to.equal(version);
   }
 }

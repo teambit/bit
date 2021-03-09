@@ -129,6 +129,7 @@
         "@types/history": "4.7.8",
         "@types/lodash": "4.14.165",
         "@types/lodash.compact": "3.0.6",
+        "@types/lodash.flatten": "4.4.6",
         "@types/lodash.head": "4.0.6",
         "@types/lodash.pick": "4.4.6",
         "@types/mdx-js__react": "1.5.3",
@@ -143,6 +144,7 @@
         "@types/react-tabs": "2.3.2",
         "@types/react-transition-group": "4.4.1",
         "@types/socket.io-client": "1.4.35",
+        "@types/ua-parser-js": "0.7.35",
         "@types/url-parse": "1.4.3",
         "@types/webpack": "4.41.25",
         "@types/webpack-dev-server": "3.11.1",
@@ -266,6 +268,7 @@
         "tippy.js": "6.2.7",
         "typedoc": "0.18.0",
         "typescript-language-server": "0.4.0",
+        "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
         "unist-util-visit": "2.0.3",
         "url-loader": "4.1.1",
@@ -286,7 +289,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.23",
+        "@teambit/legacy": "1.0.28",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -344,7 +347,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.23",
+            "@teambit/legacy": "1.0.28",
             "react-dom": "16.13.1"
           }
         }
@@ -486,7 +489,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.23",
+            "@teambit/legacy": "1.0.28",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",
