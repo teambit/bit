@@ -1,4 +1,5 @@
 import React from 'react';
+import classNames from 'classnames';
 import { ExternalLink } from '@teambit/ui.external-link';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { textSize } from '@teambit/base-ui.text.text-sizes';
@@ -24,7 +25,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
         <span>New to Harmony?</span>&nbsp;
         <ExternalLink href="https://harmony-docs.bit.dev/tutorial/install-bit/" className={styles.purpleLink}>
           <span className={styles.text}>Start tutorial</span>
-          <Icon of="right_arrow" className={textSize.xxs} />
+          <Icon of="right_arrow" className={classNames(styles.icon, textSize.xxs)} />
         </ExternalLink>
       </div>
       <div className={styles.bottomText}>We're here to help</div>
