@@ -34,19 +34,29 @@ export class ObjectsReadableGenerator {
   }
 
   async pushLanes(lanesToFetch: Lane[]) {
-    await Promise.all(
-      lanesToFetch.map(async (laneToFetch) => {
-        const laneBuffer = await laneToFetch.compress();
-        this.push({ ref: laneToFetch.hash(), buffer: laneBuffer });
-      })
-    );
+    try {
+      await Promise.all(
+        lanesToFetch.map(async (laneToFetch) => {
+          const laneBuffer = await laneToFetch.compress();
+          this.push({ ref: laneToFetch.hash(), buffer: laneBuffer });
+        })
+      );
+      this.readable.push(null);
+    } catch (err) {
+      this.readable.destroy(err);
+    }
   }
 
   async pushObjects(refs: Ref[], scope: Scope) {
-    await pMapSeries(refs, async (ref) => {
-      const objectItem = await scope.getObjectItem(ref);
-      this.push(objectItem);
-    });
+    try {
+      await pMapSeries(refs, async (ref) => {
+        const objectItem = await scope.getObjectItem(ref);
+        this.push(objectItem);
+      });
+      this.readable.push(null);
+    } catch (err) {
+      this.readable.destroy(err);
+    }
   }
 
   private async pushScopeMeta() {
