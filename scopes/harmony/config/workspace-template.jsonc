@@ -1,6 +1,6 @@
 /**
  * this is the main configuration file of your bit workspace.
- * for full documentation, please see: https://docs.bit.dev/configuration
+ * for full documentation, please see: https://harmony-docs.bit.dev/workspace/configurations
  **/
 {
   "$schema": "https://static.bit.dev/teambit/schemas/schema.json",
