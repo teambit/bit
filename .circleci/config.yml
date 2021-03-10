@@ -1359,11 +1359,11 @@ workflows:
               branches:
                 only:
                   - os-compatible-bundle
-      # - bundle_version_windows:
-      #     filters:
-      #         branches:
-      #           only:
-      #             - os-compatible-bundle
+      - bundle_version_windows:
+          filters:
+              branches:
+                only:
+                  - os-compatible-bundle
       - bundle_version_macos:
           filters:
               branches:
@@ -1372,7 +1372,7 @@ workflows:
       - harmony_publish_to_gcloud:
           requires:
             - bundle_version_linux
-            # - bundle_version_windows
+            - bundle_version_windows
             - bundle_version_macos
           filters:
             branches:
