@@ -28,6 +28,16 @@ windows_defaults: &windows_defaults
   <<: *windows_default_executor
   <<: *windows_default_working_dir
 
+mac_default_xcode_version: &mac_default_xcode_version
+  xcode: 12.4.0
+
+mac_default_executor: &mac_default_executor
+  macos:
+    <<: *mac_default_xcode_version
+
+mac_defaults: &mac_defaults
+  <<: *mac_default_executor
+
 defaults: &defaults
   <<: *default_image
   <<: *default_resource_class
@@ -646,6 +656,40 @@ jobs:
             - linux
       - store_artifacts:
           path: linux
+
+ bundle_version_macos:
+    <<: *mac_defaults
+    steps:
+      - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: create macos
+          command: mkdir macos
+      - run:
+          name: create empty folder
+          command: mkdir bit-${BIT_VERSION}
+      - run:
+          name: install bit
+          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+      - run:
+          name: remove leftovers
+          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
+      - run:
+          name: compress bit
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to macos folder
+          command: mv bit-${BIT_VERSION}.tar.gz macos/bit-${BIT_VERSION}.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - macos
+      - store_artifacts:
+          path: macos
 
   bundle_version_windows:
     <<: *windows_defaults
@@ -1311,7 +1355,12 @@ workflows:
       #         branches:
       #           only:
       #             - os-compatible-bundle
-      - bundle_version_windows:
+      # - bundle_version_windows:
+      #     filters:
+      #         branches:
+      #           only:
+      #             - os-compatible-bundle
+      - bundle_version_macos:
           filters:
               branches:
                 only:
