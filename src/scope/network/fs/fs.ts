@@ -66,8 +66,8 @@ export default class Fs implements Network {
   }
 
   async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
-    const objectList = await fetch(this.scopePath, ids, fetchOptions);
-    return objectList.toReadableStream();
+    const objectsReadable = await fetch(this.scopePath, ids, fetchOptions);
+    return objectsReadable;
   }
 
   latestVersions(componentIds: BitId[]): Promise<string[]> {

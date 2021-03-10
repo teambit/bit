@@ -4,9 +4,11 @@ import { Writable } from 'stream';
 import { BitObject, Repository } from '.';
 import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
+import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { Lane, ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
+import { ObjectItem } from './object-list';
 
 /**
  * first, write all immutable objects, such as files/sources/versions into the filesystem, as they arrive.
@@ -23,7 +25,8 @@ export class ObjectsWritable extends Writable {
   constructor(private repo: Repository, private sources: SourceRepository, private remoteName: string) {
     super({ objectMode: true });
   }
-  async _write(obj, encoding, callback) {
+  async _write(obj: ObjectItem, _, callback: Function) {
+    logger.trace('ObjectsWritable.write', obj.ref);
     if (!obj.ref || !obj.buffer) {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
