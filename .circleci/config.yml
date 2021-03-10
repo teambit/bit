@@ -660,6 +660,8 @@ jobs:
   bundle_version_macos:
     <<: *mac_defaults
     steps:
+      - run: node -v
+      - run: yarn -v
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -742,18 +744,20 @@ jobs:
       - store_artifacts:
           path: windows
 
-
   harmony_publish_to_gcloud:
     docker:
       - image: bitcli/node-gcloud-sdk
     <<: *defaults
     steps:
-      - run:
-          name: Configure gcloud auth
-          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-      - run:
-          name: Upload tar file
-          command: gsutil cp bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev
+      - attach_workspace:
+          at: ./
+      - run: ls
+      # - run:
+      #     name: Configure gcloud auth
+      #     command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      # - run:
+      #     name: Upload tar file
+      #     command: gsutil cp bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev
 
   bit_export:
     <<: *defaults
@@ -1350,11 +1354,11 @@ workflows:
             - bit_tag
   bundle_versions:
     jobs:
-      # - bundle_version_linux:
-      #     filters:
-      #         branches:
-      #           only:
-      #             - os-compatible-bundle
+      - bundle_version_linux:
+          filters:
+              branches:
+                only:
+                  - os-compatible-bundle
       # - bundle_version_windows:
       #     filters:
       #         branches:
@@ -1365,3 +1369,12 @@ workflows:
               branches:
                 only:
                   - os-compatible-bundle
+      - harmony_publish_to_gcloud:
+          filters:
+            requires:
+              - bundle_version_linux
+              # - bundle_version_windows
+              # - bundle_version_macos
+            branches:
+              only:
+                - os-compatible-bundle
