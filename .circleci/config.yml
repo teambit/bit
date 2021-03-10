@@ -613,9 +613,7 @@ jobs:
           name: Upload tar file
           command: ./jfrog rt u "bit-${BIT_VERSION}.tar.gz" bvm/dev/${BIT_VERSION}/bit-${BIT_VERSION}.tar.gz --flat=false
 
-  harmony_publish_to_gcloud:
-    docker:
-      - image: bitcli/node-gcloud-sdk
+  bundle_version_linux:
     <<: *defaults
     steps:
       - run:
@@ -625,17 +623,64 @@ jobs:
           name: Setup bit version environment variables
           command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
       - run:
+          name: create linux
+          command: mkdir linux
+      - run:
           name: create empty folder
-          command: mkdir bit-${BIT_VERSION}
+          command: cd linux && mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+          command: cd linux && cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
       - run:
           name: remove leftovers
-          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
+          command: cd linux && cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
       - run:
           name: compress bit
-          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          command: cd linux && tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - persist_to_workspace:
+          root: .
+          paths:
+            - linux
+      - store_artifacts:
+          path: linux
+
+  bundle_version_windows:
+    <<: *windows_defaults
+    steps:
+      - run:
+          name: print bit version
+          command: npm view @teambit/bit version
+      - run:
+          name: Setup bit version environment variables
+          command: $BIT_VERSION = npm view @teambit/bit version
+      - run:
+          name: print version again
+          command: $BIT_VERSION
+      - run:
+          name: create empty folder
+          command: New-Item -ItemType "directory" -Path "windows\bit-$BIT_VERSION"
+      # - run:
+      #     name: install bit
+      #     command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+      # - run:
+      #     name: remove leftovers
+      #     command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
+      # - run:
+      #     name: compress bit
+      #     command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      # - persist_to_workspace:
+      #     root: .
+      #     paths:
+      #       - bit-${BIT_VERSION}.tar.gz
+      # - store_artifacts:
+      #     path: bit-${BIT_VERSION}.tar.gz
+
+
+  harmony_publish_to_gcloud:
+    docker:
+      - image: bitcli/node-gcloud-sdk
+    <<: *defaults
+    steps:
       - run:
           name: Configure gcloud auth
           command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
@@ -1236,3 +1281,15 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+  bundle_versions:
+    jobs:
+      - bundle_version_linux:
+          filters:
+              branches:
+                only:
+                  - os-compatible-bundle
+      - bundle_version_windows:
+          filters:
+              branches:
+                only:
+                  - os-compatible-bundle
