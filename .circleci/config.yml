@@ -650,6 +650,9 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
+      - run: choco install node --version 12.15.0
+      - run: node -v
+      - run: 'yarn -v'
       - run:
           name: print bit version
           command: npm view @teambit/bit version
@@ -669,8 +672,6 @@ jobs:
       #     name: create folder
       #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
       - run: 'node -v'
-      - run: 'yarn -v'
-      - run: 'npm i -g yarn'
       - run:
           name: install bit
           command: cd bundle; npm init -y; yarn add @teambit/bit
