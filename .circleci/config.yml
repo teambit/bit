@@ -663,32 +663,35 @@ jobs:
           name: create version file
           command: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run:
-          name: read version
-          command: Get-Content -Path .\version.txt
+          name: create folder
+          command: New-Item -ItemType "directory" -Path ".\bundle"
+      # - run:
+      #     name: create folder
+      #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
       - run:
-          name: print version again
-          command: $BIT_VERSION = Get-Content -Path .\version.txt; $BIT_VERSION
+          name: install bit
+          command: cd bundle; npm init -y && yarn add @teambit/bit
+      - run:
+          name: remove leftovers
+          command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
+      - run:
+          name: rename folder
+          command: $BIT_VERSION = Get-Content -Path .\version.txt; Rename-Item .\bundle ".\bit-$BIT_VERSION"
+      - run:
+          name: compress bit
+          command: $BIT_VERSION = Get-Content -Path .\version.txt; tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
       - run:
           name: create folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
+          command: New-Item -ItemType "directory" -Path ".\windows"
       - run:
-          name: list folders
-          command: dir
-      # - run:
-      #     name: install bit
-      #     command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
-      # - run:
-      #     name: remove leftovers
-      #     command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
-      # - run:
-      #     name: compress bit
-      #     command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
-      # - persist_to_workspace:
-      #     root: .
-      #     paths:
-      #       - bit-${BIT_VERSION}.tar.gz
-      # - store_artifacts:
-      #     path: bit-${BIT_VERSION}.tar.gz
+          name: move to windows folder
+          command: $BIT_VERSION = Get-Content -Path .\version.txt;Move-Item -Path .\bit-${BIT_VERSION}.tar.gz -Destination .\windows\bit-${BIT_VERSION}.tar.gz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - windows
+      - store_artifacts:
+          path: windows
 
 
   harmony_publish_to_gcloud:
