@@ -1306,10 +1306,24 @@ workflows:
           <<: *master_only_filter
           requires:
             - setup_harmony
-      - harmony_publish_to_gcloud:
+      - bundle_version_linux:
           <<: *master_only_filter
           requires:
             - bit_tag
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - bit_tag
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1346,11 +1360,28 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - setup_harmony
-      - harmony_publish_to_gcloud:
+      - bundle_version_linux:
           <<: *master_only_filter
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+      - bundle_version_windows:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - bundle_version_macos:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bit_tag
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - harmony_deploy_approval_job
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
       - bit_export:
           <<: *master_only_filter
           requires:
@@ -1361,29 +1392,3 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
-  bundle_versions:
-    jobs:
-      - bundle_version_linux:
-          filters:
-              branches:
-                only:
-                  - os-compatible-bundle
-      - bundle_version_windows:
-          filters:
-              branches:
-                only:
-                  - os-compatible-bundle
-      - bundle_version_macos:
-          filters:
-              branches:
-                only:
-                  - os-compatible-bundle
-      - harmony_publish_to_gcloud:
-          requires:
-            - bundle_version_linux
-            - bundle_version_windows
-            - bundle_version_macos
-          filters:
-            branches:
-              only:
-                - os-compatible-bundle
