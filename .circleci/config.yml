@@ -627,16 +627,19 @@ jobs:
           command: mkdir linux
       - run:
           name: create empty folder
-          command: cd linux && mkdir bit-${BIT_VERSION}
+          command: mkdir bit-${BIT_VERSION}
       - run:
           name: install bit
-          command: cd linux && cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
+          command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
       - run:
           name: remove leftovers
-          command: cd linux && cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
+          command: cd bit-${BIT_VERSION} && rm package.json && rm yarn.lock
       - run:
           name: compress bit
-          command: cd linux && tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+          command: tar -cvf bit-${BIT_VERSION}.tar.gz bit-${BIT_VERSION}
+      - run:
+          name: move to linux folder
+          command: mv bit-${BIT_VERSION}.tar.gz linux/bit-${BIT_VERSION}.tar.gz
       - persist_to_workspace:
           root: .
           paths:
