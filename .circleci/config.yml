@@ -668,9 +668,12 @@ jobs:
       # - run:
       #     name: create folder
       #     command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
+      - run: 'node -v'
+      - run: 'yarn -v'
+      - run: 'npm i -g yarn'
       - run:
           name: install bit
-          command: cd bundle; npm init -y && yarn add @teambit/bit
+          command: cd bundle; npm init -y; yarn add @teambit/bit
       - run:
           name: remove leftovers
           command: Remove-Item .\bundle\package.json; Remove-Item .\bundle\yarn.lock
