@@ -657,7 +657,7 @@ jobs:
       - store_artifacts:
           path: linux
 
- bundle_version_macos:
+  bundle_version_macos:
     <<: *mac_defaults
     steps:
       - run:
