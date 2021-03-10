@@ -653,15 +653,24 @@ jobs:
       - run:
           name: print bit version
           command: npm view @teambit/bit version
+      # - run:
+      #     name: Setup bit version environment variables
+      #     command: $BIT_VERSION = npm view @teambit/bit version
+      # - run:
+      #     name: print version again
+      #     command: $BIT_VERSION
       - run:
-          name: Setup bit version environment variables
-          command: $BIT_VERSION = npm view @teambit/bit version
+          name: create version file
+          command: npm view @teambit/bit version | Out-File -FilePath .\version.txt
+      - run:
+          name: read version
+          command: Get-Content -Path .\version.txt
       - run:
           name: print version again
-          command: $BIT_VERSION
+          command: $BIT_VERSION = Get-Content -Path .\version.txt; $BIT_VERSION
       - run:
-          name: create empty folder
-          command: New-Item -ItemType "directory" -Path "windows\bit-$BIT_VERSION"
+          name: print version again
+          command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path "windows\bit-$BIT_VERSION" -Force
       # - run:
       #     name: install bit
       #     command: cd bit-${BIT_VERSION} && npm init -y && yarn add @teambit/bit
@@ -1286,11 +1295,11 @@ workflows:
             - bit_tag
   bundle_versions:
     jobs:
-      - bundle_version_linux:
-          filters:
-              branches:
-                only:
-                  - os-compatible-bundle
+      # - bundle_version_linux:
+      #     filters:
+      #         branches:
+      #           only:
+      #             - os-compatible-bundle
       - bundle_version_windows:
           filters:
               branches:
