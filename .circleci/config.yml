@@ -670,7 +670,7 @@ jobs:
           command: $BIT_VERSION = Get-Content -Path .\version.txt; $BIT_VERSION
       - run:
           name: create folder
-          command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".ֿֿֿ\bit-$BIT_VERSION" -Force
+          command: $BIT_VERSION = Get-Content -Path .\version.txt;New-Item -ItemType "directory" -Path ".\bit-$BIT_VERSION" -Force
       - run:
           name: list folders
           command: dir
