@@ -751,13 +751,22 @@ jobs:
     steps:
       - attach_workspace:
           at: ./
-      - run: ls
-      # - run:
-      #     name: Configure gcloud auth
-      #     command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
-      # - run:
-      #     name: Upload tar file
-      #     command: gsutil cp bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev
+      - run:
+          name: Setup bit version environment variables
+          command: echo "export BIT_VERSION=$(npm view @teambit/bit version)" >> $BASH_ENV && source $BASH_ENV
+      - run:
+          name: Configure gcloud auth
+          command: echo "${COMMAND_GCLOUD_AUTHENTICATE}" > /tmp/gcloud-service-key.json && gcloud auth activate-service-account --key-file=/tmp/gcloud-service-key.json
+      - run:
+          name: Upload tar file (Linux)
+          command: gsutil cp linux/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/${BIT_VERSION}/Linux/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (Windows)
+          command: gsutil cp windows/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/${BIT_VERSION}/Windows_NT/bit-${BIT_VERSION}.tar.gz
+      - run:
+          name: Upload tar file (OSX)
+          command: gsutil cp macos/bit-${BIT_VERSION}.tar.gz gs://bvm.bit.dev/versions/dev/${BIT_VERSION}/Darwin/bit-${BIT_VERSION}.tar.gz
+
 
   bit_export:
     <<: *defaults
