@@ -458,8 +458,8 @@
         "rootDir": "scopes/toolbox/string/capitalize"
     },
     "string/ellipsis": {
-        "scope": "",
-        "version": "",
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/ellipsis"
     },
