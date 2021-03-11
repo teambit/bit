@@ -1,5 +1,4 @@
 import pMap from 'p-map';
-import pMapSeries from 'p-map-series';
 import { Writable } from 'stream';
 import { BitObject, Repository } from '.';
 import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
@@ -21,7 +20,6 @@ import { ObjectItem } from './object-list';
  */
 export class ObjectsWritable extends Writable {
   private mutableObjects: BitObject[] = [];
-  lanes: Lane[] = [];
   constructor(private repo: Repository, private sources: SourceRepository, private remoteName: string) {
     super({ objectMode: true });
   }
@@ -65,15 +63,6 @@ export class ObjectsWritable extends Writable {
       RemoteLaneId.from(DEFAULT_LANE, this.remoteName),
       mergedComponents
     );
-
-    const laneObjects = this.mutableObjects.filter((obj) => obj instanceof Lane) as Lane[];
-    await pMapSeries(laneObjects, async (lane) => {
-      if (!lane.scope) {
-        throw new Error(`scope.addObjectListToRepo scope is missing from a lane ${lane.name}`);
-      }
-      await this.repo.remoteLanes.syncWithLaneObject(lane.scope, lane);
-      this.lanes.push(lane);
-    });
   }
 
   /**
