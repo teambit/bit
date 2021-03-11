@@ -251,7 +251,7 @@ export default class ScopeComponentsImporter {
     });
     loader.start(`got response from the remotes, merging them and writing to the filesystem`);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', 'writing them to the model');
-    await this.writeManyObjectListToModel(objectsStreamPerRemote, idsToFetch);
+    await this.writeManyObjectListToModel(objectsStreamPerRemote);
   }
 
   async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
@@ -398,11 +398,8 @@ export default class ScopeComponentsImporter {
    * ideally, we'd maintain a queue, which allows concurrent of say, 100, and make sure that no two
    * identical files are written at the same time.
    */
-  async writeManyObjectListToModel(
-    objectListPerRemote: { [remoteName: string]: ObjectItemsStream },
-    ids: BitId[]
-  ): Promise<BitId[]> {
-    const bitIds = await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
+  async writeManyObjectListToModel(objectListPerRemote: { [remoteName: string]: ObjectItemsStream }): Promise<void> {
+    await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
       loader.start(`streaming objects from ${chalk.bold(remoteName)} into the filesystem`);
       const objectList = objectListPerRemote[remoteName];
       const writable = new ObjectsWritable(this.repo, this.sources, remoteName);
@@ -425,15 +422,8 @@ export default class ScopeComponentsImporter {
         // the error is coming from the writable, no need to treat it specially. just throw it.
         throw err;
       }
-      let nonLaneIds: BitId[] = ids;
-      writable.lanes.forEach((lane) => {
-        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-        nonLaneIds.push(...lane.components.map((c) => c.id));
-      });
-      return nonLaneIds;
     });
     await this.repo.writeRemoteLanes();
-    return BitIds.uniqFromArray(R.flatten(bitIds));
   }
 
   /**
@@ -499,8 +489,8 @@ export default class ScopeComponentsImporter {
       context
     );
     logger.debugAndAddBreadCrumb('ScopeComponentsImporter.getExternalMany', 'writing them to the model');
-    const nonLaneIds = await this.writeManyObjectListToModel(objectStreamsPerRemote, ids);
-    const componentDefs = await this.sources.getMany(nonLaneIds);
+    await this.writeManyObjectListToModel(objectStreamsPerRemote);
+    const componentDefs = await this.sources.getMany(ids);
     const componentDefsExisting = componentDefs.filter((componentDef) => componentDef.component);
     const versionDeps = await mapSeries(componentDefsExisting, (compDef) =>
       this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id)
@@ -537,9 +527,9 @@ export default class ScopeComponentsImporter {
       { withoutDependencies: true },
       context
     );
-    const nonLaneIds = await this.writeManyObjectListToModel(objectStreamsPerRemote, ids);
+    await this.writeManyObjectListToModel(objectStreamsPerRemote);
 
-    const finalDefs: ComponentDef[] = await this.sources.getMany(nonLaneIds);
+    const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
 
     return Promise.all(
       finalDefs
