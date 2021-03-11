@@ -469,6 +469,13 @@ export default class Scope {
     );
   }
 
+  async getObjectItem(ref: Ref): Promise<ObjectItem> {
+    return {
+      ref,
+      buffer: await this.objects.loadRaw(ref),
+    };
+  }
+
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
     const modelComponent = await this.sources.get(id);
     if (modelComponent) {

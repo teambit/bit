@@ -717,7 +717,7 @@ export class ScopeMain implements ComponentFactory {
 
     express.register([
       new PutRoute(scope, postPutSlot),
-      new FetchRoute(scope),
+      new FetchRoute(scope, logger),
       new ActionRoute(scope),
       new DeleteRoute(scope),
     ]);

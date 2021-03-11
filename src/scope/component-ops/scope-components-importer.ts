@@ -3,6 +3,8 @@ import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
+import { promisify } from 'util';
+import { pipeline } from 'stream';
 import chalk from 'chalk';
 import { compact, flatten } from 'lodash';
 import loader from '../../cli/loader';
@@ -17,17 +19,18 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
-import ComponentVersion, { ObjectCollector } from '../component-version';
+import ComponentVersion from '../component-version';
 import { ComponentNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
-import { ObjectItem, ObjectItemsStream, ObjectList } from '../objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
 import { DEFAULT_LANE } from '../../constants';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectsWritable } from '../objects/objects-writable-stream';
+import { ErrorFromRemote } from '../exceptions/error-from-remote';
 
 const removeNils = R.reject(R.isNil);
 
@@ -362,20 +365,7 @@ export default class ScopeComponentsImporter {
       } found, going to collect its dependencies`
     );
     const dependencies = await this.importWithoutDeps(version.flattenedDependencies);
-    const source = id.scope as string;
-    return new VersionDependencies(versionComp, dependencies, source, version);
-  }
-
-  async componentsToComponentsObjects(
-    components: ObjectCollector[],
-    clientVersion: string | null | undefined,
-    collectParents: boolean,
-    collectArtifacts: boolean
-  ): Promise<ObjectItem[]> {
-    const allObjects = await mapSeries(components, (component) =>
-      component.collectObjects(this.scope.objects, clientVersion, { collectParents, collectArtifacts })
-    );
-    return R.flatten(allObjects);
+    return new VersionDependencies(versionComp, dependencies, version);
   }
 
   /**
@@ -415,21 +405,32 @@ export default class ScopeComponentsImporter {
     const bitIds = await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
       loader.start(`streaming objects from ${chalk.bold(remoteName)} into the filesystem`);
       const objectList = objectListPerRemote[remoteName];
-      return new Promise((resolve, reject) => {
-        const writable = new ObjectsWritable(this.repo, this.sources, remoteName);
-        const pipe = objectList.pipe(writable);
-        pipe.on('finish', () => {
-          let nonLaneIds: BitId[] = ids;
-          writable.lanes.forEach((lane) => {
-            nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-            nonLaneIds.push(...lane.components.map((c) => c.id));
-          });
-          resolve(nonLaneIds);
-        });
-        pipe.on('error', (err) => {
-          reject(err);
-        });
+      const writable = new ObjectsWritable(this.repo, this.sources, remoteName);
+      const pipelinePromise = promisify(pipeline);
+      // add an error listener for the ObjectList to differentiate between errors coming from the
+      // remote and errors happening inside the Writable.
+      let readableError: Error | undefined;
+      objectList.on('error', (err) => {
+        readableError = err;
       });
+      try {
+        await pipelinePromise(objectList, writable);
+      } catch (err) {
+        if (readableError) {
+          if (!readableError.message) {
+            logger.error(`error coming from a remote has no message, please fix!`, readableError);
+          }
+          throw new ErrorFromRemote(remoteName, readableError.message || 'unknown error');
+        }
+        // the error is coming from the writable, no need to treat it specially. just throw it.
+        throw err;
+      }
+      let nonLaneIds: BitId[] = ids;
+      writable.lanes.forEach((lane) => {
+        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
+        nonLaneIds.push(...lane.components.map((c) => c.id));
+      });
+      return nonLaneIds;
     });
     await this.repo.writeRemoteLanes();
     return BitIds.uniqFromArray(R.flatten(bitIds));
@@ -641,8 +642,7 @@ export default class ScopeComponentsImporter {
         // should have been fetched before by getExternalMany(). probably doesn't exist on the remote.
         throw new ShowDoctorError(`Version ${versionComp.version} of ${component.id().toString()} was not found`);
       }
-      const source = id.scope as string;
-      return new VersionDependencies(versionComp, [], source, version);
+      return new VersionDependencies(versionComp, [], version);
     });
     const versionDeps = compact(versionDepsWithNulls);
     const allFlattened = versionDeps.map((v) => v.version.getAllFlattenedDependencies());

@@ -1,22 +1,14 @@
-import mapSeries from 'p-map-series';
-import R from 'ramda';
 import { BitId, BitIds } from '../bit-id';
 import { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 import ComponentWithDependencies from './component-dependencies';
-import ComponentVersion, { ObjectCollector, CollectObjectsOpts } from './component-version';
+import ComponentVersion from './component-version';
 import { DependenciesNotFound } from './exceptions/dependencies-not-found';
 import { Version } from './models';
-import { ObjectItem } from './objects/object-list';
 import Repository from './objects/repository';
 import ConsumerComponent from '../consumer/component';
 
-export default class VersionDependencies implements ObjectCollector {
-  constructor(
-    public component: ComponentVersion,
-    public dependencies: ComponentVersion[],
-    public sourceScope: string,
-    public version: Version
-  ) {}
+export default class VersionDependencies {
+  constructor(public component: ComponentVersion, public dependencies: ComponentVersion[], public version: Version) {}
 
   get allDependencies(): ComponentVersion[] {
     return this.dependencies;
@@ -56,19 +48,6 @@ export default class VersionDependencies implements ObjectCollector {
       extensionDependencies: [],
       missingDependencies: this.getMissingDependencies(),
     });
-  }
-
-  async collectObjects(
-    repo: Repository,
-    clientVersion: string | null | undefined,
-    options: CollectObjectsOpts
-  ): Promise<ObjectItem[]> {
-    // for the dependencies, don't collect parents they might not exist
-    const depOptions: CollectObjectsOpts = { ...options, collectParents: false };
-    const depsP = mapSeries(this.allDependencies, (dep) => dep.collectObjects(repo, clientVersion, depOptions));
-    const compP = this.component.collectObjects(repo, clientVersion, options);
-    const [component, dependencies] = await Promise.all([compP, depsP]);
-    return [...component, ...R.flatten(dependencies)];
   }
 }
 

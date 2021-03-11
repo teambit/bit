@@ -5,6 +5,13 @@ import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
 import { CONCURRENT_IO_LIMIT } from '../../constants';
+import logger from '../../logger/logger';
+
+/**
+ * when error occurred during streaming between HTTP server and client, there is no good way to
+ * indicate this other than sending a new file with a special name and the error message.
+ */
+const TAR_STREAM_ERROR_FILENAME = '.BIT.ERROR';
 
 export type ObjectItem = {
   ref: Ref;
@@ -52,7 +59,7 @@ export class ObjectList {
   toTar(): NodeJS.ReadableStream {
     const pack = tarStream.pack();
     this.objects.forEach((obj) => {
-      pack.entry({ name: this.combineScopeAndHash(obj) }, obj.buffer);
+      pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
     });
     pack.finalize();
     return pack;
@@ -96,7 +103,12 @@ export class ObjectList {
         data.push(chunk);
       });
       stream.on('end', () => {
-        passThrough.write({ ...ObjectList.extractScopeAndHash(header.name), buffer: Buffer.concat(data) });
+        const allData = Buffer.concat(data);
+        if (header.name === TAR_STREAM_ERROR_FILENAME) {
+          passThrough.emit('error', new Error(allData.toString()));
+          return;
+        }
+        passThrough.write({ ...ObjectList.extractScopeAndHash(header.name), buffer: allData });
         next(); // ready for next entry
       });
       stream.on('error', (err) => {
@@ -115,20 +127,29 @@ export class ObjectList {
     return passThrough;
   }
 
-  static async fromReadableStream(readable: ObjectItemsStream): Promise<ObjectList> {
-    const allObjects: ObjectItem[] = await new Promise((resolve, reject) => {
-      const objectItems: ObjectItem[] = [];
-      readable.on('data', (obj) => {
-        objectItems.push(obj);
-      });
-      readable.on('end', () => {
-        resolve(objectItems);
-      });
-      readable.on('error', (err) => {
-        reject(err);
-      });
+  static fromObjectStreamToTar(readable: Readable) {
+    const pack = tarStream.pack();
+    readable.on('data', (obj: ObjectItem) => {
+      pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
     });
-    return new ObjectList(allObjects);
+    readable.on('end', () => {
+      pack.finalize();
+    });
+    readable.on('error', (err) => {
+      const errorMessage = err.message || `unexpected error (${err.name})`;
+      logger.error(`ObjectList.fromObjectStreamToTar, streaming an error as a file`, err);
+      pack.entry({ name: TAR_STREAM_ERROR_FILENAME }, errorMessage);
+      pack.finalize();
+    });
+    return pack;
+  }
+
+  static async fromReadableStream(readable: ObjectItemsStream): Promise<ObjectList> {
+    const objectItems: ObjectItem[] = [];
+    for await (const obj of readable) {
+      objectItems.push(obj);
+    }
+    return new ObjectList(objectItems);
   }
 
   /**
@@ -145,7 +166,7 @@ export class ObjectList {
   /**
    * the opposite of this.extractScopeAndHash
    */
-  combineScopeAndHash(objectItem: ObjectItem): string {
+  static combineScopeAndHash(objectItem: ObjectItem): string {
     const scope = objectItem.scope ? `${objectItem.scope}/` : '';
     return `${scope}${objectItem.ref.hash}`;
   }
