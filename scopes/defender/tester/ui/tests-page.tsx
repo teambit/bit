@@ -86,7 +86,7 @@ export function TestsPage({ className }: TestsPageProps) {
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link="https://bit-new-docs.netlify.app/docs/testing/test-components"
+        link="https://harmony-docs.bit.dev/testing/overview/"
       />
     );
   }

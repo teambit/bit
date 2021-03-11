@@ -96,7 +96,7 @@ function CompositionContent({ component, selected }: CompositionContentProps) {
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link="https://bit-new-docs.netlify.app/docs/compositions/develop-in-isolation"
+        link="https://harmony-docs.bit.dev/compositions/overview/"
       />
     );
   return <ComponentComposition component={component} composition={selected}></ComponentComposition>;
