@@ -6,6 +6,7 @@ import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
+import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { Lane, ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ObjectItem } from './object-list';
@@ -30,8 +31,12 @@ export class ObjectsWritable extends Writable {
     if (!obj.ref || !obj.buffer) {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
-    await this.writeImmutableObjectToFs(obj);
-    return callback();
+    try {
+      await this.writeImmutableObjectToFs(obj);
+      return callback();
+    } catch (err) {
+      return callback(err);
+    }
   }
   async _final(callback) {
     try {

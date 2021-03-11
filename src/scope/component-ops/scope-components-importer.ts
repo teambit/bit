@@ -407,10 +407,23 @@ export default class ScopeComponentsImporter {
       const objectList = objectListPerRemote[remoteName];
       const writable = new ObjectsWritable(this.repo, this.sources, remoteName);
       const pipelinePromise = promisify(pipeline);
+      // add an error listener for the ObjectList to differentiate between errors coming from the
+      // remote and errors happening inside the Writable.
+      let readableError: Error | undefined;
+      objectList.on('error', (err) => {
+        readableError = err;
+      });
       try {
         await pipelinePromise(objectList, writable);
       } catch (err) {
-        throw new ErrorFromRemote(remoteName, err.message);
+        if (readableError) {
+          if (!readableError.message) {
+            logger.error(`error coming from a remote has no message, please fix!`, readableError);
+          }
+          throw new ErrorFromRemote(remoteName, readableError.message || 'unknown error');
+        }
+        // the error is coming from the writable, no need to treat it specially. just throw it.
+        throw err;
       }
       let nonLaneIds: BitId[] = ids;
       writable.lanes.forEach((lane) => {
