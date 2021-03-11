@@ -6,7 +6,6 @@ import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
-import { ErrorFromRemote } from '../exceptions/error-from-remote';
 import { Lane, ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
 import { ObjectItem } from './object-list';
