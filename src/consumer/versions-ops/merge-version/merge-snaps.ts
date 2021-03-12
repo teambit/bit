@@ -21,6 +21,7 @@ import checkoutVersion, { applyModifiedVersion } from '../checkout-version';
 import {
   ApplyVersionResult,
   ApplyVersionResults,
+  FailedComponents,
   FileStatus,
   getMergeStrategyInteractive,
   MergeOptions,
@@ -126,10 +127,9 @@ export async function merge({
   if (componentWithConflict && !mergeStrategy) {
     mergeStrategy = await getMergeStrategyInteractive();
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
     .filter((componentStatus) => componentStatus.failureMessage)
-    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage as string }));
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others

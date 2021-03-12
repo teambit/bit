@@ -13,7 +13,7 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 import FlagHarmonyOnly from './exceptions/flag-harmony-only';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
-export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+export default async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
   loader.start(BEFORE_CHECKOUT);
   const consumer: Consumer = await loadConsumer();
   if (checkoutProps.writeConfig && consumer.config.isLegacy) {
@@ -23,7 +23,7 @@ export default (async function checkout(values: string[], checkoutProps: Checkou
   const checkoutResults = await checkoutVersion(consumer, checkoutProps);
   await consumer.onDestroy();
   return checkoutResults;
-});
+}
 
 async function parseValues(consumer: Consumer, values: string[], checkoutProps: CheckoutProps) {
   const firstValue = R.head(values);
