@@ -254,9 +254,12 @@ export default class ComponentsList {
   }
 
   async listExportPendingComponentsIds(lane?: Lane | null): Promise<BitIds> {
+    const idsFromBitMap = this.idsFromBitMap();
     const modelComponents = await this.getModelComponents();
-    const pendingExportComponents = await filterAsync(modelComponents, (component: ModelComponent) =>
-      component.isLocallyChanged(lane, this.scope.objects)
+    const pendingExportComponents = await filterAsync(
+      modelComponents,
+      (component: ModelComponent) =>
+        idsFromBitMap.hasWithoutVersion(component.toBitId()) && component.isLocallyChanged(lane, this.scope.objects)
     );
     const ids = BitIds.fromArray(pendingExportComponents.map((c) => c.toBitId()));
     return this.updateIdsFromModelIfTheyOutOfSync(ids);
@@ -287,8 +290,7 @@ export default class ComponentsList {
 
   async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds(laneObj);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponentIfExist(id)));
+    return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponent(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<Component[]> {
@@ -297,7 +299,7 @@ export default class ComponentsList {
     return this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
   }
 
-  idsFromBitMap(origin?: ComponentOrigin): BitId[] {
+  idsFromBitMap(origin?: ComponentOrigin): BitIds {
     const fromBitMap = this.getFromBitMap(origin);
     return fromBitMap;
   }

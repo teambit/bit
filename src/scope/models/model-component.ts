@@ -87,6 +87,9 @@ export default class Component extends BitObject {
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
+  /**
+   * @deprecated since 0.12.6 (long long ago :) probably can be removed)
+   */
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
@@ -814,6 +817,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
+    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;
   }
