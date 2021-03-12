@@ -95,7 +95,12 @@ export default class Component extends BitObject {
   scopesList: ScopeListItem[];
   head?: Ref;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
-  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the local snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * prop is undefined.
+   */
+  laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   private divergeData?: DivergeData;
 

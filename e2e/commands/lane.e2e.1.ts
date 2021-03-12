@@ -10,6 +10,7 @@ import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import { removeChalkCharacters } from '../../src/utils';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -166,8 +167,7 @@ describe('bit lane command', function () {
         const lanes = helper.command.showOneLaneParsed('dev');
         expect(lanes.components).to.have.lengthOf(3);
       });
-      // @todo: fix as soon as the import is working properly on Harmony
-      it.skip('bit status should show clean state', () => {
+      it('bit status should show clean state', () => {
         const output = helper.command.runCmd('bit status');
         expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
@@ -861,6 +861,35 @@ describe('bit lane command', function () {
         const result = helper.command.runCmd('node app.js');
         // notice the "v2" (!)
         expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
+      });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('import with dependencies as packages', () => {
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.command.setFeatures(HARMONY_FEATURE);
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(3);
+      npmCiRegistry = new NpmCiRegistry(helper);
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      await npmCiRegistry.init();
+      helper.command.tagAllComponents();
+      helper.command.exportAllComponents();
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      npmCiRegistry.setResolver();
+      helper.command.importComponent('comp1');
+    });
+    after(() => {
+      npmCiRegistry.destroy();
+    });
+    describe('switching to a new lane', () => {
+      before(() => {
+        helper.command.createLane();
+      });
+      it('should not show all components are staged', () => {
+        helper.command.expectStatusToBeClean();
       });
     });
   });
