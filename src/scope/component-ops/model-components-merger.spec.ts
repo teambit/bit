@@ -25,8 +25,6 @@ describe('ModelComponentMerger', () => {
       const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
-        [],
-        [],
         false,
         true,
         false
@@ -55,8 +53,6 @@ describe('ModelComponentMerger', () => {
       const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
-        [],
-        [],
         true,
         true,
         false
@@ -91,8 +87,6 @@ describe('ModelComponentMerger', () => {
       const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
-        [],
-        [],
         true,
         true,
         false
@@ -118,8 +112,6 @@ describe('ModelComponentMerger', () => {
       const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
-        [],
-        [],
         true,
         true,
         false
@@ -148,8 +140,6 @@ describe('ModelComponentMerger', () => {
       const { mergedComponent, mergedVersions } = await new ModelComponentMerger(
         existingComponent,
         incomingComponent,
-        [],
-        [],
         true,
         true,
         false
@@ -463,8 +453,6 @@ async function merge(
   const modelComponentMerger = new ModelComponentMerger(
     existingComponent,
     incomingComponent,
-    [],
-    [],
     isImport,
     isIncomingFromOrigin,
     existingHeadIsMissingInIncomingComponent

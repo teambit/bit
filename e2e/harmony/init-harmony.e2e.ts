@@ -17,7 +17,7 @@ describe('init command on Harmony', function () {
   });
   describe('init --reset-new', () => {
     before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
@@ -27,9 +27,8 @@ describe('init command on Harmony', function () {
     it('should change the .bitmap entries as if they are new', () => {
       const bitMap = helper.bitMap.readComponentsMapOnly();
       expect(bitMap).to.have.property('comp1');
-      expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp1@0.0.1`);
-      const compMap = bitMap.comp1;
-      expect(compMap.exported).to.be.false;
+      expect(bitMap.comp1.version).to.equal('');
+      expect(bitMap.comp1.scope).to.equal('');
     });
     it('should remove all objects from the scope', () => {
       const objectsPath = path.join(helper.scopes.localPath, '.bit/objects');

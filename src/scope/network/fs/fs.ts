@@ -10,7 +10,7 @@ import ScopeComponentsImporter from '../../component-ops/scope-components-import
 import DependencyGraph from '../../graph/scope-graph';
 import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
-import { ObjectList } from '../../objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
 import Scope, { ScopeDescriptor } from '../../scope';
 import loadScope from '../../scope-loader';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -65,8 +65,9 @@ export default class Fs implements Network {
     return undeprecate({ path: this.scopePath, ids });
   }
 
-  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
-    return fetch(this.scopePath, ids, fetchOptions);
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
+    const objectsReadable = await fetch(this.scopePath, ids, fetchOptions);
+    return objectsReadable;
   }
 
   latestVersions(componentIds: BitId[]): Promise<string[]> {

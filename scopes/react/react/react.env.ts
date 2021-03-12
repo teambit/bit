@@ -21,8 +21,8 @@ import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
-import webpackConfigFactory from './webpack/webpack.config';
-import previewConfigFactory from './webpack/webpack.preview.config';
+import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
+import previewConfigFactory from './webpack/webpack.config.preview';
 import eslintConfig from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
@@ -151,10 +151,19 @@ export class ReactEnv implements Environment {
   /**
    * get the default react webpack config.
    */
-  getWebpackConfig(context: DevServerContext): Configuration {
+  private getDevWebpackConfig(context: DevServerContext): Configuration {
     const fileMapPath = this.writeFileMap(context.components);
 
-    return webpackConfigFactory(context.id, fileMapPath);
+    const components = context.components;
+    const distDir = this.getCompiler().distDir;
+
+    const distPaths = components.map((comp) => {
+      const modulePath = this.pkg.getModulePath(comp);
+      const dist = join(this.workspace.path, modulePath, distDir);
+      return dist;
+    });
+
+    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
   }
 
   getDevEnvId(id?: string) {
@@ -173,7 +182,7 @@ export class ReactEnv implements Environment {
    * returns and configures the React component dev server.
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
-    const defaultConfig = this.getWebpackConfig(context);
+    const defaultConfig = this.getDevWebpackConfig(context);
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
 
     return this.webpack.createDevServer(context, config);

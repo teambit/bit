@@ -10,7 +10,7 @@ import { getAllVersionHashes } from './traverse-versions';
 /**
  * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
  * traverse by the local head, if it finds the remote head, no need to traverse by the remote
- * head. (it also means that we can do do fast-forward and no need for snap-merge).
+ * head. (it also means that we can do fast-forward and no need for snap-merge).
  */
 export async function getDivergeData(
   repo: Repository,
@@ -18,7 +18,8 @@ export async function getDivergeData(
   remoteHead: Ref | null,
   throws = true
 ): Promise<DivergeData> {
-  const localHead = modelComponent.laneHeadLocal || modelComponent.getHead();
+  const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
+  const localHead = isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead();
   if (!remoteHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes(modelComponent, repo, false);

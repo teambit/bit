@@ -71,10 +71,10 @@ describe('import functionality on Harmony', function () {
           helper.command.importComponent('comp1');
         });
         it('should not save the dependencies as components', () => {
+          helper.bitMap.expectToHaveIdHarmony('comp1', '0.0.1', helper.scopes.remote);
           const bitMap = helper.bitMap.readComponentsMapOnly();
-          expect(bitMap).to.have.property(`${helper.scopes.remote}/comp1@0.0.1`);
-          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp2@0.0.1`);
-          expect(bitMap).not.to.have.property(`${helper.scopes.remote}/comp3@0.0.1`);
+          expect(bitMap).not.to.have.property(`comp2`);
+          expect(bitMap).not.to.have.property(`comp3`);
         });
         it('bit status should be clean with no errors', () => {
           helper.command.expectStatusToBeClean();
@@ -89,7 +89,7 @@ describe('import functionality on Harmony', function () {
         it('should import to the specified path', () => {
           expect(path.join(helper.scopes.localPath, 'src')).to.be.a.directory();
           const bitMap = helper.bitMap.read();
-          const bitMapEntry = bitMap[`${helper.scopes.remote}/comp1@0.0.1`];
+          const bitMapEntry = bitMap.comp1;
           expect(bitMapEntry.rootDir).to.equal('src');
         });
       });

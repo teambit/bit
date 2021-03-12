@@ -200,6 +200,9 @@ export default class CommandHelper {
   createLane(laneName = 'dev') {
     return this.runCmd(`bit switch ${laneName} --create`);
   }
+  clearCache() {
+    return this.runCmd('bit clear-cache');
+  }
   removeLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
   }

@@ -1,5 +1,6 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
+import readLine from 'readline';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { Network } from '../network';
 import { BitId, BitIds } from '../../../bit-id';
@@ -13,13 +14,15 @@ import globalFlags from '../../../cli/global-flags';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import { CFG_HTTPS_PROXY, CFG_PROXY, CFG_USER_TOKEN_KEY } from '../../../constants';
 import logger from '../../../logger/logger';
-import { ObjectList } from '../../objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
+import loader from '../../../cli/loader';
+import { UnexpectedNetworkError } from '../exceptions';
 
 export enum Verb {
   WRITE = 'write',
@@ -39,7 +42,8 @@ export class Http implements Network {
     private _token: string | undefined | null,
     private url: string,
     private scopeName: string,
-    private proxyAgent?: HttpsProxyAgent
+    private proxyAgent?: HttpsProxyAgent,
+    private localScopeName?: string
   ) {}
 
   static getToken() {
@@ -135,9 +139,14 @@ export class Http implements Network {
     logger.debug(
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
+
+    const results = await this.readPutCentralStream(res.body);
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
     await this.throwForNonOkStatus(res);
-    const results = await this.getJsonResponse(res);
-    return results;
+    return results.data;
   }
 
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
@@ -159,7 +168,7 @@ export class Http implements Network {
     return results;
   }
 
-  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
     const scopeData = `scopeName: ${this.scopeName}, url: ${this.url}/${route}`;
     logger.debug(`Http.fetch, ${scopeData}`);
@@ -176,8 +185,9 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    const objectList = await ObjectList.fromTar(res.body);
-    return objectList;
+    const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
+
+    return objectListReadable;
   }
 
   private async getJsonResponse(res: Response) {
@@ -221,6 +231,30 @@ export class Http implements Network {
       // should not be here. it's just in case
       throw err;
     }
+  }
+
+  private async readPutCentralStream(body: NodeJS.ReadableStream): Promise<any> {
+    const readline = readLine.createInterface({
+      input: body,
+      crlfDelay: Infinity,
+    });
+
+    let results: Record<string, any> = {};
+    readline.on('line', (line) => {
+      const json = JSON.parse(line);
+      if (json.end) results = json;
+      loader.start(json.message);
+    });
+
+    return new Promise((resolve, reject) => {
+      readline.on('close', () => {
+        resolve(results);
+      });
+      readline.on('error', (err) => {
+        logger.error('readLine failed with error', err);
+        reject(new Error(`readline failed with error, ${err?.message}`));
+      });
+    });
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
@@ -354,7 +388,8 @@ export class Http implements Network {
 
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
-    return Object.assign(headers, authHeader, { connection: 'keep-alive' });
+    const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    return Object.assign(headers, authHeader, localScope, { connection: 'keep-alive' });
   }
 
   private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
@@ -362,13 +397,13 @@ export class Http implements Network {
     return optsWithProxy;
   }
 
-  static async connect(host: string, scopeName: string) {
+  static async connect(host: string, scopeName: string, localScopeName?: string) {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
     const proxyUrl = Http.getProxyUrl();
     const proxyAgent = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
     const graphClient = new GraphQLClient(`${host}/graphql`, { headers, fetch: getFetcherWithProxy() });
-    return new Http(graphClient, token, host, scopeName, proxyAgent);
+    return new Http(graphClient, token, host, scopeName, proxyAgent, localScopeName);
   }
 }
 

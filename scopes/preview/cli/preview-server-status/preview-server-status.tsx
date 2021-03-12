@@ -15,6 +15,7 @@ export type PreviewServerStatusProps = {
 
 export function PreviewServerStatus({ previewServers, pubsub }: PreviewServerStatusProps) {
   const { errors, warnings, compiling } = usePreviewServer({ pubsub });
+
   if (errors.length) {
     return <Error errors={errors} level={ErrorLevel.ERROR} />;
   }
@@ -29,7 +30,7 @@ export function PreviewServerStatus({ previewServers, pubsub }: PreviewServerSta
         return <PreviewServerRow key={key} previewServer={server} />;
       })}
       {warnings.length ? (
-        <Box marginTop={1}>
+        <Box marginTop={1} flexDirection="column">
           <Newline />
           <Error errors={warnings} level={ErrorLevel.WARNING} />
         </Box>

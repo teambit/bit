@@ -24,7 +24,6 @@ type AvatarProps = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-  isOwner?: boolean;
   hideTooltip?: boolean;
 };
 

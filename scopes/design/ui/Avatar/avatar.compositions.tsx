@@ -47,12 +47,6 @@ export const NoSetIconUserAvatar = () => (
   </ThemeCompositions>
 );
 
-export const IsOwnerUserAvatarExample = () => (
-  <ThemeCompositions>
-    <UserAvatar size={32} account={accounts.userAccount} isOwner={true} />
-  </ThemeCompositions>
-);
-
 export const NoUserNameAvatarExample = () => (
   <ThemeCompositions>
     <UserAvatar size={32} account={accounts.noNameAccount} />

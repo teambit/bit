@@ -23,6 +23,20 @@
   }
 }
 
+.purpleLink {
+  color: var(--base-highlight);
+  text-decoration: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  .text {
+    margin-right: 5px;
+  }
+  .icon {
+    margin-top: 4px;
+  }
+}
+
 .bottomText {
   margin-bottom: 16px;
   font-size: var(--p-xs);

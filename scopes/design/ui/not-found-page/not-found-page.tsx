@@ -16,7 +16,7 @@ export function NotFoundPage({ ...rest }: NotFoundPageProps) {
         <ExternalLink href="https://github.com/teambit/bit">
           <Icon of="github-logo" className={styles.github} />
         </ExternalLink>
-        <ExternalLink href="https://bit-new-docs.netlify.app/docs/getting-started/introduction">
+        <ExternalLink href="https://harmony-docs.bit.dev/">
           <img alt="bit-logo" className={styles.logo} src="https://static.bit.dev/bit-logo.svg" />
         </ExternalLink>
       </div>

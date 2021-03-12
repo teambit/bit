@@ -1001,7 +1001,7 @@ export default class Consumer {
     const dependentsIds = await this.getAuthoredAndImportedDependentsIdsOf(components);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
 
-    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds, true, false);
+    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
