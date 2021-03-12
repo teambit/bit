@@ -210,7 +210,7 @@ export async function getComponentStatus(
   }
   const repo = consumer.scope.objects;
   if (localLane) {
-    modelComponent.laneHeadLocal = localLane.getComponentHead(modelComponent.toBitId());
+    modelComponent.setLaneHeadLocal(localLane);
     if (modelComponent.laneHeadLocal && modelComponent.laneHeadLocal.toString() !== existingBitMapId.version) {
       throw new GeneralError(
         `unable to merge ${id.toStringWithoutVersion()}, the component is checkout to a different version than the lane head. please run "bit checkout your-lane --lane" first`
