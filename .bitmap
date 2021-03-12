@@ -457,6 +457,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/string/capitalize"
     },
+    "string/ellipsis": {
+        "scope": "teambit.toolbox",
+        "version": "0.0.1",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/string/ellipsis"
+    },
     "string/get-initials": {
         "scope": "teambit.toolbox",
         "version": "0.0.311",
