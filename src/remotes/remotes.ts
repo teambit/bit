@@ -42,7 +42,7 @@ export default class Remotes extends Map<string, Remote> {
   async fetch(
     idsGroupedByScope: { [scopeName: string]: string[] }, // option.type determines the id: component-id/lane-id/object-id (hash)
     thisScope: Scope,
-    options: Partial<FETCH_OPTIONS> & { concurrency?: number } = {},
+    options: Partial<FETCH_OPTIONS> = {},
     context?: Record<string, any>
   ): Promise<{ [remoteName: string]: ObjectItemsStream }> {
     const fetchOptions: FETCH_OPTIONS = {
@@ -78,7 +78,7 @@ export default class Remotes extends Map<string, Remote> {
           return null;
         }
       },
-      { concurrency: options.concurrency || CONCURRENT_FETCH_LIMIT }
+      { concurrency: CONCURRENT_FETCH_LIMIT }
     );
     if (Object.keys(failedScopes).length) {
       const failedScopesErr = Object.keys(failedScopes).map(
