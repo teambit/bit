@@ -477,9 +477,11 @@ describe('bit lane command', function () {
           removeChalkCharacters('successfully set "lane-a" as the active lane') as string
         );
       });
-      it('bit status should not show lane-b components as staged', () => {
+      // master components belong to lane-a only if they are snapped on lane-a, so utils/is-type
+      // doesn't belong to lane-a and should not appear as staged when on lane-a.
+      it('bit status should not show neither lane-b nor master components as staged', () => {
         const statusParsed = helper.command.statusJson();
-        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-string', 'utils/is-type']);
+        expect(statusParsed.stagedComponents).to.deep.equal(['utils/is-string']);
         const status = helper.command.status();
         expect(status).to.not.have.string('bar/foo');
       });
