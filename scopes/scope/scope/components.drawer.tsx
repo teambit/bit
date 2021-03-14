@@ -5,6 +5,7 @@ import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { FullLoader } from '@teambit/ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui.tree.drawer';
+import { mutedItalic } from '@teambit/ui.styles.muted-italic';
 import { useScope } from './ui/use-scope';
 
 export class ComponentsDrawer implements DrawerType {
@@ -39,6 +40,7 @@ export class ComponentsDrawer implements DrawerType {
     );
 
     if (!scope) return <FullLoader />;
+    if (!scope.components) return <span className={mutedItalic}>Scope is empty</span>;
     return <ComponentTree components={scope.components} TreeNode={TreeNodeRenderer} />;
   };
 }
