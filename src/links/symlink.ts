@@ -26,7 +26,7 @@ export default class Symlink {
     const dest = this.dest;
     this._throwForMissingDistOutsideComponent();
     // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
-    // TODO: this requires to upgrade fs-extra to have the throwIfNoEntry property
+    // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
     // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
     // const exists = fs.pathExistsSync(dest);
     let exists;
