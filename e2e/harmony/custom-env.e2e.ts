@@ -17,17 +17,45 @@ describe('custom env', function () {
     helper.scopeHelper.destroy();
   });
   describe('custom env with 3 components', () => {
+    let wsAllNew;
+    let envId;
+    let envName;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
-      const envName = helper.env.setCustomEnv();
+      envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
-      helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/${envName}`);
+      helper.extensions.addExtensionToVariant('*', envId);
       helper.command.compile();
+      wsAllNew = helper.scopeHelper.cloneLocalScope(false);
+    });
+    describe('tag', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild();
+      });
+      it('should have the correct env in the envs aspect data', () => {
+        const comp1 = helper.command.catComponent('comp1@latest');
+        const envIdFromModel = getEnvIdFromModel(comp1);
+        expect(envIdFromModel).to.equal(`${envId}@0.0.1`);
+      });
+      describe('tag again', () => {
+        before(() => {
+          // helper.command.tagWithoutBuild(envName, '-f');
+          helper.command.tagComponent(envName, 'message', '-f');
+        });
+        it('should have the correct env in the envs aspect data after additional tag', () => {
+          const comp1 = helper.command.catComponent('comp1@latest');
+          const envIdFromModel = getEnvIdFromModel(comp1);
+          expect(envIdFromModel).to.equal(`${envId}@0.0.2`);
+        });
+      });
     });
     describe('untag', () => {
       before(() => {
+        helper.scopeHelper.getClonedLocalScope(wsAllNew);
         helper.command.tagAllWithoutBuild();
+        throw new Error('ggg');
       });
       // previously it used to throw "error: component "node-env@0.0.1" was not found."
       it('should untag successfully', () => {
@@ -36,3 +64,9 @@ describe('custom env', function () {
     });
   });
 });
+
+function getEnvIdFromModel(compModel: any): string {
+  const envEntry = compModel.extensions.find((ext) => ext.name === 'teambit.envs/envs');
+  const envId = envEntry.data.id;
+  return envId;
+}
