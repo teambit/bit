@@ -63,7 +63,7 @@
         "@teambit/base-ui.text.heading": "0.6.4",
         "@teambit/base-ui.text.muted-text": "0.6.4",
         "@teambit/base-ui.text.paragraph": "0.6.4",
-        "@teambit/base-ui.text.text": "0.0.10",
+        "@teambit/base-ui.text.text": "0.0.11",
         "@teambit/base-ui.text.text-sizes": "0.0.1",
         "@teambit/base-ui.text.themed-text": "0.6.4",
         "@teambit/base-ui.theme.color-palette": "0.6.7",
