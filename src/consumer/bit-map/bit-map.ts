@@ -18,7 +18,7 @@ import { ComponentFsCache } from '../component/component-fs-cache';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
-import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
+import { getLastModifiedDirTimestampMs, getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
@@ -159,6 +159,8 @@ export default class BitMap {
   async loadFiles(componentFsCache: ComponentFsCache) {
     if (this.isLegacy) return;
     const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
+    const { currentLocation } = BitMap.getBitMapLocation(this.projectRoot);
+    const bitMapChanged = await getLastModifiedPathsTimestampMs([currentLocation as string]);
     await Promise.all(
       this.components.map(async (componentMap) => {
         const idStr = componentMap.id.toString();
@@ -168,7 +170,10 @@ export default class BitMap {
         if (dataFromCache) {
           const lastModified = await getLastModifiedDirTimestampMs(rootDir);
           const wasModifiedAfterLastTrack = lastModified > dataFromCache.timestamp;
-          if (!wasModifiedAfterLastTrack) {
+          // .bitmap might changed manually and will be very confused for the end user
+          // as to why the files look the way they look.
+          const wasBitMapModifiedAfterLastTrack = bitMapChanged > dataFromCache.timestamp;
+          if (!wasModifiedAfterLastTrack && !wasBitMapModifiedAfterLastTrack) {
             const files = JSON.parse(dataFromCache.data);
             componentMap.files = files;
             return;
