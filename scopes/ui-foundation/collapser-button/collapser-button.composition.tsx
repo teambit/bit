@@ -1,6 +1,6 @@
 import React from 'react';
-import { Collapser } from './collapser-button';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { Collapser } from './collapser-button';
 
 export const CollapserButton = () => {
   return (
