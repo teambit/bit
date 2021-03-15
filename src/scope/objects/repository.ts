@@ -396,11 +396,11 @@ export default class Repository {
   async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
     const count = objects.length;
     if (!count) return;
-    logger.debug(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
+    logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
     await pMap(objects, (obj) => this._writeOne(obj), {
       concurrency: CONCURRENT_IO_LIMIT,
     });
-    logger.debug(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
+    logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
 
     const added = this.scopeIndex.addMany(objects);
     if (added) await this.scopeIndex.write();

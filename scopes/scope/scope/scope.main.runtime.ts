@@ -135,6 +135,29 @@ export class ScopeMain implements ComponentFactory {
    */
   onTag(tagFn: OnTag) {
     const host = this.componentExtension.getHost();
+    const legacyOnTagFunc: OnTagFunc = async (
+      legacyComponents: ConsumerComponent[],
+      options?: OnTagOpts
+    ): Promise<LegacyOnTagResult[]> => {
+      // Reload the aspects with their new version
+      await this.reloadAspectsWithNewVersion(legacyComponents);
+      const components = await host.getManyByLegacy(legacyComponents);
+      const { builderDataMap } = await tagFn(components, options);
+      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
+    };
+    this.legacyScope.onTag.push(legacyOnTagFunc);
+    this.tagRegistry.register(tagFn);
+  }
+
+  // We need to reload the aspects with their new version since:
+  // during get many by legacy, we go load component which in turn go to getEnv
+  // get env validates that the env written on the component is really exist by checking the envs slot registry
+  // when we load here, it's env version in the aspect list already has the new version in case the env itself is being tagged
+  // so we are search for the env in the registry with the new version number
+  // but since the env only registered during the on load of the bit process (before the tag) it's version in the registry is only the old one
+  // once we reload them we will have it registered with the new version as well
+  async reloadAspectsWithNewVersion(components: ConsumerComponent[]): Promise<void> {
+    const host = this.componentExtension.getHost();
 
     // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
     const getUserAspectsIdsWithoutRootIds = (): string[] => {
@@ -145,7 +168,7 @@ export class ScopeMain implements ComponentFactory {
     };
 
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
-    const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
+    const getAspectsByPreviouslyUsedVersion = async (): Promise<string[]> => {
       const harmonyIds = getUserAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
@@ -165,34 +188,17 @@ export class ScopeMain implements ComponentFactory {
       return aspectsIds;
     };
 
-    // Reload the aspects with their new version
-    const reloadAspectsWithNewVersion = async (components: ConsumerComponent[]): Promise<void> => {
-      const idsToLoad = await getAspectsByPreviouslyUsedVersion(components);
-      await host.loadAspects(idsToLoad, false);
-    };
-
-    const legacyOnTagFunc: OnTagFunc = async (
-      legacyComponents: ConsumerComponent[],
-      options?: OnTagOpts
-    ): Promise<LegacyOnTagResult[]> => {
-      // We need to reload the aspects with their new version since:
-      // during get many by legacy, we go load component which in turn go to getEnv
-      // get env validates that the env written on the component is really exist by checking the envs slot registry
-      // when we load here, it's env version in the aspect list already has the new version in case the env itself is being tagged
-      // so we are search for the env in the registry with the new version number
-      // but since the env only registered during the on load of the bit process (before the tag) it's version in the registry is only the old one
-      // once we reload them we will have it registered with the new version as well
-      await reloadAspectsWithNewVersion(legacyComponents);
-      const components = await host.getManyByLegacy(legacyComponents);
-      const { builderDataMap } = await tagFn(components, options);
-      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
-    };
-    this.legacyScope.onTag.push(legacyOnTagFunc);
-    this.tagRegistry.register(tagFn);
+    const idsToLoad = await getAspectsByPreviouslyUsedVersion();
+    await host.loadAspects(idsToLoad, false);
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
     return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
+  }
+
+  clearCache() {
+    this.componentLoader.clearCache();
+    this.legacyScope.objects.clearCache();
   }
 
   builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
@@ -588,6 +594,11 @@ export class ScopeMain implements ComponentFactory {
     return component;
   }
 
+  async loadComponentsAspect(component: Component) {
+    const aspectIds = component.state.aspects.ids;
+    await this.loadAspects(aspectIds, true);
+  }
+
   /**
    * declare the slots of scope extension.
    */
@@ -706,7 +717,7 @@ export class ScopeMain implements ComponentFactory {
 
     express.register([
       new PutRoute(scope, postPutSlot),
-      new FetchRoute(scope),
+      new FetchRoute(scope, logger),
       new ActionRoute(scope),
       new DeleteRoute(scope),
     ]);

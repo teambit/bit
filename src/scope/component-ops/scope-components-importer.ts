@@ -1,7 +1,6 @@
 import { filter } from 'bluebird';
 import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
-import pMap from 'p-map';
 import groupArray from 'group-array';
 import R from 'ramda';
 import { compact, flatten } from 'lodash';
@@ -17,17 +16,17 @@ import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { splitBy } from '../../utils';
-import ComponentVersion, { ObjectCollector } from '../component-version';
+import ComponentVersion from '../component-version';
 import { ComponentNotFound } from '../exceptions';
 import { Lane, ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
-import { ObjectItem, ObjectList } from '../objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
-import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
+import { DEFAULT_LANE } from '../../constants';
 import { BitObjectList } from '../objects/bit-object-list';
-import { ModelComponentMerger } from './model-components-merger';
+import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 
 const removeNils = R.reject(R.isNil);
 
@@ -241,14 +240,16 @@ export default class ScopeComponentsImporter {
     loader.start(statusMsg);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
     const remotes = await getScopeRemotes(this.scope);
-    const { objectList, objectListPerRemote } = await remotes.fetch(groupedIds, this.scope, {
-      type: 'component-delta',
-      withoutDependencies: true,
-      concurrency: 10,
-    });
-    loader.start(`got ${objectList.count()} objects from the remotes, merging them and writing to the filesystem`);
-    logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', 'writing them to the model');
-    await this.writeManyObjectListToModel(objectListPerRemote, idsToFetch);
+    await new ObjectFetcher(
+      this.repo,
+      this.scope,
+      remotes,
+      {
+        type: 'component-delta',
+        withoutDependencies: true,
+      },
+      idsToFetch
+    ).fetchFromRemoteAndWrite();
   }
 
   async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
@@ -261,8 +262,9 @@ export default class ScopeComponentsImporter {
 
   async importLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
     const remotes = await getScopeRemotes(this.scope);
-    const { objectList } = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
-    const bitObjects = await objectList.toBitObjects();
+    const objectsStreamPerRemote = await remotes.fetch(groupByScopeName(remoteLaneIds), this.scope, { type: 'lane' });
+    const multipleStreams = Object.values(objectsStreamPerRemote);
+    const bitObjects = await this.multipleStreamsToBitObjects(multipleStreams);
     const lanes = bitObjects.getLanes();
     await Promise.all(lanes.map((lane) => this.repo.remoteLanes.syncWithLaneObject(lane.scope as string, lane)));
     return lanes;
@@ -288,8 +290,9 @@ export default class ScopeComponentsImporter {
     );
     if (R.isEmpty(groupedHashedMissing)) return;
     const remotes = await getScopeRemotes(this.scope);
-    const { objectList } = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
-    const bitObjectsList = await objectList.toBitObjects();
+    const multipleStreams = await remotes.fetch(groupedHashedMissing, this.scope, { type: 'object' });
+
+    const bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(multipleStreams));
     await this.repo.writeObjectsToTheFS(bitObjectsList.getAll());
   }
 
@@ -360,20 +363,7 @@ export default class ScopeComponentsImporter {
       } found, going to collect its dependencies`
     );
     const dependencies = await this.importWithoutDeps(version.flattenedDependencies);
-    const source = id.scope as string;
-    return new VersionDependencies(versionComp, dependencies, source, version);
-  }
-
-  async componentsToComponentsObjects(
-    components: ObjectCollector[],
-    clientVersion: string | null | undefined,
-    collectParents: boolean,
-    collectArtifacts: boolean
-  ): Promise<ObjectItem[]> {
-    const allObjects = await mapSeries(components, (component) =>
-      component.collectObjects(this.scope.objects, clientVersion, { collectParents, collectArtifacts })
-    );
-    return R.flatten(allObjects);
+    return new VersionDependencies(versionComp, dependencies, version);
   }
 
   /**
@@ -394,77 +384,28 @@ export default class ScopeComponentsImporter {
     return this.loadRemoteComponent(id);
   }
 
-  async writeManyObjectListToModel(
-    objectListPerRemote: { [remoteName: string]: ObjectList },
-    ids: BitId[]
-  ): Promise<BitId[]> {
-    const bitObjectsPerRemote: { [remoteName: string]: BitObjectList } = {};
-    await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
-      const objectList = objectListPerRemote[remoteName];
-      bitObjectsPerRemote[remoteName] = await objectList.toBitObjects();
-    });
-    const bitIds = await mapSeries(Object.keys(bitObjectsPerRemote), async (remoteName) => {
-      const bitObjectList = bitObjectsPerRemote[remoteName];
-      return this.addObjectListToRepo(bitObjectList, remoteName, ids);
-    });
-    await this.repo.writeRemoteLanes();
-    return BitIds.uniqFromArray(R.flatten(bitIds));
-  }
-
   /**
-   * this has been changed to be efficient in terms of memory and less error-prone.
-   * first, write all immutable objects, such as files/sources/versions into the filesystem.
-   * even if the process will crush later and the component-object won't be written, there is no
-   * harm of writing these objects.
-   * then, merge the component objects and write them to the filesystem. the index.json is written
-   * as well to make sure they're indexed immediately, even if the process crushes on the next remote.
-   * finally, take care of the lanes. the remote-lanes are not written at this point, only once all
-   * remotes are processed. see @writeManyObjectListToModel.
+   * get a single component from a remote without saving it locally
    */
-  private async addObjectListToRepo(bitObjectList: BitObjectList, remoteName: string, ids: BitId[]): Promise<BitId[]> {
-    const immutableObjects = bitObjectList.getAllExceptComponentsAndLanes();
-    await this.repo.writeObjectsToTheFS(immutableObjects);
-
-    const components = bitObjectList.getComponents();
-    const mergedComponents = await pMap(components, (component) => this.mergeModelComponent(component, remoteName), {
-      concurrency: CONCURRENT_COMPONENTS_LIMIT,
-    });
-    await this.repo.writeObjectsToTheFS(mergedComponents);
-    await this.repo.remoteLanes.addEntriesFromModelComponents(
-      RemoteLaneId.from(DEFAULT_LANE, remoteName),
-      mergedComponents
-    );
-
-    let nonLaneIds: BitId[] = ids;
-    const laneObjects = bitObjectList.getLanes();
-    await mapSeries(laneObjects, async (lane) => {
-      if (!lane.scope) {
-        throw new Error(`scope.addObjectListToRepo scope is missing from a lane ${lane.name}`);
-      }
-      await this.repo.remoteLanes.syncWithLaneObject(lane.scope, lane);
-      nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-      nonLaneIds.push(...lane.components.map((c) => c.id));
-    });
-
-    return nonLaneIds;
-  }
-
-  /**
-   * merge the imported component with the existing component in the local scope.
-   * when importing a component, save the remote head into the remote master ref file.
-   * unless this component arrived as a cache of the dependent, which its head might be wrong
-   */
-  private async mergeModelComponent(incomingComp: ModelComponent, remoteName: string): Promise<ModelComponent> {
-    const isIncomingFromOrigin = remoteName === incomingComp.scope;
-    const existingComp = await this.sources._findComponent(incomingComp);
-    if (!existingComp || (existingComp && incomingComp.isEqual(existingComp))) {
-      if (isIncomingFromOrigin) incomingComp.remoteHead = incomingComp.head;
-      return incomingComp;
+  async getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
+    const remotes = await getScopeRemotes(this.scope);
+    let bitObjectsList: BitObjectList;
+    try {
+      const streams = await remotes.fetch({ [id.scope as string]: [id.toString()] }, this.scope);
+      bitObjectsList = await this.multipleStreamsToBitObjects(Object.values(streams));
+    } catch (err) {
+      return null; // probably doesn't exist
     }
-    const modelComponentMerger = new ModelComponentMerger(existingComp, incomingComp, true, isIncomingFromOrigin);
-    const { mergedComponent } = await modelComponentMerger.merge();
-    if (isIncomingFromOrigin) mergedComponent.remoteHead = incomingComp.head;
-    return mergedComponent;
+    const components = bitObjectsList.getComponents();
+    if (!components.length) return null; // probably doesn't exist
+    return components[0];
+  }
+
+  private async multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
+    const objectListPerRemote = await Promise.all(streams.map((stream) => ObjectList.fromReadableStream(stream)));
+    const objectList = ObjectList.mergeMultipleInstances(objectListPerRemote);
+    const bitObjects = await objectList.toBitObjects();
+    return bitObjects;
   }
 
   private async getVersionFromComponentDef(component: ModelComponent, id: BitId): Promise<Version | null> {
@@ -499,15 +440,17 @@ export default class ScopeComponentsImporter {
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
-    const { objectListPerRemote } = await remotes.fetch(
-      groupByScopeName(ids),
+    await new ObjectFetcher(
+      this.repo,
       this.scope,
-      { withoutDependencies: false },
+      remotes,
+      {
+        withoutDependencies: false,
+      },
+      ids,
       context
-    );
-    logger.debugAndAddBreadCrumb('ScopeComponentsImporter.getExternalMany', 'writing them to the model');
-    const nonLaneIds = await this.writeManyObjectListToModel(objectListPerRemote, ids);
-    const componentDefs = await this.sources.getMany(nonLaneIds);
+    ).fetchFromRemoteAndWrite();
+    const componentDefs = await this.sources.getMany(ids);
     const componentDefsExisting = componentDefs.filter((componentDef) => componentDef.component);
     const versionDeps = await mapSeries(componentDefsExisting, (compDef) =>
       this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id)
@@ -538,15 +481,18 @@ export default class ScopeComponentsImporter {
     }
     logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `${left.length} left. Fetching them from a remote`);
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map((id) => id.toString()) }));
-    const { objectListPerRemote } = await remotes.fetch(
-      groupByScopeName(left.map((def) => def.id)),
+    await new ObjectFetcher(
+      this.repo,
       this.scope,
-      { withoutDependencies: true },
+      remotes,
+      {
+        withoutDependencies: true,
+      },
+      left.map((def) => def.id),
       context
-    );
-    const nonLaneIds = await this.writeManyObjectListToModel(objectListPerRemote, ids);
+    ).fetchFromRemoteAndWrite();
 
-    const finalDefs: ComponentDef[] = await this.sources.getMany(nonLaneIds);
+    const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
 
     return Promise.all(
       finalDefs
@@ -649,8 +595,7 @@ export default class ScopeComponentsImporter {
         // should have been fetched before by getExternalMany(). probably doesn't exist on the remote.
         throw new ShowDoctorError(`Version ${versionComp.version} of ${component.id().toString()} was not found`);
       }
-      const source = id.scope as string;
-      return new VersionDependencies(versionComp, [], source, version);
+      return new VersionDependencies(versionComp, [], version);
     });
     const versionDeps = compact(versionDepsWithNulls);
     const allFlattened = versionDeps.map((v) => v.version.getAllFlattenedDependencies());
@@ -687,7 +632,7 @@ please make sure that the scope-resolver points to the right scope.`);
   }
 }
 
-function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName: string]: string[] } {
+export function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName: string]: string[] } {
   const grouped = groupArray(ids, 'scope');
   Object.keys(grouped).forEach((scopeName) => {
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());
