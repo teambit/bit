@@ -1015,6 +1015,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/styles/ellipsis"
     },
+    "ui/styles/muted-italic": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/styles/muted-italic"
+    },
     "ui/surfaces/menu/item": {
         "scope": "teambit.design",
         "version": "0.0.312",
