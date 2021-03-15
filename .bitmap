@@ -519,7 +519,7 @@
     },
     "ui/buttons/collapser": {
         "scope": "teambit.ui-foundation",
-        "version": "0.0.12",
+        "version": "0.0.15",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/collapser-button"
     },
