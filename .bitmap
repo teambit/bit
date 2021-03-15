@@ -85,11 +85,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/cli/ui-server-loader"
     },
-    "cli/use-preview-server": {
-        "scope": "teambit.preview",
-        "version": "0.0.310",
+    "cli/webpack-events-listener": {
+        "scope": "",
+        "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/preview/cli/use-preview-server"
+        "rootDir": "scopes/preview/cli/webpack-events-listener"
     },
     "cli/webpack/error": {
         "scope": "teambit.compilation",
