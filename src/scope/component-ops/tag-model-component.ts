@@ -78,6 +78,7 @@ async function setFutureVersions(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+      componentToTag.previouslyUsedVersion = componentToTag.version;
       if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
         componentToTag.version = modelComponent.getVersionToAdd(
@@ -87,7 +88,6 @@ async function setFutureVersions(
       } else {
         componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       }
-      componentToTag.previouslyUsedVersion = componentToTag.version;
     })
   );
 }
