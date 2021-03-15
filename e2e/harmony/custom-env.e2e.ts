@@ -37,7 +37,7 @@ describe('custom env', function () {
       it('should have the correct env in the envs aspect data', () => {
         const comp1 = helper.command.catComponent('comp1@latest');
         const envIdFromModel = getEnvIdFromModel(comp1);
-        expect(envIdFromModel).to.equal(`${envId}@0.0.1`);
+        expect(envIdFromModel).to.equal(envId);
       });
       describe('tag again', () => {
         before(() => {
