@@ -287,8 +287,7 @@ export default class ComponentsList {
 
   async listExportPendingComponents(laneObj: Lane | null): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds(laneObj);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponentIfExist(id)));
+    return Promise.all(exportPendingComponentsIds.map((id) => this.scope.getModelComponent(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<Component[]> {
@@ -297,7 +296,7 @@ export default class ComponentsList {
     return this.consumer.listComponentsForAutoTagging(BitIds.fromArray(modifiedComponents));
   }
 
-  idsFromBitMap(origin?: ComponentOrigin): BitId[] {
+  idsFromBitMap(origin?: ComponentOrigin): BitIds {
     const fromBitMap = this.getFromBitMap(origin);
     return fromBitMap;
   }
