@@ -87,12 +87,20 @@ export default class Component extends BitObject {
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
+  /**
+   * @deprecated since 0.12.6 (long long ago :) probably can be removed)
+   */
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
-  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the local snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * prop is undefined.
+   */
+  laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   private divergeData?: DivergeData;
 
@@ -814,6 +822,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
+    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;
   }

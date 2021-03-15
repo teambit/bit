@@ -3,9 +3,6 @@ import { Mutex } from 'async-mutex';
 import mapSeries from 'p-map-series';
 import groupArray from 'group-array';
 import R from 'ramda';
-import { promisify } from 'util';
-import { pipeline } from 'stream';
-import chalk from 'chalk';
 import { compact, flatten } from 'lodash';
 import loader from '../../cli/loader';
 import { Scope } from '..';
@@ -29,8 +26,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
 import { DEFAULT_LANE } from '../../constants';
 import { BitObjectList } from '../objects/bit-object-list';
-import { ObjectsWritable } from '../objects/objects-writable-stream';
-import { ErrorFromRemote } from '../exceptions/error-from-remote';
+import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
 
 const removeNils = R.reject(R.isNil);
 
@@ -244,14 +240,16 @@ export default class ScopeComponentsImporter {
     loader.start(statusMsg);
     logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', statusMsg);
     const remotes = await getScopeRemotes(this.scope);
-    const objectsStreamPerRemote = await remotes.fetch(groupedIds, this.scope, {
-      type: 'component-delta',
-      withoutDependencies: true,
-      concurrency: 10,
-    });
-    loader.start(`got response from the remotes, merging them and writing to the filesystem`);
-    logger.debugAndAddBreadCrumb('importManyDeltaWithoutDeps', 'writing them to the model');
-    await this.writeManyObjectListToModel(objectsStreamPerRemote, idsToFetch);
+    await new ObjectFetcher(
+      this.repo,
+      this.scope,
+      remotes,
+      {
+        type: 'component-delta',
+        withoutDependencies: true,
+      },
+      idsToFetch
+    ).fetchFromRemoteAndWrite();
   }
 
   async importFromLanes(remoteLaneIds: RemoteLaneId[]): Promise<Lane[]> {
@@ -387,56 +385,6 @@ export default class ScopeComponentsImporter {
   }
 
   /**
-   * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
-   * until this point, no data was fetched from a remote, only the connection was established,
-   * once the readable piped into the ObjectsWritable, the data starts flowing.
-   * the remotes are processed in sequence, not in parallel. mostly because two remotes can bring
-   * the same component and if both components executing the "merge" operation at the same time,
-   * the result is unpredictable. (see model-component-merger). for other objects file it's
-   * probably also safer to not write potentially the same file from two different remote at the
-   * same time.
-   * ideally, we'd maintain a queue, which allows concurrent of say, 100, and make sure that no two
-   * identical files are written at the same time.
-   */
-  async writeManyObjectListToModel(
-    objectListPerRemote: { [remoteName: string]: ObjectItemsStream },
-    ids: BitId[]
-  ): Promise<BitId[]> {
-    const bitIds = await mapSeries(Object.keys(objectListPerRemote), async (remoteName) => {
-      loader.start(`streaming objects from ${chalk.bold(remoteName)} into the filesystem`);
-      const objectList = objectListPerRemote[remoteName];
-      const writable = new ObjectsWritable(this.repo, this.sources, remoteName);
-      const pipelinePromise = promisify(pipeline);
-      // add an error listener for the ObjectList to differentiate between errors coming from the
-      // remote and errors happening inside the Writable.
-      let readableError: Error | undefined;
-      objectList.on('error', (err) => {
-        readableError = err;
-      });
-      try {
-        await pipelinePromise(objectList, writable);
-      } catch (err) {
-        if (readableError) {
-          if (!readableError.message) {
-            logger.error(`error coming from a remote has no message, please fix!`, readableError);
-          }
-          throw new ErrorFromRemote(remoteName, readableError.message || 'unknown error');
-        }
-        // the error is coming from the writable, no need to treat it specially. just throw it.
-        throw err;
-      }
-      let nonLaneIds: BitId[] = ids;
-      writable.lanes.forEach((lane) => {
-        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-        nonLaneIds.push(...lane.components.map((c) => c.id));
-      });
-      return nonLaneIds;
-    });
-    await this.repo.writeRemoteLanes();
-    return BitIds.uniqFromArray(R.flatten(bitIds));
-  }
-
-  /**
    * get a single component from a remote without saving it locally
    */
   async getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
@@ -492,15 +440,17 @@ export default class ScopeComponentsImporter {
         throw new Error(`getExternalMany expects to get external ids only, got ${id.toString()}`);
     });
     enrichContextFromGlobal(Object.assign({}, { requestedBitIds: ids.map((id) => id.toString()) }));
-    const objectStreamsPerRemote = await remotes.fetch(
-      groupByScopeName(ids),
+    await new ObjectFetcher(
+      this.repo,
       this.scope,
-      { withoutDependencies: false },
+      remotes,
+      {
+        withoutDependencies: false,
+      },
+      ids,
       context
-    );
-    logger.debugAndAddBreadCrumb('ScopeComponentsImporter.getExternalMany', 'writing them to the model');
-    const nonLaneIds = await this.writeManyObjectListToModel(objectStreamsPerRemote, ids);
-    const componentDefs = await this.sources.getMany(nonLaneIds);
+    ).fetchFromRemoteAndWrite();
+    const componentDefs = await this.sources.getMany(ids);
     const componentDefsExisting = componentDefs.filter((componentDef) => componentDef.component);
     const versionDeps = await mapSeries(componentDefsExisting, (compDef) =>
       this.componentToVersionDependencies(compDef.component as ModelComponent, compDef.id)
@@ -531,15 +481,18 @@ export default class ScopeComponentsImporter {
     }
     logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `${left.length} left. Fetching them from a remote`);
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map((id) => id.toString()) }));
-    const objectStreamsPerRemote = await remotes.fetch(
-      groupByScopeName(left.map((def) => def.id)),
+    await new ObjectFetcher(
+      this.repo,
       this.scope,
-      { withoutDependencies: true },
+      remotes,
+      {
+        withoutDependencies: true,
+      },
+      left.map((def) => def.id),
       context
-    );
-    const nonLaneIds = await this.writeManyObjectListToModel(objectStreamsPerRemote, ids);
+    ).fetchFromRemoteAndWrite();
 
-    const finalDefs: ComponentDef[] = await this.sources.getMany(nonLaneIds);
+    const finalDefs: ComponentDef[] = await this.sources.getMany(ids);
 
     return Promise.all(
       finalDefs
@@ -679,7 +632,7 @@ please make sure that the scope-resolver points to the right scope.`);
   }
 }
 
-function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName: string]: string[] } {
+export function groupByScopeName(ids: Array<BitId | RemoteLaneId>): { [scopeName: string]: string[] } {
   const grouped = groupArray(ids, 'scope');
   Object.keys(grouped).forEach((scopeName) => {
     grouped[scopeName] = grouped[scopeName].map((id) => id.toString());

@@ -720,7 +720,7 @@ describe('bit checkout command', function () {
           expect(bitMap).to.not.have.property('bar/foo2@0.0.1');
         });
         it('should show a failure message when trying to checkout again to the latest versions', () => {
-          output = helper.command.checkout('latest --all');
+          output = helper.command.checkout('latest --all --verbose');
           expect(output).to.have.string('component bar/foo2 is already at the latest version, which is 0.0.3');
           expect(output).to.have.string('component bar/foo is already at the latest version, which is 0.0.2');
         });

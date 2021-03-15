@@ -7,7 +7,7 @@ import { Workspace, WorkspaceInstallOptions } from './workspace';
 
 type InstallCmdOptions = {
   variants: string;
-  lifecycleType: DependencyLifecycleType;
+  type: DependencyLifecycleType;
   skipDedupe: boolean;
   skipImport: boolean;
   updateExisting: boolean;
@@ -44,7 +44,7 @@ export default class InstallCmd implements Command {
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,
-      lifecycleType: options.lifecycleType,
+      lifecycleType: options.type,
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
       updateExisting: options.updateExisting,

@@ -1,11 +1,15 @@
 import React, { useCallback } from 'react';
+import classNames from 'classnames';
 import { ComponentTree, ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui.side-bar';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 
 import { FullLoader } from '@teambit/ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import type { DrawerType } from '@teambit/ui.tree.drawer';
-import { useScope } from './ui/use-scope';
+import { mutedItalic } from '@teambit/ui.styles.muted-italic';
+import { ellipsis } from '@teambit/ui.styles.ellipsis';
+import { useScope } from '../use-scope';
+import styles from './components.drawer.module.scss';
 
 export class ComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}
@@ -39,6 +43,8 @@ export class ComponentsDrawer implements DrawerType {
     );
 
     if (!scope) return <FullLoader />;
+    if (scope.components.length === 0)
+      return <span className={classNames(mutedItalic, ellipsis, styles.emptyScope)}>Scope is empty</span>;
     return <ComponentTree components={scope.components} TreeNode={TreeNodeRenderer} />;
   };
 }

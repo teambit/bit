@@ -1,14 +1,15 @@
 import pMap from 'p-map';
-import pMapSeries from 'p-map-series';
 import { Writable } from 'stream';
-import { BitObject, Repository } from '.';
+import { BitObject, Repository } from '../objects';
 import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { Lane, ModelComponent } from '../models';
 import { SourceRepository } from '../repositories';
-import { ObjectItem } from './object-list';
+import { ObjectItem } from '../objects/object-list';
+import { WriteObjectsQueue } from './write-objects-queue';
+import { WriteComponentsQueue } from './write-components-queue';
 
 /**
  * first, write all immutable objects, such as files/sources/versions into the filesystem, as they arrive.
@@ -21,8 +22,13 @@ import { ObjectItem } from './object-list';
  */
 export class ObjectsWritable extends Writable {
   private mutableObjects: BitObject[] = [];
-  lanes: Lane[] = [];
-  constructor(private repo: Repository, private sources: SourceRepository, private remoteName: string) {
+  constructor(
+    private repo: Repository,
+    private sources: SourceRepository,
+    private remoteName: string,
+    private objectsQueue: WriteObjectsQueue,
+    private componentsQueue: WriteComponentsQueue
+  ) {
     super({ objectMode: true });
   }
   async _write(obj: ObjectItem, _, callback: Function) {
@@ -45,11 +51,17 @@ export class ObjectsWritable extends Writable {
       callback(err);
     }
   }
-  private async writeImmutableObjectToFs(obj) {
+  private async writeImmutableObjectToFs(obj: ObjectItem) {
     const bitObject = await BitObject.parseObject(obj.buffer);
-    const isImmutable = !(bitObject instanceof ModelComponent) && !(bitObject instanceof Lane);
-    if (isImmutable) await this.repo.writeObjectsToTheFS([bitObject]);
-    else this.mutableObjects.push(bitObject);
+    if (bitObject instanceof Lane) {
+      throw new Error('ObjectsWritable does not support lanes');
+    }
+    if (bitObject instanceof ModelComponent) {
+      this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
+    } else {
+      this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.repo.writeObjectsToTheFS([bitObject]));
+    }
+    // else this.mutableObjects.push(bitObject);
   }
   private async writeMutableObjectsToFS() {
     const components = this.mutableObjects.filter((obj) => obj instanceof ModelComponent);
@@ -65,15 +77,14 @@ export class ObjectsWritable extends Writable {
       RemoteLaneId.from(DEFAULT_LANE, this.remoteName),
       mergedComponents
     );
+  }
 
-    const laneObjects = this.mutableObjects.filter((obj) => obj instanceof Lane) as Lane[];
-    await pMapSeries(laneObjects, async (lane) => {
-      if (!lane.scope) {
-        throw new Error(`scope.addObjectListToRepo scope is missing from a lane ${lane.name}`);
-      }
-      await this.repo.remoteLanes.syncWithLaneObject(lane.scope, lane);
-      this.lanes.push(lane);
-    });
+  private async writeComponentObject(modelComponent: ModelComponent) {
+    const component = await this.mergeModelComponent(modelComponent, this.remoteName);
+    await this.repo.writeObjectsToTheFS([component]);
+    await this.repo.remoteLanes.addEntriesFromModelComponents(RemoteLaneId.from(DEFAULT_LANE, this.remoteName), [
+      component,
+    ]);
   }
 
   /**
