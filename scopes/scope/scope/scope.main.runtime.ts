@@ -31,6 +31,7 @@ import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { Http, DEFAULT_AUTH_TYPE, AuthData } from '@teambit/legacy/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
@@ -52,14 +53,17 @@ export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<On
 type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
+type OnPreFetchObjectData = { ids: string[]; fetchOptions: FETCH_OPTIONS };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
+type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
+export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
 
 export type ScopeConfig = {
   httpTimeOut: number;
@@ -97,6 +101,8 @@ export class ScopeMain implements ComponentFactory {
     private postExportSlot: OnPostExportSlot,
 
     private postObjectsPersist: OnPostObjectsPersistSlot,
+
+    private preFetchObjects: OnPreFetchObjectsSlot,
 
     private isolator: IsolatorMain,
 
@@ -227,6 +233,11 @@ export class ScopeMain implements ComponentFactory {
    */
   registerOnPostExport(postExportFn: OnPostExport) {
     this.postExportSlot.register(postExportFn);
+    return this;
+  }
+
+  registerOnPreFetchObjects(preFetchObjectsFn: OnPreFetchObjects) {
+    this.preFetchObjects.register(preFetchObjectsFn);
     return this;
   }
 
@@ -607,6 +618,7 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
+    Slot.withType<OnPreFetchObjects>(),
   ];
   static runtime = MainRuntime;
 
@@ -637,11 +649,12 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot]: [
+    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
       TagRegistry,
       OnPostPutSlot,
       OnPostExportSlot,
-      OnPostObjectsPersistSlot
+      OnPostObjectsPersistSlot,
+      OnPreFetchObjectsSlot
     ],
     harmony: Harmony
   ) {
@@ -661,6 +674,7 @@ export class ScopeMain implements ComponentFactory {
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
+      preFetchObjectsSlot,
       isolator,
       aspectLoader,
       logger
@@ -710,9 +724,22 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
+    const onPreFetchObjectsHook = async (ids: string[], fetchOptions: FETCH_OPTIONS): Promise<void> => {
+      logger.debug(`onPreFetchObjectsHook, started. (${ids.length} components)`);
+      const fns = preFetchObjectsSlot.values();
+      const data = {
+        ids,
+        fetchOptions,
+      };
+      const metadata = { auth: getAuthData() };
+      await Promise.all(fns.map(async (fn) => fn(data, metadata)));
+      logger.debug(`onPreFetchObjectsHook, completed. (${ids.length} components)`);
+    };
+
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
+    Scope.onPreFetchObjects = onPreFetchObjectsHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([
