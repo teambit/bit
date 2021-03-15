@@ -10,8 +10,7 @@
     "sourceMap": true,
     "skipLibCheck": true,
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "rootDir": "."
+    "esModuleInterop": true
   },
   "exclude": [
     "dist"
