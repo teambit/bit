@@ -32,7 +32,7 @@ export function PreviewServerStatus({ previewServers, serverStats: servers = {} 
   }
 
   if (isCompiling) {
-    return <Text>Compiling... {Object.keys(servers)} </Text>;
+    return <Text>Compiling...</Text>;
   }
 
   return (
