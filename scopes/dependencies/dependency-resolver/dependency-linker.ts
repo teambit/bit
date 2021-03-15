@@ -416,9 +416,17 @@ export class DependencyLinker {
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
-    const isTargetExists = fs.pathExistsSync(target);
+    // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
+    // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
+    // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
+    let isTargetExists;
+    try {
+      isTargetExists = fs.lstatSync(target);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
     // Do not override links created by other means
     if (isTargetExists && !hasLocalInstallation) {
+      this.logger.debug(`linkCoreAspect, target ${target} already exist. skipping it`);
       return undefined;
     }
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
