@@ -55,7 +55,6 @@ describe('custom env', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(wsAllNew);
         helper.command.tagAllWithoutBuild();
-        throw new Error('ggg');
       });
       // previously it used to throw "error: component "node-env@0.0.1" was not found."
       it('should untag successfully', () => {
