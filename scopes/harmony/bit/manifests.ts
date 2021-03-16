@@ -52,12 +52,13 @@ import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
-import { BitDevAspect } from '@teambit/bit-dev';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
+import { E2eWorkspaceAspect } from '@teambit/e2e.workspace';
 import { ExportAspect } from '@teambit/export';
+import { UserAgentAspect } from '@teambit/user-agent';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -118,8 +119,9 @@ export const manifestsMap = {
   [ComponentTreeAspect.id]: ComponentTreeAspect,
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
-  [BitDevAspect.id]: BitDevAspect,
   [ExportAspect.id]: ExportAspect,
+  [E2eWorkspaceAspect.id]: E2eWorkspaceAspect,
+  [UserAgentAspect.id]: UserAgentAspect,
 };
 
 export function isCoreAspect(id: string) {

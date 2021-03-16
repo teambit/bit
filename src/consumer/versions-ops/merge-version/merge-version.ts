@@ -28,7 +28,7 @@ export const FileStatus = {
 // fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
 export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
 export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
-export type FailedComponents = { id: BitId; failureMessage: string };
+export type FailedComponents = { id: BitId; failureMessage: string; unchangedLegitimately?: boolean };
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;

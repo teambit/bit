@@ -400,7 +400,7 @@ export default class Consumer {
     } catch (err) {
       loader.stop();
       // @todo: remove once the server is deployed with this new "component-delta" type
-      if (err.message && err.message.includes('type component-delta was not implemented')) {
+      if (err && err.message && err.message.includes('type component-delta was not implemented')) {
         return this.importComponents(ids.toVersionLatest(), true);
       }
       throw err;
@@ -425,7 +425,7 @@ export default class Consumer {
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
       return {
         id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope),
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope as string),
       };
     });
     return shouldDependenciesSavedAsComponents;
@@ -753,18 +753,23 @@ export default class Consumer {
           ? unknownComponent.toBitIdWithLatestVersionAllowNull()
           : unknownComponent.id;
       this.bitMap.updateComponentId(id);
-      const component =
-        unknownComponent instanceof Component ? unknownComponent : await this.loadComponent(unknownComponent.toBitId());
-      const availableOnMaster = await isAvailableOnMaster(component);
+      const availableOnMaster = await isAvailableOnMaster(unknownComponent);
       if (!availableOnMaster) {
         this.bitMap.setComponentProp(id, 'onLanesOnly', true);
       }
       const componentMap = this.bitMap.getComponent(id);
       componentMap.clearNextVersion();
-      const packageJsonDir = getPackageJsonDir(componentMap, component, id);
-      return packageJsonDir // if it has package.json, it's imported, which must have a version
-        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
-        : Promise.resolve();
+      if (this.isLegacy) {
+        // on Harmony, components don't have package.json
+        const component =
+          unknownComponent instanceof Component
+            ? unknownComponent
+            : await this.loadComponent(unknownComponent.toBitId());
+        const packageJsonDir = getPackageJsonDir(componentMap, component, id);
+        packageJsonDir // if it has package.json, it's imported, which must have a version
+          ? await packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version as string)
+          : await Promise.resolve();
+      }
     };
     // important! DO NOT use Promise.all here! otherwise, you're gonna enter into a whole world of pain.
     // imagine tagging comp1 with auto-tagged comp2, comp1 package.json is written while comp2 is
@@ -999,7 +1004,7 @@ export default class Consumer {
     const dependentsIds = await this.getAuthoredAndImportedDependentsIdsOf(components);
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
 
-    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds, true, false);
+    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,

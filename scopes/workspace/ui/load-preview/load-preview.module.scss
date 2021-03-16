@@ -1,0 +1,21 @@
+.loadPreview {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 12px;
+  border-radius: 6px;
+  color: var(--primary-label-text);
+  background-color: var(--text-color);
+  padding: 4px 8px;
+  transition: background-color 300ms ease-in-out;
+  &:hover {
+    background-color: var(--text-highlight);
+  }
+  .icon {
+    margin-right: 5px;
+    transform: rotate(0.75turn);
+  }
+}

@@ -1,24 +1,16 @@
-import { readFileSync } from 'fs';
+import { readFileSync } from 'fs-extra';
 import minimatch from 'minimatch';
 import { compact, flatten } from 'lodash';
 // import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
 import { HarmonyWorker } from '@teambit/worker';
-import {
-  Tester,
-  CallbackFn,
-  TesterContext,
-  Tests,
-  TestResult,
-  TestsResult,
-  TestsFiles,
-  ComponentPatternsMap,
-} from '@teambit/tester';
+import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap } from '@teambit/tester';
+import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
 import { TestResult as JestTestResult, AggregatedResult } from '@jest/test-result';
 import { formatResultsErrors } from 'jest-message-util';
 import { ComponentMap, ComponentID } from '@teambit/component';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { JestError } from './error';
 import type { JestWorker } from './jest.worker';
 
@@ -142,6 +134,7 @@ export class JestTester implements Tester {
     };
 
     if (context.debug) config.runInBand = true;
+    config.runInBand = true;
     if (context.watch) {
       config.watchAll = true;
       config.noCache = true;

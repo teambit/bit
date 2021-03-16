@@ -1,17 +1,17 @@
 import path from 'path';
-import { uniq, compact, flatten } from 'lodash';
+import { uniq, compact, flatten, head } from 'lodash';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
-import { link as legacyLink } from 'bit-bin/dist/api/consumer';
+import { link as legacyLink } from '@teambit/legacy/dist/api/consumer';
 import { ComponentMap, Component, ComponentMain } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { PathAbsolute } from 'bit-bin/dist/utils/path';
+import { PathAbsolute } from '@teambit/legacy/dist/utils/path';
 import { BitError } from '@teambit/bit-error';
-import { createSymlinkOrCopy } from 'bit-bin/dist/utils';
-import { LinksResult as LegacyLinksResult } from 'bit-bin/dist/links/node-modules-linker';
-import { CodemodResult } from 'bit-bin/dist/consumer/component-ops/codemod-components';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import Symlink from 'bit-bin/dist/links/symlink';
+import { createSymlinkOrCopy } from '@teambit/legacy/dist/utils';
+import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
+import { CodemodResult } from '@teambit/legacy/dist/consumer/component-ops/codemod-components';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import Symlink from '@teambit/legacy/dist/links/symlink';
 import { EnvsMain } from '@teambit/envs';
 import { AspectLoaderMain, getCoreAspectName, getCoreAspectPackageName, getAspectDir } from '@teambit/aspect-loader';
 import { MainAspectNotLinkable, RootDirNotDefined, CoreAspectLinkError, HarmonyLinkError } from './exceptions';
@@ -416,9 +416,17 @@ export class DependencyLinker {
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
-    const isTargetExists = fs.pathExistsSync(target);
+    // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
+    // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
+    // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
+    let isTargetExists;
+    try {
+      isTargetExists = fs.lstatSync(target);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
     // Do not override links created by other means
     if (isTargetExists && !hasLocalInstallation) {
+      this.logger.debug(`linkCoreAspect, target ${target} already exist. skipping it`);
       return undefined;
     }
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
@@ -507,7 +515,13 @@ function resolveModuleFromDir(fromDir: string, moduleId: string, silent = true):
 // TODO: extract to new component
 function resolveModuleDirFromFile(resolvedModulePath: string, moduleId: string): string {
   const NM = 'node_modules';
-  return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+  if (resolvedModulePath.includes(NM)) {
+    return path.join(resolvedModulePath.slice(0, resolvedModulePath.lastIndexOf(NM) + NM.length), moduleId);
+  }
+
+  const [start, end] = resolvedModulePath.split('@');
+  const versionStr = head(end.split('/'));
+  return `${start}@${versionStr}`;
 }
 
 function isPathSymlink(folderPath: string): boolean | undefined {

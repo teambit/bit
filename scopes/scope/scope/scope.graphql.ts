@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
-import { latestVersions } from 'bit-bin/dist/api/scope';
-import list from 'bit-bin/dist/api/scope/lib/scope-list';
+import { latestVersions } from '@teambit/legacy/dist/api/scope';
+import list from '@teambit/legacy/dist/api/scope/lib/scope-list';
 import { ScopeMain } from './scope.main.runtime';
 
 export function scopeSchema(scopeMain: ScopeMain) {

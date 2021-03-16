@@ -3,7 +3,7 @@
  */
 import detectiveAmd from 'detective-amd';
 import detectiveStylus from 'detective-stylus';
-import fs from 'fs';
+import fs from 'fs-extra';
 import getModuleType from 'module-definition';
 import Walker from 'node-source-walk';
 import path from 'path';

@@ -1,6 +1,6 @@
 import { MemoryFS } from '@teambit/any-fs';
-import type { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { auto } from 'bit-bin/dist/utils/eol';
+import type { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { auto } from '@teambit/legacy/dist/utils/eol';
 import path from 'path';
 import minimatch from 'minimatch';
 

@@ -1,5 +1,5 @@
 import { MainRuntime } from '@teambit/cli';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 
 import { BitAspect } from './bit.aspect';
 import { provideBit } from './bit.provider';

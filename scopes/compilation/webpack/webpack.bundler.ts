@@ -35,7 +35,7 @@ export class WebpackBundler implements Bundler {
         return compiler.run((err, stats) => {
           if (err) {
             return resolve({
-              errors: [err],
+              errors: [`${err.toString()}\n${err.stack}`],
               components,
             });
           }

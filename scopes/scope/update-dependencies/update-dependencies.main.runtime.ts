@@ -9,15 +9,15 @@ import {
   getPublishedPackages,
   updateComponentsByTagResult,
   addFlattenedDependenciesToComponents,
-} from 'bit-bin/dist/scope/component-ops/tag-model-component';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { BuildStatus, LATEST } from 'bit-bin/dist/constants';
-import { BitIds } from 'bit-bin/dist/bit-id';
+} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { BuildStatus, LATEST } from '@teambit/legacy/dist/constants';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { BitId } from '@teambit/legacy-bit-id';
-import { getValidVersionOrReleaseType } from 'bit-bin/dist/utils/semver-helper';
+import { getValidVersionOrReleaseType } from '@teambit/legacy/dist/utils/semver-helper';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
-import { exportMany } from 'bit-bin/dist/scope/component-ops/export-scope-components';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
+import { exportMany } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { UpdateDependenciesCmd } from './update-dependencies.cmd';
 import { UpdateDependenciesAspect } from './update-dependencies.aspect';
 
@@ -79,6 +79,8 @@ export class UpdateDependenciesMain {
     this.addBuildStatus();
     await this.addComponentsToScope();
     await this.updateComponents();
+    // await this.scope.reloadAspectsWithNewVersion(this.legacyComponents);
+    await mapSeries(this.components, (component) => this.scope.loadComponentsAspect(component));
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       this.components,
       { throwOnError: true }, // we might change it later to not throw.
@@ -158,9 +160,10 @@ export class UpdateDependenciesMain {
   }
 
   private async parseDevUpdatesItems(depsUpdateItemsRaw: DepUpdateItemRaw[]): Promise<DepUpdateItem[]> {
+    this.logger.setStatusLine(`loading ${depsUpdateItemsRaw.length} components and their aspects...`);
     return mapSeries(depsUpdateItemsRaw, async (depUpdateItemRaw) => {
       const componentId = ComponentID.fromString(depUpdateItemRaw.componentId);
-      const component = await this.scope.get(componentId);
+      const component = await this.scope.load(componentId);
       if (!component) throw new ComponentNotFound(componentId);
       const dependencies = await Promise.all(
         depUpdateItemRaw.dependencies.map((dep) => this.getDependencyWithExactVersion(dep))
@@ -181,6 +184,7 @@ export class UpdateDependenciesMain {
   }
 
   private async updateFutureVersion() {
+    this.logger.setStatusLine(`updateFutureVersion...`);
     await mapSeries(this.depsUpdateItems, async (depUpdateItem) => {
       const legacyComp: ConsumerComponent = depUpdateItem.component.state._consumer;
       const modelComponent = await this.scope.legacyScope.getModelComponent(legacyComp.id);

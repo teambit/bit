@@ -44,10 +44,11 @@ export type ComponentStatus = {
   componentFromModel?: Version;
   id: BitId;
   failureMessage?: string;
+  unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
 
-export default (async function checkoutVersion(
+export default async function checkoutVersion(
   consumer: Consumer,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResults> {
@@ -66,10 +67,13 @@ export default (async function checkoutVersion(
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter((componentStatus) => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
-    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+    .filter((componentStatus) => componentStatus.failureMessage)
+    .map((componentStatus) => ({
+      id: componentStatus.id,
+      failureMessage: componentStatus.failureMessage as string,
+      unchangedLegitimately: componentStatus.unchangedLegitimately,
+    }));
 
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
@@ -82,17 +86,19 @@ export default (async function checkoutVersion(
     .map((c) => c.component)
     .filter((c) => c) as ComponentWithDependencies[];
 
-  const manyComponentsWriter = new ManyComponentsWriter({
-    consumer,
-    componentsWithDependencies,
-    installNpmPackages: !checkoutProps.skipNpmInstall,
-    override: true,
-    verbose: checkoutProps.verbose,
-    writeDists: !checkoutProps.ignoreDist,
-    writeConfig: checkoutProps.writeConfig,
-    writePackageJson: !checkoutProps.ignorePackageJson,
-  });
-  await manyComponentsWriter.writeAll();
+  if (componentsWithDependencies.length) {
+    const manyComponentsWriter = new ManyComponentsWriter({
+      consumer,
+      componentsWithDependencies,
+      installNpmPackages: !checkoutProps.skipNpmInstall,
+      override: true,
+      verbose: checkoutProps.verbose,
+      writeDists: !checkoutProps.ignoreDist,
+      writeConfig: checkoutProps.writeConfig,
+      writePackageJson: !checkoutProps.ignorePackageJson,
+    });
+    await manyComponentsWriter.writeAll();
+  }
 
   const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
 
@@ -111,7 +117,7 @@ export default (async function checkoutVersion(
       throw err;
     }
   }
-});
+}
 
 async function getComponentStatus(
   consumer: Consumer,
@@ -121,8 +127,9 @@ async function getComponentStatus(
   const { version, latestVersion, reset } = checkoutProps;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   const componentStatus: ComponentStatus = { id: component.id };
-  const returnFailure = (msg: string) => {
+  const returnFailure = (msg: string, unchangedLegitimately = false) => {
     componentStatus.failureMessage = msg;
+    componentStatus.unchangedLegitimately = unchangedLegitimately;
     return componentStatus;
   };
   if (!componentModel) {
@@ -155,7 +162,8 @@ async function getComponentStatus(
   }
   if (latestVersion && currentlyUsedVersion === newVersion) {
     return returnFailure(
-      `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`
+      `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
+      true
     );
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

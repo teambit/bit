@@ -52,6 +52,7 @@ export class ExpressMain {
 
   /**
    * register a new express routes.
+   * route will be added as `/api/${route}`
    */
   register(routes: Route[]) {
     this.moduleSlot.register(routes);

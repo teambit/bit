@@ -1,12 +1,7 @@
 import chalk from 'chalk';
-import fs from 'fs-extra';
-// it's a hack, but I didn't find a better way to access the getCacheDir() function
-import { __TEST__ as v8CompileCache } from 'v8-compile-cache';
-import { loadConsumerIfExist } from '../../../consumer';
-
+import { clearCache } from '../../../api/consumer';
 import { LegacyCommand } from '../../legacy-command';
-
-const { BASE_DOCS_DOMAIN } = require('../../../constants');
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class ClearCache implements LegacyCommand {
   name = 'clear-cache';
@@ -16,18 +11,13 @@ export default class ClearCache implements LegacyCommand {
   loader = false;
   skipWorkspace = true;
 
-  async action(): Promise<any> {
-    const cacheDir = v8CompileCache.getCacheDir();
-    fs.removeSync(cacheDir);
-    const consumer = await loadConsumerIfExist();
-    if (consumer) {
-      const componentCachePath = consumer.componentFsCache.basePath;
-      fs.removeSync(componentCachePath);
-    }
-    return Promise.resolve();
+  async action(): Promise<string[]> {
+    return clearCache();
   }
 
-  report(): string {
-    return chalk.green('cache cleared');
+  report(cacheCleared: string[]): string {
+    const title = 'the following cache(s) have been cleared:';
+    const output = cacheCleared.map((str) => `  ✔ ${str}`).join('\n');
+    return chalk.green(`${chalk.bold(title)}\n${output}`);
   }
 }

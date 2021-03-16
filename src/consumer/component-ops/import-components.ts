@@ -320,7 +320,7 @@ export default class ImportComponents {
 
   async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {
     const versionsP = ids.map(async (id) => {
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       const idStr = id.toStringWithoutVersion();
       if (!modelComponent) return [idStr, []];
       return [idStr, modelComponent.listVersions()];
@@ -556,7 +556,7 @@ export default class ImportComponents {
         await Promise.all(updateAllCompsP);
       })
     );
-    await this.scope.lanes.saveLane(currentLane, true);
+    await this.scope.lanes.saveLane(currentLane);
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {

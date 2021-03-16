@@ -2,7 +2,7 @@
 /* eslint-disable no-plusplus */
 /* eslint-disable max-len */
 import { Capsule } from '@teambit/isolator';
-import logger from 'bit-bin/dist/logger/logger';
+import logger from '@teambit/legacy/dist/logger/logger';
 import { ReplaySubject, Subject } from 'rxjs';
 
 import { executeTask } from '../task';

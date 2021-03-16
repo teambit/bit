@@ -6,7 +6,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import ts from 'typescript';
 import { BitError } from '@teambit/bit-error';
-import PackageJsonFile from 'bit-bin/dist/consumer/component/package-json-file';
+import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import { TypeScriptCompilerOptions } from './compiler-options';
 
 export class TypescriptCompiler implements Compiler {

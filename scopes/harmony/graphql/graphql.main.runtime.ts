@@ -84,8 +84,8 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    // @ts-ignore todo: it's not clear what's the issue.
     app.use(
+      // @ts-ignore todo: it's not clear what's the issue.
       cors({
         origin(origin, callback) {
           callback(null, true);

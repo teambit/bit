@@ -99,11 +99,18 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
     command.options.push(['', TOKEN_FLAG, 'authentication token']);
   }
   if (!command.internal) {
-    command.options.push([
-      '',
-      'log [level]',
-      'print log messages to the screen, options are: [trace, debug, info, warn, error], the default is info',
-    ]);
+    command.options.push(
+      [
+        '',
+        'log [level]',
+        'print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info',
+      ],
+      [
+        '',
+        'safe-mode',
+        'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
+      ]
+    );
   }
 
   if (packageManagerArgs) {

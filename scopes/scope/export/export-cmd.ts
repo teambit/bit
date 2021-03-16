@@ -1,9 +1,9 @@
 import { Command, CommandOptions } from '@teambit/cli';
 
-import { exportAction } from 'bit-bin/dist/api/consumer';
-import ejectTemplate from 'bit-bin/dist/cli/templates/eject-template';
-import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from 'bit-bin/dist/constants';
-import GeneralError from 'bit-bin/dist/error/general-error';
+import { exportAction } from '@teambit/legacy/dist/api/consumer';
+import ejectTemplate from '@teambit/legacy/dist/cli/templates/eject-template';
+import { BASE_DOCS_DOMAIN, CURRENT_UPSTREAM, WILDCARD_HELP } from '@teambit/legacy/dist/constants';
+import GeneralError from '@teambit/legacy/dist/error/general-error';
 import chalk from 'chalk';
 import R from 'ramda';
 
@@ -40,6 +40,11 @@ export class ExportCmd implements Command {
     ['', 'all-versions', 'export not only staged versions but all of them'],
     [
       '',
+      'origin-directly',
+      'HARMONY ONLY. avoid export to the central hub, instead, export directly to the original scopes. not recommended!',
+    ],
+    [
+      '',
       'resume <string>',
       'in case the previous export failed and suggested to resume with an export-id, enter the id',
     ],
@@ -58,6 +63,7 @@ export class ExportCmd implements Command {
       setCurrentScope = false,
       all = false,
       allVersions = false,
+      originDirectly = false,
       force = false,
       rewire = false,
       lanes = false,
@@ -81,6 +87,7 @@ export class ExportCmd implements Command {
       setCurrentScope,
       includeNonStaged: all || allVersions,
       allVersions: allVersions || all,
+      originDirectly,
       codemod: rewire,
       force,
       lanes,

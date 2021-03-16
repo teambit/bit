@@ -6,13 +6,14 @@ import GlobalRemotes from '../global-config/global-remotes';
 import logger from '../logger/logger';
 import { ScopeNotFound } from '../scope/exceptions';
 import DependencyGraph from '../scope/graph/scope-graph';
-import { ObjectList } from '../scope/objects/object-list';
 import Scope from '../scope/scope';
 import { flatten, forEach, prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { CONCURRENT_FETCH_LIMIT } from '../constants';
+import { UnexpectedNetworkError } from '../scope/network/exceptions';
+import { ObjectItemsStream } from '../scope/objects/object-list';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -26,16 +27,14 @@ export default class Remotes extends Map<string, Remote> {
     return this.forEach((remote) => remote.validate());
   }
 
-  resolve(scopeName: string, thisScope?: Scope | null | undefined): Promise<Remote> {
+  async resolve(scopeName: string, thisScope?: Scope | undefined): Promise<Remote> {
     const remote = super.get(scopeName);
     if (remote) return Promise.resolve(remote);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return remoteResolver(scopeName, thisScope).then((scopeHost) => {
-      return new Remote(scopeHost, scopeName);
-    });
+    const scopeHost = await remoteResolver(scopeName, thisScope);
+    return new Remote(scopeHost, scopeName, undefined, thisScope?.name);
   }
 
-  isHub(scope) {
+  isHub(scope: string): boolean {
     // if a scope is listed as a remote, it doesn't go to the hub
     return !this.get(scope);
   }
@@ -45,10 +44,10 @@ export default class Remotes extends Map<string, Remote> {
     thisScope: Scope,
     options: Partial<FETCH_OPTIONS> = {},
     context?: Record<string, any>
-  ): Promise<{ objectList: ObjectList; objectListPerRemote: { [remoteName: string]: ObjectList } }> {
+  ): Promise<{ [remoteName: string]: ObjectItemsStream }> {
     const fetchOptions: FETCH_OPTIONS = {
       type: 'component',
-      withoutDependencies: false,
+      withoutDependencies: true,
       includeArtifacts: false,
       ...options,
     };
@@ -56,30 +55,44 @@ export default class Remotes extends Map<string, Remote> {
     // when importing directly from a remote scope, throw for ScopeNotFound. otherwise, when
     // fetching flattened dependencies (withoutDependencies=true), ignore this error
     const shouldThrowOnUnavailableScope = !fetchOptions.withoutDependencies;
-    const objectListPerRemote = {};
-    const objectLists: ObjectList[] = await pMap(
+    const objectsStreamPerRemote = {};
+    const failedScopes: { [scopeName: string]: Error } = {};
+    await pMap(
       Object.keys(idsGroupedByScope),
       async (scopeName) => {
         const remote = await this.resolve(scopeName, thisScope);
-        let objectList: ObjectList;
+        let objectsStream: ObjectItemsStream;
         try {
-          objectList = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+          objectsStream = await remote.fetch(idsGroupedByScope[scopeName], fetchOptions, context);
+          objectsStreamPerRemote[scopeName] = objectsStream;
+          return objectsStream;
         } catch (err) {
           if (err instanceof ScopeNotFound && !shouldThrowOnUnavailableScope) {
             logger.error(`failed accessing the scope "${scopeName}". continuing without this scope.`);
-            objectList = new ObjectList();
+          } else if (err instanceof UnexpectedNetworkError) {
+            logger.error(`failed fetching from ${scopeName}`, err);
+            failedScopes[scopeName] = err;
           } else {
             throw err;
           }
+          return null;
         }
-        objectListPerRemote[scopeName] = objectList;
-        return objectList;
       },
       { concurrency: CONCURRENT_FETCH_LIMIT }
     );
+    if (Object.keys(failedScopes).length) {
+      const failedScopesErr = Object.keys(failedScopes).map(
+        (failedScope) => `${failedScope} - ${failedScopes[failedScope].message}`
+      );
+      throw new Error(`unexpected network error has occurred during fetching scopes: ${Object.keys(failedScopes).join(
+        ', '
+      )}
+server responded with the following error messages:
+${failedScopesErr.join('\n')}`);
+    }
     logger.debug('[-] Returning from the remotes');
 
-    return { objectList: ObjectList.mergeMultipleInstances(objectLists), objectListPerRemote };
+    return objectsStreamPerRemote;
   }
 
   async latestVersions(ids: BitId[], thisScope: Scope): Promise<BitId[]> {
@@ -128,26 +141,24 @@ export default class Remotes extends Map<string, Remote> {
     return object;
   }
 
-  static getScopeRemote(scopeName: string): Promise<Remote> {
-    return Remotes.getGlobalRemotes().then((remotes) => remotes.resolve(scopeName));
+  static async getScopeRemote(scopeName: string): Promise<Remote> {
+    const remotes = await Remotes.getGlobalRemotes();
+    return remotes.resolve(scopeName);
   }
 
-  static getGlobalRemotes(): Promise<Remotes> {
-    return GlobalRemotes.load()
-      .then((globalRemotes) => globalRemotes.toPlainObject())
-      .then((remotes) => Remotes.load(remotes));
+  static async getGlobalRemotes(): Promise<Remotes> {
+    const globalRemotes = await GlobalRemotes.load();
+    const remotes = globalRemotes.toPlainObject();
+    return Remotes.load(remotes);
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static load(remotes: { [key: string]: string }): Remotes {
+  static load(remotes: { [key: string]: string }, thisScope?: Scope): Remotes {
     const models = [];
 
     if (!remotes) return new Remotes();
 
     forEach(remotes, (name, host) => {
-      const remote = Remote.load(name, host);
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      const remote = Remote.load(name, host, thisScope);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       models.push([remote.name, remote]);
     });

@@ -2,12 +2,13 @@ import 'reset-css';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
 import { Corner } from '@teambit/ui.corner';
-import { Collapser } from '@teambit/ui.side-bar';
+import { Collapser } from '@teambit/ui.buttons.collapser';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
 import { TopBar } from '@teambit/ui.top-bar';
-import { FullLoader } from 'bit-bin/dist/to-eject/full-loader';
+import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
+import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { ScopeOverview } from './scope-overview';
 import { ScopeProvider } from './scope-provider';
 import styles from './scope.module.scss';
@@ -41,7 +42,8 @@ export function Scope({
   onSidebarTogglerChange,
 }: ScopeProps) {
   const { scope } = useScope();
-  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, true);
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, handleSidebarToggle] = useReducer((x) => !x, !isMobile);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.right;
   if (!scope) {
     return <FullLoader />;

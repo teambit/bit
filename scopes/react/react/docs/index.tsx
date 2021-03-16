@@ -1,3 +1,4 @@
+import { RenderingContext } from '@teambit/preview';
 import React from 'react';
 import ReactDOM from 'react-dom';
 
@@ -5,13 +6,20 @@ import { DocsApp } from './docs-app';
 import type { DocsFile } from './examples-overview/example';
 
 export default function DocsRoot(
-  Provider: React.ComponentType,
+  Provider: React.ComponentType | undefined,
   componentId: string,
   docs: DocsFile | undefined,
-  compositions: any
+  compositions: any,
+  context: RenderingContext
 ) {
   ReactDOM.render(
-    <DocsApp Provider={Provider} compositions={compositions} docs={docs} componentId={componentId} />,
+    <DocsApp
+      Provider={Provider}
+      compositions={compositions}
+      docs={docs}
+      componentId={componentId}
+      renderingContext={context}
+    />,
     document.getElementById('root')
   );
 }

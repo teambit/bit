@@ -1,7 +1,7 @@
 import { ComponentID } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
-import { GetBitMapComponentOptions } from 'bit-bin/dist/consumer/bit-map/bit-map';
-import { PathOsBased } from 'bit-bin/dist/utils/path';
+import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
+import { PathOsBased } from '@teambit/legacy/dist/utils/path';
 
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
 

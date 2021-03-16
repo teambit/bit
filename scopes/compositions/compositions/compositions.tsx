@@ -5,9 +5,10 @@ import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
-import { Collapser } from '@teambit/ui.side-bar';
+import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
+import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import head from 'lodash.head';
 import React, { useContext, useEffect, useState, useRef } from 'react';
 
@@ -32,13 +33,16 @@ export function Compositions() {
 
     selectComposition(next);
   }, [component]);
+  const isMobile = useIsMobile();
+  const showSidebar = !isMobile && component.compositions.length > 0;
+  const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
 
-  const [isSidebarOpen, setSidebarOpenness] = useState(component.compositions.length > 0);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-  // collapse sidebar when empty, reopen when not
-  useEffect(() => setSidebarOpenness(component.compositions.length > 0), [component.compositions.length]);
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
+
+  // collapse sidebar when empty, reopen when not
+  useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
 
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
@@ -92,7 +96,7 @@ function CompositionContent({ component, selected }: CompositionContentProps) {
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link="https://bit-new-docs.netlify.app/docs/compositions/develop-in-isolation"
+        link="https://harmony-docs.bit.dev/compositions/overview/"
       />
     );
   return <ComponentComposition component={component} composition={selected}></ComponentComposition>;

@@ -44,9 +44,9 @@ export default class Fetch implements LegacyCommand {
       withoutDependencies: noDependencies,
       includeArtifacts,
     };
-    return migrate(scopePath, false).then(() => {
-      return fetch(scopePath, payload, fetchOptions, headers);
-    });
+    return migrate(scopePath, false)
+      .then(() => fetch(scopePath, payload, fetchOptions, headers))
+      .then((readable) => ObjectList.fromReadableStream(readable));
   }
 
   report(objectList: ObjectList): string {

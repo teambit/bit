@@ -52,7 +52,7 @@ function EmptyCodeView() {
   return (
     <div className={styles.emptyCodeView}>
       <img src={`${staticStorageUrl}/harmony/empty-code-view.svg`} />
-      <div>Preview isn't available</div>
+      <div>Nothing to show</div>
     </div>
   );
 }

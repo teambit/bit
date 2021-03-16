@@ -30,8 +30,7 @@ export class HttpHelper {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       this.httpProcess.stderr.on('data', (data) => {
         if (this.helper.debugMode) console.log(`stderr: ${data}`);
-        // Ignore warnings here
-        if (!data.toString().includes('warning') && !data.toString().includes('Warning')) {
+        if (!this.shouldIgnoreHttpError(data.toString())) {
           reject(new Error(`http failed with the following stderr ${data}`));
         }
       });
@@ -62,5 +61,9 @@ export class HttpHelper {
     } else {
       this.httpProcess.kill('SIGINT');
     }
+  }
+  shouldIgnoreHttpError(data: string): boolean {
+    const msgToIgnore = ['@rollup/plugin-replace'];
+    return msgToIgnore.some((str) => data.startsWith(str));
   }
 }

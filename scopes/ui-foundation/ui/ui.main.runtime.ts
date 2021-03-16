@@ -12,7 +12,7 @@ import chalk from 'chalk';
 import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-import { sha1 } from 'bit-bin/dist/utils';
+import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
 import getPort from 'get-port';
 import { join, resolve } from 'path';
@@ -182,6 +182,7 @@ export class UiMain {
    */
   async build(uiRootName?: string): Promise<any> {
     // TODO: change to MultiStats from webpack once they export it in their types
+    this.logger.debug(`build, uiRootName: "${uiRootName}"`);
     const [name, uiRoot] = this.getUi(uiRootName);
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
@@ -193,8 +194,11 @@ export class UiMain {
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
 
     const compiler = webpack(config);
+    this.logger.debug(`build, uiRootName: "${uiRootName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
-    return compilerRun();
+    const results = await compilerRun();
+    this.logger.debug(`build, uiRootName: "${uiRootName}" completed webpack`);
+    return results;
   }
 
   registerStartPlugin(startPlugin: StartPlugin) {
@@ -373,6 +377,7 @@ export class UiMain {
   }
 
   private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
+    this.logger.debug(`buildUI, name ${name}`);
     const overwrite = this.getOverwriteBuildFn();
     if (overwrite) return overwrite(name, uiRoot, rebuild);
     const hash = await this.buildIfChanged(name, uiRoot, rebuild);
@@ -390,9 +395,13 @@ export class UiMain {
   }
 
   async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
+    this.logger.debug(`buildIfChanged, name ${name}`);
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed && !force) return hash;
+    if (hash === hashed && !force) {
+      this.logger.debug(`buildIfChanged, name ${name}, returned from cache`);
+      return hash;
+    }
     if (hash !== hashed) {
       this.logger.console(
         `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(

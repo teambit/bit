@@ -232,7 +232,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       this.fs.outputFile(path.join('extensions', `ext${i}`, `ext${i}.main.runtime.ts`), mainImp(i));
       this.command.addComponent(`extensions/ext${i}`, { m: aspectFileName });
     }
-    // this.scopeHelper.linkBitBin();
+    // this.scopeHelper.linkBitLegacy();
     // this.npm.installNpmPackage('@teambit/harmony');
   }
 

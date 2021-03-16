@@ -7,14 +7,14 @@ import { Component, ComponentID } from '@teambit/component';
 import {
   getPublishedPackages,
   updateComponentsByTagResult,
-} from 'bit-bin/dist/scope/component-ops/tag-model-component';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { BuildStatus } from 'bit-bin/dist/constants';
-import { getScopeRemotes } from 'bit-bin/dist/scope/scope-remotes';
-import { PostSign } from 'bit-bin/dist/scope/actions';
-import { ObjectList } from 'bit-bin/dist/scope/objects/object-list';
-import { Remotes } from 'bit-bin/dist/remotes';
-import { BitIds } from 'bit-bin/dist/bit-id';
+} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { BuildStatus } from '@teambit/legacy/dist/constants';
+import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
+import { PostSign } from '@teambit/legacy/dist/scope/actions';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { Remotes } from '@teambit/legacy/dist/remotes';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { SignCmd } from './sign.cmd';
 import { SignAspect } from './sign.aspect';
 
@@ -114,7 +114,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     componentsToSign: ComponentID[];
   }> {
     // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
-    this.logger.setStatusLine(`loading ${ids.length} components and their extensions...`);
+    this.logger.setStatusLine(`loading ${ids.length} components and their aspects...`);
     const components = await this.scope.loadMany(ids);
     this.logger.clearStatusLine();
     const componentsToSign: ComponentID[] = [];

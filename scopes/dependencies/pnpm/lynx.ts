@@ -25,7 +25,7 @@ import {
 import { MutatedProject, mutateModules } from 'supi';
 // import { ReporterFunction } from 'supi/lib/types';
 // import { createResolver } from './create-resolver';
-// import {isValidPath} from 'bit-bin/dist/utils';
+// import {isValidPath} from '@teambit/legacy/dist/utils';
 // import {createResolver} from '@pnpm/default-resolver';
 import createResolverAndFetcher, { ClientOptions } from '@pnpm/client';
 import pickRegistryForPackage from '@pnpm/pick-registry-for-package';

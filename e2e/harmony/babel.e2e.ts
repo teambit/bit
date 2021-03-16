@@ -32,7 +32,7 @@ describe('babel compiler', function () {
         helper.fixtures.copyFixtureExtensions(EXTENSIONS_BASE_FOLDER);
         helper.command.addComponent(EXTENSIONS_BASE_FOLDER);
         helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.harmony/aspect');
-        helper.scopeHelper.linkBitBin();
+        helper.scopeHelper.linkBitLegacy();
         helper.command.link();
         helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
           policy: {

@@ -10,6 +10,11 @@ const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
 const path = require('path');
 const { default: html } = require('./html');
 
+/*
+ * Webpack config for the bit ui
+ * i.e. `bit start --dev`,
+ */
+
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
@@ -175,12 +180,12 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
             fullySpecified: false,
           },
         },
-        {
-          test: /\.js$/,
-          enforce: 'pre',
-          exclude: /node_modules/,
-          use: [require.resolve('source-map-loader')],
-        },
+        // {
+        //   test: /\.js$/,
+        //   enforce: 'pre',
+        //   include: /node_modules/,
+        //   use: [require.resolve('source-map-loader')],
+        // },
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,

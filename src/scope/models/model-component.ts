@@ -87,12 +87,20 @@ export default class Component extends BitObject {
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
+  /**
+   * @deprecated since 0.12.6 (long long ago :) probably can be removed)
+   */
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
-  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the local snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * prop is undefined.
+   */
+  laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   private divergeData?: DivergeData;
 
@@ -367,7 +375,10 @@ export default class Component extends BitObject {
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log,
+        ...log, // @ts-ignore
+        username: log?.username || 'unknown',
+        // @ts-ignore
+        email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: versionInfo.ref.toString(),
       };
@@ -383,14 +394,15 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versionsIncludeOrphaned).find((versionRef) =>
-      this.versionsIncludeOrphaned[versionRef].isEqual(ref)
-    );
+  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
+    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
+    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
+    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
+    const allTags = this.versionsIncludeOrphaned;
+    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
   }
 
   /**
@@ -565,7 +577,7 @@ export default class Component extends BitObject {
     };
     const refs = await collectRefs();
     try {
-      return await Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+      return await repo.loadManyRaw(refs);
     } catch (err) {
       if (err.code === 'ENOENT') {
         throw new Error(`unable to find an object file "${err.path}"
@@ -810,6 +822,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
+    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;
   }

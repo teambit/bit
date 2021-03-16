@@ -25,12 +25,13 @@ import { Extension } from '@teambit/harmony/dist/extension';
 import { Config } from '@teambit/harmony/dist/harmony-config';
 // TODO: expose this type from harmony
 import { ConfigOptions } from '@teambit/harmony/dist/harmony-config/harmony-config';
-import { VERSION_DELIMITER } from '@teambit/legacy-bit-id';
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { getConsumerInfo } from 'bit-bin/dist/consumer';
-import { ConsumerInfo } from 'bit-bin/dist/consumer/consumer-locator';
-import BitMap from 'bit-bin/dist/consumer/bit-map';
-import { propogateUntil as propagateUntil } from 'bit-bin/dist/utils';
+import { BitId, VERSION_DELIMITER } from '@teambit/legacy-bit-id';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
+import BitMap from '@teambit/legacy/dist/consumer/bit-map';
+import { BitIds } from '@teambit/legacy/dist/bit-id';
+import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
@@ -82,16 +83,18 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   let parsedBitMap = {};
   try {
     parsedBitMap = rawBitmap ? json.parse(rawBitmap?.toString('utf8'), undefined, true) : {};
+    BitMap.removeNonComponentFields(parsedBitMap);
     // Do nothing here, invalid bitmaps will be handled later
     // eslint-disable-next-line no-empty
   } catch (e) {}
-  const allBitmapIds = Object.keys(parsedBitMap);
+  const allBitmapIds = Object.keys(parsedBitMap).map((id) => BitMap.getBitIdFromComponentJson(id, parsedBitMap[id]));
+  const bitMapBitIds = BitIds.fromArray(allBitmapIds);
   const result = Object.entries(rawConfig).reduce((acc, [aspectId, aspectConfig]) => {
     let newAspectEntry = aspectId;
     // In case the id already has a version we don't want to get it from the bitmap
     // We also don't want to add versions for core aspects
     if (!aspectId.includes(VERSION_DELIMITER) && !manifestsMap[aspectId]) {
-      const versionFromBitmap = getVersionFromBitMapIds(allBitmapIds, aspectId);
+      const versionFromBitmap = getVersionFromBitMapIds(bitMapBitIds, aspectId);
       if (versionFromBitmap) {
         newAspectEntry = `${aspectId}${VERSION_DELIMITER}${versionFromBitmap}`;
       }
@@ -102,26 +105,14 @@ function attachVersionsFromBitmap(config: Config, consumerInfo: ConsumerInfo): C
   return new Config(result);
 }
 
-function getVersionFromBitMapIds(allBitmapIds: string[], aspectId: string): string | undefined {
-  // Start by searching id in the bitmap with exact match (including scope name)
-  const exactMatch = allBitmapIds.find((id: string) => {
-    const idWithoutVersion = id.split(VERSION_DELIMITER)[0];
-    return idWithoutVersion === aspectId;
-  });
-  if (exactMatch) {
-    return exactMatch.split(VERSION_DELIMITER)[1];
-  }
-
-  // In case the aspect is not exported yet, it will be in the bitmap without a scope, while in the aspect id it will have the default scope
-  const withoutScopeMatch = allBitmapIds.find((id: string) => {
-    const idWithoutVersion = id.split(VERSION_DELIMITER)[0];
-    const aspectWithoutScope = id.substring(id.indexOf('/') + 1);
-    return idWithoutVersion === aspectWithoutScope;
-  });
-  if (withoutScopeMatch) {
-    return withoutScopeMatch.split(VERSION_DELIMITER)[1];
-  }
-  return undefined;
+function getVersionFromBitMapIds(allBitmapIds: BitIds, aspectId: string): string | undefined {
+  const aspectBitId = BitId.parse(aspectId, true);
+  // start by searching id in the bitmap with exact match (including scope name)
+  // in case the aspect is not exported yet, it will be in the bitmap without a scope,
+  // while in the aspect id it will have the default scope
+  const found =
+    allBitmapIds.searchWithoutVersion(aspectBitId) || allBitmapIds.searchWithoutScopeAndVersion(aspectBitId);
+  return found && found.hasVersion() ? found.version : undefined;
 }
 
 export async function requireAspects(aspect: Extension, runtime: RuntimeDefinition) {
@@ -158,7 +149,25 @@ function getMainAspect() {
   };
 }
 
+/**
+ * Bit may crush during the aspect loading phase or workspace/consumer initialization.
+ * normally, this is the desired behavior, however, some commands are there to help overcome these
+ * errors, such as "bit clear-cache". for these commands we're better off loading the bare minimum,
+ * which is only the CLI aspect.
+ *
+ * at this stage we don't have the commands objects, so we can't check the command/flags from there
+ * instead, we have to check the `process.argv.` directly instead, which is not 100% accurate.
+ */
+function shouldLoadInSafeMode() {
+  const currentCommand = process.argv[2];
+  const safeModeCommands = ['cc', 'clear-cache', 'init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane'];
+  const hasSafeModeFlag = process.argv[3] === '--safe-mode';
+  const isSafeModeCommand = safeModeCommands.includes(currentCommand);
+  return isSafeModeCommand || hasSafeModeFlag;
+}
+
 export async function loadBit(path = process.cwd()) {
+  const loadCLIOnly = shouldLoadInSafeMode();
   const config = await getConfig(path);
   registerCoreExtensions();
   await loadLegacyConfig(config);
@@ -168,8 +177,13 @@ export async function loadBit(path = process.cwd()) {
     cwd: path,
   };
 
-  const harmony = await Harmony.load([CLIAspect, BitAspect], MainRuntime.name, configMap);
+  const aspectsToLoad = [CLIAspect];
+  if (!loadCLIOnly) {
+    aspectsToLoad.push(BitAspect);
+  }
+  const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
+  if (loadCLIOnly) return harmony;
 
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
