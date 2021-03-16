@@ -3,6 +3,7 @@ import fetch, { Response } from 'node-fetch';
 import readLine from 'readline';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { Network } from '../network';
+import { getHarmonyVersion } from '../../../bootstrap';
 import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
@@ -389,7 +390,17 @@ export class Http implements Network {
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
     const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
-    return Object.assign(headers, authHeader, localScope, { connection: 'keep-alive' });
+    return Object.assign(
+      headers,
+      authHeader,
+      localScope,
+      { connection: 'keep-alive' },
+      { 'x-client-version': this.getClientVersion() }
+    );
+  }
+
+  private getClientVersion(): string {
+    return getHarmonyVersion();
   }
 
   private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {

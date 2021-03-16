@@ -56,7 +56,6 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
-import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -134,7 +133,6 @@ export default class Scope {
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
-  static onPreFetchObjects: (ids: string[], fetchOptions: FETCH_OPTIONS) => Promise<void>;
 
   /**
    * import components to the `Scope.
