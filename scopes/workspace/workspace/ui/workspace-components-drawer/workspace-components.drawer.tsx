@@ -14,6 +14,7 @@ import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import React, { useCallback, useContext } from 'react';
 import classNames from 'classnames';
 import { ComponentTreeSlot } from '@teambit/component-tree';
+import { Text } from '@teambit/base-ui.text.text';
 import { mutedItalic } from '@teambit/ui.styles.muted-italic';
 import { ellipsis } from '@teambit/ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
@@ -43,7 +44,7 @@ export class WorkspaceComponentsDrawer implements DrawerType {
 
     if (!workspace) return <FullLoader />;
     if (workspace.components.length === 0)
-      return <span className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</span>;
+      return <Text className={classNames(mutedItalic, ellipsis, styles.emptyWorkspace)}>Workspace is empty</Text>;
     return <ComponentTree components={workspace.components} TreeNode={TreeNodeRenderer} />;
   };
 }
