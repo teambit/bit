@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@teambit/bit": "0.0.308"
+    "@teambit/bit": "0.0.320"
   },
   "resolutions": {
     "@teambit/bit/core-js": "3.8.3"
