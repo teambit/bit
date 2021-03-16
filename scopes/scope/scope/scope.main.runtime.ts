@@ -50,7 +50,7 @@ type TagRegistry = SlotRegistry<OnTag>;
 export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
 export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
 
-type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
+type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
 type OnPreFetchObjectData = { ids: string[]; fetchOptions: FETCH_OPTIONS };
@@ -102,7 +102,7 @@ export class ScopeMain implements ComponentFactory {
 
     private postObjectsPersist: OnPostObjectsPersistSlot,
 
-    private preFetchObjects: OnPreFetchObjectsSlot,
+    public preFetchObjects: OnPreFetchObjectsSlot,
 
     private isolator: IsolatorMain,
 
@@ -724,22 +724,9 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
-    const onPreFetchObjectsHook = async (ids: string[], fetchOptions: FETCH_OPTIONS): Promise<void> => {
-      logger.debug(`onPreFetchObjectsHook, started. (${ids.length} components)`);
-      const fns = preFetchObjectsSlot.values();
-      const data = {
-        ids,
-        fetchOptions,
-      };
-      const metadata = { auth: getAuthData() };
-      await Promise.all(fns.map(async (fn) => fn(data, metadata)));
-      logger.debug(`onPreFetchObjectsHook, completed. (${ids.length} components)`);
-    };
-
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
-    Scope.onPreFetchObjects = onPreFetchObjectsHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([

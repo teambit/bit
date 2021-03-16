@@ -78,7 +78,7 @@ function printBitVersionIfAsked() {
 }
 
 // @todo: improve.
-function getHarmonyVersion() {
+export function getHarmonyVersion() {
   try {
     const teambitBit = require.resolve('@teambit/bit');
     // eslint-disable-next-line

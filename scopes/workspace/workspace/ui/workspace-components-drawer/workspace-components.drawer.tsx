@@ -18,7 +18,7 @@ import { Text } from '@teambit/base-ui.text.text';
 import { mutedItalic } from '@teambit/ui.styles.muted-italic';
 import { ellipsis } from '@teambit/ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
-import styles from './workspace-components.drawer.module.scss';
+import styles from './workspace-components-drawer.module.scss';
 
 export class WorkspaceComponentsDrawer implements DrawerType {
   constructor(private treeNodeSlot: ComponentTreeSlot) {}

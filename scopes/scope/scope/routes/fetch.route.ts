@@ -12,10 +12,17 @@ export class FetchRoute implements Route {
   route = '/scope/fetch';
   method = 'post';
   verb = Verb.READ;
-
   middlewares = [
     async (req: Request, res: Response) => {
       req.setTimeout(this.scope.config.httpTimeOut);
+      const preFetchHookP = this.scope.preFetchObjects
+        .values()
+        .map((fn) => fn({ ids: req.body.ids, fetchOptions: req.body.fetchOptions }, { headers: req.headers }));
+
+      Promise.all(preFetchHookP).catch((err) => {
+        this.logger.error('fatal: onPreFetchObjects encountered an error (this error does not stop the process)', err);
+      });
+
       const readable = await fetch(this.scope.path, req.body.ids, req.body.fetchOptions);
       const pack = ObjectList.fromObjectStreamToTar(readable, this.scope.name);
       const pipelinePromise = promisify(pipeline);
