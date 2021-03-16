@@ -89,13 +89,11 @@ export default async function threeWayMergeVersions({
       // if !currentFile && baseFile,  the file was created as part of the last tag
       // either way, no need to do any calculation, the file should be added
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.addFiles.push({ filePath, fsFile });
       return;
     }
     if (!baseFile) {
       // if currentFile && !baseFile, the file was deleted as part of the last tag
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.overrideFiles.push({ filePath, fsFile });
       return;
@@ -105,14 +103,16 @@ export default async function threeWayMergeVersions({
     const baseFileHash = baseFile.file.hash;
     const currentFileHash = currentFile.file.hash;
     if (fsFileHash === currentFileHash) {
-      // no need to check also for fsFileHash === baseFileHash, as long as fs == current, no need to take any action
+      // no need to check also for fsFileHash === baseFileHash, as long as fs === current, no need
+      // to take any action
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       results.unModifiedFiles.push({ filePath, fsFile });
       return;
     }
     if (fsFileHash === baseFileHash) {
+      // the file has no local modification
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      results.overrideFiles.push({ filePath, fsFile });
+      results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
       return;
     }
     // it was changed in both, there is a chance for conflict
