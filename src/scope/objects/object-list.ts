@@ -12,6 +12,21 @@ import logger from '../../logger/logger';
  * indicate this other than sending a new file with a special name and the error message.
  */
 const TAR_STREAM_ERROR_FILENAME = '.BIT.ERROR';
+/**
+ * schema 1.0.0 - added the start and end file with basic info
+ */
+const OBJECT_LIST_CURRENT_SCHEMA = '1.0.0';
+const TAR_STREAM_START_FILENAME = '.BIT.START';
+const TAR_STREAM_END_FILENAME = '.BIT.END';
+
+type StartFile = {
+  schema: string;
+  scopeName: string;
+};
+type EndFile = {
+  numOfFiles: number;
+  scopeName: string;
+};
 
 export type ObjectItem = {
   ref: Ref;
@@ -97,6 +112,8 @@ export class ObjectList {
   static fromTarToObjectStream(packStream: NodeJS.ReadableStream): ObjectItemsStream {
     const passThrough = new PassThrough({ objectMode: true });
     const extract = tarStream.extract();
+    let startData: StartFile | undefined;
+    let endData: EndFile | undefined;
     extract.on('entry', (header, stream, next) => {
       const data: Buffer[] = [];
       stream.on('data', (chunk) => {
@@ -106,6 +123,18 @@ export class ObjectList {
         const allData = Buffer.concat(data);
         if (header.name === TAR_STREAM_ERROR_FILENAME) {
           passThrough.emit('error', new Error(allData.toString()));
+          return;
+        }
+        if (header.name === TAR_STREAM_START_FILENAME) {
+          startData = JSON.parse(allData.toString());
+          logger.debug('fromTarToObjectStream, start getting data', startData);
+          next();
+          return;
+        }
+        if (header.name === TAR_STREAM_END_FILENAME) {
+          endData = JSON.parse(allData.toString());
+          logger.debug('fromTarToObjectStream, completed', endData);
+          next();
           return;
         }
         passThrough.write({ ...ObjectList.extractScopeAndHash(header.name), buffer: allData });
@@ -118,21 +147,39 @@ export class ObjectList {
       stream.resume(); // just auto drain the stream
     });
 
-    extract.on('finish', () => {
-      passThrough.end();
+    // not sure if needed
+    extract.on('error', (err) => {
+      passThrough.emit('error', err);
     });
 
+    extract.on('finish', () => {
+      if (startData?.schema === OBJECT_LIST_CURRENT_SCHEMA && !endData) {
+        // wasn't able to find a better way to indicate whether the server aborted the request
+        // see https://github.com/node-fetch/node-fetch/issues/1117
+        passThrough.emit(
+          'error',
+          new Error(`server terminated the stream unexpectedly (metadata: ${JSON.stringify(startData)})`)
+        );
+      }
+      passThrough.end();
+    });
     packStream.pipe(extract);
 
     return passThrough;
   }
 
-  static fromObjectStreamToTar(readable: Readable) {
+  static fromObjectStreamToTar(readable: Readable, scopeName: string) {
     const pack = tarStream.pack();
+    const startFile: StartFile = { schema: OBJECT_LIST_CURRENT_SCHEMA, scopeName };
+    pack.entry({ name: TAR_STREAM_START_FILENAME }, JSON.stringify(startFile));
+    let numOfFiles = 0;
     readable.on('data', (obj: ObjectItem) => {
+      numOfFiles += 1;
       pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
     });
     readable.on('end', () => {
+      const endFile: EndFile = { numOfFiles, scopeName };
+      pack.entry({ name: TAR_STREAM_END_FILENAME }, JSON.stringify(endFile));
       pack.finalize();
     });
     readable.on('error', (err) => {
