@@ -79,7 +79,7 @@ export default class ScopeComponentsImporter {
 
     const externalsToFetch: BitId[] = [];
 
-    const compDefs = await this.sources.getMany(idsToImport);
+    const compDefs = await this.sources.getMany(idsToImport, true);
     const existingDefs = compDefs.filter(({ id, component }) => {
       if (id.isLocal(this.scope.name)) {
         if (!component) throw new ComponentNotFound(id.toString());
@@ -89,7 +89,6 @@ export default class ScopeComponentsImporter {
       externalsToFetch.push(id);
       return false;
     });
-
     await this.findMissingExternalsRecursively(existingDefs, externalsToFetch);
     const uniqExternals = BitIds.uniqFromArray(externalsToFetch);
     logger.debug('importMany', `total missing externals: ${uniqExternals.length}`);
@@ -211,7 +210,7 @@ export default class ScopeComponentsImporter {
     const idsWithoutNils = BitIds.uniqFromArray(compact(ids));
     if (R.isEmpty(idsWithoutNils)) return;
 
-    const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest());
+    const compDef = await this.sources.getMany(idsWithoutNils.toVersionLatest(), true);
     const idsToFetch = await mapSeries(compDef, async ({ id, component }) => {
       if (!component) {
         // remove the version to fetch it with all versions.
@@ -472,7 +471,7 @@ export default class ScopeComponentsImporter {
     logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', `ids: {ids}, localFetch: ${localFetch.toString()}`, {
       ids: ids.join(', '),
     });
-    const defs: ComponentDef[] = await this.sources.getMany(ids);
+    const defs: ComponentDef[] = await this.sources.getMany(ids, true);
     const left = defs.filter((def) => !localFetch || !def.component);
     if (left.length === 0) {
       logger.debugAndAddBreadCrumb('getExternalManyWithoutDeps', 'no more ids left, all found locally');
@@ -552,7 +551,7 @@ export default class ScopeComponentsImporter {
         return;
       }
       const flattenedDepsToLocate = version.flattenedDependencies.filter((dep) => !existingCache.has(dep));
-      const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate);
+      const flattenedDepsDefs = await this.sources.getMany(flattenedDepsToLocate, true);
       const allFlattenedExist = flattenedDepsDefs.every((def) => {
         if (!def.component) return false;
         existingCache.push(def.id);
@@ -567,7 +566,7 @@ export default class ScopeComponentsImporter {
         return;
       }
       // it's local and some flattened are missing, check the direct dependencies
-      const directDepsDefs = await this.sources.getMany(version.getAllDependenciesIds());
+      const directDepsDefs = await this.sources.getMany(version.getAllDependenciesIds(), true);
       compDefsForNextIteration.push(...directDepsDefs);
     });
 
