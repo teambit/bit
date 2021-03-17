@@ -11,8 +11,10 @@ export class EjectMain {
 
   static async provider([cli, workspace, loggerMain]: [CLIMain, Workspace, LoggerMain]) {
     const logger = loggerMain.createLogger(EjectAspect.id);
-    cli.unregister('eject');
-    cli.register(new EjectCmd(workspace, logger));
+    if (workspace && !workspace.consumer.isLegacy) {
+      cli.unregister('eject');
+      cli.register(new EjectCmd(workspace, logger));
+    }
 
     return new EjectMain();
   }
