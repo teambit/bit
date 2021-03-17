@@ -6,11 +6,7 @@ import Dists from '../component/sources/dists';
 import RemovePath from '../component/sources/remove-path';
 import Consumer from '../consumer';
 
-export default (async function deleteComponentsFiles(
-  consumer: Consumer,
-  bitIds: BitIds,
-  deleteFilesForAuthor: boolean
-) {
+export default async function deleteComponentsFiles(consumer: Consumer, bitIds: BitIds, deleteFilesForAuthor: boolean) {
   logger.debug(`deleteComponentsFiles, ids: ${bitIds.toString()}`);
   const filesToDelete = getFilesToDelete();
   filesToDelete.addBasePath(consumer.getPath());
@@ -44,4 +40,4 @@ export default (async function deleteComponentsFiles(
     });
     return dataToPersist;
   }
-});
+}

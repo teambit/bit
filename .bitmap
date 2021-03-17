@@ -187,6 +187,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/e2e/workspace"
     },
+    "eject": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/eject"
+    },
     "envs": {
         "scope": "teambit.envs",
         "version": "0.0.323",

@@ -187,7 +187,7 @@ export async function resolveRemoteVersion(
   try {
     const parsedPackage = parsePackageName(packageName);
     const registriesMap = getRegistriesMap(registries);
-    const registry = pickRegistryForPackage(registriesMap, parsedPackage);
+    const registry = pickRegistryForPackage(registriesMap, parsedPackage.name);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
       pref: parsedPackage.version,
