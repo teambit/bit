@@ -43,6 +43,15 @@ describe('sign command', function () {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
       expect(comp1.buildStatus).to.equal('succeed');
     });
+    describe('running bit import on the workspace', () => {
+      before(() => {
+        helper.command.importAllComponents();
+      });
+      it('should bring the updated Version from the remote', () => {
+        const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+        expect(comp1.buildStatus).to.equal('succeed');
+      });
+    });
   });
   describe.skip('circular dependencies between two scopes', () => {
     let signOutput: string;

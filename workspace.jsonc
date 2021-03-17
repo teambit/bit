@@ -88,7 +88,7 @@
         "@teambit/documenter.ui.heading": "1.0.3",
         "@teambit/documenter.ui.highlighted-text": "1.0.3",
         "@teambit/documenter.ui.image": "0.0.1",
-        "@teambit/documenter.ui.import-action": "1.0.3",
+        "@teambit/documenter.ui.import-action": "3.0.11",
         "@teambit/documenter.ui.italic": "0.0.1",
         "@teambit/documenter.ui.label": "2.0.2",
         "@teambit/documenter.ui.label-list": "1.0.3",
@@ -291,7 +291,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.33",
+        "@teambit/legacy": "1.0.34",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -349,7 +349,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.33",
+            "@teambit/legacy": "1.0.34",
             "react-dom": "16.13.1"
           }
         }
@@ -491,7 +491,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.33",
+            "@teambit/legacy": "1.0.34",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",

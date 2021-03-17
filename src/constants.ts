@@ -327,14 +327,6 @@ export const HOOKS_NAMES = [
  */
 export const CACHE_ROOT = getCacheDirectory();
 
-export const CFG_GLOBAL_REPOSITORY = 'global_repository';
-export const REPOSITORY_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
-
-/**
- * app cache directory
- */
-export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
-
 /**
  * global config directories
  */
