@@ -178,7 +178,7 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
   let mergeResults: MergeResultsThreeWay | null | undefined;
-  if (isModified && version) {
+  if (version) {
     const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
     mergeResults = await threeWayMerge({
       consumer,

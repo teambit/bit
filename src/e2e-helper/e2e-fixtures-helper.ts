@@ -177,7 +177,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     }
     return Array(numOfComponents)
       .fill(null)
-      .map((val, key) => `comp${key + 1}`)
+      .map((val, key) => `comp${key + 1}${additionalStr}`)
       .join(' and ');
   }
 
