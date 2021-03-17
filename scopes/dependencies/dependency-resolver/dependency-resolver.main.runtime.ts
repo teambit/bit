@@ -8,16 +8,12 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import {
-  CFG_PACKAGE_MANAGER_CACHE,
-  CFG_USER_TOKEN_KEY,
-  CFG_PROXY,
-  CFG_HTTPS_PROXY,
-} from '@teambit/legacy/dist/constants';
+import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
 import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { Http, ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
@@ -75,6 +71,8 @@ import { DependencyDetector } from './dependency-detector';
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
 
+export { ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
+
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
   /**
@@ -100,12 +98,31 @@ export interface DependencyResolverWorkspaceConfig {
    * A path to a file containing one or multiple Certificate Authority signing certificates.
    * allows for multiple CA's, as well as for the CA information to be stored in a file on disk.
    */
-  caFile?: string;
+  ca?: string;
 
   /**
    * Whether or not to do SSL key validation when making requests to the registry via https
    */
   strictSsl?: string;
+
+  /**
+   * A client certificate to pass when accessing the registry. Values should be in PEM format (Windows calls it "Base-64 encoded X.509 (.CER)") with newlines replaced by the string "\n". For example:
+   * cert="-----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE-----"
+   * It is not the path to a certificate file (and there is no "certfile" option).
+   */
+  cert?: string;
+
+  /**
+   * A client key to pass when accessing the registry. Values should be in PEM format with newlines replaced by the string "\n". For example:
+   * key="-----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY-----"
+   * It is not the path to a key file (and there is no "keyfile" option).
+   */
+  key?: string;
+
+  /**
+   * A comma-separated string of domain extensions that a proxy should not be used for.
+   */
+  noProxy?: string;
 
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
@@ -155,15 +172,6 @@ export type GetLinkerOptions = {
 
 export type GetVersionResolverOptions = {
   cacheRootDirectory?: string;
-};
-
-export type ProxyConfig = {
-  httpProxy?: string;
-  httpsProxy?: string;
-  ca?: string;
-  cert?: string;
-  key?: string;
-  strictSsl?: string;
 };
 
 const defaultLinkingOptions: LinkingOptions = {
@@ -436,47 +444,65 @@ export class DependencyResolverMain {
   }
 
   async getProxyConfig(): Promise<ProxyConfig> {
-    let proxy = this.config.proxy;
-    let httpsProxy = this.config.httpsProxy || proxy;
-    let caFile = this.config.caFile;
-    let httpsProxy = this.config.httpsProxy || proxy;
+    const proxyConfigFromDepResolverConfig = this.getProxyConfigFromDepResolverConfig();
+    let httpProxy = proxyConfigFromDepResolverConfig.httpProxy;
+    let httpsProxy = proxyConfigFromDepResolverConfig.httpsProxy;
 
     // Take config from the aspect config if defined
-    if (proxy || httpsProxy) {
-      this.logger.debug(`proxy config taken from the dep resolver config. proxy: ${proxy} httpsProxy: ${httpsProxy}`);
-      return {
-        httpProxy: proxy,
-        httpsProxy,
-      };
+    if (httpProxy || httpsProxy) {
+      this.logger.debug(
+        `proxy config taken from the dep resolver config. proxy: ${httpProxy} httpsProxy: ${httpsProxy}`
+      );
+      return proxyConfigFromDepResolverConfig;
     }
 
     // Take config from the package manager (npmrc) config if defined
+    const proxyConfigFromPackageManager = await this.getProxyConfigFromPackageManager();
+    if (proxyConfigFromPackageManager?.httpProxy || proxyConfigFromPackageManager?.httpsProxy) {
+      this.logger.debug(
+        `proxy config taken from the package manager config (npmrc). proxy: ${proxyConfigFromPackageManager.httpProxy} httpsProxy: ${proxyConfigFromPackageManager.httpsProxy}`
+      );
+      return proxyConfigFromPackageManager;
+    }
+
+    // Take config from global bit config
+    const proxyConfigFromGlobalConfig = await this.getProxyConfigFromGlobalConfig();
+    httpProxy = proxyConfigFromGlobalConfig.httpProxy;
+    httpsProxy = proxyConfigFromGlobalConfig.httpsProxy;
+    if (httpProxy || httpsProxy) {
+      this.logger.debug(`proxy config taken from the global bit config. proxy: ${httpProxy} httpsProxy: ${httpsProxy}`);
+      return proxyConfigFromGlobalConfig;
+    }
+    return {};
+  }
+
+  private getProxyConfigFromDepResolverConfig(): ProxyConfig {
+    return {
+      ca: this.config.ca,
+      cert: this.config.cert,
+      httpProxy: this.config.proxy,
+      httpsProxy: this.config.httpsProxy || this.config.proxy,
+      key: this.config.key,
+      noProxy: this.config.noProxy,
+      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
+    };
+  }
+
+  private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    let proxyConfig: ProxyConfig = {};
+    let proxyConfigFromPackageManager: ProxyConfig = {};
     if (packageManager?.getProxyConfig && typeof packageManager?.getProxyConfig === 'function') {
-      proxyConfig = await packageManager?.getProxyConfig();
+      proxyConfigFromPackageManager = await packageManager?.getProxyConfig();
     } else {
       const systemPm = this.getSystemPackageManager();
       if (!systemPm.getProxyConfig) throw new Error('system package manager must implement `getProxyConfig()`');
-      proxyConfig = await systemPm.getProxyConfig();
+      proxyConfigFromPackageManager = await systemPm.getProxyConfig();
     }
-    if (proxyConfig?.httpProxy || proxyConfig?.httpsProxy) {
-      this.logger.debug(
-        `proxy config taken from the package manager config (npmrc). proxy: ${proxyConfig.httpProxy} httpsProxy: ${proxyConfig.httpsProxy}`
-      );
-      return proxyConfig;
-    }
+    return proxyConfigFromPackageManager;
+  }
 
-    proxy = this.globalConfig.getSync(CFG_PROXY);
-    httpsProxy = this.globalConfig.getSync(CFG_HTTPS_PROXY) || proxy;
-    if (proxy || httpsProxy) {
-      this.logger.debug(`proxy config taken from the global bit config. proxy: ${proxy} httpsProxy: ${httpsProxy}`);
-      return {
-        httpProxy: proxy,
-        httpsProxy,
-      };
-    }
-    return {};
+  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+    return Http.getProxyConfig();
   }
 
   async getRegistries(): Promise<Registries> {

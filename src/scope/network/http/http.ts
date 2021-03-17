@@ -52,10 +52,6 @@ export type ProxyConfig = {
   key?: string;
   noProxy?: boolean | string;
   strictSSL?: boolean;
-  // TODO: implement
-  // localAddress?: string
-  // maxSockets?: number
-  // timeout?: number
 };
 
 type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
