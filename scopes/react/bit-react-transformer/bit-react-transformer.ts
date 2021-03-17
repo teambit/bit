@@ -1,126 +1,132 @@
-import * as t from '@babel/types';
+import type { Visitor, PluginObj, PluginPass } from '@babel/core';
 import { readFileSync } from 'fs-extra';
+import memoize from 'memoizee';
+import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import { fileToBitId as _fileToBitId } from './bit-from-pgk-json';
+import { isClassComponent, isFunctionComponent } from './helpers';
 
-export type BitReactTransformer = {};
+export type BitReactTransformerOptions = {
+  componentFilesPath: string;
+};
 
-const COMPONENT_IDENTIFIER = 'componentId';
+const COMPONENT_IDENTIFIER = '__bitComponentId';
+const PLUGIN_NAME = 'bit-react-transformer';
+
+const fileToBitId = memoize(_fileToBitId, {
+  primitive: true, // optimize for strings
+});
+
+type Api = {
+  types: typeof Types;
+};
 
 /**
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
  */
-export function createBitReactTransformer({ types: c }) {
-  let componentMap;
-  function setMap(mapPath?: string) {
-    if (!mapPath || componentMap) return;
-    const json = readFileSync(mapPath, 'utf-8');
-    componentMap = JSON.parse(json);
+export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
+  let componentMap: Record<string, string>;
+  function setMap(mapPath: string) {
+    try {
+      const json = readFileSync(mapPath, 'utf-8');
+      componentMap = JSON.parse(json);
+    } catch (e) {
+      console.error('bit-react-transformer: error reading map file ', e);
+    }
   }
 
   function addComponentId(path: any, filePath: string, identifier: string) {
-    const componentId = componentMap[filePath];
+    const componentId = componentMap?.[filePath] || fileToBitId(filePath);
     if (!componentId) return;
-    const componentIdStaticProp = c.expressionStatement(
-      c.assignmentExpression(
+
+    const componentIdStaticProp = api.types.expressionStatement(
+      api.types.assignmentExpression(
         '=',
-        c.memberExpression(c.identifier(identifier), c.identifier(COMPONENT_IDENTIFIER)),
-        t.identifier(`'${componentId}'`)
+        api.types.memberExpression(api.types.identifier(identifier), api.types.identifier(COMPONENT_IDENTIFIER)),
+        api.types.identifier(`'${componentId}'`)
       )
     );
 
     path.insertAfter(componentIdStaticProp);
   }
 
-  return {
-    visitor: {
-      FunctionDeclaration(path, state) {
-        setMap(state.opts.componentFilesPath);
-        if (!isFunctionComponent(path.node.body)) {
-          return;
-        }
-        const name = path.node.id.name;
-        addComponentId(path, state.file.opts.filename, name);
-      },
+  const visitor: Visitor<PluginPass> = {
+    FunctionDeclaration(path, state) {
+      // if (!isFunctionComponent(path.node.body)) return;
+      const name = path.node.id?.name;
+      const filename = state.file.opts.filename;
+      if (!name || !filename) return;
 
-      VariableDeclarator(path, state) {
-        setMap(state.opts.componentFilesPath);
-        const node = path.node as t.VariableDeclarator;
-        if (!node.init) return;
-        if (node.id.type !== 'Identifier') return;
-        const id = node.id as t.Identifier;
-        switch (node.init.type) {
-          case 'FunctionExpression':
-            path.init as t.FunctionExpression;
-            if (isFunctionComponent(node.init.body)) {
-              addComponentId(path.parentPath, state.file.opts.filename, id.name);
-            }
-            break;
+      addComponentId(path, filename, name);
+    },
 
-          case 'ArrowFunctionExpression':
-            node.init as t.ArrowFunctionExpression;
-            if (isJsxReturnValid(node.init.body)) {
-              addComponentId(path.parentPath, state.file.opts.filename, id.name);
-            }
+    VariableDeclarator(path, state) {
+      const filename = state.file.opts.filename;
+      if (!filename) return;
 
-            node.init.body as t.BlockStatement;
-            if (isFunctionComponent(node.init.body as any)) {
-              addComponentId(path.parentPath, state.file.opts.filename, id.name);
-            }
-            break;
+      const node = path.node;
+      if (!node.init) return;
+      if (node.id.type !== 'Identifier') return;
 
-          default:
-            break;
-        }
-      },
+      const id = node.id;
+      switch (node.init.type) {
+        case 'FunctionExpression':
+          // @ts-ignore TODO - check!!
+          path.init as Types.FunctionExpression;
+          if (isFunctionComponent(node.init.body)) {
+            addComponentId(path.parentPath, filename, id.name);
+          }
+          break;
 
-      ClassDeclaration(path, state) {
-        setMap(state.opts.componentFilesPath);
-        if (!isClassComponent(path.node)) {
-          return;
-        }
-        const name = path.node.id.name;
-        addComponentId(path, state.file.opts.filename, name);
-      },
+        case 'ArrowFunctionExpression':
+          addComponentId(path.parentPath, filename, id.name);
+
+          // node.init as t.ArrowFunctionExpression;
+          // if (isJsxReturnValid(node.init.body)) {
+          //   addComponentId(path.parentPath, filename, id.name);
+          // }
+
+          // node.init.body as t.BlockStatement;
+          // if (isFunctionComponent(node.init.body as any)) {
+          //   addComponentId(path.parentPath, filename, id.name);
+          // }
+          break;
+
+        default:
+          break;
+      }
+    },
+
+    ClassDeclaration(path, state) {
+      const filename = state.file.opts.filename;
+      if (!filename) return;
+      if (!isClassComponent(path.node)) return;
+
+      const name = path.node.id.name;
+      addComponentId(path, filename, name);
     },
   };
-}
 
-function isJsxReturnValid(node?: t.Node) {
-  if (!node) return false;
-  if (node.type === 'JSXElement') return true;
-  if (node.type === 'ArrayExpression') {
-    const arrayExp = node as t.ArrayExpression;
-    return arrayExp.elements.every((elm) => {
-      return elm?.type === 'JSXElement';
-    });
-  }
+  const Plugin: PluginObj = {
+    name: PLUGIN_NAME,
+    visitor,
+    // TODO - state type
+    pre(whatever) {
+      // console.log('handling file', whatever.file);
+      const filepath = opts.componentFilesPath;
 
-  return false;
-}
+      // reuse file read
+      // might cause problems if map files changes mid-run
+      if (componentMap) return;
 
-function isClassComponent(classDec: t.ClassDeclaration) {
-  const renderMethod = classDec.body.body.find((classMember) => {
-    if (classMember.type === 'ClassMethod') {
-      classMember as t.ClassMethod;
-      if (classMember.key.type !== 'Identifier') return false;
-      const key = classMember.key as t.Identifier;
-      return key.name === 'render';
-    }
+      if (filepath) setMap(filepath);
+    },
+    post() {
+      // reset memoization, in case of fs changes
+      fileToBitId.clear();
+      // clearMap();
+    },
+  };
 
-    return false;
-  }) as t.ClassMethod;
-
-  return doesReturnJsx(renderMethod?.body);
-}
-
-function isFunctionComponent(block: t.BlockStatement): boolean {
-  if (block.type !== 'BlockStatement') return false;
-  return doesReturnJsx(block);
-}
-
-function doesReturnJsx(block: t.BlockStatement): boolean {
-  if (!block) return false;
-  return !!block.body.find((statement) => {
-    return statement.type === 'ReturnStatement' && isJsxReturnValid(statement.argument || undefined);
-  });
+  return Plugin;
 }

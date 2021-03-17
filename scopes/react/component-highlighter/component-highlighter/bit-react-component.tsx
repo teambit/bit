@@ -1,6 +1,6 @@
 export interface BitComponent {
-  componentId: string;
+  __bitComponentId: string;
 }
 export function isBitComponent(component: any): component is BitComponent {
-  return component && typeof component.componentId === 'string';
+  return component && typeof component.__bitComponentId === 'string';
 }

@@ -56,13 +56,15 @@ function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Eleme
 
     const component = domToReact(current);
 
-    // if (component)
-    if(isBitComponent(component))
+    if (isBitComponent(component))
       return {
         element: current,
         component,
-        // @ts-ignore
-        id: component.componentId || component.name || 'unknown', // component.componentId,
+        id:
+          component.__bitComponentId ||
+          // @ts-ignore
+          component.name ||
+          'unknown',
       };
   }
 
