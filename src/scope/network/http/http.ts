@@ -1,7 +1,12 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
 import readLine from 'readline';
+import HttpAgent from 'agentkeepalive';
+
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
+import { getAgent, AgentOptions } from '@teambit/network.agent';
 import { Network } from '../network';
 import { getHarmonyVersion } from '../../../bootstrap';
 import { BitId, BitIds } from '../../../bit-id';
@@ -12,8 +17,17 @@ import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
-import { getSync } from '../../../api/consumer/lib/global-config';
-import { CFG_HTTPS_PROXY, CFG_PROXY, CFG_USER_TOKEN_KEY } from '../../../constants';
+import { getSync, list } from '../../../api/consumer/lib/global-config';
+import {
+  CFG_HTTPS_PROXY,
+  CFG_PROXY,
+  CFG_USER_TOKEN_KEY,
+  CFG_PROXY_CA,
+  CFG_PROXY_CERT,
+  CFG_PROXY_KEY,
+  CFG_PROXY_NO_PROXY,
+  CFG_PROXY_STRICT_SSL,
+} from '../../../constants';
 import logger from '../../../logger/logger';
 import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
@@ -30,6 +44,22 @@ export enum Verb {
   READ = 'read',
 }
 
+export type ProxyConfig = {
+  ca?: string;
+  cert?: string;
+  httpProxy?: string;
+  httpsProxy?: string;
+  key?: string;
+  noProxy?: boolean | string;
+  strictSSL?: boolean;
+  // TODO: implement
+  // localAddress?: string
+  // maxSockets?: number
+  // timeout?: number
+};
+
+type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
+
 /**
  * fetched from HTTP Authorization header.
  * (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization)
@@ -43,7 +73,8 @@ export class Http implements Network {
     private _token: string | undefined | null,
     private url: string,
     private scopeName: string,
-    private proxyAgent?: HttpsProxyAgent,
+    private proxyConfig?: ProxyConfig,
+    private agent?: Agent,
     private localScopeName?: string
   ) {}
 
@@ -55,9 +86,21 @@ export class Http implements Network {
     return token;
   }
 
-  static getProxyUrl() {
-    const proxyUrl = getSync(CFG_HTTPS_PROXY) || getSync(CFG_PROXY);
-    return proxyUrl;
+  static async getProxyConfig(): Promise<ProxyConfig> {
+    const obj = await list();
+    return {
+      ca: obj[CFG_PROXY_CA],
+      cert: obj[CFG_PROXY_CERT],
+      httpProxy: obj[CFG_PROXY],
+      httpsProxy: obj[CFG_HTTPS_PROXY],
+      key: obj[CFG_PROXY_KEY],
+      noProxy: obj[CFG_PROXY_NO_PROXY],
+      strictSSL: obj[CFG_PROXY_STRICT_SSL],
+    };
+  }
+
+  static async getAgent(uri: string, agentOpts: AgentOptions): Promise<Agent> {
+    return getAgent(uri, agentOpts);
   }
 
   get token() {
@@ -92,7 +135,7 @@ export class Http implements Network {
       lanes: idsAreLanes,
     });
     const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': 'write' });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -109,7 +152,7 @@ export class Http implements Network {
 
     const body = objectList.toTar();
     const headers = this.getHeaders({ 'push-options': JSON.stringify(pushOptions), 'x-verb': Verb.WRITE });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -158,7 +201,7 @@ export class Http implements Network {
       options,
     });
     const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.WRITE });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -178,7 +221,7 @@ export class Http implements Network {
       fetchOptions,
     });
     const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -403,18 +446,20 @@ export class Http implements Network {
     return getHarmonyVersion();
   }
 
-  private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
-    const optsWithProxy = this.proxyAgent ? Object.assign({}, opts, { agent: this.proxyAgent }) : opts;
-    return optsWithProxy;
+  private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
+    const optsWithAgent = this.agent ? Object.assign({}, opts, { agent: this.agent }) : opts;
+    return optsWithAgent;
   }
 
   static async connect(host: string, scopeName: string, localScopeName?: string) {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
-    const proxyUrl = Http.getProxyUrl();
-    const proxyAgent = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
-    const graphClient = new GraphQLClient(`${host}/graphql`, { headers, fetch: getFetcherWithProxy() });
-    return new Http(graphClient, token, host, scopeName, proxyAgent, localScopeName);
+    const proxyConfig = await Http.getProxyConfig();
+    const agent = await Http.getAgent(host, proxyConfig);
+    const graphQlUrl = `${host}/graphql`;
+    const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
+    const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
+    return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName);
   }
 }
 
@@ -427,10 +472,10 @@ export function getAuthHeader(token: string) {
 /**
  * Read the proxy config from the global config, and wrap fetch with fetch with proxy
  */
-export function getFetcherWithProxy() {
-  const proxyUrl = Http.getProxyUrl();
-  const proxyAgent = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
-  const fetcher = proxyAgent ? wrapFetcherWithProxy(proxyAgent) : fetch;
+export async function getFetcherWithAgent(uri: string) {
+  const proxyConfig = await Http.getProxyConfig();
+  const agent = await Http.getAgent(uri, proxyConfig);
+  const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;
 }
 
@@ -438,9 +483,9 @@ export function getFetcherWithProxy() {
  * return a fetch wrapper with the proxy agent inside
  * @param proxyAgent
  */
-export function wrapFetcherWithProxy(proxyAgent: HttpsProxyAgent) {
+export function wrapFetcherWithAgent(agent: Agent) {
   return (url, opts) => {
-    const actualOpts = Object.assign({}, opts, { agent: proxyAgent });
+    const actualOpts = Object.assign({}, opts, { agent });
     return fetch(url, actualOpts);
   };
 }

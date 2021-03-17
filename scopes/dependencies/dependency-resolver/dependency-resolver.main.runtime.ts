@@ -97,6 +97,17 @@ export interface DependencyResolverWorkspaceConfig {
   httpsProxy?: string;
 
   /**
+   * A path to a file containing one or multiple Certificate Authority signing certificates.
+   * allows for multiple CA's, as well as for the CA information to be stored in a file on disk.
+   */
+  caFile?: string;
+
+  /**
+   * Whether or not to do SSL key validation when making requests to the registry via https
+   */
+  strictSsl?: string;
+
+  /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
    * an invalid state that can cause build failures or incompatible dependency versions.
@@ -149,6 +160,10 @@ export type GetVersionResolverOptions = {
 export type ProxyConfig = {
   httpProxy?: string;
   httpsProxy?: string;
+  ca?: string;
+  cert?: string;
+  key?: string;
+  strictSsl?: string;
 };
 
 const defaultLinkingOptions: LinkingOptions = {
@@ -422,6 +437,8 @@ export class DependencyResolverMain {
 
   async getProxyConfig(): Promise<ProxyConfig> {
     let proxy = this.config.proxy;
+    let httpsProxy = this.config.httpsProxy || proxy;
+    let caFile = this.config.caFile;
     let httpsProxy = this.config.httpsProxy || proxy;
 
     // Take config from the aspect config if defined
