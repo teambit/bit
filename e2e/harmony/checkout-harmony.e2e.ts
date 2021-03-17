@@ -75,9 +75,8 @@ describe('bit checkout command', function () {
           });
           it('should update bitmap with the used version', () => {
             const bitMap = helper.bitMap.read();
-            expect(bitMap).to.have.property('bar/foo@0.0.5');
-            expect(bitMap).to.not.have.property('bar/foo');
-            expect(bitMap).to.not.have.property('bar/foo@0.0.10');
+            expect(bitMap).to.have.property('bar/foo');
+            expect(bitMap['bar/foo'].version).to.equal('0.0.5');
           });
           it('should not show the component as modified', () => {
             const statusOutput = helper.command.runCmd('bit status');
