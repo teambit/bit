@@ -1009,6 +1009,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/status"
     },
+    "ui/styles/colors-by-letter": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/styles/colors-by-letter"
+    },
     "ui/styles/ellipsis": {
         "scope": "teambit.design",
         "version": "0.0.317",
