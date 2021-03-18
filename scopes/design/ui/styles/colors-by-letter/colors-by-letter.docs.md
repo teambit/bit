@@ -3,7 +3,7 @@ labels: ['react', 'css', 'colors']
 description: 'Colors and letter css component'
 ---
 
-import { colorsByLetter } from './index';
+import { letterBgColors, letterColors } from './index';
 
 A CSS component that make a color for the received letter, can be used for a background-color or a text color.
 
@@ -16,7 +16,7 @@ Text colors:
   't' , 'u' , 'v' , 'w' , 'x' , 'y' , 'z' ];
   return (
     <div>
-      {letters.map((value) => <div className={colorsByLetter[value]}>{value}</div>)}
+      {letters.map((value) => <div className={letterColors[value]}>{value}</div>)}
     </div>
   )
 }
@@ -31,7 +31,7 @@ Background colors:
   't' , 'u' , 'v' , 'w' , 'x' , 'y' , 'z' ];
   return (
     <div>
-      {letters.map((value) => <div className={colorsByLetter[`bg-${value}`]}>{value}</div>)}
+      {letters.map((value) => <div className={letterBgColors[value]}>{value}</div>)}
     </div>
   )
 }

@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { addAvatarQueryParams } from '@teambit/url.add-avatar-query-params';
 import { getInitials } from '@teambit/string.get-initials';
-import { colorsByLetter } from '@teambit/ui.styles.colors-by-letter';
+import { letterBgColors } from '@teambit/ui.styles.colors-by-letter';
 import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 
@@ -22,7 +22,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
     const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
-    const colors = firstLetter && colorsByLetter[`bg-${firstLetter.toLowerCase()}`];
+    const colors = firstLetter && letterBgColors[firstLetter.toLowerCase()];
     return (
       <div className={classNames(colors, styles.avatar, className)} style={{ width: `${size}px`, height: `${size}px` }}>
         {profileImageWithParams && (
