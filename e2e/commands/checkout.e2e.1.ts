@@ -353,9 +353,8 @@ describe('bit checkout command', function () {
 
       helper.command.checkoutVersion('0.0.1', 'bar/foo');
     });
-    it('should not delete the new files', () => {
-      // because the author may still need them
-      expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
+    it('should delete the new files', () => {
+      expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.not.be.a.path();
     });
     it('should update bitmap to not track the new files', () => {
       const bitMap = helper.bitMap.read();
