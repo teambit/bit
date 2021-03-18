@@ -7,6 +7,8 @@ import {
   SYMPHONY_URL,
   CFG_SYMPHONY_URL_KEY,
 } from '../../constants';
+
+import { RemoteScopeNotFound } from '../../scope/network/exceptions';
 import Scope from '../../scope/scope';
 import logger from '../../logger/logger';
 import { getAuthHeader, getFetcherWithProxy } from '../../scope/network/http/http';
@@ -40,12 +42,10 @@ async function getScope(name: string) {
     const res = await client.request(SCOPE_GET, {
       id: name,
     });
-
     scopeCache[name] = res;
     return res;
   } catch (err) {
-    logger.error('remote-resolver.getScope has failed with the following error', err);
-    return undefined;
+    throw new Error(`${name}: ${err?.response?.errors?.[0].message || 'unknown error'}`);
   }
 }
 
