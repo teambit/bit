@@ -6,9 +6,6 @@ $colorByLetter: a #ff6b81, b #ff7f50, c #efc951, d #94cd53, e #57606f, f #ffa502
   $letter: nth($pair, 1);
   $color: nth($pair, 2);
 
-  .bg-#{$letter} {
-    background-color: $color;
-  }
   .#{$letter} {
     color: $color;
   }

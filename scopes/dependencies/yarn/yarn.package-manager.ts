@@ -272,9 +272,17 @@ export class YarnPackageManager implements PackageManager {
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
       httpProxy: proxyConfig?.httpProxy,
       httpsProxy: proxyConfig?.httpsProxy,
+      enableStrictSsl: proxyConfig.strictSSL,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
+
+      // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
+      // ca?: string;
+      // cert?: string;
+      // key?: string;
+      // noProxy?: boolean | string;
     };
+
     if (defaultAuthProp) {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;
     }
