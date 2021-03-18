@@ -8,9 +8,7 @@ import {
   CFG_SYMPHONY_URL_KEY,
 } from '../../constants';
 
-import { RemoteScopeNotFound } from '../../scope/network/exceptions';
 import Scope from '../../scope/scope';
-import logger from '../../logger/logger';
 import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
