@@ -77,6 +77,7 @@ export default class SourceRepository {
    * to be fetched from the remote again.
    */
   async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
+    versionShouldBeBuilt = false; // a temporal workaround to get the tag working.
     const component = ModelComponent.fromBitId(bitId);
     const foundComponent: ModelComponent | undefined = await this._findComponent(component);
     if (!foundComponent) return undefined;
