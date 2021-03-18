@@ -361,6 +361,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/multi-compiler"
     },
+    "network/agent": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/network/agent"
+    },
+    "network/proxy-agent": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/network/proxy-agent"
+    },
     "node": {
         "scope": "teambit.harmony",
         "version": "0.0.325",

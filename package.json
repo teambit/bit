@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.36",
+  "version": "1.0.37",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -153,7 +153,6 @@
     "graphql-request": "3.4.0",
     "graphviz": "0.0.9",
     "group-array": "1.0.0",
-    "https-proxy-agent": "5.0.0",
     "ignore": "3.3.10",
     "ini-builder": "1.1.1",
     "ink": "3.0.8",
