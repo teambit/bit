@@ -82,13 +82,21 @@ export class Http implements Network {
     return token;
   }
 
-  static async getProxyConfig(): Promise<ProxyConfig> {
+  static async getProxyConfig(checkProxyUriDefined = true): Promise<ProxyConfig> {
     const obj = await list();
+    const httpProxy = obj[CFG_PROXY];
+    const httpsProxy = obj[CFG_HTTPS_PROXY] ?? obj[CFG_PROXY];
+
+    // If check is true, return the proxy config only case there is actual proxy server defined
+    if (checkProxyUriDefined && !httpProxy && !httpsProxy) {
+      return {};
+    }
+
     return {
       ca: obj[CFG_PROXY_CA],
       cert: obj[CFG_PROXY_CERT],
-      httpProxy: obj[CFG_PROXY],
-      httpsProxy: obj[CFG_HTTPS_PROXY],
+      httpProxy,
+      httpsProxy,
       key: obj[CFG_PROXY_KEY],
       noProxy: obj[CFG_PROXY_NO_PROXY],
       strictSSL: obj[CFG_PROXY_STRICT_SSL],
@@ -96,7 +104,8 @@ export class Http implements Network {
   }
 
   static async getAgent(uri: string, agentOpts: AgentOptions): Promise<Agent> {
-    return getAgent(uri, agentOpts);
+    const agent = await getAgent(uri, agentOpts);
+    return agent;
   }
 
   get token() {

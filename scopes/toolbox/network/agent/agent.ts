@@ -23,9 +23,10 @@ export function getAgent(uri: string, opts: AgentOptions) {
   const noProxy = checkNoProxy(uri, opts);
   if (!noProxy && (opts.httpProxy || opts.httpsProxy)) {
     const proxy = getProxyAgent(uri, opts);
-    return proxy;
+    if (proxy) {
+      return proxy;
+    }
   }
-
   const parsedUri = new URL(uri);
   const isHttps = parsedUri.protocol === 'https:';
   const agentTimeout = typeof opts.timeout !== 'number' || opts.timeout === 0 ? 0 : opts.timeout;
