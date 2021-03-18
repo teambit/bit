@@ -17,12 +17,18 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import Component from '@teambit/legacy/dist/consumer/component/consumer-component';
 import PackageJsonFile from '@teambit/legacy/dist/consumer/component/package-json-file';
 import * as packageJsonUtils from '@teambit/legacy/dist/consumer/component/package-json-utils';
-import deleteComponentsFiles from '@teambit/legacy/dist/consumer/component-ops/delete-component-files';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { Logger } from '@teambit/logger';
 
 export type EjectResults = {
   ejectedComponents: BitIds;
   failedComponents: FailedComponents;
+};
+
+export type EjectOptions = {
+  force: boolean; // eject although a component is modified/staged
+  keepFiles: boolean; // keep component files on the workspace
 };
 
 type FailedComponents = {
@@ -35,7 +41,6 @@ type FailedComponents = {
 export class ComponentsEjector {
   consumer: Consumer;
   componentsIds: BitId[];
-  force: boolean;
   idsToEject: BitIds;
   componentsToEject: Component[] = [];
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -43,10 +48,14 @@ export class ComponentsEjector {
   failedComponents: FailedComponents;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   packageJsonFilesBeforeChanges: PackageJsonFile[]; // for rollback in case of errors
-  constructor(private workspace: Workspace, private logger: Logger, componentsIds: BitId[], force?: boolean) {
+  constructor(
+    private workspace: Workspace,
+    private logger: Logger,
+    componentsIds: BitId[],
+    private ejectOptions: EjectOptions
+  ) {
     this.consumer = this.workspace.consumer;
     this.componentsIds = componentsIds;
-    this.force = force || false;
     this.idsToEject = new BitIds();
     this.failedComponents = {
       modifiedComponents: new BitIds(),
@@ -63,8 +72,9 @@ export class ComponentsEjector {
     if (this.idsToEject.length) {
       this._validateIdsHaveScopesAndVersions();
       await this.removeComponentsFromNodeModules();
-      await this.removeComponents();
+      await this.untrackComponents();
       await this.installPackages();
+      await this.removeComponentsFiles();
       await this.consumer.writeBitMap();
     }
     this.logger.debug('eject: completed successfully');
@@ -75,7 +85,7 @@ export class ComponentsEjector {
   }
 
   async decideWhichComponentsToEject(): Promise<void> {
-    this.logger.debug('eject: getting the components status');
+    this.logger.setStatusLine('Eject: getting the components status');
     if (R.isEmpty(this.componentsIds)) return;
     const remotes = await getScopeRemotes(this.consumer.scope);
     const hubExportedComponents = new BitIds();
@@ -84,7 +94,7 @@ export class ComponentsEjector {
       else if (remotes.isHub(bitId.scope as string)) hubExportedComponents.push(bitId);
       else this.failedComponents.selfHostedExportedComponents.push(bitId);
     });
-    if (this.force) {
+    if (this.ejectOptions.force) {
       this.idsToEject = hubExportedComponents;
     } else {
       await Promise.all(
@@ -104,6 +114,7 @@ export class ComponentsEjector {
         })
       );
     }
+    this.logger.consoleSuccess();
   }
 
   async loadComponentsToEject() {
@@ -112,14 +123,15 @@ export class ComponentsEjector {
   }
 
   async removeComponentsFromNodeModules() {
-    const action = 'removing the existing components from node_modules';
+    const action = 'Eject: removing the existing components from node_modules';
+    this.logger.setStatusLine(action);
     this.logger.debug(action);
     await packageJsonUtils.removeComponentsFromNodeModules(this.consumer, this.componentsToEject);
+    this.logger.consoleSuccess(action);
   }
 
   async installPackages() {
-    const action = 'installing the components using the package manager';
-    this.logger.debug(action);
+    this.logger.setStatusLine('Eject: installing packages using the package-manager');
     const packages = this.getPackagesToInstall();
     await this.workspace.install(packages);
   }
@@ -133,32 +145,36 @@ export class ComponentsEjector {
 your package.json (if existed) has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.`;
   }
 
-  async removeComponents() {
-    try {
-      this.logger.debug('eject: removing the components files from the filesystem');
-      await this.removeLocalComponents();
-    } catch (err) {
-      this.throwEjectError(
-        `eject operation has installed your components successfully using the NPM client.
-however, it failed removing the old components from the filesystem.
-please use bit remove command to remove them.`,
-        err
-      );
-    }
-  }
-
   /**
    * as part of the 'eject' operation, a component is removed locally. as opposed to the remove
    * command, in this case, no need to remove the objects from the scope, only remove from the
    * filesystem, which means, delete the component files, untrack from .bitmap and clean
    * package.json and bit.json traces.
    */
-  async removeLocalComponents(): Promise<void> {
-    // @todo: what about the dependencies? if they are getting deleted we have to make sure they
-    // not used anywhere else. Because this is part of the eject operation, the user probably
-    // gets the dependencies as npm packages so we don't need to worry much about have extra
-    // dependencies on the filesystem
-    await deleteComponentsFiles(this.consumer, this.idsToEject, true);
+  private async removeComponentsFiles() {
+    if (this.ejectOptions.keepFiles) {
+      return;
+    }
+    this.logger.setStatusLine('Eject: removing the components files from the filesystem');
+    const dataToPersist = new DataToPersist();
+    this.componentsToEject.forEach((component) => {
+      const componentMap = component.componentMap;
+      if (!componentMap) {
+        throw new Error('ComponentEjector.removeComponentsFiles expect a component to have componentMap prop');
+      }
+      const rootDir = componentMap.rootDir;
+      if (!rootDir) {
+        throw new Error('ComponentEjector.removeComponentsFiles expect a componentMap to have rootDir');
+      }
+      dataToPersist.removePath(new RemovePath(rootDir, true));
+    });
+    dataToPersist.addBasePath(this.consumer.getPath());
+    await dataToPersist.persistAllToFS();
+    this.logger.consoleSuccess();
+  }
+
+  private async untrackComponents() {
+    this.logger.debug('eject: removing the components from the .bitmap');
     await this.consumer.cleanFromBitMap(this.idsToEject, new BitIds());
   }
 
