@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { SlotRegistry, Slot } from '@teambit/harmony';
 import { flatten } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
@@ -48,6 +49,9 @@ export type UpdateDepsResult = {
   error: string | null;
 };
 
+type OnPostUpdateDependencies = (components: Component[]) => Promise<void>;
+type OnPostUpdateDependenciesSlot = SlotRegistry<OnPostUpdateDependencies>;
+
 export class UpdateDependenciesMain {
   private depsUpdateItems: DepUpdateItem[];
   private updateDepsOptions: UpdateDepsOptions;
@@ -55,7 +59,8 @@ export class UpdateDependenciesMain {
     private scope: ScopeMain,
     private logger: Logger,
     private builder: BuilderMain,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot
   ) {}
 
   /**
@@ -93,6 +98,7 @@ export class UpdateDependenciesMain {
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
     await this.export();
+    this.triggerOnPostUpdateDependencies();
 
     return {
       depsUpdateItems: this.depsUpdateItems,
@@ -106,6 +112,17 @@ export class UpdateDependenciesMain {
   }
   get components(): Component[] {
     return this.depsUpdateItems.map((d) => d.component);
+  }
+
+  registerOnPostUpdateDependencies(fn: OnPostUpdateDependencies) {
+    this.onPostUpdateDependenciesSlot.register(fn);
+  }
+
+  private triggerOnPostUpdateDependencies() {
+    // don't wait for the promise to resolve.
+    Promise.all(this.onPostUpdateDependenciesSlot.values().map((fn) => fn(this.components))).catch((err) =>
+      this.logger.error('got an error during on-post-updates hook', err)
+    );
   }
 
   private async importAllMissing(depsUpdateItemsRaw: DepUpdateItemRaw[]) {
@@ -279,15 +296,27 @@ export class UpdateDependenciesMain {
 
   static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect];
 
-  static async provider([cli, scope, loggerMain, builder, dependencyResolver]: [
-    CLIMain,
-    ScopeMain,
-    LoggerMain,
-    BuilderMain,
-    DependencyResolverMain
-  ]) {
+  static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
+
+  static async provider(
+    [cli, scope, loggerMain, builder, dependencyResolver]: [
+      CLIMain,
+      ScopeMain,
+      LoggerMain,
+      BuilderMain,
+      DependencyResolverMain
+    ],
+    _,
+    [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]
+  ) {
     const logger = loggerMain.createLogger(UpdateDependenciesAspect.id);
-    const updateDependenciesMain = new UpdateDependenciesMain(scope, logger, builder, dependencyResolver);
+    const updateDependenciesMain = new UpdateDependenciesMain(
+      scope,
+      logger,
+      builder,
+      dependencyResolver,
+      onPostUpdateDependenciesSlot
+    );
     cli.register(new UpdateDependenciesCmd(updateDependenciesMain, scope, logger));
     return updateDependenciesMain;
   }

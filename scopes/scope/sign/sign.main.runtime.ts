@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { SlotRegistry, Slot } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -24,8 +25,16 @@ export type SignResult = {
   error: string | null;
 };
 
+type OnPostSign = (components: Component[]) => Promise<void>;
+type OnPostSignSlot = SlotRegistry<OnPostSign>;
+
 export class SignMain {
-  constructor(private scope: ScopeMain, private logger: Logger, private builder: BuilderMain) {}
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger,
+    private builder: BuilderMain,
+    private onPostSignSlot: OnPostSignSlot
+  ) {}
 
   async sign(ids: ComponentID[], isMultiple?: boolean): Promise<SignResult | null> {
     if (isMultiple) await this.scope.import(ids);
@@ -57,12 +66,24 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
     }
     await this.clearScopesCaches(legacyComponents);
+    this.triggerOnPostSign(components);
 
     return {
       components,
       publishedPackages,
       error: pipeWithError ? pipeWithError.getErrorMessageFormatted() : null,
     };
+  }
+
+  public registerOnPostSign(fn: OnPostSign) {
+    this.onPostSignSlot.register(fn);
+  }
+
+  triggerOnPostSign(components: Component[]) {
+    // don't wait for the promise to complete.
+    Promise.all(this.onPostSignSlot.values().map((fn) => fn(components))).catch((err) => {
+      this.logger.error('failed running onPostSignSlot', err);
+    });
   }
 
   private async clearScopesCaches(components: ConsumerComponent[]) {
@@ -133,9 +154,15 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
 
-  static async provider([cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain]) {
+  static slots = [Slot.withType<OnPostSignSlot>()];
+
+  static async provider(
+    [cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain],
+    _,
+    [onPostSignSlot]: [OnPostSignSlot]
+  ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot);
     cli.register(new SignCmd(signMain, scope, logger));
     return signMain;
   }
