@@ -1,15 +1,6 @@
 import gitconfig from 'gitconfig';
 import R from 'ramda';
-import {
-  BASE_DOCS_DOMAIN,
-  CFG_PROXY,
-  CFG_HTTPS_PROXY,
-  CFG_PROXY_CA,
-  CFG_PROXY_STRICT_SSL,
-  CFG_PROXY_CERT,
-  CFG_PROXY_NO_PROXY,
-  CFG_PROXY_KEY,
-} from '../../../constants';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import Config from '../../../global-config/config';
 
