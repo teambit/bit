@@ -6,7 +6,8 @@ const { platform } = require('process');
 const cwd = path.resolve(__dirname, '..');
 const WAIT_FOR_NPM_IN_SEC = 10;
 const MAX_NPM_ATTEMPTS = 50;
-
+gitStatus(); // to debug errors with git-pull
+gitPull(); // this way, if the script is re-running after another commit, it has the correct data
 const shouldBump = shouldBumpBitLegacy();
 if (!shouldBump) {
   console.log('there was no change on legacy @teambit/legacy that requires bumping its version');
@@ -17,8 +18,6 @@ const currentBitLegacyVersionInCode = require('../package.json').version;
 console.log('currentBitLegacyVersionInCode', currentBitLegacyVersionInCode);
 const currentBitLegacyVersionInNpm = getCurrentBitLegacyVerFromNpm();
 const nextBitLegacyVersion = getNextBitLegacyVersion();
-gitStatus(); // to debug errors with git-pull
-gitPull();
 replaceVersionOccurrencesInCode();
 gitCommitChanges();
 gitPull();
