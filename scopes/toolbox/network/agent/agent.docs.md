@@ -2,6 +2,7 @@
 labels: ['typescript', 'utils', 'network']
 description: 'An http/s agent factory with proxy support'
 ---
+*Based on - https://github.com/pnpm/pnpm/blob/acc1782c6f18e1388e333c6fd44ccd378faba553/packages/npm-registry-agent/src/index.ts#L0-L1*
 
 Create an http/s agent from uri and options.
 This support http/s proxy server with different configuration.

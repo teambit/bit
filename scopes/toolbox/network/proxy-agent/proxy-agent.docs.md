@@ -3,6 +3,9 @@ labels: ['typescript', 'utils', 'network']
 description: 'Create a http/s/socks proxy agent'
 ---
 
+*Based on - https://github.com/pnpm/pnpm/blob/acc1782c6f18e1388e333c6fd44ccd378faba553/packages/npm-registry-agent/src/index.ts#L0-L1*
+
+
 Create a http/s/socks proxy agent from uri and options.
 This is usually used from within the `agent` component, to create an agent or proxy agent according to the config.
 
