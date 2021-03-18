@@ -117,6 +117,7 @@
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
   },
   "dependencies": {
+    "@teambit/network.agent": "0.0.1",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",
     "gitconfig": "2.0.8",
