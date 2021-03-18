@@ -249,6 +249,11 @@ export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
+export const CFG_PROXY_CA = 'proxy.ca';
+export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
+export const CFG_PROXY_CERT = 'proxy.cert';
+export const CFG_PROXY_KEY = 'proxy.key';
+export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
 
 /**
  * git hooks
