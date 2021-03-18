@@ -1,6 +1,5 @@
 import gitconfig from 'gitconfig';
 import R from 'ramda';
-
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import Config from '../../../global-config/config';

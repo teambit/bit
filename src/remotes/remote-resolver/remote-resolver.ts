@@ -11,7 +11,7 @@ import {
 import { RemoteScopeNotFound } from '../../scope/network/exceptions';
 import Scope from '../../scope/scope';
 import logger from '../../logger/logger';
-import { getAuthHeader, getFetcherWithProxy } from '../../scope/network/http/http';
+import { getAuthHeader, getFetcherWithAgent } from '../../scope/network/http/http';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 const symphonyUrl = getSync(CFG_SYMPHONY_URL_KEY) || SYMPHONY_URL;
@@ -36,7 +36,9 @@ async function getScope(name: string) {
   if (scopeCache[name]) return scopeCache[name];
   const token = getSync(CFG_USER_TOKEN_KEY);
   const headers = token ? getAuthHeader(token) : {};
-  const client = new GraphQLClient(`https://${symphonyUrl}/graphql`, { headers, fetch: getFetcherWithProxy() });
+  const graphQlUrl = `https://${symphonyUrl}/graphql`;
+  const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
+  const client = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
 
   try {
     const res = await client.request(SCOPE_GET, {
