@@ -1,0 +1,12 @@
+$colorByLetter: a #ff6b81, b #ff7f50, c #efc951, d #94cd53, e #57606f, f #ffa502, g #409d94, h #ff4757, i #747d8c,
+  j #2f3542, k #c47367, l #70a1ff, m #6665e2, n #2c437e, o #60a3bc, p #2ed573, q #1e90ff, r #275a80, s #7e6a6a,
+  t #5fc068, u #d03961, v #006266, w #833471, x #fda7df, y #12cbc4, z #4a69bd;
+
+@each $pair in $colorByLetter {
+  $letter: nth($pair, 1);
+  $color: nth($pair, 2);
+
+  .#{$letter} {
+    color: $color;
+  }
+}
