@@ -620,6 +620,7 @@ export default class Consumer {
     build,
     skipAutoSnap = false,
     resolveUnmerged = false,
+    forceDeploy = false,
   }: {
     ids: BitIds;
     message?: string;
@@ -630,6 +631,7 @@ export default class Consumer {
     build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
+    forceDeploy?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
     logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
       components: ids.toString(),
@@ -678,6 +680,7 @@ export default class Consumer {
       resolveUnmerged,
       isSnap: true,
       disableDeployPipeline: false,
+      forceDeploy,
     });
 
     return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
