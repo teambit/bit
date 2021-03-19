@@ -35,30 +35,27 @@ export class ObjectsWritable extends Writable {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
     try {
-      return await this.writeObjectToFs(obj, callback);
+      await this.writeObjectToFs(obj);
+      return callback();
     } catch (err) {
       return callback(err);
     }
   }
 
-  private async writeObjectToFs(obj: ObjectItem, callback: Function) {
+  private async writeObjectToFs(obj: ObjectItem) {
     const bitObject = await BitObject.parseObject(obj.buffer);
     if (bitObject instanceof Lane) {
       throw new Error('ObjectsWritable does not support lanes');
     }
-    let promise;
     if (bitObject instanceof ModelComponent) {
-      promise = this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
+      await this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
     } else {
-      promise = this.objectsQueue.addImmutableObject(obj.ref.toString(), () =>
-        this.repo.writeObjectsToTheFS([bitObject])
-      );
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.writeImmutableObject(bitObject));
     }
-    if (promise) {
-      promise // eslint-disable-next-line promise/no-callback-in-promise
-        .then(() => callback()) // eslint-disable-next-line promise/no-callback-in-promise
-        .catch((err) => callback(err));
-    }
+  }
+
+  private async writeImmutableObject(bitObject: BitObject) {
+    await this.repo.writeObjectsToTheFS([bitObject]);
   }
 
   private async writeComponentObject(modelComponent: ModelComponent) {
