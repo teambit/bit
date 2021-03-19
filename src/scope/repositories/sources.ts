@@ -77,20 +77,21 @@ export default class SourceRepository {
    * to be fetched from the remote again.
    */
   async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
-    const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
-    if (!foundComponent) return undefined;
-    if (!bitId.hasVersion()) return foundComponent;
+    const emptyComponent = ModelComponent.fromBitId(bitId);
+    const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
+    if (!component) return undefined;
+    if (!bitId.hasVersion()) return component;
 
     const returnComponent = (version: Version): ModelComponent | undefined => {
       if (
         versionShouldBeBuilt &&
         !bitId.isLocal(this.scope.name) &&
+        !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
         (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
       ) {
         return undefined;
       }
-      return foundComponent;
+      return component;
     };
 
     // @ts-ignore
@@ -107,12 +108,12 @@ export default class SourceRepository {
       return returnComponent(snap as Version);
     }
     // @ts-ignore
-    if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
+    if (!component.hasTagIncludeOrphaned(bitId.version)) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
       return undefined;
     }
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const versionHash = foundComponent.versionsIncludeOrphaned[bitId.version];
+    const versionHash = component.versionsIncludeOrphaned[bitId.version];
     const version = await this.objects().load(versionHash);
     if (!version) {
       logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);

@@ -42,7 +42,7 @@
         },
         "peerDependencies": {
           "react": "16.13.1",
-          "@teambit/legacy": "1.0.37",
+          "@teambit/legacy": "1.0.40",
           "react-dom": "16.13.1"
         }
       }
