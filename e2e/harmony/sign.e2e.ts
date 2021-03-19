@@ -43,8 +43,7 @@ describe('sign command', function () {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`, helper.scopes.remotePath);
       expect(comp1.buildStatus).to.equal('succeed');
     });
-    // @todo: fix it as soon as possible
-    describe.skip('running bit import on the workspace', () => {
+    describe('running bit import on the workspace', () => {
       before(() => {
         helper.command.importAllComponents();
       });
