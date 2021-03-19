@@ -101,9 +101,10 @@ export class GraphqlMain {
           this.logger.error('graphql got an error during running the following query:', params);
           this.logger.error('graphql error ', err);
           return Object.assign(err, {
-            ERR_CODE: err.originalError?.constructor?.name,
             // @ts-ignore
-            HTTP_CODE: err.originalError?.code,
+            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+            // @ts-ignore
+            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
           });
         },
         schema,
