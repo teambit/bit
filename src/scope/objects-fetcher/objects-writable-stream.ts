@@ -35,8 +35,7 @@ export class ObjectsWritable extends Writable {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
     try {
-      await this.writeObjectToFs(obj, callback);
-      return callback();
+      return await this.writeObjectToFs(obj, callback);
     } catch (err) {
       return callback(err);
     }
@@ -47,19 +46,18 @@ export class ObjectsWritable extends Writable {
     if (bitObject instanceof Lane) {
       throw new Error('ObjectsWritable does not support lanes');
     }
+    let promise;
     if (bitObject instanceof ModelComponent) {
-      this.componentsQueue
-        .addComponent(bitObject.id(), () => this.writeComponentObject(bitObject))
-        .catch((err) => {
-          // eslint-disable-next-line promise/no-callback-in-promise
-          callback(err);
-        });
+      promise = this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
     } else {
-      const addToQueue = this.objectsQueue.addImmutableObject(obj.ref.toString(), () =>
+      promise = this.objectsQueue.addImmutableObject(obj.ref.toString(), () =>
         this.repo.writeObjectsToTheFS([bitObject])
       );
-      // eslint-disable-next-line promise/no-callback-in-promise
-      if (addToQueue) addToQueue.catch((err) => callback(err));
+    }
+    if (promise) {
+      promise // eslint-disable-next-line promise/no-callback-in-promise
+        .then(() => callback()) // eslint-disable-next-line promise/no-callback-in-promise
+        .catch((err) => callback(err));
     }
   }
 
