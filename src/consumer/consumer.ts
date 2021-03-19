@@ -237,7 +237,7 @@ export default class Consumer {
   async write(): Promise<Consumer> {
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
-    await this.bitMap.write(this.componentFsCache);
+    await this.writeBitMap();
     return this;
   }
 
@@ -1038,9 +1038,13 @@ export default class Consumer {
     };
   }
 
+  async writeBitMap() {
+    await this.bitMap.write(this.componentFsCache);
+  }
+
   async onDestroy() {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
-    return this.bitMap.write(this.componentFsCache);
+    await this.writeBitMap();
   }
 }
