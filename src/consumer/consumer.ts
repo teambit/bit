@@ -329,8 +329,7 @@ export default class Consumer {
 
     const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
       modelComponent,
-      id,
-      true
+      id
     )) as VersionDependencies;
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
