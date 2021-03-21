@@ -751,6 +751,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/global-loader"
     },
+    "ui/highlight-toggler": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/highlight-toggler"
+    },
+    "ui/highlighter": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/highlighter"
+    },
     "ui/hooks/use-bind-key": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.322",

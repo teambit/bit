@@ -2,12 +2,11 @@ import React, { useState, useEffect, ReactNode, FC } from 'react';
 import { ComponentHighlighter } from '@teambit/ui.component-highlighter';
 import type { PubsubPreview } from '@teambit/pubsub';
 
-// not amazing.
-import { ToggleHighlightEvent } from '@teambit/compositions';
+import { ToggleHighlightEvent } from './toggle-highlight-event';
 
 export function createHighlighter(pubsubPreview: PubsubPreview) {
   const Highlighter: FC = ({ children }: { children?: ReactNode }) => {
-    const [isActive, setActive] = useState(true);
+    const [isActive, setActive] = useState(false);
 
     useEffect(() => {
       pubsubPreview.sub(ToggleHighlightEvent.topic, (event: ToggleHighlightEvent) => {
@@ -15,12 +14,7 @@ export function createHighlighter(pubsubPreview: PubsubPreview) {
       });
     }, []);
 
-    return (
-      <ComponentHighlighter disabled={!isActive}>
-        <div>active: {isActive.toString()}?</div>
-        {children}
-      </ComponentHighlighter>
-    );
+    return <ComponentHighlighter disabled={!isActive}>{children}</ComponentHighlighter>;
   };
   return Highlighter;
 }

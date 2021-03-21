@@ -1,5 +1,6 @@
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
 import head from 'lodash.head';
+import flatten from 'lodash.flatten';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -16,8 +17,14 @@ import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
+import type { MenuBarWidgetsSlot } from './compositions.ui.runtime';
 
-export function Compositions({ onToggleHighlight }: { onToggleHighlight?: (active: boolean) => void }) {
+export type MenuBarWidget = {
+  location: 'start' | 'end';
+  content: ReactNode;
+};
+
+export function Compositions({ menuBarWidgets }: { menuBarWidgets?: MenuBarWidgetsSlot }) {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(selected);
@@ -44,10 +51,25 @@ export function Compositions({ onToggleHighlight }: { onToggleHighlight?: (activ
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
 
+  const menuWidgets = useMemo(
+    () =>
+      flatten(menuBarWidgets?.values())
+        .filter(({ location }) => location === 'start')
+        .map(({ content }, idx) => <React.Fragment key={idx}>{content}</React.Fragment>),
+    [menuBarWidgets]
+  );
+  const menuWidgetsEnd = useMemo(
+    () =>
+      flatten(menuBarWidgets?.values())
+        .filter(({ location }) => location === 'end')
+        .map(({ content }, idx) => <React.Fragment key={idx}>{content}</React.Fragment>),
+    [menuBarWidgets]
+  );
+
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
       <Pane className={styles.left}>
-        <CompositionsMenuBar onToggleHighlight={onToggleHighlight} />
+        <CompositionsMenuBar widgetsStart={menuWidgets} widgetsEnd={menuWidgetsEnd} />
         <CompositionContent component={component} selected={selected} />
       </Pane>
       <HoverSplitter className={styles.splitter}>

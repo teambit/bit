@@ -8,6 +8,3 @@ export type { CompositionsPreview } from './compositions.preview.runtime';
 export { CompositionsOverview } from './ui/compositions-overview';
 export { ComponentComposition } from './ui';
 export default CompositionsAspect;
-
-// TODO - move
-export { ToggleHighlightEvent } from './toggle-highlight-event';

@@ -1,31 +1,21 @@
-import React, { useState } from 'react';
+import React, { ReactNode } from 'react';
 import classnames from 'classnames';
-import { MenuWidgetIcon } from '@teambit/ui.menu-widget-icon';
 
 import styles from './compositions-menu-bar.module.scss';
 
 interface CompositionsMenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
-  onToggleHighlight?: (active: boolean) => void;
+  widgetsStart?: ReactNode[];
+  widgetsEnd?: ReactNode[];
 }
 
-export function CompositionsMenuBar({ onToggleHighlight, className, ...rest }: CompositionsMenuBarProps) {
-  const [active, setActive] = useState(false);
-
-  const handleClick = () => {
-    const next = !active;
-    setActive(next);
-    onToggleHighlight?.(next);
-  };
+export function CompositionsMenuBar({ className, widgetsStart, widgetsEnd, ...rest }: CompositionsMenuBarProps) {
+  if (!widgetsEnd?.length || !widgetsEnd.length) return null;
 
   return (
     <div {...rest} className={classnames(className, styles.compositionsMenuBar)} style={{}}>
-      {/* TODO @Uri - extract this to a slot */}
-      <MenuWidgetIcon
-        icon="code"
-        tooltipContent="Component Highlighter (beta)"
-        onClick={handleClick}
-        className={classnames(styles.toggleHighlightButton, active && styles.active)}
-      />
+      {!!widgetsStart?.length && <div>{widgetsStart}</div>}
+      <div className={styles.spacer}></div>
+      {!!widgetsEnd?.length && <div>{widgetsEnd}</div>}
     </div>
   );
 }

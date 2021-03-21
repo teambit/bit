@@ -1,9 +1,9 @@
 import { ComponentType } from 'react';
 import flatten from 'lodash.flatten';
-import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import PreviewAspect, { PreviewPreview, PreviewRuntime } from '@teambit/preview';
-import { createHighlighter } from './highlighter';
+import { createHighlighter } from '@teambit/ui.highlighter';
+import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { ReactAspect } from './react.aspect';
 
 export type Provider = ComponentType<{}>;
@@ -34,6 +34,7 @@ export class ReactPreview {
     [providerSlot]: [ProviderSlot]
   ) {
     const reactPreview = new ReactPreview(preview, providerSlot);
+
     reactPreview.registerProvider([createHighlighter(pubsubPreview)]);
 
     preview.registerRenderContext(() => reactPreview.getRenderingContext());

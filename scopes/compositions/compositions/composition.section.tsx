@@ -2,9 +2,9 @@ import { Section } from '@teambit/component';
 import React from 'react';
 
 import { Compositions } from './compositions';
-import { CompositionsUI } from './compositions.ui.runtime';
+import type { CompositionsUI, MenuBarWidgetsSlot } from './compositions.ui.runtime';
 
-type Options = { onToggleHighlight?: (active: boolean) => void };
+type Options = { menuBarWidgetSlot: MenuBarWidgetsSlot };
 
 export class CompositionsSection implements Section {
   constructor(
@@ -22,7 +22,7 @@ export class CompositionsSection implements Section {
 
   route = {
     path: '~compositions',
-    children: <Compositions onToggleHighlight={this.options.onToggleHighlight} />,
+    children: <Compositions menuBarWidgets={this.options.menuBarWidgetSlot} />,
   };
 
   order = 20;
