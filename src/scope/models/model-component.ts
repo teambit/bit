@@ -798,6 +798,11 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return localVersions.includes(tag);
   }
 
+  hasLocalVersion(version: string): boolean {
+    const localVersions = this.getLocalTagsOrHashes();
+    return localVersions.includes(version);
+  }
+
   getLocalTagsOrHashes(): string[] {
     const localVersions = this.getLocalVersions();
     if (!this.divergeData) return localVersions;

@@ -7,13 +7,12 @@ export class WriteObjectsQueue {
   constructor(concurrency = CONCURRENT_IO_LIMIT) {
     this.queue = new PQueue({ concurrency, autoStart: true });
   }
-  addImmutableObject(hash: string, fn: () => Promise<void>) {
+  addImmutableObject<T>(hash: string, fn: () => Promise<T | null>) {
     if (this.addedHashes.includes(hash)) {
-      return;
+      return null;
     }
     this.addedHashes.push(hash);
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.add(fn);
+    return this.add(fn);
   }
   getQueue() {
     return this.queue;
