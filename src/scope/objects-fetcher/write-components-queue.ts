@@ -8,8 +8,7 @@ export class WriteComponentsQueue {
   }
   addComponent(id: string, fn: () => Promise<void>) {
     this.processedIds.push(id);
-    // eslint-disable-next-line @typescript-eslint/no-floating-promises
-    this.add(fn);
+    return this.add(fn);
   }
   getQueue() {
     return this.queue;

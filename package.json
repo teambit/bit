@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.32",
+  "version": "1.0.42",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -117,6 +117,7 @@
     "build:src": "babel src -d dist --verbose --extensions \".ts,.tsx,.js\" --copy-files"
   },
   "dependencies": {
+    "@teambit/network.agent": "0.0.1",
     "@babel/core": "7.12.17",
     "@babel/runtime": "7.12.18",
     "gitconfig": "2.0.8",
@@ -153,7 +154,6 @@
     "graphql-request": "3.4.0",
     "graphviz": "0.0.9",
     "group-array": "1.0.0",
-    "https-proxy-agent": "5.0.0",
     "ignore": "3.3.10",
     "ini-builder": "1.1.1",
     "ink": "3.0.8",

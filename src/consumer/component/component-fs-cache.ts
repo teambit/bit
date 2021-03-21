@@ -1,5 +1,6 @@
 import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
+import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
 import type { ComponentMapFile } from '../bit-map/component-map';
@@ -91,6 +92,10 @@ export class ComponentFsCache {
     } catch (err) {
       if (err.code === 'ENOENT') {
         return null; // cache doesn't exists
+      }
+      if (err.code === 'EINTEGRITY') {
+        fs.removeSync(cachePath);
+        return null;
       }
       throw err;
     }

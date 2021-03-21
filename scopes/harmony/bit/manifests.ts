@@ -58,6 +58,7 @@ import MDXAspect from '@teambit/mdx';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { E2eWorkspaceAspect } from '@teambit/e2e.workspace';
 import { ExportAspect } from '@teambit/export';
+import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
 import { BitAspect } from './bit.aspect';
 
@@ -122,6 +123,7 @@ export const manifestsMap = {
   [ExportAspect.id]: ExportAspect,
   [E2eWorkspaceAspect.id]: E2eWorkspaceAspect,
   [UserAgentAspect.id]: UserAgentAspect,
+  [EjectAspect.id]: EjectAspect,
 };
 
 export function isCoreAspect(id: string) {

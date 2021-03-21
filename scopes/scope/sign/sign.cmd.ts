@@ -12,11 +12,14 @@ export class SignCmd implements Command {
   description = 'complete the build process for components';
   alias = '';
   group = 'component';
-  options = [['', 'multiple', 'sign components from multiple scopes']] as CommandOptions;
+  options = [
+    ['', 'multiple', 'sign components from multiple scopes'],
+    ['', 'always-succeed', 'exit with code 0 even though the build failed'],
+  ] as CommandOptions;
 
   constructor(private signMain: SignMain, private scope: ScopeMain, private logger: Logger) {}
 
-  async report([components]: [string[]], { multiple }: { multiple: boolean }) {
+  async report([components]: [string[]], { multiple, alwaysSucceed }: { multiple: boolean; alwaysSucceed: boolean }) {
     const componentIds = components.map((c) => ComponentID.fromString(c));
     const results = await this.signMain.sign(componentIds, multiple);
     if (!results) {
@@ -29,7 +32,7 @@ export class SignCmd implements Command {
 ${results.components.map((c) => c.id.toString()).join('\n')}`;
     return {
       data: error + chalk.bold[color](signed),
-      code: error ? 1 : 0,
+      code: error && !alwaysSucceed ? 1 : 0,
     };
   }
 }

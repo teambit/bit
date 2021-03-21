@@ -56,7 +56,6 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
-import { FETCH_OPTIONS } from '../api/scope/lib/fetch';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -104,6 +103,7 @@ export type LegacyOnTagResult = {
 export type OnTagOpts = {
   disableDeployPipeline?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
+  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
 };
 export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
@@ -134,7 +134,6 @@ export default class Scope {
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
   static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
-  static onPreFetchObjects: (ids: string[], fetchOptions: FETCH_OPTIONS) => Promise<void>;
 
   /**
    * import components to the `Scope.

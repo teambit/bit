@@ -63,6 +63,7 @@
         "@teambit/base-ui.text.heading": "0.6.4",
         "@teambit/base-ui.text.muted-text": "0.6.4",
         "@teambit/base-ui.text.paragraph": "0.6.4",
+        "@teambit/base-ui.text.text": "0.0.12",
         "@teambit/base-ui.text.text-sizes": "0.0.1",
         "@teambit/base-ui.text.themed-text": "0.6.4",
         "@teambit/base-ui.theme.color-palette": "0.6.7",
@@ -87,7 +88,7 @@
         "@teambit/documenter.ui.heading": "1.0.3",
         "@teambit/documenter.ui.highlighted-text": "1.0.3",
         "@teambit/documenter.ui.image": "0.0.1",
-        "@teambit/documenter.ui.import-action": "1.0.3",
+        "@teambit/documenter.ui.import-action": "3.0.11",
         "@teambit/documenter.ui.italic": "0.0.1",
         "@teambit/documenter.ui.label": "2.0.2",
         "@teambit/documenter.ui.label-list": "1.0.3",
@@ -114,6 +115,7 @@
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
         "@teambit/evangelist.theme.icon-font": "0.5.5",
         "@teambit/harmony": "0.2.11",
+        "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "5.11.9",
         "@testing-library/react": "11.0.4",
@@ -128,6 +130,7 @@
         "@types/find-cache-dir": "3.2.0",
         "@types/get-port": "4.2.0",
         "@types/history": "4.7.8",
+        "@types/http-proxy-agent": "2.0.2",
         "@types/lodash": "4.14.165",
         "@types/lodash.compact": "3.0.6",
         "@types/lodash.flatten": "4.4.6",
@@ -155,6 +158,7 @@
         "@yarnpkg/fslib": "2.4.0",
         "@yarnpkg/plugin-npm": "2.4.0",
         "@yarnpkg/plugin-pack": "2.2.3",
+        "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
         "apollo-link-http": "1.5.17",
@@ -204,6 +208,8 @@
         "html-escaper": "3.0.0",
         "html-webpack-plugin": "4.5.2",
         "http-proxy": "1.18.1",
+        "http-proxy-agent": "4.0.1",
+        "https-proxy-agent": "5.0.0",
         "humanize-duration": "3.23.1",
         "humanize-string": "2.1.0",
         "is-primitive": "3.0.1",
@@ -261,6 +267,7 @@
         "singleton-tsserver": "1.0.1",
         "socket.io": "2.4.1",
         "socket.io-client": "2.4.0",
+        "socks-proxy-agent": "5.0.0",
         "string-to-color": "2.2.2",
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
@@ -290,7 +297,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.32",
+        "@teambit/legacy": "1.0.42",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -348,7 +355,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.32",
+            "@teambit/legacy": "1.0.42",
             "react-dom": "16.13.1"
           }
         }
@@ -490,7 +497,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.32",
+            "@teambit/legacy": "1.0.42",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",
