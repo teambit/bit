@@ -6,6 +6,11 @@ import { Composition } from '../composition';
 
 export type ComponentCompositionProps = {
   /**
+   * HTML class
+   */
+  className?: string;
+
+  /**
    * component to render.
    */
   component: ComponentModel;
@@ -21,9 +26,10 @@ export type ComponentCompositionProps = {
   hotReload?: boolean;
 };
 
-export function ComponentComposition({ component, composition, hotReload }: ComponentCompositionProps) {
+export function ComponentComposition({ component, composition, hotReload, className }: ComponentCompositionProps) {
   return (
     <ComponentPreview
+      className={className}
       component={component}
       style={{ width: '100%', height: '100%' }}
       previewName="compositions"

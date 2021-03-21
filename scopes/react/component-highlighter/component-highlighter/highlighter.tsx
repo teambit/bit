@@ -28,7 +28,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
   }, []);
 
   useEffect(() => {
-    if (!disabled) {
+    if (disabled) {
       setTarget(null);
       setText(undefined);
     }

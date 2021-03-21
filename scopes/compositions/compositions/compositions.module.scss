@@ -18,6 +18,7 @@ $panelBg: #fafafa;
 
   display: flex;
   overflow-y: auto;
+  flex-direction: column;
 }
 
 .right {
@@ -59,4 +60,9 @@ $panelBg: #fafafa;
 
 .compositions {
   padding: 16px 8px 0 8px;
+}
+
+.compositionsIframe {
+  border: 8px solid var(--border-color, #ededed);
+  box-sizing: border-box;
 }

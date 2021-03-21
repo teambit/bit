@@ -1,3 +1,5 @@
+import React, { useContext, useEffect, useState, useRef } from 'react';
+import head from 'lodash.head';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -9,15 +11,13 @@ import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
-import head from 'lodash.head';
-import React, { useContext, useEffect, useState, useRef } from 'react';
-
+import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
 
-export function Compositions() {
+export function Compositions({ onToggleHighlight }: { onToggleHighlight?: (active: boolean) => void }) {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(selected);
@@ -47,6 +47,7 @@ export function Compositions() {
   return (
     <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
       <Pane className={styles.left}>
+        <CompositionsMenuBar onToggleHighlight={onToggleHighlight} />
         <CompositionContent component={component} selected={selected} />
       </Pane>
       <HoverSplitter className={styles.splitter}>
@@ -99,5 +100,5 @@ function CompositionContent({ component, selected }: CompositionContentProps) {
         link="https://harmony-docs.bit.dev/compositions/overview/"
       />
     );
-  return <ComponentComposition component={component} composition={selected}></ComponentComposition>;
+  return <ComponentComposition className={styles.compositionsIframe} component={component} composition={selected} />;
 }

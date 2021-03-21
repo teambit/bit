@@ -1,7 +1,9 @@
 import { ComponentType } from 'react';
 import flatten from 'lodash.flatten';
+import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import PreviewAspect, { PreviewPreview, PreviewRuntime } from '@teambit/preview';
+import { createHighlighter } from './highlighter';
 import { ReactAspect } from './react.aspect';
 
 export type Provider = ComponentType<{}>;
@@ -24,13 +26,17 @@ export class ReactPreview {
 
   static slots = [Slot.withType<Provider>()];
 
-  static dependencies = [PreviewAspect];
+  static dependencies = [PreviewAspect, PubsubAspect];
 
-  static async provider([preview]: [PreviewPreview], config, [providerSlot]: [ProviderSlot]) {
+  static async provider(
+    [preview, pubsubPreview]: [PreviewPreview, PubsubPreview],
+    config,
+    [providerSlot]: [ProviderSlot]
+  ) {
     const reactPreview = new ReactPreview(preview, providerSlot);
-    preview.registerRenderContext(() => {
-      return reactPreview.getRenderingContext();
-    });
+    reactPreview.registerProvider([createHighlighter(pubsubPreview)]);
+
+    preview.registerRenderContext(() => reactPreview.getRenderingContext());
     return reactPreview;
   }
 }

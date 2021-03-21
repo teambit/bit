@@ -4,7 +4,7 @@ import { usePubSubIframe } from '@teambit/pubsub';
 
 import { toPreviewUrl } from './urls';
 
-export type ComponentPreviewProps = {
+export interface ComponentPreviewProps extends Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'> {
   /**
    * component to preview.
    */
@@ -16,11 +16,6 @@ export type ComponentPreviewProps = {
   previewName?: string;
 
   /**
-   * preview style.
-   */
-  style?: CSSProperties;
-
-  /**
    * string in the format of query params. e.g. foo=bar&bar=there
    */
   queryParams?: string;
@@ -29,18 +24,18 @@ export type ComponentPreviewProps = {
    * enable/disable hot reload for the composition preview.
    */
   hotReload?: boolean;
-};
+}
 
 /**
  * renders a preview of a component.
  */
-export function ComponentPreview({ component, style, previewName, queryParams }: ComponentPreviewProps) {
+export function ComponentPreview({ component, previewName, queryParams, hotReload, ...rest }: ComponentPreviewProps) {
   const ref = createRef<HTMLIFrameElement>();
   usePubSubIframe(ref);
 
   const url = toPreviewUrl(component, previewName, queryParams);
 
-  return <iframe ref={ref} style={style} src={url} />;
+  return <iframe {...rest} ref={ref} src={url} />;
 }
 
 ComponentPreview.defaultProps = {

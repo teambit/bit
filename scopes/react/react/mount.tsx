@@ -41,11 +41,9 @@ export default (Composition: React.ComponentType = StandaloneNotFoundPage, previ
   const reactContext = previewContext.get(ReactAspect.id);
   const Provider = withProviders(reactContext?.providers);
   ReactDOM.render(
-    <ComponentHighlighter>
-      <Provider>
-        <Composition />
-      </Provider>
-    </ComponentHighlighter>,
+    <Provider>
+      <Composition />
+    </Provider>,
     document.getElementById('root')
   );
   // ReactDOM.render(<Composition />, document.getElementById('root'));
