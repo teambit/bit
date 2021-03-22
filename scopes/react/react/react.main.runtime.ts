@@ -29,6 +29,9 @@ import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { ReactAppOptions } from './react-app-options';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
+import { ReactApp } from './react.application';
 
 type ReactDeps = [
   EnvsMain,
@@ -42,7 +45,8 @@ type ReactDeps = [
   TesterMain,
   ESLintMain,
   MultiCompilerMain,
-  MDXMain
+  MDXMain,
+  ApplicationMain
 ];
 
 export type ReactMainConfig = {
@@ -78,7 +82,9 @@ export class ReactMain {
      */
     readonly reactEnv: ReactEnv,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private application: ApplicationMain
   ) {}
 
   readonly env = this.reactEnv;
@@ -108,6 +114,13 @@ export class ReactMain {
         return this.reactEnv.getBuildPipe(tsconfig);
       },
     });
+  }
+
+  /**
+   * register a new React application.
+   */
+  registerReactApp(options: ReactAppOptions) {
+    this.application.registerApp(new ReactApp(options.name, options.portRange, this.reactEnv.getDevServer()));
   }
 
   /**
@@ -256,6 +269,7 @@ export class ReactMain {
     ESLintAspect,
     MultiCompilerAspect,
     MDXAspect,
+    ApplicationAspect,
   ];
 
   static async provider(
@@ -272,6 +286,7 @@ export class ReactMain {
       eslint,
       multiCompiler,
       mdx,
+      application,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
@@ -288,7 +303,7 @@ export class ReactMain {
       multiCompiler,
       mdx
     );
-    const react = new ReactMain(reactEnv, envs);
+    const react = new ReactMain(reactEnv, envs, application);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     return react;
