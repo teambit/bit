@@ -98,7 +98,7 @@ export class UpdateDependenciesMain {
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
     await this.export();
-    this.triggerOnPostUpdateDependencies();
+    await this.triggerOnPostUpdateDependencies();
 
     return {
       depsUpdateItems: this.depsUpdateItems,
@@ -118,9 +118,9 @@ export class UpdateDependenciesMain {
     this.onPostUpdateDependenciesSlot.register(fn);
   }
 
-  private triggerOnPostUpdateDependencies() {
+  private async triggerOnPostUpdateDependencies() {
     // don't wait for the promise to resolve.
-    Promise.all(this.onPostUpdateDependenciesSlot.values().map((fn) => fn(this.components))).catch((err) =>
+    await Promise.all(this.onPostUpdateDependenciesSlot.values().map((fn) => fn(this.components))).catch((err) =>
       this.logger.error('got an error during on-post-updates hook', err)
     );
   }
