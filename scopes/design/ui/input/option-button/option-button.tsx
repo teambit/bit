@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import classnames from 'classnames';
 import Button, { ButtonProps } from '@teambit/base-ui.input.button';
-import { CheckboxLabel } from '@teambit/base-ui.input.checkbox.label';
 import { Icon } from '@teambit/evangelist.elements.icon';
 
 import styles from './option-button.module.scss';

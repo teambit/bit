@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { PubsubUI } from '@teambit/pubsub';
 import { ToggleHighlightEvent } from '@teambit/ui.highlighter';
 import { OptionButton } from '@teambit/ui.input.option-button';
+import { Tooltip } from '@teambit/ui.tooltip';
 
 export function HighlighterWidget({ pubSub }: { pubSub: PubsubUI }) {
   const [active, setActive] = useState(false);
@@ -15,11 +16,11 @@ export function HighlighterWidget({ pubSub }: { pubSub: PubsubUI }) {
   };
 
   return (
-    <OptionButton
-      icon="highlighter-toggle"
-      // tooltipContent="Component Highlighter (beta)"
-      onClick={handleHighlightToggle}
-      active={active}
-    />
+    <Tooltip content="Component Highlighter (beta)">
+      {/* tooltip requires child with ref */}
+      <span>
+        <OptionButton icon="highlighter-toggle" onClick={handleHighlightToggle} active={active} />
+      </span>
+    </Tooltip>
   );
 }
