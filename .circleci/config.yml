@@ -1026,6 +1026,18 @@ jobs:
           paths:
             - bit/dist
 
+  windows_bvm_install:
+    <<: *windows_defaults
+    steps:
+      - attach_workspace:
+          at: .
+      - run: 'npm i -g bvm'
+      - run: 'bvm upgrade'
+      # - persist_to_workspace:
+      #     root: .
+      #     paths:
+      #       - bit/dist
+
   windows_e2e_test:
     <<: *windows_defaults
     environment:
@@ -1119,6 +1131,22 @@ workflows:
       - bit_build:
           requires:
             - generate_and_check_types
+
+  build_and_test_windows:
+    triggers:
+      - schedule:
+          filters:
+            branches:
+              only:
+                - windows_bvm_tests
+    jobs:
+      - checkout_code
+      - windows_bvm_install
+      - windows_e2e_test:
+          requires:
+            - checkout_code
+            - windows_bvm_install
+
 
 
   # windows_e2e:
@@ -1331,6 +1359,22 @@ workflows:
       - docker_build:
           requires:
             - bit_tag
+
+  windows-nightly:
+    triggers:
+      - schedule: # every day at 4AM UTC (= 1AM EST)
+          cron: '0 4 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - windows_bvm_install
+      - windows_e2e_test
+
+
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
