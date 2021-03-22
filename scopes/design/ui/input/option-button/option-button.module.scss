@@ -1,0 +1,23 @@
+.optionButton {
+  display: inline-flex;
+  align-items: center;
+
+  padding: 0 0.5em;
+  box-sizing: border-box;
+  height: 2em;
+  border-radius: 0.5em;
+
+  &:hover {
+    background-color: var(--bg-dent);
+  }
+
+  &.active {
+    color: var(--base-color);
+    background-color: var(--border-color);
+  }
+
+  // reset button styles:
+  background: none;
+  border: none;
+  font-size: inherit;
+}

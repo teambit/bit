@@ -9,7 +9,7 @@ interface CompositionsMenuBarProps extends React.HTMLAttributes<HTMLDivElement> 
 }
 
 export function CompositionsMenuBar({ className, widgetsStart, widgetsEnd, ...rest }: CompositionsMenuBarProps) {
-  if (!widgetsEnd?.length || !widgetsEnd.length) return null;
+  if (!widgetsStart?.length && !widgetsEnd?.length) return null;
 
   return (
     <div {...rest} className={classnames(className, styles.compositionsMenuBar)} style={{}}>

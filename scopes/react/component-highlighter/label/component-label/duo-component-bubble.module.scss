@@ -1,7 +1,7 @@
 .duoComponentBubble {
   display: flex;
 
-  color: var(--component-highlighter-text, white);
+  color: var(--component-highlighter-text, black);
   font-size: 12px;
 
   //reset styles from card:
@@ -39,14 +39,14 @@
 .scopeName {
   @extend .bubble;
 
-  background: var(--scope-color-bg, #f83d6c);
+  background: var(--scope-color-bg, #eebcc9);
 }
 
 .componentName {
   @extend .bubble;
 
   display: flex;
-  background-color: var(--component-highlighter-bg, #f83d6c);
+  background-color: var(--component-highlighter-bg, #eebcc9);
 }
 
 // .link {

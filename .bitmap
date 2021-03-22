@@ -751,12 +751,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/global-loader"
     },
-    "ui/highlight-toggler": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/highlight-toggler"
-    },
     "ui/highlighter": {
         "scope": "",
         "version": "",
@@ -804,6 +798,12 @@
         "version": "0.0.15",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
+    },
+    "ui/input/option-button": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/input/option-button"
     },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
