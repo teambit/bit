@@ -2,7 +2,7 @@ import type { Visitor, PluginObj, PluginPass } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
-import { fileToBitId as _fileToBitId } from './bit-from-pgk-json';
+import { fileToBitId as _fileToBitId } from './bit-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
 
 export type BitReactTransformerOptions = {
