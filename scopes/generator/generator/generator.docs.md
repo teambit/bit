@@ -1,4 +1,4 @@
-Create extension enable generating new components by a default template or extensions registered to this extension.
+;....;;..;;;..//;;//;;.';;./'p;;;Create extension enable generating new components by a default template or extensions registered to this extension.
 
 ### Configuration
 Add to your config the following:
