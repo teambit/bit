@@ -1,5 +1,5 @@
 ## Eject Feature Description
-one of the common scenarios of using `bit eject` is to make a quick change to an external component dependency. The component needs to be imported first and once it's changed and exported, there is no need to have it in the current workspace. Without `eject`, the next steps would be: 1) remove the component from the workspace sing `bit remove` and 2) installing the component using `bit install`.
+one of the common scenarios of using `bit eject` is to make a quick change to an external (component) dependency. The component needs to be imported first and once it's changed and exported, there is no need to keep it in the current workspace. Without `eject`, the next steps would be: 1) remove the component from the workspace by `bit remove` and 2) installing the component by `bit install`.
 
 `bit eject` combines the commands above to one command.
 
