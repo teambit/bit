@@ -1,2 +1,1 @@
-export { ToggleHighlightEvent } from './toggle-highlight-event';
-export { createHighlighter } from './highlighter';
+export { Highlighter } from './highlighter';

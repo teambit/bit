@@ -16,9 +16,11 @@ export interface ComponentPreviewProps extends Omit<React.IframeHTMLAttributes<H
   previewName?: string;
 
   /**
-   * string in the format of query params. e.g. foo=bar&bar=there
+   * query params to append at the end of the *hash*. Changing this property will not reload the preview
+   *
+   * e.g. 'foo=bar&bar=there', or ['foo=bar', 'bar=there']
    */
-  queryParams?: string;
+  queryParams?: string | string[];
 
   /**
    * enable/disable hot reload for the composition preview.

@@ -1,20 +1,32 @@
-import React, { useState, useEffect, ReactNode, FC } from 'react';
+import React, { useMemo, useState, useEffect, ReactNode, FC } from 'react';
 import { ComponentHighlighter } from '@teambit/ui.component-highlighter';
-import type { PubsubPreview } from '@teambit/pubsub';
+import queryString from 'query-string';
 
-import { ToggleHighlightEvent } from './toggle-highlight-event';
+export const PARAM_NAME = 'highlighter';
 
-export function createHighlighter(pubsubPreview: PubsubPreview) {
-  const Highlighter: FC = ({ children }: { children?: ReactNode }) => {
-    const [isActive, setActive] = useState(false);
+export const Highlighter: FC = ({ children }: { children?: ReactNode }) => {
+  const hash = useHash();
 
-    useEffect(() => {
-      pubsubPreview.sub(ToggleHighlightEvent.topic, (event: ToggleHighlightEvent) => {
-        setActive(event.data.shouldHighlight);
-      });
-    }, []);
+  const isActive = useMemo(() => {
+    const hashQuery = hash.split('?')[1];
+    const query = queryString.parse(hashQuery);
+    return query[PARAM_NAME] === 'true';
+  }, []);
 
-    return <ComponentHighlighter disabled={!isActive}>{children}</ComponentHighlighter>;
-  };
-  return Highlighter;
+  return <ComponentHighlighter disabled={!isActive}>{children}</ComponentHighlighter>;
+};
+
+function useHash() {
+  const [hash, setHash] = useState(window ? window.location.hash : '');
+
+  useEffect(() => {
+    setHash(window.location.hash);
+
+    window.addEventListener('hashchange', () => {
+      const current = window.location.hash;
+      setHash(current);
+    });
+  }, []);
+
+  return hash;
 }

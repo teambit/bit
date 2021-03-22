@@ -1,25 +1,18 @@
-import React, { useState } from 'react';
-import { PubsubUI } from '@teambit/pubsub';
-import { ToggleHighlightEvent } from '@teambit/ui.highlighter';
+import React from 'react';
 import { OptionButton } from '@teambit/ui.input.option-button';
 import { Tooltip } from '@teambit/ui.tooltip';
+import { usePreviewQueryParams } from '@teambit/ui.use-composition';
 
-export function HighlighterWidget({ pubSub }: { pubSub: PubsubUI }) {
-  const [active, setActive] = useState(false);
+const PARAM_NAME = 'highlighter';
 
-  const handleHighlightToggle = () => {
-    const next = !active;
-    setActive(next);
-
-    const event = new ToggleHighlightEvent(next);
-    pubSub.pub(ToggleHighlightEvent.topic, event);
-  };
+export function HighlighterWidget() {
+  const [active, setActive] = usePreviewQueryParams(PARAM_NAME);
 
   return (
     <Tooltip content="Component Highlighter (beta)">
       {/* tooltip requires child with ref */}
       <span>
-        <OptionButton icon="highlighter-toggle" onClick={handleHighlightToggle} active={active} />
+        <OptionButton icon="highlighter-toggle" onClick={() => setActive(!active)} active={active} />
       </span>
     </Tooltip>
   );

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
 import head from 'lodash.head';
-import flatten from 'lodash.flatten';
+import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -13,6 +13,8 @@ import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
+import { CompositionContextProvider } from '@teambit/ui.use-composition';
+
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -48,72 +50,63 @@ export function Compositions({ menuBarWidgets }: { menuBarWidgets?: MenuBarWidge
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
 
+  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
+  const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
+
   // collapse sidebar when empty, reopen when not
   useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
 
-  const menuWidgets = useMemo(
-    () =>
-      flatten(menuBarWidgets?.values())
-        .filter(({ location }) => location === 'start')
-        .map(({ content }, idx) => <React.Fragment key={idx}>{content}</React.Fragment>),
-    [menuBarWidgets]
-  );
-  const menuWidgetsEnd = useMemo(
-    () =>
-      flatten(menuBarWidgets?.values())
-        .filter(({ location }) => location === 'end')
-        .map(({ content }, idx) => <React.Fragment key={idx}>{content}</React.Fragment>),
-    [menuBarWidgets]
-  );
-
   return (
-    <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
-      <Pane className={styles.left}>
-        <CompositionsMenuBar widgetsStart={menuWidgets} widgetsEnd={menuWidgetsEnd} />
-        <CompositionContent component={component} selected={selected} />
-      </Pane>
-      <HoverSplitter className={styles.splitter}>
-        <Collapser
-          placement="left"
-          isOpen={isSidebarOpen}
-          onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={() => setSidebarOpenness((x) => !x)}
-          tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
-          className={styles.collapser}
-        />
-      </HoverSplitter>
-      <Pane className={styles.right}>
-        <ThemeContext>
-          <TabContainer className={styles.tabsContainer}>
-            <TabList className={styles.tabs}>
-              <Tab>compositions</Tab>
-              <Tab>properties</Tab>
-            </TabList>
-            <TabPanel className={styles.tabContent}>
-              <CompositionsPanel
-                onSelectComposition={selectComposition}
-                url={compositionUrl}
-                compositions={component.compositions}
-                active={selected}
-                className={styles.compost}
-              />
-            </TabPanel>
-            <TabPanel className={styles.tabContent}>
-              {properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />}
-            </TabPanel>
-          </TabContainer>
-        </ThemeContext>
-      </Pane>
-    </SplitPane>
+    <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
+      <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
+        <Pane className={styles.left}>
+          <CompositionsMenuBar menuBarWidgets={menuBarWidgets} />
+          <CompositionContent component={component} selected={selected} queryParams={queryParams} />
+        </Pane>
+        <HoverSplitter className={styles.splitter}>
+          <Collapser
+            placement="left"
+            isOpen={isSidebarOpen}
+            onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+            onClick={() => setSidebarOpenness((x) => !x)}
+            tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
+            className={styles.collapser}
+          />
+        </HoverSplitter>
+        <Pane className={styles.right}>
+          <ThemeContext>
+            <TabContainer className={styles.tabsContainer}>
+              <TabList className={styles.tabs}>
+                <Tab>compositions</Tab>
+                <Tab>properties</Tab>
+              </TabList>
+              <TabPanel className={styles.tabContent}>
+                <CompositionsPanel
+                  onSelectComposition={selectComposition}
+                  url={compositionUrl}
+                  compositions={component.compositions}
+                  active={selected}
+                  className={styles.compost}
+                />
+              </TabPanel>
+              <TabPanel className={styles.tabContent}>
+                {properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />}
+              </TabPanel>
+            </TabContainer>
+          </ThemeContext>
+        </Pane>
+      </SplitPane>
+    </CompositionContextProvider>
   );
 }
 
 type CompositionContentProps = {
   component: ComponentModel;
   selected?: Composition;
+  queryParams?: string | string[];
 };
 
-function CompositionContent({ component, selected }: CompositionContentProps) {
+function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
   if (component.compositions.length === 0)
     return (
       <EmptyBox
@@ -122,5 +115,12 @@ function CompositionContent({ component, selected }: CompositionContentProps) {
         link="https://harmony-docs.bit.dev/compositions/overview/"
       />
     );
-  return <ComponentComposition className={styles.compositionsIframe} component={component} composition={selected} />;
+  return (
+    <ComponentComposition
+      className={styles.compositionsIframe}
+      component={component}
+      composition={selected}
+      queryParams={queryParams}
+    />
+  );
 }
