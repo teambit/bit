@@ -31,6 +31,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const json = readFileSync(mapPath, 'utf-8');
       componentMap = JSON.parse(json);
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error('bit-react-transformer: error reading map file ', e);
     }
   }
@@ -111,12 +112,10 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     name: PLUGIN_NAME,
     visitor,
     // TODO - state type
-    pre(whatever) {
-      // console.log('handling file', whatever.file);
+    pre() {
       const filepath = opts.componentFilesPath;
 
       // reuse file read
-      // might cause problems if map files changes mid-run
       if (componentMap) return;
 
       if (filepath) setMap(filepath);

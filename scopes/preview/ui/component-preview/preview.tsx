@@ -1,4 +1,4 @@
-import React, { CSSProperties, createRef } from 'react';
+import React, { createRef } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
 
@@ -31,6 +31,8 @@ export interface ComponentPreviewProps extends Omit<React.IframeHTMLAttributes<H
 /**
  * renders a preview of a component.
  */
+// TODO - Kutner fix unused var - should be passed as query param
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ComponentPreview({ component, previewName, queryParams, hotReload, ...rest }: ComponentPreviewProps) {
   const ref = createRef<HTMLIFrameElement>();
   usePubSubIframe(ref);

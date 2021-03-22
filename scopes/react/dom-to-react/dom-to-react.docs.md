@@ -31,7 +31,7 @@ const reactComponent = domToReact(anElement);
 
 #### React versions support
 
-domToReach() assumes React is using the Fiber virtual dom, which is only included in React 16 and 17.  
+domToReact() assumes React is using the Fiber virtual dom, which is only included in React 16 and 17.  
 It is possible to support React 15, but node traversal has not been implemented for it yet.
 
 #### Live demonstration
