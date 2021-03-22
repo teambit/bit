@@ -80,7 +80,6 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
   }
 
   async triggerOnPostSign(components: Component[]) {
-    // don't wait for the promise to complete.
     await Promise.all(this.onPostSignSlot.values().map((fn) => fn(components))).catch((err) => {
       this.logger.error('failed running onPostSignSlot', err);
     });

@@ -119,7 +119,6 @@ export class UpdateDependenciesMain {
   }
 
   private async triggerOnPostUpdateDependencies() {
-    // don't wait for the promise to resolve.
     await Promise.all(this.onPostUpdateDependenciesSlot.values().map((fn) => fn(this.components))).catch((err) =>
       this.logger.error('got an error during on-post-updates hook', err)
     );
