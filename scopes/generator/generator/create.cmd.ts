@@ -8,7 +8,7 @@ export type GeneratorOptions = {
   scope?: string;
 };
 
-export class GeneratorCmd implements Command {
+export class CreateCmd implements Command {
   name = 'create <templateName> <componentNames...>';
   description = 'create a new component from a template';
   shortDescription = '';

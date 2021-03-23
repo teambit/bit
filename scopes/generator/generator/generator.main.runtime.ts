@@ -2,7 +2,6 @@ import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import Vinyl from 'vinyl';
 import path from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import { flatten } from 'lodash';
 import camelcase from 'camelcase';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -11,7 +10,8 @@ import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentTemplate, File } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
-import { GeneratorCmd, GeneratorOptions } from './generator.cmd';
+import { CreateCmd, GeneratorOptions } from './create.cmd';
+import { TemplatesCmd } from './templates.cmd';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
@@ -43,8 +43,14 @@ export class GeneratorMain {
   /**
    * list all component templates registered in the workspace.
    */
-  listComponentTemplates() {
-    return flatten(this.componentTemplateSlot.values());
+  async listComponentTemplates(): Promise<{ [aspectId: string]: ComponentTemplate[] }> {
+    await this.loadAspects();
+    const allTemplates = this.getAllTemplatesFlattened();
+    const results: { [aspectId: string]: ComponentTemplate[] } = {};
+    allTemplates.forEach(({ id, template }) => {
+      results[id] ? results[id].push(template) : (results[id] = [template]);
+    });
+    return results;
   }
 
   /**
@@ -58,20 +64,22 @@ export class GeneratorMain {
    * returns a specific component template.
    */
   getComponentTemplate(name: string, aspectId?: string): ComponentTemplate | undefined {
-    const templatesByAspects = this.componentTemplateSlot.toArray();
-    const templates = templatesByAspects.flatMap(([id, componentTemplates]) => {
-      return componentTemplates.map((template) => {
-        return {
-          id,
-          template,
-        };
-      });
-    });
+    const templates = this.getAllTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
     });
     return found?.template;
+  }
+
+  private getAllTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
+    const templatesByAspects = this.componentTemplateSlot.toArray();
+    return templatesByAspects.flatMap(([id, componentTemplates]) => {
+      return componentTemplates.map((template) => ({
+        id,
+        template,
+      }));
+    });
   }
 
   async generateComponentTemplate(
@@ -147,7 +155,8 @@ export class GeneratorMain {
     [componentTemplateSlot]: [ComponentTemplateSlot]
   ) {
     const generator = new GeneratorMain(componentTemplateSlot, config, workspace);
-    cli.register(new GeneratorCmd(generator));
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
+    cli.register(...commands);
     return generator;
   }
 }
