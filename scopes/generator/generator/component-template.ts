@@ -4,10 +4,7 @@ export interface File {
    */
   relativePath: string;
 
-  /**
-   * file contents.
-   */
-  contents: string;
+  content: string;
 }
 
 export interface GeneratorContext {
