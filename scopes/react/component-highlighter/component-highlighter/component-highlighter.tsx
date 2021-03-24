@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
-import { MouseHoverSelector } from '@teambit/ui.mouse-hover-selector';
+import { HoverSelector } from '@teambit/ui.hover-selector';
 import { Frame } from '../frame';
 import { Label, LabelContainer } from '../label';
 import { isBitComponent } from './bit-react-component';
@@ -35,7 +35,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
   }, [disabled]);
 
   return (
-    <MouseHoverSelector
+    <HoverSelector
       {...rest}
       onElementChange={handleElement}
       disabled={disabled}
@@ -49,7 +49,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
           <Label componentId={text} data-ignore-component-highlight />
         </LabelContainer>
       )}
-    </MouseHoverSelector>
+    </HoverSelector>
   );
 }
 

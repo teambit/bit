@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-interface MouseSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface MouseSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
   onElementChange?: (element: HTMLElement | null) => void;
   disabled?: boolean;
 }
