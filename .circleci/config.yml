@@ -1034,6 +1034,7 @@ jobs:
           at: .
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm upgrade'
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
       - persist_to_workspace:
           root: C:\Users\circleci\AppData\Local
