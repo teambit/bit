@@ -1,7 +1,7 @@
 import type { Visitor, PluginObj, PluginPass } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
-import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import type * as types from '@babel/types';
 import { fileToBitId as _fileToBitId } from './bit-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
 
@@ -17,7 +17,7 @@ const fileToBitId = memoize(_fileToBitId, {
 });
 
 type Api = {
-  types: typeof Types;
+  types: typeof types;
 };
 
 /**
@@ -72,8 +72,6 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       const id = node.id;
       switch (node.init.type) {
         case 'FunctionExpression':
-          // @ts-ignore TODO - check!!
-          path.init as Types.FunctionExpression;
           if (isFunctionComponent(node.init.body)) {
             addComponentId(path.parentPath, filename, id.name);
           }
