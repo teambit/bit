@@ -70,7 +70,7 @@ export default function paintComponent(
     const componentTable = table(rows, tableColumnConfig);
     const dependenciesTableStr = showRemoteVersion ? generateDependenciesTable() : '';
     const dependentsInfoTableStr = generateDependentsInfoTable(dependentsInfo, component.id);
-    const dependenciesInfoTableStr = generateDependenciesInfoTable();
+    const dependenciesInfoTableStr = generateDependenciesInfoTable(dependenciesInfo, component.id);
     return (
       componentTable +
       dependenciesTableStr +
@@ -206,29 +206,6 @@ export default function paintComponent(
     return dependenciesTable;
   }
 
-  function generateDependenciesInfoTable() {
-    if (!dependenciesInfo.length) {
-      return '';
-    }
-
-    const dependenciesHeader = [];
-    dependenciesHeader.push([
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Dependency ID'),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Depth'),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Immediate Dependent'),
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      c.cyan('Dependency type'),
-    ]);
-    const allDependenciesRows = getAllDependenciesRows(dependenciesInfo, component.id);
-
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
-    return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
-  }
-
   function calculatePadRightLength(str: string, columnWidth: number): string {
     if (!str) return '';
     const padRightCount = Math.ceil(str.length / columnWidth) * columnWidth;
@@ -245,6 +222,24 @@ function getAllDependenciesRows(dependenciesInfoArray: DependenciesInfo[], id: B
     row.push(dependency.dependencyType);
     return row;
   });
+}
+
+export function generateDependenciesInfoTable(dependenciesInfo: DependenciesInfo[], id: BitId) {
+  if (!dependenciesInfo.length) {
+    return '';
+  }
+
+  const dependenciesHeader: string[][] = [];
+  dependenciesHeader.push([
+    c.cyan('Dependency ID'),
+    c.cyan('Depth'),
+    c.cyan('Immediate Dependent'),
+    c.cyan('Dependency type'),
+  ]);
+  const allDependenciesRows = getAllDependenciesRows(dependenciesInfo, id);
+
+  const dependenciesTable = table(dependenciesHeader.concat(allDependenciesRows));
+  return `\n${c.bold('Dependencies Details')}\n${dependenciesTable}`;
 }
 
 export function generateDependentsInfoTable(dependentsInfo: DependenciesInfo[], id: BitId) {
