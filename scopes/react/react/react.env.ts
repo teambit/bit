@@ -5,7 +5,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain, CompilerOptions } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { Environment, ExecutionContext } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { MDXMain } from '@teambit/mdx';
@@ -148,12 +148,7 @@ export class ReactEnv implements Environment {
     return path;
   }
 
-  /**
-   * get the default react webpack config.
-   */
-  private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components);
-
+  private calcDistPaths(context: ExecutionContext) {
     const components = context.components;
     const distDir = this.getCompiler().distDir;
 
@@ -162,6 +157,16 @@ export class ReactEnv implements Environment {
       const dist = join(this.workspace.path, modulePath, distDir);
       return dist;
     });
+
+    return distPaths;
+  }
+
+  /**
+   * get the default react webpack config.
+   */
+  private getDevWebpackConfig(context: DevServerContext): Configuration {
+    const fileMapPath = this.writeFileMap(context.components);
+    const distPaths = this.calcDistPaths(context);
 
     return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
   }
@@ -190,7 +195,8 @@ export class ReactEnv implements Environment {
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
-    const defaultConfig = previewConfigFactory(path);
+    const distPaths = this.calcDistPaths(context);
+    const defaultConfig = previewConfigFactory(path, distPaths);
 
     if (targetConfig?.entry) {
       const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
