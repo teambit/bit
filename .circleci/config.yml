@@ -1041,6 +1041,55 @@ jobs:
           paths:
             - .bvm
 
+  windows_e2e_test_bvm:
+    <<: *windows_defaults
+    environment:
+      BITSRC_ENV: stg
+      SKIP_REGISTRY_TESTS: true
+      SKIP_BIT_DEV_TESTS: true
+    parallelism: 25
+    steps:
+      - attach_workspace:
+          at: .
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: bit -v
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - restore_cache:
+          key: windows_bitsrc-ssh-key-v1
+      - restore_cache:
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v2
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'builded-{{ checksum ".circle-sha" }}'
+      # -
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      #   run: 'chmod 400 ~/.ssh/id_rsa'
+      # -
+      #   run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit; mkdir junit'
+      - bit_config
+      - run:
+          name: 'write e2e files'
+          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
+      - run:
+          name: 'run e2e tests'
+          command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
+          # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
+          # command: cd bit; npm run e2e-test-circle --debug
+          environment:
+            MOCHA_FILE: junit\e2e-test-results.xml
+          when: always
+      - store_test_results:
+          path: bit\junit
+      - store_artifacts:
+          path: bit\junit
+      -
+        store_artifacts:
+          path: C:\Users\circleci\AppData\Local\Bit\logs\debug.log
   windows_e2e_test:
     <<: *windows_defaults
     environment:
@@ -1357,19 +1406,23 @@ workflows:
     jobs:
       - windows_checkout_code
       - windows_set_ssh_key
-      - windows_bvm_install:
+      - windows_bvm_install
+      - windows_e2e_test_bvm:
           requires:
             - windows_checkout_code
             - windows_set_ssh_key
+            - windows_bvm_install
 
   build_and_test_windows:
     jobs:
       - windows_set_ssh_key
       - windows_checkout_code
-      - windows_bvm_install:
+      - windows_bvm_install
+      - windows_e2e_test_bvm:
           requires:
             - windows_checkout_code
             - windows_set_ssh_key
+            - windows_bvm_install
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
