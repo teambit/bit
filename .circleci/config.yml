@@ -1032,9 +1032,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs --version 12.15.0
-      - run: node -v
-      - run: npm -v
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
@@ -1064,7 +1061,10 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: Get-Content -Path .\version.txt
+      - run: cinst nodejs --version 12.15.0
+      - run: node -v
+      - run: npm -v
+      # - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
