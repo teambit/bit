@@ -12,7 +12,7 @@ export type MenuBarWidgetsSlot = SlotRegistry<MenuBarWidget[]>;
 export class CompositionsUI {
   constructor(private menuBarWidgetSlot: MenuBarWidgetsSlot) {}
 
-  registerPanelWidget(...widget: MenuBarWidget[]) {
+  registerMenuWidget(...widget: MenuBarWidget[]) {
     this.menuBarWidgetSlot.register(widget);
   }
 

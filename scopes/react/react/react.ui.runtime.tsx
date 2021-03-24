@@ -12,7 +12,7 @@ export class ReactUI {
   static async provider([compositionsUI]: [CompositionsUI]) {
     const reactUI = new ReactUI();
 
-    compositionsUI.registerPanelWidget({
+    compositionsUI.registerMenuWidget({
       location: 'start',
       content: <HighlighterWidget />,
     });
