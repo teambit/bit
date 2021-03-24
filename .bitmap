@@ -751,11 +751,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/global-loader"
     },
-    "ui/highlighter": {
+    "ui/highlighter-provider": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/react/ui/highlighter"
+        "rootDir": "scopes/react/ui/highlighter-provider"
     },
     "ui/hooks/use-bind-key": {
         "scope": "teambit.ui-foundation",
@@ -798,6 +798,12 @@
         "version": "0.0.15",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
+    },
+    "ui/hover-selector": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/hover-selector"
     },
     "ui/input/option-button": {
         "scope": "",
@@ -858,12 +864,6 @@
         "version": "0.0.322",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
-    },
-    "ui/mouse-hover-selector": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/mouse-hover-selector"
     },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",

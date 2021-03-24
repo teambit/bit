@@ -4,7 +4,7 @@ import queryString from 'query-string';
 
 export const PARAM_NAME = 'highlighter';
 
-export const Highlighter: FC = ({ children }: { children?: ReactNode }) => {
+export const HighlighterProvider: FC = ({ children }: { children?: ReactNode }) => {
   const hash = useHash();
 
   const isActive = useMemo(() => {

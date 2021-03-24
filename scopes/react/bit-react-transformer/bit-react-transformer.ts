@@ -79,16 +79,6 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
 
         case 'ArrowFunctionExpression':
           addComponentId(path.parentPath, filename, id.name);
-
-          // node.init as t.ArrowFunctionExpression;
-          // if (isJsxReturnValid(node.init.body)) {
-          //   addComponentId(path.parentPath, filename, id.name);
-          // }
-
-          // node.init.body as t.BlockStatement;
-          // if (isFunctionComponent(node.init.body as any)) {
-          //   addComponentId(path.parentPath, filename, id.name);
-          // }
           break;
 
         default:
@@ -113,15 +103,11 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     pre() {
       const filepath = opts.componentFilesPath;
 
-      // reuse file read
-      if (componentMap) return;
-
-      if (filepath) setMap(filepath);
+      if (filepath && !componentMap) setMap(filepath);
     },
     post() {
       // reset memoization, in case of fs changes
       fileToBitId.clear();
-      // clearMap();
     },
   };
 

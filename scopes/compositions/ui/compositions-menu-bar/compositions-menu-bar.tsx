@@ -28,7 +28,7 @@ export function CompositionsMenuBar({ className, menuBarWidgets, ...rest }: Comp
   if (!widgetsStart.length && !widgetsEnd.length) return null;
 
   return (
-    <div {...rest} className={classnames(className, styles.compositionsMenuBar)} style={{}}>
+    <div {...rest} className={classnames(className, styles.compositionsMenuBar)}>
       {!!widgetsStart?.length && <div>{widgetsStart}</div>}
       <div className={styles.spacer}></div>
       {!!widgetsEnd?.length && <div>{widgetsEnd}</div>}

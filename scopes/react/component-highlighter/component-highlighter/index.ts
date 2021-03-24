@@ -1,2 +1,2 @@
-export { ComponentHighlighter } from './highlighter';
-export type { ComponentHighlightProps } from './highlighter';
+export { ComponentHighlighter } from './component-highlighter';
+export type { ComponentHighlightProps } from './component-highlighter';

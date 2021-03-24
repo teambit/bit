@@ -12,15 +12,16 @@ export function isClassComponent(classDec: t.ClassDeclaration) {
   }) as t.ClassMethod;
 
   return !!renderMethod;
-
-  // return doesReturnJsx(renderMethod?.body);
 }
 
 export function isFunctionComponent(block: t.BlockStatement): boolean {
   if (block.type !== 'BlockStatement') return false;
-  // return doesReturnJsx(block);
   return true;
 }
+
+// // for future use:
+// // check return value to identify react components.
+// // does not work in dists
 
 // function isJsxReturnValid(node?: t.Node) {
 //     if (!node) return false;
@@ -31,13 +32,11 @@ export function isFunctionComponent(block: t.BlockStatement): boolean {
 //             return elm?.type === "JSXElement";
 //         });
 //     }
-
 //     return false;
 // }
 
 // function doesReturnJsx(block: t.BlockStatement): boolean {
 //   return true;
-
 //   // if (!block) return false;
 //   // return !!block.body.find(statement => {
 //   //     return (

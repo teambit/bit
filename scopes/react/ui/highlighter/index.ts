@@ -1,1 +1,0 @@
-export { Highlighter } from './highlighter';

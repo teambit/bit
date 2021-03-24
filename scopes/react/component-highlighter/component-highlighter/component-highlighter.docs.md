@@ -3,7 +3,7 @@ description: Highlights Bit Components and links to their Bit scope
 labels: ['component', 'highlight', 'react']
 ---
 
-import {highlightComponents} from './highlighter'
+import {highlightComponents} from './component-highlighter'
 import {useEffect} from 'react';
 
 Highlights React components in web pages and add links to their Bit scope and component page.

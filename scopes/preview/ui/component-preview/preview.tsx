@@ -4,8 +4,7 @@ import { usePubSubIframe } from '@teambit/pubsub';
 
 import { toPreviewUrl } from './urls';
 
-// omitting 'referrerPolicy' because of TS problem
-
+// omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
 export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
    * component to preview.
@@ -33,7 +32,7 @@ export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFr
 /**
  * renders a preview of a component.
  */
-// TODO - Kutner fix unused var - should be passed as query param
+// TODO - Kutner fix unused var - 'hotReload' should be used
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function ComponentPreview({ component, previewName, queryParams, hotReload, ...rest }: ComponentPreviewProps) {
   const ref = createRef<HTMLIFrameElement>();

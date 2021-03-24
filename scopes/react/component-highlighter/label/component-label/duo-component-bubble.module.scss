@@ -28,12 +28,6 @@
 
   transition: filter 300ms;
   transform: translateZ(0); //fix blurriness in Safari
-
-  // TODO - use for links
-  // filter: saturate(100%) brightness(100%);
-  // &:hover {
-  //     filter: saturate(138%) brightness(138%);
-  // }
 }
 
 .scopeName {
@@ -47,14 +41,4 @@
 
   display: flex;
   background-color: var(--component-highlighter-bg, #eebcc9);
-}
-
-// .link {
-//     color: inherit;
-//     text-decoration: none;
-// }
-
-.versionPrefix {
-  //'@' looks a little big using the CircularPro font
-  font-size: 0.85em;
 }

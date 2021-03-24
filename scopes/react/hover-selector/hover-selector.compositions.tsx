@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { MouseHoverSelector } from './mouse-hover-selector';
+import { HoverSelector } from './hover-selector';
 
 export function Preview() {
   const [current, setCurrent] = useState<HTMLElement | null>(null);
 
   return (
     <div>
-      <MouseHoverSelector onElementChange={setCurrent}>
+      <HoverSelector onElementChange={setCurrent}>
         <div>hover me!</div>
         <span>hover me!</span>
-      </MouseHoverSelector>
+      </HoverSelector>
       <div>
         results:
         <br />

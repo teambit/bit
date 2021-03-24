@@ -16,6 +16,11 @@
     background-color: var(--border-color);
   }
 
+  &:focus {
+    box-shadow: 0 0 0 0.125em var(--muted-color);
+    outline: none;
+  }
+
   // reset button styles:
   background: none;
   border: none;

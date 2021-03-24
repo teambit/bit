@@ -74,6 +74,6 @@ export function Frame({
       className={classnames(className, stylesClass)}
       style={{ ...styles.popper, ...style }}
       {...attributes.popper}
-    ></div>
+    />
   );
 }

@@ -5,13 +5,7 @@ interface MouseSelectorProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
 }
 
-export function MouseHoverSelector({
-  onElementChange,
-  onMouseOver,
-  onMouseLeave,
-  disabled,
-  ...rest
-}: MouseSelectorProps) {
+export function HoverSelector({ onElementChange, onMouseOver, onMouseLeave, disabled, ...rest }: MouseSelectorProps) {
   const handleEnter = useCallback(
     (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
       onMouseOver?.(event);

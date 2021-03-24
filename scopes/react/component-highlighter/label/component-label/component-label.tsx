@@ -8,9 +8,9 @@ import styles from './duo-component-bubble.module.scss';
 import { ComponentBubble } from './component-bubble';
 import { ScopeBubble } from './scope-bubble';
 
-export type ComponentLabelProps = {
+export interface ComponentLabelProps extends CardProps {
   componentId: ComponentID;
-} & CardProps;
+}
 
 export function ComponentLabel({ componentId, className, ...rest }: ComponentLabelProps) {
   return (
