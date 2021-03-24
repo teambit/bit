@@ -1033,6 +1033,7 @@ jobs:
       - attach_workspace:
           at: .
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
+      - run: Get-Content -Path .\version.txt
       - restore_cache:
           key: v1-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
@@ -1040,14 +1041,15 @@ jobs:
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
       - run: bit -v | Out-File -FilePath .\version.txt
+      - run: Get-Content -Path .\version.txt
       - save_cache:
           key: v1-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - C:\Users\circleci\AppData\Local\.bvm
-      # - persist_to_workspace:
-      #     root: C:\Users\circleci\AppData\Local
-      #     paths:
-      #       - .bvm
+      - persist_to_workspace:
+          root: .
+          paths:
+            - version.txt
 
   windows_e2e_test_bvm:
     <<: *windows_defaults
@@ -1059,6 +1061,7 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: Get-Content -Path .\version.txt
       # - restore_cache:
       #     key: bvm-folder-v1
       - restore_cache:
