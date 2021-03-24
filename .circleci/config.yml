@@ -1368,7 +1368,6 @@ workflows:
     jobs:
       - windows_checkout_code
       - windows_set_ssh_key
-      - windows_checkout_code
       - windows_e2e_nightly:
           requires:
             - windows_checkout_code
