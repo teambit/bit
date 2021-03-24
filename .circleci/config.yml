@@ -1032,14 +1032,20 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - restore_cache:
+          key: bvm-folder-v1
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm upgrade'
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
-      - persist_to_workspace:
-          root: C:\Users\circleci\AppData\Local
+      - save_cache:
+          key: bvm-folder-v1
           paths:
-            - .bvm
+            - C:\Users\circleci\AppData\Local\.bvm
+      # - persist_to_workspace:
+      #     root: C:\Users\circleci\AppData\Local
+      #     paths:
+      #       - .bvm
 
   windows_e2e_test_bvm:
     <<: *windows_defaults
@@ -1051,6 +1057,8 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - restore_cache:
+          key: bvm-folder-v1
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm list'
       - run: 'bvm link'
