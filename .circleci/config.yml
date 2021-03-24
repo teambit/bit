@@ -1359,7 +1359,9 @@ workflows:
   build_and_test_windows:
     jobs:
       - windows_set_ssh_key
-      - windows_checkout_code
+      - windows_checkout_code:
+          requires:
+            - "windows_set_ssh_key"
       - windows_e2e_nightly:
           requires:
             - windows_checkout_code
