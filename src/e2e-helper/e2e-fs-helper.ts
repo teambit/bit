@@ -34,7 +34,7 @@ export default class FsHelper {
     fs.outputFileSync(filePath, impl);
   }
 
-  createJsonFile(filePathRelativeToLocalScope: string, jsonContent: string) {
+  createJsonFile(filePathRelativeToLocalScope: string, jsonContent: Record<string, any>) {
     const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
     ensureAndWriteJson(filePath, jsonContent);
   }
