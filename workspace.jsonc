@@ -312,6 +312,11 @@
     "strictPeerDependencies": true,
     "extraArgs": []
   },
+  "teambit.generator/generator": {
+    "aspects": [
+      "teambit.harmony/aspect"
+    ]
+  },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {

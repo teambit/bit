@@ -15,7 +15,7 @@ import { EnvsAspect } from '@teambit/envs';
 import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
 import { YarnAspect } from '@teambit/yarn';
-import { CreateAspect } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
 import { InsightsAspect } from '@teambit/insights';
@@ -81,7 +81,7 @@ export const manifestsMap = {
   [PnpmAspect.id]: PnpmAspect,
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
-  [CreateAspect.id]: CreateAspect,
+  [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
   [FlowsAspect.id]: FlowsAspect,
   [GraphAspect.id]: GraphAspect,

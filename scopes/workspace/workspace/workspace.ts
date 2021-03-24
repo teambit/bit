@@ -618,6 +618,10 @@ export class Workspace implements ComponentFactory {
     return this.componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(relativeComponentDir, name);
   }
 
+  get defaultScope() {
+    return this.config.defaultScope;
+  }
+
   private async componentDefaultScopeFromComponentDirAndNameWithoutConfigFile(
     relativeComponentDir: PathOsBasedRelative,
     name: string
