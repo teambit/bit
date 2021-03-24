@@ -20,12 +20,16 @@ function useHash() {
   const [hash, setHash] = useState(window ? window.location.hash : '');
 
   useEffect(() => {
-    setHash(window.location.hash);
+    const updateHash = () => {
+      setHash(window.location.hash);
+    };
 
-    window.addEventListener('hashchange', () => {
-      const current = window.location.hash;
-      setHash(current);
-    });
+    updateHash();
+    window.addEventListener('hashchange', updateHash);
+
+    return () => {
+      window.removeEventListener('hashchange', updateHash);
+    };
   }, []);
 
   return hash;
