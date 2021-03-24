@@ -934,8 +934,6 @@ jobs:
 
   windows_checkout_code:
     <<: *windows_defaults
-    environment:
-      Path: C:\Users\circleci\.npm-global;$ENV:PATH
     steps:
       - checkout
       - persist_to_workspace:
@@ -1130,15 +1128,6 @@ workflows:
       - bit_build:
           requires:
             - generate_and_check_types
-
-  build_and_test_windows:
-    jobs:
-      - windows_checkout_code
-      - windows_e2e_nightly:
-          requires:
-            - windows_checkout_code
-
-
 
   # windows_e2e:
   #   jobs:
@@ -1367,7 +1356,13 @@ workflows:
             - windows_checkout_code
             - windows_set_ssh_key
 
-
+  build_and_test_windows:
+    jobs:
+      - windows_set_ssh_key
+      - windows_checkout_code
+      - windows_e2e_nightly:
+          requires:
+            - windows_checkout_code
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:
