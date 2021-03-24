@@ -1053,16 +1053,18 @@ jobs:
       BITSRC_ENV: stg
       SKIP_REGISTRY_TESTS: true
       SKIP_BIT_DEV_TESTS: true
-    parallelism: 25
+    parallelism: 1
     steps:
       - attach_workspace:
           at: .
       - restore_cache:
           key: bvm-folder-v1
+      # - run: bit -v
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: bit -v
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm list'
       - run: 'bvm link'
-      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
       - run:
           name: 'save SHA to a file'
