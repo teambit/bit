@@ -1032,14 +1032,16 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - restore_cache:
-          key: bvm-folder-v1
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
       - run: 'npm i -g @teambit/bvm'
       - run: 'bvm upgrade'
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: 'bit -v'
+      - run: bit -v | Out-File -FilePath .\version.txt
       - save_cache:
-          key: bvm-folder-v1
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - C:\Users\circleci\AppData\Local\.bvm
       # - persist_to_workspace:
@@ -1057,15 +1059,17 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      # - restore_cache:
+      #     key: bvm-folder-v1
       - restore_cache:
-          key: bvm-folder-v1
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
       # - run: bit -v
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
-      - run: 'npm i -g @teambit/bvm'
-      - run: 'bvm list'
-      - run: 'bvm link'
-      - run: bit -v
+      # - run: 'npm i -g @teambit/bvm'
+      # - run: 'bvm list'
+      # - run: 'bvm link'
+      # - run: bit -v
       - run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
