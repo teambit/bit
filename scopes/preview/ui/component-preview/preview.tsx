@@ -1,10 +1,12 @@
-import React, { createRef } from 'react';
+import React, { createRef, IframeHTMLAttributes } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
 
 import { toPreviewUrl } from './urls';
 
-export interface ComponentPreviewProps extends Omit<React.IframeHTMLAttributes<HTMLIFrameElement>, 'src'> {
+// omitting 'referrerPolicy' because of TS problem
+
+export interface ComponentPreviewProps extends Omit<IframeHTMLAttributes<HTMLIFrameElement>, 'src' | 'referrerPolicy'> {
   /**
    * component to preview.
    */
