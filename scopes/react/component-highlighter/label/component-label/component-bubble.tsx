@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component-id';
 import classnames from 'classnames';
 import React from 'react';
-// import { BASE_URL } from "../base-url";
 import styles from './duo-component-bubble.module.scss';
 
 export type ComponentBubbleProps = {

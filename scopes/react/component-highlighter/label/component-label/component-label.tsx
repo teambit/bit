@@ -15,8 +15,8 @@ export type ComponentLabelProps = {
 export function ComponentLabel({ componentId, className, ...rest }: ComponentLabelProps) {
   return (
     <Card {...rest} className={classNames(className, styles.duoComponentBubble)} data-ignore-component-highlight>
-      <ScopeBubble componentId={componentId} className={styles.scopeBubble} />
-      <ComponentBubble componentId={componentId} />
+      <ScopeBubble componentId={componentId} className={styles.scopeBubble} data-ignore-component-highlight />
+      <ComponentBubble componentId={componentId} data-ignore-component-highlight />
     </Card>
   );
 }

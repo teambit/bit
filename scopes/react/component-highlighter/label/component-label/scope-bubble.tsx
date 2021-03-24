@@ -14,7 +14,7 @@ export function ScopeBubble({ componentId, className, ...rest }: ScopeBubbleProp
   const scope = componentId.scope;
 
   return (
-    <div className={classNames(styles.scopeName, className)} {...rest} data-ignore-component-highlight>
+    <div className={classNames(styles.scopeName, className)} {...rest}>
       {scope}
     </div>
   );
