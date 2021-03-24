@@ -1051,6 +1051,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
+      - run: 'npm i -g @teambit/bvm'
+      - run: 'bvm list'
+      - run: 'bvm link'
       - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
       - run: bit -v
       - run:
