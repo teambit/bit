@@ -1,3 +1,4 @@
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import Vinyl from 'vinyl';
 import path from 'path';
@@ -12,6 +13,7 @@ import { ComponentTemplate, File } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, GeneratorOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
+import { generatorSchema } from './generator.graphql';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
@@ -145,18 +147,19 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli]: [Workspace, CLIMain],
+    [workspace, cli, graphql]: [Workspace, CLIMain, GraphqlMain],
     config: GeneratorConfig,
     [componentTemplateSlot]: [ComponentTemplateSlot]
   ) {
     const generator = new GeneratorMain(componentTemplateSlot, config, workspace);
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
     cli.register(...commands);
+    graphql.register(generatorSchema(generator));
     return generator;
   }
 }
