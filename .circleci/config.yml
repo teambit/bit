@@ -1032,7 +1032,9 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: cinst nodejs
+      - run: cinst nodejs --version 12.15.0
+      - run: node -v
+      - run: npm -v
       - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
       - run: Get-Content -Path .\version.txt
       - restore_cache:
