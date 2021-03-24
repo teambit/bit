@@ -43,24 +43,20 @@ describe('domToFiber', () => {
     expect(fiberNode?.type).toEqual('div');
   });
 
-  // not working for text fragments. 🤷
-  it.skip('should find fiberNode for Fragment component', () => {
-    const { getByText } = render(<BasicFragmentComponent />);
-    const target = getByText('hello');
+  // // not working for text fragments. 🤷
+  // it.skip('should find fiberNode for Fragment component', () => {
+  //   const { getByText } = render(<>hello</>);
+  //   const target = getByText('hello');
 
-    const fiberNode = domToFiber(target);
-    expect(fiberNode).not.toBeNull();
-    expect(fiberNode?.memoizedProps).toEqual({ children: 'hello' });
-    expect(fiberNode?.type).toEqual('div');
-  });
+  //   const fiberNode = domToFiber(target);
+  //   expect(fiberNode).not.toBeNull();
+  //   expect(fiberNode?.memoizedProps).toEqual({ children: 'hello' });
+  //   expect(fiberNode?.type).toEqual('div');
+  // });
 });
 
 function DivComponent(props: React.HTMLAttributes<HTMLDivElement>) {
   return <div {...props}>hello</div>;
-}
-
-function BasicFragmentComponent() {
-  return <>hello</>;
 }
 
 function FragmentComponent(props: React.HTMLAttributes<HTMLDivElement>) {
