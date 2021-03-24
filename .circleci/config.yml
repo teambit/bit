@@ -1132,12 +1132,6 @@ workflows:
             - generate_and_check_types
 
   build_and_test_windows:
-    triggers:
-      - schedule:
-          filters:
-            branches:
-              only:
-                - windows-nightly
     jobs:
       - windows_checkout_code
       - windows_e2e_nightly:
