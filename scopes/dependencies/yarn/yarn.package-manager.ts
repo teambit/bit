@@ -262,19 +262,27 @@ export class YarnPackageManager implements PackageManager {
 
     const data = {
       nodeLinker: 'node-modules',
-      installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
+      installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder,
-      pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
-      bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
+      bstatePath: `${rootDirPath}/.yarn/build-state.yml`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
       httpProxy: proxyConfig?.httpProxy,
       httpsProxy: proxyConfig?.httpsProxy,
+      enableStrictSsl: proxyConfig.strictSSL,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
+
+      // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
+      // ca?: string;
+      // cert?: string;
+      // key?: string;
+      // noProxy?: boolean | string;
     };
+
     if (defaultAuthProp) {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;
     }

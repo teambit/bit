@@ -52,7 +52,8 @@ describe('merge functionality', function () {
     it('should throw MergeConflict error when importing the component', () => {
       const importFunc = () => helper.command.importComponent('bar/foo');
       const error = new MergeConflict(`${helper.scopes.remote}/bar/foo`, ['0.0.2']);
-      helper.general.expectToThrow(importFunc, error);
+      expect(importFunc).to.throw(error.message);
+      expect(importFunc).to.not.throw('unhandled rejection found');
     });
   });
   describe('importing a component with --merge flag', () => {

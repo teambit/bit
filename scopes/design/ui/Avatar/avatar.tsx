@@ -25,7 +25,7 @@ type AvatarProps = {
   className?: string;
   imgClassName?: string;
   hideTooltip?: boolean;
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export default function Avatar(props: AvatarProps) {
   const { account } = props;

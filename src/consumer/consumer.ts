@@ -68,6 +68,7 @@ import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { BasicTagParams } from '../api/consumer/lib/tag';
+import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 
 type ConsumerProps = {
   projectPath: string;
@@ -237,7 +238,7 @@ export default class Consumer {
   async write(): Promise<Consumer> {
     await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
-    await this.bitMap.write(this.componentFsCache);
+    await this.writeBitMap();
     return this;
   }
 
@@ -256,6 +257,9 @@ export default class Consumer {
   }
 
   getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): BitId {
+    if (id.startsWith('@')) {
+      throw new UnexpectedPackageName(id);
+    }
     // @ts-ignore (we know it will never be undefined since it pass throw=true)
     const bitId: BitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId);
     if (!useVersionFromBitmap) {
@@ -329,8 +333,7 @@ export default class Consumer {
 
     const versionDependencies = (await scopeComponentsImporter.componentToVersionDependencies(
       modelComponent,
-      id,
-      true
+      id
     )) as VersionDependencies;
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
@@ -621,6 +624,7 @@ export default class Consumer {
     build,
     skipAutoSnap = false,
     resolveUnmerged = false,
+    forceDeploy = false,
   }: {
     ids: BitIds;
     message?: string;
@@ -631,6 +635,7 @@ export default class Consumer {
     build: boolean;
     skipAutoSnap?: boolean;
     resolveUnmerged?: boolean;
+    forceDeploy?: boolean;
   }): Promise<{ snappedComponents: Component[]; autoSnappedResults: AutoTagResult[] }> {
     logger.debugAndAddBreadCrumb('consumer.snap', `snapping the following components: {components}`, {
       components: ids.toString(),
@@ -679,6 +684,7 @@ export default class Consumer {
       resolveUnmerged,
       isSnap: true,
       disableDeployPipeline: false,
+      forceDeploy,
     });
 
     return { snappedComponents: taggedComponents, autoSnappedResults: autoTaggedResults };
@@ -1039,9 +1045,13 @@ export default class Consumer {
     };
   }
 
+  async writeBitMap() {
+    await this.bitMap.write(this.componentFsCache);
+  }
+
   async onDestroy() {
     await this.cleanTmpFolder();
     await this.scope.scopeJson.writeIfChanged(this.scope.path);
-    return this.bitMap.write(this.componentFsCache);
+    await this.writeBitMap();
   }
 }

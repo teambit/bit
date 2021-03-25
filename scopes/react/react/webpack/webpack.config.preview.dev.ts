@@ -29,7 +29,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-export default function (envId: string, fileMapPath: string): WebpackConfigWithDevServer {
+type Options = { envId: string; fileMapPath: string; distPaths: string[] };
+
+export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       // @ts-ignore - remove this once there is types package for webpack-dev-server v4
@@ -52,7 +54,24 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
         //   use: [require.resolve('source-map-loader')],
         // },
         {
-          test: /\.(js|jsx|tsx|ts)$/,
+          test: /\.js$/,
+          include: distPaths,
+          use: [
+            {
+              loader: require.resolve('babel-loader'),
+              options: {
+                babelrc: false,
+                configFile: false,
+                plugins: [
+                  // for component highlighting in preview.
+                  [require.resolve('@teambit/babel.bit-react-transformer')],
+                ],
+              },
+            },
+          ],
+        },
+        {
+          test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
           resolve: {
@@ -69,12 +88,12 @@ export default function (envId: string, fileMapPath: string): WebpackConfigWithD
             plugins: [
               require.resolve('react-refresh/babel'),
               // for component highlighting in preview.
-              // [
-              //   require.resolve('@teambit/babel.bit-react-transformer'),
-              //   {
-              //     componentFilesPath: fileMapPath,
-              //   },
-              // ],
+              [
+                require.resolve('@teambit/babel.bit-react-transformer'),
+                {
+                  componentFilesPath: fileMapPath,
+                },
+              ],
             ],
           },
         },

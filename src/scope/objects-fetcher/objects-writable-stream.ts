@@ -1,7 +1,6 @@
-import pMap from 'p-map';
 import { Writable } from 'stream';
 import { BitObject, Repository } from '../objects';
-import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
+import { DEFAULT_LANE } from '../../constants';
 import { RemoteLaneId } from '../../lane-id/lane-id';
 import logger from '../../logger/logger';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
@@ -21,7 +20,6 @@ import { WriteComponentsQueue } from './write-components-queue';
  * remotes are processed. see @writeManyObjectListToModel.
  */
 export class ObjectsWritable extends Writable {
-  private mutableObjects: BitObject[] = [];
   constructor(
     private repo: Repository,
     private sources: SourceRepository,
@@ -37,46 +35,27 @@ export class ObjectsWritable extends Writable {
       return callback(new Error('objectItem expected to have "ref" and "buffer" props'));
     }
     try {
-      await this.writeImmutableObjectToFs(obj);
+      await this.writeObjectToFs(obj);
       return callback();
     } catch (err) {
       return callback(err);
     }
   }
-  async _final(callback) {
-    try {
-      await this.writeMutableObjectsToFS();
-      callback();
-    } catch (err) {
-      callback(err);
-    }
-  }
-  private async writeImmutableObjectToFs(obj: ObjectItem) {
+
+  private async writeObjectToFs(obj: ObjectItem) {
     const bitObject = await BitObject.parseObject(obj.buffer);
     if (bitObject instanceof Lane) {
       throw new Error('ObjectsWritable does not support lanes');
     }
     if (bitObject instanceof ModelComponent) {
-      this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
+      await this.componentsQueue.addComponent(bitObject.id(), () => this.writeComponentObject(bitObject));
     } else {
-      this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.repo.writeObjectsToTheFS([bitObject]));
+      await this.objectsQueue.addImmutableObject(obj.ref.toString(), () => this.writeImmutableObject(bitObject));
     }
-    // else this.mutableObjects.push(bitObject);
   }
-  private async writeMutableObjectsToFS() {
-    const components = this.mutableObjects.filter((obj) => obj instanceof ModelComponent);
-    const mergedComponents = await pMap(
-      components,
-      (component) => this.mergeModelComponent(component as ModelComponent, this.remoteName),
-      {
-        concurrency: CONCURRENT_COMPONENTS_LIMIT,
-      }
-    );
-    await this.repo.writeObjectsToTheFS(mergedComponents);
-    await this.repo.remoteLanes.addEntriesFromModelComponents(
-      RemoteLaneId.from(DEFAULT_LANE, this.remoteName),
-      mergedComponents
-    );
+
+  private async writeImmutableObject(bitObject: BitObject) {
+    await this.repo.writeObjectsToTheFS([bitObject]);
   }
 
   private async writeComponentObject(modelComponent: ModelComponent) {

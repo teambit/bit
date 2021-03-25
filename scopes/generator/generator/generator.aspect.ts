@@ -1,7 +1,5 @@
 import { Aspect } from '@teambit/harmony';
 
-export const CreateAspect = Aspect.create({
+export const GeneratorAspect = Aspect.create({
   id: 'teambit.generator/generator',
-  dependencies: [],
-  defaultConfig: {},
 });

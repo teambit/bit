@@ -22,6 +22,7 @@ export const FileStatus = {
   manual: chalk.red('CONFLICT'),
   updated: chalk.green('updated'),
   added: chalk.green('added'),
+  removed: chalk.green('removed'),
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged'),
 };
