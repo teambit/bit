@@ -4,6 +4,7 @@ RUN chown -R user /usr/local/
 USER user
 RUN npm i @teambit/bvm -g
 RUN bvm upgrade
+RUN bvm link bbit
 ENV PATH=$PATH:/home/user/bin
 RUN bit config set analytics_reporting false
 RUN bit config set no_warnings false
