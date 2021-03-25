@@ -7,10 +7,10 @@ import { CompositionsSection } from './composition.section';
 import { CompositionsAspect } from './compositions.aspect';
 import { MenuBarWidget } from './compositions';
 
-export type MenuBarWidgetsSlot = SlotRegistry<MenuBarWidget[]>;
+export type CompositionsMenuSlot = SlotRegistry<MenuBarWidget[]>;
 
 export class CompositionsUI {
-  constructor(private menuBarWidgetSlot: MenuBarWidgetsSlot) {}
+  constructor(private menuBarWidgetSlot: CompositionsMenuSlot) {}
 
   registerMenuWidget(...widget: MenuBarWidget[]) {
     this.menuBarWidgetSlot.register(widget);
@@ -20,7 +20,7 @@ export class CompositionsUI {
   static runtime = UIRuntime;
   static slots = [Slot.withType<ReactNode>()];
 
-  static async provider([component]: [ComponentUI], config, [slot]: [MenuBarWidgetsSlot]) {
+  static async provider([component]: [ComponentUI], config, [slot]: [CompositionsMenuSlot]) {
     const compositions = new CompositionsUI(slot);
     const section = new CompositionsSection(compositions, { menuBarWidgetSlot: compositions.menuBarWidgetSlot });
 

@@ -2,9 +2,9 @@ import { Section } from '@teambit/component';
 import React from 'react';
 
 import { Compositions } from './compositions';
-import type { CompositionsUI, MenuBarWidgetsSlot } from './compositions.ui.runtime';
+import type { CompositionsUI, CompositionsMenuSlot } from './compositions.ui.runtime';
 
-type Options = { menuBarWidgetSlot: MenuBarWidgetsSlot };
+type Options = { menuBarWidgetSlot: CompositionsMenuSlot };
 
 export class CompositionsSection implements Section {
   constructor(

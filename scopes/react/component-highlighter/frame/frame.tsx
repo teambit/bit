@@ -49,18 +49,18 @@ export function Frame({
   });
 
   useEffect(() => {
-    const refocus = update;
-    if (!refocus || !motionTracking) return () => {};
+    const triggerRefocus = update;
+    if (!triggerRefocus || !motionTracking) return () => {};
 
-    let fid = 0;
+    let animationFrameId = 0;
     const f = () => {
-      refocus().catch(() => {});
-      fid = window.requestAnimationFrame(f);
+      triggerRefocus().catch(() => {});
+      animationFrameId = window.requestAnimationFrame(f);
     };
     f();
 
     return () => {
-      if (fid > -1) window.cancelAnimationFrame(fid);
+      if (animationFrameId > -1) window.cancelAnimationFrame(animationFrameId);
     };
   }, [update, motionTracking]);
 

@@ -1147,11 +1147,11 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/tree/tree-node"
     },
-    "ui/use-composition": {
+    "ui/hooks/use-composition": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/ui/use-composition"
+        "rootDir": "scopes/compositions/ui/hooks/use-composition"
     },
     "ui/utils/get-file-icon": {
         "scope": "teambit.code",

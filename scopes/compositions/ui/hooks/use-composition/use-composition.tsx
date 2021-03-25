@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo, ReactNode, useCallback, Dispatch, SetStateAction } from 'react';
+import React, { createContext, useContext, useMemo, ReactNode, Dispatch, SetStateAction } from 'react';
 
 type CompositionsContext = {
   queryParams: Record<string, any>;
@@ -25,20 +25,4 @@ export function CompositionContextProvider({ children, queryParams, setQueryPara
 
 export function usePreview() {
   return useContext(CompositionsCtx);
-}
-
-export function usePreviewQueryParams<T = any>(paramName: string) {
-  const ctx = usePreview();
-  const param = ctx.queryParams[paramName];
-
-  const setQueryParam = useCallback(
-    (value: T) =>
-      ctx.setQueryParams((state) => ({
-        ...state,
-        [paramName]: value,
-      })),
-    [paramName]
-  );
-
-  return [param as T, setQueryParam];
 }

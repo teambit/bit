@@ -1,7 +1,7 @@
 import React from 'react';
 import { OptionButton } from '@teambit/ui.input.option-button';
 import { Tooltip } from '@teambit/ui.tooltip';
-import { usePreviewQueryParams } from '@teambit/ui.use-composition';
+import { usePreviewQueryParams } from '@teambit/ui.hooks.use-composition';
 
 const PARAM_NAME = 'highlighter';
 

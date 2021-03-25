@@ -7,7 +7,6 @@ import styles from './duo-component-bubble.module.scss';
 
 export type ScopeBubbleProps = {
   componentId: ComponentID;
-  fullScopeName?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export function ScopeBubble({ componentId, className, ...rest }: ScopeBubbleProps) {

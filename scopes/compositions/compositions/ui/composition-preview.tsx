@@ -38,7 +38,7 @@ export function ComponentComposition({
   className,
   queryParams = [],
 }: ComponentCompositionProps) {
-  const _queryParams = useMemo(() => (composition ? [composition.identifier] : []).concat(queryParams), [
+  const compositionParams = useMemo(() => (composition ? [composition.identifier] : []).concat(queryParams), [
     composition?.identifier,
     queryParams,
   ]);
@@ -49,7 +49,7 @@ export function ComponentComposition({
       component={component}
       style={{ width: '100%', height: '100%' }}
       previewName="compositions"
-      queryParams={_queryParams}
+      queryParams={compositionParams}
       hotReload={hotReload}
     />
   );

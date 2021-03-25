@@ -13,20 +13,20 @@ import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
-import { CompositionContextProvider } from '@teambit/ui.use-composition';
+import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
-import type { MenuBarWidgetsSlot } from './compositions.ui.runtime';
+import type { CompositionsMenuSlot } from './compositions.ui.runtime';
 
 export type MenuBarWidget = {
   location: 'start' | 'end';
   content: ReactNode;
 };
 
-export function Compositions({ menuBarWidgets }: { menuBarWidgets?: MenuBarWidgetsSlot }) {
+export function Compositions({ menuBarWidgets }: { menuBarWidgets?: CompositionsMenuSlot }) {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(selected);
