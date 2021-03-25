@@ -104,7 +104,7 @@ export class GeneratorMain {
         const componentNameCamelCase = camelcase(componentName, { pascalCase: true });
         const files = template.generateFiles({ componentName, componentNameCamelCase, componentId });
         const mainFile = files.find((file) => file.isMain);
-        const componentPath = this.getComponentPath(componentId);
+        const componentPath = this.getComponentPath(componentId, options.path);
         await this.writeComponentFiles(componentPath, files);
         const addResults = await this.workspace.add([componentPath], componentName, mainFile?.relativePath);
         return {
@@ -142,7 +142,8 @@ export class GeneratorMain {
     return results;
   }
 
-  private getComponentPath(componentId: ComponentID) {
+  private getComponentPath(componentId: ComponentID, customPath?: string) {
+    if (customPath) return path.join(customPath, componentId.fullName);
     return path.join(componentId.scope, componentId.fullName);
   }
 
