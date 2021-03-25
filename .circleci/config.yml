@@ -936,7 +936,12 @@ jobs:
     <<: *windows_defaults
     steps:
       # - checkout
+      - run: pwd
+      - run: dir
       - run: git clone https://github.com/teambit/bit.git
+      - run: pwd
+      - run: dir
+      - run: cd bit; dir
       - persist_to_workspace:
           root: C:\Users\circleci\project
           paths:
