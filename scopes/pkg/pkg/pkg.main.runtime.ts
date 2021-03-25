@@ -166,8 +166,8 @@ export class PkgMain {
    * returns the package path in the /node_modules/ folder
    */
   getModulePath(component: Component) {
-    const pgkName = this.getPackageName(component);
-    const path = join('node_modules', pgkName);
+    const pkgName = this.getPackageName(component);
+    const path = join('node_modules', pkgName);
     return path;
   }
 

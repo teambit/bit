@@ -1,0 +1,24 @@
+.defaultLabel {
+  display: flex;
+  align-items: center;
+
+  color: var(--component-highlighter-text, black);
+  font-size: 12px;
+
+  line-height: 1.68;
+  background: var(--scope-color-bg, #eebcc9); // TODO - what is this color??
+
+  transition: filter 300ms;
+  transform: translateZ(0); //fix blurriness in Safari
+
+  filter: saturate(100%) brightness(100%);
+
+  //hover highlight:
+  &:hover {
+    filter: saturate(109%) brightness(109%);
+  }
+
+  //reset styles from card:
+  padding: 0 12px;
+  border: none;
+}

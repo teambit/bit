@@ -116,6 +116,14 @@ describe('toPreviewUrl()', () => {
     );
   });
 
+  it('should include query params when it is an array', () => {
+    const result = toPreviewUrl(component, undefined, ['who=ami', 'mon=ami']);
+
+    expect(result).to.equal(
+      '/api/teambit.base-ui/input/button@0.6.2/~aspect/preview/#teambit.base-ui/input/button@0.6.2?who=ami&mon=ami'
+    );
+  });
+
   it('should make url from component without version (latest)', () => {
     const result = toPreviewUrl(componentWithoutVersion, undefined, 'who=ami');
 
