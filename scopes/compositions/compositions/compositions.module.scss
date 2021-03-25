@@ -1,3 +1,4 @@
+@import '~@teambit/ui.constants.z-indexes/z-indexes.module.scss';
 $panelBg: #fafafa;
 
 .compositionsPage {
@@ -18,10 +19,10 @@ $panelBg: #fafafa;
 
   display: flex;
   overflow-y: auto;
+  flex-direction: column;
 }
 
 .right {
-  position: relative;
   background: $panelBg;
   overflow-y: auto;
   // this is to fix the right panel when it gets too big or too small
@@ -31,7 +32,11 @@ $panelBg: #fafafa;
 
 .splitter {
   position: relative;
-  border-right: 1px solid var(--border-color, #ededed);
+
+  > :first-child {
+    z-index: $nav-z-index + 1;
+    position: absolute;
+  }
 }
 
 .collapser {
@@ -59,4 +64,9 @@ $panelBg: #fafafa;
 
 .compositions {
   padding: 16px 8px 0 8px;
+}
+
+.compositionsIframe:not(:only-child) {
+  border: 8px solid var(--border-color, #ededed);
+  box-sizing: border-box;
 }

@@ -607,6 +607,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
     },
+    "ui/compositions-menu-bar": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/compositions-menu-bar"
+    },
     "ui/constants/z-indexes": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.323",
@@ -745,6 +751,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/global-loader"
     },
+    "ui/highlighter-provider": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/highlighter-provider"
+    },
     "ui/hooks/use-bind-key": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.323",
@@ -786,6 +798,18 @@
         "version": "0.0.16",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/hooks/use-user-agent"
+    },
+    "ui/hover-selector": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/hover-selector"
+    },
+    "ui/input/option-button": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/input/option-button"
     },
     "ui/is-browser": {
         "scope": "teambit.ui-foundation",
@@ -1122,6 +1146,12 @@
         "version": "0.0.323",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/tree/tree-node"
+    },
+    "ui/hooks/use-composition": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/ui/hooks/use-composition"
     },
     "ui/utils/get-file-icon": {
         "scope": "teambit.code",
