@@ -804,7 +804,7 @@ export class Workspace implements ComponentFactory {
   }
 
   // remove this function
-  async loadAspects(ids: string[], throwOnError = false): Promise<void> {
+  async loadAspects(ids: string[] = [], throwOnError = false): Promise<void> {
     const notLoadedIds = ids.filter((id) => !this.aspectLoader.isAspectLoaded(id));
     if (!notLoadedIds.length) return;
     const coreAspectsStringIds = this.aspectLoader.getCoreAspectIds();
@@ -818,7 +818,6 @@ export class Workspace implements ComponentFactory {
     });
 
     const allIds = await Promise.all(allIdsP);
-
     const allComponents = await this.getMany(allIds as ComponentID[]);
 
     const aspects = allComponents.filter((component: Component) => {
