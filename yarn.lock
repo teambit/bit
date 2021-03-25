@@ -2022,17 +2022,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/types@npm:7.12.12":
-  version: 7.12.12
-  resolution: "@babel/types@npm:7.12.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Ftypes%2F-%2Ftypes-7.12.12.tgz"
-  dependencies:
-    "@babel/helper-validator-identifier": ^7.12.11
-    lodash: ^4.17.19
-    to-fast-properties: ^2.0.0
-  checksum: 928554396cb6b367e00cb6d41aee4ea0228872e8cda221d81abe786462799ecc63993f3c16845b30cd68e673269704f8007f4edc105a32c6d7e03e68a670a676
-  languageName: node
-  linkType: hard
-
 "@babel/types@npm:7.12.13":
   version: 7.12.13
   resolution: "@babel/types@npm:7.12.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Ftypes%2F-%2Ftypes-7.12.13.tgz"
@@ -2041,6 +2030,17 @@ __metadata:
     lodash: ^4.17.19
     to-fast-properties: ^2.0.0
   checksum: b6bb1356a7f3737a03c9362df03fd08a2b0599d117169cf7e2e856551fdf01cf4d5188d6370b23315f196058b0239fd609b65ccadcfed3bb3c0b90c27575e805
+  languageName: node
+  linkType: hard
+
+"@babel/types@npm:7.13.12":
+  version: 7.13.12
+  resolution: "@babel/types@npm:7.13.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Ftypes%2F-%2Ftypes-7.13.12.tgz"
+  dependencies:
+    "@babel/helper-validator-identifier": ^7.12.11
+    lodash: ^4.17.19
+    to-fast-properties: ^2.0.0
+  checksum: 154392625ea7b7c550be1ebf624b9cfed394d11bf8b7cb39b0ec874a84313d26dc708cca62b18de9901bce19a9a187f0d4834e8cf365ad2fc9357c96c13923f7
   languageName: node
   linkType: hard
 
@@ -4027,6 +4027,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@popperjs/core@npm:2.6.0":
+  version: 2.6.0
+  resolution: "@popperjs/core@npm:2.6.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40popperjs%2Fcore%2F-%2Fcore-2.6.0.tgz"
+  checksum: b05148a11586c3d622973d4968355e694471ae86620eaf28d78360e4e48323123428c963dbc76182777a91837203de4060a0e76603a4b275df3ebcdaaf1e4ded
+  languageName: node
+  linkType: hard
+
 "@popperjs/core@npm:^2.4.4, @popperjs/core@npm:^2.8.3":
   version: 2.9.0
   resolution: "@popperjs/core@npm:2.9.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40popperjs%2Fcore%2F-%2Fcore-2.9.0.tgz"
@@ -4422,6 +4429,16 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 11bd0c5f2f0f0678ab9779611c6b51d71340f0615a0c8751ce76c03917d252059b93bcaabfa08d48d7317cd641bdafa3e2b5aa649866b99d80e5bc2bcc9e2f8f
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.css-components.pill@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.css-components.pill@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.css-components.pill%2F-%2Fbase-ui.css-components.pill-0.6.7.tgz"
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: c06dd7fe3cee0c6160de82075111e3e0426a82960b31f3d237a08e339892ee0004e4b24d3528ee0b33b3cbd2004ee29796a4f220d14d2b8fd128f5203d9adbb4
   languageName: node
   linkType: hard
 
@@ -4879,16 +4896,17 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.surfaces.split-pane.hover-splitter@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@teambit/base-ui.surfaces.split-pane.hover-splitter@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.split-pane.hover-splitter%2F-%2Fbase-ui.surfaces.split-pane.hover-splitter-0.6.3.tgz"
+"@teambit/base-ui.surfaces.split-pane.hover-splitter@npm:0.7.0":
+  version: 0.7.0
+  resolution: "@teambit/base-ui.surfaces.split-pane.hover-splitter@npm:0.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.split-pane.hover-splitter%2F-%2Fbase-ui.surfaces.split-pane.hover-splitter-0.7.0.tgz"
   dependencies:
-    "@teambit/base-ui.surfaces.split-pane.splitter": 0.6.3
+    "@teambit/base-ui.surfaces.split-pane.splitter": 0.6.7
     classnames: ^2.2.6
   peerDependencies:
+    core-js: ^3.8.0
     react: ^16.13.1
     react-dom: ^16.13.1
-  checksum: a4a6c5125a2f6c0efe38c94da9a1fd6842cd8c42447de228354688c9d95061c8cc3d5429f03f0d8962ad63c1a2969f81733146e0098036b2d9dfb5272f87f3c0
+  checksum: 4f9e6fcb2cad26bd9f2fdfb49a144973f7f20561421a4ec7d5b8480ba8b34d0bfe38599383b5cad6144dddcff5cee76bfaf7f79e710738db17b58a1660360152
   languageName: node
   linkType: hard
 
@@ -4957,15 +4975,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/base-ui.surfaces.split-pane.splitter@npm:0.6.3":
-  version: 0.6.3
-  resolution: "@teambit/base-ui.surfaces.split-pane.splitter@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.split-pane.splitter%2F-%2Fbase-ui.surfaces.split-pane.splitter-0.6.3.tgz"
+"@teambit/base-ui.surfaces.split-pane.splitter@npm:0.6.7":
+  version: 0.6.7
+  resolution: "@teambit/base-ui.surfaces.split-pane.splitter@npm:0.6.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.surfaces.split-pane.splitter%2F-%2Fbase-ui.surfaces.split-pane.splitter-0.6.7.tgz"
   dependencies:
     classnames: ^2.2.6
   peerDependencies:
     react: ^16.13.1
     react-dom: ^16.13.1
-  checksum: 93815d37d2e46289c8020d29ae7733544e4f0e40e79ac0f95c5dfaebf20f072b2dae61f1c09bc69b1cfacb35ad816f33137114c9de6bbab3f03f83daef5fa08d
+  checksum: d6cfafa2df5a8ad9072a3a4ee8ab9c79816b21f91cb8996ca5233b95de70be6c26012b5cf03084f195f84d21e56ecc557ec3a4f76b4e4082180b984d6fe07a15
   languageName: node
   linkType: hard
 
@@ -5400,6 +5418,30 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 2886c3efb145b9fe6c4b96b60cc215f2fb2aa132461efcb3274d870441a6db16015e49eafe389fa36ad2c26208eb16fa89715bb87015771385449fb5c3ab5d76
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.utils.popper-js.ignore-popper-size@npm:0.6.8":
+  version: 0.6.8
+  resolution: "@teambit/base-ui.utils.popper-js.ignore-popper-size@npm:0.6.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.utils.popper-js.ignore-popper-size%2F-%2Fbase-ui.utils.popper-js.ignore-popper-size-0.6.8.tgz"
+  peerDependencies:
+    "@popperjs/core": ^2.0.0
+    core-js: ^3.6.5
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 740d9f848f91e195cdeea4caefffae8e3c74495a8250b59b1d04bd18213af67fbe48ab073535699ad126185290e71149d8d9fec7851e96d938eb8e51c5104bb5
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.utils.popper-js.resize-to-match-reference@npm:0.6.8":
+  version: 0.6.8
+  resolution: "@teambit/base-ui.utils.popper-js.resize-to-match-reference@npm:0.6.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.utils.popper-js.resize-to-match-reference%2F-%2Fbase-ui.utils.popper-js.resize-to-match-reference-0.6.8.tgz"
+  peerDependencies:
+    "@popperjs/core": ^2.0.0
+    core-js: ^3.6.5
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 1ce8362b757f424c91a1d93a59310eb8b28a886de61a5544329c3e05d9bd4c12ca364b7c7fca2c0843360dad31a45ff670418943add05ce751ddd3cb202f7cbc
   languageName: node
   linkType: hard
 
@@ -6481,7 +6523,7 @@ __metadata:
     "@babel/preset-typescript": 7.12.7
     "@babel/register": 7.12.13
     "@babel/runtime": 7.12.18
-    "@babel/types": 7.12.12
+    "@babel/types": 7.13.12
     "@graphql-modules/core": 0.7.17
     "@jest/test-result": 26.6.2
     "@mdx-js/loader": 1.6.21
@@ -6505,11 +6547,13 @@ __metadata:
     "@pnpm/store-connection-manager": 0.3.62
     "@pnpm/tarball-fetcher": 8.2.8
     "@pnpm/tarball-resolver": 4.0.7
+    "@popperjs/core": 2.6.0
     "@stencil/core": 1.17.4
     "@stencil/webpack": 0.0.6
     "@svgr/webpack": 5.5.0
     "@teambit/any-fs": 0.0.5
     "@teambit/base-ui.constants.storage": 0.6.3
+    "@teambit/base-ui.css-components.pill": 0.6.7
     "@teambit/base-ui.css-components.roundness": 0.6.3
     "@teambit/base-ui.elements.dots-loader": 0.6.3
     "@teambit/base-ui.elements.image": 0.6.3
@@ -6526,7 +6570,7 @@ __metadata:
     "@teambit/base-ui.layout.page-frame": 0.6.3
     "@teambit/base-ui.loaders.loader-ribbon": 0.0.2
     "@teambit/base-ui.surfaces.card": 0.6.3
-    "@teambit/base-ui.surfaces.split-pane.hover-splitter": 0.6.3
+    "@teambit/base-ui.surfaces.split-pane.hover-splitter": 0.7.0
     "@teambit/base-ui.surfaces.split-pane.split-pane": 0.6.1
     "@teambit/base-ui.text.heading": 0.6.4
     "@teambit/base-ui.text.muted-text": 0.6.4
@@ -6540,6 +6584,8 @@ __metadata:
     "@teambit/base-ui.theme.fonts.roboto": 0.6.7
     "@teambit/base-ui.theme.sizes": 0.6.7
     "@teambit/base-ui.theme.theme-provider": 0.6.7
+    "@teambit/base-ui.utils.popper-js.ignore-popper-size": 0.6.8
+    "@teambit/base-ui.utils.popper-js.resize-to-match-reference": 0.6.8
     "@teambit/base-ui.utils.string.affix": 0.0.2
     "@teambit/base-ui.utils.sub-paths": 0.6.3
     "@teambit/base-ui.utils.time-ago": 0.5.9
@@ -6604,6 +6650,7 @@ __metadata:
     "@types/eslint": 7.2.4
     "@types/express": 4.17.9
     "@types/find-cache-dir": 3.2.0
+    "@types/find-root": 1.1.2
     "@types/fs-extra": 9.0.7
     "@types/get-port": 4.2.0
     "@types/graphlib": 2.1.7
@@ -6616,6 +6663,7 @@ __metadata:
     "@types/lodash.head": 4.0.6
     "@types/lodash.pick": 4.4.6
     "@types/mdx-js__react": 1.5.3
+    "@types/memoizee": 0.4.5
     "@types/mime": 2.0.3
     "@types/mocha": 5.2.7
     "@types/mousetrap": 1.6.5
@@ -6727,6 +6775,7 @@ __metadata:
     file-loader: 6.2.0
     filenamify: 4.2.0
     find-cache-dir: 3.3.1
+    find-root: 1.1.0
     find-up: 5.0.0
     firstline: 2.0.2
     flatted: 3.1.0
@@ -6795,6 +6844,7 @@ __metadata:
     make-fetch-happen: 4.0.2
     memfs: 2.17.1
     memoize-one: 5.1.1
+    memoizee: 0.4.15
     memory-fs: 0.5.0
     mime: 2.5.2
     mini-css-extract-plugin: 0.12.0
@@ -6849,6 +6899,7 @@ __metadata:
     prism-react-renderer: 1.2.0
     prompt: 1.1.0
     proper-lockfile: 4.1.2
+    query-string: 7.0.0
     ramda: 0.27.1
     ramda-adjunct: 2.31.1
     react: 16.13.1
@@ -6863,6 +6914,7 @@ __metadata:
     react-hot-loader: 4.13.0
     react-live: 2.2.3
     react-native-web: 0.15.0
+    react-popper: 2.2.4
     react-refresh: 0.9.0
     react-router-dom: 5.2.0
     react-syntax-highlighter: 15.4.3
@@ -6921,6 +6973,7 @@ __metadata:
     unist-util-visit: 2.0.3
     url-loader: 4.1.1
     url-parse: 1.4.7
+    use-animation-frame: 0.1.0
     user-home: 2.0.0
     uuid: 3.4.0
     v8-compile-cache: 2.2.0
@@ -7450,6 +7503,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/find-root@npm:1.1.2":
+  version: 1.1.2
+  resolution: "@types/find-root@npm:1.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Ffind-root%2F-%2Ffind-root-1.1.2.tgz"
+  checksum: 25e4d8a8ec7da28808af9d072509868c297a065637857830934afb6872e51abc6d40582ebf3396ce72f35c57895035d29d7df65037c288d27b17c65a494f6b81
+  languageName: node
+  linkType: hard
+
 "@types/fs-capacitor@npm:*":
   version: 2.0.0
   resolution: "@types/fs-capacitor@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Ffs-capacitor%2F-%2Ffs-capacitor-2.0.0.tgz"
@@ -7755,6 +7815,13 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: 5d7bc3b3d96e21f3d2d95e2ad2f043d92a9c99c1d205dd49f5b928eba1988b956f921574ea19cebdf7ca0e0bb21fb42e73f0bc298ea77f9cae8b4bb0232e9435
+  languageName: node
+  linkType: hard
+
+"@types/memoizee@npm:0.4.5":
+  version: 0.4.5
+  resolution: "@types/memoizee@npm:0.4.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fmemoizee%2F-%2Fmemoizee-0.4.5.tgz"
+  checksum: 8e5891a0ef7bc485751312ded849a0439c62551fb62e1440e358bcf78ea79db2f578b63591b828269bac8b34d0f5a24663ce9c58703be1bcafe9467fe8ce0483
   languageName: node
   linkType: hard
 
@@ -13467,6 +13534,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"compositions-menu-bar-6f94c5@workspace:scopes/compositions/ui/compositions-menu-bar":
+  version: 0.0.0-use.local
+  resolution: "compositions-menu-bar-6f94c5@workspace:scopes/compositions/ui/compositions-menu-bar"
+  languageName: unknown
+  linkType: soft
+
 "compressible@npm:~2.0.16":
   version: 2.0.18
   resolution: "compressible@npm:2.0.18::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcompressible%2F-%2Fcompressible-2.0.18.tgz"
@@ -17307,6 +17380,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"find-root@npm:1.1.0":
+  version: 1.1.0
+  resolution: "find-root@npm:1.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffind-root%2F-%2Ffind-root-1.1.0.tgz"
+  checksum: 34f9eeb7258b3b5e270824a11bae4a8e6075efe79a319c034a3c5cae90cdb558c524c42ff7938b1200f648349c9dc04e860c8eaef852c802f5a1c26fa04d5ab1
+  languageName: node
+  linkType: hard
+
 "find-up@npm:4.1.0, find-up@npm:^4.0.0, find-up@npm:^4.1.0":
   version: 4.1.0
   resolution: "find-up@npm:4.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffind-up%2F-%2Ffind-up-4.1.0.tgz"
@@ -18995,6 +19075,12 @@ fsevents@^1.2.7:
   languageName: unknown
   linkType: soft
 
+"highlighter-provider-505879@workspace:scopes/react/ui/highlighter-provider":
+  version: 0.0.0-use.local
+  resolution: "highlighter-provider-505879@workspace:scopes/react/ui/highlighter-provider"
+  languageName: unknown
+  linkType: soft
+
 "history@npm:4.10.1, history@npm:^4.9.0":
   version: 4.10.1
   resolution: "history@npm:4.10.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhistory%2F-%2Fhistory-4.10.1.tgz"
@@ -19044,6 +19130,12 @@ fsevents@^1.2.7:
   checksum: 686512459ccb7e7eac7833fc4e8e35a0533c0dda5f516025f276ecb620b316010b853c785439ac63702e044ab56b2485cf7e1b088c1f9a46675b9496f7a45683
   languageName: node
   linkType: hard
+
+"hover-selector-867f11@workspace:scopes/react/hover-selector":
+  version: 0.0.0-use.local
+  resolution: "hover-selector-867f11@workspace:scopes/react/hover-selector"
+  languageName: unknown
+  linkType: soft
 
 "hpack.js@npm:^2.1.6":
   version: 2.1.6
@@ -23353,7 +23445,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"memoizee@npm:^0.4.14":
+"memoizee@npm:0.4.15, memoizee@npm:^0.4.14":
   version: 0.4.15
   resolution: "memoizee@npm:0.4.15::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fmemoizee%2F-%2Fmemoizee-0.4.15.tgz"
   dependencies:
@@ -24966,6 +25058,12 @@ fsevents@^1.2.7:
   checksum: b592356b9ddb2fd4d01993249ee98fc284019ada33ea52d21d5fe079800e92211bb9c175453f91777812ca518849cd879edd6d4501e839c2cd2546d778798c78
   languageName: node
   linkType: hard
+
+"option-button-cfc533@workspace:scopes/design/ui/input/option-button":
+  version: 0.0.0-use.local
+  resolution: "option-button-cfc533@workspace:scopes/design/ui/input/option-button"
+  languageName: unknown
+  linkType: soft
 
 "optionator@npm:^0.8.1, optionator@npm:^0.8.2, optionator@npm:^0.8.3":
   version: 0.8.3
@@ -27335,6 +27433,18 @@ fsevents@^1.2.7:
   languageName: unknown
   linkType: soft
 
+"query-string@npm:7.0.0":
+  version: 7.0.0
+  resolution: "query-string@npm:7.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fquery-string%2F-%2Fquery-string-7.0.0.tgz"
+  dependencies:
+    decode-uri-component: ^0.2.0
+    filter-obj: ^1.1.0
+    split-on-first: ^1.0.0
+    strict-uri-encode: ^2.0.0
+  checksum: bfdb88aee494c246b1ed2614cd55e5ada111860755e4fa79271cbc6dcc8198db8d9b21873489f83a06027f78d293f37989b4602d36a642ea632cf22713ecc63d
+  languageName: node
+  linkType: hard
+
 "query-string@npm:^4.1.0":
   version: 4.3.4
   resolution: "query-string@npm:4.3.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fquery-string%2F-%2Fquery-string-4.3.4.tgz"
@@ -27641,6 +27751,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"react-fast-compare@npm:^3.0.1":
+  version: 3.2.0
+  resolution: "react-fast-compare@npm:3.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-fast-compare%2F-%2Freact-fast-compare-3.2.0.tgz"
+  checksum: 6fe65c889eb4f326e97769135f97b3d63ac68737866f9c37f9625c9de4f5eaa9abed6f748eb3fd6a66808392118842916309cab7cfa99c67991f0c837433d6d2
+  languageName: node
+  linkType: hard
+
 "react-flow-renderer@npm:8.3.7":
   version: 8.3.7
   resolution: "react-flow-renderer@npm:8.3.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-flow-renderer%2F-%2Freact-flow-renderer-8.3.7.tgz"
@@ -27740,6 +27857,19 @@ fsevents@^1.2.7:
     react: ">=17.0.1"
     react-dom: ">=17.0.1"
   checksum: fb2471fe75648cb7291961c31ff01c03fbab4b2e915b9de3b015902cc93b0ebe833f5ece7d70db75455321914568f8c825ac290be43360fd6cddd9e39665d3d3
+  languageName: node
+  linkType: hard
+
+"react-popper@npm:2.2.4":
+  version: 2.2.4
+  resolution: "react-popper@npm:2.2.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-popper%2F-%2Freact-popper-2.2.4.tgz"
+  dependencies:
+    react-fast-compare: ^3.0.1
+    warning: ^4.0.2
+  peerDependencies:
+    "@popperjs/core": ^2.0.0
+    react: ^16.8.0 || ^17
+  checksum: 0b1303d3285e93245fb7e0460996c4dfd53b66152d09e41b1dcb6c9f99932513bf891b4359511aeb3b17eaa2ae8555129631ca2f61337d461e691104cc454898
   languageName: node
   linkType: hard
 
@@ -32784,6 +32914,16 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
+"use-animation-frame@npm:0.1.0":
+  version: 0.1.0
+  resolution: "use-animation-frame@npm:0.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fuse-animation-frame%2F-%2Fuse-animation-frame-0.1.0.tgz"
+  peerDependencies:
+    react: ^16.8.0
+    react-dom: ^16.8.0
+  checksum: 5f9608a96f2250a093d1c6ad6d95f0bd503c89cbf3314db2cfb9132314ebf006e9b247f26bf8a90b89b0f9d92875d4227ba3d984712a4782ecaf6028b067e476
+  languageName: node
+  linkType: hard
+
 "use-bind-key-e7f9ea@workspace:scopes/ui-foundation/uis/hooks/use-bind-key":
   version: 0.0.0-use.local
   resolution: "use-bind-key-e7f9ea@workspace:scopes/ui-foundation/uis/hooks/use-bind-key"
@@ -32793,6 +32933,12 @@ typescript@^3.9.3:
 "use-code-params-ae3d1a@workspace:scopes/code/hooks/use-code-params":
   version: 0.0.0-use.local
   resolution: "use-code-params-ae3d1a@workspace:scopes/code/hooks/use-code-params"
+  languageName: unknown
+  linkType: soft
+
+"use-composition-8e988e@workspace:scopes/compositions/ui/hooks/use-composition":
+  version: 0.0.0-use.local
+  resolution: "use-composition-8e988e@workspace:scopes/compositions/ui/hooks/use-composition"
   languageName: unknown
   linkType: soft
 
@@ -33437,6 +33583,15 @@ typescript@^3.9.3:
   dependencies:
     makeerror: 1.0.x
   checksum: c014f264c473fc4464ba8f59eb9f7ffa1c0cf2c83b65353de28a6012d8dd29e974bf2b0fbd5c71231f56762a3ea0d970b635f7d6f6d670ff83f426741ce6a4da
+  languageName: node
+  linkType: hard
+
+"warning@npm:^4.0.2":
+  version: 4.0.3
+  resolution: "warning@npm:4.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwarning%2F-%2Fwarning-4.0.3.tgz"
+  dependencies:
+    loose-envify: ^1.0.0
+  checksum: 20ef5d29ff9c20af3060e504914a00d5a90ce346e75e6691efbedb540481cdc82070c966d75195f812de64bb0bd7f1b02315fcb52469db151c0f15e29002781c
   languageName: node
   linkType: hard
 
