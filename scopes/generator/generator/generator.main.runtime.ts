@@ -19,6 +19,8 @@ export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[] };
 
+export type TemplateDescriptor = { aspectId: string; name: string };
+
 export type GeneratorConfig = {
   /**
    * array of aspects to include in the list of templates.
@@ -45,14 +47,13 @@ export class GeneratorMain {
   /**
    * list all component templates registered in the workspace.
    */
-  async listComponentTemplates(): Promise<{ [aspectId: string]: ComponentTemplate[] }> {
+  async listComponentTemplates(): Promise<TemplateDescriptor[]> {
     await this.loadAspects();
     const allTemplates = this.getAllTemplatesFlattened();
-    const results: { [aspectId: string]: ComponentTemplate[] } = {};
-    allTemplates.forEach(({ id, template }) => {
-      results[id] ? results[id].push(template) : (results[id] = [template]);
-    });
-    return results;
+    return allTemplates.map(({ id, template }) => ({
+      aspectId: id,
+      name: template.name,
+    }));
   }
 
   /**

@@ -1,5 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
+import { groupBy } from 'lodash';
 import { GeneratorMain } from './generator.main.runtime';
 
 export type GeneratorOptions = {
@@ -21,11 +22,11 @@ export class TemplatesCmd implements Command {
 
   async report() {
     const results = await this.generator.listComponentTemplates();
-
+    const grouped = groupBy(results, 'aspectId');
     const title = chalk.green(`the following template(s) are available\n`);
-    const output = Object.keys(results)
+    const output = Object.keys(grouped)
       .map((aspectId) => {
-        const names = results[aspectId].map((template) => `    ${template.name}`).join('\n');
+        const names = grouped[aspectId].map((template) => `    ${template.name}`).join('\n');
         return `${chalk.bold(aspectId)}\n${names}`;
       })
       .join('\n');
