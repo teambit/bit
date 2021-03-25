@@ -936,12 +936,7 @@ jobs:
     <<: *windows_defaults
     steps:
       # - checkout
-      - run: pwd
-      - run: dir
       - run: git clone https://github.com/teambit/bit.git
-      - run: pwd
-      - run: dir
-      - run: cd bit; dir
       - persist_to_workspace:
           root: C:\Users\circleci\project
           paths:
@@ -1066,10 +1061,6 @@ jobs:
     steps:
       - attach_workspace:
           at: .
-      - run: pwd
-      - run: dir
-      - run: cd bit; dir
-      - run: pwd
       - run: cinst nodejs --version 12.15.0
       - run: node -v
       - run: npm -v
@@ -1102,18 +1093,17 @@ jobs:
       #   run: 'chmod 400 ~/.ssh/id_rsa'
       # -
       #   run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit\bit; bit install'
+      - run: 'cd bit\bit; bit compile'
+      - run: 'cd bit\bit; npm run build'
+
       - run: 'cd bit\bit; mkdir junit'
-      - run: cd bit; dir
-      - run: cd bit\bit; dir
       - bit_config:
           token: "fake-token"
       - run:
           name: 'write e2e files'
           command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize | Out-File -FilePath .\spec-files.txt'
       - run: Get-Content -Path .\bit\bit\spec-files.txt
-      - run: pwd
-      - run: dir
-      - run: cd bit\bit; dir
       - run:
           name: 'run e2e tests'
           command: 'cd bit\bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
