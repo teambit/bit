@@ -6,7 +6,7 @@ export const componentTemplates: ComponentTemplate[] = [
     generateFiles: (context: GeneratorContext) => {
       const { componentName, componentNameCamelCase, componentId } = context;
       const mainRuntime = {
-        relativePath: `${componentName}.main.ts`,
+        relativePath: `${componentName}.main.runtime.ts`,
         content: `import { MainRuntime } from '@teambit/cli';
 import { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';
 
@@ -33,8 +33,11 @@ export const ${componentNameCamelCase}Aspect = Aspect.create({
       };
       const indexFile = {
         relativePath: 'index.ts',
-        content: `export type { ${componentNameCamelCase}Main } from './${componentName}.main';
-export { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';`,
+        content: `import { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';
+
+export type { ${componentNameCamelCase}Main } from './${componentName}.main.runtime';
+export default ${componentNameCamelCase}Aspect;
+export { ${componentNameCamelCase}Aspect };`,
         isMain: true,
       };
       return [mainRuntime, aspectFile, indexFile];

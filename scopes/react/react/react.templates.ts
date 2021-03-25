@@ -50,7 +50,23 @@ Button example:
 `,
       };
 
-      return [indexFile, componentFile, compositionFile, docsFile];
+      const testFile = {
+        relativePath: 'button.spec.tsx',
+        content: `import React from 'react';
+import { render } from '@testing-library/react';
+import { expect } from 'chai';
+
+import { BasicButton } from './button.composition';
+
+it('should render', () => {
+  const { getByText } = render(<BasicButton />);
+  const rendered = getByText('click me');
+
+  expect(rendered).to.exist;
+});`,
+      };
+
+      return [indexFile, componentFile, compositionFile, docsFile, testFile];
     },
   },
 ];
