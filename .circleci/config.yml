@@ -1102,7 +1102,7 @@ jobs:
       - run: Get-Content -Path .\bit\spec-files.txt
       - run:
           name: 'run e2e tests'
-          command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
+          command: '$content = get-content spec-files.txt; npm run mocha-circleci $content'
           # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
           # command: cd bit; npm run e2e-test-circle --debug
           environment:
