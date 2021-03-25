@@ -1093,10 +1093,6 @@ jobs:
       #   run: 'chmod 400 ~/.ssh/id_rsa'
       # -
       #   run: 'ssh-add ~/.ssh/id_rsa'
-      - run: 'cd bit\bit; bit install'
-      - run: 'cd bit\bit; bit compile'
-      - run: 'cd bit\bit; npm run build'
-
       - run: 'cd bit\bit; mkdir junit'
       - bit_config:
           token: "fake-token"
@@ -1104,6 +1100,9 @@ jobs:
           name: 'write e2e files'
           command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize | Out-File -FilePath .\spec-files.txt'
       - run: Get-Content -Path .\bit\bit\spec-files.txt
+      - run: 'cd bit\bit; bit install'
+      - run: 'cd bit\bit; bit compile'
+      - run: 'cd bit\bit; npm run build'
       - run:
           name: 'run e2e tests'
           command: 'cd bit\bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
