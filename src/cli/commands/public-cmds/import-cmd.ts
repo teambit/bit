@@ -18,7 +18,7 @@ export default class Import implements LegacyCommand {
   description = `import components into your current workspace.
   https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
   ${WILDCARD_HELP('import')}`;
-  alias = 'i';
+  alias = '';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],

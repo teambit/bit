@@ -19,19 +19,21 @@ import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { MDXAspect, MDXMain } from '@teambit/mdx';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
 import { ReactAppOptions } from './react-app-options';
-import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ReactApp } from './react.application';
+import { componentTemplates } from './react.templates';
 
 type ReactDeps = [
   EnvsMain,
@@ -46,7 +48,8 @@ type ReactDeps = [
   ESLintMain,
   MultiCompilerMain,
   MDXMain,
-  ApplicationMain
+  ApplicationMain,
+  GeneratorMain
 ];
 
 export type ReactMainConfig = {
@@ -120,7 +123,7 @@ export class ReactMain {
    * register a new React application.
    */
   registerReactApp(options: ReactAppOptions) {
-    this.application.registerApp(new ReactApp(options.name, options.portRange, this.reactEnv.getDevServer()));
+    // this.application.registerApp(new ReactApp(options.name, options.portRange, this.reactEnv.getDevServer()));
   }
 
   /**
@@ -270,6 +273,7 @@ export class ReactMain {
     MultiCompilerAspect,
     MDXAspect,
     ApplicationAspect,
+    GeneratorAspect,
   ];
 
   static async provider(
@@ -287,6 +291,7 @@ export class ReactMain {
       multiCompiler,
       mdx,
       application,
+      generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
@@ -306,6 +311,7 @@ export class ReactMain {
     const react = new ReactMain(reactEnv, envs, application);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
+    generator.registerComponentTemplate(componentTemplates);
     return react;
   }
 }

@@ -66,7 +66,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
       await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
     }
     await this.clearScopesCaches(legacyComponents);
-    this.triggerOnPostSign(components);
+    await this.triggerOnPostSign(components);
 
     return {
       components,
@@ -79,9 +79,8 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     this.onPostSignSlot.register(fn);
   }
 
-  triggerOnPostSign(components: Component[]) {
-    // don't wait for the promise to complete.
-    Promise.all(this.onPostSignSlot.values().map((fn) => fn(components))).catch((err) => {
+  async triggerOnPostSign(components: Component[]) {
+    await Promise.all(this.onPostSignSlot.values().map((fn) => fn(components))).catch((err) => {
       this.logger.error('failed running onPostSignSlot', err);
     });
   }

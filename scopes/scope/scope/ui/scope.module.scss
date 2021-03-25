@@ -1,3 +1,5 @@
+@import '~@teambit/ui.constants.z-indexes/z-indexes.module.scss';
+
 .scope {
   display: flex;
   flex-direction: column;
@@ -24,7 +26,11 @@
 
 .splitter {
   position: relative;
-  border-left: 1px solid var(--border-color, #ededed);
+
+  > :first-child {
+    z-index: $nav-z-index + 1;
+    position: absolute;
+  }
 }
 
 .sidebar {

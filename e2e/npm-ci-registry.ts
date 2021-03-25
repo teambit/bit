@@ -196,7 +196,6 @@ EOD`;
     const scopeJsonPath = '.bit/scope.json';
     const scopeJson = this.helper.fs.readJsonFile(scopeJsonPath);
     const resolverPath = path.join(this.helper.scopes.localPath, 'resolver.js');
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     scopeJson.resolverPath = resolverPath;
     this.helper.fs.createJsonFile(scopeJsonPath, scopeJson);
     this.helper.fs.createFile('', 'resolver.js', this._getResolverContent(extraScopes));

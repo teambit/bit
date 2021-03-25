@@ -11,11 +11,11 @@ type Props = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export class OrgAvatar extends PureComponent<Props> {
   render() {
-    const { account, size, imageSize = size, fontSize = size * 0.35, className, imgClassName } = this.props;
+    const { account, size, imageSize = size, fontSize = size * 0.35, className, imgClassName, ...rest } = this.props;
 
     const { profileImage = '' } = account;
     const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
@@ -24,6 +24,7 @@ export class OrgAvatar extends PureComponent<Props> {
       <div
         className={classNames(styles.default, styles.avatar, className)}
         style={{ width: `${size}px`, height: `${size}px` }}
+        {...rest}
       >
         {profileImageWithParams && (
           <img src={profileImageWithParams} className={classNames(styles.avatarImg, imgClassName)} />
