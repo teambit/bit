@@ -1100,6 +1100,9 @@ jobs:
           name: 'write e2e files'
           command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize | Out-File -FilePath .\spec-files.txt'
       - run: Get-Content -Path .\bit\spec-files.txt
+      - run: pwd
+      - run: dir
+      - run: cd bit; dir
       - run:
           name: 'run e2e tests'
           command: '$content = get-content spec-files.txt; npm run mocha-circleci $content'
