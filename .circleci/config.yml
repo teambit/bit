@@ -1098,7 +1098,8 @@ jobs:
           token: "fake-token"
       - run:
           name: 'write e2e files'
-          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=timings > spec-files.txt'
+          command: 'cd bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize > spec-files.txt'
+      - run: Get-Content -Path .\bit\spec-files.txt
       - run:
           name: 'run e2e tests'
           command: 'cd bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
