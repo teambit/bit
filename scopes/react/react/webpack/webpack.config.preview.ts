@@ -43,7 +43,7 @@ const lessModuleRegex = /\.module\.less$/;
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
-export default function (fileMapPath: string, distPaths: string[]): Configuration {
+export default function (fileMapPath: string): Configuration {
   const isEnvProduction = true;
 
   // Variable used for enabling profiling in Production
@@ -236,23 +236,23 @@ export default function (fileMapPath: string, distPaths: string[]): Configuratio
                 name: 'static/media/[name].[hash:8].[ext]',
               },
             },
-            {
-              test: /\.js$/,
-              include: distPaths,
-              use: [
-                {
-                  loader: require.resolve('babel-loader'),
-                  options: {
-                    babelrc: false,
-                    configFile: false,
-                    plugins: [
-                      // for component highlighting in preview.
-                      [require.resolve('@teambit/babel.bit-react-transformer')],
-                    ],
-                  },
-                },
-              ],
-            },
+            // {
+            //   test: /\.js$/,
+            //   include: distPaths,
+            //   use: [
+            //     {
+            //       loader: require.resolve('babel-loader'),
+            //       options: {
+            //         babelrc: false,
+            //         configFile: false,
+            //         plugins: [
+            //           // for component highlighting in preview.
+            //           [require.resolve('@teambit/babel.bit-react-transformer')],
+            //         ],
+            //       },
+            //     },
+            //   ],
+            // },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {

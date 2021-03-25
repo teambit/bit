@@ -148,13 +148,13 @@ export class ReactEnv implements Environment {
     return path;
   }
 
-  private calcDistPaths(context: ExecutionContext) {
+  private calcDistPaths(context: ExecutionContext, rootDir: string) {
     const components = context.components;
     const distDir = this.getCompiler().distDir;
 
     const distPaths = components.map((comp) => {
       const modulePath = this.pkg.getModulePath(comp);
-      const dist = join(this.workspace.path, modulePath, distDir);
+      const dist = join(rootDir, modulePath, distDir);
       return dist;
     });
 
@@ -166,7 +166,7 @@ export class ReactEnv implements Environment {
    */
   private getDevWebpackConfig(context: DevServerContext): Configuration {
     const fileMapPath = this.writeFileMap(context.components);
-    const distPaths = this.calcDistPaths(context);
+    const distPaths = this.calcDistPaths(context, this.workspace.path);
 
     return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
   }
@@ -195,8 +195,7 @@ export class ReactEnv implements Environment {
 
   async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
-    const distPaths = this.calcDistPaths(context);
-    const defaultConfig = previewConfigFactory(path, distPaths);
+    const defaultConfig = previewConfigFactory(path);
 
     if (targetConfig?.entry) {
       const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
