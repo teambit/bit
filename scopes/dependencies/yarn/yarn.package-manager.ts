@@ -262,10 +262,10 @@ export class YarnPackageManager implements PackageManager {
 
     const data = {
       nodeLinker: 'node-modules',
-      installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
+      installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder,
-      pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
-      bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
+      bstatePath: `${rootDirPath}/.yarn/build-state.yml`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
