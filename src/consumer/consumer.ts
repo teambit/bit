@@ -68,6 +68,7 @@ import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator';
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { BasicTagParams } from '../api/consumer/lib/tag';
+import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
 
 type ConsumerProps = {
   projectPath: string;
@@ -256,6 +257,9 @@ export default class Consumer {
   }
 
   getParsedId(id: BitIdStr, useVersionFromBitmap = false, searchWithoutScopeInProvidedId = false): BitId {
+    if (id.startsWith('@')) {
+      throw new UnexpectedPackageName(id);
+    }
     // @ts-ignore (we know it will never be undefined since it pass throw=true)
     const bitId: BitId = this.bitMap.getExistingBitId(id, true, searchWithoutScopeInProvidedId);
     if (!useVersionFromBitmap) {
