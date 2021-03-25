@@ -1,8 +1,5 @@
 import { Schema } from '@teambit/graphql';
 import gql from 'graphql-tag';
-import { ComponentTemplate } from './component-template';
-import { GeneratorOptions } from './create.cmd';
-
 import { GeneratorMain } from './generator.main.runtime';
 
 export function generatorSchema(generator: GeneratorMain): Schema {
