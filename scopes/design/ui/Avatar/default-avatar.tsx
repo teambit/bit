@@ -12,7 +12,7 @@ type DefaultAvatarProps = {
   className?: string;
   imgClassName?: string;
   // hideTooltip?: boolean;
-};
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export function DefaultAvatar(props: DefaultAvatarProps) {
   const {
@@ -21,6 +21,7 @@ export function DefaultAvatar(props: DefaultAvatarProps) {
     className,
     // imgClassName,
     // hideTooltip = false,
+    ...rest
   } = props;
   // const { profileImage = '', name = '', displayName = '' } = account;
   return (
@@ -32,6 +33,7 @@ export function DefaultAvatar(props: DefaultAvatarProps) {
         fontSize: `${size * 0.35}px`,
         lineHeight: `${size}px`,
       }}
+      {...rest}
     >
       ?
     </div>
