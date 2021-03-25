@@ -6,6 +6,7 @@ export type ExternalLinkProps = {} & React.AnchorHTMLAttributes<HTMLAnchorElemen
 
 export function ExternalLink({ href, children, className, ...rest }: ExternalLinkProps) {
   return (
+    // @ts-ignore // TODO: @uri please fix type
     <a {...rest} target="_blank" rel="noreferrer" href={href} className={classNames(styles.link, className)}>
       {children}
     </a>
