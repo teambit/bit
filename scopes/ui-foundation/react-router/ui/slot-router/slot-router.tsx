@@ -36,7 +36,7 @@ export function SlotSubRouter({ slot, basePath }: { slot: RouteSlot; basePath?: 
     <Switch>
       {routes.map((
         route,
-        idx // @ts-ignore an unclear error in capsules
+        idx // @ts-ignore an unclear error in capsules // @ts-ignore an unclear error in capsules
       ) => (
         <Route key={idx} {...route} path={extendPath(basePath || contextPath, route.path)} />
       ))}
