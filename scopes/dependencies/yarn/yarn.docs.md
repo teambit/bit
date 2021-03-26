@@ -3,7 +3,7 @@ id: yarn
 title: Yarn
 slug: /aspects/yarn
 description: Enables the use of Yarn 2 in a Bit workspace
-labels: ['pnpm', 'package manager']
+labels: ['yarn', 'package manager']
 ---
 
 Yarn is a Bit aspect that enables the use of the Yarn **v2** package manager in a Bit workspace (the Yarn aspect utilizes Yarn's programmatic API).
