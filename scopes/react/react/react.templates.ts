@@ -43,10 +43,9 @@ import { Button } from './button';
 
 Button example:
 
-// Uncomment out the code below by removing the '//'
-// \`\`\`js live
+\`\`\`js live
 <Button text="click here"/>
-// \`\`\`
+\`\`\`
 `,
       };
 
@@ -58,7 +57,7 @@ import { expect } from 'chai';
 
 import { BasicButton } from './button.composition';
 
-it('should render', () => {
+it('component should render', () => {
   const { getByText } = render(<BasicButton />);
   const rendered = getByText('click me');
 

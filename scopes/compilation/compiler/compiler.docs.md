@@ -1,3 +1,9 @@
+---
+id: compiler
+title: Compiler
+slug: /aspects/compiler
+---
+
 ## Workspace Configuration
 
 The compiler is configured inside an environment and not directly on the component level.
