@@ -1,6 +1,7 @@
 ---
-id: teambit.generator/generator
-title: Generator Aspect
+id: generator
+title: Generator
+slug: /aspects/generator
 ---
 
 Generator extension enable generating new components by pre-defined templates
