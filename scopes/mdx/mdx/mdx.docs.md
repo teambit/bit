@@ -1,4 +1,7 @@
 ---
+id: mdx
+title: MDX
+slug: /aspects/mdx
 description: A Bit-MDX integration for simple & powerful component documentation and independent content composition
 labels: ['mdx', 'bit', 'docs', 'md', 'markdown', 'ui']
 ---
@@ -6,8 +9,8 @@ labels: ['mdx', 'bit', 'docs', 'md', 'markdown', 'ui']
 import _ from 'lodash';
 import { Button } from '@teambit/evangelist.elements.button';
 
-The MDX aspect integrates [MDX](https://mdxjs.com/) with Bit to enable the authoring of component documentation and standalone content components, using the MDX format.   
-The MDX format joins together the ease-of-use and readability of the Markdown syntax with the endless possibilities that are offered by JSX. 
+The MDX aspect integrates [MDX](https://mdxjs.com/) with Bit to enable the authoring of component documentation and standalone content components, using the MDX format.
+The MDX format joins together the ease-of-use and readability of the Markdown syntax with the endless possibilities that are offered by JSX.
 The modularity that's offered by both technologies (MDX and Bit) enables MDX files to be exported to a remote scope and imported to other web projects, just like any other Bit component.
 
 #### Example
@@ -69,7 +72,7 @@ As a default, MDX will only be used for component documentation. To enable the c
 ## Usage
 
 #### Using the frontmatter API
-Bit parses your code to generate metadata for your components. This metadata is presented in the component's documentation and is used by Bit.dev's search engine.  
+Bit parses your code to generate metadata for your components. This metadata is presented in the component's documentation and is used by Bit.dev's search engine.
 To override it, use Bit's frontmatter properties, at the top of your MDX file.
 
 ```md
@@ -172,7 +175,7 @@ Building with components, whether they are code or markdown, means easier mainta
 
 The MDX aspect can be used to author independent MDX components. Components can be written using MDX and compiled to plain JS, to be consumed by other web projects. Since the MDX aspect is used and handled by your environment, this feature is turned on using the environment's configurations.
 
-For example, to turn on this feature in [`@teambit.react/react`](https://bit.dev/teambit/react/react) environment:
+For example, to turn on this feature in `@teambit.react/react` environment:
 
 ```json
 {
@@ -188,7 +191,7 @@ For example, to turn on this feature in [`@teambit.react/react`](https://bit.dev
 
 ### Collaborating with non-developers
 
-Your docs are not only for other developers. A component's documentation can be used as a hub for collaboration between different stakeholders. 
+Your docs are not only for other developers. A component's documentation can be used as a hub for collaboration between different stakeholders.
 
 The verbal descriptions, live examples, images and links to other related artifacts, are all communicating the component's story with little or no code.
 
