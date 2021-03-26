@@ -1,6 +1,7 @@
 ---
 id: typescript
-title: Typescript Compiler
+title: Typescript
+slug: /aspects/typescript
 description: Typescript compilation for Bit components.
 labels: ['typescript', 'compiler', 'bit', 'extension', 'aspect']
 ---
