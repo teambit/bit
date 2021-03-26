@@ -5491,6 +5491,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/bit-error@npm:0.0.323":
+  version: 0.0.323
+  resolution: "@teambit/bit-error@npm:0.0.323::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbit-error%2F-%2Fbit-error-0.0.323.tgz"
+  dependencies:
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.43
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 476a79afc93c17be6c065edbd6eca564412d34f06973830d4eb99312fa6eb3663c2d098df4927146a58a6fe19644472590e77958cfa6c3c0f9caa4ccce08c0af
+  languageName: node
+  linkType: hard
+
+"@teambit/bit-error@npm:0.0.324":
+  version: 0.0.324
+  resolution: "@teambit/bit-error@npm:0.0.324::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbit-error%2F-%2Fbit-error-0.0.324.tgz"
+  dependencies:
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 41844bb6ffd44a2ca7d7277589231c89fa7ecd2fb888752c3ad0e88f97edbcc599fd95784024f80dd26c28507065feec89f5ae30bff087cf98847bd76ce7f2c2
+  languageName: node
+  linkType: hard
+
 "@teambit/capsule@npm:0.0.12":
   version: 0.0.12
   resolution: "@teambit/capsule@npm:0.0.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcapsule%2F-%2Fcapsule-0.0.12.tgz"
@@ -5499,6 +5525,66 @@ __metadata:
     lodash: ^4.17.15
     p-limit: ^2.2.1
   checksum: 2e1e77d4f209eafcc9fd36863d2aa7ec0d4e800135ce394bfaa06da752504e82391c76234944707df3b693aaf489f8d4303d933322e9cc5fcc4fec10891ae697
+  languageName: node
+  linkType: hard
+
+"@teambit/component-id@npm:0.0.323":
+  version: 0.0.323
+  resolution: "@teambit/component-id@npm:0.0.323::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcomponent-id%2F-%2Fcomponent-id-0.0.323.tgz"
+  dependencies:
+    "@teambit/legacy-bit-id": 0.0.323
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.43
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 7a396fd4a39080c4a0af5149234fc7a276fa48c34fa1c105c3f06f802b424ae1e8051560a1a09c5bf67c65e5c316b9c963ba691b272dbad7d3722b5f3380201c
+  languageName: node
+  linkType: hard
+
+"@teambit/component-id@npm:0.0.324":
+  version: 0.0.324
+  resolution: "@teambit/component-id@npm:0.0.324::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcomponent-id%2F-%2Fcomponent-id-0.0.324.tgz"
+  dependencies:
+    "@teambit/legacy-bit-id": 0.0.324
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 6b0cb2d703879eeaf4ead907461384a12b75610a18aee7d86283fdd9011578b89070273ad9d5a53810d1c8a90338f0a51931e7402f16139461f3044f98f08bf3
+  languageName: node
+  linkType: hard
+
+"@teambit/component-version@npm:0.0.323":
+  version: 0.0.323
+  resolution: "@teambit/component-version@npm:0.0.323::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcomponent-version%2F-%2Fcomponent-version-0.0.323.tgz"
+  dependencies:
+    "@teambit/bit-error": 0.0.323
+    chalk: 2.4.2
+    core-js: 3.8.3
+    semver: 7.3.4
+  peerDependencies:
+    "@teambit/legacy": 1.0.43
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 33a99d1fdabe43a2f53c59ebf3c49ded1076a69787ba1b12d335ce38a9705cc468240e0cfd98cb65d7eb2b60648f2616dbaa2dc49fddb9c06c8f6daa376f9408
+  languageName: node
+  linkType: hard
+
+"@teambit/component-version@npm:0.0.324":
+  version: 0.0.324
+  resolution: "@teambit/component-version@npm:0.0.324::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcomponent-version%2F-%2Fcomponent-version-0.0.324.tgz"
+  dependencies:
+    "@teambit/bit-error": 0.0.324
+    chalk: 2.4.2
+    core-js: 3.8.3
+    semver: 7.3.4
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: eb60c98280979003c16206d51946e57254667ae0e2a028de3d0f4cee89a5d4d7d21b2177d51ceacc0254b3592bdd4c081e612765290ae504b29d020af2480f56
   languageName: node
   linkType: hard
 
@@ -6379,9 +6465,47 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.43, @teambit/legacy@npm:1.0.43::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.43.tgz":
-  version: 1.0.43
-  resolution: "@teambit/legacy@npm:1.0.43::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.43.tgz"
+"@teambit/legacy-bit-id@npm:0.0.323":
+  version: 0.0.323
+  resolution: "@teambit/legacy-bit-id@npm:0.0.323::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy-bit-id%2F-%2Flegacy-bit-id-0.0.323.tgz"
+  dependencies:
+    "@teambit/bit-error": 0.0.323
+    "@teambit/component-version": 0.0.323
+    chalk: 2.4.2
+    core-js: 3.8.3
+    decamelize: 1.2.0
+    ramda: 0.27.1
+    semver: 7.3.4
+  peerDependencies:
+    "@teambit/legacy": 1.0.43
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 632b1baf25e8eee8b62de0476ef33274dbec89cc972117d5f035a50ea79bb296548d47e9b9d1a6d9b0f7a60cd3a9ff5914b2a690e9df276cc135bb71da34969b
+  languageName: node
+  linkType: hard
+
+"@teambit/legacy-bit-id@npm:0.0.324":
+  version: 0.0.324
+  resolution: "@teambit/legacy-bit-id@npm:0.0.324::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy-bit-id%2F-%2Flegacy-bit-id-0.0.324.tgz"
+  dependencies:
+    "@teambit/bit-error": 0.0.324
+    "@teambit/component-version": 0.0.324
+    chalk: 2.4.2
+    core-js: 3.8.3
+    decamelize: 1.2.0
+    ramda: 0.27.1
+    semver: 7.3.4
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 7bff5b623ccf96b54d5b2df2079afa3ab735faea171b2cf9dbe37fd2946ed9712b043d53ec2c159aecedfe4c3d59999aa04a58a82dbb443c9e5f418588a608eb
+  languageName: node
+  linkType: hard
+
+"@teambit/legacy@npm:1.0.44, @teambit/legacy@npm:1.0.44::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.44.tgz":
+  version: 1.0.44
+  resolution: "@teambit/legacy@npm:1.0.44::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.44.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6502,7 +6626,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 26b8e8aecccda9acc55b84f547c6f8c82c451787800ae8a8b22c69222bba2989b8a47858a7ee187f40a638bf1f8d9d043dee046ced1469008674bf1cb8d603e4
+  checksum: c3dcf1ab47221a58b58c8a916c30ff596508cf4507936690357b5e1fd50825de36dfffedfe63563de0fa38b7f82d79f3f146bb453621de82003b2fce88ceffbc
   languageName: node
   linkType: hard
 
@@ -6564,6 +6688,7 @@ __metadata:
     "@teambit/base-ui.graph.tree.recursive-tree": 0.0.1
     "@teambit/base-ui.graph.tree.root-node": 0.0.1
     "@teambit/base-ui.graph.tree.tree-context": 0.0.1
+    "@teambit/base-ui.input.button": 0.6.3
     "@teambit/base-ui.input.error": 0.6.4
     "@teambit/base-ui.layout.breakpoints": 0.6.3
     "@teambit/base-ui.layout.grid-component": 0.6.3
@@ -6590,6 +6715,7 @@ __metadata:
     "@teambit/base-ui.utils.sub-paths": 0.6.3
     "@teambit/base-ui.utils.time-ago": 0.5.9
     "@teambit/capsule": 0.0.12
+    "@teambit/component-id": 0.0.323
     "@teambit/documenter.code.react-playground": 1.0.4
     "@teambit/documenter.routing.external-link": 1.0.3
     "@teambit/documenter.theme.theme-compositions": 2.0.3
@@ -6629,9 +6755,11 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.43
+    "@teambit/legacy": 1.0.44
+    "@teambit/modules.dom-to-react": 0.0.323
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
+    "@teambit/ui.component-highlighter": 0.0.324
     "@teambit/ui.composition-card": 0.0.259
     "@testing-library/jest-dom": 5.11.9
     "@testing-library/react": 11.0.4
@@ -6999,7 +7127,7 @@ __metadata:
     yaml: 1.10.0
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.43
+    "@teambit/legacy": 1.0.44
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -7031,6 +7159,32 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 204a68937ae909a6d89feccaf9cce729d4ff99ea36d684de8a13dcdc6bb883f326d493887f98f4c3c4a025511c2d97de4159c5dd96a8ebf7a2ba7c21649fa886
+  languageName: node
+  linkType: hard
+
+"@teambit/modules.dom-to-react@npm:0.0.323":
+  version: 0.0.323
+  resolution: "@teambit/modules.dom-to-react@npm:0.0.323::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fmodules.dom-to-react%2F-%2Fmodules.dom-to-react-0.0.323.tgz"
+  dependencies:
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.43
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: dce08d09d132d5309971a457fbf7ad553aba0f3e706296cccdd437d0d771bca6b9a3ec31b065dc5b2a197e074d6a5df484ae8afe4c3f3b42c4d4e474f5192fb8
+  languageName: node
+  linkType: hard
+
+"@teambit/modules.dom-to-react@npm:0.0.324":
+  version: 0.0.324
+  resolution: "@teambit/modules.dom-to-react@npm:0.0.324::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fmodules.dom-to-react%2F-%2Fmodules.dom-to-react-0.0.324.tgz"
+  dependencies:
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 6648286de7eae7b6c37739c889da129c1dd24287ab7f9546c4f37ca31e674d65f2a2f03d657b1f0c4b298aca4a909f9c2df727d4ec98e87aad9c3ab8f3d03a01
   languageName: node
   linkType: hard
 
@@ -7079,6 +7233,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/ui.component-highlighter@npm:0.0.324":
+  version: 0.0.324
+  resolution: "@teambit/ui.component-highlighter@npm:0.0.324::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui.component-highlighter%2F-%2Fui.component-highlighter-0.0.324.tgz"
+  dependencies:
+    "@popperjs/core": 2.6.0
+    "@teambit/base-ui.css-components.pill": 0.6.7
+    "@teambit/base-ui.surfaces.card": 0.6.3
+    "@teambit/base-ui.utils.popper-js.ignore-popper-size": 0.6.8
+    "@teambit/base-ui.utils.popper-js.resize-to-match-reference": 0.6.8
+    "@teambit/component-id": 0.0.324
+    "@teambit/modules.dom-to-react": 0.0.324
+    "@teambit/ui.hover-selector": 0.0.1
+    classnames: 2.2.6
+    core-js: 3.8.3
+    react-popper: 2.2.4
+    use-animation-frame: 0.1.0
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 54b57dd77af9f4c6778122747bcaffd53c950fdb945b8a5537451d934dc9f2138a1c326a6aedf571641c5ab04eef521f66a33618fcb721f2d9e7cd6c2da453d5
+  languageName: node
+  linkType: hard
+
 "@teambit/ui.composition-card@npm:0.0.259":
   version: 0.0.259
   resolution: "@teambit/ui.composition-card@npm:0.0.259::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui.composition-card%2F-%2Fui.composition-card-0.0.259.tgz"
@@ -7094,6 +7272,19 @@ __metadata:
     react: ^16.13.1
     react-dom: ^16.13.1
   checksum: 05ecd487773afebcdb03c11f87403de31d90c13d51b6d6a96657f7a0452912e1cec4bc4fee1f1b6c1b6a486a44b1eb4a381c0e1fa04d5b00b84f7451a0d02bc3
+  languageName: node
+  linkType: hard
+
+"@teambit/ui.hover-selector@npm:0.0.1":
+  version: 0.0.1
+  resolution: "@teambit/ui.hover-selector@npm:0.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fui.hover-selector%2F-%2Fui.hover-selector-0.0.1.tgz"
+  dependencies:
+    core-js: 3.8.3
+  peerDependencies:
+    "@teambit/legacy": 1.0.44
+    react: 16.13.1
+    react-dom: 16.13.1
+  checksum: 0e63cac5a488e3225bd36022a9e7d75333625ab048de4ba32e561fbaa2dc666bc99fef93a517d1b0960b463c99c2fb652fa0ab23b331ad457da7f4614c85f6ad
   languageName: node
   linkType: hard
 
@@ -32397,27 +32588,27 @@ typescript@^3.9.3:
 
 "typescript@patch:typescript@3.9.7#builtin<compat/typescript>":
   version: 3.9.7
-  resolution: "typescript@patch:typescript@npm%3A3.9.7%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.7.tgz#builtin<compat/typescript>::version=3.9.7&hash=a45b0e"
+  resolution: "typescript@patch:typescript@npm%3A3.9.7%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.7.tgz#builtin<compat/typescript>::version=3.9.7&hash=cc6730"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: ee9b64dafd9997a7f659c402dc4500792e05724a39a9071a0b79fd513466d6f4497e7d4963e092804a387b77e9cb9d4bfe365433fcbf2ca9eea44476ba3df14d
+  checksum: f0d3d9c987860c7c458229ab6dd7e3d322405db36b70abccba610b5efd9f9451e4e67a3fc7983c0d3741033c1f1a8d7aa859a1510caa8f20fad762fc39648bfa
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@4.1.5#builtin<compat/typescript>":
   version: 4.1.5
-  resolution: "typescript@patch:typescript@npm%3A4.1.5%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-4.1.5.tgz#builtin<compat/typescript>::version=4.1.5&hash=a45b0e"
+  resolution: "typescript@patch:typescript@npm%3A4.1.5%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-4.1.5.tgz#builtin<compat/typescript>::version=4.1.5&hash=cc6730"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 9c57e19536e978f130694888fbda2f8fe60f92c388c6b2945881dd7c912078bf52663dcb3278100cf9f4689805fbaec86b3de42ef600fb9672545b24fc1b7b15
+  checksum: 58cc7786be0f8485c124944883b1384287532e4867ec37f1fb5cb2811dbc10f7a9decccad89097f924043285f3515bfd8223c61dbb4f88af00b2d8dc2ef73207
   languageName: node
   linkType: hard
 
 "typescript@patch:typescript@^2.6.2#builtin<compat/typescript>":
   version: 2.9.2
-  resolution: "typescript@patch:typescript@npm%3A2.9.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-2.9.2.tgz#builtin<compat/typescript>::version=2.9.2&hash=a45b0e"
+  resolution: "typescript@patch:typescript@npm%3A2.9.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-2.9.2.tgz#builtin<compat/typescript>::version=2.9.2&hash=cc6730"
   bin:
     tsc: ./bin/tsc
     tsserver: ./bin/tsserver
@@ -32427,11 +32618,11 @@ typescript@^3.9.3:
 
 "typescript@patch:typescript@^3.9.3#builtin<compat/typescript>":
   version: 3.9.9
-  resolution: "typescript@patch:typescript@npm%3A3.9.9%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.9.tgz#builtin<compat/typescript>::version=3.9.9&hash=a45b0e"
+  resolution: "typescript@patch:typescript@npm%3A3.9.9%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ftypescript%252F-%252Ftypescript-3.9.9.tgz#builtin<compat/typescript>::version=3.9.9&hash=cc6730"
   bin:
     tsc: bin/tsc
     tsserver: bin/tsserver
-  checksum: 05a113f2ec0d0fc3263335c230d2eb7b94d851e51b5766f63b88b611127d08782ce41132eb32b9d3d434de8340f698f7ec2f72ebb4d33c3b2976b27de1f47ace
+  checksum: a57cc051e94bd7f6344165a3318fa27d094c1a59822e6028aaa7c07628d5765dc0a850f2d92db32b988331a1abe51593bf1d217798b710ee3a1ff4b995888fd2
   languageName: node
   linkType: hard
 
