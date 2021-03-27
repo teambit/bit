@@ -1,6 +1,6 @@
 import { ComponentTemplate, GeneratorContext } from '@teambit/generator/component-template';
 
-export const exampleButton: ComponentTemplate = {
+export const reactComponent: ComponentTemplate = {
   name: 'react-component',
   generateFiles: (context: GeneratorContext) => {
     const { componentName, componentNameCamelCase } = context;
@@ -19,11 +19,11 @@ text: string;
 export const ${componentNameCamelCase} = ({
 text
 }: ${componentNameCamelCase}Props) => {
-return <${componentName}>{text}</${componentName}>
+return <p>{text}</p>
 };`,
     };
     const compositionFile = {
-      relativePath: 'button.composition.tsx',
+      relativePath: `${componentName}.composition.tsx`,
       content: `import React from 'react';
 import { ${componentNameCamelCase} } from './${componentName}';
 
@@ -33,7 +33,7 @@ return <${componentNameCamelCase} text="hello from ${componentNameCamelCase}" />
 `,
     };
     const docsFile = {
-      relativePath: 'button.docs.mdx',
+      relativePath: `${componentName}.docs.mdx`,
       content: `---
 labels: ['react', 'typescript', 'ui', '${componentName}']
 description: 'A ${componentNameCamelCase} component.'
@@ -44,13 +44,13 @@ import { ${componentNameCamelCase} } from './${componentName}';
 ${componentNameCamelCase} example:
 
 \`\`\`js live
-< ${componentNameCamelCase} text="hello from ${componentNameCamelCase}"/>
+<${componentNameCamelCase} text="hello from ${componentNameCamelCase}"/>
 \`\`\`
 `,
     };
 
     const testFile = {
-      relativePath: 'button.spec.tsx',
+      relativePath: `${componentName}.spec.tsx`,
       content: `import React from 'react';
 import { render } from '@testing-library/react';
 import { expect } from 'chai';
