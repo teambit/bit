@@ -28,7 +28,7 @@ return <${componentName}>{text}</${componentName}>
 import { ${componentNameCamelCase} } from './${componentName}';
 
 export const Basic${componentNameCamelCase} = () => {
-return < ${componentNameCamelCase} text="hello from ${componentNameCamelCase}" />;
+return <${componentNameCamelCase} text="hello from ${componentNameCamelCase}" />;
 };
 `,
     };
