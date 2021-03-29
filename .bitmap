@@ -631,6 +631,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/uis/corner"
     },
+
     "ui/dependency-tree": {
         "scope": "teambit.code",
         "version": "0.0.324",
