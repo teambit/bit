@@ -49,12 +49,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/bundler"
     },
-    "button": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "teambit.bit/button"
-    },
     "cache": {
         "scope": "teambit.harmony",
         "version": "0.0.325",
@@ -162,30 +156,6 @@
         "version": "0.0.324",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/config"
-    },
-    "debbie": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "teambit.bit/debbie"
-    },
-    "debbie2": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "teambit.bit/debbie2"
-    },
-    "debbie3": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "teambit.bit/debbie3"
-    },
-    "debbie4": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "teambit.bit/debbie4"
     },
     "dependency-resolver": {
         "scope": "teambit.dependencies",
