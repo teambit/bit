@@ -13,13 +13,11 @@ export const reactComponent: ComponentTemplate = {
       content: `import React from 'react';
 
 export type ${componentNameCamelCase}Props = {
-text: string;
+  text: string;
 };
 
-export const ${componentNameCamelCase} = ({
-text
-}: ${componentNameCamelCase}Props) => {
-return <p>{text}</p>
+export const ${componentNameCamelCase} = ({ text }: ${componentNameCamelCase}Props) => {
+  return <p>{text}</p>
 };`,
     };
     const compositionFile = {
@@ -28,7 +26,7 @@ return <p>{text}</p>
 import { ${componentNameCamelCase} } from './${componentName}';
 
 export const Basic${componentNameCamelCase} = () => {
-return <${componentNameCamelCase} text="hello from ${componentNameCamelCase}" />;
+  return <${componentNameCamelCase} text="hello from ${componentNameCamelCase}" />;
 };
 `,
     };
@@ -56,13 +54,15 @@ import { render } from '@testing-library/react';
 import { expect } from 'chai';
 
 import { Basic${componentNameCamelCase} } from './${componentName}.composition';
+describe('${componentName}', () => {
 
-it('component should render', () => {
-const { getByText } = render(<Basic${componentNameCamelCase} />);
-const rendered = getByText('hello from ${componentNameCamelCase}');
+  it('should render the component', () => {
+    const { getByText } = render(<Basic${componentNameCamelCase} />);
+    const rendered = getByText('hello from ${componentNameCamelCase}');
 
-expect(rendered).to.exist;
-});`,
+    expect(rendered).to.exist;
+  });
+})`,
     };
 
     return [indexFile, componentFile, compositionFile, docsFile, testFile];

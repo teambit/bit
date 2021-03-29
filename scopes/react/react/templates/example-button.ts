@@ -12,13 +12,11 @@ export const exampleButton: ComponentTemplate = {
       content: `import React from 'react';
 
 export type ButtonProps = {
-text: string;
+  text: string;
 };
 
-export const Button = ({
-text
-}: ButtonProps) => {
-return <button>{text}</button>
+export const Button = ({ text }: ButtonProps) => {
+  return <button>{text}</button>
 };`,
     };
     const compositionFile = {
@@ -27,7 +25,7 @@ return <button>{text}</button>
 import { Button } from './button';
 
 export const BasicButton = () => {
-return <Button text="click me" />;
+  return <Button text="click me" />;
 };
 `,
     };
@@ -55,13 +53,15 @@ import { render } from '@testing-library/react';
 import { expect } from 'chai';
 
 import { BasicButton } from './button.composition';
+describe('button', () => {
 
-it('component should render', () => {
-const { getByText } = render(<BasicButton />);
-const rendered = getByText('click me');
+  it('should render the component', () => {
+    const { getByText } = render(<BasicButton />);
+    const rendered = getByText('click me');
 
-expect(rendered).to.exist;
-});`,
+    expect(rendered).to.exist;
+  });
+})`,
     };
 
     return [indexFile, componentFile, compositionFile, docsFile, testFile];
