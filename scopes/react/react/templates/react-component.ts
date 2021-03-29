@@ -56,13 +56,15 @@ import { render } from '@testing-library/react';
 import { expect } from 'chai';
 
 import { Basic${componentNameCamelCase} } from './${componentName}.composition';
+describe('${componentName}', () => {
 
-it('component should render', () => {
-const { getByText } = render(<Basic${componentNameCamelCase} />);
-const rendered = getByText('hello from ${componentNameCamelCase}');
+  it('should render the component', () => {
+  const { getByText } = render(<Basic${componentNameCamelCase} />);
+  const rendered = getByText('hello from ${componentNameCamelCase}');
 
-expect(rendered).to.exist;
-});`,
+  expect(rendered).to.exist;
+  });
+})`,
     };
 
     return [indexFile, componentFile, compositionFile, docsFile, testFile];

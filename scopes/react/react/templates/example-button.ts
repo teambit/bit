@@ -55,13 +55,15 @@ import { render } from '@testing-library/react';
 import { expect } from 'chai';
 
 import { BasicButton } from './button.composition';
+describe('button', () => {
 
-it('component should render', () => {
-const { getByText } = render(<BasicButton />);
-const rendered = getByText('click me');
+  it('should render the component', () => {
+  const { getByText } = render(<BasicButton />);
+  const rendered = getByText('click me');
 
-expect(rendered).to.exist;
-});`,
+  expect(rendered).to.exist;
+  });
+})`,
     };
 
     return [indexFile, componentFile, compositionFile, docsFile, testFile];
