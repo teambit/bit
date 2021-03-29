@@ -1,4 +1,7 @@
 ---
+id: envs
+title: Envs
+slug: /aspect/envs
 description: Manages Environments and Environment Services
 labels: ['environments', 'core aspect']
 ---
@@ -54,50 +57,41 @@ Runs the development serve (that includes running the Workspace UI).
 
 ```shell
 // run the dev server
-$ bit start
+bit start
 ```
-
-_Learn more [here](https://bit.dev/teambit/compilation/bundler)._
 
 #### build
 
 Runs the build pipeline (without tagging components with a new release version).
 
 ```shell
-$ bit build
+bit build
 ```
 
-_Learn more [here](https://bit.dev/teambit/pipelines/builder)._
 
 #### test
 
 Runs all tests.
 
 ```shell
-$ bit test
+bit test
 ```
-
-_Learn more [here](https://bit.dev/teambit/defender/tester)._
 
 #### compile
 
 Compiles all components.
 
 ```shell
-$ bit compile
+bit compile
 ```
-
-_Learn more [here](https://bit.dev/teambit/compilation/compiler)._
 
 #### lint
 
 Get lint results for all components.
 
 ```shell
-$ bit lint
+bit lint
 ```
-
-_Learn more [here](https://bit.dev/teambit/defender/linter)_.
 
 ## Usage
 
@@ -116,17 +110,19 @@ For example:
   }
 }
 ```
-> <p style={{color: '#c31313'}}>Never use the '*' wildcard in a workspace that uses multiple environments!</p> 
+
+> <p style={{color: '#c31313'}}>Never use the '*' wildcard in a workspace that uses multiple environments!</p>
 Instead, use exclusive namespaces or directories to select and configure each group of components to use its own environment (see an example in the next section).
 <br />
-<br /> 
+<br />
+
 To learn more, see the 'Troubleshooting' section.
 
 > A single component (with the same version) cannot use more than a single environment.
 
 ### Setting multiple environments
 
-A single workspace can use different environments for different sets of components. Setting an environment on a specific group of components is done by selecting the group and applying the environment. This is done using `teambit.workspace/variants`. To learn more about using 'variant' to select components, [see here](/docs/workspace/cascading-rules)
+A single workspace can use different environments for different sets of components. Setting an environment on a specific group of components is done by selecting the group and applying the environment. This is done using `teambit.workspace/variants`.
 
 For example, to set the Node and React environments on two sets of components (selected by their directory):
 
@@ -145,7 +141,7 @@ For example, to set the Node and React environments on two sets of components (s
 
 ### Extending an environment
 
-> This section goes through the steps of extending the 'main runtime'. 
+> This section goes through the steps of extending the 'main runtime'.
 See the 'Runtime Environment' section to learn how to extend multiple runtime environments.
 
 An environment extension is a component that extends an existing environment. An extension file will have the `.extension.ts` suffix as a convention.
@@ -167,9 +163,9 @@ We'll start by creating a new extension:
 
 ```shell
 // In the workspace's root directory
-$ mkdir -p extensions/custom-react
-$ touch extensions/custom-react/custom-react.extension.ts
-$ touch extensions/custom-react/index.ts
+mkdir -p extensions/custom-react
+touch extensions/custom-react/custom-react.extension.ts
+touch extensions/custom-react/index.ts
 ```
 
 #### 2. Use an existing environment to extend it
@@ -219,7 +215,7 @@ export default CustomReactExtension;
 We'll then track the new component (with the 'my-extensions' namespace):
 
 ```shell
-$ bbit add extensions/custom-react -n my-extensions
+bit add extensions/custom-react -n my-extensions
 ```
 
 #### 4. Set the extension component in the workspace config file
@@ -248,12 +244,12 @@ An environment extension uses the following Bit components to extend an existing
 - The **"base" environment** (e.g, `@teambit/react`) is extended and customized using its override methods. Each override method, or "environment transformer", corresponds to a Bit extension component used by the environment (e.g, the TypeScript component). Using an 'environment transformer' will add new configurations to the relevant Bit component and will override any conflicting ones.<br /> The full list of available 'environment transformers' can be seen in the specific environment's documentation (see: React, React Native, Node).
 
 - The **'Environments' component** (`@teambit/envs`) is used to:
-  1. Register the new environment using its [slot](TODO)
-  2. Override a ["service handler"](TODO). This is done to replace a Bit component used by an environment service. For example, to set the "compiler" service handler to use Babel instead of TypeScript (see an example, [here](/docs/environments/build-environment#override-a-service-handler)).
+  1. Register the new environment using its "slot"
+  2. Override a "service handler". This is done to replace a Bit component used by an environment service. For example, to set the "compiler" service handler to use Babel instead of TypeScript
 
 #### Override the config for a Bit component used by the environment
 
-> The current Envs API will soon be replaced. 
+> The current Envs API will soon be replaced.
 
 The example below is of a React environment extension. This new environment overrides React's DevServer configuration by setting a new Webpack configuration file.
 
@@ -374,7 +370,6 @@ style={{width: '50%', minWidth: 500}}></img>
 > Environment Services which are executed either by the development server, or via the CLI, are not identical
 > to Build Tasks that run as part of the Build Pipeline.
 > For example, the TypeScript configurations used for compilation by the development server are not the same as the ones used for a component's build process.
-> [See here](https://bit.dev/teambit/pipelines/builder), to learn more about the Build Pipeline.
 
 #### Compiler
 
@@ -577,8 +572,6 @@ getPackageJsonProps(...args : any[]): object
 
 Returns an object that defines the `package.json` properties of the packages generated for components handled by this environment. This configuration is used by the Packager service.
 
-Learn more about overriding the `package.json` properties [here](/docs/packages/publish-to-npm#packagejson)
-
 ```ts
 export class ReactEnv implements Environment {
   // ...
@@ -592,9 +585,9 @@ export class ReactEnv implements Environment {
 }
 ```
 
-> As with any other 'merging' process, the properties defined in the above returned object will be added to configurations set by Bit.  
-> Conflicting properties will be overridden by the properties that are set here.  
-> Configurations that are set here may also be overridden, either by the [pkg aspect](https://bit.dev/teambit/pkg/pkg) or by workspace configurations set using the [variants API](https://bit.dev/teambit/workspace/variants).
+> As with any other 'merging' process, the properties defined in the above returned object will be added to configurations set by Bit.
+> Conflicting properties will be overridden by the properties that are set here.
+> Configurations that are set here may also be overridden, either by the 'pkg aspect' or by workspace configurations set using the 'variants API'.
 
 #### getDependencies
 
@@ -628,9 +621,9 @@ export class ReactEnv implements Environment {
 }
 ```
 
-> As with any other 'merging' process, the properties defined in the above returned object will be added to configurations set by Bit.  
-> Conflicting properties will be overridden by the properties that are set here.  
-> Configurations that are set here may also be overridden, either by the [Dependency Resolver aspect](https://bit.dev/teambit/dependencies/dependency-resolver) or by workspace configurations set using the [variants API](https://bit.dev/teambit/workspace/variants).
+> As with any other 'merging' process, the properties defined in the above returned object will be added to configurations set by Bit.
+> Conflicting properties will be overridden by the properties that are set here.
+> Configurations that are set here may also be overridden, either by the 'Dependency Resolver aspect' or by workspace configurations set using the 'variants API'.
 
 #### getBuildPipe
 
@@ -638,7 +631,7 @@ export class ReactEnv implements Environment {
 getBuildPipe(...args : any[]): BuildTask[]
 ```
 
-Returns an array of build tasks to be used by the Builder service. Tasks will be added after and before Bit's pre-configured build tasks. Learn more about it [here](/docs/build-pipeline/overview).
+Returns an array of build tasks to be used by the Builder service. Tasks will be added after and before Bit's pre-configured build tasks.
 
 For example:
 
@@ -663,7 +656,7 @@ export class ReactEnv implements Environment {
 }
 ```
 
-## Extending multiple runtime environments 
+## Extending multiple runtime environments
 
 An environment may operate in multiple runtime environments: 'Main', which runs on the server and 'UI' and 'Preview', which run on the browser.
 Each runtime environment runs all files that are named with its corresponding file pattern.
@@ -684,7 +677,7 @@ Create a `*.aspect.ts` file:
 
 For example:
 ```shell
-$ touch path/to/extension/env-extension.aspect.ts
+touch path/to/extension/env-extension.aspect.ts
 ```
 
 Place the following lines to register your environment as a multiple runtime extension (a.k.a, an Aspect):
@@ -740,7 +733,7 @@ ReactExtensionAspect.addRuntime(ReactExtensionPreview);
 
 Node files that run in a node runtime environments and outputs to the terminal.
 
-**Example:**  
+**Example:**
 The React environment TypeScript compiler will be extended in the main runtime.
 
 ```typescript
@@ -787,10 +780,10 @@ JSX files that run in the browser, as part of the Workspace/Scope UI bundle that
 
 `*.preview.runtime.*`
 
-These files are served by the environment's server, as part of the environment's preview bundle (i.e, the component compositions and documentation).  
+These files are served by the environment's server, as part of the environment's preview bundle (i.e, the component compositions and documentation).
 (The 'preview' runtime is rendered in the Workspace/Scope UI using an iframe.)
 
-**Example:**  
+**Example:**
 A new composition provider that will "wrap" every composition using that environment will be added using the preview runtime since it is part of the component compositions (which are being served to the browser by the environment's server).
 
 ```typescript
@@ -838,13 +831,13 @@ For example:
 In the above example, components in the `components/utils` directory are set to use the Node environment.
 Since that selection is more specific than the one done using the `*` wildcard selector, it is expected to override it.
 
-**Understanding the problem:** 
-To select the right configurations for each component, the [Variants](https://bit.dev/teambit/workspace/variants) aspect sorts all workspace configurations, from the most specific to the most general.
+**Understanding the problem:**
+To select the right configurations for each component, the 'Variants' aspect sorts all workspace configurations, from the most specific to the most general.
 The first configuration set on an aspect (the most specific one) will be the one that is selected for that aspect.
 That means, once Variants encounters configurations for an aspect, it stops looking for additional configurations for that specific aspect.
 
 Each environment is considered as a different aspect, even though they are all under the "environments" category and can only be used once per component.
-[Variants](https://bit.dev/teambit/workspace/variants) does not understand categories, only individual aspects and therefore, cannot override one environment with a different environment.
+'Variants' does not understand categories, only individual aspects and therefore, cannot override one environment with a different environment.
 
 **Solution #1:**
 

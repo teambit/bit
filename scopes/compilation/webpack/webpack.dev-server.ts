@@ -14,6 +14,7 @@ export class WebpackDevServer implements DevServer {
   }
 
   listen(port: number): Server {
+    // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const webpackDs = new WsDevServer(this.getCompiler(), this.config.devServer);
     return webpackDs.listen(port);
   }

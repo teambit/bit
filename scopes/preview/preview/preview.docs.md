@@ -1,4 +1,7 @@
 ---
+id: preview
+title: Preview
+slug: /aspects/preview
 description: Handles the bundlings and rendering of component compositions and documentations
 labels: ['core aspect']
 ---
@@ -27,5 +30,5 @@ It then serves this file to the Bundler, to be bundled according to the environm
 
 ### Extending the Preview aspect
 
-The preview aspect can be extended to generate other renderable artifacts , either when running Bit's development server or as part of the build pipeline (for a component's tagged version).  
+The preview aspect can be extended to generate other renderable artifacts , either when running Bit's development server or as part of the build pipeline (for a component's tagged version).
 These artifacts can present additional information that assists in inspecting a component (for example, showing the results of accessibility tests).

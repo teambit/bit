@@ -6379,9 +6379,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.43, @teambit/legacy@npm:1.0.43::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.43.tgz":
-  version: 1.0.43
-  resolution: "@teambit/legacy@npm:1.0.43::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.43.tgz"
+"@teambit/legacy@npm:1.0.44, @teambit/legacy@npm:1.0.44::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.44.tgz":
+  version: 1.0.44
+  resolution: "@teambit/legacy@npm:1.0.44::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.44.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6502,7 +6502,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 26b8e8aecccda9acc55b84f547c6f8c82c451787800ae8a8b22c69222bba2989b8a47858a7ee187f40a638bf1f8d9d043dee046ced1469008674bf1cb8d603e4
+  checksum: c3dcf1ab47221a58b58c8a916c30ff596508cf4507936690357b5e1fd50825de36dfffedfe63563de0fa38b7f82d79f3f146bb453621de82003b2fce88ceffbc
   languageName: node
   linkType: hard
 
@@ -6564,6 +6564,7 @@ __metadata:
     "@teambit/base-ui.graph.tree.recursive-tree": 0.0.1
     "@teambit/base-ui.graph.tree.root-node": 0.0.1
     "@teambit/base-ui.graph.tree.tree-context": 0.0.1
+    "@teambit/base-ui.input.button": 0.6.3
     "@teambit/base-ui.input.error": 0.6.4
     "@teambit/base-ui.layout.breakpoints": 0.6.3
     "@teambit/base-ui.layout.grid-component": 0.6.3
@@ -6629,7 +6630,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.43
+    "@teambit/legacy": 1.0.44
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -6999,7 +7000,7 @@ __metadata:
     yaml: 1.10.0
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.43
+    "@teambit/legacy": 1.0.44
   bin:
     bit: bin/bit.js
   languageName: unknown

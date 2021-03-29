@@ -1,3 +1,9 @@
+---
+id: generator
+title: Generator
+slug: /aspects/generator
+---
+
 Generator extension enable generating new components by pre-defined templates
 
 ### Component location
@@ -67,3 +73,49 @@ Sets the component's namespace and nested dirs inside the scope. If not define, 
 #### `[--aspect | -a]`
 
 Aspect ID that registered this template, required only if there are two templates with the same name from several aspects in the workspace.
+
+## Tutorial of creating a new template
+1. create a new aspect "foo"
+```bash
+bit create aspect foo
+```
+2. edit the foo.main.runtime.ts file and paste the following:
+```js
+import { MainRuntime } from '@teambit/cli';
+import { GeneratorMain, GeneratorAspect, GeneratorContext } from '@teambit/generator';
+import { FooAspect } from './foo.aspect';
+
+export class FooMain {
+  static slots = [];
+  static dependencies = [GeneratorAspect];
+  static runtime = MainRuntime;
+  static async provider([generator]: [GeneratorMain]) {
+    generator.registerComponentTemplate([{
+      name: 'foo',
+      generateFiles: (context: GeneratorContext) => {
+        return [
+          {
+            relativePath: 'index.ts',
+            content: `export * from './${context.componentName}';`,
+            isMain: true
+          },
+          {
+            relativePath: `${context.componentName}.ts`,
+            content: `export const foo = "hello template!";`
+          },
+        ]
+      }
+    }])
+    return new FooMain();
+  }
+}
+
+FooAspect.addRuntime(FooMain);
+```
+3. edit your `workspace.jsonc` file and set this foo component to use the `teambit.harmony/aspect` env.
+4. edit your `workspace.jsonc` file and add the following to the root:
+```
+"teambit.generator/generator": {
+    "aspects": ["your-scope-name/foo"]
+  },
+```

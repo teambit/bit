@@ -1,4 +1,7 @@
 ---
+id: react
+title: React
+slug: /aspects/react
 description: A Bit development environment for React Components
 labels: ['react', 'env', 'typescript', 'extension']
 ---
@@ -55,15 +58,10 @@ Apply the React environment on a limited set of components. For example, all com
         }
     }
 }
-}
 
 ```
 
-_Learn more about configuring a selected set of components, [here](https://bit.dev/teambit/workspace/variants)_
-
 ### Set the React environment to compile MDX components
-
-> Coming Soon.
 
 > The MDX configuration does not affect the compilation of MDX documentation files (`*.doc.mdx`), which will happen regardless.
 
@@ -73,11 +71,9 @@ Use the React environment extension API to create your own customized environmen
 
 This page lists React's Environment Transformers. These are the 'override' methods that allow to add or override React's default configurations.
 
-> #### Learn how to create a new environment extension, [here](https://bit.dev/teambit/envs/envs).
-
 ### Environment transformers
 
-React's environment transformers enable merging new configurations for different [Bit extensions used by the React environment](/docs/environments/environment-services).
+React's environment transformers enable merging new configurations for different Bit extensions used by the React environment.
 
 The process of 'merging' or 'overriding' adds new properties to the existing configurations. In case of a conflict between two properties, the extension's configurations will override the extended environment's defaults.
 
@@ -117,7 +113,7 @@ export class ReactExtension {
 overridePreviewConfig(config: Configuration): EnvTransformer
 ```
 
-Overrides the Webpack configurations for the [Preview](/docs/environments/environment-services#preview) environment service, with a new ([webpack.config.js](https://webpack.js.org/configuration/)) configuration file.
+Overrides the Webpack configurations for the 'Preview' environment service, with a new ([webpack.config.js](https://webpack.js.org/configuration/)) configuration file.
 
 For example:
 
@@ -147,7 +143,7 @@ export class ReactExtension {
 overrideDevServerConfig(config: Configuration): EnvTransformer
 ```
 
-Overrides the Webpack configurations for the [DevServer](/docs/environments/environment-services#devserver) environment service, with a new ([webpack.config.js](https://webpack.js.org/configuration/)) configuration file.
+Overrides the Webpack configurations for the 'DevServer' environment service, with a new ([webpack.config.js](https://webpack.js.org/configuration/)) configuration file.
 
 For example:
 
@@ -280,8 +276,7 @@ const newDependencies = {
 overridePackageJsonProps(props: PackageJsonProps): EnvTransformer
 ```
 
-Overrides the default properties added to the `package.json` file of every package generated from components using this environment. Learn more about setting package properties [here](/docs/packages/publish-to-npm#packagejson).
-
+Overrides the default properties added to the `package.json` file of every package generated from components using this environment.
 For example:
 
 ```ts
@@ -311,7 +306,7 @@ These providers can be used to render compositions in a common context (e.g, a s
 A Provider is any React component that accepts compositions as children. This component is registered using the `registerProvider`.
 
 > Providers are part of the component compositions and documentation bundle that is served by the environment's server and rendered by the browser.
-> As such, they run in the environment's **Preview** runtime and not the **Main** runtime. To learn more about runtime environments, [see here](https://bit.dev/teambit/envs/envs)
+> As such, they run in the environment's **Preview** runtime and not the **Main** runtime.
 
 For example:
 
