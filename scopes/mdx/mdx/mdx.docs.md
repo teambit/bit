@@ -46,7 +46,7 @@ A simple example of live example:
 #### Features
 
 * __Powerful component composition__: Author clear and engaging documentation that integrates readable Markdown syntax, Bit's live playground and your own customized components.
-* __Docs that look and feel like Bit__: Component docs written with MDX (like the one you're reading right now) are themed using Bit's [Documenter design system](https://bit.dev/teambit/documenter) to provide a look-and-feel that is consistent with the Workspace/Scope UI.
+* __Docs that look and feel like Bit__: Component docs written with MDX (like the one you're reading right now) are themed using Bit's [Documenter design system to provide a look-and-feel that is consistent with the Workspace/Scope UI.
 * __Bit component frontmatter__: Use Bit's YAML frontmatter to add or override metadata to the component being documented.
 * __A simple-to-use live playground__: Use MDX's user-friendly syntax to add live examples of code. No need to worry about dependencies - any module used by the doc file will also be available to code running in the live playground.
 * __Independent MDX components__: Author consumable independent content components that can be shared across web projects. Use it to maintain a consistent "voice & tone" and to keep your content always up-to-date.
