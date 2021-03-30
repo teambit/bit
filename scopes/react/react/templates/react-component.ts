@@ -17,11 +17,11 @@ export const reactComponent: ComponentTemplate = {
       content: `import React from 'react';
 
 export interface ${Component}Props extends React.HTMLAttributes<HTMLDivElement> {
-  children: String
+  children
 };
 
 
-export const ${Component} = ( rest: ${Component}Props ) => {
+export const ${Component} = ( rest: ${Component}Props, children ) => {
   return (
     <div {...rest}>
       { children }
