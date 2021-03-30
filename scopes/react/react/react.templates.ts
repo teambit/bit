@@ -1,5 +1,5 @@
 import { ComponentTemplate } from '@teambit/generator/component-template';
-import { exampleButton } from './templates/example-button';
+import { reactButton } from './templates/react-button';
 import { reactComponent } from './templates/react-component';
 
-export const componentTemplates: ComponentTemplate[] = [exampleButton, reactComponent];
+export const componentTemplates: ComponentTemplate[] = [reactButton, reactComponent];
