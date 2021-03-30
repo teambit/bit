@@ -1,4 +1,4 @@
-import { GeneratorContext } from '@teambit/generator/component-template';
+import { GeneratorContext } from '@teambit/generator';
 
 export function indexFile({ componentNameCamelCase, componentName }: GeneratorContext) {
   return `import { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';
