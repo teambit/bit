@@ -38,6 +38,7 @@ import { ${Component} } from './${component}';
 
 export const Preview = () => {
   return <${Component}>hello from ${Component}</${Component}>;
+
 };
 `,
     };
@@ -73,6 +74,7 @@ describe('${component}', () => {
   it('should render the component', () => {
     const { getByText } = render(<Basic${Component} />);
     const rendered = getByText('hello from ${Component}');
+
 
     expect(rendered).to.exist;
   });

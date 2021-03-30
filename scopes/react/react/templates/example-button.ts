@@ -21,6 +21,7 @@ export type ${Component}Props = {
 };
 
 export const ${Component} = ({ text }: ${Component}Props) => {
+
   return <button>{text}</button>
 };`,
     };
@@ -33,6 +34,7 @@ import { ${Component} } from './${component}';
 
 export const Basic${Component} = () => {
   return <${Component} text="click me" />;
+
 };
 `,
     };
@@ -67,6 +69,7 @@ describe('${component}', () => {
 
   it('should render the component', () => {
     const { getByText } = render(<Basic${Component} />);
+
     const rendered = getByText('click me');
 
     expect(rendered).to.exist;
