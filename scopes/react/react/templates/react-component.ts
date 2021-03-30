@@ -3,62 +3,76 @@ import { ComponentTemplate, GeneratorContext } from '@teambit/generator/componen
 export const reactComponent: ComponentTemplate = {
   name: 'react-component',
   generateFiles: (context: GeneratorContext) => {
-    const { componentName, componentNameCamelCase } = context;
+    const { componentName: component, componentNameCamelCase: Component } = context;
+
+    // index File
     const indexFile = {
       relativePath: 'index.ts',
-      content: `export { ${componentNameCamelCase} }  from './${componentName}';`,
+      content: `export { ${Component} }  from './${component}';`,
     };
+
+    // component File
     const componentFile = {
-      relativePath: `${componentName}.tsx`,
+      relativePath: `${component}.tsx`,
       content: `import React from 'react';
 
-export type ${componentNameCamelCase}Props = {
-  text: string;
+export interface ${Component}Props extends React.HTMLAttributes<HTMLDivElement> {
+  children: String
 };
 
-export const ${componentNameCamelCase} = ({ text }: ${componentNameCamelCase}Props) => {
-  return <p>{text}</p>
+
+export const ${Component} = ( rest: ${Component}Props ) => {
+  return (
+    <div {...rest}>
+      { children }
+    </div>
+  )
 };`,
     };
-    const compositionFile = {
-      relativePath: `${componentName}.composition.tsx`,
-      content: `import React from 'react';
-import { ${componentNameCamelCase} } from './${componentName}';
 
-export const Basic${componentNameCamelCase} = () => {
-  return <${componentNameCamelCase} text="hello from ${componentNameCamelCase}" />;
+    // composition File
+    const compositionFile = {
+      relativePath: `${component}.composition.tsx`,
+      content: `import React from 'react';
+import { ${Component} } from './${component}';
+
+export const Preview = () => {
+  return <${Component}>hello from ${Component}</${Component}>;
 };
 `,
     };
+
+    // docs File
     const docsFile = {
-      relativePath: `${componentName}.docs.mdx`,
+      relativePath: `${component}.docs.mdx`,
       content: `---
-labels: ['react', 'typescript', 'ui', '${componentName}']
-description: 'A ${componentNameCamelCase} component.'
+labels: ['react', 'typescript', 'ui', '${component}']
+description: 'A ${Component} component.'
 ---
 
-import { ${componentNameCamelCase} } from './${componentName}';
+import { ${Component} } from './${component}';
 
-${componentNameCamelCase} example:
+${Component} example:
 
 \`\`\`js live
-<${componentNameCamelCase} text="hello from ${componentNameCamelCase}"/>
+<${Component} text="hello from ${Component}"/>
 \`\`\`
 `,
     };
 
+    // test File
     const testFile = {
-      relativePath: `${componentName}.spec.tsx`,
+      relativePath: `${component}.spec.tsx`,
       content: `import React from 'react';
 import { render } from '@testing-library/react';
 import { expect } from 'chai';
 
-import { Basic${componentNameCamelCase} } from './${componentName}.composition';
-describe('${componentName}', () => {
+import { Basic${Component} } from './${component}.composition';
+describe('${component}', () => {
 
   it('should render the component', () => {
-    const { getByText } = render(<Basic${componentNameCamelCase} />);
-    const rendered = getByText('hello from ${componentNameCamelCase}');
+    const { getByText } = render(<Basic${Component} />);
+    const rendered = getByText('hello from ${Component}');
 
     expect(rendered).to.exist;
   });

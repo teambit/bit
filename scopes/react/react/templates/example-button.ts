@@ -1,62 +1,72 @@
-import { ComponentTemplate } from '@teambit/generator/component-template';
+import { ComponentTemplate, GeneratorContext } from '@teambit/generator/component-template';
 
 export const exampleButton: ComponentTemplate = {
   name: 'react-example-button',
-  generateFiles: () => {
+  generateFiles: (context: GeneratorContext) => {
+    const { componentName: component, componentNameCamelCase: Component } = context;
+
+    // index File
     const indexFile = {
       relativePath: 'index.ts',
-      content: `export { Button }  from './button';`,
+      content: `export { Button }  from './${component}';`,
     };
+
+    // Component File
     const componentFile = {
-      relativePath: 'button.tsx',
+      relativePath: `${component}.tsx`,
       content: `import React from 'react';
 
-export type ButtonProps = {
+export type ${Component}Props = {
   text: string;
 };
 
-export const Button = ({ text }: ButtonProps) => {
+export const ${Component} = ({ text }: ${Component}Props) => {
   return <button>{text}</button>
 };`,
     };
-    const compositionFile = {
-      relativePath: 'button.composition.tsx',
-      content: `import React from 'react';
-import { Button } from './button';
 
-export const BasicButton = () => {
-  return <Button text="click me" />;
+    // composition File
+    const compositionFile = {
+      relativePath: `${component}.composition.tsx`,
+      content: `import React from 'react';
+import { ${Component} } from './${component}';
+
+export const Basic${Component} = () => {
+  return <${Component} text="click me" />;
 };
 `,
     };
+
+    // Docs File
     const docsFile = {
-      relativePath: 'button.docs.mdx',
+      relativePath: `${component}.docs.mdx`,
       content: `---
 labels: ['react', 'typescript', 'ui', 'button']
-description: 'A Button component.'
+description: 'A ${Component} component.'
 ---
 
-import { Button } from './button';
+import { ${Component} } from './${component}';
 
-Button example:
+${Component} example:
 
 \`\`\`js live
-<Button text="click here"/>
+<${Component} text="click here"/>
 \`\`\`
 `,
     };
 
+    // test File
     const testFile = {
-      relativePath: 'button.spec.tsx',
+      relativePath: `${component}.spec.tsx`,
       content: `import React from 'react';
 import { render } from '@testing-library/react';
 import { expect } from 'chai';
 
-import { BasicButton } from './button.composition';
-describe('button', () => {
+import { Basic${Component} } from './${component}.composition';
+describe('${component}', () => {
 
   it('should render the component', () => {
-    const { getByText } = render(<BasicButton />);
+    const { getByText } = render(<Basic${Component} />);
     const rendered = getByText('click me');
 
     expect(rendered).to.exist;
