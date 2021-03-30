@@ -1,4 +1,4 @@
-import { ComponentTemplate, GeneratorContext } from '@teambit/generator/component-template';
+import { ComponentTemplate, GeneratorContext } from '@teambit/generator';
 import { componentFile } from './component';
 import { compositionFile } from './composition';
 import { docsFile } from './docs';

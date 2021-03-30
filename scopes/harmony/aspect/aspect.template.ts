@@ -1,4 +1,4 @@
-import { ComponentTemplate, GeneratorContext } from '@teambit/generator/component-template';
+import { ComponentTemplate, GeneratorContext } from '@teambit/generator';
 
 export const componentTemplates: ComponentTemplate[] = [
   {

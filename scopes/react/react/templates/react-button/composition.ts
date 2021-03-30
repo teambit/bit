@@ -1,4 +1,4 @@
-import { GeneratorContext } from '@teambit/generator/component-template';
+import { GeneratorContext } from '@teambit/generator';
 
 export const compositionFile = (context: GeneratorContext) => {
   const { componentName: name, componentNameCamelCase: Name } = context;
