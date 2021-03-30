@@ -6,6 +6,20 @@ import { mainRuntime } from './files/main-runtime';
 export const aspectTemplate: ComponentTemplate = {
   name: 'aspect',
   generateFiles: (context: GeneratorContext) => {
-    return [mainRuntime(context), aspectFile(context), indexFile(context)];
+    return [
+      {
+        relativePath: 'index.ts',
+        content: indexFile(context),
+        isMain: true,
+      },
+      {
+        relativePath: `${context.componentName}.aspect.ts`,
+        content: aspectFile(context),
+      },
+      {
+        relativePath: `${context.componentName}.main.runtime.ts`,
+        content: mainRuntime(context),
+      },
+    ];
   },
 };

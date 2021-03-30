@@ -1,8 +1,7 @@
 import { GeneratorContext } from '@teambit/generator/component-template';
 
-export const mainRuntime = ({ componentName, componentNameCamelCase }: GeneratorContext) => ({
-  relativePath: `${componentName}.main.runtime.ts`,
-  content: `import { MainRuntime } from '@teambit/cli';
+export function mainRuntime({ componentName, componentNameCamelCase }: GeneratorContext) {
+  return `import { MainRuntime } from '@teambit/cli';
 import { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';
 
 export class ${componentNameCamelCase}Main {
@@ -15,5 +14,5 @@ export class ${componentNameCamelCase}Main {
 }
 
 ${componentNameCamelCase}Aspect.addRuntime(${componentNameCamelCase}Main);
-`,
-});
+`;
+}
