@@ -37,7 +37,7 @@ An avatar component, consisting of 3 different types of Avatar:
       </div>
       <div>
         User avatar with tooltip
-        <UserAvatar size={32} account={accounts.userAccount} hideTooltip={false} />
+        <UserAvatar size={32} account={accounts.userAccount} showTooltip />
       </div>
     </div>
   );
@@ -54,7 +54,7 @@ An Avatar with no picture, will show the initials of the user name, and use the 
   return (
     <div>
       {letters.map((value, index) => 
-        <UserAvatar size={32} account={{ name: `${value}k` }} hideTooltip={false} key={index} />
+        <UserAvatar size={32} account={{ name: `${value}k` }} showTooltip key={index} />
       )}
     </div>
   )

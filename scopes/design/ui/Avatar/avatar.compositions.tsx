@@ -60,6 +60,6 @@ export const NoUserNameAvatarExample = () => (
 
 export const UserAvatarWithTooltipExample = () => (
   <ThemeCompositions>
-    <UserAvatar size={32} account={accounts.userAccount} hideTooltip={false} />
+    <UserAvatar size={32} account={accounts.userAccount} showTooltip />
   </ThemeCompositions>
 );

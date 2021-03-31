@@ -29,12 +29,20 @@ export type UserAvatarProps = {
   className?: string;
   imgClassName?: string;
   /**
-   * showing or not a tooltip when hover on the avatar, this value is true by default
+   * showing or not a tooltip when hover on the avatar, this value is false by default
    */
-  hideTooltip?: boolean;
+  showTooltip?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export class UserAvatar extends PureComponent<UserAvatarProps> {
+  state = {
+    tooltipId: '',
+  };
+
+  componentDidMount() {
+    this.setState({ tooltipId: v1() });
+  }
+
   render() {
     const {
       account,
@@ -43,14 +51,14 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       fontSize = Math.round(size * 0.4),
       className,
       imgClassName,
-      hideTooltip = true,
+      showTooltip = false,
       ...rest
     } = this.props;
+    const { tooltipId } = this.state;
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
     const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
     const colors = firstLetter && letterBgColors[firstLetter.toLowerCase()];
-    const tooltipId = v1();
     return (
       <div
         className={classNames(colors, styles.avatar, className)}
@@ -70,9 +78,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
         {!displayName && !name && !profileImageWithParams && !firstLetter && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}
-        {!hideTooltip && (
-          <Tooltip className={classNames(styles.tooltip, ellipsis)} id={tooltipId} {...tooltipDefaultProps} />
-        )}
+        {showTooltip && !!tooltipId && <Tooltip className={ellipsis} id={tooltipId} {...tooltipDefaultProps} />}
       </div>
     );
   }
