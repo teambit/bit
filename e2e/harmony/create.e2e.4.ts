@@ -54,6 +54,24 @@ describe('create extension', function () {
   //     );
   //   });
   // });
+  describe('with --namespace flag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.create('aspect', 'my-aspect', '--namespace ui');
+    });
+    it('should create the directories properly', () => {
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+    it('should add the component correctly', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('ui/my-aspect');
+    });
+  });
   describe('name with namespace as part of the name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -66,6 +84,10 @@ describe('create extension', function () {
       expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
       expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
       expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+    it('should add the component correctly', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('ui/my-aspect');
     });
   });
   describe('name with namespace as part of the name and namespace flag', () => {
@@ -80,6 +102,10 @@ describe('create extension', function () {
       expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
       expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
       expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+    it('should add the component correctly', () => {
+      const bitMap = helper.bitMap.read();
+      expect(bitMap).to.have.property('another/level/ui/my-aspect');
     });
   });
 });

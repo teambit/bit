@@ -107,7 +107,7 @@ export class GeneratorMain {
         const mainFile = files.find((file) => file.isMain);
         const componentPath = this.getComponentPath(componentId, options.path);
         await this.writeComponentFiles(componentPath, files);
-        const addResults = await this.workspace.add([componentPath], componentName, mainFile?.relativePath);
+        const addResults = await this.workspace.add([componentPath], componentId.fullName, mainFile?.relativePath);
         return {
           id: componentId,
           dir: componentPath,
