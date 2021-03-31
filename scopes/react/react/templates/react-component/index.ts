@@ -11,7 +11,8 @@ export const reactComponent: ComponentTemplate = {
     const { componentName: name, componentNameCamelCase: Name } = context;
     const indexFile = {
       relativePath: 'index.ts',
-      content: `export { ${Name} } from './${name}';`,
+      content: `export { ${Name} } from './${name}';
+export type { ${Name}Props } from './${name}';`,
     };
 
     return [indexFile, componentFile(context), compositionFile(context), docsFile(context), testFile(context)];

@@ -7,15 +7,14 @@ export const testFile = (context: GeneratorContext) => {
     relativePath: `${name}.spec.tsx`,
     content: `import React from 'react';
 import { render } from '@testing-library/react';
-import { expect } from 'chai';
 import { Basic${Name} } from './${name}.composition';
 
 describe('${name}', () => {
 
-  it('should render the component', () => {
+  it('should render with the correct text', () => {
     const { getByText } = render(<Basic${Name} />);
     const rendered = getByText('hello from ${Name}');
-    expect(rendered).to.exist;
+    expect(rendered).toBeTruthy();
   });
 
 })`,

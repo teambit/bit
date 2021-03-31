@@ -8,7 +8,7 @@ export const compositionFile = (context: GeneratorContext) => {
     content: `import React from 'react';
 import { ${Name} } from './${name}';
 
-// sets the Component preview in gallery view live now with David
+// sets the Component preview in gallery view
 export const Basic${Name} = () => {
   return <${Name}>hello from ${Name}</${Name}>;
 };
