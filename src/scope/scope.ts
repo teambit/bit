@@ -56,6 +56,7 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
+import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -103,6 +104,7 @@ export type LegacyOnTagResult = {
 export type OnTagOpts = {
   disableDeployPipeline?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
+  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
 };
 export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
@@ -822,6 +824,9 @@ export default class Scope {
   }
 
   async getParsedId(id: BitIdStr): Promise<BitId> {
+    if (id.startsWith('@')) {
+      throw new UnexpectedPackageName(id);
+    }
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
     if (!idHasScope) {

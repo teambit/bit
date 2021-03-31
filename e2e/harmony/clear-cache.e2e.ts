@@ -28,10 +28,10 @@ describe('bit clear-cache', function () {
       fs.appendFileSync(cacheFile, '  ');
 
       // as an intermediate step, make sure the cache is corrupted
-      expect(() => helper.command.status()).to.throw('Integrity verification failed');
+      // expect(() => helper.command.status()).to.throw('Integrity verification failed');
     });
-    it('bit cc should be able to clear the cache and fix the issue', () => {
-      helper.command.clearCache();
+    it('the cache should be re-created on the fly and the command should work as usual', () => {
+      // helper.command.clearCache();
       expect(() => helper.command.status()).not.to.throw();
     });
   });

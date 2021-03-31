@@ -1,4 +1,7 @@
 ---
+id: compositions
+title: Compositions
+slug: /aspects/compositions
 description: Renders component instances as part of different compositions.
 labels: ['ui', 'tests']
 ---
@@ -65,7 +68,7 @@ Both compositions will be in themed (i.e, displayed in a specific context).
 First, we'll create a new composition file in the component's directory:
 
 ```sh
-$ touch path/to/component/directory/<component-name>.compositions.tsx
+touch path/to/component/directory/<component-name>.compositions.tsx
 ```
 
 Then, we'll import the component and use it to create the compositions:
@@ -104,7 +107,7 @@ export const SecondaryButton = () => {
 
 ## Loading compositions
 
-The ["Environment"](https://bit.dev/teambit/envs/envs) in use will automatically detect the composition file for each component and use it to load its compositions to the workspace UI.
+The Environment in use will automatically detect the composition file for each component and use it to load its compositions to the workspace UI.
 
 ## Viewing component compositions
 
@@ -137,7 +140,7 @@ describe('Button', () => {
 
 ## Setting providers for all your compositions
 
-Extend the [React](https://bit.dev/teambit/react/react) environment to customize its list of providers with your own composition providers.
+Extend the React environment to customize its list of providers with your own composition providers.
 The extended environment will then wrap every composition with these providers to make sure your themes or mock data are accessible to all of them,
 without you having to repeat that task ever again.
 

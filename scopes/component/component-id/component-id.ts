@@ -37,7 +37,7 @@ export class ComponentID {
 
   get namespace() {
     const arr = this.legacyComponentId.name.split('/');
-    return arr.splice(-1, 1).join('/');
+    return arr.slice(0, -1).join('/');
   }
 
   /**

@@ -2,7 +2,7 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import EjectComponents, { EjectResults } from '../../../consumer/component-ops/eject-components';
 import GeneralError from '../../../error/general-error';
 
-export default (async function eject(ids: string[], force: boolean): Promise<EjectResults> {
+export default async function eject(ids: string[], force: boolean): Promise<EjectResults> {
   if (!ids || !ids.length) {
     throw new GeneralError('please specify component ids to eject');
   }
@@ -13,4 +13,4 @@ export default (async function eject(ids: string[], force: boolean): Promise<Eje
   const ejectResults = await ejectComponents.eject();
   await consumer.onDestroy();
   return ejectResults;
-});
+}

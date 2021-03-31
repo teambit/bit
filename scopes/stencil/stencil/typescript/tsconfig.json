@@ -14,8 +14,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "jsx": "react",
-    "jsxFactory": "h",
-    "rootDir": "."
+    "jsxFactory": "h"
   },
   "exclude": [
     "node_modules"

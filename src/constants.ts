@@ -249,6 +249,11 @@ export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
 export const CFG_PROXY = 'proxy';
 export const CFG_HTTPS_PROXY = 'https_proxy';
+export const CFG_PROXY_CA = 'proxy.ca';
+export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
+export const CFG_PROXY_CERT = 'proxy.cert';
+export const CFG_PROXY_KEY = 'proxy.key';
+export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
 
 /**
  * git hooks
@@ -326,14 +331,6 @@ export const HOOKS_NAMES = [
  * cache root directory
  */
 export const CACHE_ROOT = getCacheDirectory();
-
-export const CFG_GLOBAL_REPOSITORY = 'global_repository';
-export const REPOSITORY_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
-
-/**
- * app cache directory
- */
-export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
 
 /**
  * global config directories

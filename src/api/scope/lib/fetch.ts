@@ -36,6 +36,7 @@ export default async function fetch(
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
+
   // it should be safe to use the cached scope. when fetching without deps, there is no risk as it
   // just fetches local objects. when fetching with deps, there is a lock mechanism that allows
   // only one fetch at a time. the reason for not creating a new scope instance here is the high

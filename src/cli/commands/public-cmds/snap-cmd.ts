@@ -25,6 +25,7 @@ export default class Snap implements LegacyCommand {
     ['', 'build', 'Harmony only. run the pipeline build and complete the tag'],
     ['', 'skip-tests', 'skip running component tests during snap process'],
     ['', 'skip-auto-snap', 'skip auto snapping dependents'],
+    ['', 'force-deploy', 'Harmony only. run the deploy pipeline although the build failed'],
   ] as CommandOptions;
   loader = true;
   private = true;
@@ -41,6 +42,7 @@ export default class Snap implements LegacyCommand {
       build,
       skipTests = false,
       skipAutoSnap = false,
+      forceDeploy = false,
     }: {
       message?: string;
       all?: boolean;
@@ -50,6 +52,7 @@ export default class Snap implements LegacyCommand {
       build?: boolean;
       skipTests?: boolean;
       skipAutoSnap?: boolean;
+      forceDeploy?: boolean;
     }
   ): Promise<any> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
@@ -71,6 +74,7 @@ export default class Snap implements LegacyCommand {
       build,
       skipTests,
       skipAutoSnap,
+      forceDeploy,
     });
   }
 

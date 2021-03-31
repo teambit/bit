@@ -68,7 +68,8 @@ function HelpHeader() {
 }
 
 function HelpFooter() {
-  const footer = `please use 'bit <command> --help' for more information and guides on specific commands.`;
+  const footer = `please use 'bit <command> --help' for more information and guides on specific commands.
+`;
   return (
     <Box>
       <Text color="grey">{footer}</Text>
