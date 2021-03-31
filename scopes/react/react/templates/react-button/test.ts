@@ -11,7 +11,7 @@ import { Basic${Name} } from './${name}.composition';
 
 describe('${name}', () => {
 
-  it('should render the component', () => {
+  it('should render with the correct text', () => {
     const { getByText } = render(<Basic${Name} />);
     const rendered = getByText('click me');
     expect(rendered).toBeTruthy();
