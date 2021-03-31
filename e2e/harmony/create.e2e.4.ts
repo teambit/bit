@@ -1,5 +1,4 @@
 import chai, { expect } from 'chai';
-import fs from 'fs-extra';
 import path from 'path';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
