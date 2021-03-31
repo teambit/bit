@@ -696,8 +696,8 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
-      - run: choco install nodejs --version 12.15.0
-      # - run: nodejs.install v12.15.0
+      - run: choco install nodejs --version 12.16.0
+      # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
       - run:
