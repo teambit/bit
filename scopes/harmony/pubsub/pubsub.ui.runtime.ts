@@ -1,47 +1,55 @@
 import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
-
+import { EventEmitter2 } from 'eventemitter2';
 import { connectToChild } from 'penpal';
-
+import type { AsyncMethodReturns } from 'penpal/lib/types';
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
-
 import { createProvider } from './pubsub-context';
+import { Callback } from './types';
 
+type ChildMethods = {
+  pub: (topic: string, event: BitBaseEvent<any>) => any;
+};
 export class PubsubUI {
-  private topicMap = {};
+  private childApi?: AsyncMethodReturns<ChildMethods>;
+  private events = new EventEmitter2();
+
+  /**
+   * subscribe to events
+   */
+  public sub = (topic: string, callback: Callback) => {
+    const events = this.events;
+    events.on(topic, callback);
+
+    const unSub = () => {
+      events.off(topic, callback);
+    };
+
+    return unSub;
+  };
+
+  /**
+   * publish event to all subscribers, including nested iframes.
+   */
+  public pub = (topic: string, event: BitBaseEvent<any>) => {
+    this.events.emit(topic, event);
+  };
 
   private connectToIframe = (iframe: HTMLIFrameElement) => {
-    const connection = connectToChild({
+    const connection = connectToChild<ChildMethods>({
       iframe,
-      methods: this.pubsubMethods,
+      methods: {
+        pub: this.pub,
+      },
     });
 
     // absorb valid errors like 'connection destroyed'
-    connection.promise.catch(() => {});
+    connection.promise.then((childConnection) => (this.childApi = childConnection)).catch(() => {});
 
     const destroy = () => {
       connection && connection.destroy();
     };
     return destroy;
-  };
-
-  private createOrGetTopic = (topicUUID) => {
-    this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
-  };
-
-  public sub = (topicUUID, callback) => {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].push(callback);
-  };
-
-  public pub = (topicUUID, event: BitBaseEvent<any>) => {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].forEach((callback) => callback(event));
-  };
-
-  private pubsubMethods = {
-    sub: this.sub,
-    pub: this.pub,
   };
 
   static runtime = UIRuntime;
