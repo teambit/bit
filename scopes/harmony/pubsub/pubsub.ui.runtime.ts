@@ -7,6 +7,11 @@ import { PubsubAspect } from './pubsub.aspect';
 import { createProvider } from './pubsub-context';
 import { Callback } from './types';
 
+type PubOptions = {
+  /** forward the event to adjacent windows (including the preview iframe)  */
+  propagate?: boolean;
+};
+
 type ChildMethods = {
   pub: (topic: string, event: BitBaseEvent<any>) => any;
 };
@@ -31,15 +36,20 @@ export class PubsubUI {
   /**
    * publish event to all subscribers, including nested iframes.
    */
-  public pub = (topic: string, event: BitBaseEvent<any>) => {
-    this.events.emit(topic, event);
+  public pub = (topic: string, event: BitBaseEvent<any>, { propagate }: PubOptions = {}) => {
+    this.emitEvent(topic, event);
+
+    // opt-in to forward to iframe, as we would not want 'private' messages automatically passing to iframe
+    if (propagate) {
+      this.pubToChild(topic, event);
+    }
   };
 
   private connectToIframe = (iframe: HTMLIFrameElement) => {
     const connection = connectToChild<ChildMethods>({
       iframe,
       methods: {
-        pub: this.pub,
+        pub: this.emitEvent,
       },
     });
 
@@ -50,6 +60,20 @@ export class PubsubUI {
       connection && connection.destroy();
     };
     return destroy;
+  };
+
+  /**
+   * publish event to all subscribers in this window
+   */
+  private emitEvent = (topic: string, event: BitBaseEvent<any>) => {
+    this.events.emit(topic, event);
+  };
+
+  /**
+   * publish event to nested iframes
+   */
+  private pubToChild = (topic: string, event: BitBaseEvent<any>) => {
+    return this.childApi?.pub(topic, event);
   };
 
   static runtime = UIRuntime;
