@@ -101,8 +101,9 @@ export class GeneratorMain {
       componentNames.map(async (componentName) => {
         const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
         const componentId = ComponentID.fromObject({ name: fullComponentName }, scope);
-        const componentNameCamelCase = camelcase(componentName, { pascalCase: true });
-        const files = template.generateFiles({ componentName, componentNameCamelCase, componentId });
+        const name = componentId.name;
+        const componentNameCamelCase = camelcase(name, { pascalCase: true });
+        const files = template.generateFiles({ componentName: name, componentNameCamelCase, componentId });
         const mainFile = files.find((file) => file.isMain);
         const componentPath = this.getComponentPath(componentId, options.path);
         await this.writeComponentFiles(componentPath, files);
