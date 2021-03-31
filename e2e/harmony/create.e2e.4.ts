@@ -55,7 +55,7 @@ describe('create extension', function () {
   //     );
   //   });
   // });
-  describe('name with namespace', () => {
+  describe('name with namespace as part of the name', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
@@ -63,6 +63,20 @@ describe('create extension', function () {
     });
     it('should create the directories properly', () => {
       const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'ui/my-aspect');
+      expect(compRootDir).to.be.a.directory();
+      expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
+      expect(path.join(compRootDir, 'my-aspect.aspect.ts')).to.be.a.file();
+    });
+  });
+  describe('name with namespace as part of the name and namespace flag', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.command.create('aspect', 'ui/my-aspect', '--namespace another/level');
+    });
+    it('should create the directories properly', () => {
+      const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'another/level/ui/my-aspect');
       expect(compRootDir).to.be.a.directory();
       expect(path.join(compRootDir, 'index.ts')).to.be.a.file();
       expect(path.join(compRootDir, 'my-aspect.main.runtime.ts')).to.be.a.file();
