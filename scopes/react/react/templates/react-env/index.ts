@@ -3,7 +3,7 @@ import { indexFile } from './files/index';
 import { docFile } from './files/doc';
 import { extensionFile } from './files/extension';
 
-export const customReactEnv: ComponentTemplate = {
+export const reactEnvTemplate: ComponentTemplate = {
   name: 'react-env',
   generateFiles: (context: GeneratorContext) => {
     return [
