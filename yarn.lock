@@ -6379,9 +6379,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.44, @teambit/legacy@npm:1.0.44::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.44.tgz":
-  version: 1.0.44
-  resolution: "@teambit/legacy@npm:1.0.44::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.44.tgz"
+"@teambit/legacy@npm:1.0.45, @teambit/legacy@npm:1.0.45::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.45.tgz":
+  version: 1.0.45
+  resolution: "@teambit/legacy@npm:1.0.45::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.45.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6502,7 +6502,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: c3dcf1ab47221a58b58c8a916c30ff596508cf4507936690357b5e1fd50825de36dfffedfe63563de0fa38b7f82d79f3f146bb453621de82003b2fce88ceffbc
+  checksum: 73ef6bc688b9ae3b478f1aec1a3fc9b98b5eb964a5adda1d6b2772fc0fdd4cdfce7e4f01a2d43aeace0536048a1a62eb3d2aff3dac3c6a4df8c3b4646445c30b
   languageName: node
   linkType: hard
 
@@ -6630,7 +6630,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.44
+    "@teambit/legacy": 1.0.45
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -6678,6 +6678,7 @@ __metadata:
     "@types/react-dom": 16.9.10
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
+    "@types/react-tooltip": 3.11.0
     "@types/react-transition-group": 4.4.1
     "@types/sass": 1.16.0
     "@types/semver": 7.3.4
@@ -6921,6 +6922,7 @@ __metadata:
     react-syntax-highlighter: 15.4.3
     react-tabs: 3.2.0
     react-test-renderer: 16.14.0
+    react-tooltip: 3.11.6
     read-pkg-up: 7.0.1
     readable-stream: 3.6.0
     reflect-metadata: 0.1.13
@@ -7000,7 +7002,7 @@ __metadata:
     yaml: 1.10.0
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.44
+    "@teambit/legacy": 1.0.45
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8046,6 +8048,15 @@ __metadata:
   dependencies:
     "@types/react": "*"
   checksum: 03634737818eb5dea8557366dfcf5e39011c8b6d3dc241370c2d517e8b80d33026184072a40cae2eb97e261dba242982bceb9b62c82cba5f1b5fb0a40a307bd8
+  languageName: node
+  linkType: hard
+
+"@types/react-tooltip@npm:3.11.0":
+  version: 3.11.0
+  resolution: "@types/react-tooltip@npm:3.11.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact-tooltip%2F-%2Freact-tooltip-3.11.0.tgz"
+  dependencies:
+    "@types/react": "*"
+  checksum: b08321bb93c1cc407fbcdc5951c3d8e26f96bbc40cea01e6db548371fbce56b1c822ce17453961144e31dc7fffb66d4d19729c9f8e9355a2e9e759c2d21c74b0
   languageName: node
   linkType: hard
 
@@ -28008,6 +28019,18 @@ fsevents@^1.2.7:
   version: 0.13.4
   resolution: "react-timer-mixin@npm:0.13.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-timer-mixin%2F-%2Freact-timer-mixin-0.13.4.tgz"
   checksum: 9982ef559324d468bd9e63d853204924a9aeab2715be3a822b689a1609362c29b879cceea86e51be37b34cae5c8f9082bef68d78ea37236178087d1e3551bc34
+  languageName: node
+  linkType: hard
+
+"react-tooltip@npm:3.11.6":
+  version: 3.11.6
+  resolution: "react-tooltip@npm:3.11.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-tooltip%2F-%2Freact-tooltip-3.11.6.tgz"
+  dependencies:
+    prop-types: ^15.6.0
+  peerDependencies:
+    react: "*"
+    react-dom: "*"
+  checksum: 9a7dc397d0d5dc6b6b318ca59ec98deebfc9283171baed703d12fbe5b0db992d1b4c02b870ac2e10c2bee0a9dd6ea4e63af196246855581617aaef5ead812f8a
   languageName: node
   linkType: hard
 
