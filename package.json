@@ -83,7 +83,7 @@
     "build:types": "./scripts/build-types.bash",
     "install-harmony": "cd build-harmony && yarn",
     "link-bit-legacy": "rm -rf node_modules/@teambit/legacy && ln -sf `pwd` node_modules/@teambit/legacy",
-    "link-bit-legacy:windows": "rm -r node_modules/@teambit/legacy; New-Item -Path node_modules\@teambit\legacy -ItemType SymbolicLink -Value .",
+    "link-bit-legacy:windows": "cmd /c rmdir /s /q .\\node_modules\\@teambit\\legacy; New-Item -Path node_modules\\@teambit\\legacy -ItemType SymbolicLink -Value .",
     "import-harmony": "build-harmony/node_modules/.bin/bbit import",
     "status-harmony": "build-harmony/node_modules/.bin/bbit status",
     "build-harmony": "build-harmony/node_modules/.bin/bbit install && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",

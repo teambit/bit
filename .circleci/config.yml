@@ -1103,7 +1103,7 @@ jobs:
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
       - run: 'cd bit\bit; npm run build'
-      - run: 'cd bit\bit; npm run link-bit-legacy:windows'
+      - run: 'cd bit\bit; cmd /c rmdir /s /q .\node_modules\@teambit\legacy; New-Item -Path node_modules\@teambit\legacy -ItemType SymbolicLink -Value .'
       - run:
           name: 'run e2e tests'
           command: 'cd bit\bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
