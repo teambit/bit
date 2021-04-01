@@ -1,6 +1,7 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentTemplate } from './component-template';
@@ -9,7 +10,6 @@ import { CreateCmd, GeneratorOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
 import { ComponentGenerator, GenerateResult } from './component-generator';
-import { EnvsAspect, EnvsMain } from '@teambit/envs';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
