@@ -60,8 +60,9 @@ export class ComponentGenerator {
 
   private async generateOneComponent(componentId: ComponentID, componentPath: string): Promise<GenerateResult> {
     const name = componentId.name;
-    const componentNameCamelCase = camelcase(name, { pascalCase: true });
-    const files = this.template.generateFiles({ componentName: name, componentNameCamelCase, componentId });
+    const namePascalCase = camelcase(name, { pascalCase: true });
+    const nameCamelCase = camelcase(name);
+    const files = this.template.generateFiles({ name, namePascalCase, nameCamelCase, componentId });
     const mainFile = files.find((file) => file.isMain);
     await this.writeComponentFiles(componentPath, files);
     const addResults = await this.workspace.track({

@@ -1,18 +1,18 @@
 import { GeneratorContext } from '@teambit/generator';
 
-export function mainRuntime({ componentName, componentNameCamelCase }: GeneratorContext) {
+export function mainRuntime({ name, namePascalCase }: GeneratorContext) {
   return `import { MainRuntime } from '@teambit/cli';
-import { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';
+import { ${namePascalCase}Aspect } from './${name}.aspect';
 
-export class ${componentNameCamelCase}Main {
+export class ${namePascalCase}Main {
   static slots = [];
   static dependencies = [];
   static runtime = MainRuntime;
   static async provider() {
-    return new ${componentNameCamelCase}Main();
+    return new ${namePascalCase}Main();
   }
 }
 
-${componentNameCamelCase}Aspect.addRuntime(${componentNameCamelCase}Main);
+${namePascalCase}Aspect.addRuntime(${namePascalCase}Main);
 `;
 }
