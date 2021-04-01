@@ -75,11 +75,6 @@ const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
   return loaders;
 };
 
-const a = getStyleLoaders({
-  importLoaders: 1,
-  sourceMap: isEnvProduction && shouldUseSourceMap,
-});
-
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
 // eslint-disable-next-line complexity
