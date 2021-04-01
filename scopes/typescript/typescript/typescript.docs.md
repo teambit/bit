@@ -1,3 +1,11 @@
+---
+id: typescript
+title: Typescript
+slug: /aspects/typescript
+description: Typescript compilation for Bit components.
+labels: ['typescript', 'compiler', 'bit', 'extension', 'aspect']
+---
+
 Typescript aspect implements the `Compiler` interface and provides the ability to transpile files on the workspace and build components in the isolated capsules.
 
 ## Configuration - tsconfig.json

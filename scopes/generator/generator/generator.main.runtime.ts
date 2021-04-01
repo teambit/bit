@@ -1,23 +1,16 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import Vinyl from 'vinyl';
-import path from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import camelcase from 'camelcase';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentTemplate, File } from './component-template';
+import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, GeneratorOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
+import { ComponentGenerator, GenerateResult } from './component-generator';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
-
-export type GenerateResult = { id: ComponentID; dir: string; files: string[] };
 
 export type TemplateDescriptor = { aspectId: string; name: string };
 
@@ -75,16 +68,6 @@ export class GeneratorMain {
     return found?.template;
   }
 
-  private getAllTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
-    const templatesByAspects = this.componentTemplateSlot.toArray();
-    return templatesByAspects.flatMap(([id, componentTemplates]) => {
-      return componentTemplates.map((template) => ({
-        id,
-        template,
-      }));
-    });
-  }
-
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
@@ -97,54 +80,29 @@ export class GeneratorMain {
     const scope = options.scope || this.workspace.defaultScope;
     if (!scope) throw new Error(`failed finding defaultScope`);
 
-    return Promise.all(
-      componentNames.map(async (componentName) => {
-        const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
-        const componentId = ComponentID.fromObject({ name: fullComponentName }, scope);
-        const componentNameCamelCase = camelcase(componentName, { pascalCase: true });
-        const files = template.generateFiles({ componentName, componentNameCamelCase, componentId });
-        const mainFile = files.find((file) => file.isMain);
-        const componentPath = this.getComponentPath(componentId, options.path);
-        await this.writeComponentFiles(componentPath, files);
-        const addResults = await this.workspace.add([componentPath], componentName, mainFile?.relativePath);
-        return {
-          id: componentId,
-          dir: componentPath,
-          files: addResults.addedComponents[0].files.map((f) => f.relativePath),
-        };
-      })
-    );
+    const componentIds = componentNames.map((componentName) => {
+      const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
+      return ComponentID.fromObject({ name: fullComponentName }, scope);
+    });
+
+    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template);
+    return componentGenerator.generate();
+  }
+
+  private getAllTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
+    const templatesByAspects = this.componentTemplateSlot.toArray();
+    return templatesByAspects.flatMap(([id, componentTemplates]) => {
+      return componentTemplates.map((template) => ({
+        id,
+        template,
+      }));
+    });
   }
 
   private async loadAspects() {
     if (this.aspectLoaded) return;
     await this.workspace.loadAspects(this.config.aspects);
     this.aspectLoaded = true;
-  }
-
-  /**
-   * writes the generated template files to the default directory set in the workspace config
-   */
-  private async writeComponentFiles(componentPath: string, templateFiles: File[]): Promise<PathOsBasedRelative[]> {
-    const dataToPersist = new DataToPersist();
-    const vinylFiles = templateFiles.map((templateFile) => {
-      const templateFileVinyl = new Vinyl({
-        base: componentPath,
-        path: path.join(componentPath, templateFile.relativePath),
-        contents: Buffer.from(templateFile.content),
-      });
-      return AbstractVinyl.fromVinyl(templateFileVinyl);
-    });
-    const results = vinylFiles.map((v) => v.path);
-    dataToPersist.addManyFiles(vinylFiles);
-    dataToPersist.addBasePath(this.workspace.path);
-    await dataToPersist.persistAllToFS();
-    return results;
-  }
-
-  private getComponentPath(componentId: ComponentID, customPath?: string) {
-    if (customPath) return path.join(customPath, componentId.fullName);
-    return path.join(componentId.scope, componentId.fullName);
   }
 
   static slots = [Slot.withType<ComponentTemplate[]>()];

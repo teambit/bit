@@ -1,11 +1,25 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
+import Tooltip, { Place, Type, Effect } from 'react-tooltip';
+import { v1 } from 'uuid';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { addAvatarQueryParams } from '@teambit/url.add-avatar-query-params';
 import { getInitials } from '@teambit/string.get-initials';
 import { letterBgColors } from '@teambit/ui.styles.colors-by-letter';
+import { ellipsis } from '@teambit/ui.styles.ellipsis';
 import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
+
+type tooltipProps = {
+  place: Place;
+  type: Type;
+  effect: Effect;
+};
+const tooltipDefaultProps: tooltipProps = {
+  place: 'bottom',
+  type: 'dark',
+  effect: 'solid',
+};
 
 export type UserAvatarProps = {
   account: AccountObj;
@@ -14,9 +28,21 @@ export type UserAvatarProps = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
+  /**
+   * showing or not a tooltip when hover on the avatar, this value is false by default
+   */
+  showTooltip?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export class UserAvatar extends PureComponent<UserAvatarProps> {
+  state = {
+    tooltipId: '',
+  };
+
+  componentDidMount() {
+    this.setState({ tooltipId: v1() });
+  }
+
   render() {
     const {
       account,
@@ -25,8 +51,10 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       fontSize = Math.round(size * 0.4),
       className,
       imgClassName,
+      showTooltip = false,
       ...rest
     } = this.props;
+    const { tooltipId } = this.state;
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
     const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
@@ -35,6 +63,8 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       <div
         className={classNames(colors, styles.avatar, className)}
         style={{ width: `${size}px`, height: `${size}px` }}
+        data-for={tooltipId}
+        data-tip={displayName || name}
         {...rest}
       >
         {profileImageWithParams && (
@@ -48,6 +78,7 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
         {!displayName && !name && !profileImageWithParams && !firstLetter && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}
+        {showTooltip && !!tooltipId && <Tooltip className={ellipsis} id={tooltipId} {...tooltipDefaultProps} />}
       </div>
     );
   }
