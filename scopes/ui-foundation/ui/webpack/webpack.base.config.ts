@@ -94,6 +94,9 @@ export default function createWebpackConfig(
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
   return {
+    stats: {
+      children: true,
+    },
     mode: 'production',
     entry: {
       main: entryFiles,
