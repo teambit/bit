@@ -9,6 +9,7 @@ import { CreateCmd, GeneratorOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
 import { ComponentGenerator, GenerateResult } from './component-generator';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
@@ -26,7 +27,8 @@ export class GeneratorMain {
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
     private config: GeneratorConfig,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private envs: EnvsMain
   ) {}
 
   /**
@@ -85,7 +87,7 @@ export class GeneratorMain {
       return ComponentID.fromObject({ name: fullComponentName }, scope);
     });
 
-    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template);
+    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template, this.envs);
     return componentGenerator.generate();
   }
 
@@ -107,16 +109,16 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql]: [Workspace, CLIMain, GraphqlMain],
+    [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],
     config: GeneratorConfig,
     [componentTemplateSlot]: [ComponentTemplateSlot]
   ) {
-    const generator = new GeneratorMain(componentTemplateSlot, config, workspace);
+    const generator = new GeneratorMain(componentTemplateSlot, config, workspace, envs);
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));

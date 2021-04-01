@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import path from 'path';
 import { Workspace } from '@teambit/workspace';
+import { EnvsMain } from '@teambit/envs';
 import camelcase from 'camelcase';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
@@ -11,14 +12,15 @@ import { ComponentID } from '@teambit/component-id';
 import { ComponentTemplate, File } from './component-template';
 import { GeneratorOptions } from './create.cmd';
 
-export type GenerateResult = { id: ComponentID; dir: string; files: string[] };
+export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
 export class ComponentGenerator {
   constructor(
     private workspace: Workspace,
     private componentIds: ComponentID[],
     private options: GeneratorOptions,
-    private template: ComponentTemplate
+    private template: ComponentTemplate,
+    private envs: EnvsMain
   ) {}
 
   async generate(): Promise<GenerateResult[]> {
@@ -69,10 +71,13 @@ export class ComponentGenerator {
       mainFile: mainFile?.relativePath,
       componentName: componentId.fullName,
     });
+    const component = await this.workspace.get(componentId);
+    const env = this.envs.getEnv(component);
     return {
       id: componentId,
       dir: componentPath,
       files: addResults.files,
+      envId: env.id,
     };
   }
 
