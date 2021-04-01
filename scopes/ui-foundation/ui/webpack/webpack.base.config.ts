@@ -4,7 +4,6 @@ import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
-import postcssNormalize from 'postcss-normalize';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -32,6 +31,54 @@ const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
 const lessRegex = /\.less$/;
 const lessModuleRegex = /\.module\.less$/;
+const isEnvProduction = true;
+
+// common function to get style loaders
+const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
+  const loaders = [
+    {
+      loader: MiniCssExtractPlugin.loader,
+    },
+    {
+      loader: require.resolve('css-loader'),
+      options: cssOptions,
+    },
+    {
+      // Options for PostCSS as we reference these options twice
+      // Adds vendor prefixing based on your specified browser support in
+      // package.json
+      loader: require.resolve('postcss-loader'),
+      options: {
+        postcssOptions: {
+          config: path.resolve(__dirname, 'postcss.config.js'),
+        },
+        sourceMap: isEnvProduction && shouldUseSourceMap,
+      },
+    },
+  ].filter(Boolean);
+  if (preProcessor) {
+    loaders.push(
+      {
+        loader: require.resolve('resolve-url-loader'),
+        options: {
+          sourceMap: isEnvProduction && shouldUseSourceMap,
+        },
+      },
+      {
+        loader: require.resolve(preProcessor),
+        options: {
+          sourceMap: true,
+        },
+      }
+    );
+  }
+  return loaders;
+};
+
+const a = getStyleLoaders({
+  importLoaders: 1,
+  sourceMap: isEnvProduction && shouldUseSourceMap,
+});
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -41,8 +88,6 @@ export default function createWebpackConfig(
   entryFiles: string[],
   publicDir = 'public'
 ): Configuration {
-  const isEnvProduction = true;
-
   // Variable used for enabling profiling in Production
   // passed into alias object. Uses a flag if passed into the build command
   const isEnvProductionProfile = process.argv.includes('--profile');
@@ -53,64 +98,8 @@ export default function createWebpackConfig(
   // Get environment variables to inject into our app.
   // const env = getClientEnvironment(publicUrlOrPath.slice(0, -1));
 
-  // common function to get style loaders
-  const getStyleLoaders = (cssOptions: any, preProcessor?: string) => {
-    const loaders = [
-      {
-        loader: MiniCssExtractPlugin.loader,
-      },
-      {
-        loader: require.resolve('css-loader'),
-        options: cssOptions,
-      },
-      {
-        // Options for PostCSS as we reference these options twice
-        // Adds vendor prefixing based on your specified browser support in
-        // package.json
-        loader: require.resolve('postcss-loader'),
-        options: {
-          // Necessary for external CSS imports to work
-          // https://github.com/facebook/create-react-app/issues/2677
-          ident: 'postcss',
-          plugins: () => [
-            // eslint-disable-next-line global-require
-            require('postcss-flexbugs-fixes'),
-            // eslint-disable-next-line global-require
-            require('postcss-preset-env')({
-              autoprefixer: {
-                flexbox: 'no-2009',
-              },
-              stage: 3,
-            }),
-            // Adds PostCSS Normalize as the reset css with default options,
-            // so that it honors browserslist config in package.json
-            // which in turn let's users customize the target behavior as per their needs.
-            postcssNormalize(),
-          ],
-          sourceMap: isEnvProduction && shouldUseSourceMap,
-        },
-      },
-    ].filter(Boolean);
-    if (preProcessor) {
-      loaders.push(
-        {
-          loader: require.resolve('resolve-url-loader'),
-          options: {
-            sourceMap: isEnvProduction && shouldUseSourceMap,
-          },
-        },
-        {
-          loader: require.resolve(preProcessor),
-          options: {
-            sourceMap: true,
-          },
-        }
-      );
-    }
-    return loaders;
-  };
-
   return {
+    mode: 'production',
     entry: {
       main: entryFiles,
     },
@@ -402,6 +391,7 @@ export default function createWebpackConfig(
       isEnvProduction &&
         new WorkboxWebpackPlugin.GenerateSW({
           clientsClaim: true,
+          maximumFileSizeToCacheInBytes: 5000000,
           exclude: [/\.map$/, /asset-manifest\.json$/],
           // importWorkboxFrom: 'cdn',
           navigateFallback: 'public/index.html',
