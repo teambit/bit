@@ -16,7 +16,13 @@ ${Name} example:
 
 A simple ${Name} component with some text
 
-// live component playground - if you remove the word live it turns into a code snippet
+Code Snippet:
+\`\`\`js
+<${Name}>click me</${Name}>
+\`\`\`
+
+
+Live Playground:
 \`\`\`js live
 <${Name}>click me</${Name}>
 \`\`\`
