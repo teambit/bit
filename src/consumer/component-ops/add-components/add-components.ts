@@ -51,7 +51,7 @@ import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
-type Warnings = {
+export type Warnings = {
   alreadyUsed: Record<string, any>;
   emptyDirectory: string[];
   existInScope: BitId[];
