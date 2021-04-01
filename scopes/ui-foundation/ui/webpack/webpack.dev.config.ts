@@ -81,8 +81,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
       globalObject: 'this',
     },
 
+    // @ts-ignore - remove this once there is types package for webpack-dev-server v4
     devServer: {
-      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
       static: [
         {
           directory: resolveWorkspacePath(publicUrlOrPath),
