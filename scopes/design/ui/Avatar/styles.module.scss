@@ -27,6 +27,9 @@
     text-align: center;
     display: inline-block;
   }
+  .tooltip {
+    overflow: unset;
+  }
 }
 .avatarImg {
   position: absolute;
