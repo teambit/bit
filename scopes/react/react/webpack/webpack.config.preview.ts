@@ -1,6 +1,6 @@
+import path from 'path';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
-import postcssNormalize from 'postcss-normalize';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import TerserPlugin from 'terser-webpack-plugin';
 import webpack, { Configuration } from 'webpack';
@@ -71,24 +71,9 @@ export default function (fileMapPath: string): Configuration {
         // package.json
         loader: require.resolve('postcss-loader'),
         options: {
-          // Necessary for external CSS imports to work
-          // https://github.com/facebook/create-react-app/issues/2677
-          ident: 'postcss',
-          plugins: () => [
-            // eslint-disable-next-line global-require
-            require('postcss-flexbugs-fixes'),
-            // eslint-disable-next-line global-require
-            require('postcss-preset-env')({
-              autoprefixer: {
-                flexbox: 'no-2009',
-              },
-              stage: 3,
-            }),
-            // Adds PostCSS Normalize as the reset css with default options,
-            // so that it honors browserslist config in package.json
-            // which in turn let's users customize the target behavior as per their needs.
-            postcssNormalize(),
-          ],
+          postcssOptions: {
+            config: path.resolve(__dirname, 'postcss.config.js'),
+          },
           sourceMap: isEnvProduction && shouldUseSourceMap,
         },
       },
