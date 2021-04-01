@@ -6,7 +6,7 @@ import { testFile } from './test';
 
 export const reactButton: ComponentTemplate = {
   name: 'react-button',
-
+  description: 'a basic react button',
   generateFiles: (context: GeneratorContext) => {
     const { componentName: name, componentNameCamelCase: Name } = context;
     const indexFile = {
