@@ -164,10 +164,14 @@ export default function createWebpackConfig(
             // A missing `test` is equivalent to a match.
             {
               test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-              loader: require.resolve('url-loader'),
-              options: {
-                limit: imageInlineSizeLimit,
-                name: 'static/media/[name].[hash:8].[ext]',
+              type: 'asset',
+              generator: {
+                filename: 'static/media/[hash][ext][query]',
+              },
+              parser: {
+                dataUrlCondition: {
+                  maxSize: imageInlineSizeLimit,
+                },
               },
             },
             {
@@ -335,8 +339,9 @@ export default function createWebpackConfig(
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
               exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
-              options: {
-                name: 'static/media/[name].[hash:8].[ext]',
+              type: 'asset/resource',
+              generator: {
+                filename: 'static/media/[hash][ext][query]',
               },
             },
             // ** STOP ** Are you adding a new loader?

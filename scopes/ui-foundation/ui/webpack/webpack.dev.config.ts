@@ -19,6 +19,11 @@ const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
 const port = process.env.WDS_SOCKET_PORT;
 
+// const reactRefreshRuntimeEntry = require.resolve('react-refresh/runtime');
+// const reactRefreshWebpackPluginRuntimeEntry = require.resolve(
+//   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
+// );
+
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
 const moduleFileExtensions = [
