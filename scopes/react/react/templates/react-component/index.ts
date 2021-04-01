@@ -8,7 +8,7 @@ export const reactComponent: ComponentTemplate = {
   name: 'react-component',
 
   generateFiles: (context: GeneratorContext) => {
-    const { componentName: name, componentNameCamelCase: Name } = context;
+    const { name, namePascalCase: Name } = context;
     const indexFile = {
       relativePath: 'index.ts',
       content: `export { ${Name} } from './${name}';

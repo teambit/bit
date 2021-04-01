@@ -13,11 +13,11 @@ export const reactEnvTemplate: ComponentTemplate = {
         isMain: true,
       },
       {
-        relativePath: `${context.componentName}.docs.mdx`,
+        relativePath: `${context.name}.docs.mdx`,
         content: docFile(),
       },
       {
-        relativePath: `${context.componentName}.extension.ts`,
+        relativePath: `${context.name}.extension.ts`,
         content: extensionFile(context),
       },
     ];
