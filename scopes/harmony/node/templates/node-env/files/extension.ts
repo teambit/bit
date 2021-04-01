@@ -1,6 +1,6 @@
 import { GeneratorContext } from '@teambit/generator';
 
-export function extensionFile({ componentNameCamelCase: Name }: GeneratorContext) {
+export function extensionFile({ namePascalCase: Name }: GeneratorContext) {
   return `import { EnvsMain, EnvsAspect } from '@teambit/envs'
 import { NodeAspect, NodeMain } from '@teambit/node'
 

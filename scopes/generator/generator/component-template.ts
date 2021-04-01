@@ -19,16 +19,22 @@ export interface File {
 
 export interface GeneratorContext {
   /**
-   * component name of the generating component. e.g. `button` or `use-date`.
+   * component-name as entered by the user, e.g. `use-date`.
    * without the scope and the namespace.
    */
-  componentName: string;
+  name: string;
 
   /**
-   * e.g. `use-date` becomes `useDate`.
-   * useful when generating the file content, for example for a function name.
+   * component-name as upper camel case, e.g. `use-date` becomes `UseDate`.
+   * useful when generating the file content, for example for a class name.
    */
-  componentNameCamelCase: string;
+  namePascalCase: string;
+
+  /**
+   * component-name as lower camel case, e.g. `use-date` becomes `useDate`.
+   * useful when generating the file content, for example for a function/variable name.
+   */
+  nameCamelCase: string;
 
   /**
    * component id.
