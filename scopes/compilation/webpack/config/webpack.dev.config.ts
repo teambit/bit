@@ -84,7 +84,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       injectClient: false,
 
-      overlay: false,
+      // overlay: false,
       // Enable hot reloading
       hot: true,
 
