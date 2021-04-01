@@ -1,7 +1,7 @@
 import { GeneratorContext } from '@teambit/generator';
 
 export const compositionFile = (context: GeneratorContext) => {
-  const { componentName: name, componentNameCamelCase: Name } = context;
+  const { name, namePascalCase: Name } = context;
 
   return {
     relativePath: `${name}.composition.jsx`,

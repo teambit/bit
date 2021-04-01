@@ -8,7 +8,7 @@ export const reactButtonJSX: ComponentTemplate = {
   name: 'react-button-jsx',
   description: 'a basic react button in jsx',
   generateFiles: (context: GeneratorContext) => {
-    const { componentName: name, componentNameCamelCase: Name } = context;
+    const { name, namePascalCase: Name } = context;
     const indexFile = {
       relativePath: 'index.js',
       content: `export { ${Name} } from './${name}';`,
