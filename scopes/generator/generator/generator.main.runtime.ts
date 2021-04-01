@@ -12,7 +12,7 @@ import { ComponentGenerator, GenerateResult } from './component-generator';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
-export type TemplateDescriptor = { aspectId: string; name: string };
+export type TemplateDescriptor = { aspectId: string; name: string; description?: string };
 
 export type GeneratorConfig = {
   /**
@@ -46,6 +46,7 @@ export class GeneratorMain {
     return allTemplates.map(({ id, template }) => ({
       aspectId: id,
       name: template.name,
+      description: template.description,
     }));
   }
 

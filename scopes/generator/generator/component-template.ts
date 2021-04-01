@@ -50,6 +50,11 @@ export interface ComponentTemplate {
   name: string;
 
   /**
+   * short description of the template. shown in the `bit templates` command.
+   */
+  description?: string;
+
+  /**
    * template function for generating the file of a certain component.,
    */
   generateFiles(context: GeneratorContext): File[];

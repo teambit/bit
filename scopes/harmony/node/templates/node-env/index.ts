@@ -5,6 +5,7 @@ import { extensionFile } from './files/extension';
 
 export const nodeEnvTemplate: ComponentTemplate = {
   name: 'node-env',
+  description: 'customize the base Node env with your configs and tools',
   generateFiles: (context: GeneratorContext) => {
     return [
       {

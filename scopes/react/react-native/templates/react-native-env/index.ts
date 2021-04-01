@@ -5,6 +5,7 @@ import { extensionFile } from './files/extension';
 
 export const reactNativeTemplate: ComponentTemplate = {
   name: 'react-native-env',
+  description: 'customize the base React Native env with your configs and tools',
   generateFiles: (context: GeneratorContext) => {
     return [
       {

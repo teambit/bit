@@ -5,6 +5,7 @@ import { extensionFile } from './files/extension';
 
 export const reactEnvTemplate: ComponentTemplate = {
   name: 'react-env',
+  description: 'customize the base React env with your configs and tools',
   generateFiles: (context: GeneratorContext) => {
     return [
       {
