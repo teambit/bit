@@ -1096,11 +1096,8 @@ jobs:
       - bit_config:
           token: "fake-token"
       - run: 'pwd'
-      - run: 'dir'
       - run: 'ls'
-      - run: 'ls bit'
       - run: 'ls bit\bit'
-      - run: 'cd bit\bit; pwd; ls -lah'
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
       - run: 'cd bit\bit; npm run build'
