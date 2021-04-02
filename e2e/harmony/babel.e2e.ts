@@ -63,7 +63,7 @@ describe('babel compiler', function () {
         const mapFile = path.join(distDir, 'foo.js.map');
         const mapFileParsed = fs.readJSONSync(mapFile);
         expect(mapFileParsed).to.have.property('sourceRoot');
-        expect(mapFileParsed.sourceRoot).to.endsWith('/bar');
+        expect(mapFileParsed.sourceRoot).to.endsWith(`${path.sep}bar`);
         expect(mapFileParsed).to.have.property('sources');
       });
       it('should be able to run the dist file', () => {

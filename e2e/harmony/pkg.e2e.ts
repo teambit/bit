@@ -92,7 +92,7 @@ describe('pkg extension', function () {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.harmony/aspect');
+        helper.extensions.addExtensionToVariant(`${EXTENSIONS_BASE_FOLDER}/simple-config`, 'teambit.harmony/aspect');
         helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
         helper.command.install();
         helper.command.compile();

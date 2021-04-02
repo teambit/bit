@@ -5,7 +5,7 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { DEFAULT_LANE } from '../../src/constants';
+import { DEFAULT_LANE, IS_WINDOWS } from '../../src/constants';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -648,7 +648,7 @@ describe('bit lane command', function () {
         let beforeRemove;
         before(() => {
           helper.command.switchLocalLane(DEFAULT_LANE);
-          beforeRemove = helper.scopeHelper.cloneLocalScope(false);
+          beforeRemove = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
         });
         describe('then removing without --force flag', () => {
           let output;

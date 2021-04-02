@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -28,7 +29,7 @@ describe('custom env', function () {
       helper.fixtures.populateComponents(3);
       helper.extensions.addExtensionToVariant('*', envId);
       helper.command.compile();
-      wsAllNew = helper.scopeHelper.cloneLocalScope(false);
+      wsAllNew = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
     });
     describe('tag', () => {
       before(() => {
