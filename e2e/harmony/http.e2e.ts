@@ -1,9 +1,11 @@
 import { expect } from 'chai';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HttpHelper } from '../http-helper';
 
-describe('http protocol', function () {
+// @TODO: fix for Windows
+(IS_WINDOWS ? describe.skip : describe)('http protocol', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
