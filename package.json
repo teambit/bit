@@ -59,7 +59,7 @@
     "lint:html": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format junit -o junit/eslint-results.xml",
     "lint:fix": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --fix",
-    "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,css,scss,tsx}\" --write",
+    "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,css,scss,tsx,md}\" --write",
     "prettier:check": "prettier --list-different \"{ts,js,css,tsx}/**/*.{ts,js,css,scss,tsx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
     "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
