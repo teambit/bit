@@ -1095,8 +1095,9 @@ jobs:
       #   run: 'ssh-add ~/.ssh/id_rsa'
       - bit_config:
           token: "fake-token"
-      - run: 'pwd; ls -lah'
-      - run: 'ls -lah'
+      - run: 'pwd'
+      - run: 'dir'
+      - run: 'ls'
       - run: 'ls bit'
       - run: 'ls bit\bit'
       - run: 'cd bit\bit; pwd; ls -lah'
