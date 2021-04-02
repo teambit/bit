@@ -31,11 +31,14 @@ export class CreateCmd implements Command {
 
     const componentsData = results
       .map((result) => {
-        const compTitle = `${chalk.bold(result.id.toString())} at ${result.dir}`;
-        const compFiles = result.files.map((file) => `    ${file}`).join('\n');
-        return `${compTitle}\n${compFiles}`;
+        return `${chalk.bold(result.id.toString())}
+    location: ${result.dir}
+    env:      ${result.envId}
+`;
       })
       .join('\n');
-    return `${chalk.green(title)}\n\n${componentsData}`;
+    const footer = `env configuration is according to workspace variants. learn more at https://harmony-docs.bit.dev/building-with-bit/environments/#configure-environment-for-components`;
+
+    return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
   }
 }
