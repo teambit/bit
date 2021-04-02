@@ -1489,11 +1489,12 @@ workflows:
     jobs:
       - windows_checkout_code
       - windows_set_ssh_key
-      - windows_bvm_install
+      - windows_bvm_install:
+          requires:
+            - windows_checkout_code
       - windows_build_bvm:
           requires:
             - windows_bvm_install
-            - windows_checkout_code
       - windows_e2e_test_bvm:
           requires:
             - windows_checkout_code
