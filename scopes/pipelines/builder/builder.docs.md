@@ -7,12 +7,27 @@ description: build components on isolated directories
 
 ## Background
 
-The build process is running either by `bit build` or `bit tag`. It does the following:
+Bit's build process is an extensible CI for independent components. It validates a component is not dependent on its context (the workspace), tests it, and generates all artifacts necessary for it to be viewed and consumed as an independent module (its distributable code, bundled preview, etc.).
 
-1. isolates components by coping them into a different directory on the filesystem.
-2. runs the package-manager for all isolated components.
-3. finds out what tasks to run and calculates their order (more about it down below).
-4. runs the tasks one by one, such as: compile-task, test-task, etc.
+The Build Pipeline is an Environment Service responsible for sequencing and executing a component's Build Tasks. As mentioned earlier, these tasks are performed on a component only after it's been isolated from the rest of the workspace.
+
+A component's default series of Build Tasks is composed of tasks set by Bit and by its environment.
+
+## Isolated builds
+
+Components authored in a Bit workspace are created to be completely portable, and thus independent. To address that, the build process starts by creating a component 'capsule' which is an isolated instance of a component, generated in a separate directory in your filesystem.
+
+As part of the capsule creation, all packages listed as dependencies of that component will be installed. This step is necessary to validate there are no dependency-graph issues (a component that is not totally isolated will be able to use packages installed in parent directories in your workspace, by other components. This will translate into a "false positive" result when testing for dependency-graph issues in a non-isolated location).
+
+## Incremental builds
+
+When a component "goes through" the build pipeline, all of its dependencies are built as well. If a dependency has not changed since its last build, the build process will use its artifacts from the previous build (and will not process it again). This optimization to the build process supplements the "innate optimization" that naturally comes from developing (and building) independent components instead of a single monolithic codebase.
+
+## Environment-specific builds
+
+Each Bit environment determines its own build pipeline. That means, a single workspace that uses multiple environments will run a different set of build tasks on different components depending on their associated environment. This is another Bit feature that enables seamless transitioning between different development environments, all in the same workspace. It also makes it much easier to integrate the Build Pipeline in your (remote) CI, as it only requires executing the build step - all other per-component build configurations are already set by the various environments being used.
+
+Since environments are extensible, so are the build pipelines configured by them.
 
 ## Build task
 
@@ -56,47 +71,12 @@ in the option #1, it's possible to determine the order. e.g. `getBuildPipe() { r
 in the option #2, the register happens once the extension is loaded, so there is no way to put
 one task before/after another task.
 
-To be able to determine the order, you can do the following
-
-1. `task.location`, it has two options "start" and "end". the rest are "middle".
-2. `task.dependencies`, the dependencies must be completed for all envs before this task starts.
-   the dependencies are applicable inside a location and not across locations. see getLocation()
-   or/and continue reading for more info about this.
-
-**Bit builds components and their dependencies on the component graph**. As you make a change, Bit will build only the related components on the graph that are impacted by the change. This new paradigm of building only components unlocks powerful advantages in terms of **build performance**, **isolating each component's build**, **separation of releases**, and **safety of changes**. Bit also lets you parallel and sequence build tasks for an even more powerful workflow.
-
-Bit's build process is an extensible CI for independent components. It validates a component is not dependent on its context (the workspace), tests it, and generates all artifacts necessary for it to be viewed and consumed as an independent module (its distributable code, bundled preview, etc.).
-
-The Build Pipeline is an Environment Service responsible for sequencing and executing a component's Build Tasks. As mentioned earlier, these tasks are performed on a component only after it's been isolated from the rest of the workspace.
-
-A component's default series of Build Tasks is composed of tasks set by Bit and by its environment.
-
-## Isolated builds
-
-Components authored in a Bit workspace are created to be completely portable, and thus independent. To address that, the build process starts by creating a component 'capsule' which is an isolated instance of a component, generated in a separate directory in your filesystem.
-
-As part of the capsule creation, all packages listed as dependencies of that component will be installed. This step is necessary to validate there are no dependency-graph issues (a component that is not totally isolated will be able to use packages installed in parent directories in your workspace, by other components. This will translate into a "false positive" result when testing for dependency-graph issues in a non-isolated location).
-
-## Incremental builds
-
-When a component "goes through" the build pipeline, all of its dependencies are built as well. If a dependency has not changed since its last build, the build process will use its artifacts from the previous build (and will not process it again). This optimization to the build process supplements the "innate optimization" that naturally comes from developing (and building) independent components instead of a single monolithic codebase.
-
-## Parallel builds
-
-The build pipeline processes multiple components in parallel to make use of multiple cores on your machine.
-
-## Environment-specific builds
-
-Each Bit environment determines its own build pipeline. That means, a single workspace that uses multiple environments will run a different set of build tasks on different components depending on their associated environment. This is another Bit feature that enables seamless transitioning between different development environments, all in the same workspace. It also makes it much easier to integrate the Build Pipeline in your (remote) CI, as it only requires executing the build step - all other per-component build configurations are already set by the various environments being used.
-
-Since environments are extensible, so are the build pipelines configured by them.
-
 ## Sequencing the build tasks
 
 The Build Pipeline takes into consideration the following factors when deciding the order of which to execute each task:
 
 - **Location**: A task can be executed either at the start or end of the build pipeline. This can be explicitly configured by the task itself.
-- **Dependencies**: A task can depend on other tasks. That means, it will not get executed before its dependencies are executed successfully. This is configured by the task itself.
+- **Dependencies**: A task can depend on other tasks. That means, the dependencies must be completed successfully for all envs before this task starts. The dependencies are applicable inside a location and not across locations. This is configured by the task itself.
 - **An environment's list of build tasks**: This is the array of tasks as it is defined by an environment
 
 ## Executing the build pipeline
@@ -186,7 +166,7 @@ A build task is positioned in the build pipeline sequence either by overriding t
 
 ### Override the build pipeline sequence
 
-This methodology leaves the task completely agnostic as to its position in the build pipeline. Instead, the task position is determined by the environment using the 'getBuildpipe' Environment Handler.
+This methodology leaves the task completely agnostic as to its position in the build pipeline. Instead, the task position is determined by the environment using the `getBuildPipe` Environment Handler.
 
 The example above shows the React environment `overrideBuildPipe` method being used to override its default pipeline. This method uses the `getBuildPipe()` Environment Handler, internally.
 
