@@ -1493,6 +1493,7 @@ workflows:
       - windows_build_bvm:
           requires:
             - windows_bvm_install
+            - windows_checkout_code
       - windows_e2e_test_bvm:
           requires:
             - windows_checkout_code
