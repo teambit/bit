@@ -1095,6 +1095,7 @@ jobs:
       #   run: 'ssh-add ~/.ssh/id_rsa'
       - bit_config:
           token: "fake-token"
+      - run: 'cd bit\bit; pwd; ls -lah'
       - run: 'cd bit\bit; bit install'
       - run: 'cd bit\bit; bit compile'
       - run: 'cd bit\bit; npm run build'
