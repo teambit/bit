@@ -477,8 +477,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(name: string) {
-    return this.runCmd(`bit create ${name}`);
+  create(templateName: string, componentName: string, flags = '') {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

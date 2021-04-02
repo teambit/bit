@@ -1,12 +1,14 @@
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
+import { nodeEnvTemplate } from './templates/node-env';
 
 export class NodeMain {
   constructor(
@@ -75,11 +77,12 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, ReactAspect];
+  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
 
-  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
+    generator.registerComponentTemplate([nodeEnvTemplate]);
     return new NodeMain(react, nodeEnv, envs);
   }
 }

@@ -696,8 +696,8 @@ jobs:
   bundle_version_windows:
     <<: *windows_defaults
     steps:
-      - run: choco install nodejs --version 12.15.0
-      # - run: nodejs.install v12.15.0
+      - run: choco install nodejs --version 12.16.0
+      # - run: nodejs.install v12.16.0
       - run: node -v
       - run: 'yarn -v'
       - run:
@@ -1288,8 +1288,8 @@ workflows:
 
   nightly:
     triggers:
-      - schedule: # every day at 6AM UTC (= 1AM EST)
-          cron: '0 6 * * *'
+      - schedule: # every day at 3AM UTC (= 10PM EST)
+          cron: '0 3 * * *'
           filters:
             branches:
               only:
