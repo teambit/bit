@@ -484,7 +484,8 @@ export default class ComponentMap {
     });
     const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
     if (!foundMainFile || R.isEmpty(foundMainFile)) {
-      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list.
+if you renamed the mainFile, please re-add the component with the "--main" flag pointing to the correct main-file`);
     }
     const filesPaths = this.files.map((file) => file.relativePath);
     const duplicateFiles = filesPaths.filter(

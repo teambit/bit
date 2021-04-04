@@ -42,7 +42,10 @@ import { BitId } from '@teambit/legacy-bit-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
-import { AddActionResults } from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
+import type {
+  AddActionResults,
+  Warnings,
+} from '@teambit/legacy/dist/consumer/component-ops/add-components/add-components';
 import ComponentsList from '@teambit/legacy/dist/consumer/component/components-list';
 import { NoComponentDir } from '@teambit/legacy/dist/consumer/component/exceptions/no-component-dir';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
@@ -104,6 +107,14 @@ export type WorkspaceInstallOptions = {
 };
 
 export type WorkspaceLinkOptions = LinkingOptions;
+
+export type TrackData = {
+  rootDir: PathOsBasedRelative; // path relative to the workspace
+  componentName?: string; // if empty, it'll be generated from the path
+  mainFile?: string; // if empty, attempts will be made to guess the best candidate
+};
+
+export type TrackResult = { componentName: string; files: string[]; warnings: Warnings };
 
 const DEFAULT_VENDOR_DIR = 'vendor';
 
@@ -547,6 +558,7 @@ export class Workspace implements ComponentFactory {
   }
 
   /**
+   * @deprecated use this.track() instead
    * track a new component. (practically, add it to .bitmap).
    *
    * @param componentPaths component paths relative to the workspace dir
@@ -566,6 +578,23 @@ export class Workspace implements ComponentFactory {
     //  .bitmap file. workspace needs a similar mechanism. once done, remove the next line.
     await this.consumer.bitMap.write(this.consumer.componentFsCache);
     return addResults;
+  }
+
+  /**
+   * add a new component to the .bitmap file.
+   * this method only adds the records in memory but doesn't persist to the filesystem.
+   * to write the .bitmap file once completed, run "await this.consumer.writeBitMap();"
+   */
+  async track(trackData: TrackData): Promise<TrackResult> {
+    const addComponent = new AddComponents(
+      { consumer: this.consumer },
+      { componentPaths: [trackData.rootDir], id: trackData.componentName, main: trackData.mainFile, override: false }
+    );
+    const result = await addComponent.add();
+    const addedComponent = result.addedComponents[0];
+    const componentName = addedComponent?.id.name || (trackData.componentName as string);
+    const files = addedComponent?.files.map((f) => f.relativePath) || [];
+    return { componentName, files, warnings: result.warnings };
   }
 
   /**
