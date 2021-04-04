@@ -39,22 +39,8 @@
 - [Articles](https://harmony-docs.bit.dev/resources/articles)
 - [Community](https://harmony-docs.bit.dev/resources/community)
 
-## Radical Dogfooding
-
-Bit is 100% built with Bit! Every feature in Bit, from the [Bit Version Manager](https://bit.dev/teambit/bvm) to the workspace UI and even [supporting MDX](https://bit.dev/teambit/mdx), are just scopes of components developed with Bit.  
-
-Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on the Bit cloud platform.  
-
-This also means you can customize and extend any part of Bit as you like! It's just a simple matter of importing and editing a component or adding a new one.  
-
 
 ## What is Bit?
-
-Bit is a platform for building with components and using them to compose apps and systems. Building with Bit gives a host of benefits for our codebase's modularity, composability, testability, and scalability.
-
-One of the key benefits is how Bit isolates components, giving us the freedom to build and work with each component as an isolated module. We then compose components into more concrete components, deploy them as apps or services, and collaborate with different product teams.
-
-## In a nutshell
 
 Bit allows us to compose apps and codebases from components. We use this approach to build using service-oriented architecture, where **components are services**. This simplifies our codebase, as it promotes composability and modularity.
 
@@ -145,7 +131,16 @@ We use Lanes to manage cross-team changes and communicate over API changes for c
 - Composing apps and services with components removes the need for architecture layers in our codebase and allows for a much smoother dev-experience of working in a service-oriented codebase where each component is a service that can be composed with other components to solve concrete problems.
 - Bit's scopes implement feature ownership across the organization and host cross-cutting concern components that facilitate services.
 - Workspaces are flexible and can be used to maintain components from many scopes, making it easier to reuse and collaborate on available components.
-- Lanes helps distributed teams to communicate and collaborate on API changes by understanding the underline dependency graph of components and "bundling" together changes that affect many teams and should be synced.
+- Lanes helps distributed teams to communicate and collaborate on API changes by understanding the underline dependency graph of components and "bundling" together changes that affect many teams and should be synced.  
+
+## We build Bit with Bit
+
+Bit is 100% built with Bit! Every feature in Bit, from the [Bit Version Manager](https://bit.dev/teambit/bvm) to the workspace UI and even [supporting MDX](https://bit.dev/teambit/mdx), are just scopes of components developed with Bit.  
+
+Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on the Bit cloud platform.  
+
+This also means you can customize and extend any part of Bit as you like! It's just a simple matter of importing and editing a component or adding a new one.  
+
 ## Contributing 🎗️
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
