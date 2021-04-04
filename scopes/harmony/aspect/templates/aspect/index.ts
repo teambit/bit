@@ -5,6 +5,7 @@ import { mainRuntime } from './files/main-runtime';
 
 export const aspectTemplate: ComponentTemplate = {
   name: 'aspect',
+  description: 'extend Bit capabilities',
   generateFiles: (context: GeneratorContext) => {
     return [
       {
@@ -13,11 +14,11 @@ export const aspectTemplate: ComponentTemplate = {
         isMain: true,
       },
       {
-        relativePath: `${context.componentName}.aspect.ts`,
+        relativePath: `${context.name}.aspect.ts`,
         content: aspectFile(context),
       },
       {
-        relativePath: `${context.componentName}.main.runtime.ts`,
+        relativePath: `${context.name}.main.runtime.ts`,
         content: mainRuntime(context),
       },
     ];

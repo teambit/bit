@@ -24,7 +24,7 @@ type AvatarProps = {
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-  hideTooltip?: boolean;
+  showTooltip?: boolean;
 } & React.HTMLAttributes<HTMLDivElement>;
 
 export default function Avatar(props: AvatarProps) {

@@ -153,6 +153,7 @@
         "@types/react-dom": "16.9.10",
         "@types/react-router-dom": "5.1.7",
         "@types/react-tabs": "2.3.2",
+        "@types/react-tooltip": "3.11.0",
         "@types/react-transition-group": "4.4.1",
         "@types/socket.io-client": "1.4.35",
         "@types/ua-parser-js": "0.7.35",
@@ -269,6 +270,7 @@
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "3.2.0",
         "react-test-renderer": "16.14.0",
+        "react-tooltip": "3.11.6",
         "remark-frontmatter": "2.0.0",
         "reset-css": "5.0.1",
         "resolve-from": "5.0.0",
@@ -310,7 +312,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.45",
+        "@teambit/legacy": "1.0.48",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -373,7 +375,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.45",
+            "@teambit/legacy": "1.0.48",
             "react-dom": "16.13.1"
           }
         }
@@ -515,7 +517,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.45",
+            "@teambit/legacy": "1.0.48",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",
