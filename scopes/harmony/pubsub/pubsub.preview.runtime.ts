@@ -33,6 +33,7 @@ export class PubsubPreview {
   public pub(topic: string, event: BitBaseEvent<any>) {
     this.events.emit(topic, event);
     this._parentPubsub?.pub(topic, event).catch((err) => {
+      // eslint-disable-next-line no-console
       console.error('[Pubsub.preview]', err);
     });
   }
