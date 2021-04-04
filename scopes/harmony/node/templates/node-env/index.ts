@@ -5,6 +5,7 @@ import { extensionFile } from './files/extension';
 
 export const nodeEnvTemplate: ComponentTemplate = {
   name: 'node-env',
+  description: 'customize the base Node env with your configs and tools',
   generateFiles: (context: GeneratorContext) => {
     return [
       {
@@ -13,11 +14,11 @@ export const nodeEnvTemplate: ComponentTemplate = {
         isMain: true,
       },
       {
-        relativePath: `${context.componentName}.docs.mdx`,
+        relativePath: `${context.name}.docs.mdx`,
         content: docFile(),
       },
       {
-        relativePath: `${context.componentName}.extension.ts`,
+        relativePath: `${context.name}.extension.ts`,
         content: extensionFile(context),
       },
     ];

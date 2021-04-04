@@ -8,7 +8,6 @@ import { ReactNativeAspect, ReactNativeMain } from '@teambit/react-native';
 // Example for fetching config from a file. The 'typescript' folder here is a directory inside your extended environment component
 //const tsconfig = require('./typescript/tsconfig.json');
 
-
 export class ${Name}Extension {
   constructor(private reactNative: ReactNativeMain) {}
 

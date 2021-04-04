@@ -6379,9 +6379,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.45, @teambit/legacy@npm:1.0.45::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.45.tgz":
-  version: 1.0.45
-  resolution: "@teambit/legacy@npm:1.0.45::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.45.tgz"
+"@teambit/legacy@npm:1.0.48, @teambit/legacy@npm:1.0.48::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.48.tgz":
+  version: 1.0.48
+  resolution: "@teambit/legacy@npm:1.0.48::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.48.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6502,7 +6502,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 73ef6bc688b9ae3b478f1aec1a3fc9b98b5eb964a5adda1d6b2772fc0fdd4cdfce7e4f01a2d43aeace0536048a1a62eb3d2aff3dac3c6a4df8c3b4646445c30b
+  checksum: 236af7eed03802bb17ef58f6415368ee63926ab03a46b644e4644db4ed34438edecda7c08d71da5d4e0e5ed6fdddc21c9a39b9bca618e26b1fc75ccafa512a48
   languageName: node
   linkType: hard
 
@@ -6630,7 +6630,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.45
+    "@teambit/legacy": 1.0.48
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -6770,6 +6770,7 @@ __metadata:
     eslint-plugin-react-hooks: 4.2.0
     eslint-plugin-simple-import-sort: 5.0.3
     eslint-plugin-unicorn: 12.1.0
+    eventemitter2: 6.4.4
     execa: 2.1.0
     express: 4.17.1
     express-graphql: 0.12.0
@@ -7002,7 +7003,7 @@ __metadata:
     yaml: 1.10.0
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.45
+    "@teambit/legacy": 1.0.48
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -16662,6 +16663,13 @@ __metadata:
   version: 4.3.0
   resolution: "event-pubsub@npm:4.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fevent-pubsub%2F-%2Fevent-pubsub-4.3.0.tgz"
   checksum: 55028bce1f5f312eb829a10f8360bff19c7c7cf1c2bd5d16df922362484383ed5255e9a8962e527356a31f8c75c3ba29188c358e26646628e97793c2f8e7e5c9
+  languageName: node
+  linkType: hard
+
+"eventemitter2@npm:6.4.4":
+  version: 6.4.4
+  resolution: "eventemitter2@npm:6.4.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Feventemitter2%2F-%2Feventemitter2-6.4.4.tgz"
+  checksum: 632e4e96be6d34c55855980dfe051d684ed9555d9ce800b824369a7f3a9ba9d792775bba45182f0280c5635eab96e8d7cbbcdd6a8f2f4c0d703304632391b9be
   languageName: node
   linkType: hard
 
@@ -33002,12 +33010,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"use-preview-server-464ffd@workspace:scopes/preview/cli/use-preview-server":
-  version: 0.0.0-use.local
-  resolution: "use-preview-server-464ffd@workspace:scopes/preview/cli/use-preview-server"
-  languageName: unknown
-  linkType: soft
-
 "use-query-625f84@workspace:scopes/ui-foundation/react-router/ui/use-query":
   version: 0.0.0-use.local
   resolution: "use-query-625f84@workspace:scopes/ui-foundation/react-router/ui/use-query"
@@ -33759,6 +33761,12 @@ typescript@^3.9.3:
   checksum: 6bf6803810e70f77c50b08b040aa2e8d8e844572e18ad57c624f0cda36cc316fb700a3f765401097c4088d922b41381a44760bd3ed1f196e84a97ba938513130
   languageName: node
   linkType: hard
+
+"webpack-events-listener-527d0b@workspace:scopes/preview/cli/webpack-events-listener":
+  version: 0.0.0-use.local
+  resolution: "webpack-events-listener-527d0b@workspace:scopes/preview/cli/webpack-events-listener"
+  languageName: unknown
+  linkType: soft
 
 "webpack-hot-middleware@npm:2.25.0":
   version: 2.25.0
