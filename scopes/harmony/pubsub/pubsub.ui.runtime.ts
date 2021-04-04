@@ -1,23 +1,65 @@
 import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
-
+import { EventEmitter2 } from 'eventemitter2';
 import { connectToChild } from 'penpal';
-
+import type { AsyncMethodReturns } from 'penpal/lib/types';
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
-
 import { createProvider } from './pubsub-context';
+import { Callback } from './types';
 
+type PubOptions = {
+  /** forward the event to adjacent windows (including the preview iframe)  */
+  propagate?: boolean;
+};
+
+type ChildMethods = {
+  pub: (topic: string, event: BitBaseEvent<any>) => any;
+};
 export class PubsubUI {
-  private topicMap = {};
+  private childApi?: AsyncMethodReturns<ChildMethods>;
+  private events = new EventEmitter2();
+
+  /**
+   * subscribe to events
+   */
+  public sub = (topic: string, callback: Callback) => {
+    const events = this.events;
+    events.on(topic, callback);
+
+    const unSub = () => {
+      events.off(topic, callback);
+    };
+
+    return unSub;
+  };
+
+  /**
+   * publish event to all subscribers, including nested iframes.
+   */
+  public pub = (topic: string, event: BitBaseEvent<any>, { propagate }: PubOptions = {}) => {
+    this.emitEvent(topic, event);
+
+    // opt-in to forward to iframe, as we would not want 'private' messages automatically passing to iframe
+    if (propagate) {
+      this.pubToChild(topic, event);
+    }
+  };
 
   private connectToIframe = (iframe: HTMLIFrameElement) => {
-    const connection = connectToChild({
+    const connection = connectToChild<ChildMethods>({
       iframe,
-      methods: this.pubsubMethods,
+      methods: {
+        pub: this.emitEvent,
+      },
     });
 
     // absorb valid errors like 'connection destroyed'
-    connection.promise.catch(() => {});
+    connection.promise
+      .then((childConnection) => (this.childApi = childConnection))
+      .catch(() => {
+        // eslint-disable-next-line no-console
+        console.error('[Pubsub.ui]', 'failed connecting to child iframe');
+      });
 
     const destroy = () => {
       connection && connection.destroy();
@@ -25,23 +67,18 @@ export class PubsubUI {
     return destroy;
   };
 
-  private createOrGetTopic = (topicUUID) => {
-    this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
+  /**
+   * publish event to all subscribers in this window
+   */
+  private emitEvent = (topic: string, event: BitBaseEvent<any>) => {
+    this.events.emit(topic, event);
   };
 
-  public sub = (topicUUID, callback) => {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].push(callback);
-  };
-
-  public pub = (topicUUID, event: BitBaseEvent<any>) => {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].forEach((callback) => callback(event));
-  };
-
-  private pubsubMethods = {
-    sub: this.sub,
-    pub: this.pub,
+  /**
+   * publish event to nested iframes
+   */
+  private pubToChild = (topic: string, event: BitBaseEvent<any>) => {
+    return this.childApi?.pub(topic, event);
   };
 
   static runtime = UIRuntime;
