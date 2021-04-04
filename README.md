@@ -33,9 +33,9 @@
 
 - [Conference talks](https://harmony-docs.bit.dev/resources/interviews)
 - [Interviews](https://harmony-docs.bit.dev/resources/interviews)
-- [Podcasts](https://harmony-docs.bit.dev/resources/community)
-- [Live streams](https://harmony-docs.bit.dev/resources/community)
-- [Articles](https://harmony-docs.bit.dev/resources/community)
+- [Podcasts](https://harmony-docs.bit.dev/resources/podcasts)
+- [Live streams](https://harmony-docs.bit.dev/resources/live-streams)
+- [Articles](https://harmony-docs.bit.dev/resources/articles)
 - [Community](https://harmony-docs.bit.dev/resources/community)
 
 ## Radical Dogfooding
