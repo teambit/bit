@@ -197,6 +197,7 @@
           "preserve": true
         },
         "eslint-import-resolver-node": "0.3.4",
+        "eventemitter2": "6.4.4",
         "express": "4.17.1",
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
