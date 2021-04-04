@@ -38,6 +38,7 @@ export class NodeMain {
   overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
 
   /**
+   * @deprecated - please use extend for all config overrides
    * override the jest config of the environment.
    */
   overrideJestConfig = this.react.overrideJestConfig.bind(this.react);
@@ -48,6 +49,7 @@ export class NodeMain {
   overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
 
   /**
+   * @deprecated - please use extend for all config overrides
    * override the build ts config.
    */
   overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
