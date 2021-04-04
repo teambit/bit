@@ -42,13 +42,15 @@
 
 ## What is Bit?
 
-Bit allows us to compose apps and codebases from components. We use this approach to build using service-oriented architecture, where **components are services**. This simplifies our codebase, as it promotes composability and modularity.
+Bit is an open-source tool that helps you develop modern applications in a modular way, through components that are independently developed, built, tested, versioned, and integrated into different projects. Through the [Bit Cloud](https://bit.dev/) teamwork can scale to many teams collaborating on many components to compose many applications together.
+
+We use this approach to build using service-oriented architecture, where **components are services**. This simplifies our codebase, as it promotes composability and modularity.
 
 <div style={{textAlign: 'center'}}>
     <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-virtual-component-monorepo.png" width="200" alt="Bit in a Nutshell" />
 </div>
 
-We sort components in **Scopes** where each Scope "implements" a cross-cutting concern of different business aspects of an end product(s). Each component in a Scope is essentially a service for other developers to use when composing their app.
+Bit lets us sort components in **Scopes**, where each Scope "implements" a set of components that handle a feature or a business functionality. Each component in a Scope is essentially a service for other developers to use when composing their app.
 
 Scopes allow us to achieve feature ownership as each Scope's components can implement different tools, libraries, SDKs, and UI relevant to that specific business concern/feature.
 
