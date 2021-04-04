@@ -40,7 +40,7 @@
 
 ## Radical Dogfooding
 
-Bit is 100% built with Bit! Every feature in Bit, from the Bit Version Manager to the workspace UI and even supporting MDX, are different scopes of components developed with Bit.  
+Bit is 100% built with Bit! Every feature in Bit, from the [Bit Version Manager](https://bit.dev/teambit/bvm) to the workspace UI and even [supporting MDX](https://bit.dev/teambit/mdx), are just scopes of components developed with Bit.  
 
 Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on the Bit cloud platform.  
 
