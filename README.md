@@ -48,16 +48,16 @@ With Bit we sort components in **Scopes**, where each Scope "implements" a set o
 
 ## Why Bit?
  
-* We need a new way of working with software that focuses on simplicity, productivity, and composability.
-* We need a first-class development experience for discovering, navigating, and refactoring an organization's codebase.
-* We want feature ownership across the orgnaization.
-* We want to ensure different product teams remain independent while depending on other team's code.
-* We want to compose apps and services from ready-made components and share components as services for other teams to compose with.
-* We want to build scalable products and improve collaboration between different teams in a consistent, repeatable, and non-intrusive manner.
-* We don't want code duplications.
-* We want to easily build systems of any size.
+* A new way of working with software that focuses on simplicity, productivity, and composability.
+* A first-class development experience for discovering, navigating, and refactoring an organization's codebase.
+* Feature ownership across the orgnaization.
+* Ensure different product teams remain independent while depending on other team's code.
+* Compose apps and services from ready-made components and share components as services for other teams to compose with.
+* Build scalable products and improve collaboration between different teams in a consistent, repeatable, and non-intrusive manner.
+* Reduce code duplications.
+* Easily build systems of any size.
 
-**We want to develop in harmony.**
+**Develop in harmony.**
 
 ## Benefits of Using Bit
 
