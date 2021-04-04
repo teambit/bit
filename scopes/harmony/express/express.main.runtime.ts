@@ -91,11 +91,11 @@ export class ExpressMain {
     });
     if (!options?.disableBodyParser) this.bodyParser(app);
 
-    this.middlewareSlot.toArray().flatMap(([, middlewares]) =>
-      middlewares.flatMap((middlewareManifest) => {
-        app.use(middlewareManifest.middleware);
-      })
-    );
+    this.middlewareSlot
+      .toArray()
+      .flatMap(([, middlewares]) =>
+        middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
+      );
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
