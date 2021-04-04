@@ -32,7 +32,9 @@ export class PubsubPreview {
 
   public pub(topic: string, event: BitBaseEvent<any>) {
     this.events.emit(topic, event);
-    this._parentPubsub?.pub(topic, event).catch(() => {});
+    this._parentPubsub?.pub(topic, event).catch((err) => {
+      console.error('[Pubsub.preview]', err);
+    });
   }
 
   private inIframe() {
@@ -44,7 +46,7 @@ export class PubsubPreview {
   }
 
   private connectToParentPubSub = (retries = 10): Promise<ParentMethods | undefined> => {
-    if (retries <= 0) throw new Error('Pubsub.preview: could not connect to parent window');
+    if (retries <= 0) throw new Error('could not connect to parent window');
 
     return connectToParent<ParentMethods>({
       timeout: 300,
@@ -70,7 +72,10 @@ export class PubsubPreview {
     const pubsubPreview = new PubsubPreview();
 
     if (pubsubPreview.inIframe()) {
-      pubsubPreview.connectToParentPubSub().catch(() => {});
+      pubsubPreview.connectToParentPubSub().catch((err) => {
+        // eslint-disable-next-line no-console
+        console.error('[Pubsub.preview]', err);
+      });
     }
 
     return pubsubPreview;
