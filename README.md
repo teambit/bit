@@ -1,7 +1,7 @@
 
 # Bit
 
-Bit is a platform for building with components and use them to compose apps and systems. Building with Bit gives a host of benefits for codebase's modularity, composability, testability, and scalability.
+Bit is a platform for building with components and using them to compose apps and systems. Building with Bit gives a host of benefits for codebase's modularity, composability, testability, and scalability.
 
 [![Bit](https://storage.googleapis.com/static.bit.dev/harmony-docs/homepage-components-micro-frontends.png)](https://bit.dev/)
 
