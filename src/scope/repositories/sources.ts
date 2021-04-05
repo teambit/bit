@@ -2,7 +2,7 @@ import R from 'ramda';
 import pMap from 'p-map';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
+import { BuildStatus, COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -51,13 +51,13 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  async getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+  async getMany(ids: BitId[] | BitIds, versionShouldBeBuilt = false): Promise<ComponentDef[]> {
     if (!ids.length) return [];
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return pMap(
       ids,
       async (id) => {
-        const component = await this.get(id);
+        const component = await this.get(id, versionShouldBeBuilt);
         return {
           id,
           component,
@@ -67,38 +67,60 @@ export default class SourceRepository {
     );
   }
 
-  async get(bitId: BitId): Promise<ModelComponent | undefined> {
-    const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
-    if (foundComponent && bitId.hasVersion()) {
-      // @ts-ignore
-      const isSnap = isHash(bitId.version);
-      const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (isSnap) {
-        // @ts-ignore
-        const snap = await this.objects().load(new Ref(bitId.version));
-        if (!snap) {
-          logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-          return undefined;
-        }
-        return foundComponent;
-      }
-      // @ts-ignore
-      if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
-        logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
+  /**
+   * get component (local or external) from the scope.
+   * if the id has a version but the Version object doesn't exist, it returns undefined.
+   *
+   * if versionShouldBeBuilt is true, it also verified that not only the version exists but it also
+   * built successfully. otherwise, if the build failed or pending, the server may have a newer
+   * version of this Version object, so we return undefined, to signal the importer that it needs
+   * to be fetched from the remote again.
+   */
+  async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
+    const emptyComponent = ModelComponent.fromBitId(bitId);
+    const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
+    if (!component) return undefined;
+    if (!bitId.hasVersion()) return component;
+
+    const returnComponent = (version: Version): ModelComponent | undefined => {
+      if (
+        versionShouldBeBuilt &&
+        !bitId.isLocal(this.scope.name) &&
+        !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
+        (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
+      ) {
         return undefined;
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const versionHash = foundComponent.versionsIncludeOrphaned[bitId.version];
-      const version = await this.objects().load(versionHash);
-      if (!version) {
+      return component;
+    };
+
+    // @ts-ignore
+    const isSnap = isHash(bitId.version);
+    const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    if (isSnap) {
+      // @ts-ignore
+      const snap = await this.objects().load(new Ref(bitId.version));
+      if (!snap) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return undefined;
       }
+      return returnComponent(snap as Version);
+    }
+    // @ts-ignore
+    if (!component.hasTagIncludeOrphaned(bitId.version)) {
+      logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
+      return undefined;
+    }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const versionHash = component.versionsIncludeOrphaned[bitId.version];
+    const version = await this.objects().load(versionHash);
+    if (!version) {
+      logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+      return undefined;
     }
 
-    return foundComponent;
+    return returnComponent(version as Version);
   }
 
   async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
@@ -478,33 +500,15 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * @see this.removeComponent()
-   *
+   * get hashes needed for removing a component from a local scope.
    */
-  async removeComponentById(bitId: BitId): Promise<void> {
-    logger.debug(`sources.removeComponentById: ${bitId.toString()}`);
+  async getRefsForComponentRemoval(bitId: BitId, includeVersions = true): Promise<Ref[]> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}, includeVersions: ${includeVersions}`);
     const component = await this.get(bitId);
-    if (!component) return;
-    this.removeComponent(component);
-  }
-
-  /**
-   * remove all versions objects of the component from local scope.
-   * if deepRemove is true, it removes also the refs associated with the removed versions.
-   * finally, it removes the component object itself
-   * it doesn't physically delete from the filesystem.
-   * the actual delete is done at a later phase, once Repository.persist() is called.
-   *
-   * @param {ModelComponent} component
-   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
-   */
-  removeComponent(component: ModelComponent): void {
-    const repo = this.objects();
-    logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
-    const objectRefs = component.versionArray;
-    objectRefs.push(component.hash());
-    repo.removeManyObjects(objectRefs);
-    repo.unmergedComponents.removeComponent(component.name);
+    if (!component) return [];
+    const objectRefs = [component.hash()];
+    if (includeVersions) objectRefs.push(...component.versionArray);
+    return objectRefs;
   }
 
   /**
@@ -527,11 +531,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    */
   async merge(
     incomingComp: ModelComponent,
-    versionObjects: Version[],
-    remoteName: string | undefined, // not available on export (isImport = false)
-    isImport = true
+    versionObjects: Version[]
   ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
-    const isExport = !isImport;
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -541,36 +542,55 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
     if (!existingComp) {
-      if (isExport) this.throwForMissingVersions(allVersionsInfo, incomingComp);
+      this.throwForMissingVersions(allVersionsInfo, incomingComp);
       this.putModelComponent(incomingComp);
       return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
     const hashesOfHistoryGraph = allVersionsInfo
       .map((v) => (v.isPartOfHistory ? v.ref : null))
       .filter((ref) => ref) as Ref[];
-    const existingComponentHead = existingComp.getHead();
+    const existingComponentHead = existingComp.getHead()?.clone();
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
-    const existingComponentHashes = await getAllVersionHashes(existingComp, this.objects(), false);
-    const existingTagsAndSnaps = existingComp.switchHashesWithTagsIfExist(existingComponentHashes);
-    // for export, currently it'll always be true. later, we might want to support exporting
+    // currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
-    const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
+    const isIncomingFromOrigin = incomingComp.scope === this.scope.name;
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,
-      existingTagsAndSnaps,
-      incomingTagsAndSnaps,
-      isImport,
+      false,
       isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
+    if (existingComponentHead) {
+      const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
+      mergedVersions.push(...mergedSnaps);
+    }
+
     this.putModelComponent(mergedComponent);
     return { mergedComponent, mergedVersions };
+  }
+
+  private async getMergedSnaps(
+    existingHead: Ref,
+    incomingComp: ModelComponent,
+    versionObjects: Version[]
+  ): Promise<string[]> {
+    const allIncomingVersionsInfoUntilExistingHead = await getAllVersionsInfo({
+      modelComponent: incomingComp,
+      throws: false,
+      versionObjects,
+      stopAt: existingHead,
+    });
+    const hashesOnly = allIncomingVersionsInfoUntilExistingHead
+      .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion
+      .map((v) => v.ref)
+      .filter((ref) => ref) as Ref[];
+    return hashesOnly.map((hash) => hash.toString());
   }
 
   private throwForMissingVersions(allVersionsInfo: VersionInfo[], component: ModelComponent) {

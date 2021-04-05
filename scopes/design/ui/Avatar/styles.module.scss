@@ -8,11 +8,9 @@
   text-align: center;
   text-transform: uppercase;
   font-weight: bold;
+  border: 1px solid var(--border-color);
 
   .tooltip {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     max-width: 13ch;
   }
 

@@ -125,7 +125,7 @@ export default class EjectComponents {
     const hubExportedComponents = new BitIds();
     this.componentsIds.forEach((bitId) => {
       if (!bitId.hasScope()) this.failedComponents.notExportedComponents.push(bitId);
-      else if (remotes.isHub(bitId.scope)) hubExportedComponents.push(bitId);
+      else if (remotes.isHub(bitId.scope as string)) hubExportedComponents.push(bitId);
       else this.failedComponents.selfHostedExportedComponents.push(bitId);
     });
     if (this.force) {

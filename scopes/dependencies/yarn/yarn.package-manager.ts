@@ -69,16 +69,15 @@ export class YarnPackageManager implements PackageManager {
     const config = await this.computeConfiguration(rootDirPath, cacheDir);
 
     const project = new Project(rootDirPath, { configuration: config });
+
+    const rootManifest = workspaceManifest.toJson({
+      includeDir: true,
+      copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
+    }).manifest;
+
     // @ts-ignore
     project.setupResolutions();
-    const rootWs = await this.createWorkspace(
-      rootDir,
-      project,
-      workspaceManifest.toJson({
-        includeDir: true,
-        copyPeerToRuntime: installOptions.copyPeerToRuntimeOnRoot,
-      }).manifest
-    );
+    const rootWs = await this.createWorkspace(rootDir, project, rootManifest);
 
     // const manifests = Array.from(workspaceManifest.componentsManifestsMap.entries());
     const manifests = this.computeComponents(
@@ -86,6 +85,9 @@ export class YarnPackageManager implements PackageManager {
       componentDirectoryMap,
       installOptions.copyPeerToRuntimeOnComponents
     );
+
+    this.logger.debug('root manifest for installation', rootManifest);
+    this.logger.debug('components manifests for installation', manifests);
 
     const workspacesP = Object.keys(manifests).map(async (path) => {
       const manifest = manifests[path];
@@ -260,19 +262,27 @@ export class YarnPackageManager implements PackageManager {
 
     const data = {
       nodeLinker: 'node-modules',
-      installStatePath: resolve(`${rootDirPath}/.yarn/install-state.gz`),
+      installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder,
-      pnpDataPath: resolve(`${rootDirPath}/.pnp.meta.json`),
-      bstatePath: resolve(`${rootDirPath}/.yarn/build-state.yml`),
+      pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
+      bstatePath: `${rootDirPath}/.yarn/build-state.yml`,
       npmScopes: scopedRegistries,
       virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
       httpProxy: proxyConfig?.httpProxy,
       httpsProxy: proxyConfig?.httpsProxy,
+      enableStrictSsl: proxyConfig.strictSSL,
       // enableInlineBuilds: true,
       globalFolder: `${userHome}/.yarn/global`,
+
+      // TODO: check about support for the following: (see more here - https://github.com/yarnpkg/berry/issues/1434#issuecomment-801449010)
+      // ca?: string;
+      // cert?: string;
+      // key?: string;
+      // noProxy?: boolean | string;
     };
+
     if (defaultAuthProp) {
       data[defaultAuthProp.keyName] = defaultAuthProp.value;
     }

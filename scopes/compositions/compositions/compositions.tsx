@@ -1,3 +1,6 @@
+import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
+import head from 'lodash.head';
+import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
@@ -5,18 +8,25 @@ import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
-import { Collapser } from '@teambit/ui.side-bar';
+import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
-import head from 'lodash.head';
-import React, { useContext, useEffect, useState, useRef } from 'react';
+import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
+import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
+import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
 import { CompositionsPanel } from './ui/compositions-panel/compositions-panel';
+import type { CompositionsMenuSlot } from './compositions.ui.runtime';
 
-export function Compositions() {
+export type MenuBarWidget = {
+  location: 'start' | 'end';
+  content: ReactNode;
+};
+
+export function Compositions({ menuBarWidgets }: { menuBarWidgets?: CompositionsMenuSlot }) {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(selected);
@@ -32,68 +42,85 @@ export function Compositions() {
 
     selectComposition(next);
   }, [component]);
+  const isMobile = useIsMobile();
+  const showSidebar = !isMobile && component.compositions.length > 0;
+  const [isSidebarOpen, setSidebarOpenness] = useState(showSidebar);
 
-  const [isSidebarOpen, setSidebarOpenness] = useState(component.compositions.length > 0);
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
-  // collapse sidebar when empty, reopen when not
-  useEffect(() => setSidebarOpenness(component.compositions.length > 0), [component.compositions.length]);
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
 
+  const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
+  const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
+
+  // collapse sidebar when empty, reopen when not
+  useEffect(() => setSidebarOpenness(showSidebar), [showSidebar]);
+
   return (
-    <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
-      <Pane className={styles.left}>
-        <CompositionContent component={component} selected={selected} />
-      </Pane>
-      <HoverSplitter className={styles.splitter}>
-        <Collapser
-          placement="left"
-          isOpen={isSidebarOpen}
-          onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
-          onClick={() => setSidebarOpenness((x) => !x)}
-          tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
-          className={styles.collapser}
-        />
-      </HoverSplitter>
-      <Pane className={styles.right}>
-        <ThemeContext>
-          <TabContainer className={styles.tabsContainer}>
-            <TabList className={styles.tabs}>
-              <Tab>compositions</Tab>
-              <Tab>properties</Tab>
-            </TabList>
-            <TabPanel className={styles.tabContent}>
-              <CompositionsPanel
-                onSelectComposition={selectComposition}
-                url={compositionUrl}
-                compositions={component.compositions}
-                active={selected}
-                className={styles.compost}
-              />
-            </TabPanel>
-            <TabPanel className={styles.tabContent}>
-              {properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />}
-            </TabPanel>
-          </TabContainer>
-        </ThemeContext>
-      </Pane>
-    </SplitPane>
+    <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
+      <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
+        <Pane className={styles.left}>
+          <CompositionsMenuBar menuBarWidgets={menuBarWidgets} />
+          <CompositionContent component={component} selected={selected} queryParams={queryParams} />
+        </Pane>
+        <HoverSplitter className={styles.splitter}>
+          <Collapser
+            placement="left"
+            isOpen={isSidebarOpen}
+            onMouseDown={(e) => e.stopPropagation()} // avoid split-pane drag
+            onClick={() => setSidebarOpenness((x) => !x)}
+            tooltipContent={`${isSidebarOpen ? 'Hide' : 'Show'} side compositions`}
+            className={styles.collapser}
+          />
+        </HoverSplitter>
+        <Pane className={styles.right}>
+          <ThemeContext>
+            <TabContainer className={styles.tabsContainer}>
+              <TabList className={styles.tabs}>
+                <Tab>compositions</Tab>
+                <Tab>properties</Tab>
+              </TabList>
+              <TabPanel className={styles.tabContent}>
+                <CompositionsPanel
+                  onSelectComposition={selectComposition}
+                  url={compositionUrl}
+                  compositions={component.compositions}
+                  active={selected}
+                  className={styles.compost}
+                />
+              </TabPanel>
+              <TabPanel className={styles.tabContent}>
+                {properties && properties.length > 0 ? <PropTable rows={properties} showListView /> : <div />}
+              </TabPanel>
+            </TabContainer>
+          </ThemeContext>
+        </Pane>
+      </SplitPane>
+    </CompositionContextProvider>
   );
 }
 
 type CompositionContentProps = {
   component: ComponentModel;
   selected?: Composition;
+  queryParams?: string | string[];
 };
 
-function CompositionContent({ component, selected }: CompositionContentProps) {
+function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
   if (component.compositions.length === 0)
     return (
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
-        link="https://bit-new-docs.netlify.app/docs/compositions/develop-in-isolation"
+        link="https://harmony-docs.bit.dev/compositions/overview/"
       />
     );
-  return <ComponentComposition component={component} composition={selected}></ComponentComposition>;
+  return (
+    <ComponentComposition
+      className={styles.compositionsIframe}
+      component={component}
+      composition={selected}
+      queryParams={queryParams}
+    />
+  );
 }

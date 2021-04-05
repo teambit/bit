@@ -9,6 +9,7 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
+  DEFAULT_LANE,
   DEFAULT_LANGUAGE,
   TESTER_ENV_TYPE,
 } from '../../constants';
@@ -87,12 +88,20 @@ export default class Component extends BitObject {
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
+  /**
+   * @deprecated since 0.12.6 (long long ago :) probably can be removed)
+   */
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
-  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the local snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * prop is undefined.
+   */
+  laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   private divergeData?: DivergeData;
 
@@ -235,6 +244,8 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
+      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
 
@@ -386,14 +397,15 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versionsIncludeOrphaned).find((versionRef) =>
-      this.versionsIncludeOrphaned[versionRef].isEqual(ref)
-    );
+  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
+    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
+    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
+    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
+    const allTags = this.versionsIncludeOrphaned;
+    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
   }
 
   /**
@@ -789,15 +801,17 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return localVersions.includes(tag);
   }
 
+  hasLocalVersion(version: string): boolean {
+    const localVersions = this.getLocalTagsOrHashes();
+    return localVersions.includes(version);
+  }
+
   getLocalTagsOrHashes(): string[] {
     const localVersions = this.getLocalVersions();
     if (!this.divergeData) return localVersions;
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
-    // @todo: this doesn't make sense when creating a new lane locally.
-    // the laneHeadRemote is not set. it needs to be compare to the head
-    if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
@@ -813,6 +827,8 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
+    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;
   }

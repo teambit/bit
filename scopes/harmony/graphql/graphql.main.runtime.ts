@@ -84,8 +84,8 @@ export class GraphqlMain {
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    // @ts-ignore todo: it's not clear what's the issue.
     app.use(
+      // @ts-ignore todo: it's not clear what's the issue.
       cors({
         origin(origin, callback) {
           callback(null, true);
@@ -101,9 +101,10 @@ export class GraphqlMain {
           this.logger.error('graphql got an error during running the following query:', params);
           this.logger.error('graphql error ', err);
           return Object.assign(err, {
-            ERR_CODE: err.originalError?.constructor?.name,
             // @ts-ignore
-            HTTP_CODE: err.originalError?.code,
+            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+            // @ts-ignore
+            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
           });
         },
         schema,

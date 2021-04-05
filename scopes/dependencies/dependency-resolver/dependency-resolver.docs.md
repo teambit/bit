@@ -1,4 +1,7 @@
 ---
+id: dependency-resolver
+title: Dependency Resolver
+slug: /aspects/dependency-resolver
 description: Simplifies the dependency management of components in a Bit workspace.
 labels: ['core aspect', 'dependencies']
 ---
@@ -17,7 +20,7 @@ In addition to that, the Dependency Resolver offers an efficient API to manually
 - **An efficient dependency configuration API:**
   The Dependency Resolver strikes the right balance between automation and customization by offering a simple and efficient configuration API.
   Use it in the workspace configuration file to manually modify the version and dependency type of dependencies in the generated dependency graph.
-  When used in combination with [`@teambit.workspace/variant`](https://bit.dev/teambit/workspace/variants) it allows to define, in a cascading (CSS-like) way,
+  When used in combination with `@teambit.workspace/variant` it allows to define, in a cascading (CSS-like) way,
   different dependency policies for different sets of components, and even to add or remove dependencies, altogether.
 
 - **Optimized dependency installation:**
@@ -32,7 +35,7 @@ In addition to that, the Dependency Resolver offers an efficient API to manually
 
 - **Programmatic API for extensions and environments**
   The Dependency Resolver provides other extensions and environments with an API that allows them to register their own dependency policies.
-  For example, the [React environment](https://bit.dev/teambit/react/react) uses the Dependency Resolver to set 'react-dom' as a peerDependency for all components using it.
+  For example, the 'React environment' uses the Dependency Resolver to set 'react-dom' as a peerDependency for all components using it.
 
 ## Quickstart & configuration
 
@@ -66,14 +69,13 @@ The hierarchy in a descending order:
 3. Policies set by the environment (using `getDependencies`)
 4. Bit’s automated dependency detections, and policies set by the Dependency Resolver at the workspace configuration root-level.
 
-> Learn more about how the Variants aspect selects and merges policies that were set using it, [here](https://bit.dev/teambit/workspace/variants)
 
 > Use the `bit dependencies <component-id>` command to understand the calculations and interactions that resolved in the generated dependency graph of a specific component.
 
 ### Select a package manager
 
 The Dependency resolver does not replace package managers - it uses them and directs them.
-To choose between '[Yarn](https://bit.dev/teambit/dependencies/yarn)' and '[pnpm](https://bit.dev/teambit/dependencies/pnpm)', set the `packageManager` property to either of the two:
+To choose between 'Yarn' and 'pnpm', set the `packageManager` property to either of the two:
 
 - `teambit.dependencies/yarn`
 - `teambit.dependencies/pnpm`
@@ -133,11 +135,9 @@ For example, to set version `1.0.0` of `classnames` as a dependency of all compo
 }
 ```
 
-> To learn how to select components using `@teambit.workspace/variants`, [see here](https://bit.dev/teambit/workspace/variants).
-
 ### Remove a dependency
 
-Dependency policies can also be used to remove a dependency. That's especially useful when a dependency is not defined with the correct dependency type.  
+Dependency policies can also be used to remove a dependency. That's especially useful when a dependency is not defined with the correct dependency type.
 For example, a module can be "moved" from `dependencies` to `peerDependencies` by removing it from `dependencies` and listing it under `peerDependencies`.
 
 ```json
@@ -229,8 +229,6 @@ Set the `devFilePatterns` property to add your own list of file extensions to be
 }
 ```
 
-To learn more about the Dev File aspect, [see here](https://bit.dev/teambit/component/dev-files).
-
 ##### Configure specific dependencies as devDependencies
 
 > Dependencies can be _directly_ configured as `devDependencies` only by using the `variants` config API.
@@ -275,7 +273,6 @@ To set a package as a peer dependency, place it under the `peerDependencies` ent
 > Peer dependencies are usually used in the context of a single "hosting code". That could be an application or a single component library.
 > Bit may generate multiple "hosts", one for each environment being used, to run components of different types.
 > That could translate into multiple versions of the same peer dependency, one for each environment.
-> To manage multiple versions of a peer dependency [see here](/docs/faq/multiple-peer-dep-versions).
 
 ## Enforce the installation of a specific package version
 
@@ -322,17 +319,17 @@ The package manager can be configured to use a proxy for outgoing network reques
 To get the value for 'proxy'/'https-proxy':
 
 ```shell
-$ bit config get proxy
+bit config get proxy
 
-$ bit config get https-proxy
+bit config get https-proxy
 ```
 
 To set a new 'proxy'/'https-proxy' value:
 
 ```shell
-$ bit config set proxy http://domain-one.proxy.com:8080
+bit config set proxy http://domain-one.proxy.com:8080
 
-$ bit config set https-proxy http://domain-one.proxy.com:8080
+bit config set https-proxy http://domain-one.proxy.com:8080
 ```
 
 Read about setting a proxy in NPM's global configuration [here](https://docs.npmjs.com/cli/v6/using-npm/config#https-proxy)
@@ -353,25 +350,25 @@ Read about setting a proxy in NPM's global configuration [here](https://docs.npm
 ##### Install all dependencies listed in the Dependency Resolver configuration:
 
 ```shell
-$ bit install
+bit install
 ```
 
 ##### Install the latest version of a package:
 
 ```shell
-$ bit install <package>
+bit install <package>
 
 // For example
-$ bit install lodash
+bit install lodash
 ```
 
 ##### Install a specific version of a package:
 
 ```shell
-$ bit install <package>@<version>
+bit install <package>@<version>
 
 // For example
-$ bit install lodash@1.0.0
+bit install lodash@1.0.0
 ```
 
 ##### Install packages that are already listed in the Dependency Resolver policies
@@ -381,9 +378,9 @@ When trying to install a specific package that is already listed in the Dependen
 To override it:
 
 ```shell
-$ bit install <package> --update-existing
+bit install <package> --update-existing
 
-$ bit install <package> -u
+bit install <package> -u
 ```
 
 ##### Install packages without importing components
@@ -392,5 +389,5 @@ The 'install' process includes importing components listed in the `.bitmap` file
 To disable importing and install all packages and components as standard packages use:
 
 ```shell
-$ bit install --skip-import
+bit install --skip-import
 ```

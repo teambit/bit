@@ -1,5 +1,5 @@
 import { Configuration } from 'webpack';
-import { merge } from 'lodash';
+import { mergeDeepLeft } from 'ramda';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -19,6 +19,7 @@ import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { MDXAspect, MDXMain } from '@teambit/mdx';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
@@ -29,6 +30,7 @@ import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { componentTemplates } from './react.templates';
 
 type ReactDeps = [
   EnvsMain,
@@ -42,7 +44,8 @@ type ReactDeps = [
   TesterMain,
   ESLintMain,
   MultiCompilerMain,
-  MDXMain
+  MDXMain,
+  GeneratorMain
 ];
 
 export type ReactMainConfig = {
@@ -178,7 +181,10 @@ export class ReactMain {
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
+      getDependencies: async () => {
+        const reactDeps = await this.reactEnv.getDependencies();
+        return mergeDeepLeft(dependencyPolicy, reactDeps);
+      },
     });
   }
 
@@ -253,6 +259,7 @@ export class ReactMain {
     ESLintAspect,
     MultiCompilerAspect,
     MDXAspect,
+    GeneratorAspect,
   ];
 
   static async provider(
@@ -269,6 +276,7 @@ export class ReactMain {
       eslint,
       multiCompiler,
       mdx,
+      generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
@@ -288,6 +296,7 @@ export class ReactMain {
     const react = new ReactMain(reactEnv, envs);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
+    generator.registerComponentTemplate(componentTemplates);
     return react;
   }
 }

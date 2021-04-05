@@ -1,71 +1,78 @@
+
+# Bit
+
+Bit is a platform for building with components and use them to compose apps and systems. Building with Bit gives a host of benefits for codebase's modularity, composability, testability, and scalability.
+
+[![Bit](https://storage.googleapis.com/static.bit.dev/harmony-docs/homepage-components-micro-frontends.png)](https://bit.dev/)
+
  <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
  <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
  <a href="https://circleci.com/gh/teambit/bit/tree/master"><img alt="Circle Status" src="https://circleci.com/gh/teambit/bit/tree/master.svg?style=shield&circle-token=d9fc5b19b90fb7e0655d941a5d7f21b61174c4e7">
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
-<a href="https://join.slack.com/t/bit-dev-community/shared_invite/enQtNzM2NzQ3MTQzMTg3LWI2YmFmZjQwMTkxNmFmNTVkYzU2MGI2YjgwMmJlZDdkNWVhOGIzZDFlYjg4MGRmOTM4ODAxNTIxMTMwNWVhMzg" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
+<a href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w" ><img alt="Join Slack" src="https://img.shields.io/badge/Slack-Join%20Bit%20Slack-blueviolet"/></a>
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bitdev_&url=https://bit.dev&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-# Bit is the platform for collaborating on components 
+[Docs](https://harmony-docs.bit.dev/) • [Bit Cloud](https://bit.dev/) • [Slack](https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w) • [Twitter](https://twitter.com/bitdev_) • [YouTube](https://www.youtube.com/channel/UCuNkM3qIO79Q3-VrkcDiXfw) • [Blog](https://blog.bitsrc.io/tagged/bit) • [Resources](https://harmony-docs.bit.dev/resources/conference-talks/)
 
-![Bit Workflow](https://storage.googleapis.com/static.bit.dev/docs/images/quick_start.png)
 
-[Documentation](https://docs.bit.dev) • [Tutorials](https://docs.bit.dev/docs/tutorials/bit-react-tutorial) • [Quick start guide ](https://docs.bit.dev/docs/quick-start) • [Workflows](https://docs.bit.dev/docs/workflows/workflows) • [bit.dev components cloud](https://bit.dev) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) 
+## Getting Started
 
-## What is Bit? 🤔
+### Docs
 
-Bit is an [open-source](https://github.com/teambit/bit) cli tool for collaborating on isolated components across projects and repositories.  
-Use Bit to distribute discrete components from a design library or a project into a standalone reusable package and utilize it across applications.  
-You can set up your own server for components collaboration, or use the [bit.dev cloud](#bitdev-cloud-%EF%B8%8F) hosting for private and public components sharing.
+- [Getting started](https://harmony-docs.bit.dev/getting-started/installing-bit)
+- [What is Bit?](https://harmony-docs.bit.dev/essentials/what-is-bit)
+- [Thinking in Components](https://harmony-docs.bit.dev/component-architecture/thinking-in-components)
 
-## Why Bit? 🎖️
 
-Bit facilitates the process of collaborating on UI components. Team members can share, maintain, and synchronize isolated components from different projects.  
+### Resources & Community
 
-Bit allows teams to:
+- [Conference talks](https://harmony-docs.bit.dev/resources/interviews)
+- [Interviews](https://harmony-docs.bit.dev/resources/interviews)
+- [Podcasts](https://harmony-docs.bit.dev/resources/podcasts)
+- [Live streams](https://harmony-docs.bit.dev/resources/live-streams)
+- [Articles](https://harmony-docs.bit.dev/resources/articles)
+- [Community](https://harmony-docs.bit.dev/resources/community)
 
-- Increase code reusability
-- Increase design and development efficiency
-- Retain UI and UX consistency
-- Increase project's stability
 
-## Key Features 🔑
+## What is Bit?
 
-- Extract a component for sharing directly from an existing library or project.
-- Validate the component's independence by building and testing each component separately from the rest of the project.
-- Change the source code of shared components from any application that utilizes it.
-- Get published changes in components on top of local modifications.
-- Contribute back changes made to components directly from the consuming applications.
-- Automatically wrap each component as an npm package.
-- Distribute discrete components instead of a single massive package.
-- Automate component versioning according to changes in its dependencies.
-- Use with leading frameworks and tools: React, Vue, Angular, Mocha, Jest.  
-- Works alongside Git, NPM, and Yarn.
+Bit allows us to compose apps and codebases from components. We use this approach to build using service-oriented architecture, where components are services. This simplifies our codebase, as it promotes composability and modularity.
 
-Bit is working with Javascript and Javascript frameworks: 
+Use this approach to build using service-oriented architecture, where **components are services**. This simplifies our codebase, as it promotes composability and modularity.
 
-<img src="https://storage.googleapis.com/static.bit.dev/docs/images/js_logos.png">
+<div style={{textAlign: 'center'}}>
+    <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-virtual-component-monorepo.png" width="200" alt="Bit in a Nutshell" />
+</div>
 
-## Installation 🚪
+With Bit we sort components in **Scopes**, where each Scope "implements" a set of components that handle a feature or a business functionality. Each component in a Scope is essentially a service for other developers to use when composing their app.
 
-Using npm: 
+## Why Bit?
+ 
+* A new way of working with software that focuses on simplicity, productivity, and composability.
+* A first-class development experience for discovering, navigating, and refactoring an organization's codebase.
+* Feature ownership across the orgnaization.
+* Ensure different product teams remain independent while depending on other team's code.
+* Compose apps and services from ready-made components and share components as services for other teams to compose with.
+* Build scalable products and improve collaboration between different teams in a consistent, repeatable, and non-intrusive manner.
+* Reduce code duplications.
+* Easily build systems of any size.
 
-```bash
-npm install bit-bin --global
-```
+**Develop in harmony.**
 
-Using yarn: 
-```bash
-yarn global add bit-bin  
-```
+## Benefits of Using Bit
 
-Bit cli requires node 8.12 and above. Check other [installation](https://docs.bit.dev/docs/installation) methods.
+- Components simplify the design of our tools and services by giving us building blocks at the required level of abstraction.
+- Components maximize code reuse to the point of having zero code duplication across our entire codebase.
+- Composing apps and services with components removes the need for architecture layers in our codebase and allows for a much smoother dev-experience of working in a service-oriented codebase where each component is a service that can be composed with other components to solve concrete problems.
+- Bit's scopes implement feature ownership across the organization and host cross-cutting concern components that facilitate services.
+- Workspaces are flexible and can be used to maintain components from many scopes, making it easier to reuse and collaborate on available components.
+- Lanes helps distributed teams to communicate and collaborate on API changes by understanding the underline dependency graph of components and "bundling" together changes that affect many teams and should be synced.  
 
-## bit.dev cloud 🌩️
+## Large scale example for buildig with Bit
 
-Use [bit.dev](https://bit.dev) cloud hosting solution as a shared server and showcase for your components. 
-<p align="center">
- <a href="https://bit.dev"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
-</p>
+Bit is 100% built with Bit! Every feature in Bit, from the [Bit Version Manager](https://bit.dev/teambit/bvm) to the workspace UI and even [supporting MDX](https://bit.dev/teambit/mdx), are just scopes of components developed with Bit.  
+
+Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on the Bit cloud platform.  
 
 ## Contributing 🎗️
 

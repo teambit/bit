@@ -172,6 +172,9 @@ export default class CommandHelper {
   tagScope(version: string, message = 'tag-message', options = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
   }
+  tagScopeWithoutBuild(version = '', options = '') {
+    return this.runCmd(`bit tag -s ${version} ${options}`, undefined, undefined, BUILD_ON_CI);
+  }
   softTag(options = '') {
     return this.runCmd(`bit tag --soft ${options}`);
   }
@@ -196,6 +199,9 @@ export default class CommandHelper {
   }
   createLane(laneName = 'dev') {
     return this.runCmd(`bit switch ${laneName} --create`);
+  }
+  clearCache() {
+    return this.runCmd('bit clear-cache');
   }
   removeLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
@@ -471,8 +477,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(name: string) {
-    return this.runCmd(`bit create ${name}`);
+  create(templateName: string, componentName: string, flags = '') {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

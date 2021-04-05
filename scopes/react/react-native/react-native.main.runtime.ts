@@ -1,6 +1,7 @@
 import { Configuration } from 'webpack';
 import { merge as webpackMerge } from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { BuildTask } from '@teambit/builder';
@@ -9,6 +10,7 @@ import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
+import { reactNativeTemplate } from './templates/react-native-env';
 
 const webpackConfig = require('./webpack/webpack.config');
 
@@ -86,9 +88,9 @@ export class ReactNativeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactNativeEnv), transformers);
   }
 
-  static dependencies: Aspect[] = [ReactAspect, EnvsAspect];
+  static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect];
   static runtime = MainRuntime;
-  static async provider([react, envs]: [ReactMain, EnvsMain]) {
+  static async provider([react, envs, generator]: [ReactMain, EnvsMain, GeneratorMain]) {
     const reactNativeEnv = react.compose([
       react.overrideDevServerConfig(webpackConfig),
       react.overridePreviewConfig(webpackConfig),
@@ -96,6 +98,7 @@ export class ReactNativeMain {
       react.overrideDependencies(getReactNativeDeps()),
     ]);
     envs.registerEnv(reactNativeEnv);
+    generator.registerComponentTemplate([reactNativeTemplate]);
     return new ReactNativeMain(react, reactNativeEnv, envs);
   }
 }
@@ -113,17 +116,16 @@ function getReactNativeDeps() {
       react: '-',
       'react-dom': '-',
       'react-native': '-',
-      
-      '@types/react': { version: '^16.14.3', resolveFromEnv: true },
-      '@types/react-dom': { version: '^16.9.10', resolveFromEnv: true },
-      '@types/react-native': '^0.63.2',
-      '@types/jest': '~26.0.9',
+      '@types/jest': '26.0.20', // TODO - ~26.0.9
+      '@types/react': '^16.8.0',
+      '@types/react-dom': '^16.8.0',
+      '@types/react-native': '0.63.50',
     },
     peerDependencies: {
-      react: { version: '>=16.8.0 || <17.0.0', resolveFromEnv: true },
-      'react-dom': { version: '>=16.8.0 || <17.0.0', resolveFromEnv: true },
-      // TODO - ask the correct version from Josh 
-      'react-native-web': { version: '^0.14.0', resolveFromEnv: true },
+      react: '^16.8.0',
+      'react-dom': '^16.8.0',
+      'react-native': '0.63.4',
+      'react-native-web': '^0.14.0', // TODO - use react 0.14.8
     },
   };
 }

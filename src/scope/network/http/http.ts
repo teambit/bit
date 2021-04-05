@@ -1,7 +1,14 @@
 import { ClientError, gql, GraphQLClient } from 'graphql-request';
 import fetch, { Response } from 'node-fetch';
+import readLine from 'readline';
+import HttpAgent from 'agentkeepalive';
+
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { SocksProxyAgent } from 'socks-proxy-agent';
+import { HttpProxyAgent } from 'http-proxy-agent';
+import { getAgent, AgentOptions } from '@teambit/network.agent';
 import { Network } from '../network';
+import { getHarmonyVersion } from '../../../bootstrap';
 import { BitId, BitIds } from '../../../bit-id';
 import Component from '../../../consumer/component';
 import { ListScopeResult } from '../../../consumer/component/components-list';
@@ -10,21 +17,44 @@ import { LaneData } from '../../lanes/lanes';
 import { ComponentLog } from '../../models/model-component';
 import { ScopeDescriptor } from '../../scope';
 import globalFlags from '../../../cli/global-flags';
-import { getSync } from '../../../api/consumer/lib/global-config';
-import { CFG_HTTPS_PROXY, CFG_PROXY, CFG_USER_TOKEN_KEY } from '../../../constants';
+import { getSync, list } from '../../../api/consumer/lib/global-config';
+import {
+  CFG_HTTPS_PROXY,
+  CFG_PROXY,
+  CFG_USER_TOKEN_KEY,
+  CFG_PROXY_CA,
+  CFG_PROXY_CERT,
+  CFG_PROXY_KEY,
+  CFG_PROXY_NO_PROXY,
+  CFG_PROXY_STRICT_SSL,
+} from '../../../constants';
 import logger from '../../../logger/logger';
-import { ObjectList } from '../../objects/object-list';
+import { ObjectItemsStream, ObjectList } from '../../objects/object-list';
 import { FETCH_OPTIONS } from '../../../api/scope/lib/fetch';
 import { remoteErrorHandler } from '../remote-error-handler';
 import { PushOptions } from '../../../api/scope/lib/put';
 import { HttpInvalidJsonResponse } from '../exceptions/http-invalid-json-response';
 import RemovedObjects from '../../removed-components';
 import { GraphQLClientError } from '../exceptions/graphql-client-error';
+import loader from '../../../cli/loader';
+import { UnexpectedNetworkError } from '../exceptions';
 
 export enum Verb {
   WRITE = 'write',
   READ = 'read',
 }
+
+export type ProxyConfig = {
+  ca?: string;
+  cert?: string;
+  httpProxy?: string;
+  httpsProxy?: string;
+  key?: string;
+  noProxy?: boolean | string;
+  strictSSL?: boolean;
+};
+
+type Agent = HttpsProxyAgent | HttpAgent | HttpAgent.HttpsAgent | HttpProxyAgent | SocksProxyAgent | undefined;
 
 /**
  * fetched from HTTP Authorization header.
@@ -39,7 +69,9 @@ export class Http implements Network {
     private _token: string | undefined | null,
     private url: string,
     private scopeName: string,
-    private proxyAgent?: HttpsProxyAgent
+    private proxyConfig?: ProxyConfig,
+    private agent?: Agent,
+    private localScopeName?: string
   ) {}
 
   static getToken() {
@@ -50,9 +82,30 @@ export class Http implements Network {
     return token;
   }
 
-  static getProxyUrl() {
-    const proxyUrl = getSync(CFG_HTTPS_PROXY) || getSync(CFG_PROXY);
-    return proxyUrl;
+  static async getProxyConfig(checkProxyUriDefined = true): Promise<ProxyConfig> {
+    const obj = await list();
+    const httpProxy = obj[CFG_PROXY];
+    const httpsProxy = obj[CFG_HTTPS_PROXY] ?? obj[CFG_PROXY];
+
+    // If check is true, return the proxy config only case there is actual proxy server defined
+    if (checkProxyUriDefined && !httpProxy && !httpsProxy) {
+      return {};
+    }
+
+    return {
+      ca: obj[CFG_PROXY_CA],
+      cert: obj[CFG_PROXY_CERT],
+      httpProxy,
+      httpsProxy,
+      key: obj[CFG_PROXY_KEY],
+      noProxy: obj[CFG_PROXY_NO_PROXY],
+      strictSSL: obj[CFG_PROXY_STRICT_SSL],
+    };
+  }
+
+  static async getAgent(uri: string, agentOpts: AgentOptions): Promise<Agent> {
+    const agent = await getAgent(uri, agentOpts);
+    return agent;
   }
 
   get token() {
@@ -87,7 +140,7 @@ export class Http implements Network {
       lanes: idsAreLanes,
     });
     const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': 'write' });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -104,7 +157,7 @@ export class Http implements Network {
 
     const body = objectList.toTar();
     const headers = this.getHeaders({ 'push-options': JSON.stringify(pushOptions), 'x-verb': Verb.WRITE });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -115,6 +168,36 @@ export class Http implements Network {
     return ids;
   }
 
+  async pushToCentralHub(
+    objectList: ObjectList,
+    options: Record<string, any> = {}
+  ): Promise<{
+    successIds: string[];
+    failedScopes: string[];
+    exportId: string;
+    errors: { [scopeName: string]: string };
+  }> {
+    const route = 'api/put';
+    logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
+    const pack = objectList.toTar();
+    const res = await fetch(`${this.url}/${route}`, {
+      method: 'POST',
+      body: pack,
+      headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
+    });
+    logger.debug(
+      `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
+    );
+
+    const results = await this.readPutCentralStream(res.body);
+    if (!results.data) throw new Error(`HTTP results are missing "data" property`);
+    if (results.data.isError) {
+      throw new UnexpectedNetworkError(results.message);
+    }
+    await this.throwForNonOkStatus(res);
+    return results.data;
+  }
+
   async action<Options, Result>(name: string, options: Options): Promise<Result> {
     const route = 'api/scope/action';
     logger.debug(`Http.action, url: ${this.url}/${route}`);
@@ -123,7 +206,7 @@ export class Http implements Network {
       options,
     });
     const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.WRITE });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -134,7 +217,7 @@ export class Http implements Network {
     return results;
   }
 
-  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectList> {
+  async fetch(ids: string[], fetchOptions: FETCH_OPTIONS): Promise<ObjectItemsStream> {
     const route = 'api/scope/fetch';
     const scopeData = `scopeName: ${this.scopeName}, url: ${this.url}/${route}`;
     logger.debug(`Http.fetch, ${scopeData}`);
@@ -143,7 +226,7 @@ export class Http implements Network {
       fetchOptions,
     });
     const headers = this.getHeaders({ 'Content-Type': 'application/json', 'x-verb': Verb.READ });
-    const opts = this.addProxyAgentIfExist({
+    const opts = this.addAgentIfExist({
       method: 'post',
       body,
       headers,
@@ -151,8 +234,9 @@ export class Http implements Network {
     const res = await fetch(`${this.url}/${route}`, opts);
     logger.debug(`Http.fetch got a response, ${scopeData}, status ${res.status}, statusText ${res.statusText}`);
     await this.throwForNonOkStatus(res);
-    const objectList = await ObjectList.fromTar(res.body);
-    return objectList;
+    const objectListReadable = ObjectList.fromTarToObjectStream(res.body);
+
+    return objectListReadable;
   }
 
   private async getJsonResponse(res: Response) {
@@ -196,6 +280,30 @@ export class Http implements Network {
       // should not be here. it's just in case
       throw err;
     }
+  }
+
+  private async readPutCentralStream(body: NodeJS.ReadableStream): Promise<any> {
+    const readline = readLine.createInterface({
+      input: body,
+      crlfDelay: Infinity,
+    });
+
+    let results: Record<string, any> = {};
+    readline.on('line', (line) => {
+      const json = JSON.parse(line);
+      if (json.end) results = json;
+      loader.start(json.message);
+    });
+
+    return new Promise((resolve, reject) => {
+      readline.on('close', () => {
+        resolve(results);
+      });
+      readline.on('error', (err) => {
+        logger.error('readLine failed with error', err);
+        reject(new Error(`readline failed with error, ${err?.message}`));
+      });
+    });
   }
 
   async list(namespacesUsingWildcards?: string | undefined): Promise<ListScopeResult[]> {
@@ -329,21 +437,34 @@ export class Http implements Network {
 
   private getHeaders(headers: { [key: string]: string } = {}) {
     const authHeader = this.token ? getAuthHeader(this.token) : {};
-    return Object.assign(headers, authHeader);
+    const localScope = this.localScopeName ? { 'x-request-scope': this.localScopeName } : {};
+    return Object.assign(
+      headers,
+      authHeader,
+      localScope,
+      { connection: 'keep-alive' },
+      { 'x-client-version': this.getClientVersion() }
+    );
   }
 
-  private addProxyAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
-    const optsWithProxy = this.proxyAgent ? Object.assign({}, opts, { agent: this.proxyAgent }) : opts;
-    return optsWithProxy;
+  private getClientVersion(): string {
+    return getHarmonyVersion();
   }
 
-  static async connect(host: string, scopeName: string) {
+  private addAgentIfExist(opts: { [key: string]: any } = {}): Record<string, any> {
+    const optsWithAgent = this.agent ? Object.assign({}, opts, { agent: this.agent }) : opts;
+    return optsWithAgent;
+  }
+
+  static async connect(host: string, scopeName: string, localScopeName?: string) {
     const token = Http.getToken();
     const headers = token ? getAuthHeader(token) : {};
-    const proxyUrl = Http.getProxyUrl();
-    const proxyAgent = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
-    const graphClient = new GraphQLClient(`${host}/graphql`, { headers, fetch: getFetcherWithProxy() });
-    return new Http(graphClient, token, host, scopeName, proxyAgent);
+    const proxyConfig = await Http.getProxyConfig();
+    const agent = await Http.getAgent(host, proxyConfig);
+    const graphQlUrl = `${host}/graphql`;
+    const graphQlFetcher = await getFetcherWithAgent(graphQlUrl);
+    const graphClient = new GraphQLClient(graphQlUrl, { headers, fetch: graphQlFetcher });
+    return new Http(graphClient, token, host, scopeName, proxyConfig, agent, localScopeName);
   }
 }
 
@@ -356,10 +477,10 @@ export function getAuthHeader(token: string) {
 /**
  * Read the proxy config from the global config, and wrap fetch with fetch with proxy
  */
-export function getFetcherWithProxy() {
-  const proxyUrl = Http.getProxyUrl();
-  const proxyAgent = proxyUrl ? getProxyAgent(proxyUrl) : undefined;
-  const fetcher = proxyAgent ? wrapFetcherWithProxy(proxyAgent) : fetch;
+export async function getFetcherWithAgent(uri: string) {
+  const proxyConfig = await Http.getProxyConfig();
+  const agent = await Http.getAgent(uri, proxyConfig);
+  const fetcher = agent ? wrapFetcherWithAgent(agent) : fetch;
   return fetcher;
 }
 
@@ -367,9 +488,9 @@ export function getFetcherWithProxy() {
  * return a fetch wrapper with the proxy agent inside
  * @param proxyAgent
  */
-export function wrapFetcherWithProxy(proxyAgent: HttpsProxyAgent) {
+export function wrapFetcherWithAgent(agent: Agent) {
   return (url, opts) => {
-    const actualOpts = Object.assign({}, opts, { agent: proxyAgent });
+    const actualOpts = Object.assign({}, opts, { agent });
     return fetch(url, actualOpts);
   };
 }

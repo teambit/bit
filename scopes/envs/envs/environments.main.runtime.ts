@@ -153,6 +153,12 @@ export class EnvsMain {
   getEnvId(component: Component): string {
     const envsData = this.getEnvData(component);
     const withVersion = this.resolveEnv(component, envsData.id);
+    const withVersionMatch = this.envSlot.toArray().find(([envId]) => {
+      return withVersion?.toString() === envId;
+    });
+    const withVersionMatchId = withVersionMatch?.[0];
+    if (withVersionMatchId) return withVersionMatchId;
+
     const exactMatch = this.envSlot.toArray().find(([envId]) => {
       return envsData.id === envId;
     });

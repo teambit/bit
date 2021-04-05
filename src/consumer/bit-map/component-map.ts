@@ -77,6 +77,8 @@ export default class ComponentMap {
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
+  scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
+  version?: string; // Harmony only. empty string if new. (undefined if legacy).
   constructor({
     id,
     files,
@@ -124,6 +126,8 @@ export default class ComponentMap {
 
   toPlainObject(isLegacy: boolean): Record<string, any> {
     let res = {
+      scope: this.scope,
+      version: this.version,
       files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
@@ -480,7 +484,8 @@ export default class ComponentMap {
     });
     const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
     if (!foundMainFile || R.isEmpty(foundMainFile)) {
-      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list.
+if you renamed the mainFile, please re-add the component with the "--main" flag pointing to the correct main-file`);
     }
     const filesPaths = this.files.map((file) => file.relativePath);
     const duplicateFiles = filesPaths.filter(

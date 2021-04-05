@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { GraphBuilder, VersionSubgraph } from '@teambit/graph';
-import { Box, Newline, Text } from 'ink';
-import React from 'react';
 
 import { Insight, InsightResult, RawResult } from '../insight';
 // import NoDataForInsight from '../exceptions/no-data-for-insight';
@@ -28,11 +26,11 @@ export default class DuplicateDependencies implements Insight {
   constructor(graphBuilder: GraphBuilder) {
     this.graphBuilder = graphBuilder;
   }
-  async _runInsight(): Promise<RawResult> {
+  private async runInsight(): Promise<RawResult> {
     const graph = await this.graphBuilder.getGraph();
     if (!graph) {
       return {
-        message: '',
+        message: 'No graph found',
         data: undefined,
       };
     }
@@ -50,10 +48,10 @@ export default class DuplicateDependencies implements Insight {
     };
   }
 
-  _formatData(data: any): FormattedEntry[] {
+  private formatData(data: any): FormattedEntry[] {
     const formatted: FormattedEntry[] = [];
     for (const [dependency, depData] of data.entries()) {
-      const dependents: Dependent[] = this._getDependents(depData.priorVersions);
+      const dependents: Dependent[] = this.getDependents(depData.priorVersions);
       formatted.push({
         dependencyId: dependency,
         latestVersion: depData.latestVersionId,
@@ -63,7 +61,7 @@ export default class DuplicateDependencies implements Insight {
     return formatted;
   }
 
-  _getDependents(priorVersions: VersionSubgraph[]): Dependent[] {
+  private getDependents(priorVersions: VersionSubgraph[]): Dependent[] {
     const dependents: Dependent[] = [];
     priorVersions.forEach((pVersion: VersionSubgraph) => {
       pVersion.immediateDependents.forEach((dependent: string) => {
@@ -76,48 +74,39 @@ export default class DuplicateDependencies implements Insight {
     return dependents;
   }
 
-  _renderData(data: FormattedEntry[]) {
-    const element = (
-      <Box>
-        {data.map(function (mainDependency) {
-          return (
-            <Box key={mainDependency.dependencyId}>
-              <Text>dependency: {mainDependency.dependencyId}</Text>
-              <Newline />
-              <Text>latest version: {mainDependency.latestVersion}</Text>
-              <Newline />
-              <Box>
-                <Text>dependents that do not use latest version:</Text>
-                {mainDependency.dependents.map(function (dependent) {
-                  return (
-                    <Box key={dependent.id}>
-                      <Text>
-                        <Text color="redBright">{dependent.id}</Text> uses{' '}
-                        <Text color="redBright">{dependent.usedVersion}</Text>
-                      </Text>
-                      <Newline />
-                    </Box>
-                  );
-                })}
-              </Box>
-            </Box>
-          );
-        })}
-      </Box>
-    );
-    return element;
+  private renderDependents(dependents: { id: string; usedVersion: string }[]): string {
+    const string = dependents
+      .map((dependent) => {
+        return `- ${dependent.id} => ${dependent.usedVersion}`;
+      })
+      .join('\n');
+    return string;
+  }
+
+  private renderData(data: FormattedEntry[]) {
+    const string = data
+      .map((obj) => {
+        return `\nDuplicate dependency
+--------------------
+Dependency: ${obj.dependencyId}
+Dependents:
+${this.renderDependents(obj.dependents)}`;
+      })
+      .join('\n');
+    return string;
   }
 
   async run(): Promise<InsightResult> {
-    const bareResult = await this._runInsight();
-    const formattedData = this._formatData(bareResult.data);
-    const renderedData = this._renderData(formattedData);
+    const bareResult = await this.runInsight();
+    const formattedData = this.formatData(bareResult.data);
+    const renderedData = this.renderData(formattedData);
     const result: InsightResult = {
       metaData: {
         name: this.name,
         description: this.description,
       },
       data: bareResult.data,
+      message: bareResult.message,
       renderedData,
     };
 

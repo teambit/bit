@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import semver from 'semver';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { difference } from 'ramda';
 import { TaskResultsList, BuilderData, BuilderAspect } from '@teambit/builder';
@@ -7,18 +8,7 @@ import { resolve, join } from 'path';
 import { AspectLoaderAspect, AspectDefinition } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import type { ComponentMain, ComponentMap } from '@teambit/component';
-import {
-  Component,
-  ComponentAspect,
-  ComponentFactory,
-  ComponentFS,
-  ComponentID,
-  Config,
-  Snap,
-  State,
-  Tag,
-  TagMap,
-} from '@teambit/component';
+import { Component, ComponentAspect, ComponentFactory, ComponentID, Snap, State } from '@teambit/component';
 import type { GraphqlMain } from '@teambit/graphql';
 import { GraphqlAspect } from '@teambit/graphql';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
@@ -30,8 +20,8 @@ import { UIAspect } from '@teambit/ui';
 import { RequireableComponent } from '@teambit/modules.requireable-component';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
-import { ModelComponent, Version, Lane } from '@teambit/legacy/dist/scope/models';
-import { Ref, Repository } from '@teambit/legacy/dist/scope/objects';
+import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
+import { Repository } from '@teambit/legacy/dist/scope/objects';
 import LegacyScope, { LegacyOnTagResult, OnTagFunc, OnTagOpts } from '@teambit/legacy/dist/scope/scope';
 import { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { loadScopeIfExist } from '@teambit/legacy/dist/scope/scope-loader';
@@ -41,45 +31,48 @@ import { ExportPersist, PostSign } from '@teambit/legacy/dist/scope/actions';
 import { getScopeRemotes } from '@teambit/legacy/dist/scope/scope-remotes';
 import { Remotes } from '@teambit/legacy/dist/remotes';
 import { Scope } from '@teambit/legacy/dist/scope';
+import { FETCH_OPTIONS } from '@teambit/legacy/dist/api/scope/lib/fetch';
 import { Http, DEFAULT_AUTH_TYPE, AuthData } from '@teambit/legacy/dist/scope/network/http/http';
 import { buildOneGraphForComponentsUsingScope } from '@teambit/legacy/dist/scope/graph/components-graph';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { resumeExport } from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
 import { compact, slice, uniqBy } from 'lodash';
-import semver, { SemVer } from 'semver';
 import { ComponentNotFound } from './exceptions';
 import { ScopeAspect } from './scope.aspect';
 import { scopeSchema } from './scope.graphql';
 import { ScopeUIRoot } from './scope.ui-root';
 import { PutRoute, FetchRoute, ActionRoute, DeleteRoute } from './routes';
+import { ScopeComponentLoader } from './scope-component-loader';
 
 type TagRegistry = SlotRegistry<OnTag>;
 
 export type OnTagResults = { builderDataMap: ComponentMap<BuilderData>; pipeResults: TaskResultsList[] };
 export type OnTag = (components: Component[], options?: OnTagOpts) => Promise<OnTagResults>;
 
-type RemoteEventMetadata = { auth?: AuthData; clientBitVersion?: string };
+type RemoteEventMetadata = { auth?: AuthData; headers?: {} };
 type RemoteEvent<Data> = (data: Data, metadata: RemoteEventMetadata, errors?: Array<string | Error>) => Promise<void>;
 type OnPostPutData = { ids: ComponentID[]; lanes: Lane[] };
-type OnPrePersistExportData = { clientId: string; scopes: string[] };
+type OnPreFetchObjectData = { ids: string[]; fetchOptions: FETCH_OPTIONS };
 
 type OnPostPut = RemoteEvent<OnPostPutData>;
 type OnPostExport = RemoteEvent<OnPostPutData>;
 type OnPostObjectsPersist = RemoteEvent<undefined>;
-type OnPrePersistExport = RemoteEvent<OnPrePersistExportData>;
+type OnPreFetchObjects = RemoteEvent<OnPreFetchObjectData>;
 
 export type OnPostPutSlot = SlotRegistry<OnPostPut>;
 export type OnPostExportSlot = SlotRegistry<OnPostExport>;
 export type OnPostObjectsPersistSlot = SlotRegistry<OnPostObjectsPersist>;
-export type OnPrePersistExportSlot = SlotRegistry<OnPrePersistExport>;
+export type OnPreFetchObjectsSlot = SlotRegistry<OnPreFetchObjects>;
 
 export type ScopeConfig = {
-  description: string;
-  icon: string;
+  httpTimeOut: number;
+  description?: string;
+  icon?: string;
 };
 
 export class ScopeMain implements ComponentFactory {
+  componentLoader: ScopeComponentLoader;
   constructor(
     /**
      * private reference to the instance of Harmony.
@@ -98,6 +91,9 @@ export class ScopeMain implements ComponentFactory {
     /**
      * slot registry for subscribing to build
      */
+
+    readonly config: ScopeConfig,
+
     private tagRegistry: TagRegistry,
 
     private postPutSlot: OnPostPutSlot,
@@ -106,16 +102,16 @@ export class ScopeMain implements ComponentFactory {
 
     private postObjectsPersist: OnPostObjectsPersistSlot,
 
-    private prePersistExportSlot: OnPrePersistExportSlot,
+    public preFetchObjects: OnPreFetchObjectsSlot,
 
     private isolator: IsolatorMain,
 
     private aspectLoader: AspectLoaderMain,
 
-    private config: ScopeConfig,
-
     private logger: Logger
-  ) {}
+  ) {
+    this.componentLoader = new ScopeComponentLoader(this, this.logger);
+  }
 
   /**
    * name of the scope
@@ -124,11 +120,11 @@ export class ScopeMain implements ComponentFactory {
     return this.legacyScope.name;
   }
 
-  get icon(): string {
+  get icon(): string | undefined {
     return this.config.icon;
   }
 
-  get description(): string {
+  get description(): string | undefined {
     return this.config.description;
   }
 
@@ -145,6 +141,29 @@ export class ScopeMain implements ComponentFactory {
    */
   onTag(tagFn: OnTag) {
     const host = this.componentExtension.getHost();
+    const legacyOnTagFunc: OnTagFunc = async (
+      legacyComponents: ConsumerComponent[],
+      options?: OnTagOpts
+    ): Promise<LegacyOnTagResult[]> => {
+      // Reload the aspects with their new version
+      await this.reloadAspectsWithNewVersion(legacyComponents);
+      const components = await host.getManyByLegacy(legacyComponents);
+      const { builderDataMap } = await tagFn(components, options);
+      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
+    };
+    this.legacyScope.onTag.push(legacyOnTagFunc);
+    this.tagRegistry.register(tagFn);
+  }
+
+  // We need to reload the aspects with their new version since:
+  // during get many by legacy, we go load component which in turn go to getEnv
+  // get env validates that the env written on the component is really exist by checking the envs slot registry
+  // when we load here, it's env version in the aspect list already has the new version in case the env itself is being tagged
+  // so we are search for the env in the registry with the new version number
+  // but since the env only registered during the on load of the bit process (before the tag) it's version in the registry is only the old one
+  // once we reload them we will have it registered with the new version as well
+  async reloadAspectsWithNewVersion(components: ConsumerComponent[]): Promise<void> {
+    const host = this.componentExtension.getHost();
 
     // Return only aspects that defined on components but not in the root config file (workspace.jsonc/scope.jsonc)
     const getUserAspectsIdsWithoutRootIds = (): string[] => {
@@ -155,7 +174,7 @@ export class ScopeMain implements ComponentFactory {
     };
 
     // Based on the list of components to be tagged return those who are loaded to harmony with their used version
-    const getAspectsByPreviouslyUsedVersion = async (components: ConsumerComponent[]): Promise<string[]> => {
+    const getAspectsByPreviouslyUsedVersion = async (): Promise<string[]> => {
       const harmonyIds = getUserAspectsIdsWithoutRootIds();
       const aspectsIds: string[] = [];
       const aspectsP = components.map(async (component) => {
@@ -175,34 +194,17 @@ export class ScopeMain implements ComponentFactory {
       return aspectsIds;
     };
 
-    // Reload the aspects with their new version
-    const reloadAspectsWithNewVersion = async (components: ConsumerComponent[]): Promise<void> => {
-      const idsToLoad = await getAspectsByPreviouslyUsedVersion(components);
-      await host.loadAspects(idsToLoad, false);
-    };
-
-    const legacyOnTagFunc: OnTagFunc = async (
-      legacyComponents: ConsumerComponent[],
-      options?: OnTagOpts
-    ): Promise<LegacyOnTagResult[]> => {
-      // We need to reload the aspects with their new version since:
-      // during get many by legacy, we go load component which in turn go to getEnv
-      // get env validates that the env written on the component is really exist by checking the envs slot registry
-      // when we load here, it's env version in the aspect list already has the new version in case the env itself is being tagged
-      // so we are search for the env in the registry with the new version number
-      // but since the env only registered during the on load of the bit process (before the tag) it's version in the registry is only the old one
-      // once we reload them we will have it registered with the new version as well
-      await reloadAspectsWithNewVersion(legacyComponents);
-      const components = await host.getManyByLegacy(legacyComponents);
-      const { builderDataMap } = await tagFn(components, options);
-      return this.builderDataMapToLegacyOnTagResults(builderDataMap);
-    };
-    this.legacyScope.onTag.push(legacyOnTagFunc);
-    this.tagRegistry.register(tagFn);
+    const idsToLoad = await getAspectsByPreviouslyUsedVersion();
+    await host.loadAspects(idsToLoad, false);
   }
 
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]> {
     return mapSeries(components, async (component) => this.getFromConsumerComponent(component));
+  }
+
+  clearCache() {
+    this.componentLoader.clearCache();
+    this.legacyScope.objects.clearCache();
   }
 
   builderDataMapToLegacyOnTagResults(builderDataComponentMap: ComponentMap<BuilderData>): LegacyOnTagResult[] {
@@ -234,13 +236,13 @@ export class ScopeMain implements ComponentFactory {
     return this;
   }
 
-  registerOnPostObjectsPersist(postObjectsPersistFn: OnPostObjectsPersist) {
-    this.postObjectsPersist.register(postObjectsPersistFn);
+  registerOnPreFetchObjects(preFetchObjectsFn: OnPreFetchObjects) {
+    this.preFetchObjects.register(preFetchObjectsFn);
     return this;
   }
 
-  registerOnPrePersistExport(prePersistFn: OnPrePersistExport) {
-    this.prePersistExportSlot.register(prePersistFn);
+  registerOnPostObjectsPersist(postObjectsPersistFn: OnPostObjectsPersist) {
+    this.postObjectsPersist.register(postObjectsPersistFn);
     return this;
   }
 
@@ -362,7 +364,12 @@ export class ScopeMain implements ComponentFactory {
     const components = await this.getMany(userAspectsIds);
     const network = await this.isolator.isolateComponents(
       userAspectsIds,
-      { baseDir: this.getAspectCapsulePath(), skipIfExists: true },
+      {
+        baseDir: this.getAspectCapsulePath(),
+        skipIfExists: true,
+        includeFromNestedHosts: true,
+        installOptions: { copyPeerToRuntimeOnRoot: true },
+      },
       this.legacyScope
     );
     const capsules = network.seedersCapsules;
@@ -435,44 +442,12 @@ export class ScopeMain implements ComponentFactory {
     return this.getMany(ids);
   }
 
-  /**
-   * get a component.
-   * @param id component id
-   */
   async get(id: ComponentID): Promise<Component | undefined> {
-    const legacyId = id._legacy;
-    let modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
-    // Search with scope name for bare scopes
-    if (!modelComponent && !legacyId.scope) {
-      id = id.changeScope(this.name);
-      modelComponent = await this.legacyScope.getModelComponentIfExist(id._legacy);
-    }
-    if (!modelComponent) return undefined;
-
-    // :TODO move to head snap once we have it merged, for now using `latest`.
-    const versionStr = id.version && id.version !== 'latest' ? id.version : modelComponent.latest();
-    const newId = id.changeVersion(versionStr);
-    const version = await modelComponent.loadVersion(versionStr, this.legacyScope.objects);
-    const snap = this.createSnapFromVersion(version);
-    const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
-
-    return new Component(newId, snap, state, tagMap, this);
+    return this.componentLoader.get(id);
   }
 
   async getFromConsumerComponent(consumerComponent: ConsumerComponent): Promise<Component> {
-    const legacyId = consumerComponent.id;
-    const modelComponent = await this.legacyScope.getModelComponent(legacyId);
-    // :TODO move to head snap once we have it merged, for now using `latest`.
-    const id = await this.resolveComponentId(legacyId);
-    const version =
-      consumerComponent.pendingVersion ||
-      (await modelComponent.loadVersion(legacyId.version as string, this.legacyScope.objects));
-    const snap = this.createSnapFromVersion(version);
-    const state = await this.createStateFromVersion(id, version);
-    const tagMap = await this.getTagMap(modelComponent);
-
-    return new Component(id, snap, state, tagMap, this);
+    return this.componentLoader.getFromConsumerComponent(consumerComponent);
   }
 
   /**
@@ -491,6 +466,8 @@ export class ScopeMain implements ComponentFactory {
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {
     let modelComponents = await this.legacyScope.list();
+    const ids = modelComponents.map((component) => ComponentID.fromLegacy(component.toBitIdWithLatestVersion()));
+    this.logger.debug(`scope listIds: modelComponents ids: ${JSON.stringify(ids)}`);
     if (!includeCache) {
       modelComponents = modelComponents.filter((modelComponent) => this.exists(modelComponent));
     }
@@ -498,6 +475,7 @@ export class ScopeMain implements ComponentFactory {
     const componentsIds = modelComponents.map((component) =>
       ComponentID.fromLegacy(component.toBitIdWithLatestVersion())
     );
+    this.logger.debug(`scope listIds: componentsIds after filter scope: ${JSON.stringify(componentsIds)}`);
     return componentsIds;
   }
 
@@ -506,11 +484,13 @@ export class ScopeMain implements ComponentFactory {
    * @param componentId
    */
   async hasId(componentId: ComponentID, includeCache = false): Promise<boolean> {
-    const ids = await this.listIds(includeCache);
-    const found = ids.find((id) => {
-      return id.isEqual(componentId);
-    });
-    return !!found;
+    if (!includeCache && componentId.scope !== this.name) return false;
+    const opts = {
+      includeOrphaned: true,
+      includeVersion: true,
+    };
+
+    return this.legacyScope.hasId(componentId._legacy, opts);
   }
 
   async hasIdNested(componentId: ComponentID, includeCache = false): Promise<boolean> {
@@ -534,20 +514,11 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
-   * load components from a scope and load its aspects.
+   * load components from a scope and load their aspects
    */
-  async loadMany(ids: ComponentID[]) {
-    // get all components.
-    const components = await this.getMany(ids);
-    // load all component aspects.
-    await Promise.all(
-      components.map(async (component) => {
-        const aspectIds = component.state.aspects.ids;
-        await this.loadAspects(aspectIds, true);
-      })
-    );
-
-    return components;
+  async loadMany(ids: ComponentID[]): Promise<Component[]> {
+    const components = await mapSeries(ids, (id) => this.load(id));
+    return compact(components);
   }
 
   /**
@@ -566,14 +537,11 @@ export class ScopeMain implements ComponentFactory {
    * @param hash state hash.
    */
   async getState(id: ComponentID, hash: string): Promise<State> {
-    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
-    return this.createStateFromVersion(id, version);
+    return this.componentLoader.getState(id, hash);
   }
 
   async getSnap(id: ComponentID, hash: string): Promise<Snap> {
-    // TODO: add cache by hash
-    const version = (await this.legacyScope.objects.load(new Ref(hash))) as Version;
-    return this.createSnapFromVersion(version);
+    return this.componentLoader.getSnap(id, hash);
   }
 
   async getLogs(id: ComponentID): Promise<ComponentLog[]> {
@@ -608,49 +576,11 @@ export class ScopeMain implements ComponentFactory {
   async getExactVersionBySemverRange(id: ComponentID, range: string): Promise<string | undefined> {
     const modelComponent = await this.legacyScope.getModelComponent(id._legacy);
     const versions = modelComponent.listVersions();
-    // TODO - @david
-    return semver.maxSatisfying(versions, range)?.toString();
-    // return semver.maxSatisfying<string>(versions, range);
+    return semver.maxSatisfying<string>(versions, range)?.toString();
   }
 
   async resumeExport(exportId: string, remotes: string[]): Promise<string[]> {
     return resumeExport(this.legacyScope, exportId, remotes);
-  }
-
-  private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {
-    const tagMap = new TagMap();
-    Object.keys(modelComponent.versions).forEach((versionStr: string) => {
-      const tag = new Tag(modelComponent.versions[versionStr].toString(), new SemVer(versionStr));
-      tagMap.set(tag.version, tag);
-    });
-    return tagMap;
-  }
-
-  private createSnapFromVersion(version: Version): Snap {
-    return new Snap(
-      version.hash().toString(),
-      new Date(parseInt(version.log.date)),
-      version.parents.map((p) => p.toString()),
-      {
-        displayName: version.log.username || 'unknown',
-        email: version.log.email || 'unknown@anywhere',
-      },
-      version.log.message
-    );
-  }
-
-  private async createStateFromVersion(id: ComponentID, version: Version): Promise<State> {
-    const consumerComponent = await this.legacyScope.getConsumerComponent(id._legacy);
-    const state = new State(
-      // We use here the consumerComponent.extensions instead of version.extensions
-      // because as part of the conversion to consumer component the artifacts are initialized as Artifact instances
-      new Config(version.mainFile, consumerComponent.extensions),
-      this.componentExtension.createAspectList(consumerComponent.extensions, this.name),
-      ComponentFS.fromVinyls(consumerComponent.files),
-      version.dependencies,
-      consumerComponent
-    );
-    return state;
   }
 
   async resolveId(id: string): Promise<ComponentID> {
@@ -663,7 +593,22 @@ export class ScopeMain implements ComponentFactory {
     return getScopeRemotes(this.legacyScope);
   }
 
-  load() {}
+  /**
+   * get a component and load its aspect
+   */
+  async load(id: ComponentID): Promise<Component | undefined> {
+    const component = await this.get(id);
+    if (!component) return undefined;
+    const aspectIds = component.state.aspects.ids;
+    await this.loadAspects(aspectIds, true);
+
+    return component;
+  }
+
+  async loadComponentsAspect(component: Component) {
+    const aspectIds = component.state.aspects.ids;
+    await this.loadAspects(aspectIds, true);
+  }
 
   /**
    * declare the slots of scope extension.
@@ -673,7 +618,7 @@ export class ScopeMain implements ComponentFactory {
     Slot.withType<OnPostPut>(),
     Slot.withType<OnPostExport>(),
     Slot.withType<OnPostObjectsPersist>(),
-    Slot.withType<OnPrePersistExportSlot>(),
+    Slot.withType<OnPreFetchObjects>(),
   ];
   static runtime = MainRuntime;
 
@@ -688,6 +633,10 @@ export class ScopeMain implements ComponentFactory {
     LoggerAspect,
   ];
 
+  static defaultConfig: ScopeConfig = {
+    httpTimeOut: 600000,
+  };
+
   static async provider(
     [componentExt, ui, graphql, cli, isolator, aspectLoader, express, loggerMain]: [
       ComponentMain,
@@ -700,12 +649,12 @@ export class ScopeMain implements ComponentFactory {
       LoggerMain
     ],
     config: ScopeConfig,
-    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, prePersistExportSlot]: [
+    [tagSlot, postPutSlot, postExportSlot, postObjectsPersistSlot, preFetchObjectsSlot]: [
       TagRegistry,
       OnPostPutSlot,
       OnPostExportSlot,
       OnPostObjectsPersistSlot,
-      OnPrePersistExportSlot
+      OnPreFetchObjectsSlot
     ],
     harmony: Harmony
   ) {
@@ -720,14 +669,14 @@ export class ScopeMain implements ComponentFactory {
       harmony,
       legacyScope,
       componentExt,
+      config,
       tagSlot,
       postPutSlot,
       postExportSlot,
       postObjectsPersistSlot,
-      prePersistExportSlot,
+      preFetchObjectsSlot,
       isolator,
       aspectLoader,
-      config,
       logger
     );
     cli.registerOnStart(async (hasWorkspace: boolean) => {
@@ -737,6 +686,7 @@ export class ScopeMain implements ComponentFactory {
 
     const onPutHook = async (ids: string[], lanes: Lane[], authData?: AuthData): Promise<void> => {
       logger.debug(`onPutHook, started. (${ids.length} components)`);
+      scope.componentLoader.clearCache();
       const componentIds = await scope.resolveMultipleComponentIds(ids);
       const fns = postPutSlot.values();
       const data = {
@@ -774,24 +724,14 @@ export class ScopeMain implements ComponentFactory {
       logger.debug(`onPostObjectsPersistHook, completed`);
     };
 
-    const onPrePersistExportHook = async (clientId: string, scopes: string[]): Promise<void> => {
-      const data = { clientId, scopes };
-      logger.debug(`onPrePersistExportHook, started`, data);
-      const fns = prePersistExportSlot.values();
-      const metadata = { auth: getAuthData() };
-      await Promise.all(fns.map(async (fn) => fn(data, metadata)));
-      logger.debug(`onPrePersistExportHook, completed`);
-    };
-
     ExportPersist.onPutHook = onPutHook;
     PostSign.onPutHook = onPutHook;
     Scope.onPostExport = onPostExportHook;
-    Scope.onPrePersistExport = onPrePersistExportHook;
     Repository.onPostObjectsPersist = onPostObjectsPersistHook;
 
     express.register([
       new PutRoute(scope, postPutSlot),
-      new FetchRoute(scope),
+      new FetchRoute(scope, logger),
       new ActionRoute(scope),
       new DeleteRoute(scope),
     ]);

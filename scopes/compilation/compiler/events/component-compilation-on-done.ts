@@ -18,7 +18,7 @@ export class ComponentCompilationOnDoneEvent extends BitBaseEvent<ComponentCompi
     readonly errors: Array<CompileError>,
     readonly component: ConsumerComponent,
     readonly buildResults: string[],
-    readonly timestamp = Date.now().toString()
+    readonly timestamp = Date.now()
   ) {
     super(
       ComponentCompilationOnDoneEvent.TYPE,

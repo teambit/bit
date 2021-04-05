@@ -5,7 +5,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain, CompilerOptions } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { Environment, ExecutionContext } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { MDXMain } from '@teambit/mdx';
@@ -21,8 +21,8 @@ import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
-import webpackConfigFactory from './webpack/webpack.config';
-import previewConfigFactory from './webpack/webpack.preview.config';
+import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
+import previewConfigFactory from './webpack/webpack.config.preview';
 import eslintConfig from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
@@ -148,13 +148,27 @@ export class ReactEnv implements Environment {
     return path;
   }
 
+  private calcDistPaths(context: ExecutionContext, rootDir: string) {
+    const components = context.components;
+    const distDir = this.getCompiler().distDir;
+
+    const distPaths = components.map((comp) => {
+      const modulePath = this.pkg.getModulePath(comp);
+      const dist = join(rootDir, modulePath, distDir);
+      return dist;
+    });
+
+    return distPaths;
+  }
+
   /**
    * get the default react webpack config.
    */
-  getWebpackConfig(context: DevServerContext): Configuration {
+  private getDevWebpackConfig(context: DevServerContext): Configuration {
     const fileMapPath = this.writeFileMap(context.components);
+    const distPaths = this.calcDistPaths(context, this.workspace.path);
 
-    return webpackConfigFactory(context.id, fileMapPath);
+    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
   }
 
   getDevEnvId(id?: string) {
@@ -173,7 +187,7 @@ export class ReactEnv implements Environment {
    * returns and configures the React component dev server.
    */
   getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
-    const defaultConfig = this.getWebpackConfig(context);
+    const defaultConfig = this.getDevWebpackConfig(context);
     const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
 
     return this.webpack.createDevServer(context, config);
@@ -256,20 +270,19 @@ export class ReactEnv implements Environment {
       devDependencies: {
         react: '-',
         'react-dom': '-',
-        'core-js': '^3.6.5',
-        '@types/node': '^12.12.27',
-        '@types/react': { version: '^17.0.2', resolveFromEnv: true },
-        '@types/react-dom': { version: '^17.0.1', resolveFromEnv: true },
-        '@types/jest': '~26.0.9',
+        '@types/node': '^12.20.4', // check version
+        '@types/react': '^17.0.0',
+        '@types/react-dom': '^17.0.0',
+        '@types/jest': '26.0.20',
         '@types/mocha': '-',
-        '@types/react-router-dom': '^5.1.5',
+        '@types/react-router-dom': '5.1.7',
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
-        '@babel/runtime': '^7.11.2',
+        '@babel/runtime': '7.12.18',
       },
-      // TODO: take version from config
       peerDependencies: {
-        react: { version: '^17.0.1', resolveFromEnv: true },
-        'react-dom': { version: '^17.0.1', resolveFromEnv: true },
+        react: '^16.8.0 || ^17.0.0',
+        'react-dom': '^16.8.0 || ^17.0.0',
+        'core-js': '^3.0.0',
       },
     };
   }

@@ -12,13 +12,16 @@ export type ErrorProps = {
 };
 
 export function Error({ errors, level }: ErrorProps) {
+  const color = level === ErrorLevel.WARNING ? 'yellow' : 'red';
+
   return (
     <>
       {errors.map((warning, index) => (
-        <Text key={index} color={level === ErrorLevel.WARNING ? 'yellow' : 'red'}>
-          {warning.message}
+        <Text key={index} color={color}>
+          <Text>{warning.message}</Text>
+          {warning.stack && <Newline />}
+          <Text>{warning.stack}</Text>
           <Newline />
-          {warning.stack}
         </Text>
       ))}
     </>

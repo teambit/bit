@@ -36,19 +36,19 @@
       "policy": {
         "dependencies": {
           "@teambit/legacy": "-",
-          "react": "^16.13.1",
-          "react-dom": "^16.13.1",
-          "react-native-web": "^0.14.8"
+          "react": "^16.8.0",
+          "react-dom": "^16.8.0",
+          "react-native-web": "^0.14.0"
         },
         "devDependencies": {
           "@teambit/legacy": "-",
           "react": "-",
           "react-dom": "-",
-          "@types/react": "^16.14.3",
-          "@types/react-dom": "^16.9.10"
+          "@types/react": "^16.8.0",
+          "@types/react-dom": "^16.8.0"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.2"
+          "@teambit/legacy": "1.0.48"
         }
       }
     },

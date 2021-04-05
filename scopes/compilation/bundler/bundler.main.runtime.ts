@@ -49,11 +49,11 @@ export class BundlerMain {
     const envRuntime = await this.envs.createEnvironment(components);
     // TODO: this must be refactored away from here. this logic should be in the Preview.
     this.devService.uiRoot = root;
-    const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService);
     this._componentServers = servers;
 
     this.indexByComponent();
-    // @ts-ignore
+
     return this._componentServers;
   }
 

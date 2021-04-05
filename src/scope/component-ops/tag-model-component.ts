@@ -1,9 +1,8 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
-import * as RA from 'ramda-adjunct';
+import { isNilOrEmpty, compact } from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
-import { compact } from 'ramda-adjunct';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
@@ -78,14 +77,16 @@ async function setFutureVersions(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+      componentToTag.previouslyUsedVersion = componentToTag.version;
       if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
-        if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
-        if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
+        componentToTag.version = modelComponent.getVersionToAdd(
+          exactVersionOrReleaseType.releaseType,
+          exactVersionOrReleaseType.exactVersion
+        );
+      } else {
+        componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       }
-      const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
-      componentToTag.previouslyUsedVersion = componentToTag.version;
-      componentToTag.version = version;
     })
   );
 }
@@ -175,6 +176,7 @@ export default async function tagModelComponent({
   resolveUnmerged,
   isSnap = false,
   disableDeployPipeline,
+  forceDeploy,
 }: {
   consumerComponents: Component[];
   scope: Scope;
@@ -229,7 +231,7 @@ export default async function tagModelComponent({
     });
     const newestVersions = await Promise.all(newestVersionsP);
     const newestVersionsWithoutEmpty = newestVersions.filter((newest) => newest);
-    if (!RA.isNilOrEmpty(newestVersionsWithoutEmpty)) {
+    if (!isNilOrEmpty(newestVersionsWithoutEmpty)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new NewerVersionFound(newestVersionsWithoutEmpty);
     }
@@ -288,7 +290,7 @@ export default async function tagModelComponent({
 
   const publishedPackages: string[] = [];
   if (!consumer.isLegacy && build) {
-    const onTagOpts = { disableDeployPipeline, throwOnError: true };
+    const onTagOpts = { disableDeployPipeline, throwOnError: true, forceDeploy };
     const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
       func(allComponentsToTag, onTagOpts)
     );

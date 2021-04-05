@@ -1,9 +1,32 @@
 import tarStream from 'tar-stream';
 import pMap from 'p-map';
+import { Readable, PassThrough } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
 import { CONCURRENT_IO_LIMIT } from '../../constants';
+import logger from '../../logger/logger';
+
+/**
+ * when error occurred during streaming between HTTP server and client, there is no good way to
+ * indicate this other than sending a new file with a special name and the error message.
+ */
+const TAR_STREAM_ERROR_FILENAME = '.BIT.ERROR';
+/**
+ * schema 1.0.0 - added the start and end file with basic info
+ */
+const OBJECT_LIST_CURRENT_SCHEMA = '1.0.0';
+const TAR_STREAM_START_FILENAME = '.BIT.START';
+const TAR_STREAM_END_FILENAME = '.BIT.END';
+
+type StartFile = {
+  schema: string;
+  scopeName: string;
+};
+type EndFile = {
+  numOfFiles: number;
+  scopeName: string;
+};
 
 export type ObjectItem = {
   ref: Ref;
@@ -13,6 +36,11 @@ export type ObjectItem = {
 };
 
 export const FETCH_FORMAT_OBJECT_LIST = 'ObjectList';
+
+/**
+ * Stream.Readable that operates with objectMode, while each 'data' event emits one ObjectItem object.
+ */
+export type ObjectItemsStream = Readable;
 
 export class ObjectList {
   constructor(public objects: ObjectItem[] = []) {}
@@ -46,22 +74,25 @@ export class ObjectList {
   toTar(): NodeJS.ReadableStream {
     const pack = tarStream.pack();
     this.objects.forEach((obj) => {
-      pack.entry({ name: this.combineScopeAndHash(obj) }, obj.buffer);
+      pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
     });
     pack.finalize();
     return pack;
+  }
+  toReadableStream(): ObjectItemsStream {
+    return Readable.from(this.objects);
   }
   static async fromTar(packStream: NodeJS.ReadableStream): Promise<ObjectList> {
     const extract = tarStream.extract();
     const objectItems: ObjectItem[] = await new Promise((resolve, reject) => {
       const objects: ObjectItem[] = [];
       extract.on('entry', (header, stream, next) => {
-        let data = Buffer.from('');
+        const data: Buffer[] = [];
         stream.on('data', (chunk) => {
-          data = Buffer.concat([data, chunk]);
+          data.push(chunk);
         });
         stream.on('end', () => {
-          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: data });
+          objects.push({ ...ObjectList.extractScopeAndHash(header.name), buffer: Buffer.concat(data) });
           next(); // ready for next entry
         });
         stream.on('error', (err) => reject(err));
@@ -75,6 +106,96 @@ export class ObjectList {
 
       packStream.pipe(extract);
     });
+    return new ObjectList(objectItems);
+  }
+
+  static fromTarToObjectStream(packStream: NodeJS.ReadableStream): ObjectItemsStream {
+    const passThrough = new PassThrough({ objectMode: true });
+    const extract = tarStream.extract();
+    let startData: StartFile | undefined;
+    let endData: EndFile | undefined;
+    extract.on('entry', (header, stream, next) => {
+      const data: Buffer[] = [];
+      stream.on('data', (chunk) => {
+        data.push(chunk);
+      });
+      stream.on('end', () => {
+        const allData = Buffer.concat(data);
+        if (header.name === TAR_STREAM_ERROR_FILENAME) {
+          passThrough.emit('error', new Error(allData.toString()));
+          return;
+        }
+        if (header.name === TAR_STREAM_START_FILENAME) {
+          startData = JSON.parse(allData.toString());
+          logger.debug('fromTarToObjectStream, start getting data', startData);
+          next();
+          return;
+        }
+        if (header.name === TAR_STREAM_END_FILENAME) {
+          endData = JSON.parse(allData.toString());
+          logger.debug('fromTarToObjectStream, completed', endData);
+          next();
+          return;
+        }
+        passThrough.write({ ...ObjectList.extractScopeAndHash(header.name), buffer: allData });
+        next(); // ready for next entry
+      });
+      stream.on('error', (err) => {
+        passThrough.emit('error', err);
+      });
+
+      stream.resume(); // just auto drain the stream
+    });
+
+    // not sure if needed
+    extract.on('error', (err) => {
+      passThrough.emit('error', err);
+    });
+
+    extract.on('finish', () => {
+      if (startData?.schema === OBJECT_LIST_CURRENT_SCHEMA && !endData) {
+        // wasn't able to find a better way to indicate whether the server aborted the request
+        // see https://github.com/node-fetch/node-fetch/issues/1117
+        passThrough.emit(
+          'error',
+          new Error(`server terminated the stream unexpectedly (metadata: ${JSON.stringify(startData)})`)
+        );
+      }
+      passThrough.end();
+    });
+    packStream.pipe(extract);
+
+    return passThrough;
+  }
+
+  static fromObjectStreamToTar(readable: Readable, scopeName: string) {
+    const pack = tarStream.pack();
+    const startFile: StartFile = { schema: OBJECT_LIST_CURRENT_SCHEMA, scopeName };
+    pack.entry({ name: TAR_STREAM_START_FILENAME }, JSON.stringify(startFile));
+    let numOfFiles = 0;
+    readable.on('data', (obj: ObjectItem) => {
+      numOfFiles += 1;
+      pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
+    });
+    readable.on('end', () => {
+      const endFile: EndFile = { numOfFiles, scopeName };
+      pack.entry({ name: TAR_STREAM_END_FILENAME }, JSON.stringify(endFile));
+      pack.finalize();
+    });
+    readable.on('error', (err) => {
+      const errorMessage = err.message || `unexpected error (${err.name})`;
+      logger.error(`ObjectList.fromObjectStreamToTar, streaming an error as a file`, err);
+      pack.entry({ name: TAR_STREAM_ERROR_FILENAME }, errorMessage);
+      pack.finalize();
+    });
+    return pack;
+  }
+
+  static async fromReadableStream(readable: ObjectItemsStream): Promise<ObjectList> {
+    const objectItems: ObjectItem[] = [];
+    for await (const obj of readable) {
+      objectItems.push(obj);
+    }
     return new ObjectList(objectItems);
   }
 
@@ -92,14 +213,17 @@ export class ObjectList {
   /**
    * the opposite of this.extractScopeAndHash
    */
-  combineScopeAndHash(objectItem: ObjectItem): string {
+  static combineScopeAndHash(objectItem: ObjectItem): string {
     const scope = objectItem.scope ? `${objectItem.scope}/` : '';
     return `${scope}${objectItem.ref.hash}`;
   }
 
   addIfNotExist(objectItems: ObjectItem[]) {
     objectItems.forEach((objectItem) => {
-      if (!this.objects.find((object) => object.ref.isEqual(objectItem.ref))) {
+      const exists = this.objects.find(
+        (object) => object.ref.isEqual(objectItem.ref) && object.scope === objectItem.scope
+      );
+      if (!exists) {
         this.objects.push(objectItem);
       }
     });
