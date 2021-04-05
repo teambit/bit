@@ -68,11 +68,11 @@ With Bit we sort components in **Scopes**, where each Scope "implements" a set o
 - Workspaces are flexible and can be used to maintain components from many scopes, making it easier to reuse and collaborate on available components.
 - Lanes helps distributed teams to communicate and collaborate on API changes by understanding the underline dependency graph of components and "bundling" together changes that affect many teams and should be synced.  
 
-## Large scale example for buildig with Bit
+## Large scale example of building with Bit
 
 Bit is 100% built with Bit! Every feature in Bit, from the [Bit Version Manager](https://bit.dev/teambit/bvm) to the workspace UI and even [supporting MDX](https://bit.dev/teambit/mdx), are just scopes of components developed with Bit.  
 
-Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on the Bit cloud platform.  
+Explore [dozens of OSS scopes and hundreds of OSS components](https://bit.dev/teambit) on Bit's cloud platform.  
 
 ## Contributing 🎗️
 
