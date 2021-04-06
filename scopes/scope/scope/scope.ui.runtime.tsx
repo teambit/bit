@@ -313,7 +313,7 @@ export class ScopeUI {
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
-        Overview
+        Gallery
       </MenuLinkItem>
     ));
 
