@@ -259,6 +259,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/graphql"
     },
+    "harmony-ui-app": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
+    },
     "insights": {
         "scope": "teambit.explorer",
         "version": "0.0.343",

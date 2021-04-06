@@ -1,5 +1,5 @@
+import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { AppContext } from './app-context';
-import { ServeAppOptions } from './application.main.runtime';
 
 export interface Application {
   /**
@@ -8,22 +8,12 @@ export interface Application {
   name: string;
 
   /**
-   * range of allowed ports.
+   * run the application.
    */
-  portRange?: number[];
+  run(context: AppContext): Promise<void>;
 
   /**
-   * serve the application.
+   * application deployment. this is a build task.
    */
-  serve(options: ServeAppOptions): Promise<void>;
-
-  /**
-   * start the application at dev mode.
-   */
-  dev?(context: AppContext): Promise<void>;
-
-  /**
-   * application deployment.
-   */
-  deploy?(): Promise<void>;
+  deploy?(context: BuildContext): Promise<BuiltTaskResult>;
 }

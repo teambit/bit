@@ -3,12 +3,16 @@ import { flatten } from 'lodash';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
+import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
+import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
 import { ApplicationType } from './application-type';
 import { Application } from './application';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppListCmd } from './app-list.cmd';
 import { DeployTask } from './deploy.task';
+import { RunCmd } from './run.cmd';
+import { AppService } from './application.service';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
@@ -20,18 +24,21 @@ export type ServeAppOptions = {
    * default port range used to serve applications.
    */
   defaultPortRange?: number[];
+
+  /**
+   * determine whether to start the application in dev mode.
+   */
+  dev: boolean;
 };
 
 export class ApplicationMain {
-  constructor(private appSlot: ApplicationSlot, private appTypeSlot: ApplicationTypeSlot) {}
-
-  /**
-   * register a new application type. One can be `React` or `Angular`.
-   */
-  registerAppType(appType: ApplicationType) {
-    this.appTypeSlot.register([appType]);
-    return this;
-  }
+  constructor(
+    private appSlot: ApplicationSlot,
+    private appTypeSlot: ApplicationTypeSlot,
+    private envs: EnvsMain,
+    private componentAspect: ComponentMain,
+    private appService: AppService
+  ) {}
 
   /**
    * register a new app.
@@ -69,7 +76,7 @@ export class ApplicationMain {
    */
   getAppOrThrow(appName: string) {
     const app = this.getApp(appName);
-    if (!app) throw new AppNotFound();
+    if (!app) throw new AppNotFound(appName);
     return app;
   }
 
@@ -84,41 +91,53 @@ export class ApplicationMain {
     };
   }
 
-  async serveApp(appName: string, options: Partial<ServeAppOptions> = {}) {
+  async runApp(appName: string, options: Partial<ServeAppOptions> = {}) {
     const app = this.getAppOrThrow(appName);
     const opts = this.computeOptions(options);
-    await app.serve(opts);
+    const context = await this.createAppContext(appName);
+
+    await app.run(context);
     return app;
   }
 
-  private createAppContext() {
-    return '';
+  /**
+   * get the component ID of a certain app.
+   */
+  getAppIdOrThrow(appName: string) {
+    const maybeApp = this.appSlot.toArray().find(([, apps]) => {
+      return apps.find((app) => app.name === appName);
+    });
+
+    if (!maybeApp) throw new AppNotFound(appName);
+    return ComponentID.fromString(maybeApp[0]);
   }
 
-  devApp(appName: string) {
-    const app = this.getAppOrThrow(appName);
-    if (!app.dev) return this.serveApp(appName);
-    return app.dev(this.createAppContext());
+  private async createAppContext(appName: string) {
+    const host = this.componentAspect.getHost();
+    const id = this.getAppIdOrThrow(appName);
+    const component = await host.get(id);
+    if (!component) throw new AppNotFound(appName);
+
+    const env = await this.envs.createEnvironment([component]);
+    const res = await env.run(this.appService);
+    return res.results[0].data;
   }
 
   static runtime = MainRuntime;
-
-  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect];
+  static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect];
 
   static slots = [Slot.withType<ApplicationType[]>(), Slot.withType<Application[]>()];
 
   static async provider(
-    [cli, loggerAspect, builder]: [CLIMain, LoggerMain, BuilderMain],
+    [cli, loggerAspect, builder, envs, component]: [CLIMain, LoggerMain, BuilderMain, EnvsMain, ComponentMain],
     config: ApplicationAspectConfig,
     [appTypeSlot, appSlot]: [ApplicationTypeSlot, ApplicationSlot]
   ) {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
-    const application = new ApplicationMain(appSlot, appTypeSlot);
+    const appService = new AppService();
+    const application = new ApplicationMain(appSlot, appTypeSlot, envs, component, appService);
     builder.registerDeployTasks([new DeployTask(application)]);
-    cli.register(
-      // new ServeCmd(application, logger),
-      new AppListCmd(application)
-    );
+    cli.register(new RunCmd(application, logger), new AppListCmd(application));
 
     return application;
   }

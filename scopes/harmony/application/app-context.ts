@@ -1,3 +1,8 @@
-export interface AppDevContext {}
+import { ExecutionContext } from '@teambit/envs';
 
-export interface AppContext {}
+export interface AppContext extends ExecutionContext {
+  /**
+   * determine whether to serve the application in dev mode.
+   */
+  dev: boolean;
+}

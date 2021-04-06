@@ -17,10 +17,9 @@ export class PreviewStartPlugin implements StartPlugin {
   previewServers: ComponentServer[] = [];
 
   async initiate(options: StartPluginOptions) {
-    const [, uiRoot] = this.ui.getUi();
     const components = await this.workspace.byPattern(options.pattern || '');
     // TODO: logic for creating preview servers must be refactored to this aspect from the DevServer aspect.
-    const previewServers = await this.bundler.devServer(components, uiRoot);
+    const previewServers = await this.bundler.devServer(components);
     previewServers.forEach((server) => server.listen());
     // DON'T add wait! this promise never resolve so it's stop all the start process!
     // eslint-disable-next-line @typescript-eslint/no-floating-promises

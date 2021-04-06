@@ -87,7 +87,9 @@ export class ReactMain {
 
     private envs: EnvsMain,
 
-    private application: ApplicationMain
+    private application: ApplicationMain,
+
+    private workspace: Workspace
   ) {}
 
   readonly env = this.reactEnv;
@@ -123,7 +125,9 @@ export class ReactMain {
    * register a new React application.
    */
   registerReactApp(options: ReactAppOptions) {
-    // this.application.registerApp(new ReactApp(options.name, options.portRange, this.reactEnv.getDevServer()));
+    this.application.registerApp(
+      new ReactApp(options.name, options.entry, options.portRange || [3000, 4000], this.reactEnv, this.workspace.path)
+    );
   }
 
   /**
@@ -308,7 +312,7 @@ export class ReactMain {
       multiCompiler,
       mdx
     );
-    const react = new ReactMain(reactEnv, envs, application);
+    const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);

@@ -1,6 +1,6 @@
 import { Application } from './application';
 
-export class ApplicationServer {
+export class AppServer {
   constructor(private app: Application) {}
 
   get name() {
