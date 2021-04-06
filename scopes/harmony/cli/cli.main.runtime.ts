@@ -6,6 +6,7 @@ import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensi
 import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
+import loader from '@teambit/legacy/dist/cli/loader';
 
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { Help } from './commands/help.cmd';
@@ -88,6 +89,7 @@ export class CLIMain {
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   async run(hasWorkspace: boolean) {
+    loader.start('starting bit, running cli-aspect...');
     await this.invokeOnStart(hasWorkspace);
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {
