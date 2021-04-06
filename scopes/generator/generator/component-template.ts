@@ -19,16 +19,22 @@ export interface File {
 
 export interface GeneratorContext {
   /**
-   * component name of the generating component. e.g. `button` or `use-date`.
+   * component-name as entered by the user, e.g. `use-date`.
    * without the scope and the namespace.
    */
-  componentName: string;
+  name: string;
 
   /**
-   * e.g. `use-date` becomes `useDate`.
-   * useful when generating the file content, for example for a function name.
+   * component-name as upper camel case, e.g. `use-date` becomes `UseDate`.
+   * useful when generating the file content, for example for a class name.
    */
-  componentNameCamelCase: string;
+  namePascalCase: string;
+
+  /**
+   * component-name as lower camel case, e.g. `use-date` becomes `useDate`.
+   * useful when generating the file content, for example for a function/variable name.
+   */
+  nameCamelCase: string;
 
   /**
    * component id.
@@ -42,6 +48,11 @@ export interface ComponentTemplate {
    * name of the component template. for example: `hook`, `react-component` or `module`.
    */
   name: string;
+
+  /**
+   * short description of the template. shown in the `bit templates` command.
+   */
+  description?: string;
 
   /**
    * template function for generating the file of a certain component.,

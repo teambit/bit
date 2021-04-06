@@ -1,6 +1,7 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentTemplate } from './component-template';
@@ -12,7 +13,7 @@ import { ComponentGenerator, GenerateResult } from './component-generator';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 
-export type TemplateDescriptor = { aspectId: string; name: string };
+export type TemplateDescriptor = { aspectId: string; name: string; description?: string };
 
 export type GeneratorConfig = {
   /**
@@ -26,7 +27,8 @@ export class GeneratorMain {
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
     private config: GeneratorConfig,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private envs: EnvsMain
   ) {}
 
   /**
@@ -46,6 +48,7 @@ export class GeneratorMain {
     return allTemplates.map(({ id, template }) => ({
       aspectId: id,
       name: template.name,
+      description: template.description,
     }));
   }
 
@@ -85,7 +88,7 @@ export class GeneratorMain {
       return ComponentID.fromObject({ name: fullComponentName }, scope);
     });
 
-    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template);
+    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template, this.envs);
     return componentGenerator.generate();
   }
 
@@ -107,16 +110,16 @@ export class GeneratorMain {
 
   static slots = [Slot.withType<ComponentTemplate[]>()];
 
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql]: [Workspace, CLIMain, GraphqlMain],
+    [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],
     config: GeneratorConfig,
     [componentTemplateSlot]: [ComponentTemplateSlot]
   ) {
-    const generator = new GeneratorMain(componentTemplateSlot, config, workspace);
+    const generator = new GeneratorMain(componentTemplateSlot, config, workspace, envs);
     const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));

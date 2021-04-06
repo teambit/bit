@@ -9,6 +9,7 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
+  DEFAULT_LANE,
   DEFAULT_LANGUAGE,
   TESTER_ENV_TYPE,
 } from '../../constants';
@@ -243,6 +244,8 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
+      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
 
@@ -809,9 +812,6 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
-    // @todo: this doesn't make sense when creating a new lane locally.
-    // the laneHeadRemote is not set. it needs to be compare to the head
-    if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 

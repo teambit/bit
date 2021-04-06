@@ -1,10 +1,10 @@
 import { GeneratorContext } from '@teambit/generator';
 
-export function indexFile({ componentNameCamelCase, componentName }: GeneratorContext) {
-  return `import { ${componentNameCamelCase}Aspect } from './${componentName}.aspect';
+export function indexFile({ namePascalCase, name }: GeneratorContext) {
+  return `import { ${namePascalCase}Aspect } from './${name}.aspect';
 
-export type { ${componentNameCamelCase}Main } from './${componentName}.main.runtime';
-export default ${componentNameCamelCase}Aspect;
-export { ${componentNameCamelCase}Aspect };
+export type { ${namePascalCase}Main } from './${name}.main.runtime';
+export default ${namePascalCase}Aspect;
+export { ${namePascalCase}Aspect };
 `;
 }

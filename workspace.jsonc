@@ -197,6 +197,7 @@
           "preserve": true
         },
         "eslint-import-resolver-node": "0.3.4",
+        "eventemitter2": "6.4.4",
         "express": "4.17.1",
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
@@ -311,7 +312,7 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.46",
+        "@teambit/legacy": "1.0.48",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
@@ -374,7 +375,7 @@
           },
           "peerDependencies": {
             "react": "16.13.1",
-            "@teambit/legacy": "1.0.46",
+            "@teambit/legacy": "1.0.48",
             "react-dom": "16.13.1"
           }
         }
@@ -516,7 +517,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.46",
+            "@teambit/legacy": "1.0.48",
             // TODO: remove this later
             "core-js": "3.8.3",
             "react": "16.13.1",

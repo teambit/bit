@@ -1,7 +1,7 @@
 import { GeneratorContext } from '@teambit/generator';
 
 export const docsFile = (context: GeneratorContext) => {
-  const { componentName: name, componentNameCamelCase: Name } = context;
+  const { name, namePascalCase: Name } = context;
 
   return {
     relativePath: `${name}.docs.mdx`,
@@ -16,7 +16,13 @@ ${Name} example:
 
 A simple ${Name} component with some text
 
-// live component playground - if you remove the word live it turns into a code snippet
+Code Snippet:
+\`\`\`js
+<${Name}>click me</${Name}>
+\`\`\`
+
+
+Live Playground:
 \`\`\`js live
 <${Name}>click me</${Name}>
 \`\`\`

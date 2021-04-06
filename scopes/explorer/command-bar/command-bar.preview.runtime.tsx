@@ -14,7 +14,7 @@ export class CommandBarPreview {
     const { target } = e;
     if (!target || isEditable(target as HTMLElement)) return;
 
-    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e))?.catch(() => {});
+    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e));
   };
 
   static dependencies = [PubsubAspect];
