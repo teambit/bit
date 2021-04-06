@@ -2,7 +2,7 @@ import R from 'ramda';
 import pMap from 'p-map';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { BuildStatus, COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
+import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -24,6 +24,7 @@ import Repository from '../objects/repository';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -53,6 +54,7 @@ export default class SourceRepository {
 
   async getMany(ids: BitId[] | BitIds, versionShouldBeBuilt = false): Promise<ComponentDef[]> {
     if (!ids.length) return [];
+    const concurrency = concurrentComponentsLimit();
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return pMap(
       ids,
@@ -63,7 +65,7 @@ export default class SourceRepository {
           component,
         };
       },
-      { concurrency: CONCURRENT_COMPONENTS_LIMIT }
+      { concurrency }
     );
   }
 
