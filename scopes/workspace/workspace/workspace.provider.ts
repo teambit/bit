@@ -108,6 +108,14 @@ export default async function provideWorkspace(
     graphql
   );
 
+  const getWorkspacePolicyFromPackageJson = () => {
+    const packageJson = workspace.consumer.packageJson?.packageJsonObject || {};
+    const policyFromPackageJson = dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
+    return policyFromPackageJson;
+  };
+
+  dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
+
   ManyComponentsWriter.registerExternalInstaller({
     install: async () => {
       // TODO: think how we should pass this options
