@@ -2,6 +2,7 @@ import { GeneratorContext } from '@teambit/generator';
 
 export function extensionFile({ componentNameCamelCase: Name }: GeneratorContext) {
   return `
+import { Aspect } from '@teambit/harmony';
 import { EnvsMain, EnvsAspect } from '@teambit/envs';
 import { ReactNativeAspect, ReactNativeMain } from '@teambit/react-native';
 
@@ -12,7 +13,7 @@ import { ReactNativeAspect, ReactNativeMain } from '@teambit/react-native';
 export class ${Name}Extension {
   constructor(private reactNative: ReactNativeMain) {}
 
-  static dependencies: any = [EnvsAspect, ReactNativeAspect];
+  static dependencies: Aspect[] = [EnvsAspect, ReactNativeAspect];
 
   static async provider([envs, reactNative]: [EnvsMain, ReactNativeMain]) {
     const ${Name}Env = reactNative.compose([
