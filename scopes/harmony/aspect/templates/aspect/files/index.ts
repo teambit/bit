@@ -1,6 +1,6 @@
-import { GeneratorContext } from '@teambit/generator';
+import { ComponentContext } from '@teambit/generator';
 
-export function indexFile({ namePascalCase, name }: GeneratorContext) {
+export function indexFile({ namePascalCase, name }: ComponentContext) {
   return `import { ${namePascalCase}Aspect } from './${name}.aspect';
 
 export type { ${namePascalCase}Main } from './${name}.main.runtime';

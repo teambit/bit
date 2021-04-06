@@ -1,4 +1,4 @@
-import { ComponentTemplate, GeneratorContext } from '@teambit/generator';
+import { ComponentTemplate, ComponentContext } from '@teambit/generator';
 import { componentFile } from './component';
 import { compositionFile } from './composition';
 import { docsFile } from './docs';
@@ -7,7 +7,7 @@ import { testFile } from './test';
 export const reactButtonJSX: ComponentTemplate = {
   name: 'react-button-jsx',
   description: 'a basic react button in jsx',
-  generateFiles: (context: GeneratorContext) => {
+  generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
     const indexFile = {
       relativePath: 'index.js',

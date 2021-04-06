@@ -1,6 +1,6 @@
-import { GeneratorContext } from '@teambit/generator';
+import { ComponentContext } from '@teambit/generator';
 
-export const componentFile = (context: GeneratorContext) => {
+export const componentFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
     relativePath: `${name}.jsx`,

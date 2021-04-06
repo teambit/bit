@@ -1,4 +1,4 @@
-import { GeneratorContext, ComponentTemplate } from '@teambit/generator';
+import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { indexFile } from './files/index';
 import { aspectFile } from './files/aspect-file';
 import { mainRuntime } from './files/main-runtime';
@@ -6,7 +6,7 @@ import { mainRuntime } from './files/main-runtime';
 export const aspectTemplate: ComponentTemplate = {
   name: 'aspect',
   description: 'extend Bit capabilities',
-  generateFiles: (context: GeneratorContext) => {
+  generateFiles: (context: ComponentContext) => {
     return [
       {
         relativePath: 'index.ts',
