@@ -274,7 +274,7 @@ export class ReactEnv implements Environment {
         '@types/node': '12.20.4',
         '@types/react': '^16.8.0',
         '@types/jest': '^26.0.0',
-        '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
+        // '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
         '@babel/runtime': '7.12.18',
       },
