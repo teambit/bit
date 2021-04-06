@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { isEmpty } from 'ramda';
 import { ExtensionDataList, ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { ComponentID } from '@teambit/component-id';
 import { AspectEntry, SerializableMap } from './aspect-entry';
@@ -62,7 +62,7 @@ export class AspectList {
   toConfigObject() {
     const res = {};
     this.entries.forEach((entry) => {
-      if (entry.config && !R.isEmpty(entry.config)) {
+      if (entry.config && !isEmpty(entry.config)) {
         res[entry.id.toString()] = entry.config;
       }
     });

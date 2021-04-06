@@ -151,6 +151,7 @@ export interface DependencyResolverVariantConfig {
   policy: VariantPolicyConfigObject;
 }
 
+export type RootPolicyRegistry = SlotRegistry<WorkspacePolicy>;
 export type PoliciesRegistry = SlotRegistry<VariantPolicyConfigObject>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
@@ -191,6 +192,11 @@ export class DependencyResolverMain {
      * Dependency resolver  extension configuration.
      */
     readonly config: DependencyResolverWorkspaceConfig,
+
+    /**
+     * Registry for changes by other extensions.
+     */
+    private rootPolicyRegistry: RootPolicyRegistry,
 
     /**
      * Registry for changes by other extensions.
@@ -303,7 +309,23 @@ export class DependencyResolverMain {
     return deps;
   }
 
+  /**
+   * Getting the merged workspace policy (from dep resolver config and others like root package.json)
+   * @returns
+   */
   getWorkspacePolicy(): WorkspacePolicy {
+    const policyFromConfig = this.getWorkspacePolicyFromConfig();
+    const externalPolicies = this.rootPolicyRegistry.toArray().map(([, policy]) => policy);
+    return this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
+  }
+
+  /**
+   * Getting the workspace policy as defined in the workspace.jsonc in the dependencyResolver aspect
+   * This will not take into account packages that defined in the package.json of the root for example
+   * in most cases you should use getWorkspacePolicy
+   * @returns
+   */
+  getWorkspacePolicyFromConfig(): WorkspacePolicy {
     const factory = new WorkspacePolicyFactory();
     return factory.fromConfigObject(this.config.policy);
   }
@@ -573,7 +595,7 @@ export class DependencyResolverMain {
   }
 
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
-    const workspacePolicy = this.getWorkspacePolicy();
+    const workspacePolicy = this.getWorkspacePolicyFromConfig();
     entries.forEach((entry) => workspacePolicy.add(entry, options));
     const workspacePolicyObject = workspacePolicy.toConfigObject();
     this.config.policy = workspacePolicyObject;
@@ -593,6 +615,13 @@ export class DependencyResolverMain {
    */
   registerDependenciesPolicies(policy: VariantPolicyConfigObject): void {
     return this.policiesRegistry.register(policy);
+  }
+
+  /**
+   * register new dependencies policies
+   */
+  registerRootPolicy(policy: WorkspacePolicy): void {
+    return this.rootPolicyRegistry.register(policy);
   }
 
   /**
@@ -696,6 +725,7 @@ export class DependencyResolverMain {
   ];
 
   static slots = [
+    Slot.withType<WorkspacePolicy>(),
     Slot.withType<VariantPolicyConfigObject>(),
     Slot.withType<PackageManager>(),
     Slot.withType<RegExp>(),
@@ -727,7 +757,15 @@ export class DependencyResolverMain {
       GlobalConfigMain
     ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
+    [
+      rootPolicyRegistry,
+      policiesRegistry,
+      packageManagerSlot,
+      dependencyFactorySlot,
+      preInstallSlot,
+      postInstallSlot,
+    ]: [
+      RootPolicyRegistry,
       PoliciesRegistry,
       PackageManagerSlot,
       DependencyFactorySlot,
@@ -739,6 +777,7 @@ export class DependencyResolverMain {
     const logger = loggerExt.createLogger(DependencyResolverAspect.id);
     const dependencyResolver = new DependencyResolverMain(
       config,
+      rootPolicyRegistry,
       policiesRegistry,
       envs,
       logger,
