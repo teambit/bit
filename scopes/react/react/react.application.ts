@@ -22,7 +22,7 @@ export class ReactApp implements Application {
   private getDevServerContext(context: AppContext): DevServerContext {
     return Object.assign(context, {
       entry: this.entry,
-      rootPath: this.rootPath,
+      rootPath: '',
       publicPath: `public/${this.name}`,
     });
   }
