@@ -1,5 +1,5 @@
 import { EnvDefinition } from '@teambit/envs';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 import { ComponentMap } from '@teambit/component';
 import { Logger, LongProcessLogger } from '@teambit/logger';
 import mapSeries from 'p-map-series';

@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';

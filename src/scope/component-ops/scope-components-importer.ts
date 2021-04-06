@@ -25,9 +25,10 @@ import { ObjectItemsStream, ObjectList } from '../objects/object-list';
 import SourcesRepository, { ComponentDef } from '../repositories/sources';
 import { getScopeRemotes } from '../scope-remotes';
 import VersionDependencies from '../version-dependencies';
-import { CONCURRENT_COMPONENTS_LIMIT, DEFAULT_LANE } from '../../constants';
+import { DEFAULT_LANE } from '../../constants';
 import { BitObjectList } from '../objects/bit-object-list';
 import { ObjectFetcher } from '../objects-fetcher/objects-fetcher';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
 
 const removeNils = R.reject(R.isNil);
 
@@ -405,6 +406,7 @@ export default class ScopeComponentsImporter {
   }
 
   private async multipleCompsDefsToVersionDeps(compsDefs: ComponentDef[]): Promise<VersionDependencies[]> {
+    const concurrency = concurrentComponentsLimit();
     const componentsWithVersionsWithNulls = await pMap(
       compsDefs,
       async ({ component, id }) => {
@@ -423,7 +425,7 @@ export default class ScopeComponentsImporter {
 
         return { componentVersion: versionComp, versionObj: version };
       },
-      { concurrency: CONCURRENT_COMPONENTS_LIMIT }
+      { concurrency }
     );
     const componentsWithVersion = compact(componentsWithVersionsWithNulls);
 

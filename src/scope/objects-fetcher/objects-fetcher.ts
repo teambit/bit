@@ -5,7 +5,6 @@ import pMap from 'p-map';
 import { Scope } from '..';
 import { FETCH_OPTIONS } from '../../api/scope/lib/fetch';
 import loader from '../../cli/loader';
-import { CONCURRENT_FETCH_LIMIT } from '../../constants';
 import logger from '../../logger/logger';
 import { Remotes } from '../../remotes';
 import { ScopeNotFound } from '../exceptions';
@@ -17,6 +16,7 @@ import { ObjectsWritable } from './objects-writable-stream';
 import { WriteComponentsQueue } from './write-components-queue';
 import { WriteObjectsQueue } from './write-objects-queue';
 import { groupByScopeName } from '../component-ops/scope-components-importer';
+import { concurrentFetchLimit } from '../../utils/concurrency';
 
 /**
  * due to the use of streams, this is memory efficient and can handle easily GBs of objects.
@@ -59,7 +59,7 @@ export class ObjectFetcher {
         if (!readableStream) return;
         await this.writeFromSingleRemote(readableStream, scopeName, objectsQueue, componentsQueue);
       },
-      { concurrency: CONCURRENT_FETCH_LIMIT }
+      { concurrency: concurrentFetchLimit() }
     );
     if (Object.keys(this.failedScopes).length) {
       const failedScopesErr = Object.keys(this.failedScopes).map(
