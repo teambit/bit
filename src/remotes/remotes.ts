@@ -11,9 +11,9 @@ import { flatten, forEach, prependBang } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import Remote from './remote';
 import remoteResolver from './remote-resolver/remote-resolver';
-import { CONCURRENT_FETCH_LIMIT } from '../constants';
 import { UnexpectedNetworkError } from '../scope/network/exceptions';
 import { ObjectItemsStream } from '../scope/objects/object-list';
+import { concurrentFetchLimit } from '../utils/concurrency';
 
 export default class Remotes extends Map<string, Remote> {
   constructor(remotes: [string, Remote][] = []) {
@@ -57,6 +57,7 @@ export default class Remotes extends Map<string, Remote> {
     const shouldThrowOnUnavailableScope = !fetchOptions.withoutDependencies;
     const objectsStreamPerRemote = {};
     const failedScopes: { [scopeName: string]: Error } = {};
+    const concurrency = concurrentFetchLimit();
     await pMap(
       Object.keys(idsGroupedByScope),
       async (scopeName) => {
@@ -78,7 +79,7 @@ export default class Remotes extends Map<string, Remote> {
           return null;
         }
       },
-      { concurrency: CONCURRENT_FETCH_LIMIT }
+      { concurrency }
     );
     if (Object.keys(failedScopes).length) {
       const failedScopesErr = Object.keys(failedScopes).map(
