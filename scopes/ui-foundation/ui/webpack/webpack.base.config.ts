@@ -25,7 +25,7 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
 // style files regexes
-const cssRegex = /\.css$/;
+const cssRegex = /(?<!\.module)\.css$/;
 const cssModuleRegex = /\.module\.css$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
@@ -162,6 +162,26 @@ export default function createWebpackConfig(
           // match the requirements. When no loader matches it will fall
           // back to the "file" loader at the end of the loader list.
           oneOf: [
+
+            // "postcss" loader applies autoprefixer to our CSS.
+            // "css" loader resolves paths in CSS and adds assets as dependencies.
+            // "style" loader turns CSS into JS modules that inject <style> tags.
+            // In production, we use MiniCSSExtractPlugin to extract that CSS
+            // to a file, but in development "style" loader enables hot editing
+            // of CSS.
+            // By default we support CSS Modules with the extension .module.css
+            {
+              test: cssRegex,
+              use: getStyleLoaders({
+                importLoaders: 1,
+                sourceMap: isEnvProduction && shouldUseSourceMap,
+              }),
+              // Don't consider CSS imports dead code even if the
+              // containing package claims to have no side effects.
+              // Remove this when webpack adds a warning or an error for this.
+              // See https://github.com/webpack/webpack/issues/6571
+              sideEffects: true,
+            },
             // "url" loader works like "file" loader except that it embeds assets
             // smaller than specified limit in bytes as data URLs to avoid requests.
             // A missing `test` is equivalent to a match.
@@ -235,26 +255,7 @@ export default function createWebpackConfig(
                 inputSourceMap: shouldUseSourceMap,
               },
             },
-            // "postcss" loader applies autoprefixer to our CSS.
-            // "css" loader resolves paths in CSS and adds assets as dependencies.
-            // "style" loader turns CSS into JS modules that inject <style> tags.
-            // In production, we use MiniCSSExtractPlugin to extract that CSS
-            // to a file, but in development "style" loader enables hot editing
-            // of CSS.
-            // By default we support CSS Modules with the extension .module.css
-            {
-              test: cssRegex,
-              exclude: cssModuleRegex,
-              use: getStyleLoaders({
-                importLoaders: 1,
-                sourceMap: isEnvProduction && shouldUseSourceMap,
-              }),
-              // Don't consider CSS imports dead code even if the
-              // containing package claims to have no side effects.
-              // Remove this when webpack adds a warning or an error for this.
-              // See https://github.com/webpack/webpack/issues/6571
-              sideEffects: true,
-            },
+
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
             // using the extension .module.css
             {
@@ -336,12 +337,12 @@ export default function createWebpackConfig(
             // This loader doesn't use a "test" so it will catch all modules
             // that fall through the other loaders.
             {
-              loader: require.resolve('file-loader'),
               // Exclude `js` files to keep "css" loader working as it injects
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/],
+              loader: require.resolve('file-loader'),
+              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
               type: 'asset/resource',
               generator: {
                 filename: 'static/media/[hash][ext][query]',

@@ -4691,6 +4691,30 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/aspect-loader@workspace:scopes/harmony/aspect-loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/aspect-loader@workspace:scopes/harmony/aspect-loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/aspect@workspace:scopes/harmony/aspect":
+  version: 0.0.0-use.local
+  resolution: "@teambit/aspect@workspace:scopes/harmony/aspect"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/babel.bit-react-transformer@workspace:scopes/react/bit-react-transformer":
+  version: 0.0.0-use.local
+  resolution: "@teambit/babel.bit-react-transformer@workspace:scopes/react/bit-react-transformer"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/babel@workspace:scopes/compilation/babel":
+  version: 0.0.0-use.local
+  resolution: "@teambit/babel@workspace:scopes/compilation/babel"
+  languageName: unknown
+  linkType: soft
+
 "@teambit/base-ui.constants.storage@npm:0.6.3":
   version: 0.6.3
   resolution: "@teambit/base-ui.constants.storage@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.constants.storage%2F-%2Fbase-ui.constants.storage-0.6.3.tgz"
@@ -5780,6 +5804,38 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/bit-error@workspace:scopes/harmony/bit-error":
+  version: 0.0.0-use.local
+  resolution: "@teambit/bit-error@workspace:scopes/harmony/bit-error"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/bit@workspace:scopes/harmony/bit":
+  version: 0.0.0-use.local
+  resolution: "@teambit/bit@workspace:scopes/harmony/bit"
+  dependencies:
+    "@types/react": 16.14.4
+  languageName: unknown
+  linkType: soft
+
+"@teambit/builder@workspace:scopes/pipelines/builder":
+  version: 0.0.0-use.local
+  resolution: "@teambit/builder@workspace:scopes/pipelines/builder"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/bundler@workspace:scopes/compilation/bundler":
+  version: 0.0.0-use.local
+  resolution: "@teambit/bundler@workspace:scopes/compilation/bundler"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/cache@workspace:scopes/harmony/cache":
+  version: 0.0.0-use.local
+  resolution: "@teambit/cache@workspace:scopes/harmony/cache"
+  languageName: unknown
+  linkType: soft
+
 "@teambit/capsule@npm:0.0.12":
   version: 0.0.12
   resolution: "@teambit/capsule@npm:0.0.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fcapsule%2F-%2Fcapsule-0.0.12.tgz"
@@ -5790,6 +5846,128 @@ __metadata:
   checksum: 2e1e77d4f209eafcc9fd36863d2aa7ec0d4e800135ce394bfaa06da752504e82391c76234944707df3b693aaf489f8d4303d933322e9cc5fcc4fec10891ae697
   languageName: node
   linkType: hard
+
+"@teambit/changelog@workspace:scopes/component/changelog":
+  version: 0.0.0-use.local
+  resolution: "@teambit/changelog@workspace:scopes/component/changelog"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/cli.preview-server-status@workspace:scopes/preview/cli/preview-server-status":
+  version: 0.0.0-use.local
+  resolution: "@teambit/cli.preview-server-status@workspace:scopes/preview/cli/preview-server-status"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/cli.ui-server-console@workspace:scopes/ui-foundation/cli/ui-server-console":
+  version: 0.0.0-use.local
+  resolution: "@teambit/cli.ui-server-console@workspace:scopes/ui-foundation/cli/ui-server-console"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/cli.ui-server-loader@workspace:scopes/ui-foundation/cli/ui-server-loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/cli.ui-server-loader@workspace:scopes/ui-foundation/cli/ui-server-loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/cli.webpack.error@workspace:scopes/compilation/cli/webpack/error":
+  version: 0.0.0-use.local
+  resolution: "@teambit/cli.webpack.error@workspace:scopes/compilation/cli/webpack/error"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/cli@workspace:scopes/harmony/cli":
+  version: 0.0.0-use.local
+  resolution: "@teambit/cli@workspace:scopes/harmony/cli"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/code@workspace:scopes/component/code":
+  version: 0.0.0-use.local
+  resolution: "@teambit/code@workspace:scopes/component/code"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/command-bar@workspace:scopes/explorer/command-bar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/command-bar@workspace:scopes/explorer/command-bar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/compiler@workspace:scopes/compilation/compiler":
+  version: 0.0.0-use.local
+  resolution: "@teambit/compiler@workspace:scopes/compilation/compiler"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/component-id@workspace:scopes/component/component-id":
+  version: 0.0.0-use.local
+  resolution: "@teambit/component-id@workspace:scopes/component/component-id"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/component-package-version@workspace:scopes/component/component-package-version":
+  version: 0.0.0-use.local
+  resolution: "@teambit/component-package-version@workspace:scopes/component/component-package-version"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/component-tree@workspace:scopes/component/component-tree":
+  version: 0.0.0-use.local
+  resolution: "@teambit/component-tree@workspace:scopes/component/component-tree"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/component-version@workspace:scopes/component/component-version":
+  version: 0.0.0-use.local
+  resolution: "@teambit/component-version@workspace:scopes/component/component-version"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/component@workspace:scopes/component/component":
+  version: 0.0.0-use.local
+  resolution: "@teambit/component@workspace:scopes/component/component"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/compositions@workspace:scopes/compositions/compositions":
+  version: 0.0.0-use.local
+  resolution: "@teambit/compositions@workspace:scopes/compositions/compositions"
+  dependencies:
+    "@teambit/documenter.theme.theme-context": 3.0.8
+  languageName: unknown
+  linkType: soft
+
+"@teambit/config@workspace:scopes/harmony/config":
+  version: 0.0.0-use.local
+  resolution: "@teambit/config@workspace:scopes/harmony/config"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/dependency-resolver@workspace:scopes/dependencies/dependency-resolver":
+  version: 0.0.0-use.local
+  resolution: "@teambit/dependency-resolver@workspace:scopes/dependencies/dependency-resolver"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/deprecation@workspace:scopes/component/deprecation":
+  version: 0.0.0-use.local
+  resolution: "@teambit/deprecation@workspace:scopes/component/deprecation"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/dev-files@workspace:scopes/component/dev-files":
+  version: 0.0.0-use.local
+  resolution: "@teambit/dev-files@workspace:scopes/component/dev-files"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/docs@workspace:scopes/docs/docs":
+  version: 0.0.0-use.local
+  resolution: "@teambit/docs@workspace:scopes/docs/docs"
+  languageName: unknown
+  linkType: soft
 
 "@teambit/documenter.code.react-playground@npm:1.0.4":
   version: 1.0.4
@@ -6419,6 +6597,38 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/e2e.workspace@workspace:scopes/workspace/e2e/workspace":
+  version: 0.0.0-use.local
+  resolution: "@teambit/e2e.workspace@workspace:scopes/workspace/e2e/workspace"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/eject@workspace:scopes/workspace/eject":
+  version: 0.0.0-use.local
+  resolution: "@teambit/eject@workspace:scopes/workspace/eject"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/envs@workspace:scopes/envs/envs":
+  version: 0.0.0-use.local
+  resolution: "@teambit/envs@workspace:scopes/envs/envs"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/eslint-config-bit-react@workspace:scopes/react/eslint-config-bit-react":
+  version: 0.0.0-use.local
+  resolution: "@teambit/eslint-config-bit-react@workspace:scopes/react/eslint-config-bit-react"
+  dependencies:
+    eslint-config-airbnb-typescript: 12.0.0
+  languageName: unknown
+  linkType: soft
+
+"@teambit/eslint@workspace:scopes/defender/eslint":
+  version: 0.0.0-use.local
+  resolution: "@teambit/eslint@workspace:scopes/defender/eslint"
+  languageName: unknown
+  linkType: soft
+
 "@teambit/evangelist.css-components.fade-in-out@npm:0.5.20":
   version: 0.5.20
   resolution: "@teambit/evangelist.css-components.fade-in-out@npm:0.5.20::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fevangelist.css-components.fade-in-out%2F-%2Fevangelist.css-components.fade-in-out-0.5.20.tgz"
@@ -6653,6 +6863,48 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/export@workspace:scopes/scope/export":
+  version: 0.0.0-use.local
+  resolution: "@teambit/export@workspace:scopes/scope/export"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/express@workspace:scopes/harmony/express":
+  version: 0.0.0-use.local
+  resolution: "@teambit/express@workspace:scopes/harmony/express"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/flows@workspace:scopes/pipelines/flows":
+  version: 0.0.0-use.local
+  resolution: "@teambit/flows@workspace:scopes/pipelines/flows"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/generator@workspace:scopes/generator/generator":
+  version: 0.0.0-use.local
+  resolution: "@teambit/generator@workspace:scopes/generator/generator"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/global-config@workspace:scopes/harmony/global-config":
+  version: 0.0.0-use.local
+  resolution: "@teambit/global-config@workspace:scopes/harmony/global-config"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/graph@workspace:scopes/component/graph":
+  version: 0.0.0-use.local
+  resolution: "@teambit/graph@workspace:scopes/component/graph"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/graphql@workspace:scopes/harmony/graphql":
+  version: 0.0.0-use.local
+  resolution: "@teambit/graphql@workspace:scopes/harmony/graphql"
+  languageName: unknown
+  linkType: soft
+
 "@teambit/harmony@npm:0.2.11":
   version: 0.2.11
   resolution: "@teambit/harmony@npm:0.2.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fharmony%2F-%2Fharmony-0.2.11.tgz"
@@ -6667,6 +6919,36 @@ __metadata:
   checksum: f877b46403dd51be4b5f97c30785d8a05928763dfd9fa83a2cda7bf357d41e472c7694198a340e2d68df513241e4d2434fcd17af9eb870a7d22f8edf617aa60e
   languageName: node
   linkType: hard
+
+"@teambit/insights@workspace:scopes/explorer/insights":
+  version: 0.0.0-use.local
+  resolution: "@teambit/insights@workspace:scopes/explorer/insights"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/isolator@workspace:scopes/component/isolator":
+  version: 0.0.0-use.local
+  resolution: "@teambit/isolator@workspace:scopes/component/isolator"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/jest@workspace:scopes/defender/jest":
+  version: 0.0.0-use.local
+  resolution: "@teambit/jest@workspace:scopes/defender/jest"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/legacy-bit-id@workspace:scopes/component/legacy-bit-id":
+  version: 0.0.0-use.local
+  resolution: "@teambit/legacy-bit-id@workspace:scopes/component/legacy-bit-id"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/legacy-component-log@workspace:scopes/component/legacy-component-log":
+  version: 0.0.0-use.local
+  resolution: "@teambit/legacy-component-log@workspace:scopes/component/legacy-component-log"
+  languageName: unknown
+  linkType: soft
 
 "@teambit/legacy@npm:1.0.46, @teambit/legacy@npm:1.0.46::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.46.tgz":
   version: 1.0.46
@@ -7283,7 +7565,7 @@ __metadata:
     vscode-languageserver: 6.1.1
     vscode-ws-jsonrpc: 0.2.0
     vue-template-compiler: 2.6.12
-    webpack: 5.26.1
+    webpack: 5.30.0
     webpack-dev-middleware: 4.1.0
     webpack-dev-server: ^4.0.0-beta.0
     webpack-hot-middleware: 2.25.0
@@ -7298,6 +7580,24 @@ __metadata:
     "@teambit/legacy": 1.0.46
   bin:
     bit: bin/bit.js
+  languageName: unknown
+  linkType: soft
+
+"@teambit/linter@workspace:scopes/defender/linter":
+  version: 0.0.0-use.local
+  resolution: "@teambit/linter@workspace:scopes/defender/linter"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/logger@workspace:scopes/harmony/logger":
+  version: 0.0.0-use.local
+  resolution: "@teambit/logger@workspace:scopes/harmony/logger"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/mdx@workspace:scopes/mdx/mdx":
+  version: 0.0.0-use.local
+  resolution: "@teambit/mdx@workspace:scopes/mdx/mdx"
   languageName: unknown
   linkType: soft
 
@@ -7316,6 +7616,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/model.composition-id@workspace:scopes/compositions/model/composition-id":
+  version: 0.0.0-use.local
+  resolution: "@teambit/model.composition-id@workspace:scopes/compositions/model/composition-id"
+  languageName: unknown
+  linkType: soft
+
 "@teambit/model.composition-type@npm:0.0.259":
   version: 0.0.259
   resolution: "@teambit/model.composition-type@npm:0.0.259::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fmodel.composition-type%2F-%2Fmodel.composition-type-0.0.259.tgz"
@@ -7329,6 +7635,60 @@ __metadata:
   checksum: 204a68937ae909a6d89feccaf9cce729d4ff99ea36d684de8a13dcdc6bb883f326d493887f98f4c3c4a025511c2d97de4159c5dd96a8ebf7a2ba7c21649fa886
   languageName: node
   linkType: hard
+
+"@teambit/model.composition-type@workspace:scopes/compositions/model/composition-type":
+  version: 0.0.0-use.local
+  resolution: "@teambit/model.composition-type@workspace:scopes/compositions/model/composition-type"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.dom-to-react@workspace:scopes/react/dom-to-react":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.dom-to-react@workspace:scopes/react/dom-to-react"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.match-pattern@workspace:scopes/workspace/modules/match-pattern":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.match-pattern@workspace:scopes/workspace/modules/match-pattern"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.mdx-compiler@workspace:scopes/mdx/modules/compiler":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.mdx-compiler@workspace:scopes/mdx/modules/compiler"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.mdx-loader@workspace:scopes/mdx/modules/loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.mdx-loader@workspace:scopes/mdx/modules/loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.merge-component-results@workspace:scopes/pipelines/modules/merge-component-results":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.merge-component-results@workspace:scopes/pipelines/modules/merge-component-results"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.requireable-component@workspace:scopes/harmony/modules/requireable-component":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.requireable-component@workspace:scopes/harmony/modules/requireable-component"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/modules.resolved-component@workspace:scopes/harmony/modules/resolved-component":
+  version: 0.0.0-use.local
+  resolution: "@teambit/modules.resolved-component@workspace:scopes/harmony/modules/resolved-component"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/multi-compiler@workspace:scopes/compilation/multi-compiler":
+  version: 0.0.0-use.local
+  resolution: "@teambit/multi-compiler@workspace:scopes/compilation/multi-compiler"
+  languageName: unknown
+  linkType: soft
 
 "@teambit/network.agent@npm:0.0.1":
   version: 0.0.1
@@ -7344,6 +7704,12 @@ __metadata:
   checksum: 39c9e5ec0340759c54619cdfa66564c5a35412e179bf9498eba2faff5ce5a4dcdb5e7c9cf9759a44cf2f8e629d67dbecbabd51a450376f0439125ec7962d73d9
   languageName: node
   linkType: hard
+
+"@teambit/network.agent@workspace:scopes/toolbox/network/agent":
+  version: 0.0.0-use.local
+  resolution: "@teambit/network.agent@workspace:scopes/toolbox/network/agent"
+  languageName: unknown
+  linkType: soft
 
 "@teambit/network.proxy-agent@npm:0.0.1":
   version: 0.0.1
@@ -7362,6 +7728,118 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/network.proxy-agent@workspace:scopes/toolbox/network/proxy-agent":
+  version: 0.0.0-use.local
+  resolution: "@teambit/network.proxy-agent@workspace:scopes/toolbox/network/proxy-agent"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/node@workspace:scopes/harmony/node":
+  version: 0.0.0-use.local
+  resolution: "@teambit/node@workspace:scopes/harmony/node"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/notifications@workspace:scopes/ui-foundation/notifications/aspect":
+  version: 0.0.0-use.local
+  resolution: "@teambit/notifications@workspace:scopes/ui-foundation/notifications/aspect"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/panels@workspace:scopes/ui-foundation/panels":
+  version: 0.0.0-use.local
+  resolution: "@teambit/panels@workspace:scopes/ui-foundation/panels"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/path.is-path-inside@workspace:scopes/toolbox/path/is-path-inside":
+  version: 0.0.0-use.local
+  resolution: "@teambit/path.is-path-inside@workspace:scopes/toolbox/path/is-path-inside"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/path.to-windows-compatible-path@workspace:scopes/toolbox/path/to-windows-compatible-path":
+  version: 0.0.0-use.local
+  resolution: "@teambit/path.to-windows-compatible-path@workspace:scopes/toolbox/path/to-windows-compatible-path"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/pkg@workspace:scopes/pkg/pkg":
+  version: 0.0.0-use.local
+  resolution: "@teambit/pkg@workspace:scopes/pkg/pkg"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/pnpm@workspace:scopes/dependencies/pnpm":
+  version: 0.0.0-use.local
+  resolution: "@teambit/pnpm@workspace:scopes/dependencies/pnpm"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/preview@workspace:scopes/preview/preview":
+  version: 0.0.0-use.local
+  resolution: "@teambit/preview@workspace:scopes/preview/preview"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/pubsub@workspace:scopes/harmony/pubsub":
+  version: 0.0.0-use.local
+  resolution: "@teambit/pubsub@workspace:scopes/harmony/pubsub"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/react-native@workspace:scopes/react/react-native":
+  version: 0.0.0-use.local
+  resolution: "@teambit/react-native@workspace:scopes/react/react-native"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/react-router@workspace:scopes/ui-foundation/react-router/react-router":
+  version: 0.0.0-use.local
+  resolution: "@teambit/react-router@workspace:scopes/ui-foundation/react-router/react-router"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/react@workspace:scopes/react/react":
+  version: 0.0.0-use.local
+  resolution: "@teambit/react@workspace:scopes/react/react"
+  dependencies:
+    "@teambit/documenter.theme.theme-context": 3.0.8
+    "@typescript-eslint/eslint-plugin": 4.15.1
+    "@typescript-eslint/parser": 4.15.1
+  languageName: unknown
+  linkType: soft
+
+"@teambit/schema@workspace:scopes/semantics/schema":
+  version: 0.0.0-use.local
+  resolution: "@teambit/schema@workspace:scopes/semantics/schema"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/scope@workspace:scopes/scope/scope":
+  version: 0.0.0-use.local
+  resolution: "@teambit/scope@workspace:scopes/scope/scope"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/sidebar@workspace:scopes/ui-foundation/sidebar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/sidebar@workspace:scopes/ui-foundation/sidebar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/sign@workspace:scopes/scope/sign":
+  version: 0.0.0-use.local
+  resolution: "@teambit/sign@workspace:scopes/scope/sign"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/string.capitalize@workspace:scopes/toolbox/string/capitalize":
+  version: 0.0.0-use.local
+  resolution: "@teambit/string.capitalize@workspace:scopes/toolbox/string/capitalize"
+  languageName: unknown
+  linkType: soft
+
 "@teambit/string.ellipsis@npm:0.0.7":
   version: 0.0.7
   resolution: "@teambit/string.ellipsis@npm:0.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fstring.ellipsis%2F-%2Fstring.ellipsis-0.0.7.tgz"
@@ -7374,6 +7852,128 @@ __metadata:
   checksum: 9ebbd4231e3facc0922b6e6fee5d6cd1d19bc60b6102d577f32fc019942a6530d60138fb7a57f00c4e9a754cea9e414388214d30fe7525c9bd399be214e05271
   languageName: node
   linkType: hard
+
+"@teambit/string.ellipsis@workspace:scopes/toolbox/string/ellipsis":
+  version: 0.0.0-use.local
+  resolution: "@teambit/string.ellipsis@workspace:scopes/toolbox/string/ellipsis"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/string.get-initials@workspace:scopes/toolbox/string/get-initials":
+  version: 0.0.0-use.local
+  resolution: "@teambit/string.get-initials@workspace:scopes/toolbox/string/get-initials"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/string.strip-trailing-char@workspace:scopes/toolbox/string/strip-trailing-char":
+  version: 0.0.0-use.local
+  resolution: "@teambit/string.strip-trailing-char@workspace:scopes/toolbox/string/strip-trailing-char"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/tester@workspace:scopes/defender/tester":
+  version: 0.0.0-use.local
+  resolution: "@teambit/tester@workspace:scopes/defender/tester"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/tests-results@workspace:scopes/defender/tests-results":
+  version: 0.0.0-use.local
+  resolution: "@teambit/tests-results@workspace:scopes/defender/tests-results"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/time.time-format@workspace:scopes/toolbox/time/time-format":
+  version: 0.0.0-use.local
+  resolution: "@teambit/time.time-format@workspace:scopes/toolbox/time/time-format"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/types.serializable@workspace:scopes/toolbox/types/serializable":
+  version: 0.0.0-use.local
+  resolution: "@teambit/types.serializable@workspace:scopes/toolbox/types/serializable"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/typescript@workspace:scopes/typescript/typescript":
+  version: 0.0.0-use.local
+  resolution: "@teambit/typescript@workspace:scopes/typescript/typescript"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.aspect-box@workspace:scopes/harmony/ui/aspect-box":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.aspect-box@workspace:scopes/harmony/ui/aspect-box"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.avatar@workspace:scopes/design/ui/Avatar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.avatar@workspace:scopes/design/ui/Avatar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.buttons.collapser@workspace:scopes/ui-foundation/collapser-button":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.buttons.collapser@workspace:scopes/ui-foundation/collapser-button"
+  dependencies:
+    "@teambit/documenter.theme.theme-compositions": 3.0.8
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.cli-snippet@workspace:scopes/design/ui/cli-snippet":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.cli-snippet@workspace:scopes/design/ui/cli-snippet"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.code-tab-page@workspace:scopes/code/ui/code-tab-page":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.code-tab-page@workspace:scopes/code/ui/code-tab-page"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.code-tab-tree@workspace:scopes/code/ui/code-tab-tree":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.code-tab-tree@workspace:scopes/code/ui/code-tab-tree"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.code-view@workspace:scopes/code/ui/code-view":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.code-view@workspace:scopes/code/ui/code-view"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.component-highlighter@workspace:scopes/react/component-highlighter":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.component-highlighter@workspace:scopes/react/component-highlighter"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.component-preview@workspace:scopes/preview/ui/component-preview":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.component-preview@workspace:scopes/preview/ui/component-preview"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.component-status-resolver@workspace:scopes/component/ui/component-status-resolver":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.component-status-resolver@workspace:scopes/component/ui/component-status-resolver"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.component-status@workspace:scopes/component/ui/component-status":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.component-status@workspace:scopes/component/ui/component-status"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.component-tooltip@workspace:scopes/component/ui/component-tooltip":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.component-tooltip@workspace:scopes/component/ui/component-tooltip"
+  languageName: unknown
+  linkType: soft
 
 "@teambit/ui.composition-card@npm:0.0.259":
   version: 0.0.259
@@ -7392,6 +7992,650 @@ __metadata:
   checksum: 05ecd487773afebcdb03c11f87403de31d90c13d51b6d6a96657f7a0452912e1cec4bc4fee1f1b6c1b6a486a44b1eb4a381c0e1fa04d5b00b84f7451a0d02bc3
   languageName: node
   linkType: hard
+
+"@teambit/ui.composition-card@workspace:scopes/compositions/ui/composition-card":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.composition-card@workspace:scopes/compositions/ui/composition-card"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.compositions-menu-bar@workspace:scopes/compositions/ui/compositions-menu-bar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.compositions-menu-bar@workspace:scopes/compositions/ui/compositions-menu-bar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.constants.z-indexes@workspace:scopes/ui-foundation/uis/constants/z-indexes":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.constants.z-indexes@workspace:scopes/ui-foundation/uis/constants/z-indexes"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.contributors@workspace:scopes/design/ui/contributors":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.contributors@workspace:scopes/design/ui/contributors"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.corner@workspace:scopes/ui-foundation/uis/corner":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.corner@workspace:scopes/ui-foundation/uis/corner"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.dependency-tree@workspace:scopes/code/ui/dependency-tree":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.dependency-tree@workspace:scopes/code/ui/dependency-tree"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.deprecation-icon@workspace:scopes/component/ui/deprecation-icon":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.deprecation-icon@workspace:scopes/component/ui/deprecation-icon"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.docs.create-heading@workspace:scopes/mdx/ui/create-heading":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.docs.create-heading@workspace:scopes/mdx/ui/create-heading"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.docs.highlighted-text-span@workspace:scopes/mdx/ui/highlighted-text-span":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.docs.highlighted-text-span@workspace:scopes/mdx/ui/highlighted-text-span"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.docs.link@workspace:scopes/mdx/ui/link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.docs.link@workspace:scopes/mdx/ui/link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.docs.paragraph@workspace:scopes/mdx/ui/paragraph":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.docs.paragraph@workspace:scopes/mdx/ui/paragraph"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.docs.snippet@workspace:scopes/mdx/ui/snippet":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.docs.snippet@workspace:scopes/mdx/ui/snippet"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.empty-box@workspace:scopes/design/ui/empty-box":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.empty-box@workspace:scopes/design/ui/empty-box"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.empty-component-gallery@workspace:scopes/ui-foundation/empty-component-gallery":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.empty-component-gallery@workspace:scopes/ui-foundation/empty-component-gallery"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.empty-scope@workspace:scopes/scope/ui/empty-scope":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.empty-scope@workspace:scopes/scope/ui/empty-scope"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.empty-workspace@workspace:scopes/workspace/ui/empty-workspace":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.empty-workspace@workspace:scopes/workspace/ui/empty-workspace"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.env-icon@workspace:scopes/envs/ui/env-icon":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.env-icon@workspace:scopes/envs/ui/env-icon"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.error-page@workspace:scopes/design/ui/error-page":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.error-page@workspace:scopes/design/ui/error-page"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.external-link@workspace:scopes/design/ui/external-link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.external-link@workspace:scopes/design/ui/external-link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.full-loader@workspace:scopes/ui-foundation/uis/full-loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.full-loader@workspace:scopes/ui-foundation/uis/full-loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.gallery.base-component-card@workspace:scopes/explorer/ui/base-component-card":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.gallery.base-component-card@workspace:scopes/explorer/ui/base-component-card"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.gallery.component-card@workspace:scopes/explorer/ui/component-card":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.gallery.component-card@workspace:scopes/explorer/ui/component-card"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.gallery.component-grid@workspace:scopes/explorer/ui/component-grid":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.gallery.component-grid@workspace:scopes/explorer/ui/component-grid"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.get-icon-from-file-name@workspace:scopes/ui-foundation/get-icon-from-file-name":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.get-icon-from-file-name@workspace:scopes/ui-foundation/get-icon-from-file-name"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.global-loader@workspace:scopes/ui-foundation/uis/global-loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.global-loader@workspace:scopes/ui-foundation/uis/global-loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.highlighter-provider@workspace:scopes/react/ui/highlighter-provider":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.highlighter-provider@workspace:scopes/react/ui/highlighter-provider"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-bind-key@workspace:scopes/ui-foundation/uis/hooks/use-bind-key":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-bind-key@workspace:scopes/ui-foundation/uis/hooks/use-bind-key"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-code-params@workspace:scopes/code/hooks/use-code-params":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-code-params@workspace:scopes/code/hooks/use-code-params"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-composition@workspace:scopes/compositions/ui/hooks/use-composition":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-composition@workspace:scopes/compositions/ui/hooks/use-composition"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-data-query@workspace:scopes/ui-foundation/uis/hooks/use-data-query":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-data-query@workspace:scopes/ui-foundation/uis/hooks/use-data-query"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-in-out-transition@workspace:scopes/ui-foundation/uis/hooks/use-in-out-transition":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-in-out-transition@workspace:scopes/ui-foundation/uis/hooks/use-in-out-transition"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-is-mobile@workspace:scopes/ui-foundation/uis/hooks/use-is-mobile":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-is-mobile@workspace:scopes/ui-foundation/uis/hooks/use-is-mobile"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-snaps@workspace:scopes/component/ui/hooks/use-snaps":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-snaps@workspace:scopes/component/ui/hooks/use-snaps"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hooks.use-user-agent@workspace:scopes/ui-foundation/uis/hooks/use-user-agent":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hooks.use-user-agent@workspace:scopes/ui-foundation/uis/hooks/use-user-agent"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.hover-selector@workspace:scopes/react/hover-selector":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.hover-selector@workspace:scopes/react/hover-selector"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.input.option-button@workspace:scopes/design/ui/input/option-button":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.input.option-button@workspace:scopes/design/ui/input/option-button"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.is-browser@workspace:scopes/ui-foundation/uis/is-browser":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.is-browser@workspace:scopes/ui-foundation/uis/is-browser"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.keycap@workspace:scopes/ui-foundation/uis/keycap":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.keycap@workspace:scopes/ui-foundation/uis/keycap"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.label@workspace:scopes/design/ui/label":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.label@workspace:scopes/design/ui/label"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.load-preview@workspace:scopes/workspace/ui/load-preview":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.load-preview@workspace:scopes/workspace/ui/load-preview"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.main-dropdown@workspace:scopes/ui-foundation/uis/main-dropdown":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.main-dropdown@workspace:scopes/ui-foundation/uis/main-dropdown"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.mdx-layout@workspace:scopes/mdx/ui/mdx-layout":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.mdx-layout@workspace:scopes/mdx/ui/mdx-layout"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.mdx-scope-context@workspace:scopes/mdx/ui/mdx-scope-context":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.mdx-scope-context@workspace:scopes/mdx/ui/mdx-scope-context"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.menu-widget-icon@workspace:scopes/ui-foundation/menu-widget-icon":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.menu-widget-icon@workspace:scopes/ui-foundation/menu-widget-icon"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.menu@workspace:scopes/ui-foundation/menu":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.menu@workspace:scopes/ui-foundation/menu"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.notifications.notification-center@workspace:scopes/ui-foundation/notifications/ui/notification-center":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.notifications.notification-center@workspace:scopes/ui-foundation/notifications/ui/notification-center"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.notifications.notification-context@workspace:scopes/ui-foundation/notifications/ui/notification-context":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.notifications.notification-context@workspace:scopes/ui-foundation/notifications/ui/notification-context"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.notifications.notification@workspace:scopes/ui-foundation/notifications/ui/notification":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.notifications.notification@workspace:scopes/ui-foundation/notifications/ui/notification"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.notifications.store@workspace:scopes/ui-foundation/notifications/ui/notification-store":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.notifications.store@workspace:scopes/ui-foundation/notifications/ui/notification-store"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.owner-avatar@workspace:scopes/design/ui/owner-avatar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.owner-avatar@workspace:scopes/design/ui/owner-avatar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.pages.not-found@workspace:scopes/design/ui/not-found-page":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.pages.not-found@workspace:scopes/design/ui/not-found-page"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.pages.server-error@workspace:scopes/design/ui/server-error-page":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.pages.server-error@workspace:scopes/design/ui/server-error-page"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.pages.standalone-not-found-page@workspace:scopes/design/ui/pages/standalone-not-found-page":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.pages.standalone-not-found-page@workspace:scopes/design/ui/pages/standalone-not-found-page"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.pill-label@workspace:scopes/design/ui/pill-label":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.pill-label@workspace:scopes/design/ui/pill-label"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.preview-placeholder@workspace:scopes/preview/ui/preview-placeholder":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.preview-placeholder@workspace:scopes/preview/ui/preview-placeholder"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.queries.get-component-code@workspace:scopes/code/queries/get-component-code":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.queries.get-component-code@workspace:scopes/code/queries/get-component-code"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.queries.get-docs@workspace:scopes/docs/ui/queries/get-docs":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.queries.get-docs@workspace:scopes/docs/ui/queries/get-docs"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.queries.get-file-content@workspace:scopes/code/queries/get-file-content":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.queries.get-file-content@workspace:scopes/code/queries/get-file-content"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.react-router.extend-path@workspace:scopes/ui-foundation/react-router/ui/extend-path":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.react-router.extend-path@workspace:scopes/ui-foundation/react-router/ui/extend-path"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.react-router.link@workspace:scopes/ui-foundation/react-router/ui/link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.react-router.link@workspace:scopes/ui-foundation/react-router/ui/link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.react-router.nav-link@workspace:scopes/ui-foundation/react-router/ui/nav-link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.react-router.nav-link@workspace:scopes/ui-foundation/react-router/ui/nav-link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.react-router.slot-router@workspace:scopes/ui-foundation/react-router/ui/slot-router":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.react-router.slot-router@workspace:scopes/ui-foundation/react-router/ui/slot-router"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.react-router.use-query@workspace:scopes/ui-foundation/react-router/ui/use-query":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.react-router.use-query@workspace:scopes/ui-foundation/react-router/ui/use-query"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.round-loader@workspace:scopes/design/ui/round-loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.round-loader@workspace:scopes/design/ui/round-loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.routing.compare-url@workspace:scopes/ui-foundation/routing/compare-url":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.routing.compare-url@workspace:scopes/ui-foundation/routing/compare-url"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.routing.link@workspace:scopes/ui-foundation/routing/link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.routing.link@workspace:scopes/ui-foundation/routing/link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.routing.native-link@workspace:scopes/ui-foundation/routing/native-link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.routing.native-link@workspace:scopes/ui-foundation/routing/native-link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.routing.native-nav-link@workspace:scopes/ui-foundation/routing/native-nav-link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.routing.native-nav-link@workspace:scopes/ui-foundation/routing/native-nav-link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.routing.nav-link@workspace:scopes/ui-foundation/routing/nav-link":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.routing.nav-link@workspace:scopes/ui-foundation/routing/nav-link"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.routing.provider@workspace:scopes/ui-foundation/routing/routing-provider":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.routing.provider@workspace:scopes/ui-foundation/routing/routing-provider"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.scope-details@workspace:scopes/scope/ui/scope-details":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.scope-details@workspace:scopes/scope/ui/scope-details"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.scope-labels@workspace:scopes/scope/ui/scope-labels":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.scope-labels@workspace:scopes/scope/ui/scope-labels"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.scope-title@workspace:scopes/scope/ui/scope-title":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.scope-title@workspace:scopes/scope/ui/scope-title"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.separator@workspace:scopes/design/ui/separator":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.separator@workspace:scopes/design/ui/separator"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.side-bar@workspace:scopes/ui-foundation/uis/side-bar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.side-bar@workspace:scopes/ui-foundation/uis/side-bar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.status@workspace:scopes/workspace/ui/status":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.status@workspace:scopes/workspace/ui/status"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.styles.colors-by-letter@workspace:scopes/design/ui/styles/colors-by-letter":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.styles.colors-by-letter@workspace:scopes/design/ui/styles/colors-by-letter"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.styles.ellipsis@workspace:scopes/design/ui/styles/ellipsis":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.styles.ellipsis@workspace:scopes/design/ui/styles/ellipsis"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.styles.muted-italic@workspace:scopes/design/ui/styles/muted-italic":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.styles.muted-italic@workspace:scopes/design/ui/styles/muted-italic"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.surfaces.menu.item@workspace:scopes/design/ui/surfaces/menu/item":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.surfaces.menu.item@workspace:scopes/design/ui/surfaces/menu/item"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.surfaces.menu.link-item@workspace:scopes/design/ui/surfaces/menu/link-item":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.surfaces.menu.link-item@workspace:scopes/design/ui/surfaces/menu/link-item"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.surfaces.menu.section@workspace:scopes/design/ui/surfaces/menu/section":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.surfaces.menu.section@workspace:scopes/design/ui/surfaces/menu/section"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.test-loader@workspace:scopes/defender/ui/test-loader":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.test-loader@workspace:scopes/defender/ui/test-loader"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.test-row@workspace:scopes/defender/ui/test-row":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.test-row@workspace:scopes/defender/ui/test-row"
+  dependencies:
+    "@teambit/documenter.theme.theme-context": 3.0.8
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.test-table@workspace:scopes/defender/ui/test-table":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.test-table@workspace:scopes/defender/ui/test-table"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.time-ago@workspace:scopes/design/ui/time-ago":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.time-ago@workspace:scopes/design/ui/time-ago"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.tooltip@workspace:scopes/design/ui/tooltip":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.tooltip@workspace:scopes/design/ui/tooltip"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.top-bar@workspace:scopes/ui-foundation/uis/top-bar":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.top-bar@workspace:scopes/ui-foundation/uis/top-bar"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.tree.drawer@workspace:scopes/ui-foundation/tree/drawer":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.tree.drawer@workspace:scopes/ui-foundation/tree/drawer"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.tree.file-tree@workspace:scopes/ui-foundation/tree/file-tree":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.tree.file-tree@workspace:scopes/ui-foundation/tree/file-tree"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.tree.folder-tree-node@workspace:scopes/ui-foundation/tree/folder-tree-node":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.tree.folder-tree-node@workspace:scopes/ui-foundation/tree/folder-tree-node"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.tree.tree-node@workspace:scopes/ui-foundation/tree/tree-node":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.tree.tree-node@workspace:scopes/ui-foundation/tree/tree-node"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.utils.get-file-icon@workspace:scopes/code/utils/get-file-icon":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.utils.get-file-icon@workspace:scopes/code/utils/get-file-icon"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.version-block@workspace:scopes/component/ui/version-block":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.version-block@workspace:scopes/component/ui/version-block"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.version-dropdown@workspace:scopes/component/ui/version-dropdown":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.version-dropdown@workspace:scopes/component/ui/version-dropdown"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.version-label@workspace:scopes/component/ui/version-label":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.version-label@workspace:scopes/component/ui/version-label"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui.workspace-component-card@workspace:scopes/workspace/ui/workspace-component-card":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui.workspace-component-card@workspace:scopes/workspace/ui/workspace-component-card"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/ui@workspace:scopes/ui-foundation/ui":
+  version: 0.0.0-use.local
+  resolution: "@teambit/ui@workspace:scopes/ui-foundation/ui"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/update-dependencies@workspace:scopes/scope/update-dependencies":
+  version: 0.0.0-use.local
+  resolution: "@teambit/update-dependencies@workspace:scopes/scope/update-dependencies"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/url.add-avatar-query-params@workspace:scopes/toolbox/url/add-avatar-query-params":
+  version: 0.0.0-use.local
+  resolution: "@teambit/url.add-avatar-query-params@workspace:scopes/toolbox/url/add-avatar-query-params"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/url.query-string@workspace:scopes/toolbox/url/query-string":
+  version: 0.0.0-use.local
+  resolution: "@teambit/url.query-string@workspace:scopes/toolbox/url/query-string"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/user-agent@workspace:scopes/ui-foundation/user-agent":
+  version: 0.0.0-use.local
+  resolution: "@teambit/user-agent@workspace:scopes/ui-foundation/user-agent"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/variants@workspace:scopes/workspace/variants":
+  version: 0.0.0-use.local
+  resolution: "@teambit/variants@workspace:scopes/workspace/variants"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/webpack@workspace:scopes/compilation/webpack":
+  version: 0.0.0-use.local
+  resolution: "@teambit/webpack@workspace:scopes/compilation/webpack"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/worker@workspace:scopes/harmony/worker":
+  version: 0.0.0-use.local
+  resolution: "@teambit/worker@workspace:scopes/harmony/worker"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/workspace@workspace:scopes/workspace/workspace":
+  version: 0.0.0-use.local
+  resolution: "@teambit/workspace@workspace:scopes/workspace/workspace"
+  languageName: unknown
+  linkType: soft
+
+"@teambit/yarn@workspace:scopes/dependencies/yarn":
+  version: 0.0.0-use.local
+  resolution: "@teambit/yarn@workspace:scopes/dependencies/yarn"
+  languageName: unknown
+  linkType: soft
 
 "@testing-library/dom@npm:^7.24.2":
   version: 7.29.6
@@ -9898,12 +11142,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"Avatar-333965@workspace:scopes/design/ui/Avatar":
-  version: 0.0.0-use.local
-  resolution: "Avatar-333965@workspace:scopes/design/ui/Avatar"
-  languageName: unknown
-  linkType: soft
-
 "JSONStream@npm:1.3.5":
   version: 1.3.5
   resolution: "JSONStream@npm:1.3.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2FJSONStream%2F-%2FJSONStream-1.3.5.tgz"
@@ -10182,12 +11420,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"add-avatar-query-params-6de96f@workspace:scopes/toolbox/url/add-avatar-query-params":
-  version: 0.0.0-use.local
-  resolution: "add-avatar-query-params-6de96f@workspace:scopes/toolbox/url/add-avatar-query-params"
-  languageName: unknown
-  linkType: soft
-
 "address@npm:1.1.2, address@npm:^1.0.1":
   version: 1.1.2
   resolution: "address@npm:1.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Faddress%2F-%2Faddress-1.1.2.tgz"
@@ -10211,12 +11443,6 @@ __metadata:
   checksum: ac1e164f625a9715daaef092bdc1ceb11d053d95d343d83315c10eced4fdc4ead499f7c25d433aabc26f32cd736370551998a6ce7ab9ad9c2d978cca41852858
   languageName: node
   linkType: hard
-
-"agent-20b9e0@workspace:scopes/toolbox/network/agent":
-  version: 0.0.0-use.local
-  resolution: "agent-20b9e0@workspace:scopes/toolbox/network/agent"
-  languageName: unknown
-  linkType: soft
 
 "agent-base@npm:4, agent-base@npm:^4.3.0":
   version: 4.3.0
@@ -11131,30 +12357,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"aspect-874810@workspace:scopes/harmony/aspect":
-  version: 0.0.0-use.local
-  resolution: "aspect-874810@workspace:scopes/harmony/aspect"
-  languageName: unknown
-  linkType: soft
-
-"aspect-box-39b8f5@workspace:scopes/harmony/ui/aspect-box":
-  version: 0.0.0-use.local
-  resolution: "aspect-box-39b8f5@workspace:scopes/harmony/ui/aspect-box"
-  languageName: unknown
-  linkType: soft
-
-"aspect-f6a34f@workspace:scopes/ui-foundation/notifications/aspect":
-  version: 0.0.0-use.local
-  resolution: "aspect-f6a34f@workspace:scopes/ui-foundation/notifications/aspect"
-  languageName: unknown
-  linkType: soft
-
-"aspect-loader-4bc567@workspace:scopes/harmony/aspect-loader":
-  version: 0.0.0-use.local
-  resolution: "aspect-loader-4bc567@workspace:scopes/harmony/aspect-loader"
-  languageName: unknown
-  linkType: soft
-
 "assert-plus@npm:1.0.0, assert-plus@npm:^1.0.0":
   version: 1.0.0
   resolution: "assert-plus@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fassert-plus%2F-%2Fassert-plus-1.0.0.tgz"
@@ -11449,12 +12651,6 @@ __metadata:
   checksum: dba5c8b41bc8239afa61a9b2fa2fe92bcf087e1a500cdee94adc19e549f82095604bbaba1d0e4df6802ec74117d2a60af4bb67122c691491e1451fdefe41486d
   languageName: node
   linkType: hard
-
-"babel-f097cd@workspace:scopes/compilation/babel":
-  version: 0.0.0-use.local
-  resolution: "babel-f097cd@workspace:scopes/compilation/babel"
-  languageName: unknown
-  linkType: soft
 
 "babel-jest@npm:26.6.3, babel-jest@npm:^26.6.3":
   version: 26.6.3
@@ -11760,12 +12956,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"base-component-card-ba7416@workspace:scopes/explorer/ui/base-component-card":
-  version: 0.0.0-use.local
-  resolution: "base-component-card-ba7416@workspace:scopes/explorer/ui/base-component-card"
-  languageName: unknown
-  linkType: soft
-
 "base62@npm:^1.1.0":
   version: 1.2.8
   resolution: "base62@npm:1.2.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbase62%2F-%2Fbase62-1.2.8.tgz"
@@ -11878,20 +13068,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bit-226828@workspace:scopes/harmony/bit":
-  version: 0.0.0-use.local
-  resolution: "bit-226828@workspace:scopes/harmony/bit"
-  dependencies:
-    "@types/react": 16.14.4
-  languageName: unknown
-  linkType: soft
-
-"bit-error-bfca26@workspace:scopes/harmony/bit-error":
-  version: 0.0.0-use.local
-  resolution: "bit-error-bfca26@workspace:scopes/harmony/bit-error"
-  languageName: unknown
-  linkType: soft
-
 "bit-mask@npm:0.0.2-alpha":
   version: 0.0.2-alpha
   resolution: "bit-mask@npm:0.0.2-alpha::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbit-mask%2F-%2Fbit-mask-0.0.2-alpha.tgz"
@@ -11900,12 +13076,6 @@ __metadata:
   checksum: 50da30578e9480f041e22a5118801a4826301d1a867d477b8b988823c3ab57a71a2d9f6dc98639236af7332c5b53aa60803a2c415d5cfff58956e45ca4821bdf
   languageName: node
   linkType: hard
-
-"bit-react-transformer-356323@workspace:scopes/react/bit-react-transformer":
-  version: 0.0.0-use.local
-  resolution: "bit-react-transformer-356323@workspace:scopes/react/bit-react-transformer"
-  languageName: unknown
-  linkType: soft
 
 "bl@npm:^4.0.3":
   version: 4.1.0
@@ -12170,12 +13340,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"builder-07b0ef@workspace:scopes/pipelines/builder":
-  version: 0.0.0-use.local
-  resolution: "builder-07b0ef@workspace:scopes/pipelines/builder"
-  languageName: unknown
-  linkType: soft
-
 "builtin-modules@npm:^3.1.0":
   version: 3.2.0
   resolution: "builtin-modules@npm:3.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbuiltin-modules%2F-%2Fbuiltin-modules-3.2.0.tgz"
@@ -12189,12 +13353,6 @@ __metadata:
   checksum: 36aa0f11effcc9ab1637e69240752c70aab8ed1f9ed88baae94dd989fa3e34fc332a41f851062c24a888572f31343130e5cd7055344b9743c9d6bcbdc449eaf1
   languageName: node
   linkType: hard
-
-"bundler-c1db05@workspace:scopes/compilation/bundler":
-  version: 0.0.0-use.local
-  resolution: "bundler-c1db05@workspace:scopes/compilation/bundler"
-  languageName: unknown
-  linkType: soft
 
 "bunyan@npm:1.8.15":
   version: 1.8.15
@@ -12310,12 +13468,6 @@ __metadata:
   checksum: c1ddb5312933185135e7d53463673493a88eb01a5f9b237650e6ed72e5fb49d514f59929ccc0869b176fe8c39ae57bcff46425f515acaa7a7e82483d2459c18e
   languageName: node
   linkType: hard
-
-"cache-8223fe@workspace:scopes/harmony/cache":
-  version: 0.0.0-use.local
-  resolution: "cache-8223fe@workspace:scopes/harmony/cache"
-  languageName: unknown
-  linkType: soft
 
 "cache-base@npm:^1.0.1":
   version: 1.0.1
@@ -12520,12 +13672,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"capitalize-50e159@workspace:scopes/toolbox/string/capitalize":
-  version: 0.0.0-use.local
-  resolution: "capitalize-50e159@workspace:scopes/toolbox/string/capitalize"
-  languageName: unknown
-  linkType: soft
-
 "capture-exit@npm:^2.0.0":
   version: 2.0.0
   resolution: "capture-exit@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcapture-exit%2F-%2Fcapture-exit-2.0.0.tgz"
@@ -12662,12 +13808,6 @@ __metadata:
   checksum: f860285b419f9e925c2db0f45ffa88aa8794c14b80cc5d01ff30930bcfc384996606362706f0829cf557f6d36152a5fb2d227ad63c4bc90e2ec9e9dbed4a3c07
   languageName: node
   linkType: hard
-
-"changelog-ab57ba@workspace:scopes/component/changelog":
-  version: 0.0.0-use.local
-  resolution: "changelog-ab57ba@workspace:scopes/component/changelog"
-  languageName: unknown
-  linkType: soft
 
 "changelog-parser@npm:^2.0.0":
   version: 2.8.0
@@ -12941,12 +14081,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"cli-d41ca8@workspace:scopes/harmony/cli":
-  version: 0.0.0-use.local
-  resolution: "cli-d41ca8@workspace:scopes/harmony/cli"
-  languageName: unknown
-  linkType: soft
-
 "cli-highlight@npm:2.1.9":
   version: 2.1.9
   resolution: "cli-highlight@npm:2.1.9::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcli-highlight%2F-%2Fcli-highlight-2.1.9.tgz"
@@ -12962,12 +14096,6 @@ __metadata:
   checksum: 47674cc8b1483913974cc3e9b1286ad3ff39e9bf52109444b35536dbebacaeb6a332a0afb26bcbc337f81de2ede0a1b683187b85fcb6baa3e613d9807cd7bb6b
   languageName: node
   linkType: hard
-
-"cli-snippet-320052@workspace:scopes/design/ui/cli-snippet":
-  version: 0.0.0-use.local
-  resolution: "cli-snippet-320052@workspace:scopes/design/ui/cli-snippet"
-  languageName: unknown
-  linkType: soft
 
 "cli-spinners@npm:1.3.1":
   version: 1.3.1
@@ -13120,12 +14248,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"code-261c22@workspace:scopes/component/code":
-  version: 0.0.0-use.local
-  resolution: "code-261c22@workspace:scopes/component/code"
-  languageName: unknown
-  linkType: soft
-
 "code-excerpt@npm:^3.0.0":
   version: 3.0.0
   resolution: "code-excerpt@npm:3.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcode-excerpt%2F-%2Fcode-excerpt-3.0.0.tgz"
@@ -13142,38 +14264,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"code-tab-page-51a8df@workspace:scopes/code/ui/code-tab-page":
-  version: 0.0.0-use.local
-  resolution: "code-tab-page-51a8df@workspace:scopes/code/ui/code-tab-page"
-  languageName: unknown
-  linkType: soft
-
-"code-tab-tree-75513e@workspace:scopes/code/ui/code-tab-tree":
-  version: 0.0.0-use.local
-  resolution: "code-tab-tree-75513e@workspace:scopes/code/ui/code-tab-tree"
-  languageName: unknown
-  linkType: soft
-
-"code-view-ec1f0d@workspace:scopes/code/ui/code-view":
-  version: 0.0.0-use.local
-  resolution: "code-view-ec1f0d@workspace:scopes/code/ui/code-view"
-  languageName: unknown
-  linkType: soft
-
 "collapse-white-space@npm:^1.0.2":
   version: 1.0.6
   resolution: "collapse-white-space@npm:1.0.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcollapse-white-space%2F-%2Fcollapse-white-space-1.0.6.tgz"
   checksum: beca17619bd6f8a09bf1a08667d4951af39eeddb59c2a225d3f40a5b758bd0c42ebf8885488b73372c9330085b0971efa1b95503fca833d75e84d8cd1992914f
   languageName: node
   linkType: hard
-
-"collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button":
-  version: 0.0.0-use.local
-  resolution: "collapser-button-fa3ad9@workspace:scopes/ui-foundation/collapser-button"
-  dependencies:
-    "@teambit/documenter.theme.theme-compositions": 3.0.8
-  languageName: unknown
-  linkType: soft
 
 "collect-v8-coverage@npm:^1.0.0":
   version: 1.0.1
@@ -13268,12 +14364,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"colors-by-letter-b31519@workspace:scopes/design/ui/styles/colors-by-letter":
-  version: 0.0.0-use.local
-  resolution: "colors-by-letter-b31519@workspace:scopes/design/ui/styles/colors-by-letter"
-  languageName: unknown
-  linkType: soft
-
 "colors@npm:1.0.x":
   version: 1.0.3
   resolution: "colors@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcolors%2F-%2Fcolors-1.0.3.tgz"
@@ -13320,12 +14410,6 @@ __metadata:
   checksum: 31a5a2fa6e0f02764b0634e0aa31913c9be0ef568f4e58b5c1ec85d0a6e4a6c367905eacf2c7e59b57d3d05f40cff166ea3c9b6ee8338625cad060ce43ede9fd
   languageName: node
   linkType: hard
-
-"command-bar-591a30@workspace:scopes/explorer/command-bar":
-  version: 0.0.0-use.local
-  resolution: "command-bar-591a30@workspace:scopes/explorer/command-bar"
-  languageName: unknown
-  linkType: soft
 
 "command-exists@npm:1.2.6":
   version: 1.2.6
@@ -13426,12 +14510,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"compare-url-93804f@workspace:scopes/ui-foundation/routing/compare-url":
-  version: 0.0.0-use.local
-  resolution: "compare-url-93804f@workspace:scopes/ui-foundation/routing/compare-url"
-  languageName: unknown
-  linkType: soft
-
 "compare-versions@npm:^3.6.0":
   version: 3.6.0
   resolution: "compare-versions@npm:3.6.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcompare-versions%2F-%2Fcompare-versions-3.6.0.tgz"
@@ -13439,36 +14517,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"compiler-68acff@workspace:scopes/compilation/compiler":
-  version: 0.0.0-use.local
-  resolution: "compiler-68acff@workspace:scopes/compilation/compiler"
-  languageName: unknown
-  linkType: soft
-
-"compiler-dcfcd3@workspace:scopes/mdx/modules/compiler":
-  version: 0.0.0-use.local
-  resolution: "compiler-dcfcd3@workspace:scopes/mdx/modules/compiler"
-  languageName: unknown
-  linkType: soft
-
-"component-860f6b@workspace:scopes/component/component":
-  version: 0.0.0-use.local
-  resolution: "component-860f6b@workspace:scopes/component/component"
-  languageName: unknown
-  linkType: soft
-
 "component-bind@npm:1.0.0":
   version: 1.0.0
   resolution: "component-bind@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcomponent-bind%2F-%2Fcomponent-bind-1.0.0.tgz"
   checksum: afbea09480c570b50fb86d8b4bee5d8b4809c667d8a7072cab0d48832f2cb9ebd62bf61b28722f1560cf7a2b0c2c171f8ef120229ec88e9cf332833cbf2779e8
   languageName: node
   linkType: hard
-
-"component-card-6a10fd@workspace:scopes/explorer/ui/component-card":
-  version: 0.0.0-use.local
-  resolution: "component-card-6a10fd@workspace:scopes/explorer/ui/component-card"
-  languageName: unknown
-  linkType: soft
 
 "component-emitter@npm:1.2.1":
   version: 1.2.1
@@ -13484,24 +14538,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"component-grid-de0a6d@workspace:scopes/explorer/ui/component-grid":
-  version: 0.0.0-use.local
-  resolution: "component-grid-de0a6d@workspace:scopes/explorer/ui/component-grid"
-  languageName: unknown
-  linkType: soft
-
-"component-highlighter-a6137e@workspace:scopes/react/component-highlighter":
-  version: 0.0.0-use.local
-  resolution: "component-highlighter-a6137e@workspace:scopes/react/component-highlighter"
-  languageName: unknown
-  linkType: soft
-
-"component-id-dbdcb1@workspace:scopes/component/component-id":
-  version: 0.0.0-use.local
-  resolution: "component-id-dbdcb1@workspace:scopes/component/component-id"
-  languageName: unknown
-  linkType: soft
-
 "component-inherit@npm:0.0.3":
   version: 0.0.3
   resolution: "component-inherit@npm:0.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcomponent-inherit%2F-%2Fcomponent-inherit-0.0.3.tgz"
@@ -13509,54 +14545,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"component-package-version-487330@workspace:scopes/component/component-package-version":
-  version: 0.0.0-use.local
-  resolution: "component-package-version-487330@workspace:scopes/component/component-package-version"
-  languageName: unknown
-  linkType: soft
-
-"component-preview-9588a3@workspace:scopes/preview/ui/component-preview":
-  version: 0.0.0-use.local
-  resolution: "component-preview-9588a3@workspace:scopes/preview/ui/component-preview"
-  languageName: unknown
-  linkType: soft
-
 "component-props@npm:1.1.1":
   version: 1.1.1
   resolution: "component-props@npm:1.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcomponent-props%2F-%2Fcomponent-props-1.1.1.tgz"
   checksum: 42d852bfbabc9d57c510b93a3ddc316e0a9ab5fd822186037eac8cea1147b3de5e8724745d32114a818b6687c9c59e1f27df97aaaee40dd3c2bb73b1c474f2b5
   languageName: node
   linkType: hard
-
-"component-status-0be800@workspace:scopes/component/ui/component-status":
-  version: 0.0.0-use.local
-  resolution: "component-status-0be800@workspace:scopes/component/ui/component-status"
-  languageName: unknown
-  linkType: soft
-
-"component-status-resolver-f49c8f@workspace:scopes/component/ui/component-status-resolver":
-  version: 0.0.0-use.local
-  resolution: "component-status-resolver-f49c8f@workspace:scopes/component/ui/component-status-resolver"
-  languageName: unknown
-  linkType: soft
-
-"component-tooltip-246023@workspace:scopes/component/ui/component-tooltip":
-  version: 0.0.0-use.local
-  resolution: "component-tooltip-246023@workspace:scopes/component/ui/component-tooltip"
-  languageName: unknown
-  linkType: soft
-
-"component-tree-98421b@workspace:scopes/component/component-tree":
-  version: 0.0.0-use.local
-  resolution: "component-tree-98421b@workspace:scopes/component/component-tree"
-  languageName: unknown
-  linkType: soft
-
-"component-version-5616d2@workspace:scopes/component/component-version":
-  version: 0.0.0-use.local
-  resolution: "component-version-5616d2@workspace:scopes/component/component-version"
-  languageName: unknown
-  linkType: soft
 
 "component-xor@npm:0.0.4":
   version: 0.0.4
@@ -13573,38 +14567,6 @@ __metadata:
   checksum: 069b4e1a82db5f00a7d9612565b5f0891744b09c0486bc61e1bcbd419e1202af710e44ec1b2ba2fb322af4861f141432165f34962f32d387c1ff37e4357a66e1
   languageName: node
   linkType: hard
-
-"composition-card-4046af@workspace:scopes/compositions/ui/composition-card":
-  version: 0.0.0-use.local
-  resolution: "composition-card-4046af@workspace:scopes/compositions/ui/composition-card"
-  languageName: unknown
-  linkType: soft
-
-"composition-id-0871f4@workspace:scopes/compositions/model/composition-id":
-  version: 0.0.0-use.local
-  resolution: "composition-id-0871f4@workspace:scopes/compositions/model/composition-id"
-  languageName: unknown
-  linkType: soft
-
-"composition-type-90c41b@workspace:scopes/compositions/model/composition-type":
-  version: 0.0.0-use.local
-  resolution: "composition-type-90c41b@workspace:scopes/compositions/model/composition-type"
-  languageName: unknown
-  linkType: soft
-
-"compositions-903b7c@workspace:scopes/compositions/compositions":
-  version: 0.0.0-use.local
-  resolution: "compositions-903b7c@workspace:scopes/compositions/compositions"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.8
-  languageName: unknown
-  linkType: soft
-
-"compositions-menu-bar-6f94c5@workspace:scopes/compositions/ui/compositions-menu-bar":
-  version: 0.0.0-use.local
-  resolution: "compositions-menu-bar-6f94c5@workspace:scopes/compositions/ui/compositions-menu-bar"
-  languageName: unknown
-  linkType: soft
 
 "compressible@npm:~2.0.16":
   version: 2.0.18
@@ -13660,12 +14622,6 @@ __metadata:
   checksum: 286f55bb6a41f290248b0c4b1fa84f08b1d7f248634bf5907b1b946e28b537b8f95bd6100f10394e9d870fcec9ed50d4636dfc68c0b7e820b06c7f84814edb43
   languageName: node
   linkType: hard
-
-"config-3aa257@workspace:scopes/harmony/config":
-  version: 0.0.0-use.local
-  resolution: "config-3aa257@workspace:scopes/harmony/config"
-  languageName: unknown
-  linkType: soft
 
 "config-chain@npm:^1.1.11":
   version: 1.1.12
@@ -13734,12 +14690,6 @@ __metadata:
   checksum: ff6e19cbf281c23d5608723a6dc60ac97e2280bd4d21602511283112321e6c1555895e395555e367672b54a0f1585276284b7c3c8be313aca73902ac2f2609fd
   languageName: node
   linkType: hard
-
-"contributors-db9275@workspace:scopes/design/ui/contributors":
-  version: 0.0.0-use.local
-  resolution: "contributors-db9275@workspace:scopes/design/ui/contributors"
-  languageName: unknown
-  linkType: soft
 
 "convert-source-map@npm:1.7.0, convert-source-map@npm:^1.1.0, convert-source-map@npm:^1.4.0, convert-source-map@npm:^1.6.0, convert-source-map@npm:^1.7.0":
   version: 1.7.0
@@ -13900,12 +14850,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"corner-912f64@workspace:scopes/ui-foundation/uis/corner":
-  version: 0.0.0-use.local
-  resolution: "corner-912f64@workspace:scopes/ui-foundation/uis/corner"
-  languageName: unknown
-  linkType: soft
-
 "cors@npm:2.8.5, cors@npm:^2.8.4":
   version: 2.8.5
   resolution: "cors@npm:2.8.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcors%2F-%2Fcors-2.8.5.tgz"
@@ -13962,12 +14906,6 @@ __metadata:
   checksum: cbd6512694a5bf8cd3f8742cb58cd4b85c67812316878d9515cbbc8f531b22b4fb14e074de6b564fc4951be4e7ce223ed4bf245865ac0cb09e1209d8e6cae0ec
   languageName: node
   linkType: hard
-
-"create-heading-73711b@workspace:scopes/mdx/ui/create-heading":
-  version: 0.0.0-use.local
-  resolution: "create-heading-73711b@workspace:scopes/mdx/ui/create-heading"
-  languageName: unknown
-  linkType: soft
 
 "create-react-class@npm:^15.7.0":
   version: 15.7.0
@@ -14954,36 +15892,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dependency-resolver-11341d@workspace:scopes/dependencies/dependency-resolver":
-  version: 0.0.0-use.local
-  resolution: "dependency-resolver-11341d@workspace:scopes/dependencies/dependency-resolver"
-  languageName: unknown
-  linkType: soft
-
-"dependency-tree-e49664@workspace:scopes/code/ui/dependency-tree":
-  version: 0.0.0-use.local
-  resolution: "dependency-tree-e49664@workspace:scopes/code/ui/dependency-tree"
-  languageName: unknown
-  linkType: soft
-
 "deprecated-decorator@npm:^0.1.6":
   version: 0.1.6
   resolution: "deprecated-decorator@npm:0.1.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fdeprecated-decorator%2F-%2Fdeprecated-decorator-0.1.6.tgz"
   checksum: 35a358b89b0ca582266b5a2ce73e088658af576508463f1f608f0e7e08bf2fe3395651209a2d431d2c6901ebfafc483bc7318b8bb82d3b3585fcbd6e6c3d65de
   languageName: node
   linkType: hard
-
-"deprecation-e9a7a0@workspace:scopes/component/deprecation":
-  version: 0.0.0-use.local
-  resolution: "deprecation-e9a7a0@workspace:scopes/component/deprecation"
-  languageName: unknown
-  linkType: soft
-
-"deprecation-icon-f65de1@workspace:scopes/component/ui/deprecation-icon":
-  version: 0.0.0-use.local
-  resolution: "deprecation-icon-f65de1@workspace:scopes/component/ui/deprecation-icon"
-  languageName: unknown
-  linkType: soft
 
 "destroy@npm:~1.0.4":
   version: 1.0.4
@@ -15072,12 +15986,6 @@ __metadata:
   checksum: 93e3d7030e4b9c58c11884e734b4b9dfd424c49fa66e0bbce3499bfc8e4cff1cc4b734862d062e329adc757acda1fdb8582b9a9772434ba5a0b0f537a300f73d
   languageName: node
   linkType: hard
-
-"dev-files-c0467d@workspace:scopes/component/dev-files":
-  version: 0.0.0-use.local
-  resolution: "dev-files-c0467d@workspace:scopes/component/dev-files"
-  languageName: unknown
-  linkType: soft
 
 "dicer@npm:0.3.0":
   version: 0.3.0
@@ -15178,12 +16086,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"docs-6fa149@workspace:scopes/docs/docs":
-  version: 0.0.0-use.local
-  resolution: "docs-6fa149@workspace:scopes/docs/docs"
-  languageName: unknown
-  linkType: soft
-
 "doctrine@npm:1.5.0":
   version: 1.5.0
   resolution: "doctrine@npm:1.5.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fdoctrine%2F-%2Fdoctrine-1.5.0.tgz"
@@ -15247,12 +16149,6 @@ __metadata:
   checksum: 598e05e71b8cdb03424393c0631818b978b9fee2dd18d0215a9ee97a6dee86bddd1dcfae4609c173185a9f1bcde24d4a87e1f0d512d66b76536b21fc3f34fc03
   languageName: node
   linkType: hard
-
-"dom-to-react-95e16b@workspace:scopes/react/dom-to-react":
-  version: 0.0.0-use.local
-  resolution: "dom-to-react-95e16b@workspace:scopes/react/dom-to-react"
-  languageName: unknown
-  linkType: soft
 
 "dom-walk@npm:^0.1.0":
   version: 0.1.2
@@ -15346,12 +16242,6 @@ __metadata:
   checksum: 76e6693d8803eeff9cb920988446bf223cf1f6e5b1c0c2fe07a66906392134931a481b11e3c0bd852c5cfc97fad65258bcb4359169ad1d8d624cb3f56932be98
   languageName: node
   linkType: hard
-
-"drawer-76b114@workspace:scopes/ui-foundation/tree/drawer":
-  version: 0.0.0-use.local
-  resolution: "drawer-76b114@workspace:scopes/ui-foundation/tree/drawer"
-  languageName: unknown
-  linkType: soft
 
 "dtrace-provider@npm:~0.8":
   version: 0.8.8
@@ -15464,12 +16354,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eject-929fdf@workspace:scopes/workspace/eject":
-  version: 0.0.0-use.local
-  resolution: "eject-929fdf@workspace:scopes/workspace/eject"
-  languageName: unknown
-  linkType: soft
-
 "ejs@npm:^2.6.1":
   version: 2.7.4
   resolution: "ejs@npm:2.7.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fejs%2F-%2Fejs-2.7.4.tgz"
@@ -15483,18 +16367,6 @@ __metadata:
   checksum: 61ee1c1359f650fdbd09ac7977c82c39587a17fd0aca6e37565b40ff7e3b7ab5a7dead0f22615a964524bb858f6d2ec84aeb4beeb67e268df5c1abd2eaa64506
   languageName: node
   linkType: hard
-
-"ellipsis-2796fc@workspace:scopes/toolbox/string/ellipsis":
-  version: 0.0.0-use.local
-  resolution: "ellipsis-2796fc@workspace:scopes/toolbox/string/ellipsis"
-  languageName: unknown
-  linkType: soft
-
-"ellipsis-ae5bc5@workspace:scopes/design/ui/styles/ellipsis":
-  version: 0.0.0-use.local
-  resolution: "ellipsis-ae5bc5@workspace:scopes/design/ui/styles/ellipsis"
-  languageName: unknown
-  linkType: soft
 
 "emittery@npm:^0.7.1":
   version: 0.7.2
@@ -15537,30 +16409,6 @@ __metadata:
   checksum: a79126b55bc86ee8fd938235a6adf9d457c05fb5bb934e8608b7d35c878d9d1e312a67759244f5c3fba0810b508eb5617e5e6ad6886496ebcfa6832d1c8de3c4
   languageName: node
   linkType: hard
-
-"empty-box-dbdece@workspace:scopes/design/ui/empty-box":
-  version: 0.0.0-use.local
-  resolution: "empty-box-dbdece@workspace:scopes/design/ui/empty-box"
-  languageName: unknown
-  linkType: soft
-
-"empty-component-gallery-ac7da5@workspace:scopes/ui-foundation/empty-component-gallery":
-  version: 0.0.0-use.local
-  resolution: "empty-component-gallery-ac7da5@workspace:scopes/ui-foundation/empty-component-gallery"
-  languageName: unknown
-  linkType: soft
-
-"empty-scope-f8f05b@workspace:scopes/scope/ui/empty-scope":
-  version: 0.0.0-use.local
-  resolution: "empty-scope-f8f05b@workspace:scopes/scope/ui/empty-scope"
-  languageName: unknown
-  linkType: soft
-
-"empty-workspace-227e2f@workspace:scopes/workspace/ui/empty-workspace":
-  version: 0.0.0-use.local
-  resolution: "empty-workspace-227e2f@workspace:scopes/workspace/ui/empty-workspace"
-  languageName: unknown
-  linkType: soft
 
 "enabled@npm:2.0.x":
   version: 2.0.0
@@ -15714,12 +16562,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"env-icon-2f015c@workspace:scopes/envs/ui/env-icon":
-  version: 0.0.0-use.local
-  resolution: "env-icon-2f015c@workspace:scopes/envs/ui/env-icon"
-  languageName: unknown
-  linkType: soft
-
 "env-paths@npm:^2.2.0":
   version: 2.2.0
   resolution: "env-paths@npm:2.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fenv-paths%2F-%2Fenv-paths-2.2.0.tgz"
@@ -15748,12 +16590,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"envs-a3894a@workspace:scopes/envs/envs":
-  version: 0.0.0-use.local
-  resolution: "envs-a3894a@workspace:scopes/envs/envs"
-  languageName: unknown
-  linkType: soft
-
 "err-code@npm:^1.0.0":
   version: 1.1.2
   resolution: "err-code@npm:1.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ferr-code%2F-%2Ferr-code-1.1.2.tgz"
@@ -15772,12 +16608,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"error-245217@workspace:scopes/compilation/cli/webpack/error":
-  version: 0.0.0-use.local
-  resolution: "error-245217@workspace:scopes/compilation/cli/webpack/error"
-  languageName: unknown
-  linkType: soft
-
 "error-ex@npm:^1.2.0, error-ex@npm:^1.3.1":
   version: 1.3.2
   resolution: "error-ex@npm:1.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ferror-ex%2F-%2Ferror-ex-1.3.2.tgz"
@@ -15786,12 +16616,6 @@ __metadata:
   checksum: 6c6c9187429ae867d145bc64c682c7c137b1f8373a406dc3b605c0d92f15b85bfcea02b461dc55ae11b10d013377e1eaf3d469d2861b2f94703c743620a9c08c
   languageName: node
   linkType: hard
-
-"error-page-0389d1@workspace:scopes/design/ui/error-page":
-  version: 0.0.0-use.local
-  resolution: "error-page-0389d1@workspace:scopes/design/ui/error-page"
-  languageName: unknown
-  linkType: soft
 
 "error-stack-parser@npm:^2.0.6":
   version: 2.0.6
@@ -15984,12 +16808,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint-1eccb0@workspace:scopes/defender/eslint":
-  version: 0.0.0-use.local
-  resolution: "eslint-1eccb0@workspace:scopes/defender/eslint"
-  languageName: unknown
-  linkType: soft
-
 "eslint-ast-utils@npm:^1.1.0":
   version: 1.1.0
   resolution: "eslint-ast-utils@npm:1.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Feslint-ast-utils%2F-%2Feslint-ast-utils-1.1.0.tgz"
@@ -16085,14 +16903,6 @@ __metadata:
   checksum: 694d1833ffebe06ab0f3e1535c6772ae93da7992f5d6abbbfb319a207ea1f20d7ed2cc47ae3364bcf27737253a3f07f3ddd2c073ccbec5104540f4d024eec39e
   languageName: node
   linkType: hard
-
-"eslint-config-bit-react-8b2c72@workspace:scopes/react/eslint-config-bit-react":
-  version: 0.0.0-use.local
-  resolution: "eslint-config-bit-react-8b2c72@workspace:scopes/react/eslint-config-bit-react"
-  dependencies:
-    eslint-config-airbnb-typescript: 12.0.0
-  languageName: unknown
-  linkType: soft
 
 "eslint-config-prettier@npm:6.15.0":
   version: 6.15.0
@@ -16796,18 +17606,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"export-e08eea@workspace:scopes/scope/export":
-  version: 0.0.0-use.local
-  resolution: "export-e08eea@workspace:scopes/scope/export"
-  languageName: unknown
-  linkType: soft
-
-"express-a4799d@workspace:scopes/harmony/express":
-  version: 0.0.0-use.local
-  resolution: "express-a4799d@workspace:scopes/harmony/express"
-  languageName: unknown
-  linkType: soft
-
 "express-graphql@npm:0.12.0":
   version: 0.12.0
   resolution: "express-graphql@npm:0.12.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fexpress-graphql%2F-%2Fexpress-graphql-0.12.0.tgz"
@@ -16876,12 +17674,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"extend-path-d3610e@workspace:scopes/ui-foundation/react-router/ui/extend-path":
-  version: 0.0.0-use.local
-  resolution: "extend-path-d3610e@workspace:scopes/ui-foundation/react-router/ui/extend-path"
-  languageName: unknown
-  linkType: soft
-
 "extend-shallow@npm:^2.0.1":
   version: 2.0.1
   resolution: "extend-shallow@npm:2.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fextend-shallow%2F-%2Fextend-shallow-2.0.1.tgz"
@@ -16929,12 +17721,6 @@ __metadata:
   checksum: 22163643f9938f4d46bab20ee0417cf1131aaf9ea4c546184d3668f689b8f7fc0d750b5a60857cb8ea09e4651b2c49fe30eb5a0903697e3c2d837da1e90d2d7c
   languageName: node
   linkType: hard
-
-"external-link-b2adfa@workspace:scopes/design/ui/external-link":
-  version: 0.0.0-use.local
-  resolution: "external-link-b2adfa@workspace:scopes/design/ui/external-link"
-  languageName: unknown
-  linkType: soft
 
 "extglob@npm:^2.0.4":
   version: 2.0.4
@@ -17228,12 +18014,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"file-tree-e9bb67@workspace:scopes/ui-foundation/tree/file-tree":
-  version: 0.0.0-use.local
-  resolution: "file-tree-e9bb67@workspace:scopes/ui-foundation/tree/file-tree"
-  languageName: unknown
-  linkType: soft
-
 "file-uri-to-path@npm:1.0.0":
   version: 1.0.0
   resolution: "file-uri-to-path@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffile-uri-to-path%2F-%2Ffile-uri-to-path-1.0.0.tgz"
@@ -17485,12 +18265,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"flows-49dfb5@workspace:scopes/pipelines/flows":
-  version: 0.0.0-use.local
-  resolution: "flows-49dfb5@workspace:scopes/pipelines/flows"
-  languageName: unknown
-  linkType: soft
-
 "flush-write-stream@npm:^1.0.0":
   version: 1.1.1
   resolution: "flush-write-stream@npm:1.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fflush-write-stream%2F-%2Fflush-write-stream-1.1.1.tgz"
@@ -17514,12 +18288,6 @@ __metadata:
   checksum: e33a39ffd68424b58d849cb3672c2ed9c4f8dadf0ef9416d5b5d9b8877258c1aa0f42554aaa2d15e87bcb5892ce4d4f78bdbbc5856f5a2b79fc31a10b6e69c8f
   languageName: node
   linkType: hard
-
-"folder-tree-node-760119@workspace:scopes/ui-foundation/tree/folder-tree-node":
-  version: 0.0.0-use.local
-  resolution: "folder-tree-node-760119@workspace:scopes/ui-foundation/tree/folder-tree-node"
-  languageName: unknown
-  linkType: soft
 
 "follow-redirects@npm:^1.0.0":
   version: 1.13.3
@@ -17835,12 +18603,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"full-loader-333d72@workspace:scopes/ui-foundation/uis/full-loader":
-  version: 0.0.0-use.local
-  resolution: "full-loader-333d72@workspace:scopes/ui-foundation/uis/full-loader"
-  languageName: unknown
-  linkType: soft
-
 "function-bind@npm:^1.1.1":
   version: 1.1.1
   resolution: "function-bind@npm:1.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffunction-bind%2F-%2Ffunction-bind-1.1.1.tgz"
@@ -17885,12 +18647,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"generator-a69b6b@workspace:scopes/generator/generator":
-  version: 0.0.0-use.local
-  resolution: "generator-a69b6b@workspace:scopes/generator/generator"
-  languageName: unknown
-  linkType: soft
-
 "gensync@npm:^1.0.0-beta.1, gensync@npm:^1.0.0-beta.2":
   version: 1.0.0-beta.2
   resolution: "gensync@npm:1.0.0-beta.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fgensync%2F-%2Fgensync-1.0.0-beta.2.tgz"
@@ -17915,48 +18671,12 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"get-component-code-0c184a@workspace:scopes/code/queries/get-component-code":
-  version: 0.0.0-use.local
-  resolution: "get-component-code-0c184a@workspace:scopes/code/queries/get-component-code"
-  languageName: unknown
-  linkType: soft
-
-"get-docs-c721d8@workspace:scopes/docs/ui/queries/get-docs":
-  version: 0.0.0-use.local
-  resolution: "get-docs-c721d8@workspace:scopes/docs/ui/queries/get-docs"
-  languageName: unknown
-  linkType: soft
-
-"get-file-content-eea016@workspace:scopes/code/queries/get-file-content":
-  version: 0.0.0-use.local
-  resolution: "get-file-content-eea016@workspace:scopes/code/queries/get-file-content"
-  languageName: unknown
-  linkType: soft
-
-"get-file-icon-9cd05c@workspace:scopes/code/utils/get-file-icon":
-  version: 0.0.0-use.local
-  resolution: "get-file-icon-9cd05c@workspace:scopes/code/utils/get-file-icon"
-  languageName: unknown
-  linkType: soft
-
 "get-func-name@npm:^2.0.0":
   version: 2.0.0
   resolution: "get-func-name@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fget-func-name%2F-%2Fget-func-name-2.0.0.tgz"
   checksum: c72d3857cd05338fc61e52c385da67d553e42c226e141da11684aecb3e017a753bf7120411731fbc30768edf68f9c359dc202757703b3a851da54b2b17a9828d
   languageName: node
   linkType: hard
-
-"get-icon-from-file-name-161c1e@workspace:scopes/ui-foundation/get-icon-from-file-name":
-  version: 0.0.0-use.local
-  resolution: "get-icon-from-file-name-161c1e@workspace:scopes/ui-foundation/get-icon-from-file-name"
-  languageName: unknown
-  linkType: soft
-
-"get-initials-d7fc81@workspace:scopes/toolbox/string/get-initials":
-  version: 0.0.0-use.local
-  resolution: "get-initials-d7fc81@workspace:scopes/toolbox/string/get-initials"
-  languageName: unknown
-  linkType: soft
 
 "get-intrinsic@npm:^1.0.2, get-intrinsic@npm:^1.1.0, get-intrinsic@npm:^1.1.1":
   version: 1.1.1
@@ -18252,12 +18972,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"global-config-65e821@workspace:scopes/harmony/global-config":
-  version: 0.0.0-use.local
-  resolution: "global-config-65e821@workspace:scopes/harmony/global-config"
-  languageName: unknown
-  linkType: soft
-
 "global-dirs@npm:^0.1.0":
   version: 0.1.1
   resolution: "global-dirs@npm:0.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fglobal-dirs%2F-%2Fglobal-dirs-0.1.1.tgz"
@@ -18266,12 +18980,6 @@ fsevents@^1.2.7:
   checksum: 0d46e90b45e35fef757ef468fd497ea249787dafb20b76597ac0a1c129d8e8d7f09db4640a2f7ed12d1057159197af94ef4eea74c0be9c7c1c2c3bec5f0a6834
   languageName: node
   linkType: hard
-
-"global-loader-b18c5a@workspace:scopes/ui-foundation/uis/global-loader":
-  version: 0.0.0-use.local
-  resolution: "global-loader-b18c5a@workspace:scopes/ui-foundation/uis/global-loader"
-  languageName: unknown
-  linkType: soft
 
 "global-modules@npm:2.0.0":
   version: 2.0.0
@@ -18433,12 +19141,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"graph-dc1495@workspace:scopes/component/graph":
-  version: 0.0.0-use.local
-  resolution: "graph-dc1495@workspace:scopes/component/graph"
-  languageName: unknown
-  linkType: soft
-
 "graph-sequencer@npm:2.0.0":
   version: 2.0.0
   resolution: "graph-sequencer@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fgraph-sequencer%2F-%2Fgraph-sequencer-2.0.0.tgz"
@@ -18464,12 +19166,6 @@ fsevents@^1.2.7:
   checksum: 86e4433af9cf450c414d8cc58481ac8b96321fc25ecbbf08d27f0694a5e3a72a5c7a973795683b5ed5bbced75af1b0706c2b6e964f44f27b9078b229b652abee
   languageName: node
   linkType: hard
-
-"graphql-b5e57e@workspace:scopes/harmony/graphql":
-  version: 0.0.0-use.local
-  resolution: "graphql-b5e57e@workspace:scopes/harmony/graphql"
-  languageName: unknown
-  linkType: soft
 
 "graphql-extensions@npm:^0.12.8":
   version: 0.12.8
@@ -19007,18 +19703,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"highlighted-text-span-2f925c@workspace:scopes/mdx/ui/highlighted-text-span":
-  version: 0.0.0-use.local
-  resolution: "highlighted-text-span-2f925c@workspace:scopes/mdx/ui/highlighted-text-span"
-  languageName: unknown
-  linkType: soft
-
-"highlighter-provider-505879@workspace:scopes/react/ui/highlighter-provider":
-  version: 0.0.0-use.local
-  resolution: "highlighter-provider-505879@workspace:scopes/react/ui/highlighter-provider"
-  languageName: unknown
-  linkType: soft
-
 "history@npm:4.10.1, history@npm:^4.9.0":
   version: 4.10.1
   resolution: "history@npm:4.10.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhistory%2F-%2Fhistory-4.10.1.tgz"
@@ -19057,12 +19741,6 @@ fsevents@^1.2.7:
   checksum: 686512459ccb7e7eac7833fc4e8e35a0533c0dda5f516025f276ecb620b316010b853c785439ac63702e044ab56b2485cf7e1b088c1f9a46675b9496f7a45683
   languageName: node
   linkType: hard
-
-"hover-selector-867f11@workspace:scopes/react/hover-selector":
-  version: 0.0.0-use.local
-  resolution: "hover-selector-867f11@workspace:scopes/react/hover-selector"
-  languageName: unknown
-  linkType: soft
 
 "hpack.js@npm:^2.1.6":
   version: 2.1.6
@@ -19920,12 +20598,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"insights-d3887b@workspace:scopes/explorer/insights":
-  version: 0.0.0-use.local
-  resolution: "insights-d3887b@workspace:scopes/explorer/insights"
-  languageName: unknown
-  linkType: soft
-
 "internal-ip@npm:^6.2.0":
   version: 6.2.0
   resolution: "internal-ip@npm:6.2.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Finternal-ip%2F-%2Finternal-ip-6.2.0.tgz"
@@ -20098,12 +20770,6 @@ fsevents@^1.2.7:
   checksum: 1d6047a022aa49cdf8580ac8b3d6d25da0d33a65ae00142bec2ba95c6c889de84693a0ef5acc9eabb59ba9e66fb473f47fa589ec22dd8e7ef8d88b6774e3adc6
   languageName: node
   linkType: hard
-
-"is-browser-85c208@workspace:scopes/ui-foundation/uis/is-browser":
-  version: 0.0.0-use.local
-  resolution: "is-browser-85c208@workspace:scopes/ui-foundation/uis/is-browser"
-  languageName: unknown
-  linkType: soft
 
 "is-buffer@npm:^1.1.5, is-buffer@npm:~1.1.6":
   version: 1.1.6
@@ -20466,12 +21132,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"is-path-inside-8b0a87@workspace:scopes/toolbox/path/is-path-inside":
-  version: 0.0.0-use.local
-  resolution: "is-path-inside-8b0a87@workspace:scopes/toolbox/path/is-path-inside"
-  languageName: unknown
-  linkType: soft
-
 "is-path-inside@npm:^1.0.0":
   version: 1.0.1
   resolution: "is-path-inside@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-path-inside%2F-%2Fis-path-inside-1.0.1.tgz"
@@ -20795,12 +21455,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"isolator-495077@workspace:scopes/component/isolator":
-  version: 0.0.0-use.local
-  resolution: "isolator-495077@workspace:scopes/component/isolator"
-  languageName: unknown
-  linkType: soft
-
 "isomorphic-ws@npm:4.0.1":
   version: 4.0.1
   resolution: "isomorphic-ws@npm:4.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fisomorphic-ws%2F-%2Fisomorphic-ws-4.0.1.tgz"
@@ -20890,12 +21544,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"item-45308b@workspace:scopes/design/ui/surfaces/menu/item":
-  version: 0.0.0-use.local
-  resolution: "item-45308b@workspace:scopes/design/ui/surfaces/menu/item"
-  languageName: unknown
-  linkType: soft
-
 "iterall@npm:^1.1.3, iterall@npm:^1.2.1, iterall@npm:^1.2.2, iterall@npm:^1.3.0":
   version: 1.3.0
   resolution: "iterall@npm:1.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fiterall%2F-%2Fiterall-1.3.0.tgz"
@@ -20911,12 +21559,6 @@ fsevents@^1.2.7:
   checksum: 017454cf3fdb482fb36b1f9967ecfc349ca689457507bcceb64fd5c82022e94187571c89a4375e6b20e276b4d32266ea7871e2016626cb823496526248b208b0
   languageName: node
   linkType: hard
-
-"jest-99324c@workspace:scopes/defender/jest":
-  version: 0.0.0-use.local
-  resolution: "jest-99324c@workspace:scopes/defender/jest"
-  languageName: unknown
-  linkType: soft
 
 "jest-changed-files@npm:^26.6.2":
   version: 26.6.2
@@ -21964,12 +22606,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"keycap-03bf40@workspace:scopes/ui-foundation/uis/keycap":
-  version: 0.0.0-use.local
-  resolution: "keycap-03bf40@workspace:scopes/ui-foundation/uis/keycap"
-  languageName: unknown
-  linkType: soft
-
 "keygrip@npm:~1.1.0":
   version: 1.1.0
   resolution: "keygrip@npm:1.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fkeygrip%2F-%2Fkeygrip-1.1.0.tgz"
@@ -22064,12 +22700,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"label-bacb37@workspace:scopes/design/ui/label":
-  version: 0.0.0-use.local
-  resolution: "label-bacb37@workspace:scopes/design/ui/label"
-  languageName: unknown
-  linkType: soft
-
 "language-subtag-registry@npm:~0.3.2":
   version: 0.3.21
   resolution: "language-subtag-registry@npm:0.3.21::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flanguage-subtag-registry%2F-%2Flanguage-subtag-registry-0.3.21.tgz"
@@ -22094,18 +22724,6 @@ fsevents@^1.2.7:
   checksum: 117b4a315afaba84c34c13a07dd1b15fe622f72fcd703136cf9d26ddeb3dc29d9b234241a18909f0af67224fb445a90d85a8e686f8defb8bce1968520b9c68aa
   languageName: node
   linkType: hard
-
-"legacy-bit-id-5ef633@workspace:scopes/component/legacy-bit-id":
-  version: 0.0.0-use.local
-  resolution: "legacy-bit-id-5ef633@workspace:scopes/component/legacy-bit-id"
-  languageName: unknown
-  linkType: soft
-
-"legacy-component-log-8893e7@workspace:scopes/component/legacy-component-log":
-  version: 0.0.0-use.local
-  resolution: "legacy-component-log-8893e7@workspace:scopes/component/legacy-component-log"
-  languageName: unknown
-  linkType: soft
 
 "less-loader@npm:8.0.0":
   version: 8.0.0
@@ -22307,30 +22925,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"link-afb879@workspace:scopes/ui-foundation/routing/link":
-  version: 0.0.0-use.local
-  resolution: "link-afb879@workspace:scopes/ui-foundation/routing/link"
-  languageName: unknown
-  linkType: soft
-
-"link-c1e223@workspace:scopes/mdx/ui/link":
-  version: 0.0.0-use.local
-  resolution: "link-c1e223@workspace:scopes/mdx/ui/link"
-  languageName: unknown
-  linkType: soft
-
-"link-c3a062@workspace:scopes/ui-foundation/react-router/ui/link":
-  version: 0.0.0-use.local
-  resolution: "link-c3a062@workspace:scopes/ui-foundation/react-router/ui/link"
-  languageName: unknown
-  linkType: soft
-
-"link-item-60300f@workspace:scopes/design/ui/surfaces/menu/link-item":
-  version: 0.0.0-use.local
-  resolution: "link-item-60300f@workspace:scopes/design/ui/surfaces/menu/link-item"
-  languageName: unknown
-  linkType: soft
-
 "lint-staged@npm:>=10":
   version: 10.5.4
   resolution: "lint-staged@npm:10.5.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Flint-staged%2F-%2Flint-staged-10.5.4.tgz"
@@ -22355,12 +22949,6 @@ fsevents@^1.2.7:
   checksum: dbcafe3679668379fc03f3aef481c3f710794ec03dd5c3915f26a0de110977fbcb44b55ab6dfcff9e8e5789c568ea5629e92f55944fc43f6f6fa1890ee5b07ba
   languageName: node
   linkType: hard
-
-"linter-805730@workspace:scopes/defender/linter":
-  version: 0.0.0-use.local
-  resolution: "linter-805730@workspace:scopes/defender/linter"
-  languageName: unknown
-  linkType: soft
 
 "listr2@npm:^3.2.2":
   version: 3.3.4
@@ -22416,18 +23004,6 @@ fsevents@^1.2.7:
   checksum: 88a718741648c6ca88c989b12be5f5fa1fab5e1f0b52cde9eaa692132aef54d152f775355f69fe725c4231f9b4e4d10fc3da188bac623fea66142f2c7c66bf39
   languageName: node
   linkType: hard
-
-"load-preview-9fa5e0@workspace:scopes/workspace/ui/load-preview":
-  version: 0.0.0-use.local
-  resolution: "load-preview-9fa5e0@workspace:scopes/workspace/ui/load-preview"
-  languageName: unknown
-  linkType: soft
-
-"loader-9bf95f@workspace:scopes/mdx/modules/loader":
-  version: 0.0.0-use.local
-  resolution: "loader-9bf95f@workspace:scopes/mdx/modules/loader"
-  languageName: unknown
-  linkType: soft
 
 "loader-runner@npm:^4.2.0":
   version: 4.2.0
@@ -22851,12 +23427,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"logger-2c3658@workspace:scopes/harmony/logger":
-  version: 0.0.0-use.local
-  resolution: "logger-2c3658@workspace:scopes/harmony/logger"
-  languageName: unknown
-  linkType: soft
-
 "loglevel-colored-level-prefix@npm:^1.0.0":
   version: 1.0.0
   resolution: "loglevel-colored-level-prefix@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Floglevel-colored-level-prefix%2F-%2Floglevel-colored-level-prefix-1.0.0.tgz"
@@ -23029,12 +23599,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"main-dropdown-c946d5@workspace:scopes/ui-foundation/uis/main-dropdown":
-  version: 0.0.0-use.local
-  resolution: "main-dropdown-c946d5@workspace:scopes/ui-foundation/uis/main-dropdown"
-  languageName: unknown
-  linkType: soft
-
 "make-dir@npm:^1.0.0":
   version: 1.3.0
   resolution: "make-dir@npm:1.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fmake-dir%2F-%2Fmake-dir-1.3.0.tgz"
@@ -23166,12 +23730,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"match-pattern-8d51c7@workspace:scopes/workspace/modules/match-pattern":
-  version: 0.0.0-use.local
-  resolution: "match-pattern-8d51c7@workspace:scopes/workspace/modules/match-pattern"
-  languageName: unknown
-  linkType: soft
-
 "md5@npm:^2.1.0":
   version: 2.3.0
   resolution: "md5@npm:2.3.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fmd5%2F-%2Fmd5-2.3.0.tgz"
@@ -23237,24 +23795,6 @@ fsevents@^1.2.7:
   checksum: ed5e81efed218ca1cb61bbb5c41857c98ce456382d630a2f45a1b050087a10119a24107ca1acd4ccef2f1a17b02b8d61fb3c630d3d7c0f22df906dbdd2e5f7b5
   languageName: node
   linkType: hard
-
-"mdx-d28562@workspace:scopes/mdx/mdx":
-  version: 0.0.0-use.local
-  resolution: "mdx-d28562@workspace:scopes/mdx/mdx"
-  languageName: unknown
-  linkType: soft
-
-"mdx-layout-7ac240@workspace:scopes/mdx/ui/mdx-layout":
-  version: 0.0.0-use.local
-  resolution: "mdx-layout-7ac240@workspace:scopes/mdx/ui/mdx-layout"
-  languageName: unknown
-  linkType: soft
-
-"mdx-scope-context-8b1848@workspace:scopes/mdx/ui/mdx-scope-context":
-  version: 0.0.0-use.local
-  resolution: "mdx-scope-context-8b1848@workspace:scopes/mdx/ui/mdx-scope-context"
-  languageName: unknown
-  linkType: soft
 
 "media-typer@npm:0.3.0":
   version: 0.3.0
@@ -23360,24 +23900,6 @@ fsevents@^1.2.7:
   checksum: 825bcc7d3eb8bd021a1b0f8c81e4d7a8dc2eced1f8bb79d41ec978547cf118146d6863f5e6134f02bb55ee5d963a8689793e6e82ce8eb989bac339ae782728bb
   languageName: node
   linkType: hard
-
-"menu-f68f59@workspace:scopes/ui-foundation/menu":
-  version: 0.0.0-use.local
-  resolution: "menu-f68f59@workspace:scopes/ui-foundation/menu"
-  languageName: unknown
-  linkType: soft
-
-"menu-widget-icon-0be18f@workspace:scopes/ui-foundation/menu-widget-icon":
-  version: 0.0.0-use.local
-  resolution: "menu-widget-icon-0be18f@workspace:scopes/ui-foundation/menu-widget-icon"
-  languageName: unknown
-  linkType: soft
-
-"merge-component-results-91b045@workspace:scopes/pipelines/modules/merge-component-results":
-  version: 0.0.0-use.local
-  resolution: "merge-component-results-91b045@workspace:scopes/pipelines/modules/merge-component-results"
-  languageName: unknown
-  linkType: soft
 
 "merge-descriptors@npm:1.0.1":
   version: 1.0.1
@@ -23894,12 +24416,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"multi-compiler-c337c3@workspace:scopes/compilation/multi-compiler":
-  version: 0.0.0-use.local
-  resolution: "multi-compiler-c337c3@workspace:scopes/compilation/multi-compiler"
-  languageName: unknown
-  linkType: soft
-
 "multicast-dns-service-types@npm:^1.1.0":
   version: 1.1.0
   resolution: "multicast-dns-service-types@npm:1.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fmulticast-dns-service-types%2F-%2Fmulticast-dns-service-types-1.1.0.tgz"
@@ -23939,12 +24455,6 @@ fsevents@^1.2.7:
   checksum: 315c40f463ec31deee54c5b8779207feb6b63dd4c58fe0f84ad46abdd6dac1ada578d53efde4a47b0ae4d29d453d35bb39ecdd98ee9ebf538929039a3a9945df
   languageName: node
   linkType: hard
-
-"muted-italic-58abc8@workspace:scopes/design/ui/styles/muted-italic":
-  version: 0.0.0-use.local
-  resolution: "muted-italic-58abc8@workspace:scopes/design/ui/styles/muted-italic"
-  languageName: unknown
-  linkType: soft
 
 "mv@npm:2.1.1, mv@npm:~2":
   version: 2.1.1
@@ -24034,18 +24544,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"native-link-e08eb7@workspace:scopes/ui-foundation/routing/native-link":
-  version: 0.0.0-use.local
-  resolution: "native-link-e08eb7@workspace:scopes/ui-foundation/routing/native-link"
-  languageName: unknown
-  linkType: soft
-
-"native-nav-link-063fd0@workspace:scopes/ui-foundation/routing/native-nav-link":
-  version: 0.0.0-use.local
-  resolution: "native-nav-link-063fd0@workspace:scopes/ui-foundation/routing/native-nav-link"
-  languageName: unknown
-  linkType: soft
-
 "native-url@npm:^0.2.6":
   version: 0.2.6
   resolution: "native-url@npm:0.2.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fnative-url%2F-%2Fnative-url-0.2.6.tgz"
@@ -24061,18 +24559,6 @@ fsevents@^1.2.7:
   checksum: 2daf93d9bb516eddb06e2e80657a605af2e494d47c65d090ba43691aaffbc41f520840f1c9d3b7b641977af950217a4ab6ffb85bafcd5dfa8ba6fe4e68c43b53
   languageName: node
   linkType: hard
-
-"nav-link-33163a@workspace:scopes/ui-foundation/react-router/ui/nav-link":
-  version: 0.0.0-use.local
-  resolution: "nav-link-33163a@workspace:scopes/ui-foundation/react-router/ui/nav-link"
-  languageName: unknown
-  linkType: soft
-
-"nav-link-a16aa0@workspace:scopes/ui-foundation/routing/nav-link":
-  version: 0.0.0-use.local
-  resolution: "nav-link-a16aa0@workspace:scopes/ui-foundation/routing/nav-link"
-  languageName: unknown
-  linkType: soft
 
 "ncp@npm:1.0.x":
   version: 1.0.1
@@ -24190,12 +24676,6 @@ fsevents@^1.2.7:
   checksum: 84db4909caec37504c6655f995a004067f8733be8cd8d849f1578661b60a1685e086325fa4e1a5e8ce94e7416c1d0f037e2a00f635a14457183de80ab4fc7612
   languageName: node
   linkType: hard
-
-"node-39df33@workspace:scopes/harmony/node":
-  version: 0.0.0-use.local
-  resolution: "node-39df33@workspace:scopes/harmony/node"
-  languageName: unknown
-  linkType: soft
 
 "node-dir@npm:^0.1.10":
   version: 0.1.17
@@ -24430,36 +24910,6 @@ fsevents@^1.2.7:
   checksum: 09794941dbe5c7b91caf6f3cd1ae167c27f6d09793e4a03601a68b62de7e8ee9e5de21a246130cdbab98b01481de292f9556d492444a527648f9cf1220e4b0df
   languageName: node
   linkType: hard
-
-"not-found-page-4f3712@workspace:scopes/design/ui/not-found-page":
-  version: 0.0.0-use.local
-  resolution: "not-found-page-4f3712@workspace:scopes/design/ui/not-found-page"
-  languageName: unknown
-  linkType: soft
-
-"notification-ae8861@workspace:scopes/ui-foundation/notifications/ui/notification":
-  version: 0.0.0-use.local
-  resolution: "notification-ae8861@workspace:scopes/ui-foundation/notifications/ui/notification"
-  languageName: unknown
-  linkType: soft
-
-"notification-center-f32c5f@workspace:scopes/ui-foundation/notifications/ui/notification-center":
-  version: 0.0.0-use.local
-  resolution: "notification-center-f32c5f@workspace:scopes/ui-foundation/notifications/ui/notification-center"
-  languageName: unknown
-  linkType: soft
-
-"notification-context-730aad@workspace:scopes/ui-foundation/notifications/ui/notification-context":
-  version: 0.0.0-use.local
-  resolution: "notification-context-730aad@workspace:scopes/ui-foundation/notifications/ui/notification-context"
-  languageName: unknown
-  linkType: soft
-
-"notification-store-b4da8b@workspace:scopes/ui-foundation/notifications/ui/notification-store":
-  version: 0.0.0-use.local
-  resolution: "notification-store-b4da8b@workspace:scopes/ui-foundation/notifications/ui/notification-store"
-  languageName: unknown
-  linkType: soft
 
 "npm-normalize-package-bin@npm:^1.0.0":
   version: 1.0.1
@@ -24854,12 +25304,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"option-button-cfc533@workspace:scopes/design/ui/input/option-button":
-  version: 0.0.0-use.local
-  resolution: "option-button-cfc533@workspace:scopes/design/ui/input/option-button"
-  languageName: unknown
-  linkType: soft
-
 "optionator@npm:^0.8.1, optionator@npm:^0.8.2, optionator@npm:^0.8.3":
   version: 0.8.3
   resolution: "optionator@npm:0.8.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Foptionator%2F-%2Foptionator-0.8.3.tgz"
@@ -24926,12 +25370,6 @@ fsevents@^1.2.7:
   checksum: ca158a3c2e48748adc7736cdbe4c593723f8ed8581d2aae2f2a30fdb9417d4ba14bed1cd487d47561898a7b1ece88bce69745e9ce0303e1dea9ea7d22d1f1082
   languageName: node
   linkType: hard
-
-"owner-avatar-a218cd@workspace:scopes/design/ui/owner-avatar":
-  version: 0.0.0-use.local
-  resolution: "owner-avatar-a218cd@workspace:scopes/design/ui/owner-avatar"
-  languageName: unknown
-  linkType: soft
 
 "p-cancelable@npm:^2.0.0":
   version: 2.0.0
@@ -25220,18 +25658,6 @@ fsevents@^1.2.7:
   checksum: 27a029909dba1c8b6ad89a38d935ed0ce8cf96d5865265446e8ebbddf9b698283fb3e42a3514c47668b62e376d468abb49a04b9f5e50fd26569a2daf2810df55
   languageName: node
   linkType: hard
-
-"panels-3f1c08@workspace:scopes/ui-foundation/panels":
-  version: 0.0.0-use.local
-  resolution: "panels-3f1c08@workspace:scopes/ui-foundation/panels"
-  languageName: unknown
-  linkType: soft
-
-"paragraph-26b712@workspace:scopes/mdx/ui/paragraph":
-  version: 0.0.0-use.local
-  resolution: "paragraph-26b712@workspace:scopes/mdx/ui/paragraph"
-  languageName: unknown
-  linkType: soft
 
 "parallel-transform@npm:^1.1.0":
   version: 1.2.0
@@ -25671,12 +26097,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"pill-label-7adc64@workspace:scopes/design/ui/pill-label":
-  version: 0.0.0-use.local
-  resolution: "pill-label-7adc64@workspace:scopes/design/ui/pill-label"
-  languageName: unknown
-  linkType: soft
-
 "pino-pretty@npm:4.5.0":
   version: 4.5.0
   resolution: "pino-pretty@npm:4.5.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fpino-pretty%2F-%2Fpino-pretty-4.5.0.tgz"
@@ -25729,12 +26149,6 @@ fsevents@^1.2.7:
   checksum: 21604008c36ab6e14ac458e1a267dd7322cfd36b9e1042e9e277dd064582717e30b9aba8c0a47d738bf004ee7946ed27f6b982d30968534f2c6b5b168a52b555
   languageName: node
   linkType: hard
-
-"pkg-9e8114@workspace:scopes/pkg/pkg":
-  version: 0.0.0-use.local
-  resolution: "pkg-9e8114@workspace:scopes/pkg/pkg"
-  languageName: unknown
-  linkType: soft
 
 "pkg-dir@npm:^2.0.0":
   version: 2.0.0
@@ -25817,12 +26231,6 @@ fsevents@^1.2.7:
   checksum: 7df19be13c86dfab22e8484590480e49d496b270430a731be0bb40cea8a16c29e45188a7303d7c57b7140754f807877b0c10aa95400ad30a7ad4fb3f7d132381
   languageName: node
   linkType: hard
-
-"pnpm-58c752@workspace:scopes/dependencies/pnpm":
-  version: 0.0.0-use.local
-  resolution: "pnpm-58c752@workspace:scopes/dependencies/pnpm"
-  languageName: unknown
-  linkType: soft
 
 "porter-stemmer@npm:0.9.1":
   version: 0.9.1
@@ -26784,24 +27192,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"preview-13afe3@workspace:scopes/preview/preview":
-  version: 0.0.0-use.local
-  resolution: "preview-13afe3@workspace:scopes/preview/preview"
-  languageName: unknown
-  linkType: soft
-
-"preview-placeholder-b6c245@workspace:scopes/preview/ui/preview-placeholder":
-  version: 0.0.0-use.local
-  resolution: "preview-placeholder-b6c245@workspace:scopes/preview/ui/preview-placeholder"
-  languageName: unknown
-  linkType: soft
-
-"preview-server-status-b0e8a5@workspace:scopes/preview/cli/preview-server-status":
-  version: 0.0.0-use.local
-  resolution: "preview-server-status-b0e8a5@workspace:scopes/preview/cli/preview-server-status"
-  languageName: unknown
-  linkType: soft
-
 "prime@npm:0.0.5-alpha":
   version: 0.0.5-alpha
   resolution: "prime@npm:0.0.5-alpha::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fprime%2F-%2Fprime-0.0.5-alpha.tgz"
@@ -27046,12 +27436,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"proxy-agent-e351a9@workspace:scopes/toolbox/network/proxy-agent":
-  version: 0.0.0-use.local
-  resolution: "proxy-agent-e351a9@workspace:scopes/toolbox/network/proxy-agent"
-  languageName: unknown
-  linkType: soft
-
 "prr@npm:~1.0.1":
   version: 1.0.1
   resolution: "prr@npm:1.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fprr%2F-%2Fprr-1.0.1.tgz"
@@ -27072,12 +27456,6 @@ fsevents@^1.2.7:
   checksum: 92d47c6257456878bfa8190d76b84de69bcefdc129eeee3f9fe204c15fd08d35fe5b8627033f39b455e40a9375a1474b25ff4ab2c5448dd8c8f75da692d0f5b4
   languageName: node
   linkType: hard
-
-"pubsub-1e3401@workspace:scopes/harmony/pubsub":
-  version: 0.0.0-use.local
-  resolution: "pubsub-1e3401@workspace:scopes/harmony/pubsub"
-  languageName: unknown
-  linkType: soft
 
 "pump@npm:^2.0.0":
   version: 2.0.1
@@ -27158,12 +27536,6 @@ fsevents@^1.2.7:
   checksum: fa0410eff2c05ce3328e11f82db4015e7819c986ee056d6b62b06ae112f4929af09ea3b879ca168ff9f0338f50972bba487ad0e46c879e42bfaf63c3c2ea7f09
   languageName: node
   linkType: hard
-
-"query-string-21ebe5@workspace:scopes/toolbox/url/query-string":
-  version: 0.0.0-use.local
-  resolution: "query-string-21ebe5@workspace:scopes/toolbox/url/query-string"
-  languageName: unknown
-  linkType: soft
 
 "query-string@npm:7.0.0":
   version: 7.0.0
@@ -27309,16 +27681,6 @@ fsevents@^1.2.7:
   checksum: ea2b7f7cee201a67923a2240de594a5d9b59bd312b814b06536d3d609a416dfd6fb9b85ea2abfd3b8a4eb5ed33eaff946ee75a8f2b7fb10941073c5cfee6b7a5
   languageName: node
   linkType: hard
-
-"react-a12f27@workspace:scopes/react/react":
-  version: 0.0.0-use.local
-  resolution: "react-a12f27@workspace:scopes/react/react"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.8
-    "@typescript-eslint/eslint-plugin": 4.15.1
-    "@typescript-eslint/parser": 4.15.1
-  languageName: unknown
-  linkType: soft
 
 "react-animate-height@npm:2.0.23":
   version: 2.0.23
@@ -27539,12 +27901,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"react-native-24af20@workspace:scopes/react/react-native":
-  version: 0.0.0-use.local
-  resolution: "react-native-24af20@workspace:scopes/react/react-native"
-  languageName: unknown
-  linkType: soft
-
 "react-native-web@npm:0.15.0":
   version: 0.15.0
   resolution: "react-native-web@npm:0.15.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-native-web%2F-%2Freact-native-web-0.15.0.tgz"
@@ -27598,12 +27954,6 @@ fsevents@^1.2.7:
   checksum: 300dc431389f4c532bdfec08d5bc59b591c8c440486a7d5770c8954adf3afe62501b659c5acbdb7831751e8be506eb90a6f72491fab40352f3b3fba16897acf6
   languageName: node
   linkType: hard
-
-"react-router-36aded@workspace:scopes/ui-foundation/react-router/react-router":
-  version: 0.0.0-use.local
-  resolution: "react-router-36aded@workspace:scopes/ui-foundation/react-router/react-router"
-  languageName: unknown
-  linkType: soft
 
 "react-router-dom@npm:5.2.0":
   version: 5.2.0
@@ -28504,12 +28854,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"requireable-component-ba7c6f@workspace:scopes/harmony/modules/requireable-component":
-  version: 0.0.0-use.local
-  resolution: "requireable-component-ba7c6f@workspace:scopes/harmony/modules/requireable-component"
-  languageName: unknown
-  linkType: soft
-
 "requirejs-config-file@npm:^3.1.1":
   version: 3.1.2
   resolution: "requirejs-config-file@npm:3.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Frequirejs-config-file%2F-%2Frequirejs-config-file-3.1.2.tgz"
@@ -28663,12 +29007,6 @@ fsevents@^1.2.7:
   checksum: c4a515b76026806b5b26513fc7bdb80458c532bc91c02ef45ac928d1025585f93bec0b904be39c02131118a37ff7e3f9258f1526850b025d2ec0948bb5fd03d0
   languageName: node
   linkType: hard
-
-"resolved-component-35f3ef@workspace:scopes/harmony/modules/resolved-component":
-  version: 0.0.0-use.local
-  resolution: "resolved-component-35f3ef@workspace:scopes/harmony/modules/resolved-component"
-  languageName: unknown
-  linkType: soft
 
 "responselike@npm:^2.0.0":
   version: 2.0.0
@@ -28870,18 +29208,6 @@ fsevents@^1.2.7:
   checksum: 3cef540cc05efa2a59529dbb9432c808e409b9445524e49a0ef2d08c5bb3a3510d797367c1a3fced0ea50d84f11c2e3ee82f782e542e61d9d8fc89c0a27b21ba
   languageName: node
   linkType: hard
-
-"round-loader-c42359@workspace:scopes/design/ui/round-loader":
-  version: 0.0.0-use.local
-  resolution: "round-loader-c42359@workspace:scopes/design/ui/round-loader"
-  languageName: unknown
-  linkType: soft
-
-"routing-provider-02c5b3@workspace:scopes/ui-foundation/routing/routing-provider":
-  version: 0.0.0-use.local
-  resolution: "routing-provider-02c5b3@workspace:scopes/ui-foundation/routing/routing-provider"
-  languageName: unknown
-  linkType: soft
 
 "rsvp@npm:^4.8.4":
   version: 4.8.5
@@ -29133,12 +29459,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"schema-f08c50@workspace:scopes/semantics/schema":
-  version: 0.0.0-use.local
-  resolution: "schema-f08c50@workspace:scopes/semantics/schema"
-  languageName: unknown
-  linkType: soft
-
 "schema-utils@npm:^2.6.5":
   version: 2.7.1
   resolution: "schema-utils@npm:2.7.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fschema-utils%2F-%2Fschema-utils-2.7.1.tgz"
@@ -29161,30 +29481,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"scope-4ce60d@workspace:scopes/scope/scope":
-  version: 0.0.0-use.local
-  resolution: "scope-4ce60d@workspace:scopes/scope/scope"
-  languageName: unknown
-  linkType: soft
-
-"scope-details-06c250@workspace:scopes/scope/ui/scope-details":
-  version: 0.0.0-use.local
-  resolution: "scope-details-06c250@workspace:scopes/scope/ui/scope-details"
-  languageName: unknown
-  linkType: soft
-
-"scope-labels-9a064d@workspace:scopes/scope/ui/scope-labels":
-  version: 0.0.0-use.local
-  resolution: "scope-labels-9a064d@workspace:scopes/scope/ui/scope-labels"
-  languageName: unknown
-  linkType: soft
-
-"scope-title-50c68b@workspace:scopes/scope/ui/scope-title":
-  version: 0.0.0-use.local
-  resolution: "scope-title-50c68b@workspace:scopes/scope/ui/scope-title"
-  languageName: unknown
-  linkType: soft
-
 "sdk-base@npm:^3.6.0":
   version: 3.6.0
   resolution: "sdk-base@npm:3.6.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fsdk-base%2F-%2Fsdk-base-3.6.0.tgz"
@@ -29196,12 +29492,6 @@ fsevents@^1.2.7:
   checksum: 52a7ccd1730145820cfba5de45c792405a0fec508b9701cad2fe7fab20fe09117873055450b223b1582560b5c949c8f9f211edd48f6d65b7bd84b0235de084d3
   languageName: node
   linkType: hard
-
-"section-787141@workspace:scopes/design/ui/surfaces/menu/section":
-  version: 0.0.0-use.local
-  resolution: "section-787141@workspace:scopes/design/ui/surfaces/menu/section"
-  languageName: unknown
-  linkType: soft
 
 "select-hose@npm:^2.0.0":
   version: 2.0.0
@@ -29324,18 +29614,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"separator-7e051b@workspace:scopes/design/ui/separator":
-  version: 0.0.0-use.local
-  resolution: "separator-7e051b@workspace:scopes/design/ui/separator"
-  languageName: unknown
-  linkType: soft
-
-"serializable-a81f70@workspace:scopes/toolbox/types/serializable":
-  version: 0.0.0-use.local
-  resolution: "serializable-a81f70@workspace:scopes/toolbox/types/serializable"
-  languageName: unknown
-  linkType: soft
-
 "serialize-error@npm:5.0.0":
   version: 5.0.0
   resolution: "serialize-error@npm:5.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fserialize-error%2F-%2Fserialize-error-5.0.0.tgz"
@@ -29389,12 +29667,6 @@ fsevents@^1.2.7:
   checksum: 97e8c94ec02950d019000ca12a8e0b4fdeaaabb7ae965c1c05557b55b48114716ae92688972a8d9f06a5e2d5957c305253a859ec223bb39a1e0732366d0e2768
   languageName: node
   linkType: hard
-
-"server-error-page-a14c10@workspace:scopes/design/ui/server-error-page":
-  version: 0.0.0-use.local
-  resolution: "server-error-page-a14c10@workspace:scopes/design/ui/server-error-page"
-  languageName: unknown
-  linkType: soft
 
 "set-blocking@npm:^2.0.0, set-blocking@npm:~2.0.0":
   version: 2.0.0
@@ -29548,12 +29820,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"side-bar-b708a4@workspace:scopes/ui-foundation/uis/side-bar":
-  version: 0.0.0-use.local
-  resolution: "side-bar-b708a4@workspace:scopes/ui-foundation/uis/side-bar"
-  languageName: unknown
-  linkType: soft
-
 "side-channel@npm:^1.0.4":
   version: 1.0.4
   resolution: "side-channel@npm:1.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fside-channel%2F-%2Fside-channel-1.0.4.tgz"
@@ -29564,18 +29830,6 @@ fsevents@^1.2.7:
   checksum: 84258ce3edb1ad35810ca17eccd52fd504b5d4da59447a6829cfd1ae8e3cff97b7df2a14f9a45b7aaa3b507ded95626cf20a500735d3b797e9ffb1eba3cfa9e7
   languageName: node
   linkType: hard
-
-"sidebar-c63b5b@workspace:scopes/ui-foundation/sidebar":
-  version: 0.0.0-use.local
-  resolution: "sidebar-c63b5b@workspace:scopes/ui-foundation/sidebar"
-  languageName: unknown
-  linkType: soft
-
-"sign-d7b908@workspace:scopes/scope/sign":
-  version: 0.0.0-use.local
-  resolution: "sign-d7b908@workspace:scopes/scope/sign"
-  languageName: unknown
-  linkType: soft
 
 "signal-exit@npm:^3.0.0, signal-exit@npm:^3.0.2, signal-exit@npm:^3.0.3":
   version: 3.0.3
@@ -29706,12 +29960,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"slot-router-26e8e1@workspace:scopes/ui-foundation/react-router/ui/slot-router":
-  version: 0.0.0-use.local
-  resolution: "slot-router-26e8e1@workspace:scopes/ui-foundation/react-router/ui/slot-router"
-  languageName: unknown
-  linkType: soft
-
 "smart-buffer@npm:^4.1.0":
   version: 4.1.0
   resolution: "smart-buffer@npm:4.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fsmart-buffer%2F-%2Fsmart-buffer-4.1.0.tgz"
@@ -29769,12 +30017,6 @@ fsevents@^1.2.7:
   checksum: c30b63a732bf37dbd2147bf57b4d9eac651ab7b313d1521f73855154b2c2f5a3f2ad18bd47e21cc64b6991f868ecb2a99f8da973ca86da39956f1f0f720b7033
   languageName: node
   linkType: hard
-
-"snippet-631f24@workspace:scopes/mdx/ui/snippet":
-  version: 0.0.0-use.local
-  resolution: "snippet-631f24@workspace:scopes/mdx/ui/snippet"
-  languageName: unknown
-  linkType: soft
 
 "socket.io-adapter@npm:~1.1.0":
   version: 1.1.2
@@ -30279,12 +30521,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"standalone-not-found-page-482ba1@workspace:scopes/design/ui/pages/standalone-not-found-page":
-  version: 0.0.0-use.local
-  resolution: "standalone-not-found-page-482ba1@workspace:scopes/design/ui/pages/standalone-not-found-page"
-  languageName: unknown
-  linkType: soft
-
 "state-toggle@npm:^1.0.0":
   version: 1.0.3
   resolution: "state-toggle@npm:1.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fstate-toggle%2F-%2Fstate-toggle-1.0.3.tgz"
@@ -30301,12 +30537,6 @@ fsevents@^1.2.7:
   checksum: c42052c35259769fabbede527b2ae81962b53cf3b7a5cb07bd5b0b295777641ba81ddb2f4a62df9970c96303357fc6ffb90f61a4a9e127e6e42c7895af9cd5ce
   languageName: node
   linkType: hard
-
-"status-2f5124@workspace:scopes/workspace/ui/status":
-  version: 0.0.0-use.local
-  resolution: "status-2f5124@workspace:scopes/workspace/ui/status"
-  languageName: unknown
-  linkType: soft
 
 "statuses@npm:>= 1.4.0 < 2, statuses@npm:>= 1.5.0 < 2, statuses@npm:~1.5.0":
   version: 1.5.0
@@ -30706,12 +30936,6 @@ fsevents@^1.2.7:
   checksum: 5a01031e8b6662fbc2397360916e0b8ee66cc74c15a292c15ab82b5067728165ad730fa5289b12c2875e17660e21450515958a83636462bba3900ea5bc964082
   languageName: node
   linkType: hard
-
-"strip-trailing-char-87869f@workspace:scopes/toolbox/string/strip-trailing-char":
-  version: 0.0.0-use.local
-  resolution: "strip-trailing-char-87869f@workspace:scopes/toolbox/string/strip-trailing-char"
-  languageName: unknown
-  linkType: soft
 
 "style-loader@npm:^2.0.0":
   version: 2.0.0
@@ -31214,38 +31438,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"test-loader-aed005@workspace:scopes/defender/ui/test-loader":
-  version: 0.0.0-use.local
-  resolution: "test-loader-aed005@workspace:scopes/defender/ui/test-loader"
-  languageName: unknown
-  linkType: soft
-
-"test-row-e01aa7@workspace:scopes/defender/ui/test-row":
-  version: 0.0.0-use.local
-  resolution: "test-row-e01aa7@workspace:scopes/defender/ui/test-row"
-  dependencies:
-    "@teambit/documenter.theme.theme-context": 3.0.8
-  languageName: unknown
-  linkType: soft
-
-"test-table-bf0074@workspace:scopes/defender/ui/test-table":
-  version: 0.0.0-use.local
-  resolution: "test-table-bf0074@workspace:scopes/defender/ui/test-table"
-  languageName: unknown
-  linkType: soft
-
-"tester-0ea4df@workspace:scopes/defender/tester":
-  version: 0.0.0-use.local
-  resolution: "tester-0ea4df@workspace:scopes/defender/tester"
-  languageName: unknown
-  linkType: soft
-
-"tests-results-c2ef71@workspace:scopes/defender/tests-results":
-  version: 0.0.0-use.local
-  resolution: "tests-results-c2ef71@workspace:scopes/defender/tests-results"
-  languageName: unknown
-  linkType: soft
-
 "text-hex@npm:1.0.x":
   version: 1.0.0
   resolution: "text-hex@npm:1.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftext-hex%2F-%2Ftext-hex-1.0.0.tgz"
@@ -31318,18 +31510,6 @@ fsevents@^1.2.7:
   checksum: eceb856b6412ecd02c24731a2441698aa57622e03b0a4d6d1dea47d7b173aca54980fd2fba5b3a2e11ccec48373c46483f7f55a46717bfc07645395fa57267a6
   languageName: node
   linkType: hard
-
-"time-ago-d19018@workspace:scopes/design/ui/time-ago":
-  version: 0.0.0-use.local
-  resolution: "time-ago-d19018@workspace:scopes/design/ui/time-ago"
-  languageName: unknown
-  linkType: soft
-
-"time-format-ec35cc@workspace:scopes/toolbox/time/time-format":
-  version: 0.0.0-use.local
-  resolution: "time-format-ec35cc@workspace:scopes/toolbox/time/time-format"
-  languageName: unknown
-  linkType: soft
 
 "timed-out@npm:^4.0.0":
   version: 4.0.1
@@ -31464,12 +31644,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"to-windows-compatible-path-d750eb@workspace:scopes/toolbox/path/to-windows-compatible-path":
-  version: 0.0.0-use.local
-  resolution: "to-windows-compatible-path-d750eb@workspace:scopes/toolbox/path/to-windows-compatible-path"
-  languageName: unknown
-  linkType: soft
-
 "toggle-selection@npm:^1.0.6":
   version: 1.0.6
   resolution: "toggle-selection@npm:1.0.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftoggle-selection%2F-%2Ftoggle-selection-1.0.6.tgz"
@@ -31483,18 +31657,6 @@ fsevents@^1.2.7:
   checksum: 95720e8a0f98f1525f50ccbecbc2a23f0a1b4e448de03819dbbeda03adf0d2010fe64525fbc9d549765242550d341bb891672e4ac0b2cac58613cdd742324255
   languageName: node
   linkType: hard
-
-"tooltip-b63f3b@workspace:scopes/design/ui/tooltip":
-  version: 0.0.0-use.local
-  resolution: "tooltip-b63f3b@workspace:scopes/design/ui/tooltip"
-  languageName: unknown
-  linkType: soft
-
-"top-bar-293515@workspace:scopes/ui-foundation/uis/top-bar":
-  version: 0.0.0-use.local
-  resolution: "top-bar-293515@workspace:scopes/ui-foundation/uis/top-bar"
-  languageName: unknown
-  linkType: soft
 
 "toposort@npm:^2.0.2":
   version: 2.0.2
@@ -31569,12 +31731,6 @@ fsevents@^1.2.7:
   checksum: 6c418ed82fb5453511008fd0d3f9f18fa21485e4fe891582b8d2efff39a975db29bd1c9db895ed069e3f47ddfcd92f02f7ca8b1beed71d89528a1949104935e7
   languageName: node
   linkType: hard
-
-"tree-node-4805f0@workspace:scopes/ui-foundation/tree/tree-node":
-  version: 0.0.0-use.local
-  resolution: "tree-node-4805f0@workspace:scopes/ui-foundation/tree/tree-node"
-  languageName: unknown
-  linkType: soft
 
 "treeify@npm:^1.1.0":
   version: 1.1.0
@@ -31917,12 +32073,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"typescript-53fe74@workspace:scopes/typescript/typescript":
-  version: 0.0.0-use.local
-  resolution: "typescript-53fe74@workspace:scopes/typescript/typescript"
-  languageName: unknown
-  linkType: soft
-
 "typescript-language-server@npm:0.4.0":
   version: 0.4.0
   resolution: "typescript-language-server@npm:0.4.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ftypescript-language-server%2F-%2Ftypescript-language-server-0.4.0.tgz"
@@ -32035,24 +32185,6 @@ typescript@^3.9.3:
   checksum: bb35cfe5ce9735a9707b33628dbbef02ab4b62bdd3650a02e14dfe42f4ac3fe5e9d616352476605706ab651561abc66ef2877c3dcabf4bde5bf66cecec94f3e8
   languageName: node
   linkType: hard
-
-"ui-bf9061@workspace:scopes/ui-foundation/ui":
-  version: 0.0.0-use.local
-  resolution: "ui-bf9061@workspace:scopes/ui-foundation/ui"
-  languageName: unknown
-  linkType: soft
-
-"ui-server-console-098958@workspace:scopes/ui-foundation/cli/ui-server-console":
-  version: 0.0.0-use.local
-  resolution: "ui-server-console-098958@workspace:scopes/ui-foundation/cli/ui-server-console"
-  languageName: unknown
-  linkType: soft
-
-"ui-server-loader-97c8fd@workspace:scopes/ui-foundation/cli/ui-server-loader":
-  version: 0.0.0-use.local
-  resolution: "ui-server-loader-97c8fd@workspace:scopes/ui-foundation/cli/ui-server-loader"
-  languageName: unknown
-  linkType: soft
 
 "uid-number@npm:0.0.6":
   version: 0.0.6
@@ -32386,12 +32518,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"update-dependencies-4b3ed3@workspace:scopes/scope/update-dependencies":
-  version: 0.0.0-use.local
-  resolution: "update-dependencies-4b3ed3@workspace:scopes/scope/update-dependencies"
-  languageName: unknown
-  linkType: soft
-
 "update-notifier@npm:^2.2.0":
   version: 2.5.0
   resolution: "update-notifier@npm:2.5.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fupdate-notifier%2F-%2Fupdate-notifier-2.5.0.tgz"
@@ -32509,30 +32635,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"use-bind-key-e7f9ea@workspace:scopes/ui-foundation/uis/hooks/use-bind-key":
-  version: 0.0.0-use.local
-  resolution: "use-bind-key-e7f9ea@workspace:scopes/ui-foundation/uis/hooks/use-bind-key"
-  languageName: unknown
-  linkType: soft
-
-"use-code-params-ae3d1a@workspace:scopes/code/hooks/use-code-params":
-  version: 0.0.0-use.local
-  resolution: "use-code-params-ae3d1a@workspace:scopes/code/hooks/use-code-params"
-  languageName: unknown
-  linkType: soft
-
-"use-composition-8e988e@workspace:scopes/compositions/ui/hooks/use-composition":
-  version: 0.0.0-use.local
-  resolution: "use-composition-8e988e@workspace:scopes/compositions/ui/hooks/use-composition"
-  languageName: unknown
-  linkType: soft
-
-"use-data-query-28aac7@workspace:scopes/ui-foundation/uis/hooks/use-data-query":
-  version: 0.0.0-use.local
-  resolution: "use-data-query-28aac7@workspace:scopes/ui-foundation/uis/hooks/use-data-query"
-  languageName: unknown
-  linkType: soft
-
 "use-debounce@npm:3.4.3, use-debounce@npm:^3.4.3":
   version: 3.4.3
   resolution: "use-debounce@npm:3.4.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fuse-debounce%2F-%2Fuse-debounce-3.4.3.tgz"
@@ -32541,18 +32643,6 @@ typescript@^3.9.3:
   checksum: cc9cd52973962f718892142666da7c3c45d30e867ee1bd2718c9618ec9308405a01214a0bce55fd5cc3f0ce782af27e9f6ccefea7ef41c59273cb81b00a0a1ed
   languageName: node
   linkType: hard
-
-"use-in-out-transition-f9e0df@workspace:scopes/ui-foundation/uis/hooks/use-in-out-transition":
-  version: 0.0.0-use.local
-  resolution: "use-in-out-transition-f9e0df@workspace:scopes/ui-foundation/uis/hooks/use-in-out-transition"
-  languageName: unknown
-  linkType: soft
-
-"use-is-mobile-781d4e@workspace:scopes/ui-foundation/uis/hooks/use-is-mobile":
-  version: 0.0.0-use.local
-  resolution: "use-is-mobile-781d4e@workspace:scopes/ui-foundation/uis/hooks/use-is-mobile"
-  languageName: unknown
-  linkType: soft
 
 "use-memo-one@npm:^1.1.1":
   version: 1.1.2
@@ -32569,36 +32659,12 @@ typescript@^3.9.3:
   languageName: unknown
   linkType: soft
 
-"use-query-625f84@workspace:scopes/ui-foundation/react-router/ui/use-query":
-  version: 0.0.0-use.local
-  resolution: "use-query-625f84@workspace:scopes/ui-foundation/react-router/ui/use-query"
-  languageName: unknown
-  linkType: soft
-
-"use-snaps-cc0a56@workspace:scopes/component/ui/hooks/use-snaps":
-  version: 0.0.0-use.local
-  resolution: "use-snaps-cc0a56@workspace:scopes/component/ui/hooks/use-snaps"
-  languageName: unknown
-  linkType: soft
-
-"use-user-agent-f2a652@workspace:scopes/ui-foundation/uis/hooks/use-user-agent":
-  version: 0.0.0-use.local
-  resolution: "use-user-agent-f2a652@workspace:scopes/ui-foundation/uis/hooks/use-user-agent"
-  languageName: unknown
-  linkType: soft
-
 "use@npm:^3.1.0":
   version: 3.1.1
   resolution: "use@npm:3.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fuse%2F-%2Fuse-3.1.1.tgz"
   checksum: 8dd3bdeeda53864c779e0fa8d799064739708f80b45d06fa48a1a6ba192dc3f9e3266d4556f223cd718d27aedfd957922152e7463c00ac46e185f8331353fb6f
   languageName: node
   linkType: hard
-
-"user-agent-e9aec5@workspace:scopes/ui-foundation/user-agent":
-  version: 0.0.0-use.local
-  resolution: "user-agent-e9aec5@workspace:scopes/ui-foundation/user-agent"
-  languageName: unknown
-  linkType: soft
 
 "user-home@npm:2.0.0, user-home@npm:^2.0.0":
   version: 2.0.0
@@ -32790,12 +32856,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"variants-eb2896@workspace:scopes/workspace/variants":
-  version: 0.0.0-use.local
-  resolution: "variants-eb2896@workspace:scopes/workspace/variants"
-  languageName: unknown
-  linkType: soft
-
 "vary@npm:^1, vary@npm:~1.1.2":
   version: 1.1.2
   resolution: "vary@npm:1.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fvary%2F-%2Fvary-1.1.2.tgz"
@@ -32886,24 +32946,6 @@ typescript@^3.9.3:
   checksum: 38ea80312cb42e5e8b4ac562d108d675b2354a79f8f125d363671f692657461b9181fd26f4fc9acdca433f8afee099cb78058806e1303e6b15b8fb022affba94
   languageName: node
   linkType: hard
-
-"version-block-1d5fec@workspace:scopes/component/ui/version-block":
-  version: 0.0.0-use.local
-  resolution: "version-block-1d5fec@workspace:scopes/component/ui/version-block"
-  languageName: unknown
-  linkType: soft
-
-"version-dropdown-794cec@workspace:scopes/component/ui/version-dropdown":
-  version: 0.0.0-use.local
-  resolution: "version-dropdown-794cec@workspace:scopes/component/ui/version-dropdown"
-  languageName: unknown
-  linkType: soft
-
-"version-label-73d666@workspace:scopes/component/ui/version-label":
-  version: 0.0.0-use.local
-  resolution: "version-label-73d666@workspace:scopes/component/ui/version-label"
-  languageName: unknown
-  linkType: soft
 
 "version-selector-type@npm:^3.0.0":
   version: 3.0.0
@@ -33215,12 +33257,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"webpack-a7b1e1@workspace:scopes/compilation/webpack":
-  version: 0.0.0-use.local
-  resolution: "webpack-a7b1e1@workspace:scopes/compilation/webpack"
-  languageName: unknown
-  linkType: soft
-
 "webpack-dev-middleware@npm:4.1.0, webpack-dev-middleware@npm:^4.1.0":
   version: 4.1.0
   resolution: "webpack-dev-middleware@npm:4.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack-dev-middleware%2F-%2Fwebpack-dev-middleware-4.1.0.tgz"
@@ -33335,9 +33371,9 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"webpack@npm:5.26.1":
-  version: 5.26.1
-  resolution: "webpack@npm:5.26.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack%2F-%2Fwebpack-5.26.1.tgz"
+"webpack@npm:5.30.0":
+  version: 5.30.0
+  resolution: "webpack@npm:5.30.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack%2F-%2Fwebpack-5.30.0.tgz"
   dependencies:
     "@types/eslint-scope": ^3.7.0
     "@types/estree": ^0.0.46
@@ -33367,7 +33403,7 @@ typescript@^3.9.3:
       optional: true
   bin:
     webpack: bin/webpack.js
-  checksum: 0a6d16f9efe483b07df883a0b97fe4567d631bc47ac3827150c76e8a753254f186c3da9abc19c01cc58fc69f6f68e8636ddcf4aedd0a3b74dcb8e944e5043916
+  checksum: 133845a1a94b1c24339ee0aef5b961fd513868ad93b875c7c9a670dac2388aeae238519ace48c283453f52ccbb0159a211043db1cd17a38b12279546aa05ce44
   languageName: node
   linkType: hard
 
@@ -33811,12 +33847,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"worker-187f11@workspace:scopes/harmony/worker":
-  version: 0.0.0-use.local
-  resolution: "worker-187f11@workspace:scopes/harmony/worker"
-  languageName: unknown
-  linkType: soft
-
 "worker-farm@npm:^1.3.1":
   version: 1.7.0
   resolution: "worker-farm@npm:1.7.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fworker-farm%2F-%2Fworker-farm-1.7.0.tgz"
@@ -33834,24 +33864,6 @@ typescript@^3.9.3:
   checksum: f1ff1b619f37d304b4d0011ee2d2648b5ee93a984ed8ef869c7d42386d36fd042c63ae797a720dd4a32d9d0a7686e84ebbee2dbb26e0b00cf0cfbd65bc4f19eb
   languageName: node
   linkType: hard
-
-"workspace-1404ce@workspace:scopes/workspace/workspace":
-  version: 0.0.0-use.local
-  resolution: "workspace-1404ce@workspace:scopes/workspace/workspace"
-  languageName: unknown
-  linkType: soft
-
-"workspace-component-card-b2cfe7@workspace:scopes/workspace/ui/workspace-component-card":
-  version: 0.0.0-use.local
-  resolution: "workspace-component-card-b2cfe7@workspace:scopes/workspace/ui/workspace-component-card"
-  languageName: unknown
-  linkType: soft
-
-"workspace-d2a110@workspace:scopes/workspace/e2e/workspace":
-  version: 0.0.0-use.local
-  resolution: "workspace-d2a110@workspace:scopes/workspace/e2e/workspace"
-  languageName: unknown
-  linkType: soft
 
 "wrap-ansi@npm:^6.2.0":
   version: 6.2.0
@@ -34172,12 +34184,6 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"yarn-94b64d@workspace:scopes/dependencies/yarn":
-  version: 0.0.0-use.local
-  resolution: "yarn-94b64d@workspace:scopes/dependencies/yarn"
-  languageName: unknown
-  linkType: soft
-
 "yeast@npm:0.1.2":
   version: 0.1.2
   resolution: "yeast@npm:0.1.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fyeast%2F-%2Fyeast-0.1.2.tgz"
@@ -34221,12 +34227,6 @@ typescript@^3.9.3:
   checksum: 72956b9ca9808eb0bc67b93cf25b610784b089ecd3fc949f329d9f7322f40632ac4ecd57edb414cf922e50d146629b5bfbc02b985b3f59bbba4091bc2b1f440c
   languageName: node
   linkType: hard
-
-"z-indexes-da4963@workspace:scopes/ui-foundation/uis/constants/z-indexes":
-  version: 0.0.0-use.local
-  resolution: "z-indexes-da4963@workspace:scopes/ui-foundation/uis/constants/z-indexes"
-  languageName: unknown
-  linkType: soft
 
 "zen-observable-ts@npm:^0.8.21":
   version: 0.8.21

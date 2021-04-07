@@ -32,7 +32,7 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
 // style files regexes
-const cssRegex = /\.css$/;
+const cssRegex = /(?<!\.module)\.css$/;
 const cssModuleRegex = /\.module\.css$/;
 const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
@@ -322,7 +322,6 @@ export default function (fileMapPath: string): Configuration {
             // By default we support CSS Modules with the extension .module.css
             {
               test: cssRegex,
-              exclude: cssModuleRegex,
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -419,7 +418,7 @@ export default function (fileMapPath: string): Configuration {
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/],
+              exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
               options: {
                 name: 'static/media/[name].[hash:8].[ext]',
               },

@@ -192,7 +192,6 @@ export class UiMain {
     const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootName: "${uiRootName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
