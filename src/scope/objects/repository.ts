@@ -3,7 +3,7 @@ import { Mutex } from 'async-mutex';
 import { uniqBy } from 'lodash';
 import * as path from 'path';
 import pMap from 'p-map';
-import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
+import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
@@ -20,6 +20,7 @@ import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
+import { concurrentIOLimit } from '../../utils/concurrency';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -135,7 +136,8 @@ export default class Repository {
 
   async list(): Promise<BitObject[]> {
     const refs = await this.listRefs();
-    return pMap(refs, (ref) => this.load(ref), { concurrency: CONCURRENT_IO_LIMIT });
+    const concurrency = concurrentIOLimit();
+    return pMap(refs, (ref) => this.load(ref), { concurrency });
   }
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
@@ -148,6 +150,7 @@ export default class Repository {
 
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
+    const concurrency = concurrentIOLimit();
     return pMap(
       refs,
       async (ref) => {
@@ -160,7 +163,7 @@ export default class Repository {
           return null;
         }
       },
-      { concurrency: CONCURRENT_IO_LIMIT }
+      { concurrency }
     );
   }
 
@@ -224,7 +227,8 @@ export default class Repository {
   }
 
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
-    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency: CONCURRENT_IO_LIMIT });
+    const concurrency = concurrentIOLimit();
+    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
@@ -380,7 +384,8 @@ export default class Repository {
     if (!refs.length) return;
     const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
-    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency: CONCURRENT_IO_LIMIT });
+    const concurrency = concurrentIOLimit();
+    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
@@ -397,8 +402,9 @@ export default class Repository {
     const count = objects.length;
     if (!count) return;
     logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
+    const concurrency = concurrentIOLimit();
     await pMap(objects, (obj) => this._writeOne(obj), {
-      concurrency: CONCURRENT_IO_LIMIT,
+      concurrency,
     });
     logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
 
