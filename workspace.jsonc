@@ -534,7 +534,7 @@
             "graphql": "-",
             "react": "-",
             "react-dom": "-",
-            "core-js": "-",
+            "core-js": "-"
           }
         }
       }
