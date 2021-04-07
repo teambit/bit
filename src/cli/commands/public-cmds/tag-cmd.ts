@@ -14,6 +14,7 @@ export default class Tag implements LegacyCommand {
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
+  loader = true;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],

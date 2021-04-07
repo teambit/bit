@@ -10,6 +10,7 @@ export default class CiUpdate implements LegacyCommand {
   name = 'ci-update <id> [scopePath]';
   description = 'run an update for build and test of a certain bit-component';
   alias = '';
+  loader = false;
   opts = [
     // ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
     ['d', 'directory [file]', 'directory to run ci-update'],
