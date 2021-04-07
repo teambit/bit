@@ -5,7 +5,7 @@ import { GeneratorMain } from './generator.main.runtime';
 export type NewOptions = {
   aspect?: string;
   owner?: string;
-  standalone?: string;
+  standalone?: boolean;
 };
 
 export class NewCmd implements Command {
@@ -25,18 +25,6 @@ export class NewCmd implements Command {
 
   async report([templateName, workspaceName]: [string, string], options: NewOptions) {
     const results = await this.generator.generateWorkspaceTemplate(workspaceName, templateName, options);
-    const title = `the following ${results.length} component(s) were created`;
-
-    const componentsData = results
-      .map((result) => {
-        return `${chalk.bold(result.id.toString())}
-    location: ${result.dir}
-    env:      ${result.envId}
-`;
-      })
-      .join('\n');
-    const footer = `env configuration is according to workspace variants. learn more at https://harmony-docs.bit.dev/building-with-bit/environments/#configure-environment-for-components`;
-
-    return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
+    return chalk.green(`a new workspace has been created successfully at ${results}`);
   }
 }

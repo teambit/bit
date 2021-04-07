@@ -12,7 +12,7 @@ import { generatorSchema } from './generator.graphql';
 import { ComponentGenerator, GenerateResult } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
-import { NewOptions } from './new.cmd';
+import { NewCmd, NewOptions } from './new.cmd';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
@@ -56,8 +56,16 @@ export class GeneratorMain {
    * list all component templates registered in the workspace.
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    await this.loadAspects();
-    const allTemplates = this.getAllComponentTemplatesFlattened();
+    if (this.workspace) {
+      await this.loadAspects();
+      const allTemplates = this.getAllComponentTemplatesFlattened();
+      return allTemplates.map(({ id, template }) => ({
+        aspectId: id,
+        name: template.name,
+        description: template.description,
+      }));
+    }
+    const allTemplates = this.getAllWorkspaceTemplatesFlattened();
     return allTemplates.map(({ id, template }) => ({
       aspectId: id,
       name: template.name,
@@ -119,7 +127,6 @@ export class GeneratorMain {
 
   async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
     const { aspect: aspectId } = options;
-    await this.loadAspects();
     const template = this.getWorkspaceTemplate(templateName, aspectId);
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
@@ -164,7 +171,7 @@ export class GeneratorMain {
     [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
     const generator = new GeneratorMain(componentTemplateSlot, workspaceTemplateSlot, config, workspace, envs);
-    const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     return generator;

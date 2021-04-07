@@ -1,4 +1,5 @@
-.idea/
+export function gitIgnore() {
+  return `.idea/
 .vscode/
 node_modules/
 build
@@ -11,3 +12,5 @@ yarn-error.log*
 /.changelog
 .npm/
 yarn.lock
+`;
+}

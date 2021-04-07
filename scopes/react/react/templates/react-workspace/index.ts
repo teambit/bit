@@ -1,8 +1,9 @@
-import fs from 'fs-extra';
 import { ComponentContext, ComponentTemplate } from '@teambit/generator';
 import { workspaceConfig } from './files/workspace-config';
+import { readme } from './files/readme-file';
+import { gitIgnore } from './files/git-ignore';
 
-export const reactEnvTemplate: ComponentTemplate = {
+export const reactWorkspaceTemplate: ComponentTemplate = {
   name: 'react-workspace',
   description: 'create a new React project',
   generateFiles: (context: ComponentContext) => {
@@ -13,11 +14,11 @@ export const reactEnvTemplate: ComponentTemplate = {
       },
       {
         relativePath: `.gitignore`,
-        content: fs.readFileSync('./files/.gitignore', 'utf-8'),
+        content: gitIgnore(),
       },
       {
         relativePath: `README.md`,
-        content: fs.readFileSync('./files/README.md', 'utf-8'),
+        content: readme(),
       },
     ];
   },
