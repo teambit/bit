@@ -311,7 +311,7 @@
         "graphql": "14.7.0",
         "mz": "2.7.0",
         "react": "16.14.0",
-        "react-dom": "16.14.2",
+        "react-dom": "16.14.0",
         "core-js": "3.10.0"
       }
     },
@@ -519,7 +519,7 @@
             "graceful-fs": "4.2.4",
             // make sure the package manager installs an instance of react (and other peers)
             "react": "16.14.0",
-            "react-dom": "16.14.2",
+            "react-dom": "16.14.0",
             "core-js": "3.10.0"
           },
           "devDependencies": {
