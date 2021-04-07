@@ -149,8 +149,8 @@
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "4.1.1",
         "@types/puppeteer": "3.0.5",
-        "@types/react": "16.9.43",
-        "@types/react-dom": "16.9.10",
+        "@types/react": "16.14.5",
+        "@types/react-dom": "16.9.12",
         "@types/react-router-dom": "5.1.7",
         "@types/react-tabs": "2.3.2",
         "@types/react-tooltip": "3.11.0",
@@ -310,8 +310,8 @@
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
-        "react": "16.13.1",
-        "react-dom": "16.13.1",
+        "react": "16.14.0",
+        "react-dom": "16.14.2",
         "core-js": "3.10.0"
       }
     },
