@@ -4,8 +4,8 @@ import { Readable, PassThrough } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
-import { CONCURRENT_IO_LIMIT } from '../../constants';
 import logger from '../../logger/logger';
+import { concurrentIOLimit } from '../../utils/concurrency';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to
@@ -230,13 +230,15 @@ export class ObjectList {
   }
 
   async toBitObjects(): Promise<BitObjectList> {
+    const concurrency = concurrentIOLimit();
     const bitObjects = await pMap(this.objects, (object) => BitObject.parseObject(object.buffer), {
-      concurrency: CONCURRENT_IO_LIMIT,
+      concurrency,
     });
     return new BitObjectList(bitObjects);
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
+    const concurrency = concurrentIOLimit();
     const objectItems = await pMap(
       bitObjects,
       async (obj) => ({
@@ -244,7 +246,7 @@ export class ObjectList {
         buffer: await obj.compress(),
         type: obj.getType(),
       }),
-      { concurrency: CONCURRENT_IO_LIMIT }
+      { concurrency }
     );
     return new ObjectList(objectItems);
   }

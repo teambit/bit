@@ -1,14 +1,14 @@
 /* eslint-disable max-classes-per-file */
 import { BitBaseEvent } from '@teambit/pubsub';
 
-export class WebpackCompilationStartedEventData {
-  constructor(readonly params: object) {}
-}
+type Params = {
+  devServerID: string;
+};
 
-export class WebpackCompilationStartedEvent extends BitBaseEvent<WebpackCompilationStartedEventData> {
+export class WebpackCompilationStartedEvent extends BitBaseEvent<Params> {
   static readonly TYPE = 'webpack-compilation-started';
 
-  constructor(readonly timestamp, readonly params: object) {
-    super(WebpackCompilationStartedEvent.TYPE, '0.0.1', timestamp, new WebpackCompilationStartedEventData(params));
+  constructor(readonly timestamp, readonly params: Params) {
+    super(WebpackCompilationStartedEvent.TYPE, '0.0.1', timestamp, params);
   }
 }

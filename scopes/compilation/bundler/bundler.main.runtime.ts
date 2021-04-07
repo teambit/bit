@@ -45,11 +45,12 @@ export class BundlerMain {
    */
   async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
-    const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    // TODO: this must be refactored away from here. this logic should be in the Preview.
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService);
     this._componentServers = servers;
 
     this.indexByComponent();
-    // @ts-ignore
+
     return this._componentServers;
   }
 

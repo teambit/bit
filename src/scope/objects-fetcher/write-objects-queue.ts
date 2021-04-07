@@ -1,10 +1,10 @@
 import PQueue from 'p-queue';
-import { CONCURRENT_IO_LIMIT } from '../../constants';
+import { concurrentIOLimit } from '../../utils/concurrency';
 
 export class WriteObjectsQueue {
   private queue: PQueue;
   private addedHashes: string[] = [];
-  constructor(concurrency = CONCURRENT_IO_LIMIT) {
+  constructor(concurrency = concurrentIOLimit()) {
     this.queue = new PQueue({ concurrency, autoStart: true });
   }
   addImmutableObject<T>(hash: string, fn: () => Promise<T | null>) {

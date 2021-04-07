@@ -255,6 +255,10 @@ export const CFG_PROXY_CERT = 'proxy.cert';
 export const CFG_PROXY_KEY = 'proxy.key';
 export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
 
+export const CFG_CONCURRENCY_IO = 'concurrency.io';
+export const CFG_CONCURRENCY_COMPONENTS = 'concurrency.components';
+export const CFG_CONCURRENCY_FETCH = 'concurrency.fetch';
+
 /**
  * git hooks
  */
@@ -438,10 +442,6 @@ export const DEFAULT_LANE = 'master';
 const MISSING_DEPS_SPACE_COUNT = 10;
 export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
-
-export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time
-export const CONCURRENT_COMPONENTS_LIMIT = 50; // limit number of components to load at the same time
-export const CONCURRENT_FETCH_LIMIT = 15; // limit number of scopes to fetch from at the same time
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
