@@ -27,7 +27,7 @@
     },
     "bit": {
         "scope": "teambit.harmony",
-        "version": "0.0.348",
+        "version": "0.0.349",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -363,13 +363,13 @@
     },
     "network/agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.31",
+        "version": "0.0.32",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/agent"
     },
     "network/proxy-agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.31",
+        "version": "0.0.32",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
