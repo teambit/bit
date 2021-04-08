@@ -57,7 +57,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         },
         {
           test: /\.js$/,
-          include: distPaths,
+          include: /node_modules/,
           use: [
             {
               loader: require.resolve('babel-loader'),

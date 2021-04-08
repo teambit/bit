@@ -236,23 +236,23 @@ export default function (fileMapPath: string): Configuration {
                 name: 'static/media/[name].[hash:8].[ext]',
               },
             },
-            // {
-            //   test: /\.js$/,
-            //   include: distPaths,
-            //   use: [
-            //     {
-            //       loader: require.resolve('babel-loader'),
-            //       options: {
-            //         babelrc: false,
-            //         configFile: false,
-            //         plugins: [
-            //           // for component highlighting in preview.
-            //           [require.resolve('@teambit/babel.bit-react-transformer')],
-            //         ],
-            //       },
-            //     },
-            //   ],
-            // },
+            {
+              test: /\.js$/,
+              include: /node_modules/,
+              use: [
+                {
+                  loader: require.resolve('babel-loader'),
+                  options: {
+                    babelrc: false,
+                    configFile: false,
+                    plugins: [
+                      // for component highlighting in preview.
+                      [require.resolve('@teambit/babel.bit-react-transformer')],
+                    ],
+                  },
+                },
+              ],
+            },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
