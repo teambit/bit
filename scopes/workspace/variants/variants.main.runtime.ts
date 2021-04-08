@@ -2,7 +2,7 @@ import { MainRuntime } from '@teambit/cli';
 import ConsumerOverrides from '@teambit/legacy/dist/consumer/config/consumer-overrides';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
-import R from 'ramda';
+import { forEachObjIndexed, omit } from 'ramda';
 import { MatchedPatternWithConfig, isMatchPattern, sortMatchesBySpecificity } from '@teambit/modules.match-pattern';
 
 import { VariantsAspect } from './variants.aspect';
@@ -47,7 +47,7 @@ export class VariantsMain {
    */
   byRootDirAndName(rootDir: PathLinuxRelative, componentName: string): VariantsComponentConfig | undefined {
     const matches: MatchedPatternWithConfig[] = [];
-    R.forEachObjIndexed((patternConfig, pattern) => {
+    forEachObjIndexed((patternConfig, pattern) => {
       const match = isMatchPattern(rootDir, componentName, pattern);
 
       if (match.match) {
@@ -89,7 +89,7 @@ export class VariantsMain {
 }
 
 function getExtensionFromPatternRawConfig(config: Record<string, any>) {
-  const rawExtensions = R.omit(INTERNAL_FIELDS, config);
+  const rawExtensions = omit(INTERNAL_FIELDS, config);
   const extensions = ExtensionDataList.fromConfigObject(rawExtensions);
   return extensions;
 }

@@ -37,10 +37,14 @@ export type UserAvatarProps = {
 export class UserAvatar extends PureComponent<UserAvatarProps> {
   state = {
     tooltipId: '',
+    isMobile: false,
   };
 
   componentDidMount() {
     this.setState({ tooltipId: v1() });
+    if (window.innerWidth <= 1080) {
+      this.setState({ isMobile: true });
+    }
   }
 
   render() {
@@ -54,11 +58,12 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       showTooltip = false,
       ...rest
     } = this.props;
-    const { tooltipId } = this.state;
+    const { tooltipId, isMobile } = this.state;
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
     const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
     const colors = firstLetter && letterBgColors[firstLetter.toLowerCase()];
+    const isTooltipOn = showTooltip && !!tooltipId && !isMobile;
     return (
       <div
         className={classNames(colors, styles.avatar, className)}
@@ -78,7 +83,9 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
         {!displayName && !name && !profileImageWithParams && !firstLetter && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}
-        {showTooltip && !!tooltipId && <Tooltip className={ellipsis} id={tooltipId} {...tooltipDefaultProps} />}
+        {isTooltipOn && (
+          <Tooltip className={classNames(styles.tooltip, ellipsis)} id={tooltipId} {...tooltipDefaultProps} />
+        )}
       </div>
     );
   }

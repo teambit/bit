@@ -246,6 +246,7 @@ export default function (fileMapPath: string): Configuration {
                 babelrc: false,
                 configFile: false,
                 customize: require.resolve('babel-preset-react-app/webpack-overrides'),
+                presets: [require.resolve('@babel/preset-react')],
                 plugins: [
                   [
                     require.resolve('@teambit/babel.bit-react-transformer'),

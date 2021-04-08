@@ -93,7 +93,7 @@
         "@teambit/documenter.ui.heading": "1.0.3",
         "@teambit/documenter.ui.highlighted-text": "1.0.3",
         "@teambit/documenter.ui.image": "0.0.1",
-        "@teambit/documenter.ui.import-action": "3.0.11",
+        "@teambit/documenter.ui.import-action": "3.0.12",
         "@teambit/documenter.ui.italic": "0.0.1",
         "@teambit/documenter.ui.label": "2.0.2",
         "@teambit/documenter.ui.label-list": "1.0.3",
@@ -149,12 +149,11 @@
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "4.1.1",
         "@types/puppeteer": "3.0.5",
-        "@types/react": "16.9.43",
-        "@types/react-dom": "16.9.10",
+        "@types/react": "16.14.5",
+        "@types/react-dom": "16.9.12",
         "@types/react-router-dom": "5.1.7",
         "@types/react-tabs": "2.3.2",
         "@types/react-tooltip": "3.11.0",
-        "@types/react-transition-group": "4.4.1",
         "@types/socket.io-client": "1.4.35",
         "@types/ua-parser-js": "0.7.35",
         "@types/url-parse": "1.4.3",
@@ -185,7 +184,6 @@
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "copy-to-clipboard": "3.3.1",
-        "core-js": "3.8.3",
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-fetch": "3.0.6",
@@ -198,6 +196,7 @@
           "preserve": true
         },
         "eslint-import-resolver-node": "0.3.4",
+        "eventemitter2": "6.4.4",
         "express": "4.17.1",
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
@@ -254,17 +253,13 @@
         "postcss-preset-env": "6.7.0",
         "postcss-safe-parser": "5.0.2",
         "pretty-time": "1.1.0",
-        "prism-react-renderer": "1.2.0",
         "process": "0.11.10",
         "proper-lockfile": "4.1.2",
         "query-string": "7.0.0",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "10.2.1",
-        "react-dom": "16.14.0",
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
-        "react-hot-loader": "4.13.0",
-        "react-live": "2.2.3",
         "react-popper": "2.2.4",
         "react-router-dom": "5.2.0",
         "react-syntax-highlighter": "15.4.3",
@@ -312,12 +307,13 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.46",
+        "@teambit/legacy": "1.0.50",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
-        "react": "16.13.1",
-        "react-dom": "16.13.1"
+        "react": "16.14.0",
+        "react-dom": "16.14.0",
+        "core-js": "3.10.0"
       }
     },
     "packageManagerArgs": [],
@@ -365,18 +361,14 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "-",
-            // TODO: remove this later
-            "core-js": "3.8.3"
+            "@teambit/legacy": "-"
           },
           "devDependencies": {
             "@types/mocha": "5.2.7",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "react": "16.13.1",
-            "@teambit/legacy": "1.0.46",
-            "react-dom": "16.13.1"
+            "@teambit/legacy": "1.0.50"
           }
         }
       },
@@ -500,6 +492,7 @@
     "scopes/semantics": {
       "defaultScope": "teambit.semantics"
     },
+    // overrides for @teambit/bit ("teambit.harmony/bit") package:
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
@@ -517,31 +510,32 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.46",
-            // TODO: remove this later
-            "core-js": "3.8.3",
-            "react": "16.13.1",
-            "react-dom": "16.13.1",
+            "@teambit/legacy": "1.0.50",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
             "mz": "2.7.0",
             "react-refresh": "0.9.0",
             // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
-            "graceful-fs": "4.2.4"
+            "graceful-fs": "4.2.4",
+            // make sure the package manager installs an instance of react (and other peers)
+            "react": "16.14.0",
+            "react-dom": "16.14.0",
+            "core-js": "3.10.0"
           },
           "devDependencies": {
-            "@types/react": "16.14.4",
-            "@types/mocha": "5.2.7",
-            // why this is needed? try to automate this
-            "@types/node": "12.20.4"
+            // "@types/react": "-",
+            // "@types/mocha": "5.2.7",
+            // // why this is needed? try to automate this
+            // "@types/node": "12.20.4"
           },
           "peerDependencies": {
             "@teambit/legacy": "-",
             "browserslist": "-",
             "graphql": "-",
             "react": "-",
-            "react-dom": "-"
+            "react-dom": "-",
+            "core-js": "-"
           }
         }
       }

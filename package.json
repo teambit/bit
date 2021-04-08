@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.46",
+  "version": "1.0.50",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -19,7 +19,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,js,tsx,css,scss}": [
+    "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
       "prettier --write",
       "git add"
     ]
@@ -59,8 +59,8 @@
     "lint:html": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format junit -o junit/eslint-results.xml",
     "lint:fix": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --fix",
-    "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,css,scss,tsx}\" --write",
-    "prettier:check": "prettier --list-different \"{ts,js,css,tsx}/**/*.{ts,js,css,scss,tsx}\"",
+    "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
+    "prettier:check": "prettier --list-different \"{src,e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
     "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",

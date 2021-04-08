@@ -1,6 +1,6 @@
 import * as path from 'path';
 import R from 'ramda';
-import * as RA from 'ramda-adjunct';
+import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -824,7 +824,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!missing) return;
     const processMissingFiles = () => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (RA.isNilOrEmpty(missing.files)) return;
+      if (isNilOrEmpty(missing.files)) return;
       const absOriginFile = this.consumer.toAbsolutePath(originFile);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const missingFiles = missing.files.filter((missingFile) => {
@@ -837,7 +837,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToMissingDependenciesOnFs(originFile, missingFiles);
     };
     const processMissingPackages = () => {
-      if (RA.isNilOrEmpty(missing.packages)) return;
+      if (isNilOrEmpty(missing.packages)) return;
       const missingPackages = missing.packages.filter(
         (pkg) => !this.overridesDependencies.shouldIgnorePackage(pkg, fileType)
       );
@@ -858,7 +858,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
     };
     const processMissingComponents = () => {
-      if (RA.isNilOrEmpty(missing.bits)) return;
+      if (isNilOrEmpty(missing.bits)) return;
       this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
     };
     processMissingFiles();

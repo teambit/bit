@@ -1,7 +1,7 @@
 import { GeneratorContext } from '@teambit/generator';
 
-export function indexFile({ componentNameCamelCase: Name, componentName }: GeneratorContext) {
-  return `import { ${Name}Extension } from './${componentName}.extension';
+export function indexFile({ namePascalCase: Name, name }: GeneratorContext) {
+  return `import { ${Name}Extension } from './${name}.extension';
 export { ${Name}Extension };
 export default ${Name}Extension;
 `;

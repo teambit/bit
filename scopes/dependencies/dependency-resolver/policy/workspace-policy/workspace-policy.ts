@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { uniqWith } from 'ramda';
 import { sortObject } from '@teambit/legacy/dist/utils';
 import { Policy, PolicyEntry, SemverVersion, GitUrlVersion, FileSystemPath, PolicyConfigKeys } from '../policy';
 import { KEY_NAME_BY_LIFECYCLE_TYPE, DependencyLifecycleType } from '../../dependencies';
@@ -154,7 +154,7 @@ export class WorkspacePolicy implements Policy<WorkspacePolicyConfigObject> {
 }
 
 function uniqEntries(entries: Array<WorkspacePolicyEntry>): Array<WorkspacePolicyEntry> {
-  const uniq = R.uniqWith((entry1: WorkspacePolicyEntry, entry2: WorkspacePolicyEntry) => {
+  const uniq = uniqWith((entry1: WorkspacePolicyEntry, entry2: WorkspacePolicyEntry) => {
     return entry1.dependencyId === entry2.dependencyId && entry1.lifecycleType === entry2.lifecycleType;
   }, entries);
   return uniq;

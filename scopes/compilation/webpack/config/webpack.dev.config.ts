@@ -1,15 +1,14 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
-const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
+import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
+import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
+import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
 
-const path = require('path');
-const html = require('./html');
+import path from 'path';
+import html from './html';
 
-const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
-const WebpackCompilerStartedPlugin = require('../plugins/webpack-compiler-started-plugin');
+import WebpackBitReporterPlugin from '../plugins/webpack-bit-reporter-plugin';
 
 const clientHost = process.env.WDS_SOCKET_HOST;
 const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
@@ -143,11 +142,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         filename: 'index.html',
       }),
 
-      new WebpackCompilerStartedPlugin({
-        options: { pubsub, devServerID },
-      }),
-
-      new WebpackCompilerDonePlugin({
+      new WebpackBitReporterPlugin({
         options: { pubsub, devServerID },
       }),
     ],

@@ -47,12 +47,12 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
             fullySpecified: false,
           },
         },
-        // {
-        //   test: /\.js$/,
-        //   enforce: 'pre',
-        //   include: distPaths,
-        //   use: [require.resolve('source-map-loader')],
-        // },
+        {
+          test: /\.js$/,
+          enforce: 'pre',
+          include: distPaths,
+          use: [require.resolve('source-map-loader')],
+        },
         {
           test: /\.js$/,
           include: distPaths,

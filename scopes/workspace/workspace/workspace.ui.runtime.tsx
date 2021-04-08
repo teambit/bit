@@ -186,7 +186,7 @@ export class WorkspaceUI {
 
     workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
-        Overview
+        Gallery
       </MenuLinkItem>
     ));
 

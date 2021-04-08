@@ -1070,7 +1070,7 @@ export class Workspace implements ComponentFactory {
     // TODO: pass get install options
     const installer = this.dependencyResolver.getInstaller({});
     const compDirMap = await this.getComponentsDirectory([]);
-    const mergedRootPolicy = this.getMergedRootPolicy();
+    const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
 
     const depsFilterFn = await this.generateFilterFnForDepsFromLocalRemote();
 
@@ -1096,21 +1096,13 @@ export class Workspace implements ComponentFactory {
 
   async link(options?: WorkspaceLinkOptions): Promise<LinkResults> {
     const compDirMap = await this.getComponentsDirectory([]);
-    const mergedRootPolicy = this.getMergedRootPolicy();
+    const mergedRootPolicy = this.dependencyResolver.getWorkspacePolicy();
     const linker = this.dependencyResolver.getLinker({
       rootDir: this.path,
       linkingOptions: options,
     });
     const res = await linker.link(this.path, mergedRootPolicy, compDirMap, options);
     return res;
-  }
-
-  private getMergedRootPolicy() {
-    const packageJson = this.consumer.packageJson?.packageJsonObject || {};
-    const workspacePolicy = this.dependencyResolver.getWorkspacePolicy();
-    const policyFromPackageJson = this.dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
-    const mergedRootPolicy = this.dependencyResolver.mergeWorkspacePolices([policyFromPackageJson, workspacePolicy]);
-    return mergedRootPolicy;
   }
 
   /**
