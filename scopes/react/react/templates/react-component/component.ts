@@ -6,16 +6,20 @@ export const componentFile = (context: GeneratorContext) => {
     relativePath: `${name}.tsx`,
     content: `import React from 'react';
 
-export interface ${Name}Props extends React.HTMLAttributes<HTMLDivElement> {
-
+export type ${Name}Props = {
+  /**
+   * a text to be rendered in the component.
+   */
+  text: string
 };
 
-export const ${Name} = ( {children, ...rest}: ${Name}Props ) => {
+export function ${Name}({ text }: ${Name}Props) {
   return (
-    <div {...rest}>
-      {children}
+    <div>
+      {text}
     </div>
-  )
-};`,
+  );
+}
+`,
   };
 };
