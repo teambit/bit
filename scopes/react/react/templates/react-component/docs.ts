@@ -18,13 +18,13 @@ A simple ${Name} component with some text
 
 Code Snippet:
 \`\`\`js
-<${Name}>hello from ${Name}</${Name}>
+<${Name} text="hello from ${Name}" />
 \`\`\`
 
 
 Live Playground:
 \`\`\`js live
-<${Name}>hello from ${Name}</${Name}>
+<${Name} text="hello from ${Name}" />
 \`\`\`
 `,
   };
