@@ -18,8 +18,8 @@ export function ${Name}({ text }: ${Name}Props) {
     <div>
       {text}
     </div>
-  )
-};
+  );
+}
 `,
   };
 };
