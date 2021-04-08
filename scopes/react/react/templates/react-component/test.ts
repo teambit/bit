@@ -17,6 +17,7 @@ describe('${name}', () => {
     expect(rendered).toBeTruthy();
   });
 
-})`,
+})
+`,
   };
 };
