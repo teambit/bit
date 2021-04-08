@@ -1,6 +1,6 @@
 import { ComponentTemplate } from '@teambit/generator';
 import { reactComponent } from './templates/react-component';
-import { reactComponentJSX } from './templates/react-component-jsx';
+import { reactComponentJS } from './templates/react-component-js';
 import { reactEnvTemplate } from './templates/react-env';
 
-export const componentTemplates: ComponentTemplate[] = [reactComponent, reactComponentJSX, reactEnvTemplate];
+export const componentTemplates: ComponentTemplate[] = [reactComponent, reactComponentJS, reactEnvTemplate];
