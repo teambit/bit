@@ -17,8 +17,8 @@
     "teambit.dependencies/dependency-resolver": {
       "policy": {
         "dependencies": {
-          "react": "-",
-          "react-dom": "-",
+          "react": "^16.14.0",
+          "react-dom": "^16.14.0",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.12.13",
           "@typescript-eslint/parser": "4.15.1",
@@ -57,8 +57,6 @@
           "@types/react-dom": "^16.8.0"
         },
         "peerDependencies": {
-          "react": "^16.8.0 || ^17.0.0",
-          "react-dom": "^16.8.0 || ^17.0.0",
           "@teambit/legacy": "1.0.50"
         }
       }
