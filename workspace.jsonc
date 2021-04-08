@@ -519,6 +519,7 @@
             // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
             "graceful-fs": "4.2.4",
             // make sure the package manager installs an instance of react (and other peers)
+            "react-native-web": "0.14.13",
             "react": "16.14.0",
             "react-dom": "16.14.0",
             "core-js": "3.10.0"
@@ -535,6 +536,7 @@
             "graphql": "-",
             "react": "-",
             "react-dom": "-",
+            "react-native-web": "-",
             "core-js": "-"
           }
         }
