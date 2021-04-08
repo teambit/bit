@@ -40,7 +40,7 @@ export async function bootstrap() {
 }
 
 async function ensureDirectories() {
-  loader.start('starting bit, create missing directories...');
+  loader.start('starting bit, ensure directories...');
   await fs.ensureDir(GLOBAL_CONFIG);
   await fs.ensureDir(GLOBAL_LOGS);
 }
