@@ -17,7 +17,7 @@ export function DocsApp({ Provider = Noop, docs, componentId, compositions, rend
   return (
     <Provider>
       <ThemeContext>
-        <EvaIconFont query="mxd7i0" />
+        <EvaIconFont query="jyyv17" />
         <Base docs={docs} componentId={componentId} compositions={compositions} renderingContext={renderingContext} />
       </ThemeContext>
     </Provider>

@@ -9,7 +9,7 @@ export type StandaloneNotFoundProps = NotFoundPageProps;
 export function StandaloneNotFoundPage() {
   return (
     <Theme>
-      <EvaIconFont query="av92bs" />
+      <EvaIconFont query="jyyv17" />
       <NotFoundPage />
     </Theme>
   );
