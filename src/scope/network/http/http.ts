@@ -180,11 +180,12 @@ export class Http implements Network {
     const route = 'api/put';
     logger.debug(`Http.pushToCentralHub, started. url: ${this.url}/${route}. total objects ${objectList.count()}`);
     const pack = objectList.toTar();
-    const res = await fetch(`${this.url}/${route}`, {
-      method: 'POST',
-      body: pack,
+    const opts = this.addAgentIfExist({
+      method: 'post',
+      body :pack,
       headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
     });
+    const res = await fetch(`${this.url}/${route}`, opts);
     logger.debug(
       `Http.pushToCentralHub, completed. url: ${this.url}/${route}, status ${res.status} statusText ${res.statusText}`
     );
