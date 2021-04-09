@@ -10,6 +10,7 @@ import uniqid from 'uniqid';
 import yn from 'yn';
 
 import { getSync, setSync } from '../api/consumer/lib/global-config';
+import loader from '../cli/loader';
 import {
   BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,
@@ -70,6 +71,7 @@ class Analytics {
   }
 
   static promptAnalyticsIfNeeded(): Promise<void> {
+    loader.start('starting bit, setup analytics...');
     const cmd = process.argv.slice(2);
     function shouldPromptForAnalytics() {
       // do not prompt analytics approval for bit config command (so you can configure it in CI envs)

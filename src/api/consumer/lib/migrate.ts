@@ -2,7 +2,7 @@ import { loadConsumer, loadConsumerIfExist } from '../../../consumer';
 import { HarmonyMigrator } from '../../../consumer/migrations/harmony-migrator';
 import logger from '../../../logger/logger';
 import { MigrationResult } from '../../../migration/migration-helper';
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 
 /**
  * Running migration process for consumer and / or scope - to update the stores (bitObjects, bit.map.json) to the current version
@@ -18,7 +18,7 @@ export default async function migrate(
 ): Promise<MigrationResult | null | undefined> {
   logger.trace('migrate.migrate, starting migration process');
   if (verbose) console.log('starting migration process'); // eslint-disable-line no-console
-  let scope;
+  let scope: Scope;
   // If a scope path provided we will run the migrate only for the scope
   if (scopePath) {
     logger.trace(`migrate.migrate, running migration process for scope in path ${scopePath}`);
