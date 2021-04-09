@@ -36,15 +36,12 @@ const refsIndex = {};
  * @param {BitRawObject} objects - Scope's raw objects
  * @param {boolean} verbose - print logs
  */
-export default (async function migrate(
-  scopeVersion: string,
-  migratonManifest: Object,
+export default async function migrate(
+  migrations: VersionMigrations[],
   objects: BitRawObject[],
   verbose: boolean = false
 ): Promise<ScopeMigrationResult> {
   globalVerbose = verbose;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  const migrations: VersionMigrations[] = getMigrationVersions(BIT_VERSION, scopeVersion, migratonManifest, verbose);
   const result = { newObjects: {}, refsToRemove: [] };
   if (R.isEmpty(migrations)) {
     const noMigrationMsg = 'there are no migrations to run, leaving the scope as is with no changes';
@@ -59,7 +56,7 @@ export default (async function migrate(
   result.newObjects = R.values(result.newObjects);
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return result;
-});
+}
 
 /**
  * Runs all the migrations for all the versions for a given object
