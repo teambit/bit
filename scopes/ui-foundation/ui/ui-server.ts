@@ -99,6 +99,7 @@ export class UIServer {
       });
 
       if (ssrMiddleware) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         app.get('*', ssrMiddleware);
         this.logger.debug('[ssr] serving for "*"');
       } else {

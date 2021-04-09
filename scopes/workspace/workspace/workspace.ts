@@ -1223,14 +1223,14 @@ export class Workspace implements ComponentFactory {
 
         // No entry in bitmap at all, search for the original input id
         if (!_bitMapId) {
-          return this.scope.resolveComponentId(id.toString());
+          return await this.scope.resolveComponentId(id.toString());
         }
         const _bitMapIdWithoutVersion = _bitMapId.toStringWithoutVersion();
         const _bitMapIdWithVersion = _bitMapId.changeVersion(version).toString();
         // The id in the bitmap has prefix which is not in the source id - the bitmap entry has scope name
         // Handle use case 4
         if (_bitMapIdWithoutVersion.endsWith(idWithoutVersion) && _bitMapIdWithoutVersion !== idWithoutVersion) {
-          return this.scope.resolveComponentId(_bitMapIdWithVersion);
+          return await this.scope.resolveComponentId(_bitMapIdWithVersion);
         }
         // The id in the bitmap doesn't have scope, the source id has scope
         // Handle use case 2 and use case 1
@@ -1238,14 +1238,14 @@ export class Workspace implements ComponentFactory {
           if (id.toString().startsWith(this.scope.name)) {
             // Handle use case 1 - the provided id has scope name same as the local scope name
             // we want to send it as it appear in the bitmap
-            return this.scope.resolveComponentId(_bitMapIdWithVersion);
+            return await this.scope.resolveComponentId(_bitMapIdWithVersion);
           }
           // Handle use case 2 - the provided id has scope which is not the local scope
           // we want to search by the source id
-          return this.scope.resolveComponentId(idWithVersion);
+          return await this.scope.resolveComponentId(idWithVersion);
         }
         // Handle use case 3
-        return this.scope.resolveComponentId(idWithVersion);
+        return await this.scope.resolveComponentId(idWithVersion);
       } catch (error) {
         legacyId = BitId.parse(id.toString(), true);
         return ComponentID.fromLegacy(legacyId);

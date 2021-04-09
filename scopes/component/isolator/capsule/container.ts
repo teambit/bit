@@ -79,11 +79,10 @@ export default class FsContainer implements Container<Exec, AnyFS> {
     return exec;
   }
 
-  execP(execOptions: BitExecOption): Promise<string> {
-    // eslint-disable-next-line no-async-promise-executor
-    return new Promise(async (resolve, reject) => {
-      let hasError = false;
-      const exec = await this.exec(execOptions);
+  async execP(execOptions: BitExecOption): Promise<string> {
+    let hasError = false;
+    const exec = await this.exec(execOptions);
+    return new Promise((resolve, reject) => {
       exec.stdout.on('error', () => {
         hasError = true;
       });
