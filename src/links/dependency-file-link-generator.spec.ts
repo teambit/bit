@@ -79,7 +79,7 @@ describe('DependencyFileLinkGenerator', () => {
   before(() => {
     mockGetSync();
   });
-  describe('generate()', async () => {
+  describe('generate()', () => {
     describe('using plain javascript', () => {
       let dependencyFileLinkGenerator;
       let linkResult;

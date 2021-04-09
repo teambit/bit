@@ -16,7 +16,7 @@ import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean) => void;
+export type OnStart = (hasWorkspace: boolean) => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
