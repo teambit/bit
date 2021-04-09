@@ -1,15 +1,8 @@
-import Vinyl from 'vinyl';
 import fs from 'fs-extra';
-import pMapSeries from 'p-map-series';
 import { init } from '@teambit/legacy/dist/api/consumer';
 import path from 'path';
-import { Workspace } from '@teambit/workspace';
 import { EnvsMain } from '@teambit/envs';
-import camelcase from 'camelcase';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { addFeature, HARMONY_FEATURE } from '@teambit/legacy/dist/api/consumer/lib/feature-toggle';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ComponentID } from '@teambit/component-id';
 import { WorkspaceFile, WorkspaceTemplate } from './workspace-template';
 import { NewOptions } from './new.cmd';
@@ -31,7 +24,7 @@ export class WorkspaceGenerator {
     }
     await fs.ensureDir(workspacePath);
     addFeature(HARMONY_FEATURE);
-    const consumer = await init(workspacePath, this.options.standalone, false, false, false, false, {});
+    await init(workspacePath, this.options.standalone, false, false, false, false, {});
     const files = this.template.generateFiles({ name: this.workspaceName });
     await this.writeWorkspaceFiles(workspacePath, files);
     return workspacePath;
