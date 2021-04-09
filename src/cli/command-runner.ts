@@ -90,8 +90,10 @@ export class CommandRunner {
   private determineConsoleWritingDuringCommand() {
     if (this.command.loader && !this.flags.json) {
       loader.on();
+      loader.start(`running command ${this.command.name}...`);
       logger.shouldWriteToConsole = true;
     } else {
+      loader.off();
       logger.shouldWriteToConsole = false;
     }
     if (this.flags.log) {
@@ -108,6 +110,7 @@ export class CommandRunner {
     // @ts-ignore LegacyCommandAdapter has .migration
     if (this.command.migration) {
       logger.debug('Checking if a migration is needed');
+      loader.start('starting bit, migration...');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return migrate(null, false);
     }

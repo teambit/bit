@@ -39,11 +39,8 @@
      */
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
-      "dependencies": { },
-      "peerDependencies": {
-        "react": "16.13.1",
-        "react-dom": "16.13.1"
-      }
+      "dependencies": {},
+      "peerDependencies": {}
     }
   },
 

@@ -8,10 +8,9 @@ export const compositionFile = (context: ComponentContext) => {
     content: `import React from 'react';
 import { ${Name} } from './${name}';
 
-// sets the Component preview in gallery view
-export const Basic${Name} = () => {
-  return <${Name}>hello from ${Name}</${Name}>;
-};
+export const Basic${Name} = () => (
+  <${Name} text="hello from ${Name}" />
+);
 `,
   };
 };

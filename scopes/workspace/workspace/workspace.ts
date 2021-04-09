@@ -55,7 +55,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice, groupBy, uniqBy } from 'lodash';
+import { slice, uniqBy } from 'lodash';
 import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
@@ -888,13 +888,15 @@ export class Workspace implements ComponentFactory {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
     const componentIdsToResolve = await this.resolveMultipleComponentIds(userAspectsIds);
-    const groupedByHost = groupBy(componentIdsToResolve, (id) => {
-      if (this.hasId(id)) {
-        return 'workspace';
-      }
-      return 'scope';
-    });
-    const wsComponents = await this.getMany(groupedByHost.workspace || []);
+    const workspaceIds: ComponentID[] = [];
+    const scopeIds: ComponentID[] = [];
+    await Promise.all(
+      componentIdsToResolve.map(async (id) => {
+        const existOnWorkspace = await this.hasId(id);
+        existOnWorkspace ? workspaceIds.push(id) : scopeIds.push(id);
+      })
+    );
+    const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
       const packageName = componentIdToPackageName(component.state._consumer);
@@ -911,8 +913,8 @@ export class Workspace implements ComponentFactory {
     });
 
     let scopeAspectDefs: AspectDefinition[] = [];
-    if (groupedByHost.scope) {
-      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, groupedByHost.scope);
+    if (scopeIds.length) {
+      scopeAspectDefs = await this.scope.resolveAspects(runtimeName, scopeIds);
     }
 
     let coreAspectDefs = await Promise.all(

@@ -6,12 +6,13 @@ export const componentFile = (context: ComponentContext) => {
     relativePath: `${name}.jsx`,
     content: `import React from 'react';
 
-export const ${Name} = ( {children, ...rest} ) => {
+export function ${Name}({ text }) {
   return (
-    <div {...rest}>
-      {children}
+    <div>
+      {text}
     </div>
-  )
-};`,
+  );
+}
+`,
   };
 };
