@@ -55,7 +55,7 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice, groupBy, uniqBy } from 'lodash';
+import { slice, uniqBy } from 'lodash';
 import path, { join } from 'path';
 import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
