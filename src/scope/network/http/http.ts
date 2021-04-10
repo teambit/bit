@@ -182,7 +182,7 @@ export class Http implements Network {
     const pack = objectList.toTar();
     const opts = this.addAgentIfExist({
       method: 'post',
-      body :pack,
+      body: pack,
       headers: this.getHeaders({ 'push-options': JSON.stringify(options), 'x-verb': Verb.WRITE }),
     });
     const res = await fetch(`${this.url}/${route}`, opts);
