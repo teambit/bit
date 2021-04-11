@@ -30,7 +30,7 @@ import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
-import { componentTemplates } from './react.templates';
+import { componentTemplates, workspaceTemplates } from './react.templates';
 
 type ReactDeps = [
   EnvsMain,
@@ -297,6 +297,7 @@ export class ReactMain {
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);
+    generator.registerWorkspaceTemplate(workspaceTemplates);
     return react;
   }
 }

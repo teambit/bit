@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
 
-export type GeneratorOptions = {
+export type CreateOptions = {
   namespace?: string;
   aspect?: string;
   scope?: string;
@@ -25,7 +25,7 @@ export class CreateCmd implements Command {
 
   constructor(private generator: GeneratorMain) {}
 
-  async report([templateName, componentNames]: [string, string[]], options: GeneratorOptions) {
+  async report([templateName, componentNames]: [string, string[]], options: CreateOptions) {
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
     const title = `the following ${results.length} component(s) were created`;
 

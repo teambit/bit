@@ -6,12 +6,16 @@ import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
-import { CreateCmd, GeneratorOptions } from './create.cmd';
+import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
 import { ComponentGenerator, GenerateResult } from './component-generator';
+import { WorkspaceGenerator } from './workspace-generator';
+import { WorkspaceTemplate } from './workspace-template';
+import { NewCmd, NewOptions } from './new.cmd';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
+export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 
 export type TemplateDescriptor = { aspectId: string; name: string; description?: string };
 
@@ -26,6 +30,7 @@ export class GeneratorMain {
   private aspectLoaded = false;
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
+    private workspaceTemplateSlot: WorkspaceTemplateSlot,
     private config: GeneratorConfig,
     private workspace: Workspace,
     private envs: EnvsMain
@@ -40,11 +45,27 @@ export class GeneratorMain {
   }
 
   /**
+   * register a new component template.
+   */
+  registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
+    this.workspaceTemplateSlot.register(templates);
+    return this;
+  }
+
+  /**
    * list all component templates registered in the workspace.
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    await this.loadAspects();
-    const allTemplates = this.getAllTemplatesFlattened();
+    if (this.workspace) {
+      await this.loadAspects();
+      const allTemplates = this.getAllComponentTemplatesFlattened();
+      return allTemplates.map(({ id, template }) => ({
+        aspectId: id,
+        name: template.name,
+        description: template.description,
+      }));
+    }
+    const allTemplates = this.getAllWorkspaceTemplatesFlattened();
     return allTemplates.map(({ id, template }) => ({
       aspectId: id,
       name: template.name,
@@ -63,7 +84,19 @@ export class GeneratorMain {
    * returns a specific component template.
    */
   getComponentTemplate(name: string, aspectId?: string): ComponentTemplate | undefined {
-    const templates = this.getAllTemplatesFlattened();
+    const templates = this.getAllComponentTemplatesFlattened();
+    const found = templates.find(({ id, template }) => {
+      if (aspectId && id !== aspectId) return false;
+      return template.name === name;
+    });
+    return found?.template;
+  }
+
+  /**
+   * returns a specific workspace template.
+   */
+  getWorkspaceTemplate(name: string, aspectId?: string): WorkspaceTemplate | undefined {
+    const templates = this.getAllWorkspaceTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
@@ -74,7 +107,7 @@ export class GeneratorMain {
   async generateComponentTemplate(
     componentNames: string[],
     templateName: string,
-    options: GeneratorOptions
+    options: CreateOptions
   ): Promise<GenerateResult[]> {
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
@@ -92,10 +125,28 @@ export class GeneratorMain {
     return componentGenerator.generate();
   }
 
-  private getAllTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
+  async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
+    const { aspect: aspectId } = options;
+    const template = this.getWorkspaceTemplate(templateName, aspectId);
+    if (!template) throw new Error(`template "${templateName}" was not found`);
+    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
+    return workspaceGenerator.generate();
+  }
+
+  private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
     const templatesByAspects = this.componentTemplateSlot.toArray();
     return templatesByAspects.flatMap(([id, componentTemplates]) => {
       return componentTemplates.map((template) => ({
+        id,
+        template,
+      }));
+    });
+  }
+
+  private getAllWorkspaceTemplatesFlattened(): Array<{ id: string; template: WorkspaceTemplate }> {
+    const templatesByAspects = this.workspaceTemplateSlot.toArray();
+    return templatesByAspects.flatMap(([id, workspaceTemplates]) => {
+      return workspaceTemplates.map((template) => ({
         id,
         template,
       }));
@@ -108,7 +159,7 @@ export class GeneratorMain {
     this.aspectLoaded = true;
   }
 
-  static slots = [Slot.withType<ComponentTemplate[]>()];
+  static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
   static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
 
@@ -117,10 +168,10 @@ export class GeneratorMain {
   static async provider(
     [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],
     config: GeneratorConfig,
-    [componentTemplateSlot]: [ComponentTemplateSlot]
+    [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
-    const generator = new GeneratorMain(componentTemplateSlot, config, workspace, envs);
-    const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
+    const generator = new GeneratorMain(componentTemplateSlot, workspaceTemplateSlot, config, workspace, envs);
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     return generator;

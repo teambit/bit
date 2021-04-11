@@ -6,6 +6,7 @@ import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensi
 import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
+import loader from '@teambit/legacy/dist/cli/loader';
 
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { Help } from './commands/help.cmd';
@@ -15,7 +16,7 @@ import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 
 export type CommandList = Array<Command>;
-export type OnStart = (hasWorkspace: boolean) => void;
+export type OnStart = (hasWorkspace: boolean) => Promise<void>;
 
 export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
@@ -88,6 +89,7 @@ export class CLIMain {
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   async run(hasWorkspace: boolean) {
+    loader.start('starting bit, running cli-aspect...');
     await this.invokeOnStart(hasWorkspace);
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {

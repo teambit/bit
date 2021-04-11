@@ -32,6 +32,7 @@ import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
@@ -39,11 +40,13 @@ import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 
 async function loadLegacyConfig(config: any) {
+  loader.start('starting bit, load legacy config...');
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 }
 
 async function getConfig(cwd = process.cwd()) {
+  loader.start('starting bit, load config...');
   const consumerInfo = await getConsumerInfo(cwd);
   const scopePath = propagateUntil(cwd);
   const globalConfigOpts = {
@@ -181,7 +184,9 @@ export async function loadBit(path = process.cwd()) {
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
   }
+  loader.start('starting bit, loading Harmony...');
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
+  loader.start('starting bit, running Harmony...');
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
 

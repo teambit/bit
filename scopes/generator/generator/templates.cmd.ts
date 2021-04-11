@@ -11,8 +11,9 @@ export type GeneratorOptions = {
 
 export class TemplatesCmd implements Command {
   name = 'templates';
-  description = 'list all templates available';
-  shortDescription = '';
+  description =
+    'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
+  shortDescription = 'list templates';
   alias = '';
   loader = true;
   group = 'development';
