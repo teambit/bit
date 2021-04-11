@@ -5,7 +5,7 @@ const config = {
   // Necessary for external CSS imports to work
   // https://github.com/facebook/create-react-app/issues/2677
   ident: 'postcss',
-  plugins: () => [
+  plugins: [
     // eslint-disable-next-line global-require
     require('postcss-flexbugs-fixes'),
     // eslint-disable-next-line global-require
