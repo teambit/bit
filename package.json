@@ -243,7 +243,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.12.13",
     "@babel/plugin-transform-runtime": "7.12.17",
     "@babel/preset-env": "7.12.17",
-    "@babel/preset-react": "7.12.13",
+    "@babel/preset-react": "7.13.13",
     "@babel/preset-typescript": "7.12.17",
     "@babel/register": "7.12.13",
     "@types/bluebird": "3.5.33",
