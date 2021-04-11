@@ -47,12 +47,6 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
             fullySpecified: false,
           },
         },
-        // Temp workaround since the yaml package.json is invalid, see here - https://github.com/eemeli/yaml/issues/255
-        {
-          test: /\.js/,
-          include: /node_modules\/yaml\/browser/,
-          type: 'javascript/auto',
-        },
         {
           test: /\.js$/,
           enforce: 'pre',

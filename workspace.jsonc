@@ -304,7 +304,7 @@
         "webpack-merge": "5.7.3",
         "workbox-webpack-plugin": "6.1.2",
         "ws": "7.4.2",
-        "yaml": "1.10.0"
+        "yaml": "1.10.2"
       },
       "peerDependencies": {
         "@teambit/legacy": "1.0.50",
