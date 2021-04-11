@@ -38,14 +38,16 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       return {
         component,
-        errors: result.errors.map((err) => err.message),
+        errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
         warning: result.warnings,
       };
     });
 
+    const artifacts = this.getArtifactDef(context);
+
     return {
       componentsResults,
-      artifacts: this.getArtifactDef(context),
+      artifacts,
     };
   }
 
