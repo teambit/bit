@@ -199,6 +199,12 @@ export default function (fileMapPath: string): Configuration {
     module: {
       strictExportPresence: true,
       rules: [
+        // Temp workaround since the yaml package.json is invalid, see here - https://github.com/eemeli/yaml/issues/255
+        {
+          test: /\.js/,
+          include: /node_modules\/yaml\/browser/,
+          type: 'javascript/auto',
+        },
         {
           // "oneOf" will traverse all following loaders until one will
           // match the requirements. When no loader matches it will fall
