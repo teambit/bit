@@ -6379,9 +6379,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.50, @teambit/legacy@npm:1.0.50::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.50.tgz":
-  version: 1.0.50
-  resolution: "@teambit/legacy@npm:1.0.50::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.50.tgz"
+"@teambit/legacy@npm:1.0.53, @teambit/legacy@npm:1.0.53::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.53.tgz":
+  version: 1.0.53
+  resolution: "@teambit/legacy@npm:1.0.53::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.53.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6502,7 +6502,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 690bd07f8b6d38868a5ef9f50f9ceb96f5ed582c22336c6dd7d2a2fb68c0d69cc7ed8dd8e5f943b698a7d0e88f3fa364cfb3756120c082b2910e55eecf2e6b24
+  checksum: fb6f92b7ec15db712e2e4b798c9c72ec049bcaa1ec43bde1aab675bc535c354bbdb4ec80e1d518801823bc57c738db395cdc0a2dbcbff9d5742b567c808bbe27
   languageName: node
   linkType: hard
 
@@ -6630,7 +6630,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.50
+    "@teambit/legacy": 1.0.53
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -6912,7 +6912,7 @@ __metadata:
     react-dom: 16.13.1
     react-error-overlay: 6.0.9
     react-flow-renderer: 8.3.7
-    react-native-web: ^0.14.0
+    react-native-web: 0.14.13
     react-popper: 2.2.4
     react-refresh: 0.9.0
     react-router-dom: 5.2.0
@@ -6999,8 +6999,7 @@ __metadata:
     yaml: 1.10.0
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.50
-    react-native-web: ^0.14.0
+    "@teambit/legacy": 1.0.53
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -17875,8 +17874,6 @@ fsevents@^1.2.7:
 "fsevents@^2.1.2, fsevents@~2.3.1":
   version: 2.3.2
   resolution: "fsevents@npm:2.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Ffsevents%2F-%2Ffsevents-2.3.2.tgz"
-  dependencies:
-    node-gyp: latest
   checksum: a1883f4ca12b8b403ec528f1a4cb312b0877eacd24719da535cabea78d6fdd78530e3538bdba590a1c0f6c295128f964a89182621885296353a44dcfa4f9db53
   languageName: node
   linkType: hard
@@ -17894,8 +17891,6 @@ fsevents@^1.2.7:
 "fsevents@patch:fsevents@^2.1.2#builtin<compat/fsevents>, fsevents@patch:fsevents@~2.3.1#builtin<compat/fsevents>":
   version: 2.3.2
   resolution: "fsevents@patch:fsevents@npm%3A2.3.2%3A%3A__archiveUrl=https%253A%252F%252Fregistry.npmjs.org%252Ffsevents%252F-%252Ffsevents-2.3.2.tgz#builtin<compat/fsevents>::version=2.3.2&hash=11e9ea"
-  dependencies:
-    node-gyp: latest
   checksum: 7b25d9251aefe433d508a0eb614217f0495ae05a9e8af15f7dbf9998e08c4e675acd1cf32361e0fcf71d917d9e8c4b76301fdc72a1ec1105a3ea0994f5e15a8d
   languageName: node
   linkType: hard
@@ -27855,7 +27850,7 @@ fsevents@^1.2.7:
   languageName: unknown
   linkType: soft
 
-"react-native-web@npm:^0.14.0":
+"react-native-web@npm:0.14.13":
   version: 0.14.13
   resolution: "react-native-web@npm:0.14.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-native-web%2F-%2Freact-native-web-0.14.13.tgz"
   dependencies:

@@ -1,6 +1,6 @@
-import { GeneratorContext } from '@teambit/generator';
+import { ComponentContext } from '@teambit/generator';
 
-export const docsFile = (context: GeneratorContext) => {
+export const docsFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
 
   return {
@@ -18,13 +18,13 @@ A simple ${Name} component with some text
 
 Code Snippet:
 \`\`\`js
-<${Name}>click me</${Name}>
+<${Name} text="hello from ${Name}" />
 \`\`\`
 
 
 Live Playground:
 \`\`\`js live
-<${Name}>click me</${Name}>
+<${Name} text="hello from ${Name}" />
 \`\`\`
 `,
   };

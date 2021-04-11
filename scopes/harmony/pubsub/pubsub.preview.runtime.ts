@@ -6,9 +6,10 @@ import { PreviewRuntime } from '@teambit/preview';
 import { isBrowser } from '@teambit/ui.is-browser';
 
 import { EventEmitter2 } from 'eventemitter2';
-import { connectToParent } from 'penpal';
+import { connectToParent, ErrorCode } from 'penpal';
 
 import { BitBaseEvent } from './bit-base-event';
+import { PubSubNoParentError } from './no-parent-error';
 import { PubsubAspect } from './pubsub.aspect';
 import { Callback } from './types';
 
@@ -47,7 +48,7 @@ export class PubsubPreview {
   }
 
   private connectToParentPubSub = (retries = 10): Promise<ParentMethods | undefined> => {
-    if (retries <= 0) throw new Error('could not connect to parent window');
+    if (retries <= 0) throw new PubSubNoParentError();
 
     return connectToParent<ParentMethods>({
       timeout: 300,
@@ -57,7 +58,7 @@ export class PubsubPreview {
     })
       .promise.then((parentPubsub) => (this._parentPubsub = parentPubsub))
       .catch((e: any) => {
-        if (e.code !== 'ConnectionTimeout') throw e;
+        if (e.code !== ErrorCode.ConnectionTimeout) throw e;
 
         return this.connectToParentPubSub(retries - 1);
       });
@@ -74,6 +75,9 @@ export class PubsubPreview {
 
     if (pubsubPreview.inIframe()) {
       pubsubPreview.connectToParentPubSub().catch((err) => {
+        // parent window is not required to accept connections
+        if (err instanceof PubSubNoParentError) return;
+
         // eslint-disable-next-line no-console
         console.error('[Pubsub.preview]', err);
       });

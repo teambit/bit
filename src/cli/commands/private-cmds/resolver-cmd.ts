@@ -14,6 +14,7 @@ class ResolverSet implements LegacyCommand {
   description = 'set remote resolver to scope (use from scope directory)';
   alias = 's';
   private = true;
+  loader = false;
   opts = [];
 
   action([resolverPath]: [string]): Promise<any> {

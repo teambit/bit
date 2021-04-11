@@ -129,6 +129,7 @@ export default class SourceRepository {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
+        // eslint-disable-next-line @typescript-eslint/return-await
         return this._findComponentBySymlink(foundComponent);
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
