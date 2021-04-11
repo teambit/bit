@@ -136,7 +136,7 @@ describe('BitMap', function () {
       );
     });
   });
-  describe('getAuthoredExportedComponents', async () => {
+  describe('getAuthoredExportedComponents', () => {
     it('should return an empty array when there are no authored components', async () => {
       const consumer = {
         getPath: () => path.join(bitMapFixtureDir, 'only-imported'),

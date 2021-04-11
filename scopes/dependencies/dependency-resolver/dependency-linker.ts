@@ -1,5 +1,6 @@
 import path from 'path';
 import { uniq, compact, flatten, head } from 'lodash';
+import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from '@teambit/legacy/dist/api/consumer';
@@ -419,15 +420,19 @@ export class DependencyLinker {
     // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
     // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
     // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
-    let isTargetExists;
+    let targetStat: Stats | undefined;
     try {
-      isTargetExists = fs.lstatSync(target);
+      targetStat = fs.lstatSync(target);
       // eslint-disable-next-line no-empty
     } catch (e) {}
-    // Do not override links created by other means
-    if (isTargetExists && !hasLocalInstallation) {
-      this.logger.debug(`linkCoreAspect, target ${target} already exist. skipping it`);
-      return undefined;
+    if (targetStat && !hasLocalInstallation) {
+      // Do not override links created by other means
+      if (!targetStat.isSymbolicLink()) {
+        this.logger.debug(`linkCoreAspect, target ${target} already exist. skipping it`);
+        return undefined;
+      }
+      // it's a symlink, remove is as it might point to an older version
+      fs.removeSync(target);
     }
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
     if (!isAspectDirExist) {

@@ -895,4 +895,23 @@ describe('bit lane command', function () {
       });
     });
   });
+  describe('tag on master, export, create lane and snap', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(1);
+      helper.command.tagAllWithoutBuild();
+      helper.command.exportAllComponents();
+      helper.command.createLane();
+      helper.fixtures.populateComponents(1, undefined, 'v2');
+      helper.command.snapAllComponentsWithoutBuild();
+    });
+    it('bit status should show the correct staged versions', () => {
+      // before it was a bug that "versions" part of the staged-component was empty
+      // another bug was that it had all versions included exported.
+      const status = helper.command.status();
+      const hash = helper.command.getHeadOfLane('dev', 'comp1');
+      expect(status).to.have.string(`versions: ${hash} ...`);
+    });
+  });
 });

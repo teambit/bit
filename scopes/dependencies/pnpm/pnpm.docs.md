@@ -1,11 +1,14 @@
 ---
+id: pnpm
+title: pnpm
+slug: /aspects/pnmp
 description: Enables the use of pnpm in a Bit workspace
 labels: ['pnpm', 'package manager']
 ---
 
 pnpm is a Bit aspect that enables the use of the pnpm package manager in a Bit workspace (the pnpm aspect utilizes pnpm's programmatic API).
 
-The pnpm aspect is used **indirectly** by the [Dependency Resolver](https://bit.dev/dependencies/pnpm).
+The pnpm aspect is used **indirectly** by the 'Dependency Resolver'.
 
 ## Quickstart
 
@@ -31,4 +34,4 @@ To start using the pnpm aspect as a package manager for your workspace, set the 
   where it can be shared by multiple dependent components.
   Versions that are used by a minority of components will be installed nested in each component directory.
 
-> pnpm cannot be used with the [React Native environment](https://bit.dev/teambit/react/react-native).
+> pnpm cannot be used with the 'React Native environment'.

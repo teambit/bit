@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { uniqBy, prop } from 'ramda';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 
@@ -92,6 +92,6 @@ export class DependencyList {
 }
 
 function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
-  const uniq = R.uniqBy(R.prop('id'), dependencies);
+  const uniq = uniqBy(prop('id'), dependencies);
   return uniq;
 }

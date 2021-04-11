@@ -57,6 +57,7 @@ export class TypescriptCompiler implements Compiler {
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
     compilerOptions.sourceRoot = options.componentDir;
+    compilerOptions.rootDir = '.';
     const result = this.tsModule.transpileModule(fileContent, {
       compilerOptions,
       fileName: options.filePath,

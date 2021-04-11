@@ -8,6 +8,7 @@ const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_
 /**
  * to debug errors here, first, change the parent to have { silent: false }, in analytics.js `fork` call.
  */
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('message', (msg) => {
   // needed for the parent to make sure the child got the message
   // without it, when the message is large, the parent exits before it totally sent

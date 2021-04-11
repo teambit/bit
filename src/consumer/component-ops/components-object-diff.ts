@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 
 import { Consumer } from '..';
 import Component from '../component/consumer-component';

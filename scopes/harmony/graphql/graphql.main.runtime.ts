@@ -96,6 +96,7 @@ export class GraphqlMain {
 
     app.use(
       '/graphql',
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       graphqlHTTP((request, res, params) => ({
         customFormatErrorFn: (err) => {
           this.logger.error('graphql got an error during running the following query:', params);

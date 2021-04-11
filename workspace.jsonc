@@ -14,6 +14,7 @@
         "@babel/core": "7.11.6",
         "@babel/preset-react": "7.12.7",
         "@babel/preset-typescript": "7.12.7",
+        "@babel/types": "7.13.12",
         "@graphql-modules/core": "0.7.17",
         "@jest/test-result": "26.6.2",
         "@mdx-js/loader": "1.6.21",
@@ -37,11 +38,13 @@
         "@pnpm/store-connection-manager": "0.3.62",
         "@pnpm/tarball-fetcher": "8.2.8",
         "@pnpm/tarball-resolver": "4.0.7",
+        "@popperjs/core": "2.6.0",
         "@stencil/core": "1.17.4",
         "@stencil/webpack": "0.0.6",
         "@svgr/webpack": "5.5.0",
         "@teambit/any-fs": "0.0.5",
         "@teambit/base-ui.constants.storage": "0.6.3",
+        "@teambit/base-ui.css-components.pill": "0.6.7",
         "@teambit/base-ui.css-components.roundness": "0.6.3",
         "@teambit/base-ui.elements.dots-loader": "0.6.3",
         "@teambit/base-ui.elements.image": "0.6.3",
@@ -58,7 +61,7 @@
         "@teambit/base-ui.layout.page-frame": "0.6.3",
         "@teambit/base-ui.loaders.loader-ribbon": "0.0.2",
         "@teambit/base-ui.surfaces.card": "0.6.3",
-        "@teambit/base-ui.surfaces.split-pane.hover-splitter": "0.6.3",
+        "@teambit/base-ui.surfaces.split-pane.hover-splitter": "0.7.0",
         "@teambit/base-ui.surfaces.split-pane.split-pane": "0.6.1",
         "@teambit/base-ui.text.heading": "0.6.4",
         "@teambit/base-ui.text.muted-text": "0.6.4",
@@ -72,6 +75,8 @@
         "@teambit/base-ui.theme.fonts.roboto": "0.6.7",
         "@teambit/base-ui.theme.sizes": "0.6.7",
         "@teambit/base-ui.theme.theme-provider": "0.6.7",
+        "@teambit/base-ui.utils.popper-js.ignore-popper-size": "0.6.8",
+        "@teambit/base-ui.utils.popper-js.resize-to-match-reference": "0.6.8",
         "@teambit/base-ui.utils.string.affix": "0.0.2",
         "@teambit/base-ui.utils.sub-paths": "0.6.3",
         "@teambit/base-ui.utils.time-ago": "0.5.9",
@@ -88,7 +93,7 @@
         "@teambit/documenter.ui.heading": "1.0.3",
         "@teambit/documenter.ui.highlighted-text": "1.0.3",
         "@teambit/documenter.ui.image": "0.0.1",
-        "@teambit/documenter.ui.import-action": "3.0.11",
+        "@teambit/documenter.ui.import-action": "3.0.12",
         "@teambit/documenter.ui.italic": "0.0.1",
         "@teambit/documenter.ui.label": "2.0.2",
         "@teambit/documenter.ui.label-list": "1.0.3",
@@ -128,6 +133,7 @@
         "@types/eslint": "7.2.4",
         "@types/express": "4.17.9",
         "@types/find-cache-dir": "3.2.0",
+        "@types/find-root": "1.1.2",
         "@types/get-port": "4.2.0",
         "@types/history": "4.7.8",
         "@types/http-proxy-agent": "2.0.2",
@@ -137,16 +143,17 @@
         "@types/lodash.head": "4.0.6",
         "@types/lodash.pick": "4.4.6",
         "@types/mdx-js__react": "1.5.3",
+        "@types/memoizee": "0.4.5",
         "@types/mime": "2.0.3",
         "@types/mousetrap": "1.6.5",
         "@types/node": "14.14.13",
         "@types/proper-lockfile": "4.1.1",
         "@types/puppeteer": "3.0.5",
-        "@types/react": "16.9.43",
-        "@types/react-dom": "16.9.10",
+        "@types/react": "16.14.5",
+        "@types/react-dom": "16.9.12",
         "@types/react-router-dom": "5.1.7",
         "@types/react-tabs": "2.3.2",
-        "@types/react-transition-group": "4.4.1",
+        "@types/react-tooltip": "3.11.0",
         "@types/socket.io-client": "1.4.35",
         "@types/ua-parser-js": "0.7.35",
         "@types/url-parse": "1.4.3",
@@ -177,7 +184,6 @@
         "cli-highlight": "2.1.9",
         "comlink": "4.3.0",
         "copy-to-clipboard": "3.3.1",
-        "core-js": "3.8.3",
         "cors": "2.8.5",
         "credentials-by-uri": "2.0.0",
         "cross-fetch": "3.0.6",
@@ -189,12 +195,14 @@
           "preserve": true
         },
         "eslint-import-resolver-node": "0.3.4",
+        "eventemitter2": "6.4.4",
         "express": "4.17.1",
         "express-graphql": "0.12.0",
         "express-history-api-fallback": "2.2.1",
         "file-loader": "6.2.0",
         "filenamify": "4.2.0",
         "find-cache-dir": "3.3.1",
+        "find-root": "1.1.0",
         "flatted": "3.1.0",
         "fuse.js": "6.4.6",
         "get-port": "5.1.1",
@@ -225,6 +233,7 @@
         "lodash.head": "4.0.1",
         "lodash.pick": "4.4.0",
         "memoize-one": "5.1.1",
+        "memoizee": "0.4.15",
         "memory-fs": "0.5.0",
         "mime": "2.5.2",
         "mini-css-extract-plugin": "0.12.0",
@@ -244,19 +253,18 @@
         "postcss-preset-env": "6.7.0",
         "postcss-safe-parser": "4.0.2",
         "pretty-time": "1.1.0",
-        "prism-react-renderer": "1.2.0",
         "proper-lockfile": "4.1.2",
+        "query-string": "7.0.0",
         "react-animate-height": "2.0.23",
         "react-dev-utils": "10.2.1",
-        "react-dom": "16.14.0",
         "react-error-overlay": "6.0.9",
         "react-flow-renderer": "8.3.7",
-        "react-hot-loader": "4.13.0",
-        "react-live": "2.2.3",
+        "react-popper": "2.2.4",
         "react-router-dom": "5.2.0",
         "react-syntax-highlighter": "15.4.3",
         "react-tabs": "3.2.0",
         "react-test-renderer": "16.14.0",
+        "react-tooltip": "3.11.6",
         "remark-frontmatter": "2.0.0",
         "reset-css": "5.0.1",
         "resolve-from": "5.0.0",
@@ -281,6 +289,7 @@
         "unist-util-visit": "2.0.3",
         "url-loader": "4.1.1",
         "url-parse": "1.4.7",
+        "use-animation-frame": "0.1.0",
         "vfile": "4.2.0",
         "vscode-icons-js": "11.0.0",
         "vscode-languageclient": "6.1.3",
@@ -297,12 +306,13 @@
         "yaml": "1.10.0"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.42",
+        "@teambit/legacy": "1.0.53",
         "browserslist": "4.16.3",
         "graphql": "14.7.0",
         "mz": "2.7.0",
-        "react": "16.13.1",
-        "react-dom": "16.13.1"
+        "react": "16.14.0",
+        "react-dom": "16.14.0",
+        "core-js": "3.10.0"
       }
     },
     "packageManagerArgs": [],
@@ -311,6 +321,11 @@
     ],
     "strictPeerDependencies": true,
     "extraArgs": []
+  },
+  "teambit.generator/generator": {
+    "aspects": [
+      "teambit.harmony/aspect"
+    ]
   },
   "teambit.workspace/variants": {
     "*": {
@@ -345,18 +360,14 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "-",
-            // TODO: remove this later
-            "core-js": "3.8.3"
+            "@teambit/legacy": "-"
           },
           "devDependencies": {
             "@types/mocha": "5.2.7",
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "react": "16.13.1",
-            "@teambit/legacy": "1.0.42",
-            "react-dom": "16.13.1"
+            "@teambit/legacy": "1.0.53"
           }
         }
       },
@@ -480,6 +491,7 @@
     "scopes/semantics": {
       "defaultScope": "teambit.semantics"
     },
+    // overrides for @teambit/bit ("teambit.harmony/bit") package:
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
@@ -497,31 +509,34 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.42",
-            // TODO: remove this later
-            "core-js": "3.8.3",
-            "react": "16.13.1",
-            "react-dom": "16.13.1",
+            "@teambit/legacy": "1.0.53",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
             "mz": "2.7.0",
             "react-refresh": "0.9.0",
             // TODO: remove this once this is merged https://github.com/isaacs/node-graceful-fs/pull/202
-            "graceful-fs": "4.2.4"
+            "graceful-fs": "4.2.4",
+            // make sure the package manager installs an instance of react (and other peers)
+            "react-native-web": "0.14.13",
+            "react": "16.14.0",
+            "react-dom": "16.14.0",
+            "core-js": "3.10.0"
           },
           "devDependencies": {
-            "@types/react": "16.14.4",
-            "@types/mocha": "5.2.7",
-            // why this is needed? try to automate this
-            "@types/node": "12.20.4"
+            // "@types/react": "-",
+            // "@types/mocha": "5.2.7",
+            // // why this is needed? try to automate this
+            // "@types/node": "12.20.4"
           },
           "peerDependencies": {
             "@teambit/legacy": "-",
             "browserslist": "-",
             "graphql": "-",
             "react": "-",
-            "react-dom": "-"
+            "react-dom": "-",
+            "react-native-web": "-",
+            "core-js": "-"
           }
         }
       }

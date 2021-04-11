@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { ComponentMain, ComponentID } from '@teambit/component';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';

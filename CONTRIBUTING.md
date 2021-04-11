@@ -5,14 +5,23 @@ please read the [code of conduct](CODE_OF_CONDUCT.md).
 
 ## Setup
 
+the setup process is more involving than expected because we write bit using bit (dogfooding), this is done by having a previous version of bit installed and using it to build the current code.
+
 ### installation
 
-- install dependencies using npm
+- one script to rule them all
 ```bash
-  $ npm i
+  $ npm run full-setup
 ```
+the script does the following:
+1. installs a previous version of bit inside `build-harmony` directory.
+2. runs `bit install` to install all dependencies
+3. runs `bit compile` to compile all components in the workspace (Harmony code).
+4. compiles bit-legacy code (by `npm run build`).
+5. generates the d.ts files for the bit-legacy code (by `npm run build:types`).
 
-- install command globally and link (in order to use the "bit-dev" command globally and always use the
+
+install command globally and link (in order to use the "bit-dev" command globally and always use the
   latest development build)
 ```bash
   npm run dev-link
@@ -34,15 +43,30 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
 ```
 
 ### Build
+Depends on where your changes were made, you'll need to build the legacy code or Harmony code.
+If the changes were done in `src/` directory, then it's the legacy. Otherwise, it's probably in `scopes/` directory and it's the new code.
 
-- build distributions:
+- build bit-legacy code
 ```bash
   npm run build
 ```
 
-- use with watch, to run the build on every code modification
+- build bit Harmony code
+```bash
+  bit compile
+```
+
+### Watch
+It's easier to leave the watch process running instead of re-build for every change.
+
+- watch bit-legacy code
 ```bash
   npm run watch
+```
+
+- watch bit Harmony code
+```bash
+  bit watch
 ```
 
 ### Unit Tests
@@ -53,6 +77,8 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
 ```
 
 ### End to End Tests
+
+Keep in mind that running the e2e-tests locally may take hours to complete, it's faster to create a new PR and let CircleCI run them. Circle is configured to run multiple tests in parallel and complete them much faster.
 
 - run the e2e tests (with default 'bit' command)
 ```bash
@@ -74,10 +100,6 @@ bit will install these commands in `/usr/local/bin/` directory, so in order to r
   npm run e2e-test:ssh
   npm run e2e-test:ssh-debug
 ```
-
-When adding end to end tests please make sure new test files are created in the following name convention: ```name.e2e.[number].js``` where number should be 1/2/3. This was made in order to batch work in appveyor.
-
-Keep in mind that running the e2e-tests locally may take hours to complete, it's faster to create a new PR and let CircleCI run them. Circle is configured to run multiple tests in parallel and complete them much faster.
 
 ### Debugging
 
