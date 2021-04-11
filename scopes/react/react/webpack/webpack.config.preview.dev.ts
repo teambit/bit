@@ -237,6 +237,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         fs: false,
         stream: false,
         process: false,
+        assert: false,
       },
     },
 
