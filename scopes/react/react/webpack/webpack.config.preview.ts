@@ -193,6 +193,7 @@ export default function (fileMapPath: string): Configuration {
         fs: false,
         stream: false,
         process: false,
+        assert: false,
       },
     },
     module: {
