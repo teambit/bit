@@ -19,6 +19,8 @@
         "dependencies": {
           "react": "-",
           "react-dom": "-",
+          "buffer": "6.0.3",
+          "process": "0.11.10",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.12.13",
           "@typescript-eslint/parser": "4.15.1",
@@ -38,7 +40,7 @@
           "babel-plugin-named-asset-import": "0.3.7",
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "^10.0.0",
-        
+
           "style-loader": "^2.0.0",
           "css-loader": "5.2.0",
           "postcss-loader": "5.2.0",

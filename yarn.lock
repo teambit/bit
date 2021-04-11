@@ -6976,8 +6976,8 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/proper-lockfile": 4.1.1
     "@types/puppeteer": 3.0.5
-    "@types/react": 16.9.43
-    "@types/react-dom": ^16.8.0
+    "@types/react": 16.14.5
+    "@types/react-dom": 16.9.12
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
     "@types/react-tooltip": 3.11.0
@@ -7024,6 +7024,7 @@ __metadata:
     bluebird: 3.7.2
     body-parser: 1.19.0
     browserslist: 4.16.3
+    buffer: 6.0.3
     cacache: 15.0.5
     camelcase: 6.2.0
     case-sensitive-paths-webpack-plugin: 2.3.0
@@ -7042,7 +7043,7 @@ __metadata:
     commander: 2.20.3
     comment-json: 3.0.3
     copy-to-clipboard: 3.3.1
-    core-js: 3.8.3
+    core-js: 3.10.0
     cors: 2.8.5
     credentials-by-uri: 2.0.0
     cross-fetch: 3.0.6
@@ -7208,16 +7209,16 @@ __metadata:
     query-string: 7.0.0
     ramda: 0.27.1
     ramda-adjunct: 2.31.1
-    react: 16.13.1
+    react: 16.14.0
     react-animate-height: 2.0.23
     react-app-polyfill: 1.0.6
     react-dev-utils: 10.2.1
     react-docgen: 5.3.1
     react-docgen-typescript: 1.21.0
-    react-dom: 16.13.1
+    react-dom: 16.14.0
     react-error-overlay: 6.0.9
     react-flow-renderer: 8.3.7
-    react-native-web: ^0.14.0
+    react-native-web: 0.14.13
     react-popper: 2.2.4
     react-refresh: 0.9.0
     react-router-dom: 5.2.0
@@ -7302,11 +7303,10 @@ __metadata:
     winston: 3.3.3
     workbox-webpack-plugin: 6.1.2
     ws: 7.4.2
-    yaml: 1.10.0
+    yaml: 1.10.2
     yn: 2.0.0
   peerDependencies:
     "@teambit/legacy": 1.0.50
-    react-native-web: ^0.14.0
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8319,7 +8319,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^16.8.0":
+"@types/react-dom@npm:16.9.12":
   version: 16.9.12
   resolution: "@types/react-dom@npm:16.9.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact-dom%2F-%2Freact-dom-16.9.12.tgz"
   dependencies:
@@ -8377,13 +8377,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:16.9.43":
-  version: 16.9.43
-  resolution: "@types/react@npm:16.9.43::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.9.43.tgz"
+"@types/react@npm:16.14.5":
+  version: 16.14.5
+  resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
   dependencies:
     "@types/prop-types": "*"
-    csstype: ^2.2.0
-  checksum: b9d4491463ab013e0752bf6f99bd578f91504f74dfd1ebd7fbceebbdffe89762b040494a78403e249bb72d1645d2784f844890e7b1acdb3634432533ff9732fb
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
   languageName: node
   linkType: hard
 
@@ -8428,6 +8429,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: e95d14da2d05dea49e913db55922857234b01f2b1b513dd8cc556b64ffa6d89fb81ce4c1f21a6b4cd20f39d61455975e623ed681502b3d06b2d24a2ddd03a21e
+  languageName: node
+  linkType: hard
+
+"@types/scheduler@npm:*":
+  version: 0.16.1
+  resolution: "@types/scheduler@npm:0.16.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fscheduler%2F-%2Fscheduler-0.16.1.tgz"
+  checksum: 0124c2e4dee5e9b8c8524fcd6b1b8ea0b807b132e593925db04cdcc92ca2779a0d27c79414e60454b4458361a4d8319fa2b59d20585054f21617d1e9acf46a6f
   languageName: node
   linkType: hard
 
@@ -11883,10 +11891,6 @@ __metadata:
 "bit-226828@workspace:scopes/harmony/bit":
   version: 0.0.0-use.local
   resolution: "bit-226828@workspace:scopes/harmony/bit"
-  dependencies:
-    core-js: 3.10.0
-    react: 16.14.0
-    react-dom: 16.14.0
   languageName: unknown
   linkType: soft
 
@@ -12161,6 +12165,16 @@ __metadata:
     ieee754: ^1.1.4
     isarray: ^1.0.0
   checksum: e29ecda22aa854008e26a8df294be1e5339a3bec8cbf537a794fecf63a024da68165743bc9afb1524909c74d8b03392e93a9c8fa5c2b064b1b2a52d4680c204e
+  languageName: node
+  linkType: hard
+
+"buffer@npm:6.0.3":
+  version: 6.0.3
+  resolution: "buffer@npm:6.0.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbuffer%2F-%2Fbuffer-6.0.3.tgz"
+  dependencies:
+    base64-js: ^1.3.1
+    ieee754: ^1.2.1
+  checksum: a8cf6a58571dc7c43b24ab821ad4c72222d9040775f49fd143a30fad45f33ec0a8e0d572ca80d589ad4f8b4715aa012c029dc2b925dc95467f135c2d13d7abfb
   languageName: node
   linkType: hard
 
@@ -13452,8 +13466,6 @@ __metadata:
 "compiler-dcfcd3@workspace:scopes/mdx/modules/compiler":
   version: 0.0.0-use.local
   resolution: "compiler-dcfcd3@workspace:scopes/mdx/modules/compiler"
-  peerDependencies:
-    react: 16.14.0
   languageName: unknown
   linkType: soft
 
@@ -14408,13 +14420,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csstype@npm:^2.2.0":
-  version: 2.6.16
-  resolution: "csstype@npm:2.6.16::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcsstype%2F-%2Fcsstype-2.6.16.tgz"
-  checksum: 857b0d414e13a550c7dd2b2a94f23ca63c8d5c10dc6e6020e7ca5afebd143b5e2926199cced1c3801a1e9eceb7d94b65edc11a521cdb3b67f61de757facfbff3
-  languageName: node
-  linkType: hard
-
 "csstype@npm:^3.0.2":
   version: 3.0.7
   resolution: "csstype@npm:3.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcsstype%2F-%2Fcsstype-3.0.7.tgz"
@@ -15264,8 +15269,6 @@ __metadata:
 "dom-to-react-95e16b@workspace:scopes/react/dom-to-react":
   version: 0.0.0-use.local
   resolution: "dom-to-react-95e16b@workspace:scopes/react/dom-to-react"
-  peerDependencies:
-    react: 16.14.0
   languageName: unknown
   linkType: soft
 
@@ -19526,7 +19529,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"ieee754@npm:^1.1.13, ieee754@npm:^1.1.4":
+"ieee754@npm:^1.1.13, ieee754@npm:^1.1.4, ieee754@npm:^1.2.1":
   version: 1.2.1
   resolution: "ieee754@npm:1.2.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fieee754%2F-%2Fieee754-1.2.1.tgz"
   checksum: 6c1cfab995ecab3b0dbb6cfb7e192686eb02f0f8e788f2d962e1fc02e2d5ab38a85e06d417221f136bd029663a77cdb920d99605d68d3730a05597dd7910426a
@@ -23272,8 +23275,6 @@ fsevents@^1.2.7:
 "mdx-d28562@workspace:scopes/mdx/mdx":
   version: 0.0.0-use.local
   resolution: "mdx-d28562@workspace:scopes/mdx/mdx"
-  dependencies:
-    lodash: 4.17.20
   languageName: unknown
   linkType: soft
 
@@ -27460,20 +27461,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"react-dom@npm:16.13.1":
-  version: 16.13.1
-  resolution: "react-dom@npm:16.13.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-dom%2F-%2Freact-dom-16.13.1.tgz"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-    scheduler: ^0.19.1
-  peerDependencies:
-    react: ^16.13.1
-  checksum: fb5c3ad41360c6a8674f33916aa895d05e79d063d31a6963074220c1cda9e07e880799d01670b4ebd570b4d3457584f13cc898b5033a05641e8e801f5611607e
-  languageName: node
-  linkType: hard
-
 "react-dom@npm:16.14.0":
   version: 16.14.0
   resolution: "react-dom@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-dom%2F-%2Freact-dom-16.14.0.tgz"
@@ -27564,7 +27551,7 @@ fsevents@^1.2.7:
   languageName: unknown
   linkType: soft
 
-"react-native-web@npm:^0.14.0":
+"react-native-web@npm:0.14.13":
   version: 0.14.13
   resolution: "react-native-web@npm:0.14.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-native-web%2F-%2Freact-native-web-0.14.13.tgz"
   dependencies:
@@ -27754,17 +27741,6 @@ fsevents@^1.2.7:
     react: ^16.8.x
     typescript: ^3.5.2
   checksum: 6ab3d398f9284291b3cfd80ec5e4fc536b6c5e175397471fdfed0d123921ccf4eda85a2a9c7647cadee1d1f7acc9a6319ae33f722d43e201b6ff50190dc3a652
-  languageName: node
-  linkType: hard
-
-"react@npm:16.13.1":
-  version: 16.13.1
-  resolution: "react@npm:16.13.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact%2F-%2Freact-16.13.1.tgz"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-  checksum: 13dcc9ba8a7521ecc3d7e69998dbc5703ae9515308d06a94a474ad34b42f1fc109372265e924a8c9b11d20fa1828407c290b8f61617c36734c4ca907ae7e5f45
   languageName: node
   linkType: hard
 
@@ -34150,7 +34126,14 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"yaml@npm:1.10.0, yaml@npm:^1.10.0, yaml@npm:^1.7.2":
+"yaml@npm:1.10.2":
+  version: 1.10.2
+  resolution: "yaml@npm:1.10.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fyaml%2F-%2Fyaml-1.10.2.tgz"
+  checksum: 8d72062ea3dbfd8fae3d6ddd5b741c2aeb5835a31b0719bf14fac71dd84adde0829763d6fbac46387309da00af1440194c796da5efc349b0baf9de39d82ae69e
+  languageName: node
+  linkType: hard
+
+"yaml@npm:^1.10.0, yaml@npm:^1.7.2":
   version: 1.10.0
   resolution: "yaml@npm:1.10.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fyaml%2F-%2Fyaml-1.10.0.tgz"
   checksum: d4cc9f9724f8d0aebc2cf52e4e6aa7059f12d50deb54b5225d103462fb2af36e5c0bb419101ca4b1f0cd3b4db9e4139cf2c690e863ac6227648d39d6f4e2522c

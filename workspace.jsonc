@@ -177,6 +177,7 @@
         "babel-plugin-named-asset-import": "0.3.7",
         "babel-preset-jest": "26.6.2",
         "body-parser": "1.19.0",
+        "buffer": "6.0.3",
         "camelcase": "6.2.0",
         "case-sensitive-paths-webpack-plugin": "2.3.0",
         "classnames": "2.2.6",
@@ -309,11 +310,11 @@
       "peerDependencies": {
         "@teambit/legacy": "1.0.50",
         "browserslist": "4.16.3",
+        "core-js": "3.10.0",
         "graphql": "14.7.0",
         "mz": "2.7.0",
         "react": "16.14.0",
-        "react-dom": "16.14.0",
-        "core-js": "3.10.0"
+        "react-dom": "16.14.0"
       }
     },
     "packageManagerArgs": [],
