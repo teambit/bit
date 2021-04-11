@@ -49,7 +49,7 @@ export async function bundleFixture(fixturePath: string) {
         return reject(new Error('no modules compiled'));
       }
 
-      const module = modules.find(m => m.name.startsWith(fixture));
+      const module = modules.find(m => m?.name?.startsWith(fixture));
       if (!module) {
         return reject(new Error('module not found'));
       }
