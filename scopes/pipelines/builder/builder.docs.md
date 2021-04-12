@@ -93,12 +93,7 @@ The example task below, shown being used by a customized environment, prints out
 > Information returned by a build task will only persist if the build-pipeline was triggered by the 'hard-tag' command (`bit tag <component-id>`).
 
 ```ts title="print-cmp-name-task.ts"
-import {
-  BuildTask,
-  BuildContext,
-  BuiltTaskResult,
-  ComponentResult
-} from '@teambit/builder'
+import { BuildTask, BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 
 // A task is an implementation of 'BuildTask' provided by the 'builder' aspect
 export class PrintCmpNameTask implements BuildTask {
@@ -107,55 +102,52 @@ export class PrintCmpNameTask implements BuildTask {
 
   // This is where the task logic is placed. It will be executed by the build pipeline
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const componentsResults: ComponentResult[] = []
+    const componentsResults: ComponentResult[] = [];
 
     // Go through every isolated component instance
     context.capsuleNetwork.seedersCapsules.forEach((capsule) => {
-      console.log(`The current component name is: ${capsule.component.id.name}`)
+      console.log(`The current component name is: ${capsule.component.id.name}`);
 
       componentsResults.push({
         component: capsule.component,
-        metadata: { customProp: capsule.component.id.name }
-      })
-    })
+        metadata: { customProp: capsule.component.id.name },
+      });
+    });
     return {
       // An array of component objects, enriched with additional data produced by the task
-      componentsResults
-    }
+      componentsResults,
+    };
   }
 }
 ```
 
 ```ts title="customized-react.extension.ts"
-import { EnvsMain, EnvsAspect } from '@teambit/envs'
-import { ReactAspect, ReactMain } from '@teambit/react'
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
+import { ReactAspect, ReactMain } from '@teambit/react';
 
 // Import the task
-import { PrintCmpNameTask } from './print-cmp-name-task'
+import { PrintCmpNameTask } from './print-cmp-name-task';
 
 export class CustomReact {
   constructor(private react: ReactMain) {}
 
-  static dependencies: any = [EnvsAspect, ReactAspect]
+  static dependencies: any = [EnvsAspect, ReactAspect];
 
   static async provider([envs, react]: [EnvsMain, ReactMain]) {
     // Get the environment's default build pipeline
-    const reactPipe = react.env.getBuildPipe()
+    const reactPipe = react.env.getBuildPipe();
 
     // Add the custom task to the end of the build tasks sequence.
     // Provide the task with the component ID of the extension using it.
     // Provide the ask with a name.
-    const tasks = [
-      ...reactPipe,
-      new PrintCompTask('extensions/custom-react', 'PrintCmpNameTask')
-    ]
+    const tasks = [...reactPipe, new PrintCompTask('extensions/custom-react', 'PrintCmpNameTask')];
 
     // Create a new environment by merging these configurations with the env's default ones
-    const customReactEnv = react.compose([react.overrideBuildPipe(tasks)])
+    const customReactEnv = react.compose([react.overrideBuildPipe(tasks)]);
 
     // register the extension as an environment
-    envs.registerEnv(customReactEnv)
-    return new CustomReact(react)
+    envs.registerEnv(customReactEnv);
+    return new CustomReact(react);
   }
 }
 ```
@@ -177,68 +169,57 @@ This methodology places the task at the start or end of the build pipeline seque
 Example:
 
 ```ts title="print-cmp-name-task.ts"
-import {
-  BuildTask,
-  BuildContext,
-  BuiltTaskResult,
-  ComponentResult
-} from '@teambit/builder'
+import { BuildTask, BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
 
 export class PrintCmpNameTask implements BuildTask {
   constructor(readonly aspectId: string, readonly name: string) {}
 
   // Place the task at the end of the build pipeline
-  readonly location = 'end'
+  readonly location = 'end';
 
   // Run this task only after the '@teambit/preview' task is completed successfully
-  readonly dependencies = ['@teambit/preview']
+  readonly dependencies = ['@teambit/preview'];
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
-    const componentsResults: ComponentResult[] = []
+    const componentsResults: ComponentResult[] = [];
     context.capsuleNetwork.seedersCapsules.forEach((capsule) => {
-      console.log(`The current component name is: ${capsule.component.id.name}`)
+      console.log(`The current component name is: ${capsule.component.id.name}`);
 
       componentsResults.push({
         component: capsule.component,
-        metadata: { customProp: capsule.component.id.name }
-      })
-    })
+        metadata: { customProp: capsule.component.id.name },
+      });
+    });
     return {
-      componentsResults
-    }
+      componentsResults,
+    };
   }
 }
 ```
 
 ```ts title="customized-react.extension.ts"
-import { EnvsMain, EnvsAspect } from '@teambit/envs'
-import { ReactAspect, ReactMain } from '@teambit/react'
-import { BuilderMain } from '@teambit/builder'
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
+import { ReactAspect, ReactMain } from '@teambit/react';
+import { BuilderMain } from '@teambit/builder';
 
 // Import the task (in reality, it should be an independent component)
-import { PrintCmpNameTask } from './print-cmp-name-task'
+import { PrintCmpNameTask } from './print-cmp-name-task';
 
 export class CustomReact {
   constructor(private react: ReactMain) {}
 
-  static dependencies: any = [EnvsAspect, ReactAspect]
+  static dependencies: any = [EnvsAspect, ReactAspect];
 
   // Inject the builder
-  static async provider([envs, react, builder]: [
-    EnvsMain,
-    ReactMain,
-    BuilderMain
-  ]) {
+  static async provider([envs, react, builder]: [EnvsMain, ReactMain, BuilderMain]) {
     // Register this task using the registration slot, made available by the 'builder'.
     // Here, the environment has no say in the positioning of the task
-    builder.registerBuildTasks([
-      new ExampleTask('extensions/custom-react', 'PrintCmpNameTask')
-    ])
+    builder.registerBuildTasks([new ExampleTask('extensions/custom-react', 'PrintCmpNameTask')]);
 
-    const customReactEnv = react.compose([])
+    const customReactEnv = react.compose([]);
 
-    envs.registerEnv(customReactEnv)
-    return new CustomReact(react)
+    envs.registerEnv(customReactEnv);
+    return new CustomReact(react);
   }
 }
 ```

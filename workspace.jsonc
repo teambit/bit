@@ -12,7 +12,7 @@
       "dependencies": {
         "@apollo/client": "3.3.6",
         "@babel/core": "7.11.6",
-        "@babel/preset-react": "7.12.7",
+        "@babel/preset-react": "7.13.13",
         "@babel/preset-typescript": "7.12.7",
         "@babel/types": "7.13.12",
         "@graphql-modules/core": "0.7.17",
@@ -177,6 +177,7 @@
         "babel-plugin-named-asset-import": "0.3.7",
         "babel-preset-jest": "26.6.2",
         "body-parser": "1.19.0",
+        "buffer": "6.0.3",
         "camelcase": "6.2.0",
         "case-sensitive-paths-webpack-plugin": "2.3.0",
         "classnames": "2.2.6",
@@ -188,6 +189,7 @@
         "credentials-by-uri": "2.0.0",
         "cross-fetch": "3.0.6",
         "cross-spawn": "7.0.3",
+        "css-minimizer-webpack-plugin": "1.2.0",
         "dagre": "0.8.5",
         "didyoumean": "1.2.1",
         "eslint-config-airbnb-typescript": {
@@ -214,7 +216,7 @@
         "graphql-type-json": "0.3.2",
         "history": "4.10.1",
         "html-escaper": "3.0.0",
-        "html-webpack-plugin": "4.5.2",
+        "html-webpack-plugin": "5.3.1",
         "http-proxy": "1.18.1",
         "http-proxy-agent": "4.0.1",
         "https-proxy-agent": "5.0.0",
@@ -236,23 +238,23 @@
         "memoizee": "0.4.15",
         "memory-fs": "0.5.0",
         "mime": "2.5.2",
-        "mini-css-extract-plugin": "0.12.0",
+        "mini-css-extract-plugin": "1.4.0",
         "minimatch": "3.0.4",
         "mousetrap": "1.6.5",
         "nanoid": "3.1.20",
         "nerf-dart": "1.0.0",
-        "optimize-css-assets-webpack-plugin": "5.0.4",
         "parallel-webpack": "2.6.0",
         "parse-es6-imports": "1.0.1",
         "parse-package-name": "0.1.0",
         "penpal": "5.3.0",
-        "postcss": "7.0.32",
-        "postcss-flexbugs-fixes": "4.2.1",
-        "postcss-loader": "3.0.0",
+        "postcss": "8.2.9",
+        "postcss-flexbugs-fixes": "5.0.2",
+        "postcss-loader": "5.2.0",
         "postcss-normalize": "9.0.0",
         "postcss-preset-env": "6.7.0",
-        "postcss-safe-parser": "4.0.2",
+        "postcss-safe-parser": "5.0.2",
         "pretty-time": "1.1.0",
+        "process": "0.11.10",
         "proper-lockfile": "4.1.2",
         "query-string": "7.0.0",
         "react-animate-height": "2.0.23",
@@ -280,7 +282,7 @@
         "strip-ansi": "6.0.0",
         "subscriptions-transport-ws": "0.9.18",
         "supi": "0.44.3",
-        "terser-webpack-plugin": "4.2.3",
+        "terser-webpack-plugin": "5.1.1",
         "tippy.js": "6.2.7",
         "typedoc": "0.18.0",
         "typescript-language-server": "0.4.0",
@@ -295,24 +297,24 @@
         "vscode-languageclient": "6.1.3",
         "vscode-languageserver": "6.1.1",
         "vscode-ws-jsonrpc": "0.2.0",
-        "webpack": "4.42.0",
-        "webpack-dev-middleware": "3.7.3",
-        "webpack-dev-server": "3.11.2",
+        "webpack": "5.30.0",
+        "webpack-dev-middleware": "4.1.0",
+        "webpack-dev-server": "^4.0.0-beta.0",
         "webpack-hot-middleware": "2.25.0",
-        "webpack-manifest-plugin": "2.2.0",
+        "webpack-manifest-plugin": "3.1.0",
         "webpack-merge": "5.7.3",
-        "workbox-webpack-plugin": "5.1.4",
+        "workbox-webpack-plugin": "6.1.2",
         "ws": "7.4.2",
-        "yaml": "1.10.0"
+        "yaml": "1.10.2"
       },
       "peerDependencies": {
         "@teambit/legacy": "1.0.53",
         "browserslist": "4.16.3",
+        "core-js": "3.10.0",
         "graphql": "14.7.0",
         "mz": "2.7.0",
         "react": "16.14.0",
-        "react-dom": "16.14.0",
-        "core-js": "3.10.0"
+        "react-dom": "16.14.0"
       }
     },
     "packageManagerArgs": [],
@@ -550,6 +552,21 @@
         }
       }
     },
+    "scopes/compilation/webpack": {
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          // Used for webpack5 native modules fallbacks
+          // see more here:
+          // https://webpack.js.org/blog/2020-10-10-webpack-5-release/#automatic-nodejs-polyfills-removed
+          // https://github.com/webpack/webpack/pull/8460/commits/a68426e9255edcce7822480b78416837617ab065
+          "dependencies": {
+            "util": "0.12.3",
+            "assert": "2.0.0",
+            "path-browserify": "1.0.1"
+          }
+        }
+      }
+    },
     "scopes/harmony/aspect": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
@@ -561,7 +578,7 @@
             "@babel/plugin-transform-runtime": "7.12.17",
             "@babel/preset-env": "7.12.17",
             "babel-plugin-transform-typescript-metadata": "0.3.1",
-            "@babel/preset-react": "7.12.13",
+            "@babel/preset-react": "7.13.13",
             "@babel/preset-typescript": "7.12.7"
           }
         }

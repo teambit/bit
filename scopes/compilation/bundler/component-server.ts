@@ -44,7 +44,7 @@ export class ComponentServer {
   }
 
   async listen() {
-    const server = this.devServer.listen(this.port);
+    const server = await this.devServer.listen(this.port);
     const address = server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
