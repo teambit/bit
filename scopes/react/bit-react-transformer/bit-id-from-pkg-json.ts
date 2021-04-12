@@ -46,6 +46,7 @@ function safeFindRoot(filepath: string) {
   try {
     return findRoot(filepath);
   } catch (e) {
+    // eslint-disable-next-line no-console
     console.debug(`bit-react-transformer: could not find package.json for ${filepath}`);
     // might happen when the component is new, etc
     return undefined;
