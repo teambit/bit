@@ -1594,7 +1594,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-typescript@npm:^7.12.1, @babel/plugin-transform-typescript@npm:^7.9.0":
+"@babel/plugin-transform-typescript@npm:^7.12.1, @babel/plugin-transform-typescript@npm:^7.12.17, @babel/plugin-transform-typescript@npm:^7.9.0":
   version: 7.13.0
   resolution: "@babel/plugin-transform-typescript@npm:7.13.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fplugin-transform-typescript%2F-%2Fplugin-transform-typescript-7.13.0.tgz"
   dependencies:
@@ -1897,6 +1897,19 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: 40986497972b9743558a408a78157ef6aec05374e5f130b7bab29dc4eaf49c8934116fb83ae17648bf679212a17d2469b37d338057ab282dced0fd9f1051cbce
+  languageName: node
+  linkType: hard
+
+"@babel/preset-typescript@npm:7.12.17":
+  version: 7.12.17
+  resolution: "@babel/preset-typescript@npm:7.12.17::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fpreset-typescript%2F-%2Fpreset-typescript-7.12.17.tgz"
+  dependencies:
+    "@babel/helper-plugin-utils": ^7.12.13
+    "@babel/helper-validator-option": ^7.12.17
+    "@babel/plugin-transform-typescript": ^7.12.17
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: db2a9caed33c81f922cb2bb90f713c328d8924d47794726cc43eae887d22816e82d9fb0522f3480b02355536b10a5db995126ed5d488817c3fe25b289108a032
   languageName: node
   linkType: hard
 
@@ -6512,7 +6525,7 @@ __metadata:
   dependencies:
     "@apollo/client": 3.3.6
     "@babel/cli": 7.12.17
-    "@babel/core": 7.11.6
+    "@babel/core": 7.12.17
     "@babel/plugin-proposal-class-properties": 7.12.13
     "@babel/plugin-proposal-decorators": 7.12.13
     "@babel/plugin-proposal-object-rest-spread": 7.12.13
@@ -6674,7 +6687,7 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/proper-lockfile": 4.1.1
     "@types/puppeteer": 3.0.5
-    "@types/react": 16.9.43
+    "@types/react": ^16.8.0
     "@types/react-dom": ^16.8.0
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -6739,7 +6752,7 @@ __metadata:
     commander: 2.20.3
     comment-json: 3.0.3
     copy-to-clipboard: 3.3.1
-    core-js: 3.8.3
+    core-js: 3.10.0
     cors: 2.8.5
     credentials-by-uri: 2.0.0
     cross-fetch: 3.0.6
@@ -6831,7 +6844,7 @@ __metadata:
     less-loader: 7.3.0
     lint-staged: ">=10"
     loader-utils: 2.0.0
-    lodash: 4.17.20
+    lodash: 4.17.21
     lodash.assignwith: 4.2.0
     lodash.compact: 3.0.1
     lodash.flatten: 4.4.0
@@ -6903,13 +6916,13 @@ __metadata:
     query-string: 7.0.0
     ramda: 0.27.1
     ramda-adjunct: 2.31.1
-    react: 16.13.1
+    react: 16.14.0
     react-animate-height: 2.0.23
     react-app-polyfill: 1.0.6
     react-dev-utils: 10.2.1
     react-docgen: 5.3.1
     react-docgen-typescript: 1.21.0
-    react-dom: 16.13.1
+    react-dom: 16.14.0
     react-error-overlay: 6.0.9
     react-flow-renderer: 8.3.7
     react-native-web: 0.14.13
@@ -8067,16 +8080,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:16.9.43":
-  version: 16.9.43
-  resolution: "@types/react@npm:16.9.43::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.9.43.tgz"
-  dependencies:
-    "@types/prop-types": "*"
-    csstype: ^2.2.0
-  checksum: b9d4491463ab013e0752bf6f99bd578f91504f74dfd1ebd7fbceebbdffe89762b040494a78403e249bb72d1645d2784f844890e7b1acdb3634432533ff9732fb
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:^16":
   version: 16.14.4
   resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
@@ -8084,6 +8087,17 @@ __metadata:
     "@types/prop-types": "*"
     csstype: ^3.0.2
   checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^16.8.0":
+  version: 16.14.5
+  resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
   languageName: node
   linkType: hard
 
@@ -8118,6 +8132,13 @@ __metadata:
   dependencies:
     "@types/node": "*"
   checksum: e95d14da2d05dea49e913db55922857234b01f2b1b513dd8cc556b64ffa6d89fb81ce4c1f21a6b4cd20f39d61455975e623ed681502b3d06b2d24a2ddd03a21e
+  languageName: node
+  linkType: hard
+
+"@types/scheduler@npm:*":
+  version: 0.16.1
+  resolution: "@types/scheduler@npm:0.16.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fscheduler%2F-%2Fscheduler-0.16.1.tgz"
+  checksum: 0124c2e4dee5e9b8c8524fcd6b1b8ea0b807b132e593925db04cdcc92ca2779a0d27c79414e60454b4458361a4d8319fa2b59d20585054f21617d1e9acf46a6f
   languageName: node
   linkType: hard
 
@@ -11640,10 +11661,6 @@ __metadata:
 "bit-226828@workspace:scopes/harmony/bit":
   version: 0.0.0-use.local
   resolution: "bit-226828@workspace:scopes/harmony/bit"
-  dependencies:
-    core-js: 3.10.0
-    react: 16.14.0
-    react-dom: 16.14.0
   languageName: unknown
   linkType: soft
 
@@ -13384,8 +13401,6 @@ __metadata:
 "compiler-dcfcd3@workspace:scopes/mdx/modules/compiler":
   version: 0.0.0-use.local
   resolution: "compiler-dcfcd3@workspace:scopes/mdx/modules/compiler"
-  peerDependencies:
-    react: 16.14.0
   languageName: unknown
   linkType: soft
 
@@ -14392,13 +14407,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"csstype@npm:^2.2.0":
-  version: 2.6.16
-  resolution: "csstype@npm:2.6.16::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcsstype%2F-%2Fcsstype-2.6.16.tgz"
-  checksum: 857b0d414e13a550c7dd2b2a94f23ca63c8d5c10dc6e6020e7ca5afebd143b5e2926199cced1c3801a1e9eceb7d94b65edc11a521cdb3b67f61de757facfbff3
-  languageName: node
-  linkType: hard
-
 "csstype@npm:^3.0.2":
   version: 3.0.7
   resolution: "csstype@npm:3.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fcsstype%2F-%2Fcsstype-3.0.7.tgz"
@@ -15285,8 +15293,6 @@ __metadata:
 "dom-to-react-95e16b@workspace:scopes/react/dom-to-react":
   version: 0.0.0-use.local
   resolution: "dom-to-react-95e16b@workspace:scopes/react/dom-to-react"
-  peerDependencies:
-    react: 16.14.0
   languageName: unknown
   linkType: soft
 
@@ -23401,6 +23407,8 @@ fsevents@^1.2.7:
 "mdx-d28562@workspace:scopes/mdx/mdx":
   version: 0.0.0-use.local
   resolution: "mdx-d28562@workspace:scopes/mdx/mdx"
+  dependencies:
+    lodash: 4.17.20
   languageName: unknown
   linkType: soft
 
@@ -27635,6 +27643,7 @@ fsevents@^1.2.7:
   version: 0.0.0-use.local
   resolution: "react-a12f27@workspace:scopes/react/react"
   dependencies:
+    "@babel/preset-typescript": 7.12.17
     "@teambit/documenter.theme.theme-context": 3.0.8
     "@typescript-eslint/eslint-plugin": 4.15.1
     "@typescript-eslint/parser": 4.15.1
@@ -27743,20 +27752,6 @@ fsevents@^1.2.7:
   bin:
     react-docgen: bin/react-docgen.js
   checksum: d07ee0b298b15dd9f1f2a7fd2d3a4e511adad7f02cf36a2277f981e513964bf756351d8fab146035d4b06c67572951ecff0bdacb911ce418bc52faba36421a89
-  languageName: node
-  linkType: hard
-
-"react-dom@npm:16.13.1":
-  version: 16.13.1
-  resolution: "react-dom@npm:16.13.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-dom%2F-%2Freact-dom-16.13.1.tgz"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-    scheduler: ^0.19.1
-  peerDependencies:
-    react: ^16.13.1
-  checksum: fb5c3ad41360c6a8674f33916aa895d05e79d063d31a6963074220c1cda9e07e880799d01670b4ebd570b4d3457584f13cc898b5033a05641e8e801f5611607e
   languageName: node
   linkType: hard
 
@@ -28040,17 +28035,6 @@ fsevents@^1.2.7:
     react: ^16.8.x
     typescript: ^3.5.2
   checksum: 6ab3d398f9284291b3cfd80ec5e4fc536b6c5e175397471fdfed0d123921ccf4eda85a2a9c7647cadee1d1f7acc9a6319ae33f722d43e201b6ff50190dc3a652
-  languageName: node
-  linkType: hard
-
-"react@npm:16.13.1":
-  version: 16.13.1
-  resolution: "react@npm:16.13.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact%2F-%2Freact-16.13.1.tgz"
-  dependencies:
-    loose-envify: ^1.1.0
-    object-assign: ^4.1.1
-    prop-types: ^15.6.2
-  checksum: 13dcc9ba8a7521ecc3d7e69998dbc5703ae9515308d06a94a474ad34b42f1fc109372265e924a8c9b11d20fa1828407c290b8f61617c36734c4ca907ae7e5f45
   languageName: node
   linkType: hard
 
