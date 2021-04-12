@@ -1591,7 +1591,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-react-jsx-development@npm:^7.12.1, @babel/plugin-transform-react-jsx-development@npm:^7.12.12":
+"@babel/plugin-transform-react-jsx-development@npm:^7.12.1, @babel/plugin-transform-react-jsx-development@npm:^7.12.12, @babel/plugin-transform-react-jsx-development@npm:^7.12.17":
   version: 7.12.17
   resolution: "@babel/plugin-transform-react-jsx-development@npm:7.12.17::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fplugin-transform-react-jsx-development%2F-%2Fplugin-transform-react-jsx-development-7.12.17.tgz"
   dependencies:
@@ -1639,7 +1639,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/plugin-transform-react-jsx@npm:^7.12.1":
+"@babel/plugin-transform-react-jsx@npm:^7.12.1, @babel/plugin-transform-react-jsx@npm:^7.13.12":
   version: 7.13.12
   resolution: "@babel/plugin-transform-react-jsx@npm:7.13.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fplugin-transform-react-jsx%2F-%2Fplugin-transform-react-jsx-7.13.12.tgz"
   dependencies:
@@ -2148,7 +2148,23 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/preset-react@npm:7.12.13, @babel/preset-react@npm:^7.12.5":
+"@babel/preset-react@npm:7.13.13":
+  version: 7.13.13
+  resolution: "@babel/preset-react@npm:7.13.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fpreset-react%2F-%2Fpreset-react-7.13.13.tgz"
+  dependencies:
+    "@babel/helper-plugin-utils": ^7.13.0
+    "@babel/helper-validator-option": ^7.12.17
+    "@babel/plugin-transform-react-display-name": ^7.12.13
+    "@babel/plugin-transform-react-jsx": ^7.13.12
+    "@babel/plugin-transform-react-jsx-development": ^7.12.17
+    "@babel/plugin-transform-react-pure-annotations": ^7.12.1
+  peerDependencies:
+    "@babel/core": ^7.0.0-0
+  checksum: 7c712240df06701624cd73269b20e841487ad54894517be353d22eecd0b1290389b00114b020c33f4a29dd8ca03900f076a951b4e88a1165f7b627422819f66d
+  languageName: node
+  linkType: hard
+
+"@babel/preset-react@npm:^7.12.5":
   version: 7.12.13
   resolution: "@babel/preset-react@npm:7.12.13::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fpreset-react%2F-%2Fpreset-react-7.12.13.tgz"
   dependencies:
@@ -6681,9 +6697,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.50, @teambit/legacy@npm:1.0.50::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.50.tgz":
-  version: 1.0.50
-  resolution: "@teambit/legacy@npm:1.0.50::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.50.tgz"
+"@teambit/legacy@npm:1.0.53, @teambit/legacy@npm:1.0.53::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.53.tgz":
+  version: 1.0.53
+  resolution: "@teambit/legacy@npm:1.0.53::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.53.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6804,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 690bd07f8b6d38868a5ef9f50f9ceb96f5ed582c22336c6dd7d2a2fb68c0d69cc7ed8dd8e5f943b698a7d0e88f3fa364cfb3756120c082b2910e55eecf2e6b24
+  checksum: fb6f92b7ec15db712e2e4b798c9c72ec049bcaa1ec43bde1aab675bc535c354bbdb4ec80e1d518801823bc57c738db395cdc0a2dbcbff9d5742b567c808bbe27
   languageName: node
   linkType: hard
 
@@ -6821,7 +6837,7 @@ __metadata:
     "@babel/plugin-transform-modules-commonjs": 7.12.13
     "@babel/plugin-transform-runtime": 7.12.17
     "@babel/preset-env": 7.12.17
-    "@babel/preset-react": 7.12.13
+    "@babel/preset-react": 7.13.13
     "@babel/preset-typescript": 7.12.7
     "@babel/register": 7.12.13
     "@babel/runtime": 7.12.18
@@ -6932,7 +6948,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.50
+    "@teambit/legacy": 1.0.53
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -7306,7 +7322,7 @@ __metadata:
     yaml: 1.10.2
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.50
+    "@teambit/legacy": 1.0.53
   bin:
     bit: bin/bit.js
   languageName: unknown
