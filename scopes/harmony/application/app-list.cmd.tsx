@@ -34,10 +34,6 @@ export class AppListCmd implements Command {
         width: 35,
         color: 'cyan',
       },
-      {
-        width: 150,
-        alias: 'content',
-      },
     ];
 
     const table = new Table(headers, rows, options);
