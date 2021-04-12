@@ -1,6 +1,7 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
+import path from 'path';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import * as mdxLoader from '@teambit/modules.mdx-loader';
@@ -29,9 +30,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-type Options = { envId: string; fileMapPath: string; distPaths: string[] };
+type Options = { envId: string; fileMapPath: string; distPaths: string[]; workDir: string };
 
-export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
+export default function ({ envId, fileMapPath, distPaths, workDir }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       sockPath: `_hmr/${envId}`,
@@ -56,8 +57,10 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: /\.js$/,
-          include: /node_modules/,
+          test: [/\.js$/],
+          // include: distPaths, // use this to only include dists of this workspace
+          include: path.join(workDir, 'node_modules'),
+          exclude: [/babel/, /\.bin/, /\.cache/],
           use: [
             {
               loader: require.resolve('babel-loader'),
@@ -68,6 +71,9 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
                   // for component highlighting in preview.
                   [require.resolve('@teambit/babel.bit-react-transformer')],
                 ],
+                // turn off all optimizations (only slow down for node_modules)
+                compact: false,
+                minified: false,
               },
             },
           ],

@@ -168,7 +168,7 @@ export class ReactEnv implements Environment {
     const fileMapPath = this.writeFileMap(context.components);
     const distPaths = this.calcDistPaths(context, this.workspace.path);
 
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
+    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths, workDir: this.workspace.path });
   }
 
   getDevEnvId(id?: string) {
