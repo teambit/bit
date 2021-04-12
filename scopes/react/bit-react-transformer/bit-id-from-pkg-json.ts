@@ -10,7 +10,7 @@ type Json = {
 };
 
 export function fileToBitId(filepath: string) {
-  const root = findRoot(filepath);
+  const root = safeFindRoot(filepath);
   if (!root) return undefined;
 
   const id = bitIdFromPkgPath(join(root, 'package.json'));
@@ -38,6 +38,16 @@ function parsePkgJson(pkgPath: string): Json | undefined {
 
     return json;
   } catch {
+    return undefined;
+  }
+}
+
+function safeFindRoot(filepath: string) {
+  try {
+    return findRoot(filepath);
+  } catch (e) {
+    console.debug(`bit-react-transformer: could not find package.json for ${filepath}`);
+    // might happen when the component is new, etc
     return undefined;
   }
 }
