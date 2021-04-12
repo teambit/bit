@@ -152,6 +152,12 @@ export default function createWebpackConfig(
     module: {
       strictExportPresence: true,
       rules: [
+        {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
         // Disable require.ensure as it's not a standard language feature.
         // { parser: { requireEnsure: false } },
         {
@@ -193,12 +199,6 @@ export default function createWebpackConfig(
                 },
               },
             },
-            {
-              test: /\.m?js/,
-              resolve: {
-                fullySpecified: false,
-              },
-            },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
@@ -231,6 +231,7 @@ export default function createWebpackConfig(
             },
             // Process any JS outside of the app with Babel.
             // Unlike the application JS, we only compile the standard ES features.
+            // Probably not needed in our use case
             {
               test: /\.(js|mjs)$/,
               exclude: /@babel(?:\/|\\{1,2})runtime/,

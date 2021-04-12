@@ -202,6 +202,12 @@ export default function (fileMapPath: string): Configuration {
       strictExportPresence: true,
       rules: [
         {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
+        {
           // "oneOf" will traverse all following loaders until one will
           // match the requirements. When no loader matches it will fall
           // back to the "file" loader at the end of the loader list.
@@ -225,40 +231,6 @@ export default function (fileMapPath: string): Configuration {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
-            {
-              test: /\.m?js/,
-              resolve: {
-                fullySpecified: false,
-              },
-            },
-            // "url" loader works like "file" loader except that it embeds assets
-            // smaller than specified limit in bytes as data URLs to avoid requests.
-            // A missing `test` is equivalent to a match.
-            {
-              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-              loader: require.resolve('url-loader'),
-              options: {
-                limit: imageInlineSizeLimit,
-                name: 'static/media/[name].[hash:8].[ext]',
-              },
-            },
-            // {
-            //   test: /\.js$/,
-            //   include: distPaths,
-            //   use: [
-            //     {
-            //       loader: require.resolve('babel-loader'),
-            //       options: {
-            //         babelrc: false,
-            //         configFile: false,
-            //         plugins: [
-            //           // for component highlighting in preview.
-            //           [require.resolve('@teambit/babel.bit-react-transformer')],
-            //         ],
-            //       },
-            //     },
-            //   ],
-            // },
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
@@ -296,28 +268,57 @@ export default function (fileMapPath: string): Configuration {
                 compact: isEnvProduction,
               },
             },
-            // Process any JS outside of the app with Babel.
-            // Unlike the application JS, we only compile the standard ES features.
+            // "url" loader works like "file" loader except that it embeds assets
+            // smaller than specified limit in bytes as data URLs to avoid requests.
+            // A missing `test` is equivalent to a match.
             {
-              test: /\.(js|mjs)$/,
-              exclude: /@babel(?:\/|\\{1,2})runtime/,
-              loader: require.resolve('babel-loader'),
+              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+              loader: require.resolve('url-loader'),
               options: {
-                babelrc: false,
-                configFile: false,
-                compact: false,
-                presets: [[require.resolve('babel-preset-react-app/dependencies'), { helpers: true }]],
-                cacheDirectory: true,
-                // See #6846 for context on why cacheCompression is disabled
-                cacheCompression: false,
-
-                // Babel sourcemaps are needed for debugging into node_modules
-                // code.  Without the options below, debuggers like VSCode
-                // show incorrect code and set breakpoints on the wrong lines.
-                sourceMaps: shouldUseSourceMap,
-                inputSourceMap: shouldUseSourceMap,
+                limit: imageInlineSizeLimit,
+                name: 'static/media/[name].[hash:8].[ext]',
               },
             },
+            // {
+            //   test: /\.js$/,
+            //   include: distPaths,
+            //   use: [
+            //     {
+            //       loader: require.resolve('babel-loader'),
+            //       options: {
+            //         babelrc: false,
+            //         configFile: false,
+            //         plugins: [
+            //           // for component highlighting in preview.
+            //           [require.resolve('@teambit/babel.bit-react-transformer')],
+            //         ],
+            //       },
+            //     },
+            //   ],
+            // },
+            // Process any JS outside of the app with Babel.
+            // Unlike the application JS, we only compile the standard ES features.
+            // Probably not needed in our use case
+            // {
+            //   test: /\.(js|mjs)$/,
+            //   exclude: /@babel(?:\/|\\{1,2})runtime/,
+            //   loader: require.resolve('babel-loader'),
+            //   options: {
+            //     babelrc: false,
+            //     configFile: false,
+            //     compact: false,
+            //     presets: [[require.resolve('babel-preset-react-app/dependencies'), { helpers: true }]],
+            //     cacheDirectory: true,
+            //     // See #6846 for context on why cacheCompression is disabled
+            //     cacheCompression: false,
+
+            //     // Babel sourcemaps are needed for debugging into node_modules
+            //     // code.  Without the options below, debuggers like VSCode
+            //     // show incorrect code and set breakpoints on the wrong lines.
+            //     sourceMaps: shouldUseSourceMap,
+            //     inputSourceMap: shouldUseSourceMap,
+            //   },
+            // },
             // MDX support (move to the mdx aspect and extend from there)
             {
               test: /\.mdx?$/,
