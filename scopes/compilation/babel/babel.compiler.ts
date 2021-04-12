@@ -59,7 +59,8 @@ export class BabelCompiler implements Compiler {
     const code = result.code || '';
     const outputPath = this.replaceFileExtToJs(options.filePath);
     const mapFilePath = `${outputPath}.map`;
-    const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${mapFilePath}` : code;
+    const mapFileBasename = path.basename(mapFilePath);
+    const outputText = result.map ? `${code}\n\n//# sourceMappingURL=${mapFileBasename}` : code;
     const outputFiles = [{ outputText, outputPath }];
     if (result.map) {
       outputFiles.push({
