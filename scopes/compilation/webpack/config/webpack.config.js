@@ -10,17 +10,11 @@ module.exports = (entries, rootPath) => {
     // This means they will be the "root" imports that are included in JS bundle.
     entry: entries.filter(Boolean),
 
-    node: {
-      fs: 'empty',
-    },
-
     output: {
       // The build folder.
       path: `${rootPath}/public`,
 
       filename: 'static/js/[name].[contenthash:8].js',
-      // TODO: remove this when upgrading to webpack 5
-      futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // webpack uses `publicPath` to determine where the app is being served from.
@@ -30,6 +24,14 @@ module.exports = (entries, rootPath) => {
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
       globalObject: 'this',
+    },
+
+    resolve: {
+      fallback: {
+        util: require.resolve('util'),
+        assert: require.resolve('assert'),
+        path: require.resolve('path-browserify'),
+      },
     },
 
     plugins: [

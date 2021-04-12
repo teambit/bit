@@ -1,3 +1,4 @@
+import { BitError } from '@teambit/bit-error';
 import { Bundler, BundlerResult, Target } from '@teambit/bundler';
 import { Logger } from '@teambit/logger';
 import { flatten } from 'lodash';
@@ -38,6 +39,7 @@ export class WebpackBundler implements Bundler {
               components,
             });
           }
+          if (!stats) throw new BitError('unknown build error');
           const info = stats.toJson();
           return resolve({
             errors: info.errors,

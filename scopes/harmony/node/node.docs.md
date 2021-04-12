@@ -52,7 +52,7 @@ Node, like all over Environments must implement a set of Service Handlers. For e
 | Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
 | Bundling             | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
 | Documentation        | _Core implementation_                                       | [Docs template](https://bit.dev/teambit/react/react/~code/docs/index.tsx)                                                          |
-| Build pipeline       | [Builder](https://bit.dev/teambit/pipelines/builder)        | [Build pipeline](https://bit.dev/teambit/react/react/~code/node.env.ts)                                                           |
+| Build pipeline       | [Builder](https://bit.dev/teambit/pipelines/builder)        | [Build pipeline](https://bit.dev/teambit/react/react/~code/node.env.ts)                                                            |
 | Dependencies         | _Core implementation_                                       | [Env-dependencies](https://bit.dev/teambit/harmony/node/~code/node.env.ts)                                                         |
 | Component Generator  | [Generator](https://bit.dev/teambit/generator/generator)    | [example template](https://bit.dev/harmony/node/~code/templates/node-component.ts)                                                 |
 
@@ -110,26 +110,22 @@ Node implements a set of APIs you can use to merge your preferred configuration 
 In case of a conflict, your config will override the default.
 
 ```typescript {4,14} title="Customized TypeScript configuration"
-import { EnvsMain, EnvsAspect } from '@teambit/envs'
-import { NodeAspect, NodeMain } from '@teambit/node'
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
+import { NodeAspect, NodeMain } from '@teambit/node';
 
-const tsconfig = require('./typescript/tsconfig.json')
+const tsconfig = require('./typescript/tsconfig.json');
 
 export class CustomNodeExtension {
   constructor(private node: NodeMain) {}
 
-  static dependencies: any = [EnvsAspect, NodeAspect]
+  static dependencies: any = [EnvsAspect, NodeAspect];
 
   static async provider([envs, node]: [EnvsMain, NodeMain]) {
-    const customNodeEnv = node.compose(
-      [
-        node.overrideTsConfig(tsconfig)
-      ]
-    )
+    const customNodeEnv = node.compose([node.overrideTsConfig(tsconfig)]);
 
-    envs.registerEnv(customNodeEnv)
+    envs.registerEnv(customNodeEnv);
 
-    return new CustomNodeExtension(node)
+    return new CustomNodeExtension(node);
   }
 }
 ```
@@ -148,33 +144,29 @@ The below example uses the `overrideCompiler` transformer to override the `getCo
 1. Use the `compose` Env API to apply the compiler override transformer and add Babel as a transpiler in the environment
 
 ```typescript {3,5,10-12,15,17-18,22-23}
-import { EnvsMain, EnvsAspect } from '@teambit/envs'
-import { NodeAspect, NodeMain } from '@teambit/node'
-import { BabelAspect, BabelMain } from '@teambit/babel'
+import { EnvsMain, EnvsAspect } from '@teambit/envs';
+import { NodeAspect, NodeMain } from '@teambit/node';
+import { BabelAspect, BabelMain } from '@teambit/babel';
 
-const babelConfig = require('./babel/babel.config')
+const babelConfig = require('./babel/babel.config');
 
 export class CustomNodeExtension {
   constructor(private node: NodeMain) {}
 
-  static dependencies: any = [EnvsAspect, NodeAspect, BabelAspect]
+  static dependencies: any = [EnvsAspect, NodeAspect, BabelAspect];
 
-  static async provider([envs, node, babel]: [
-    EnvsMain,
-    NodeMain,
-    BabelMain
-  ]) {
+  static async provider([envs, node, babel]: [EnvsMain, NodeMain, BabelMain]) {
     const babelCompiler = babel.createCompiler({
-      babelTransformOptions: babelConfig
-    })
+      babelTransformOptions: babelConfig,
+    });
 
     const customNodeEnv = node.compose([
       node.overrideCompiler(babelCompiler),
-      node.overrideCompilerTasks([babelCompiler.createTask()])
-    ])
+      node.overrideCompilerTasks([babelCompiler.createTask()]),
+    ]);
 
-    envs.registerEnv(customNodeEnv)
-    return new CustomNodeExtension(node)
+    envs.registerEnv(customNodeEnv);
+    return new CustomNodeExtension(node);
   }
 }
 ```
@@ -225,7 +217,6 @@ export class NodeExtension {
 
 Merges the Webpack configuration for the 'Preview' environment service, with the contents of your [webpack configuration file](https://webpack.js.org/configuration/).
 This webpack configuration is used for building and rendering your components on the local dev server.
-
 
 ```ts
 // ...
@@ -281,15 +272,15 @@ This method receives an array of build tasks. It merges the provided tasks with 
 ```ts
 // ...
 // Import the task
-import { CustomTask } from './custom.task'
+import { CustomTask } from './custom.task';
 export class CustomNode {
   // ...
   static async provider([envs, node]: [EnvsMain, NodeMain]) {
     // Get the environment's default build pipeline using the 'getBuildPipe' service handler
-    const nodePipe = node.env.getBuildPipe()
+    const nodePipe = node.env.getBuildPipe();
     // Add the custom task to the end of the build tasks sequence.
-    const tasks = [...nodePipe, new CustomTask()]
-    const newNodeEnv = node.compose([node.overrideBuildPipe(tasks)])
+    const tasks = [...nodePipe, new CustomTask()];
+    const newNodeEnv = node.compose([node.overrideBuildPipe(tasks)]);
     // ...
   }
 }
@@ -304,16 +295,14 @@ Each key-value pair in a dependency-policy object signifies the package and the 
 // ...
 const newDependencies = {
   devDependencies: {
-    '@types/jest': '~26.0.9'
-  }
-}
+    '@types/jest': '~26.0.9',
+  },
+};
 
 export class CustomNode {
   // ...
   static async provider([envs, node]: [EnvsMain, NodeMain]) {
-    const newNodeEnv = node.compose([
-      node.overrideDependencies(newDependencies)
-    ])
+    const newNodeEnv = node.compose([node.overrideDependencies(newDependencies)]);
     // ...
   }
 }
@@ -329,15 +318,13 @@ Merges the provide props with the default properties added to the `package.json`
 // ...
 const newPackageProps = {
   main: 'dist/{main}.js',
-  types: '{main}.ts'
-}
+  types: '{main}.ts',
+};
 
 export class CustomNode {
   // ...
   static async provider([envs, node]: [EnvsMain, NodeMain]) {
-    const newNodeEnv = node.compose([
-      node.overridePackageJsonProps(newPackageProps)
-    ])
+    const newNodeEnv = node.compose([node.overridePackageJsonProps(newPackageProps)]);
     // ...
   }
 }

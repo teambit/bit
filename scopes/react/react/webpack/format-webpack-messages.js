@@ -4,9 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-
-const chalk = require('chalk');
-
 const friendlySyntaxErrorLabel = 'Syntax error:';
 
 function isLikelyASyntaxError(message) {
@@ -71,8 +68,6 @@ function formatMessage(message) {
     lines[1] += 'Run `npm install node-sass` or `yarn add node-sass` inside your workspace.';
   }
 
-  lines[0] = chalk.inverse(lines[0]);
-
   message = lines.join('\n');
   // Internal stacks are generally useless so we strip them... with the
   // exception of stacks containing `webpack:` because they're normally
@@ -93,12 +88,8 @@ function formatMessage(message) {
 }
 
 function formatWebpackMessages(json) {
-  const formattedErrors = json.errors.map(function (message) {
-    return formatMessage(message, true);
-  });
-  const formattedWarnings = json.warnings.map(function (message) {
-    return formatMessage(message, false);
-  });
+  const formattedErrors = json.errors.map(formatMessage);
+  const formattedWarnings = json.warnings.map(formatMessage);
   const result = { errors: formattedErrors, warnings: formattedWarnings };
   if (result.errors.some(isLikelyASyntaxError)) {
     // If there are any syntax errors, show just them.
