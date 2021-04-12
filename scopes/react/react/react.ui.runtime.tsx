@@ -12,10 +12,12 @@ export class ReactUI {
   static async provider([compositionsUI]: [CompositionsUI]) {
     const reactUI = new ReactUI();
 
-    compositionsUI.registerMenuWidget({
-      location: 'start',
-      content: <HighlighterWidget />,
-    });
+    if (typeof window !== 'undefined' && window.location.search.includes('highlighter')) {
+      compositionsUI.registerMenuWidget({
+        location: 'start',
+        content: <HighlighterWidget />,
+      });
+    }
 
     return reactUI;
   }
