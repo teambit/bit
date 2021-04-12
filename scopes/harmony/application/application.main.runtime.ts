@@ -72,6 +72,13 @@ export class ApplicationMain {
   }
 
   /**
+   * get an app AspectId.
+   */
+  getAppAspect(appName: string): string | undefined {
+    return this.appSlot.toArray().find(([aspectId, apps]) => apps.find((app) => app.name === appName))?.[0];
+  }
+
+  /**
    * get app to throw.
    */
   getAppOrThrow(appName: string) {
@@ -82,6 +89,7 @@ export class ApplicationMain {
 
   private computeOptions(opts: Partial<ServeAppOptions>) {
     const defaultOpts: ServeAppOptions = {
+      dev: false,
       defaultPortRange: [3100, 3500],
     };
 
@@ -95,7 +103,7 @@ export class ApplicationMain {
     const app = this.getAppOrThrow(appName);
     const opts = this.computeOptions(options);
     const context = await this.createAppContext(appName);
-
+    if (!context) throw new AppNotFound(appName);
     await app.run(context);
     return app;
   }
@@ -136,7 +144,8 @@ export class ApplicationMain {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
     const application = new ApplicationMain(appSlot, appTypeSlot, envs, component, appService);
-    builder.registerDeployTasks([new DeployTask(application)]);
+    builder.registerBuildTasks([new DeployTask(application)]);
+    //builder.registerDeployTasks([new DeployTask(application)]);
     cli.register(new RunCmd(application, logger), new AppListCmd(application));
 
     return application;

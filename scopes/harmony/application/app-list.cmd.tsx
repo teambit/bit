@@ -18,7 +18,7 @@ export class AppListCmd implements Command {
     if (!apps.length) return chalk.yellow('no apps found');
 
     const rows = apps.map((app) => {
-      return [app.name, app.type];
+      return [app.name];
     });
 
     const options = {

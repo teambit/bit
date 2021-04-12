@@ -131,7 +131,9 @@ export class PreviewMain {
   }
 
   async writePreviewRuntime() {
-    const [name, uiRoot] = this.ui.getUi();
+    const ui = this.ui.getUi();
+    if (!ui) throw new Error('ui not found');
+    const [name, uiRoot] = ui;
     const filePath = await this.ui.generateRoot(
       await uiRoot.resolveAspects(PreviewRuntime.name),
       name,

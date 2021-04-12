@@ -1,15 +1,22 @@
-import { Application, AppContext } from '@teambit/application';
+import { join } from 'path';
+import { Application, AppContext, DeployContext } from '@teambit/application';
 import { DevServerContext } from '@teambit/bundler';
+import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import { Bundler, BundlerContext } from '@teambit/bundler';
 import getPort from 'get-port';
+import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';
+import { throws } from 'node:assert';
 
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly entry: string[],
+    readonly buildEntry: string[],
+    readonly runEntry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
-    private rootPath: string
+    private rootPath: string,
+    readonly deploy?: (context: DeployContext) => Promise<void>
   ) {}
 
   async run(context: AppContext): Promise<void> {
@@ -19,9 +26,35 @@ export class ReactApp implements Application {
     devServer.listen(port);
   }
 
+  async build(context: BuildContext, aspectId: string): Promise<DeployContext> {
+    const capsules = context.capsuleNetwork.seedersCapsules;
+    const appCapsule = capsules.find((capsule) => capsule.component.id.isEqual(ComponentID.fromString(aspectId)));
+
+    if (!appCapsule) return Object.assign(context, { publicDir: null });
+    const outputPath = join(appCapsule.path, 'applications', this.name, 'build');
+    const entries = this.buildEntry.map((entry) => require.resolve(`${appCapsule.path}/${entry}`));
+    const bundlerContext: BundlerContext = Object.assign(context, {
+      targets: [
+        {
+          components: [appCapsule?.component],
+          entries,
+          outputPath,
+        },
+      ],
+      entry: [],
+      rootPath: '/',
+    });
+
+    const bundler: Bundler = await context.env.getBundler(bundlerContext);
+    const bundlerResults = await bundler.run();
+    const deployContext = Object.assign(context, { publicDir: join(outputPath, 'public') });
+
+    return deployContext;
+  }
+
   private getDevServerContext(context: AppContext): DevServerContext {
     return Object.assign(context, {
-      entry: this.entry,
+      entry: this.runEntry,
       rootPath: '',
       publicPath: `public/${this.name}`,
     });

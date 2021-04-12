@@ -1,5 +1,6 @@
 import { BuildContext, BuiltTaskResult } from '@teambit/builder';
 import { AppContext } from './app-context';
+import { DeployContext } from './deploy-context';
 
 export interface Application {
   /**
@@ -13,7 +14,12 @@ export interface Application {
   run(context: AppContext): Promise<void>;
 
   /**
+   * build the application.
+   */
+  build(context: BuildContext, aspectId: string): Promise<DeployContext>;
+
+  /**
    * application deployment. this is a build task.
    */
-  deploy?(context: BuildContext): Promise<BuiltTaskResult>;
+  deploy?(context: BuildContext): Promise<void>;
 }

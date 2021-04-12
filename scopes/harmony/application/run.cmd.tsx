@@ -34,7 +34,7 @@ export class RunCmd implements Command {
       dev,
     });
 
-    return `Bit server has started on port ${appServer.port}`;
+    return `${appName} has started`;
   }
 
   async render(
@@ -46,7 +46,7 @@ export class RunCmd implements Command {
       dev,
     });
 
-    return <Text>app</Text>;
+    return <Text>{appName} has started</Text>;
     // return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
 }

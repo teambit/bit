@@ -1,4 +1,5 @@
 import { Bundler, DevServer } from '@teambit/bundler';
+import { DeployContext } from '@teambit/application';
 
 export type ReactAppOptions = {
   /**
@@ -7,9 +8,14 @@ export type ReactAppOptions = {
   name: string;
 
   /**
+   * path to entry files of the application.
+   */
+  buildEntry: string[];
+
+  /**
    * absolute path to entry files of the application.
    */
-  entry: string[];
+  runEntry: string[];
 
   /**
    * use server-side rendering for the app.
@@ -29,7 +35,7 @@ export type ReactAppOptions = {
   /**
    * deploy function.
    */
-  deploy?: () => void;
+  deploy?: (context: DeployContext) => Promise<void>;
 
   /**
    * ranges of ports to use to run the app server.
