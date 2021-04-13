@@ -86,7 +86,11 @@ export class BuilderMain {
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
     const { throwOnError, forceDeploy, disableDeployPipeline } = options;
-    const envsExecutionResults = await this.build(components, { emptyRootDir: true, ...isolateOptions });
+    const envsExecutionResults = await this.build(
+      components,
+      { emptyRootDir: true, ...isolateOptions },
+      { skipTests: options.skipTests }
+    );
     if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
