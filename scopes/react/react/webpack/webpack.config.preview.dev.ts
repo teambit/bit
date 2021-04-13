@@ -32,9 +32,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-type Options = { envId: string; fileMapPath: string; distPaths: string[]; workDir: string };
+type Options = { envId: string; fileMapPath: string; distPaths: string[] };
 
-export default function ({ envId, fileMapPath, distPaths, workDir }: Options): WebpackConfigWithDevServer {
+export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       // @ts-ignore - remove this once there is types package for webpack-dev-server v4
@@ -58,9 +58,10 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         },
         {
           test: [/\.js$/],
-          // include: distPaths, // use this to only include dists of this workspace
-          include: path.join(workDir, 'node_modules'),
-          exclude: [/babel/, /\.bin/, /\.cache/],
+          include: distPaths,
+          // // apply to all installed components:
+          // include: path.join(workDir, 'node_modules'),
+          // exclude: [/babel/, /\.bin/, /\.cache/],
           use: [
             {
               loader: require.resolve('babel-loader'),
