@@ -44,13 +44,7 @@ export interface LabelProps extends CardProps {
 }
 
 export function Label({ componentId, ...rest }: LabelProps) {
-  const parsedId = useMemo(() => {
-    try {
-      return ComponentID.fromString(componentId);
-    } catch {
-      return undefined;
-    }
-  }, [componentId]);
+  const parsedId = useMemo(() => ComponentID.tryFromString(componentId), [componentId]);
 
   if (!parsedId) return <DefaultLabel {...rest}>{componentId}</DefaultLabel>;
 

@@ -81,9 +81,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       // websockets in `webpackHotDevClient`.
       transportMode: 'ws',
 
-      injectClient: false,
-
-      // overlay: false,
       // Enable hot reloading
       hot: true,
 
@@ -95,6 +92,8 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       },
 
       client: {
+        needClientEntry: false,
+        overlay: false,
         host: clientHost,
         path: clientPath,
         port,

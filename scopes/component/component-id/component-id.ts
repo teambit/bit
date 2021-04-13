@@ -119,6 +119,17 @@ export class ComponentID {
   }
 
   /**
+   * generate a component ID from a string. Returns undefined if input is malformed
+   */
+  static tryFromString(idStr: string, scope?: string) {
+    try {
+      return ComponentID.fromString(idStr, scope);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * generate a component ID from a string.
    */
   static fromString(idStr: string, scope?: string) {
