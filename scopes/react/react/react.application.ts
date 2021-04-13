@@ -19,6 +19,7 @@ export class ReactApp implements Application {
     readonly deploy?: (context: DeployContext) => Promise<void>
   ) {}
 
+  applicationType = 'react';
   async run(context: AppContext): Promise<void> {
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext);
@@ -30,8 +31,10 @@ export class ReactApp implements Application {
     const capsules = context.capsuleNetwork.seedersCapsules;
     const appCapsule = capsules.find((capsule) => capsule.component.id.isEqual(ComponentID.fromString(aspectId)));
 
-    if (!appCapsule) return Object.assign(context, { publicDir: null });
-    const outputPath = join(appCapsule.path, 'applications', this.name, 'build');
+    if (!appCapsule)
+      return Object.assign(context, { applicationType: this.applicationType, aspectId, publicDir: null });
+    const publicDir = join('applications', this.name, 'build');
+    const outputPath = join(appCapsule.path, publicDir);
     const entries = this.buildEntry.map((entry) => require.resolve(`${appCapsule.path}/${entry}`));
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [
@@ -47,8 +50,11 @@ export class ReactApp implements Application {
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
     const bundlerResults = await bundler.run();
-    const deployContext = Object.assign(context, { publicDir: join(outputPath, 'public') });
-
+    const deployContext = Object.assign(context, {
+      applicationType: this.applicationType,
+      aspectId,
+      publicDir: join(publicDir, 'public'),
+    });
     return deployContext;
   }
 
