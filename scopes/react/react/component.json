@@ -42,6 +42,8 @@
           "css-loader": "5.2.0",
           "postcss": "8.2.9",
           "postcss-loader": "5.2.0",
+          "postcss-preset-env": "6.7.0",
+          "postcss-flexbugs-fixes": "5.0.2",
           "sass-loader": "11.0.1",
           "less": "^4.1.1",
           "less-loader": "8.0.0",
@@ -60,7 +62,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.54"
+          "@teambit/legacy": "1.0.56"
         }
       }
     }

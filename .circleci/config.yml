@@ -661,6 +661,10 @@ jobs:
     <<: *mac_defaults
     steps:
       - run: node -v
+      - run: rm -rf /usr/local/bin/yarn
+      - run: rm -rf /usr/local/bin/yarnpkg
+      - run: npm install --global yarn --force
+      - run: yarn cache clean
       - run: yarn -v
       - run:
           name: print bit version

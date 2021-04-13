@@ -308,7 +308,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.54",
+        "@teambit/legacy": "1.0.56",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -369,7 +369,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.54"
+            "@teambit/legacy": "1.0.56"
           }
         }
       },
@@ -522,7 +522,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.54",
+            "@teambit/legacy": "1.0.56",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -534,8 +534,11 @@
             "react-native-web": "0.14.13",
             "react": "16.14.0",
             "react-dom": "16.14.0",
+            "core-js": "3.10.0",
+            // Those are here to make sure we have them in the root with specific versions when installing with bvm
             "postcss": "8.2.9",
-            "core-js": "3.10.0"
+            "buffer": "6.0.3",
+            "process": "0.11.10"
           },
           "devDependencies": {
             // "@types/react": "-",

@@ -132,12 +132,12 @@ describe('harmony extension config', function () {
             remoteBeforeExport = helper.scopeHelper.cloneRemoteScope();
           });
           it('should block exporting component without exporting the extension', () => {
-            output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote} bar/foo`);
+            output = helper.general.runWithTryCatch(`bit export bar/foo`);
             expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension@0.0.1" was not found`);
           });
           describe('exporting extension and component together', () => {
             before(() => {
-              helper.command.exportAllComponents();
+              helper.command.export();
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -150,8 +150,8 @@ describe('harmony extension config', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeExport);
               helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
-              helper.command.exportComponent('dummy-extension');
-              helper.command.exportComponent('bar/foo');
+              helper.command.export('dummy-extension');
+              helper.command.export('bar/foo');
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -170,10 +170,10 @@ describe('harmony extension config', function () {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.tagComponent('dummy-extension');
-          helper.command.exportComponent('dummy-extension');
+          helper.command.export('dummy-extension');
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
           helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');

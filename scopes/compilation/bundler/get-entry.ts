@@ -16,11 +16,7 @@ export type ComponentDir = {
 /**
  * computes the bundler entry.
  */
-export async function getEntry(
-  context: ExecutionContext,
-  uiRoot: ComponentDir,
-  runtimeSlot: BrowserRuntimeSlot
-): Promise<string[]> {
+export async function getEntry(context: ExecutionContext, runtimeSlot: BrowserRuntimeSlot): Promise<string[]> {
   // TODO: refactor this away from here and use computePaths instead
   const slotEntries = await Promise.all(
     runtimeSlot.values().map(async (browserRuntime) => browserRuntime.entry(context))
