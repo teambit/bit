@@ -6,7 +6,6 @@ import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensi
 import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
-import loader from '@teambit/legacy/dist/cli/loader';
 
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { Help } from './commands/help.cmd';

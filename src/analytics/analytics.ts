@@ -10,7 +10,6 @@ import uniqid from 'uniqid';
 import yn from 'yn';
 
 import { getSync, setSync } from '../api/consumer/lib/global-config';
-import loader from '../cli/loader';
 import {
   BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,
