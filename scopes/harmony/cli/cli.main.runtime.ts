@@ -89,7 +89,6 @@ export class CLIMain {
    * execute commands registered to `Paper` and the legacy bit cli.
    */
   async run(hasWorkspace: boolean) {
-    loader.start('starting bit, running cli-aspect...');
     await this.invokeOnStart(hasWorkspace);
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {
