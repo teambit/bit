@@ -6992,8 +6992,8 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/proper-lockfile": 4.1.1
     "@types/puppeteer": 3.0.5
-    "@types/react": 16.14.5
-    "@types/react-dom": 16.9.12
+    "@types/react": ^16.8.0
+    "@types/react-dom": ^16.8.0
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
     "@types/react-tooltip": 3.11.0
@@ -8336,7 +8336,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:16.9.12":
+"@types/react-dom@npm:^16.8.0":
   version: 16.9.12
   resolution: "@types/react-dom@npm:16.9.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact-dom%2F-%2Freact-dom-16.9.12.tgz"
   dependencies:
@@ -8394,17 +8394,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:16.14.5":
-  version: 16.14.5
-  resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
-  dependencies:
-    "@types/prop-types": "*"
-    "@types/scheduler": "*"
-    csstype: ^3.0.2
-  checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:^16":
   version: 16.14.4
   resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
@@ -8412,6 +8401,17 @@ __metadata:
     "@types/prop-types": "*"
     csstype: ^3.0.2
   checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^16.8.0":
+  version: 16.14.5
+  resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
   languageName: node
   linkType: hard
 
@@ -19514,6 +19514,12 @@ fsevents@^1.2.7:
   checksum: e008aa82acb27b87855548a232d1aed3046b69558998e5430a6a7349ebc0805e51398a1953c93a0edb0f6867d5a9e7543de0f6c04a91e30b9a8335302846caf9
   languageName: node
   linkType: hard
+
+"icon-font-dbe2e8@workspace:scopes/design/ui/theme/icon-font":
+  version: 0.0.0-use.local
+  resolution: "icon-font-dbe2e8@workspace:scopes/design/ui/theme/icon-font"
+  languageName: unknown
+  linkType: soft
 
 "iconv-lite@npm:0.4.24, iconv-lite@npm:^0.4.17, iconv-lite@npm:^0.4.24, iconv-lite@npm:^0.4.4, iconv-lite@npm:^0.4.5":
   version: 0.4.24
