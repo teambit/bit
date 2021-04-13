@@ -661,7 +661,8 @@ jobs:
     <<: *mac_defaults
     steps:
       - run: node -v
-      - run: npm uninstall --global yarn
+      - run: rm -rf /usr/local/bin/yarn
+      - run: rm -rf /usr/local/bin/yarnpkg
       - run: npm install --global yarn --force
       - run: yarn -v
       - run:
