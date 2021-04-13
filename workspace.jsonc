@@ -534,6 +534,7 @@
             "react-native-web": "0.14.13",
             "react": "16.14.0",
             "react-dom": "16.14.0",
+            "postcss": "8.2.9",
             "core-js": "3.10.0"
           },
           "devDependencies": {

@@ -40,13 +40,11 @@ import { BitAspect } from './bit.aspect';
 import { registerCoreExtensions } from './bit.main.runtime';
 
 async function loadLegacyConfig(config: any) {
-  loader.start('starting bit, load legacy config...');
   const harmony = await Harmony.load([ConfigAspect], ConfigRuntime.name, config.toObject());
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
 }
 
 async function getConfig(cwd = process.cwd()) {
-  loader.start('starting bit, load config...');
   const consumerInfo = await getConsumerInfo(cwd);
   const scopePath = propagateUntil(cwd);
   const globalConfigOpts = {
@@ -164,7 +162,7 @@ function getMainAspect() {
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
   const safeModeCommands = ['cc', 'clear-cache', 'init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane'];
-  const hasSafeModeFlag = process.argv[3] === '--safe-mode';
+  const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
   return isSafeModeCommand || hasSafeModeFlag;
 }
@@ -184,12 +182,11 @@ export async function loadBit(path = process.cwd()) {
   if (!loadCLIOnly) {
     aspectsToLoad.push(BitAspect);
   }
-  loader.start('starting bit, loading Harmony...');
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
-  loader.start('starting bit, running Harmony...');
+
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
-
+  loader.start('loading aspects...');
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());
