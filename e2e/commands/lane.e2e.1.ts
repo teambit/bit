@@ -692,7 +692,7 @@ describe('bit lane command', function () {
         helper.command.createLane();
         helper.fixtures.populateComponents();
         helper.command.snapAllComponents();
-        helper.command.export();
+        helper.command.export(`${helper.command.scopes.remote} --lanes`);
       });
       it('as an intermediate step, make sure the lane is on the remote', () => {
         const lanes = helper.command.showRemoteLanesParsed();
@@ -799,7 +799,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponents();
     });
     it('should export with no errors about missing artifact files from the first snap', () => {
-      expect(() => helper.command.export()).to.not.throw();
+      expect(() => helper.command.export(`${helper.command.scopes.remote} --lanes`)).to.not.throw();
     });
   });
   describe('auto-snap when on a lane', () => {
