@@ -33,7 +33,7 @@ export interface UIRoot extends ComponentDir {
   /**
    * resolve components from a given pattern.
    */
-  resolvePattern(pattern: string): Promise<Component[]>;
+  resolvePattern?(pattern: string): Promise<Component[]>;
 
   /**
    * listener for when the dev server starts. can be used for running the watcher.

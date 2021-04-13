@@ -10860,6 +10860,12 @@ __metadata:
   languageName: node
   linkType: hard
 
+"application-0847de@workspace:scopes/harmony/application":
+  version: 0.0.0-use.local
+  resolution: "application-0847de@workspace:scopes/harmony/application"
+  languageName: unknown
+  linkType: soft
+
 "application-config-path@npm:^0.1.0":
   version: 0.1.0
   resolution: "application-config-path@npm:0.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fapplication-config-path%2F-%2Fapplication-config-path-0.1.0.tgz"
