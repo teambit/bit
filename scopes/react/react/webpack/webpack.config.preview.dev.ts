@@ -57,7 +57,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
           use: [require.resolve('source-map-loader')],
         },
         {
-          test: [/\.js$/],
+          test: /\.js$/,
           include: distPaths,
           // // apply to all installed components:
           // include: path.join(workDir, 'node_modules'),
