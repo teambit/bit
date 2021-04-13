@@ -2,7 +2,7 @@ import type { Visitor, PluginObj, PluginPass } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as types from '@babel/types';
-import { fileToBitId as _fileToBitId } from './bit-id-from-pkg-json';
+import { fileToBitId } from './bit-id-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
 
 export type BitReactTransformerOptions = {
@@ -11,10 +11,6 @@ export type BitReactTransformerOptions = {
 
 const COMPONENT_IDENTIFIER = '__bitComponentId';
 const PLUGIN_NAME = 'bit-react-transformer';
-
-const fileToBitId = memoize(_fileToBitId, {
-  primitive: true, // optimize for strings
-});
 
 type Api = {
   types: typeof types;
@@ -36,8 +32,17 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     }
   }
 
+  const toComponentId = memoize(
+    (filePath: string) => {
+      return componentMap?.[filePath] || fileToBitId(filePath);
+    },
+    {
+      primitive: true, // optimize for strings
+    }
+  );
+
   function addComponentId(path: any, filePath: string, identifier: string) {
-    const componentId = componentMap?.[filePath] || fileToBitId(filePath);
+    const componentId = toComponentId(filePath);
     if (!componentId) return;
 
     const componentIdStaticProp = api.types.expressionStatement(
@@ -99,15 +104,14 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   const Plugin: PluginObj = {
     name: PLUGIN_NAME,
     visitor,
-    // TODO - state type
     pre() {
       const filepath = opts.componentFilesPath;
 
       if (filepath && !componentMap) setMap(filepath);
     },
     post() {
-      // reset memoization, in case of fs changes
-      fileToBitId.clear();
+      // reset memoization, in case any file change between runs
+      toComponentId.clear();
     },
   };
 

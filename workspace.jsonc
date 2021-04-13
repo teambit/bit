@@ -318,17 +318,23 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": ["**/*.spec.ts"],
+    "devFilePatterns": [
+      "**/*.spec.ts"
+    ],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.generator/generator": {
-    "aspects": ["teambit.harmony/aspect"]
+    "aspects": [
+      "teambit.harmony/aspect"
+    ]
   },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -479,7 +485,18 @@
       "defaultScope": "teambit.mdx"
     },
     "scopes/design": {
-      "defaultScope": "teambit.design"
+      "defaultScope": "teambit.design",
+      "teambit.envs/envs": {
+        "env": "teambit.react/react"
+      },
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "devDependencies": {
+            // TODO - remove when @teambit/legacy is applied only to aspects
+            "@teambit/legacy": "-"
+          }
+        }
+      }
     },
     "scopes/typescript": {
       "defaultScope": "teambit.typescript"
@@ -491,7 +508,9 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": ["--access public"],
+          "packageManagerPublishArgs": [
+            "--access public"
+          ],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
