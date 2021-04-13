@@ -1,0 +1,11 @@
+.highlighter {
+  border: solid var(--border-color, #ededed);
+  border-width: 0px;
+  box-sizing: border-box;
+  transition: all 300ms;
+  height: 100vh;
+
+  &.active {
+    border-width: 8px;
+  }
+}
