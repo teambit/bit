@@ -7,8 +7,8 @@ const config = {
   // https://github.com/facebook/create-react-app/issues/2677
   ident: 'postcss',
   plugins: [
-    // postcssFlexbugsFixes,
-    require.resolve('postcss-flexbugs-fixes'),
+    // eslint-disable-next-line global-require
+    require('postcss-flexbugs-fixes'),
     postcssPresetEnv({
       autoprefixer: {
         flexbox: 'no-2009',

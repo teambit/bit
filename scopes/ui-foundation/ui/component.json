@@ -25,6 +25,7 @@
           "css-loader": "5.2.0",
           "postcss": "8.2.9",
           "postcss-loader": "5.2.0",
+          "postcss-flexbugs-fixes": "5.0.2",
           "sass-loader": "11.0.1",
           "less": "^4.1.1",
           "less-loader": "8.0.0",
@@ -38,7 +39,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.55"
+          "@teambit/legacy": "1.0.56"
         }
       }
     }

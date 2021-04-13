@@ -28,14 +28,14 @@ describe('http protocol', function () {
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      exportOutput = helper.command.exportAllComponents();
+      exportOutput = helper.command.export();
       scopeAfterExport = helper.scopeHelper.cloneLocalScope();
     });
     after(() => {
       httpHelper.killHttp();
     });
     it('should export successfully', () => {
-      expect(exportOutput).to.have.string('exported 3 components');
+      expect(exportOutput).to.have.string('exported the following 3 component');
     });
     describe('bit log', () => {
       let logOutput: string;
