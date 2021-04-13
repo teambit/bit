@@ -50,7 +50,7 @@ describe.skip('flows functionality', function () {
     describe('imported component', () => {
       before(() => {
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp1');

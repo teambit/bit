@@ -34,7 +34,7 @@ describe('eject command on Harmony', function () {
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.removeRemoteScope();
       npmCiRegistry.setResolver();
       scopeBeforeEject = helper.scopeHelper.cloneLocalScope(false);

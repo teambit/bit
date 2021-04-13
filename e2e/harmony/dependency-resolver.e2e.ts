@@ -159,7 +159,7 @@ describe('dependency-resolver extension', function () {
     });
     describe('exporting the component', () => {
       before(() => {
-        helper.command.exportAllComponents();
+        helper.command.export();
       });
       it('should change the component id to include the scope name', () => {
         const comp2 = helper.command.catComponent('comp2@latest');

@@ -268,13 +268,15 @@ export default class CommandHelper {
   exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --rewire --force`);
   }
+  exportToDefaultAndRewire() {
+    return this.runCmd(`bit export --rewire --force`);
+  }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  export(options? = '') {
+  export(options = '') {
     // --force just silents the prompt, which obviously needed for CIs
-    return this.runCmd(`bit export --force ${options}`);
+    return this.runCmd(`bit export ${options} --force`);
   }
   resumeExport(exportId: string, remotes: string[]) {
     return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);

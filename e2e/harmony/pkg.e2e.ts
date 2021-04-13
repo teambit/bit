@@ -27,6 +27,7 @@ describe('pkg extension', function () {
 
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
@@ -55,7 +56,7 @@ describe('pkg extension', function () {
     describe('after import', () => {
       before(() => {
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');

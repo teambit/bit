@@ -23,7 +23,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
@@ -58,7 +58,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.command.tagScope('0.0.2');
     });
     it('should not show the component as modified', () => {
