@@ -15,6 +15,7 @@ export class AppListCmd implements Command {
 
   async report(args: [string], { json }: { json: boolean }) {
     const apps = this.applicationAspect.listApps();
+    if (json) return JSON.stringify(apps, null, 2);
     if (!apps.length) return chalk.yellow('no apps found');
 
     const rows = apps.map((app) => {

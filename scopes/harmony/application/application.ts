@@ -1,4 +1,4 @@
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
+import { BuildContext } from '@teambit/builder';
 import { AppContext } from './app-context';
 import { DeployContext } from './deploy-context';
 

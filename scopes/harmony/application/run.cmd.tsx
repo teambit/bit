@@ -26,11 +26,11 @@ export class RunCmd implements Command {
 
   async report(
     [appName]: [string],
-    { dev, verbose }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
+    { dev }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<string> {
     this.logger.off();
 
-    const appServer = await this.application.runApp(appName, {
+    await this.application.runApp(appName, {
       dev,
     });
 
@@ -39,10 +39,10 @@ export class RunCmd implements Command {
 
   async render(
     [appName]: [string],
-    { dev, verbose }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
+    { dev }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    const appServer = await this.application.runApp(appName, {
+    await this.application.runApp(appName, {
       dev,
     });
 

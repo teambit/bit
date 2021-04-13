@@ -1,8 +1,7 @@
 import { join } from 'path';
 import { Application, AppContext, DeployContext } from '@teambit/application';
-import { DevServerContext } from '@teambit/bundler';
-import { BuildContext, BuiltTaskResult } from '@teambit/builder';
-import { Bundler, BundlerContext } from '@teambit/bundler';
+import { BuildContext } from '@teambit/builder';
+import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import getPort from 'get-port';
 import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';

@@ -3,7 +3,7 @@ import { flatten } from 'lodash';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
 import { ApplicationType } from './application-type';
 import { Application } from './application';
@@ -75,7 +75,7 @@ export class ApplicationMain {
    * get an app AspectId.
    */
   getAppAspect(appName: string): string | undefined {
-    return this.appSlot.toArray().find(([aspectId, apps]) => apps.find((app) => app.name === appName))?.[0];
+    return this.appSlot.toArray().find(([, apps]) => apps.find((app) => app.name === appName))?.[0];
   }
 
   /**
@@ -101,7 +101,7 @@ export class ApplicationMain {
 
   async runApp(appName: string, options: Partial<ServeAppOptions> = {}) {
     const app = this.getAppOrThrow(appName);
-    const opts = this.computeOptions(options);
+    this.computeOptions(options);
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
     await app.run(context);
