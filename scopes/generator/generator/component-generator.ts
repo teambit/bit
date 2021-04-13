@@ -9,8 +9,8 @@ import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { ComponentID } from '@teambit/component-id';
-import { ComponentTemplate, File } from './component-template';
-import { GeneratorOptions } from './create.cmd';
+import { ComponentTemplate, ComponentFile } from './component-template';
+import { CreateOptions } from './create.cmd';
 
 export type GenerateResult = { id: ComponentID; dir: string; files: string[]; envId: string };
 
@@ -18,7 +18,7 @@ export class ComponentGenerator {
   constructor(
     private workspace: Workspace,
     private componentIds: ComponentID[],
-    private options: GeneratorOptions,
+    private options: CreateOptions,
     private template: ComponentTemplate,
     private envs: EnvsMain
   ) {}
@@ -85,7 +85,10 @@ export class ComponentGenerator {
   /**
    * writes the generated template files to the default directory set in the workspace config
    */
-  private async writeComponentFiles(componentPath: string, templateFiles: File[]): Promise<PathOsBasedRelative[]> {
+  private async writeComponentFiles(
+    componentPath: string,
+    templateFiles: ComponentFile[]
+  ): Promise<PathOsBasedRelative[]> {
     const dataToPersist = new DataToPersist();
     const vinylFiles = templateFiles.map((templateFile) => {
       const templateFileVinyl = new Vinyl({

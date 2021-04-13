@@ -5,6 +5,7 @@ export default class CatObject implements LegacyCommand {
   name = 'cat-object <hash>';
   description = 'cat a bit object by hash';
   private = true;
+  loader = false;
   alias = '';
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],

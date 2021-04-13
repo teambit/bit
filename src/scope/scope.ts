@@ -32,7 +32,7 @@ import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-res
 import GeneralError from '../error/general-error';
 import LaneId from '../lane-id/lane-id';
 import logger from '../logger/logger';
-import { MigrationResult } from '../migration/migration-helper';
+import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
@@ -105,6 +105,7 @@ export type OnTagOpts = {
   disableDeployPipeline?: boolean;
   throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
   forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
+  skipTests?: boolean;
 };
 export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
@@ -239,8 +240,10 @@ export default class Scope {
       'scope.migrate',
       `start scope migration. scope version ${scopeVersion}, bit version ${BIT_VERSION}`
     );
-    const rawObjects = await this.objects.listRawObjects();
-    const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
+    const migrations = getMigrationVersions(BIT_VERSION, scopeVersion, migratonManifest, verbose);
+    const rawObjects = migrations.length ? await this.objects.listRawObjects() : [];
+    // @ts-ignore
+    const resultObjects: ScopeMigrationResult = await migrate(migrations, rawObjects, verbose);
     if (!R.isEmpty(resultObjects.newObjects) || !R.isEmpty(resultObjects.refsToRemove)) {
       // Add the new / updated objects
       this.objects.addMany(resultObjects.newObjects);

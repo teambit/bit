@@ -109,18 +109,23 @@ function getReactNativeDeps() {
   return {
     dependencies: {
       react: '-',
+      'react-dom': '-',
       'react-native': '-',
     },
     devDependencies: {
-      '@types/react-native': '0.63.50',
-      '@types/jest': '26.0.20',
       react: '-',
+      'react-dom': '-',
       'react-native': '-',
-      'react-native-web': '0.14.8',
+      '@types/jest': '^26.0.0',
+      '@types/react': '^16.8.0',
+      '@types/react-dom': '^16.8.0',
+      '@types/react-native': '^0.63.0',
     },
     peerDependencies: {
-      react: '16.13.1',
-      'react-native': '0.63.4',
+      react: '^16.8.0',
+      'react-dom': '^16.8.0',
+      'react-native': '^0.63.0',
+      'react-native-web': '^0.14.0',
     },
   };
 }

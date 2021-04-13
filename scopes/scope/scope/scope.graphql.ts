@@ -1,7 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import gql from 'graphql-tag';
 import { latestVersions } from '@teambit/legacy/dist/api/scope';
-import log from '@teambit/legacy/dist/api/scope/lib/log';
 import list from '@teambit/legacy/dist/api/scope/lib/scope-list';
 import { ScopeMain } from './scope.main.runtime';
 
@@ -98,11 +97,6 @@ export function scopeSchema(scopeMain: ScopeMain) {
             data.id = data.id.toString();
           });
           return listData;
-        },
-
-        getLogs: async (scope: ScopeMain, { id }: { id: string }) => {
-          const logs = await log(scope.path, id);
-          return JSON.parse(logs);
         },
 
         getMany: async (scope: ScopeMain, { ids }: { ids: string[] }) => {

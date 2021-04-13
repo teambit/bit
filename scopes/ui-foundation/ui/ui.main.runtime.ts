@@ -20,7 +20,7 @@ import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { createRoot } from './create-root';
-import { UnknownUI } from './exceptions';
+import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
@@ -187,7 +187,8 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootName?: string) {
+  async build(uiRootName?: string): Promise<any> {
+    // TODO: change to MultiStats from webpack once they export it in their types
     this.logger.debug(`build, uiRootName: "${uiRootName}"`);
     const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
 
@@ -202,7 +203,6 @@ export class UiMain {
     const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-
     const compiler = webpack(config);
     this.logger.debug(`build, uiRootName: "${uiRootName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
@@ -425,6 +425,7 @@ export class UiMain {
     }
 
     const res = await this.build(name);
+    if (!res) throw new UnknownBuildError();
     this.clearConsole();
     // TODO: replace this with logger and learn why it is not working here.
     // eslint-disable-next-line no-console
