@@ -299,7 +299,7 @@
         "vscode-ws-jsonrpc": "0.2.0",
         "webpack": "5.30.0",
         "webpack-dev-middleware": "4.1.0",
-        "webpack-dev-server": "^4.0.0-beta.0",
+        "webpack-dev-server": "4.0.0-beta.2",
         "webpack-hot-middleware": "2.25.0",
         "webpack-manifest-plugin": "3.1.0",
         "webpack-merge": "5.7.3",
@@ -308,7 +308,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.53",
+        "@teambit/legacy": "1.0.56",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -369,7 +369,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.53"
+            "@teambit/legacy": "1.0.56"
           }
         }
       },
@@ -511,7 +511,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.53",
+            "@teambit/legacy": "1.0.56",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -523,7 +523,11 @@
             "react-native-web": "0.14.13",
             "react": "16.14.0",
             "react-dom": "16.14.0",
-            "core-js": "3.10.0"
+            "core-js": "3.10.0",
+            // Those are here to make sure we have them in the root with specific versions when installing with bvm
+            "postcss": "8.2.9",
+            "buffer": "6.0.3",
+            "process": "0.11.10"
           },
           "devDependencies": {
             // "@types/react": "-",

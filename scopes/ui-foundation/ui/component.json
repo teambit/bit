@@ -10,9 +10,7 @@
         "name": "@teambit/{name}",
         "private": false
       },
-      "packageManagerPublishArgs": [
-        "--access public"
-      ]
+      "packageManagerPublishArgs": ["--access public"]
     },
     "teambit.dependencies/dependency-resolver": {
       "policy": {
@@ -25,7 +23,9 @@
           "babel-plugin-named-asset-import": "0.3.7",
           "style-loader": "^2.0.0",
           "css-loader": "5.2.0",
+          "postcss": "8.2.9",
           "postcss-loader": "5.2.0",
+          "postcss-flexbugs-fixes": "5.0.2",
           "sass-loader": "11.0.1",
           "less": "^4.1.1",
           "less-loader": "8.0.0",
@@ -39,7 +39,7 @@
           "@teambit/legacy": "-"
         },
         "peerDependencies": {
-          "@teambit/legacy": "1.0.53"
+          "@teambit/legacy": "1.0.56"
         }
       }
     }

@@ -100,6 +100,11 @@ async function exportComponents({
 }> {
   const consumer: Consumer = await loadConsumer();
   if (consumer.isLegacy && lanes) throw new LanesIsDisabled();
+  if (!consumer.isLegacy && !lanes && remote) {
+    // on Harmony, we don't allow to specify a remote (except lanes), it exports to the default-scope
+    ids.push(remote);
+    remote = null;
+  }
   const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,

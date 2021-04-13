@@ -111,7 +111,6 @@ export class CommandRunner {
     // @ts-ignore LegacyCommandAdapter has .migration
     if (this.command.migration) {
       logger.debug('Checking if a migration is needed');
-      loader.start('starting bit, migration...');
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return migrate(null, false);
     }

@@ -6697,9 +6697,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.53, @teambit/legacy@npm:1.0.53::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.53.tgz":
-  version: 1.0.53
-  resolution: "@teambit/legacy@npm:1.0.53::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.53.tgz"
+"@teambit/legacy@npm:1.0.55, @teambit/legacy@npm:1.0.55::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.55.tgz":
+  version: 1.0.55
+  resolution: "@teambit/legacy@npm:1.0.55::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.55.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6820,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: fb6f92b7ec15db712e2e4b798c9c72ec049bcaa1ec43bde1aab675bc535c354bbdb4ec80e1d518801823bc57c738db395cdc0a2dbcbff9d5742b567c808bbe27
+  checksum: 1b3ee9d5000c07f9e8c03cdf6b5a2b4d868ab5065563ad9443eb3ea924f0a64b0ae0a8ea1e1ec6ce1163796cf0e39b90a3d7d8ce1ff8ff932620b8e47907cd49
   languageName: node
   linkType: hard
 
@@ -6948,7 +6948,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.53
+    "@teambit/legacy": 1.0.55
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -6992,8 +6992,8 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/proper-lockfile": 4.1.1
     "@types/puppeteer": 3.0.5
-    "@types/react": 16.14.5
-    "@types/react-dom": 16.9.12
+    "@types/react": ^16.8.0
+    "@types/react-dom": ^16.8.0
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
     "@types/react-tooltip": 3.11.0
@@ -7312,7 +7312,7 @@ __metadata:
     vue-template-compiler: 2.6.12
     webpack: 5.30.0
     webpack-dev-middleware: 4.1.0
-    webpack-dev-server: ^4.0.0-beta.0
+    webpack-dev-server: 4.0.0-beta.2
     webpack-hot-middleware: 2.25.0
     webpack-manifest-plugin: 3.1.0
     webpack-merge: 5.7.3
@@ -7322,7 +7322,7 @@ __metadata:
     yaml: 1.10.2
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.53
+    "@teambit/legacy": 1.0.55
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -7960,7 +7960,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/http-proxy@npm:*, @types/http-proxy@npm:^1.17.4":
+"@types/http-proxy@npm:*, @types/http-proxy@npm:^1.17.5":
   version: 1.17.5
   resolution: "@types/http-proxy@npm:1.17.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Fhttp-proxy%2F-%2Fhttp-proxy-1.17.5.tgz"
   dependencies:
@@ -8335,7 +8335,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:16.9.12":
+"@types/react-dom@npm:^16.8.0":
   version: 16.9.12
   resolution: "@types/react-dom@npm:16.9.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact-dom%2F-%2Freact-dom-16.9.12.tgz"
   dependencies:
@@ -8393,17 +8393,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:16.14.5":
-  version: 16.14.5
-  resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
-  dependencies:
-    "@types/prop-types": "*"
-    "@types/scheduler": "*"
-    csstype: ^3.0.2
-  checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
-  languageName: node
-  linkType: hard
-
 "@types/react@npm:^16":
   version: 16.14.4
   resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
@@ -8411,6 +8400,17 @@ __metadata:
     "@types/prop-types": "*"
     csstype: ^3.0.2
   checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^16.8.0":
+  version: 16.14.5
+  resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
+  dependencies:
+    "@types/prop-types": "*"
+    "@types/scheduler": "*"
+    csstype: ^3.0.2
+  checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
   languageName: node
   linkType: hard
 
@@ -10859,6 +10859,12 @@ __metadata:
   checksum: 483c0aabcee120f3de76ecc953ac837c122b3de6ac7d244ba63ea3773db7e407544fa663ae5168791a1e9424a96adbf742a4c65412920165e5c615523ea9d709
   languageName: node
   linkType: hard
+
+"application-0847de@workspace:scopes/harmony/application":
+  version: 0.0.0-use.local
+  resolution: "application-0847de@workspace:scopes/harmony/application"
+  languageName: unknown
+  linkType: soft
 
 "application-config-path@npm:^0.1.0":
   version: 0.1.0
@@ -16684,7 +16690,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eventsource@npm:1.0.7, eventsource@npm:^1.0.7":
+"eventsource@npm:1.0.7":
   version: 1.0.7
   resolution: "eventsource@npm:1.0.7::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Feventsource%2F-%2Feventsource-1.0.7.tgz"
   dependencies:
@@ -19162,10 +19168,10 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"html-entities@npm:^2.1.1":
-  version: 2.1.1
-  resolution: "html-entities@npm:2.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhtml-entities%2F-%2Fhtml-entities-2.1.1.tgz"
-  checksum: 0412c31ed8620c35048810cd4dcb6ade15a1e99c89f39c8e1cacce0918a20bb30f32f4776fcc9293941fde708475fa3c9f3f70d258fc8ffcea3099545842a3c2
+"html-entities@npm:^2.3.2":
+  version: 2.3.2
+  resolution: "html-entities@npm:2.3.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhtml-entities%2F-%2Fhtml-entities-2.3.2.tgz"
+  checksum: a0bcdfdb2326d8943d43d4f5f794769f666d335f7795e82ac5140154970d82a8a1be082725bd53e18c8727821713e7d124982ed9a3463db9b0159b58bc6eff42
   languageName: node
   linkType: hard
 
@@ -19336,16 +19342,16 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"http-proxy-middleware@npm:^1.0.6":
-  version: 1.0.6
-  resolution: "http-proxy-middleware@npm:1.0.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhttp-proxy-middleware%2F-%2Fhttp-proxy-middleware-1.0.6.tgz"
+"http-proxy-middleware@npm:^1.1.0":
+  version: 1.1.1
+  resolution: "http-proxy-middleware@npm:1.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fhttp-proxy-middleware%2F-%2Fhttp-proxy-middleware-1.1.1.tgz"
   dependencies:
-    "@types/http-proxy": ^1.17.4
+    "@types/http-proxy": ^1.17.5
     http-proxy: ^1.18.1
     is-glob: ^4.0.1
-    lodash: ^4.17.20
+    is-plain-obj: ^3.0.0
     micromatch: ^4.0.2
-  checksum: 46385b03f1a2c5895e6ed054ebb966ac6e8929405bbe8690db78dce460ec19f4cd892fcb12f99f869a047ef888409d0fe7db703d936d853c2c22ea17dddba27b
+  checksum: 7fe1bf6406b62d681ce1eedbe6dfbb7d3814e4e5381cbee748f1cb3f30402a92689603d15dcdfcf79bbf53475b36fb8c390acfb46ea3b51d6c33c749731523fe
   languageName: node
   linkType: hard
 
@@ -20033,6 +20039,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
+"ipaddr.js@npm:^2.0.0":
+  version: 2.0.0
+  resolution: "ipaddr.js@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fipaddr.js%2F-%2Fipaddr.js-2.0.0.tgz"
+  checksum: c14a0aaac9b3383be5226ea8b0b7707d9d6b021d5a8b04c6cdd9f6cea29583089d93718e10a8352460ed63becd834c7b93b62dbd46d2db4595086c9dc880630b
+  languageName: node
+  linkType: hard
+
 "is-absolute-url@npm:^2.0.0":
   version: 2.1.0
   resolution: "is-absolute-url@npm:2.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-absolute-url%2F-%2Fis-absolute-url-2.1.0.tgz"
@@ -20532,6 +20545,13 @@ fsevents@^1.2.7:
   version: 2.1.0
   resolution: "is-plain-obj@npm:2.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-plain-obj%2F-%2Fis-plain-obj-2.1.0.tgz"
   checksum: 2314302f9140d1e9607731d523f207d8000281aebbabe0083210342c0758976f75f0f5db405e55910bd4dc9a04baddbeab9d476290642b5a0d31431cc9bda4b3
+  languageName: node
+  linkType: hard
+
+"is-plain-obj@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "is-plain-obj@npm:3.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fis-plain-obj%2F-%2Fis-plain-obj-3.0.0.tgz"
+  checksum: 70a50b220133b82adf1302aa7efde74d6a2b734a6687b199c733491a4f724b69d1196a6c440238adcc767cc419e7dc02309af159ab21412f685893d36154eb2e
   languageName: node
   linkType: hard
 
@@ -21849,13 +21869,6 @@ fsevents@^1.2.7:
   version: 5.0.1
   resolution: "json-stringify-safe@npm:5.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fjson-stringify-safe%2F-%2Fjson-stringify-safe-5.0.1.tgz"
   checksum: 261dfb8eb3e72c8b0dda11fd7c20c151ffc1d1b03e529245d51708c8dd8d8c6a225880464adf41a570dff6e5c805fd9d1f47fed948cfb526e4fbe5a67ce4e5f4
-  languageName: node
-  linkType: hard
-
-"json3@npm:^3.3.3":
-  version: 3.3.3
-  resolution: "json3@npm:3.3.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fjson3%2F-%2Fjson3-3.3.3.tgz"
-  checksum: f79831247f3ecdd4e99996534a171ccd20f34502b799dd53b671af8a7d7ac1228a7d806c100948cc16f3437da5ea0b821e2c44f8372a2a4095a0abebf0fb41ef
   languageName: node
   linkType: hard
 
@@ -25180,13 +25193,13 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"p-retry@npm:^4.4.0":
-  version: 4.4.0
-  resolution: "p-retry@npm:4.4.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fp-retry%2F-%2Fp-retry-4.4.0.tgz"
+"p-retry@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "p-retry@npm:4.5.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fp-retry%2F-%2Fp-retry-4.5.0.tgz"
   dependencies:
     "@types/retry": ^0.12.0
     retry: ^0.12.0
-  checksum: 239738c24189b11fa1518deab4d2d2ef2ec2b4905cb49be3b75b0b02df5348a3e032ddfb774b16716974786057faf786b1363b852b3bf9b966373cf20f441032
+  checksum: f05f4f657a7ad107f667258442097b1a588c6d9be3ee45b05356d5ca60d7d29612c30be1a9be6655c8787ac13c777d2c7e24bf6bef7a948980d49ebfab3b1661
   languageName: node
   linkType: hard
 
@@ -29853,20 +29866,6 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"sockjs-client@npm:^1.5.0":
-  version: 1.5.0
-  resolution: "sockjs-client@npm:1.5.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fsockjs-client%2F-%2Fsockjs-client-1.5.0.tgz"
-  dependencies:
-    debug: ^3.2.6
-    eventsource: ^1.0.7
-    faye-websocket: ^0.11.3
-    inherits: ^2.0.4
-    json3: ^3.3.3
-    url-parse: ^1.4.7
-  checksum: e5c976415fff9bcef89b280fb5310125cf838f26f94b4e9d1a65eb1ca2f12521383ac76bbab9350f8b110ed04556d3e9d8bdbf64a7b964883e4e2de950f35317
-  languageName: node
-  linkType: hard
-
 "sockjs@npm:^0.3.21":
   version: 0.3.21
   resolution: "sockjs@npm:0.3.21::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fsockjs%2F-%2Fsockjs-0.3.21.tgz"
@@ -32484,7 +32483,7 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"url-parse@npm:^1.4.3, url-parse@npm:^1.4.7":
+"url-parse@npm:^1.4.3":
   version: 1.5.1
   resolution: "url-parse@npm:1.5.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Furl-parse%2F-%2Furl-parse-1.5.1.tgz"
   dependencies:
@@ -32657,7 +32656,7 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"util@npm:0.12.3, util@npm:^0.12.0, util@npm:^0.12.3":
+"util@npm:0.12.3, util@npm:^0.12.0":
   version: 0.12.3
   resolution: "util@npm:0.12.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Futil%2F-%2Futil-0.12.3.tgz"
   dependencies:
@@ -33246,9 +33245,9 @@ typescript@^3.9.3:
   languageName: node
   linkType: hard
 
-"webpack-dev-server@npm:^4.0.0-beta.0":
-  version: 4.0.0-beta.1
-  resolution: "webpack-dev-server@npm:4.0.0-beta.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack-dev-server%2F-%2Fwebpack-dev-server-4.0.0-beta.1.tgz"
+"webpack-dev-server@npm:4.0.0-beta.2":
+  version: 4.0.0-beta.2
+  resolution: "webpack-dev-server@npm:4.0.0-beta.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fwebpack-dev-server%2F-%2Fwebpack-dev-server-4.0.0-beta.2.tgz"
   dependencies:
     ansi-html: ^0.0.7
     bonjour: ^3.5.0
@@ -33259,24 +33258,22 @@ typescript@^3.9.3:
     express: ^4.17.1
     find-cache-dir: ^3.3.1
     graceful-fs: ^4.2.6
-    html-entities: ^2.1.1
-    http-proxy-middleware: ^1.0.6
+    html-entities: ^2.3.2
+    http-proxy-middleware: ^1.1.0
     internal-ip: ^6.2.0
-    ipaddr.js: ^1.9.1
+    ipaddr.js: ^2.0.0
     is-absolute-url: ^3.0.3
     killable: ^1.0.1
     open: ^7.4.2
-    p-retry: ^4.4.0
+    p-retry: ^4.5.0
     portfinder: ^1.0.28
     schema-utils: ^3.0.0
     selfsigned: ^1.10.8
     serve-index: ^1.9.1
     sockjs: ^0.3.21
-    sockjs-client: ^1.5.0
     spdy: ^4.0.2
     strip-ansi: ^6.0.0
     url: ^0.11.0
-    util: ^0.12.3
     webpack-dev-middleware: ^4.1.0
     ws: ^7.4.4
   peerDependencies:
@@ -33286,7 +33283,7 @@ typescript@^3.9.3:
       optional: true
   bin:
     webpack-dev-server: bin/webpack-dev-server.js
-  checksum: 273d49a56be92e92a5e658d5e7e9d2f58dd204c0528f14ac85143bc49eb895a624c9f6acfbc768e86549b52aa5f494d51198aaf26d358f8f6d8a02af05d28562
+  checksum: 7e213ea81bd94539bd59fc25ec29f53a1597e20724f7da609135847df21fbf799857764edb17821cce20119e32fe76d32862264d86dde81623ce9a624fcc5daf
   languageName: node
   linkType: hard
 
