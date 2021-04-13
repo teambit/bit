@@ -10,9 +10,7 @@
         "name": "@teambit/{name}",
         "private": false
       },
-      "packageManagerPublishArgs": [
-        "--access public"
-      ]
+      "packageManagerPublishArgs": ["--access public"]
     },
     "teambit.dependencies/dependency-resolver": {
       "policy": {
@@ -40,9 +38,9 @@
           "babel-plugin-named-asset-import": "0.3.7",
           "babel-loader": "8.2.2",
           "babel-preset-react-app": "^10.0.0",
-
           "style-loader": "^2.0.0",
           "css-loader": "5.2.0",
+          "postcss": "8.2.9",
           "postcss-loader": "5.2.0",
           "sass-loader": "11.0.1",
           "less": "^4.1.1",

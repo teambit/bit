@@ -49,7 +49,7 @@ export class PreviewPreview {
     const name = previewName || this.getDefault();
 
     const preview = this.getPreview(name);
-    if (!preview) {
+    if (!preview || !componentId) {
       throw new PreviewNotFound(previewName);
     }
     const includes = (preview.include || [])
@@ -113,7 +113,7 @@ export class PreviewPreview {
 
     return {
       previewName: this.getParam(after, 'preview'),
-      componentId: ComponentID.fromString(before),
+      componentId: ComponentID.tryFromString(before),
     };
   }
 

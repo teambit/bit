@@ -318,23 +318,17 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": [
-      "**/*.spec.ts"
-    ],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.generator/generator": {
-    "aspects": [
-      "teambit.harmony/aspect"
-    ]
+    "aspects": ["teambit.harmony/aspect"]
   },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -497,9 +491,7 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": [
-            "--access public"
-          ],
+          "packageManagerPublishArgs": ["--access public"],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -523,7 +515,11 @@
             "react-native-web": "0.14.13",
             "react": "16.14.0",
             "react-dom": "16.14.0",
-            "core-js": "3.10.0"
+            "core-js": "3.10.0",
+            // Those are here to make sure we have them in the root with specific versions when installing with bvm
+            "postcss": "8.2.9",
+            "buffer": "6.0.3",
+            "process": "0.11.10"
           },
           "devDependencies": {
             // "@types/react": "-",
