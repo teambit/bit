@@ -662,7 +662,7 @@ jobs:
     steps:
       - run: node -v
       - run: npm uninstall --global yarn
-      - run: npm install --global yarn
+      - run: npm install --global yarn --force
       - run: yarn -v
       - run:
           name: print bit version
