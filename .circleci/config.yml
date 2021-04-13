@@ -661,6 +661,7 @@ jobs:
     <<: *mac_defaults
     steps:
       - run: node -v
+      - run: npm uninstall --global yarn
       - run: npm install --global yarn
       - run: yarn -v
       - run:
