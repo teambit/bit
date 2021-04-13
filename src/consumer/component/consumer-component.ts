@@ -139,9 +139,9 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
-  packageDependencies: any;
-  devPackageDependencies: any;
-  peerPackageDependencies: any;
+  packageDependencies: Record<string, any>;
+  devPackageDependencies: Record<string, any>;
+  peerPackageDependencies: Record<string, any>;
   compilerPackageDependencies: Record<string, any>;
   testerPackageDependencies: Record<string, any>;
   manuallyRemovedDependencies: ManuallyChangedDependencies = {};
