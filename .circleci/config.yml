@@ -661,6 +661,7 @@ jobs:
     <<: *mac_defaults
     steps:
       - run: node -v
+      - run: npm install --global yarn
       - run: yarn -v
       - run:
           name: print bit version
@@ -1392,3 +1393,15 @@ workflows:
           requires:
             - harmony_deploy_approval_job
             - bit_tag
+
+  bundle_versions:
+    jobs:
+      - bundle_version_linux
+      - bundle_version_windows
+      - bundle_version_macos
+      - harmony_publish_to_gcloud:
+          <<: *master_only_filter
+          requires:
+            - bundle_version_linux
+            - bundle_version_windows
+            - bundle_version_macos
