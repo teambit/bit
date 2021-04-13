@@ -144,8 +144,7 @@ export class ApplicationMain {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
     const application = new ApplicationMain(appSlot, appTypeSlot, envs, component, appService);
-    builder.registerBuildTasks([new DeployTask(application)]);
-    //builder.registerDeployTasks([new DeployTask(application)]);
+    builder.registerDeployTasks([new DeployTask(application)]);
     cli.register(new RunCmd(application, logger), new AppListCmd(application));
 
     return application;
