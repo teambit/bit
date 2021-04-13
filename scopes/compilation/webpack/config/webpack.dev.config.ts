@@ -1,3 +1,4 @@
+import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
@@ -128,10 +129,19 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
+      alias: {
+        process: require.resolve('process/browser'),
+        buffer: require.resolve('buffer/'),
+      },
+
       fallback: {
         util: require.resolve('util'),
         assert: require.resolve('assert'),
         path: require.resolve('path-browserify'),
+        buffer: require.resolve('buffer/'),
+        process: require.resolve('process/browser'),
+        stream: require.resolve('stream-browserify'),
+        fs: false,
       },
     },
 
@@ -139,6 +149,11 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       new HtmlWebpackPlugin({
         templateContent: html('Component preview'),
         filename: 'index.html',
+      }),
+
+      new webpack.ProvidePlugin({
+        process: require.resolve('process/browser'),
+        Buffer: [require.resolve('buffer/'), 'Buffer'],
       }),
 
       new WebpackBitReporterPlugin({

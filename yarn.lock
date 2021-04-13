@@ -6992,8 +6992,8 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/proper-lockfile": 4.1.1
     "@types/puppeteer": 3.0.5
-    "@types/react": ^16.8.0
-    "@types/react-dom": ^16.8.0
+    "@types/react": 16.14.5
+    "@types/react-dom": 16.9.12
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
     "@types/react-tooltip": 3.11.0
@@ -7267,6 +7267,7 @@ __metadata:
     socks-proxy-agent: 5.0.0
     source-map-loader: 1.1.3
     ssh2: 0.8.9
+    stream-browserify: 3.0.0
     string-format: 0.5.0
     string-to-color: 2.2.2
     stringify-package: 1.0.1
@@ -8335,7 +8336,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^16.8.0":
+"@types/react-dom@npm:16.9.12":
   version: 16.9.12
   resolution: "@types/react-dom@npm:16.9.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact-dom%2F-%2Freact-dom-16.9.12.tgz"
   dependencies:
@@ -8393,17 +8394,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^16":
-  version: 16.14.4
-  resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
-  dependencies:
-    "@types/prop-types": "*"
-    csstype: ^3.0.2
-  checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:^16.8.0":
+"@types/react@npm:16.14.5":
   version: 16.14.5
   resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
   dependencies:
@@ -8411,6 +8402,16 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^16":
+  version: 16.14.4
+  resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
+  dependencies:
+    "@types/prop-types": "*"
+    csstype: ^3.0.2
+  checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
   languageName: node
   linkType: hard
 
@@ -19766,7 +19767,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"inherits@npm:2, inherits@npm:2.0.4, inherits@npm:^2.0.0, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4, inherits@npm:~2.0.1, inherits@npm:~2.0.3":
+"inherits@npm:2, inherits@npm:2.0.4, inherits@npm:^2.0.0, inherits@npm:^2.0.1, inherits@npm:^2.0.3, inherits@npm:^2.0.4, inherits@npm:~2.0.1, inherits@npm:~2.0.3, inherits@npm:~2.0.4":
   version: 2.0.4
   resolution: "inherits@npm:2.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Finherits%2F-%2Finherits-2.0.4.tgz"
   checksum: 98426da247ddfc3dcd7d7daedd90c3ca32d5b08deca08949726f12d49232aef94772a07b36cf4ff833e105ae2ef931777f6de4a6dd8245a216b9299ad4a50bea
@@ -27911,7 +27912,7 @@ fsevents@^1.2.7:
   languageName: node
   linkType: hard
 
-"readable-stream@npm:3.6.0, readable-stream@npm:^3.0.0, readable-stream@npm:^3.0.2, readable-stream@npm:^3.0.6, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.6.0":
+"readable-stream@npm:3.6.0, readable-stream@npm:^3.0.0, readable-stream@npm:^3.0.2, readable-stream@npm:^3.0.6, readable-stream@npm:^3.1.1, readable-stream@npm:^3.4.0, readable-stream@npm:^3.5.0, readable-stream@npm:^3.6.0":
   version: 3.6.0
   resolution: "readable-stream@npm:3.6.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freadable-stream%2F-%2Freadable-stream-3.6.0.tgz"
   dependencies:
@@ -30339,6 +30340,16 @@ fsevents@^1.2.7:
   version: 1.1.1
   resolution: "stealthy-require@npm:1.1.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fstealthy-require%2F-%2Fstealthy-require-1.1.1.tgz"
   checksum: f24a9bc613817dea37afcbf64578f2ba0195916d906ebdaa1c1d5b8e9d51fd462cbf4c61ae04217babd0cf662e6c0115fd972dffa8e62a7f6f44f3109fb4c796
+  languageName: node
+  linkType: hard
+
+"stream-browserify@npm:3.0.0":
+  version: 3.0.0
+  resolution: "stream-browserify@npm:3.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fstream-browserify%2F-%2Fstream-browserify-3.0.0.tgz"
+  dependencies:
+    inherits: ~2.0.4
+    readable-stream: ^3.5.0
+  checksum: 55fb0c30082a87f7e42f1c093ad7aee42c942864edf11ac911e6e89d5be9877ba32fd20569f6bfb489dabd71b63d3264bec349463294abc270fba42bedd6ca22
   languageName: node
   linkType: hard
 

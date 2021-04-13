@@ -1,4 +1,6 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+
 const html = require('./html');
 
 module.exports = (entries, rootPath) => {
@@ -27,10 +29,19 @@ module.exports = (entries, rootPath) => {
     },
 
     resolve: {
+      alias: {
+        process: require.resolve('process/browser'),
+        buffer: require.resolve('buffer/'),
+      },
+
       fallback: {
         util: require.resolve('util'),
         assert: require.resolve('assert'),
         path: require.resolve('path-browserify'),
+        buffer: require.resolve('buffer/'),
+        process: require.resolve('process/browser'),
+        stream: require.resolve('stream-browserify'),
+        fs: false,
       },
     },
 
@@ -58,6 +69,10 @@ module.exports = (entries, rootPath) => {
           }
         )
       ),
+      new webpack.ProvidePlugin({
+        process: require.resolve('process/browser'),
+        Buffer: [require.resolve('buffer/'), 'Buffer'],
+      }),
     ],
   };
 };

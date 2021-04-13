@@ -227,15 +227,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),
-        process: require.resolve('process/browser'),
-        buffer: require.resolve('buffer'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
-      },
-      fallback: {
-        fs: false,
-        stream: false,
-        // process: false,
-        assert: false,
       },
     },
 
@@ -251,10 +243,6 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
-      }),
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: [require.resolve('buffer'), 'Buffer'],
       }),
     ],
   };

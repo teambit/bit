@@ -17,8 +17,6 @@
         "dependencies": {
           "react": "-",
           "react-dom": "-",
-          "buffer": "6.0.3",
-          "process": "0.11.10",
           "@babel/preset-env": "7.12.17",
           "@babel/preset-react": "7.13.13",
           "@typescript-eslint/parser": "4.15.1",

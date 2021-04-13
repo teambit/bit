@@ -185,19 +185,11 @@ export default function (fileMapPath: string): Configuration {
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
-        process: require.resolve('process/browser'),
-        buffer: require.resolve('buffer'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
-      },
-      fallback: {
-        fs: false,
-        stream: false,
-        process: false,
-        assert: false,
       },
     },
     module: {
@@ -442,10 +434,6 @@ export default function (fileMapPath: string): Configuration {
         // both options are optional
         filename: 'static/css/[name].[contenthash:8].css',
         chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-      }),
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: [require.resolve('buffer'), 'Buffer'],
       }),
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding
