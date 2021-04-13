@@ -6,7 +6,6 @@ import { Bundler, BundlerContext } from '@teambit/bundler';
 import getPort from 'get-port';
 import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';
-import { throws } from 'node:assert';
 
 export class ReactApp implements Application {
   constructor(
@@ -49,7 +48,7 @@ export class ReactApp implements Application {
     });
 
     const bundler: Bundler = await context.env.getBundler(bundlerContext);
-    const bundlerResults = await bundler.run();
+    await bundler.run();
     const deployContext = Object.assign(context, {
       applicationType: this.applicationType,
       aspectId,
