@@ -517,6 +517,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/tests-results"
     },
+    "theme/icons-font": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/theme/icon-font"
+    },
     "time/time-format": {
         "scope": "teambit.toolbox",
         "version": "0.0.337",

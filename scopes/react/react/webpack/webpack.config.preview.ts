@@ -273,23 +273,6 @@ export default function (fileMapPath: string): Configuration {
                 name: 'static/media/[name].[hash:8].[ext]',
               },
             },
-            // {
-            //   test: /\.js$/,
-            //   include: distPaths,
-            //   use: [
-            //     {
-            //       loader: require.resolve('babel-loader'),
-            //       options: {
-            //         babelrc: false,
-            //         configFile: false,
-            //         plugins: [
-            //           // for component highlighting in preview.
-            //           [require.resolve('@teambit/babel.bit-react-transformer')],
-            //         ],
-            //       },
-            //     },
-            //   ],
-            // },
             // Process any JS outside of the app with Babel.
             // Unlike the application JS, we only compile the standard ES features.
             // Probably not needed in our use case
