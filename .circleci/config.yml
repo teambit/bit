@@ -1403,7 +1403,6 @@ workflows:
       - bundle_version_windows
       - bundle_version_macos
       - harmony_publish_to_gcloud:
-          <<: *master_only_filter
           requires:
             - bundle_version_linux
             - bundle_version_windows
