@@ -25,7 +25,7 @@ export class HarmonyUiAppMain {
       },
     });
 
-    //this.application.registerApp(new HarmonyUIApp(options.name, this.ui));
+    // this.application.registerApp(new HarmonyUIApp(options.name, this.ui));
 
     return this;
   }
