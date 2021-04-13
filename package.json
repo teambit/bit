@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.53",
+  "version": "1.0.54",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -243,7 +243,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.12.13",
     "@babel/plugin-transform-runtime": "7.12.17",
     "@babel/preset-env": "7.12.17",
-    "@babel/preset-react": "7.12.13",
+    "@babel/preset-react": "7.13.13",
     "@babel/preset-typescript": "7.12.17",
     "@babel/register": "7.12.13",
     "@types/bluebird": "3.5.33",

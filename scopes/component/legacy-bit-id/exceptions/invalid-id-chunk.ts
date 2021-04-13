@@ -1,4 +1,3 @@
-import chalk from 'chalk';
 import { BitError } from '@teambit/bit-error';
 
 export default class InvalidIdChunk extends BitError {
@@ -6,9 +5,7 @@ export default class InvalidIdChunk extends BitError {
 
   constructor(id: string) {
     super(
-      `error: "${chalk.bold(
-        id
-      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+      `error: "${id}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
     );
   }
 }

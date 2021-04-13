@@ -1,5 +1,7 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import webpack from 'webpack';
+
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 import path from 'path';
 
@@ -35,20 +37,18 @@ type Options = { envId: string; fileMapPath: string; distPaths: string[]; workDi
 export default function ({ envId, fileMapPath, distPaths, workDir }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
-      sockPath: `_hmr/${envId}`,
-      stats: {
-        // - for webpack-dev-server, this property needs to be in the devServer configuration object.
-        // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
-        warningsFilter: [/Failed to parse source map/],
+      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
+      client: {
+        path: `_hmr/${envId}`,
       },
     },
     module: {
       rules: [
         {
-          // support packages with `*.mjs`, namely, 'graphql'
-          test: /\.mjs$/,
-          include: /node_modules/,
-          type: 'javascript/auto',
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
         },
         {
           test: /\.js$/,
@@ -82,6 +82,9 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
+          resolve: {
+            fullySpecified: false,
+          },
           loader: require.resolve('babel-loader'),
           options: {
             babelrc: false,
@@ -124,7 +127,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         },
         {
           test: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -146,7 +149,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         {
           test: /\.s(a|c)ss$/,
           exclude: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -159,7 +162,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         },
         {
           test: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -181,7 +184,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -194,7 +197,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         },
         {
           test: /\.module.css$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -210,7 +213,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         {
           test: /\.css$/,
           exclude: /\.module\.css$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
     },
@@ -230,7 +233,15 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),
+        process: require.resolve('process/browser'),
+        buffer: require.resolve('buffer'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
+      },
+      fallback: {
+        fs: false,
+        stream: false,
+        // process: false,
+        assert: false,
       },
     },
 
@@ -246,6 +257,10 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
         // TODO: use a more specific exclude for our selfs
         exclude: [/dist/, /node_modules/],
+      }),
+      new webpack.ProvidePlugin({
+        process: require.resolve('process/browser'),
+        Buffer: [require.resolve('buffer'), 'Buffer'],
       }),
     ],
   };

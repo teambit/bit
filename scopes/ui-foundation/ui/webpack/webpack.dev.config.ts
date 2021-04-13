@@ -1,3 +1,5 @@
+import { Configuration } from 'webpack';
+
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
@@ -13,9 +15,14 @@ const { default: html } = require('./html');
  * i.e. `bit start --dev`,
  */
 
-const sockHost = process.env.WDS_SOCKET_HOST;
-const sockPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
-const sockPort = process.env.WDS_SOCKET_PORT;
+const clientHost = process.env.WDS_SOCKET_HOST;
+const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
+const port = process.env.WDS_SOCKET_PORT;
+
+// const reactRefreshRuntimeEntry = require.resolve('react-refresh/runtime');
+// const reactRefreshWebpackPluginRuntimeEntry = require.resolve(
+//   '@pmmmwh/react-refresh-webpack-plugin/lib/runtime/RefreshUtils'
+// );
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
@@ -38,7 +45,7 @@ module.exports = {
   devConfig: createWebpackConfig,
 };
 
-function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
+function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Configuration {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -69,8 +76,6 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
 
       publicPath: publicUrlOrPath,
 
-      futureEmitAssets: true,
-
       chunkFilename: 'static/js/[name].chunk.js',
 
       // point sourcemap entries to original disk locations (format as URL on windows)
@@ -81,14 +86,24 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
       globalObject: 'this',
     },
 
+    // @ts-ignore - remove this once there is types package for webpack-dev-server v4
     devServer: {
-      // Serve index.html as the base
-      contentBase: resolveWorkspacePath(publicUrlOrPath),
-
-      // By default files from `contentBase` will not trigger a page reload.
-      watchContentBase: true,
-
-      contentBasePublicPath: publicUrlOrPath,
+      static: [
+        {
+          directory: resolveWorkspacePath(publicUrlOrPath),
+          staticOptions: {},
+          // Don't be confused with `dev.publicPath`, it is `publicPath` for static directory
+          // Can be:
+          // publicPath: ['/static-public-path-one/', '/static-public-path-two/'],
+          publicPath: publicUrlOrPath,
+          // Can be:
+          // serveIndex: {} (options for the `serveIndex` option you can find https://github.com/expressjs/serve-index)
+          serveIndex: true,
+          // Can be:
+          // watch: {} (options for the `watch` option you can find https://github.com/paulmillr/chokidar)
+          watch: true,
+        },
+      ],
 
       // Enable compression
       compress: true,
@@ -107,11 +122,13 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         index: publicUrlOrPath,
       },
 
-      sockHost,
-      sockPath,
-      sockPort,
+      client: {
+        host: clientHost,
+        path: clientPath,
+        port,
+      },
 
-      before(app, server) {
+      onBeforeSetupMiddleware(app, server) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -120,7 +137,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         app.use(errorOverlayMiddleware());
       },
 
-      after(app) {
+      onAfterSetupMiddleware(app) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -132,14 +149,10 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // Public path is root of content base
-      publicPath: publicUrlOrPath.slice(0, -1),
-
-      // stats: {
-      //   // - for webpack-dev-server, this property needs to be in the devServer configuration object.
-      //   // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
-      //   warningsFilter: [/Failed to parse source map/],
-      // },
+      dev: {
+        // Public path is root of content base
+        publicPath: publicUrlOrPath.slice(0, -1),
+      },
     },
 
     resolve: {
@@ -156,14 +169,22 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         'react-dom': require.resolve('react-dom'),
         // 'react-refresh/runtime': require.resolve('react-refresh/runtime'),
       },
-    },
-
-    node: {
-      fs: 'empty',
+      fallback: {
+        fs: false,
+        path: require.resolve('path-browserify'),
+        stream: false,
+        process: false,
+      },
     },
 
     module: {
       rules: [
+        {
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
+        },
         // {
         //   test: /\.js$/,
         //   enforce: 'pre',
@@ -187,7 +208,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         },
         {
           test: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -209,7 +230,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.s(a|c)ss$/,
           exclude: /\.module.(s(a|c)ss)$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -222,7 +243,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         },
         {
           test: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -244,7 +265,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -258,7 +279,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths) {
         {
           test: /\.css$/,
           exclude: /\.(s(a|c)ss)$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
     },

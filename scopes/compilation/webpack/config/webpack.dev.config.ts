@@ -10,9 +10,9 @@ import html from './html';
 
 import WebpackBitReporterPlugin from '../plugins/webpack-bit-reporter-plugin';
 
-const sockHost = process.env.WDS_SOCKET_HOST;
-const sockPath = process.env.WDS_SOCKET_PATH; // default: '/sockjs-node'
-const sockPort = process.env.WDS_SOCKET_PORT;
+const clientHost = process.env.WDS_SOCKET_HOST;
+const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
+const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
@@ -36,10 +36,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     // Entry point of app
     entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
 
-    node: {
-      fs: 'empty',
-    },
-
     output: {
       // Development filename output
       filename: 'static/js/[name].bundle.js',
@@ -49,8 +45,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       path: resolveWorkspacePath(publicDirectory),
 
       publicPath: `${publicRoot}/`,
-
-      futureEmitAssets: true,
 
       chunkFilename: 'static/js/[name].chunk.js',
 
@@ -63,16 +57,22 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     },
 
     devServer: {
-      quiet: true,
-      stats: 'none',
-
-      // Serve index.html as the base
-      contentBase: resolveWorkspacePath(publicDirectory),
-
-      // By default files from `contentBase` will not trigger a page reload.
-      watchContentBase: true,
-
-      contentBasePublicPath: publicDirectory,
+      static: [
+        {
+          directory: resolveWorkspacePath(publicDirectory),
+          staticOptions: {},
+          // Don't be confused with `dev.publicPath`, it is `publicPath` for static directory
+          // Can be:
+          // publicPath: ['/static-public-path-one/', '/static-public-path-two/'],
+          publicPath: publicDirectory,
+          // Can be:
+          // serveIndex: {} (options for the `serveIndex` option you can find https://github.com/expressjs/serve-index)
+          serveIndex: true,
+          // Can be:
+          // watch: {} (options for the `watch` option you can find https://github.com/paulmillr/chokidar)
+          watch: true,
+        },
+      ],
 
       // Enable compression
       compress: true,
@@ -81,9 +81,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       // websockets in `webpackHotDevClient`.
       transportMode: 'ws',
 
-      injectClient: false,
-
-      overlay: false,
       // Enable hot reloading
       hot: true,
 
@@ -94,11 +91,15 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         index: publicUrlOrPath,
       },
 
-      sockHost,
-      sockPath,
-      sockPort,
+      client: {
+        needClientEntry: false,
+        overlay: false,
+        host: clientHost,
+        path: clientPath,
+        port,
+      },
 
-      before(app, server) {
+      onBeforeSetupMiddleware(app, server) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -107,7 +108,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(errorOverlayMiddleware());
       },
 
-      after(app) {
+      onAfterSetupMiddleware(app) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -119,12 +120,19 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // Public path is root of content base
-      publicPath: publicRoot,
+      dev: {
+        // Public path is root of content base
+        publicPath: publicRoot,
+      },
     },
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
+      fallback: {
+        util: require.resolve('util'),
+        assert: require.resolve('assert'),
+        path: require.resolve('path-browserify'),
+      },
     },
 
     plugins: [

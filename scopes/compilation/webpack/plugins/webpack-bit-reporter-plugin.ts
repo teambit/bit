@@ -1,4 +1,4 @@
-import type { Plugin, Compiler } from 'webpack';
+import type { Compiler } from 'webpack';
 import { WebpackCompilationDoneEvent, WebpackCompilationStartedEvent } from '../events';
 import { WebpackAspect } from '../webpack.aspect';
 
@@ -7,7 +7,8 @@ const PLUGIN_NAME = 'webpack-compiler-started-plugin';
 /**
  * Monitors Webpack's compilation, and updates progress to Bit
  */
-export default class WebpackBitReporterPlugin implements Plugin {
+export default class WebpackBitReporterPlugin {
+  // TODO: add plugin type from webpack and implement it
   pubsub: any;
   devServerID: string;
 

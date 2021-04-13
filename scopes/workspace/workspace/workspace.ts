@@ -872,12 +872,13 @@ export class Workspace implements ComponentFactory {
     });
     // no need to filter core aspects as they are not included in the graph
     // here we are trying to load extensions from the workspace.
-    try {
-      const requireableExtensions: any = await this.requireComponents(aspects);
+    const { workspaceComps, scopeComps } = await this.groupComponentsByWorkspaceAndScope(aspects);
+    if (workspaceComps.length) {
+      const requireableExtensions: any = await this.requireComponents(workspaceComps);
       await this.aspectLoader.loadRequireableExtensions(requireableExtensions, throwOnError);
-    } catch (err) {
-      // if extensions does not exist on workspace, try and load them from the local scope.
-      await this.scope.loadAspects(aspects.map((aspect) => aspect.id.toString()));
+    }
+    if (scopeComps.length) {
+      await this.scope.loadAspects(scopeComps.map((aspect) => aspect.id.toString()));
     }
   }
 
@@ -888,14 +889,7 @@ export class Workspace implements ComponentFactory {
     const coreAspectsIds = this.aspectLoader.getCoreAspectIds();
     const userAspectsIds: string[] = difference(idsToResolve, coreAspectsIds);
     const componentIdsToResolve = await this.resolveMultipleComponentIds(userAspectsIds);
-    const workspaceIds: ComponentID[] = [];
-    const scopeIds: ComponentID[] = [];
-    await Promise.all(
-      componentIdsToResolve.map(async (id) => {
-        const existOnWorkspace = await this.hasId(id);
-        existOnWorkspace ? workspaceIds.push(id) : scopeIds.push(id);
-      })
-    );
+    const { workspaceIds, scopeIds } = await this.groupIdsByWorkspaceAndScope(componentIdsToResolve);
     const wsComponents = await this.getMany(workspaceIds);
     const aspectDefs = await this.aspectLoader.resolveAspects(wsComponents, async (component) => {
       stringIds.push(component.id._legacy.toString());
@@ -943,6 +937,34 @@ export class Workspace implements ComponentFactory {
     }
 
     return defs;
+  }
+
+  private async groupIdsByWorkspaceAndScope(
+    ids: ComponentID[]
+  ): Promise<{ workspaceIds: ComponentID[]; scopeIds: ComponentID[] }> {
+    const workspaceIds: ComponentID[] = [];
+    const scopeIds: ComponentID[] = [];
+    await Promise.all(
+      ids.map(async (id) => {
+        const existOnWorkspace = await this.hasId(id);
+        existOnWorkspace ? workspaceIds.push(id) : scopeIds.push(id);
+      })
+    );
+    return { workspaceIds, scopeIds };
+  }
+
+  private async groupComponentsByWorkspaceAndScope(
+    components: Component[]
+  ): Promise<{ workspaceComps: Component[]; scopeComps: Component[] }> {
+    const workspaceComps: Component[] = [];
+    const scopeComps: Component[] = [];
+    await Promise.all(
+      components.map(async (component) => {
+        const existOnWorkspace = await this.hasId(component.id);
+        existOnWorkspace ? workspaceComps.push(component) : scopeComps.push(component);
+      })
+    );
+    return { workspaceComps, scopeComps };
   }
 
   /**
