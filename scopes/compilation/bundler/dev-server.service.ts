@@ -1,5 +1,4 @@
 import { EnvService, ExecutionContext } from '@teambit/envs';
-import { UIRoot } from '@teambit/ui';
 import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
@@ -19,17 +18,8 @@ export class DevServerService implements EnvService<ComponentServer> {
     /**
      * browser runtime slot
      */
-    private runtimeSlot: BrowserRuntimeSlot,
-
-    /**
-     * main path of the dev server to execute on.
-     */
-    private _uiRoot?: UIRoot
+    private runtimeSlot: BrowserRuntimeSlot
   ) {}
-
-  set uiRoot(value: UIRoot) {
-    this._uiRoot = value;
-  }
 
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {
   //   const devServerContext = await this.buildContext(context);
@@ -85,14 +75,11 @@ export class DevServerService implements EnvService<ComponentServer> {
     context: ExecutionContext,
     additionalContexts: ExecutionContext[] = []
   ): Promise<DevServerContext> {
-    const uiRoot = this._uiRoot;
-    if (!uiRoot) throw new Error('a root must be provided by UI root');
-
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
 
     return Object.assign(context, {
-      entry: await getEntry(context, uiRoot, this.runtimeSlot),
+      entry: await getEntry(context, this.runtimeSlot),
       rootPath: `/preview/${context.envRuntime.id}`,
       publicPath: `/public`,
     });

@@ -25,11 +25,14 @@ import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler'
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { ReactAppOptions } from './react-app-options';
+import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
 
 type ReactDeps = [
@@ -45,6 +48,7 @@ type ReactDeps = [
   ESLintMain,
   MultiCompilerMain,
   MDXMain,
+  ApplicationMain,
   GeneratorMain
 ];
 
@@ -81,7 +85,11 @@ export class ReactMain {
      */
     readonly reactEnv: ReactEnv,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private application: ApplicationMain,
+
+    private workspace: Workspace
   ) {}
 
   readonly env = this.reactEnv;
@@ -111,6 +119,23 @@ export class ReactMain {
         return this.reactEnv.getBuildPipe(tsconfig);
       },
     });
+  }
+
+  /**
+   * register a new React application.
+   */
+  registerReactApp(options: ReactAppOptions) {
+    this.application.registerApp(
+      new ReactApp(
+        options.name,
+        options.buildEntry,
+        options.runEntry,
+        options.portRange || [3000, 4000],
+        this.reactEnv,
+        this.workspace.path,
+        options.deploy
+      )
+    );
   }
 
   /**
@@ -259,6 +284,7 @@ export class ReactMain {
     ESLintAspect,
     MultiCompilerAspect,
     MDXAspect,
+    ApplicationAspect,
     GeneratorAspect,
   ];
 
@@ -276,6 +302,7 @@ export class ReactMain {
       eslint,
       multiCompiler,
       mdx,
+      application,
       generator,
     ]: ReactDeps,
     config: ReactMainConfig
@@ -293,7 +320,7 @@ export class ReactMain {
       multiCompiler,
       mdx
     );
-    const react = new ReactMain(reactEnv, envs);
+    const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);
