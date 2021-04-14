@@ -1,9 +1,12 @@
 import React, { useState, useCallback, useEffect } from 'react';
+import classnames from 'classnames';
 import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
 import { HoverSelector } from '@teambit/ui.hover-selector';
 import { Frame } from '../frame';
 import { Label, LabelContainer } from '../label';
 import { isBitComponent } from './bit-react-component';
+
+import styles from './component-highlighter.module.scss';
 
 export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
@@ -37,6 +40,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
   return (
     <HoverSelector
       {...rest}
+      className={classnames(styles.highlighter, !disabled && styles.active)}
       onElementChange={handleElement}
       disabled={disabled}
       style={{ fontFamily: 'sans-serif' }}

@@ -58,6 +58,9 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         {
           test: /\.js$/,
           include: distPaths,
+          // // apply to all installed components:
+          // include: path.join(workDir, 'node_modules'),
+          // exclude: [/babel/, /\.bin/, /\.cache/],
           use: [
             {
               loader: require.resolve('babel-loader'),
@@ -68,6 +71,9 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
                   // for component highlighting in preview.
                   [require.resolve('@teambit/babel.bit-react-transformer')],
                 ],
+                // turn off all optimizations (only slow down for node_modules)
+                compact: false,
+                minified: false,
               },
             },
           ],
