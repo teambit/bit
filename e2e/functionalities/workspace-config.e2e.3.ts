@@ -99,8 +99,8 @@ describe('workspace config', function () {
         });
         it('bit diff should show the tagged dependency version vs the version from overrides', () => {
           const diff = helper.command.diff('bar');
-          expect(diff).to.have.string('- [ foo@2.0.0 ]');
-          expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+          expect(diff).to.have.string('- foo@2.0.0');
+          expect(diff).to.have.string('+ foo@0.0.1');
         });
         it('should not duplicate the dependencies or add anything to the package dependencies', () => {
           const bar = helper.command.showComponentParsed('bar');
@@ -1119,10 +1119,10 @@ describe('workspace config', function () {
                 helper.packageJson.write(packageJson, barPath);
               });
               it('bit diff should show the removed dependency', () => {
-                const diff = helper.command.diff();
-                expect(diff).to.have.string('--- Dependencies (0.0.2 original)');
-                expect(diff).to.have.string('+++ Dependencies (0.0.2 modified)');
-                expect(diff).to.have.string(`- [ ${helper.scopes.remote}/foo@0.0.1 ]`);
+                const diff = helper.command.diff('--verbose');
+                expect(diff).to.have.string('--- dependencies (0.0.2 original)');
+                expect(diff).to.have.string('+++ dependencies (0.0.2 modified)');
+                expect(diff).to.have.string(`- ${helper.scopes.remote}/foo@0.0.1`);
                 expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
                 expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
                 expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo@0.0.1 ]`);

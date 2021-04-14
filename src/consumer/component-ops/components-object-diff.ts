@@ -16,7 +16,7 @@ type ConfigDiff = {
   fieldName: string;
   diffOutput: string;
 };
-type DepDiffType = 'add' | 'remove' | 'upgrade' | 'downgrade' | 'changed';
+type DepDiffType = 'added' | 'removed' | 'upgraded' | 'downgraded' | 'changed';
 type DepDiff = {
   name: string;
   type: DepDiffType;
@@ -150,7 +150,8 @@ export function diffBetweenComponentsObjects(
   consumer: Consumer,
   componentLeft: Component,
   componentRight: Component,
-  verbose: boolean
+  verbose: boolean,
+  table: boolean
 ): FieldsDiff[] | undefined {
   const printableLeft = componentToPrintableForDiffCommand(componentLeft, verbose);
   const printableRight = componentToPrintableForDiffCommand(componentRight, verbose);
@@ -214,20 +215,20 @@ export function diffBetweenComponentsObjects(
   };
 
   const getDepDiffType = (left?: string, right?: string): DepDiffType => {
-    if (left && !right) return 'remove';
-    if (!left && right) return 'add';
+    if (left && !right) return 'removed';
+    if (!left && right) return 'added';
     if (!left || !right) throw new Error('diff.getType expect at least one of the component to have value');
     const opts = { loose: true, includePrerelease: true };
     try {
-      if (lt(left, right, opts)) return 'upgrade';
-      if (gt(left, right, opts)) return 'downgrade';
+      if (lt(left, right, opts)) return 'upgraded';
+      if (gt(left, right, opts)) return 'downgraded';
     } catch (err) {
       // the semver is probably a range, no need to compare, just fallback to the "changed"
     }
     return 'changed';
   };
 
-  const formatDepsDiff = (diffs: DepDiff[]): string => {
+  const formatDepsDiffAsTable = (diffs: DepDiff[], fieldName: string): string => {
     diffs.forEach((oneDiff) => {
       // oneDiff.name = `> ${oneDiff.name}`;
       oneDiff.left = oneDiff.left || '---';
@@ -266,8 +267,25 @@ export function diffBetweenComponentsObjects(
         value: 'right',
       },
     ];
-    const table = new Table(headers, diffs, options);
-    return table.render();
+    const diffTable = new Table(headers, diffs, options);
+    return `\n${chalk.bold(fieldName)}\n${diffTable.render()}`;
+  };
+
+  const formatDepsDiffAsPlainText = (diffs: DepDiff[], fieldName: string): string => {
+    diffs.forEach((oneDiff) => {
+      oneDiff.left = oneDiff.left ? chalk.red(`- ${oneDiff.name}@${oneDiff.left}\n`) : '';
+      oneDiff.right = oneDiff.right ? chalk.green(`+ ${oneDiff.name}@${oneDiff.right}\n`) : '';
+    });
+    const output = diffs.map((d) => `${d.name}\n${d.left}${d.right}`).join('\n');
+    const depTitleLeft = `--- ${fieldName} ${labelLeft(leftVersion, rightVersion)}`;
+    const depTitleRight = `+++ ${fieldName} ${labelRight(leftVersion, rightVersion)}`;
+    const title = `${depTitleLeft}\n${chalk.bold(depTitleRight)}`;
+
+    return `\n${title}\n${output}`;
+  };
+
+  const formatDepsDiff = (diffs: DepDiff[], fieldName: string): string => {
+    return table ? formatDepsDiffAsTable(diffs, fieldName) : formatDepsDiffAsPlainText(diffs, fieldName);
   };
 
   const packageDependenciesOutput = (fieldName: string): string | null => {
@@ -301,7 +319,7 @@ export function diffBetweenComponentsObjects(
     }, diffsLeft);
     if (!diffs.length) return null;
 
-    return `\n${chalk.bold(fieldName)}\n${formatDepsDiff(diffs)}`;
+    return formatDepsDiff(diffs, fieldName);
   };
 
   const componentDependenciesOutput = (fieldName: string): string | null => {
@@ -313,7 +331,7 @@ export function diffBetweenComponentsObjects(
       if (dependencyRight && dependencyLeft.isEqual(dependencyRight)) return acc;
 
       acc.push({
-        name: dependencyLeft.toStringWithoutScopeAndVersion(),
+        name: dependencyLeft.toStringWithoutVersion(),
         type: getDepDiffType(dependencyLeft.version, dependencyRight?.version),
         left: dependencyLeft.version,
         right: dependencyRight?.version,
@@ -324,7 +342,7 @@ export function diffBetweenComponentsObjects(
       if (!dependenciesLeft.hasWithoutScopeAndVersion(dependencyRight)) {
         // otherwise it was taken care already above
         acc.push({
-          name: dependencyRight.toStringWithoutScopeAndVersion(),
+          name: dependencyRight.toStringWithoutVersion(),
           type: getDepDiffType(undefined, dependencyRight.version),
           left: undefined,
           right: dependencyRight?.version,
@@ -334,7 +352,7 @@ export function diffBetweenComponentsObjects(
     }, diffsLeft);
     if (!diffs.length) return null;
 
-    return `${chalk.bold(fieldName)}\n${formatDepsDiff(diffs)}`;
+    return formatDepsDiff(diffs, fieldName);
   };
 
   const getAllDepsOutput = (): FieldsDiff[] => {
