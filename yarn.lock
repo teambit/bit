@@ -6862,7 +6862,7 @@ __metadata:
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
     "@testing-library/jest-dom": 5.11.10
-    "@testing-library/react": 11.0.4
+    "@testing-library/react": 11.2.6
     "@tippyjs/react": 4.2.0
     "@types/bluebird": 3.5.33
     "@types/cacache": 12.0.1
@@ -7330,22 +7330,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/dom@npm:^7.24.2":
-  version: 7.30.3
-  resolution: "@testing-library/dom@npm:7.30.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40testing-library%2Fdom%2F-%2Fdom-7.30.3.tgz"
-  dependencies:
-    "@babel/code-frame": ^7.10.4
-    "@babel/runtime": ^7.12.5
-    "@types/aria-query": ^4.2.0
-    aria-query: ^4.2.2
-    chalk: ^4.1.0
-    dom-accessibility-api: ^0.5.4
-    lz-string: ^1.4.4
-    pretty-format: ^26.6.2
-  checksum: 3d5ac838646e622ef10a6cdd496591a17f803df9f9acd67c81168b14092cf510b68bfc7bd188a971fe65bc18b1c259bdaac9db9ee01549ff94b1efefd8f640a1
-  languageName: node
-  linkType: hard
-
 "@testing-library/dom@npm:^7.28.1":
   version: 7.30.0
   resolution: "@testing-library/dom@npm:7.30.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40testing-library%2Fdom%2F-%2Fdom-7.30.0.tgz"
@@ -7378,19 +7362,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@testing-library/react@npm:11.0.4":
-  version: 11.0.4
-  resolution: "@testing-library/react@npm:11.0.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40testing-library%2Freact%2F-%2Freact-11.0.4.tgz"
-  dependencies:
-    "@babel/runtime": ^7.11.2
-    "@testing-library/dom": ^7.24.2
-  peerDependencies:
-    react: "*"
-    react-dom: "*"
-  checksum: 3662df0d284b4ad0701aa86ec396652280357cccf22935c6bde02fbb9a08125c216a43c4960b188e6403f053bfa68a680d934a9ea90ff92312e16e57d6eaa986
-  languageName: node
-  linkType: hard
-
 "@testing-library/react@npm:11.2.2":
   version: 11.2.2
   resolution: "@testing-library/react@npm:11.2.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40testing-library%2Freact%2F-%2Freact-11.2.2.tgz"
@@ -7401,6 +7372,19 @@ __metadata:
     react: "*"
     react-dom: "*"
   checksum: b2061c140201ab179a8cc3294ebc58f9a7ea5ffdb83ee246d59cb0ecfe4c2c99cdeedef66c280a52773453477f03866388ba7b36d2b144a3e646250c3f8efbc9
+  languageName: node
+  linkType: hard
+
+"@testing-library/react@npm:11.2.6":
+  version: 11.2.6
+  resolution: "@testing-library/react@npm:11.2.6::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40testing-library%2Freact%2F-%2Freact-11.2.6.tgz"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+    "@testing-library/dom": ^7.28.1
+  peerDependencies:
+    react: "*"
+    react-dom: "*"
+  checksum: 3ad25d7b88650b83d54990665fabac4f75ff8229773ae877c18ec7a431c17773832d4c3279cecc229815660ffc8be2c86f39de9930777b4dbc1519fb7bca63a5
   languageName: node
   linkType: hard
 
