@@ -37,7 +37,7 @@ export class TypescriptCompiler implements Compiler {
    * compile one file on the workspace
    */
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    if (!this.isFileSupported(options.filePath) || options.filePath.endsWith('.d.ts')) {
+    if (!this.isFileSupported(options.filePath)) {
       return null; // file is not supported
     }
     const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
