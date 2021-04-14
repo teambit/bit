@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import symlinkOrCopy from 'symlink-or-copy';
+import { IS_WINDOWS } from '../../constants';
 
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
@@ -22,7 +23,7 @@ export default function createSymlinkOrCopy(
   fs.ensureDirSync(path.dirname(destPath));
   try {
     logger.trace(`generating a symlink on ${destPath} pointing to ${srcPath}`);
-    symlinkOrCopy.sync(srcPath, destPath);
+    IS_WINDOWS ? symlinkOrCopy.sync(srcPath, destPath) : fs.symlinkSync(srcPath, destPath);
   } catch (err) {
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
     throw new ShowDoctorError(`${errorHeader}.
