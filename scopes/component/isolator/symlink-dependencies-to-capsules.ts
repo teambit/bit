@@ -28,7 +28,7 @@ export async function symlinkOnCapsuleRoot(capsuleList: CapsuleList, logger: Log
     return new Symlink(src, dest, capsule.component.id._legacy);
   });
 
-  await Promise.all(symlinks.map((symlink) => symlink.writeWithNativeFS()));
+  await Promise.all(symlinks.map((symlink) => symlink.write()));
 }
 
 async function symlinkComponent(component: ConsumerComponent, capsuleList: CapsuleList, logger: Logger) {
@@ -53,10 +53,5 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
     return new Symlink(src, dest, component.id);
   });
 
-  // using native fs to write the symlink instead of using `symlink-or-copy` package.
-  // because we want symlink src to be relative to symlink dest, and not relative to the cwd (which used by the symlink-or-copy)
-  // from the symlink-or-copy package readme -
-  // If you pass a relative srcPath, it will be resolved relative to process.cwd(), akin to a copy function.
-  // Note that this is unlike fs.symlinkSync, whose srcPath is relative to destPath.
-  await Promise.all(symlinks.map((symlink) => symlink && symlink.writeWithNativeFS()));
+  await Promise.all(symlinks.map((symlink) => symlink && symlink.write()));
 }
