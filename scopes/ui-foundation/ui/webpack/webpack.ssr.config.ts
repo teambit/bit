@@ -20,7 +20,7 @@ export default function createWebpackConfig(
 function createSsrConfig(workspaceDir: string, publicDir: string) {
   const ssrConfig: Configuration = {
     target: 'node',
-    devtool: 'cheap-eval-source-map', // TODO
+    devtool: 'eval-cheap-source-map', // TODO
 
     output: {
       path: path.resolve(workspaceDir, publicDir, 'ssr'),

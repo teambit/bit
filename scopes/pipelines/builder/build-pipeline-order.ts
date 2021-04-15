@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { Graph } from 'cleargraph';
+import TesterAspect from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
@@ -45,7 +46,8 @@ export function calculatePipelineOrder(
   taskSlot: TaskSlot,
   envs: EnvDefinition[],
   pipeNameOnEnv = 'getBuildPipe',
-  tasks: string[] = []
+  tasks: string[] = [],
+  skipTests = false
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
@@ -80,6 +82,9 @@ export function calculatePipelineOrder(
     return new TasksQueue(
       ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
     );
+  }
+  if (skipTests) {
+    return new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== TesterAspect.id));
   }
   return tasksQueue;
 }

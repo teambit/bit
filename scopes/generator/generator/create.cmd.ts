@@ -2,7 +2,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 import chalk from 'chalk';
 import { GeneratorMain } from './generator.main.runtime';
 
-export type GeneratorOptions = {
+export type CreateOptions = {
   namespace?: string;
   aspect?: string;
   scope?: string;
@@ -25,17 +25,20 @@ export class CreateCmd implements Command {
 
   constructor(private generator: GeneratorMain) {}
 
-  async report([templateName, componentNames]: [string, string[]], options: GeneratorOptions) {
+  async report([templateName, componentNames]: [string, string[]], options: CreateOptions) {
     const results = await this.generator.generateComponentTemplate(componentNames, templateName, options);
     const title = `the following ${results.length} component(s) were created`;
 
     const componentsData = results
       .map((result) => {
-        const compTitle = `${chalk.bold(result.id.toString())} at ${result.dir}`;
-        const compFiles = result.files.map((file) => `    ${file}`).join('\n');
-        return `${compTitle}\n${compFiles}`;
+        return `${chalk.bold(result.id.toString())}
+    location: ${result.dir}
+    env:      ${result.envId}
+`;
       })
       .join('\n');
-    return `${chalk.green(title)}\n\n${componentsData}`;
+    const footer = `env configuration is according to workspace variants. learn more at https://harmony-docs.bit.dev/building-with-bit/environments/#configure-environment-for-components`;
+
+    return `${chalk.green(title)}\n\n${componentsData}\n\n${footer}`;
   }
 }

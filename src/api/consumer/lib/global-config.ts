@@ -70,13 +70,19 @@ export function getSync(key: string): string | undefined {
   const config = getConfigObject();
   const val = config ? config.get(key) : undefined;
   if (!R.isNil(val)) return val;
+  const gitConfigCache = gitCache().get() || {};
+  if (key in gitConfigCache) {
+    return gitConfigCache[val];
+  }
   try {
     const gitVal = gitconfig.get.sync(key);
-    return gitVal;
-    // Ignore error from git config get
+    gitConfigCache[key] = gitVal;
   } catch (err) {
-    return undefined;
+    // Ignore error from git config get
+    gitConfigCache[key] = undefined;
   }
+  gitCache().set(gitConfigCache);
+  return gitConfigCache[key];
 }
 
 export function list(): Promise<any> {
@@ -97,6 +103,19 @@ function cache() {
     set: (config) => {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       cache.config = config;
+    },
+  };
+}
+
+function gitCache() {
+  return {
+    get: () => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      return gitCache.config;
+    },
+    set: (config) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      gitCache.config = config;
     },
   };
 }

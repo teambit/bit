@@ -12,6 +12,7 @@ let compressResponse;
 export default class ListLanes implements LegacyCommand {
   name = '_lanes <path> <args>';
   private = true;
+  internal = true;
   description = 'list lanes';
   alias = '';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

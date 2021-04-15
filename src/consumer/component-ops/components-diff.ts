@@ -21,12 +21,13 @@ export type DiffResults = {
   fieldsDiff?: FieldsDiff[] | null | undefined;
 };
 
-export default (async function componentsDiff(
+export default async function componentsDiff(
   consumer: Consumer,
   ids: BitId[],
   version: string | null | undefined,
   toVersion: string | null | undefined,
-  verbose: boolean // whether show internal components diff, such as sourceRelativePath
+  verbose: boolean, // whether show internal components diff, such as sourceRelativePath
+  table: boolean // show output as table when possible
 ): Promise<DiffResults[]> {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { components } = await consumer.loadComponents(ids);
@@ -127,10 +128,10 @@ export default (async function componentsDiff(
   }
 
   async function updateFieldsDiff(componentA: Component, componentB: Component, diffResult: DiffResults) {
-    diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB, verbose);
+    diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB, verbose, table);
     diffResult.hasDiff = hasDiff(diffResult);
   }
-});
+}
 
 function hasDiff(diffResult: DiffResults): boolean {
   return !!((diffResult.filesDiff && diffResult.filesDiff.find((file) => file.diffOutput)) || diffResult.fieldsDiff);

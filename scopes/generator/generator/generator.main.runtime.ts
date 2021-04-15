@@ -1,25 +1,23 @@
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import Vinyl from 'vinyl';
-import path from 'path';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
-import camelcase from 'camelcase';
-import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
-import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
-import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { ComponentTemplate, File } from './component-template';
+import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
-import { CreateCmd, GeneratorOptions } from './create.cmd';
+import { CreateCmd, CreateOptions } from './create.cmd';
 import { TemplatesCmd } from './templates.cmd';
 import { generatorSchema } from './generator.graphql';
+import { ComponentGenerator, GenerateResult } from './component-generator';
+import { WorkspaceGenerator } from './workspace-generator';
+import { WorkspaceTemplate } from './workspace-template';
+import { NewCmd, NewOptions } from './new.cmd';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
+export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 
-export type GenerateResult = { id: ComponentID; dir: string; files: string[] };
-
-export type TemplateDescriptor = { aspectId: string; name: string };
+export type TemplateDescriptor = { aspectId: string; name: string; description?: string };
 
 export type GeneratorConfig = {
   /**
@@ -32,8 +30,10 @@ export class GeneratorMain {
   private aspectLoaded = false;
   constructor(
     private componentTemplateSlot: ComponentTemplateSlot,
+    private workspaceTemplateSlot: WorkspaceTemplateSlot,
     private config: GeneratorConfig,
-    private workspace: Workspace
+    private workspace: Workspace,
+    private envs: EnvsMain
   ) {}
 
   /**
@@ -45,14 +45,31 @@ export class GeneratorMain {
   }
 
   /**
+   * register a new component template.
+   */
+  registerWorkspaceTemplate(templates: WorkspaceTemplate[]) {
+    this.workspaceTemplateSlot.register(templates);
+    return this;
+  }
+
+  /**
    * list all component templates registered in the workspace.
    */
   async listComponentTemplates(): Promise<TemplateDescriptor[]> {
-    await this.loadAspects();
-    const allTemplates = this.getAllTemplatesFlattened();
+    if (this.workspace) {
+      await this.loadAspects();
+      const allTemplates = this.getAllComponentTemplatesFlattened();
+      return allTemplates.map(({ id, template }) => ({
+        aspectId: id,
+        name: template.name,
+        description: template.description,
+      }));
+    }
+    const allTemplates = this.getAllWorkspaceTemplatesFlattened();
     return allTemplates.map(({ id, template }) => ({
       aspectId: id,
       name: template.name,
+      description: template.description,
     }));
   }
 
@@ -67,7 +84,7 @@ export class GeneratorMain {
    * returns a specific component template.
    */
   getComponentTemplate(name: string, aspectId?: string): ComponentTemplate | undefined {
-    const templates = this.getAllTemplatesFlattened();
+    const templates = this.getAllComponentTemplatesFlattened();
     const found = templates.find(({ id, template }) => {
       if (aspectId && id !== aspectId) return false;
       return template.name === name;
@@ -75,7 +92,48 @@ export class GeneratorMain {
     return found?.template;
   }
 
-  private getAllTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
+  /**
+   * returns a specific workspace template.
+   */
+  getWorkspaceTemplate(name: string, aspectId?: string): WorkspaceTemplate | undefined {
+    const templates = this.getAllWorkspaceTemplatesFlattened();
+    const found = templates.find(({ id, template }) => {
+      if (aspectId && id !== aspectId) return false;
+      return template.name === name;
+    });
+    return found?.template;
+  }
+
+  async generateComponentTemplate(
+    componentNames: string[],
+    templateName: string,
+    options: CreateOptions
+  ): Promise<GenerateResult[]> {
+    await this.loadAspects();
+    const { namespace, aspect: aspectId } = options;
+    const template = this.getComponentTemplate(templateName, aspectId);
+    if (!template) throw new Error(`template "${templateName}" was not found`);
+    const scope = options.scope || this.workspace.defaultScope;
+    if (!scope) throw new Error(`failed finding defaultScope`);
+
+    const componentIds = componentNames.map((componentName) => {
+      const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
+      return ComponentID.fromObject({ name: fullComponentName }, scope);
+    });
+
+    const componentGenerator = new ComponentGenerator(this.workspace, componentIds, options, template, this.envs);
+    return componentGenerator.generate();
+  }
+
+  async generateWorkspaceTemplate(workspaceName: string, templateName: string, options: NewOptions) {
+    const { aspect: aspectId } = options;
+    const template = this.getWorkspaceTemplate(templateName, aspectId);
+    if (!template) throw new Error(`template "${templateName}" was not found`);
+    const workspaceGenerator = new WorkspaceGenerator(workspaceName, options, template, this.envs);
+    return workspaceGenerator.generate();
+  }
+
+  private getAllComponentTemplatesFlattened(): Array<{ id: string; template: ComponentTemplate }> {
     const templatesByAspects = this.componentTemplateSlot.toArray();
     return templatesByAspects.flatMap(([id, componentTemplates]) => {
       return componentTemplates.map((template) => ({
@@ -85,35 +143,14 @@ export class GeneratorMain {
     });
   }
 
-  async generateComponentTemplate(
-    componentNames: string[],
-    templateName: string,
-    options: GeneratorOptions
-  ): Promise<GenerateResult[]> {
-    await this.loadAspects();
-    const { namespace, aspect: aspectId } = options;
-    const template = this.getComponentTemplate(templateName, aspectId);
-    if (!template) throw new Error(`template "${templateName}" was not found`);
-    const scope = options.scope || this.workspace.defaultScope;
-    if (!scope) throw new Error(`failed finding defaultScope`);
-
-    return Promise.all(
-      componentNames.map(async (componentName) => {
-        const fullComponentName = namespace ? `${namespace}/${componentName}` : componentName;
-        const componentId = ComponentID.fromObject({ name: fullComponentName }, scope);
-        const componentNameCamelCase = camelcase(componentName, { pascalCase: true });
-        const files = template.generateFiles({ componentName, componentNameCamelCase, componentId });
-        const mainFile = files.find((file) => file.isMain);
-        const componentPath = this.getComponentPath(componentId, options.path);
-        await this.writeComponentFiles(componentPath, files);
-        const addResults = await this.workspace.add([componentPath], componentName, mainFile?.relativePath);
-        return {
-          id: componentId,
-          dir: componentPath,
-          files: addResults.addedComponents[0].files.map((f) => f.relativePath),
-        };
-      })
-    );
+  private getAllWorkspaceTemplatesFlattened(): Array<{ id: string; template: WorkspaceTemplate }> {
+    const templatesByAspects = this.workspaceTemplateSlot.toArray();
+    return templatesByAspects.flatMap(([id, workspaceTemplates]) => {
+      return workspaceTemplates.map((template) => ({
+        id,
+        template,
+      }));
+    });
   }
 
   private async loadAspects() {
@@ -122,44 +159,19 @@ export class GeneratorMain {
     this.aspectLoaded = true;
   }
 
-  /**
-   * writes the generated template files to the default directory set in the workspace config
-   */
-  private async writeComponentFiles(componentPath: string, templateFiles: File[]): Promise<PathOsBasedRelative[]> {
-    const dataToPersist = new DataToPersist();
-    const vinylFiles = templateFiles.map((templateFile) => {
-      const templateFileVinyl = new Vinyl({
-        base: componentPath,
-        path: path.join(componentPath, templateFile.relativePath),
-        contents: Buffer.from(templateFile.content),
-      });
-      return AbstractVinyl.fromVinyl(templateFileVinyl);
-    });
-    const results = vinylFiles.map((v) => v.path);
-    dataToPersist.addManyFiles(vinylFiles);
-    dataToPersist.addBasePath(this.workspace.path);
-    await dataToPersist.persistAllToFS();
-    return results;
-  }
+  static slots = [Slot.withType<ComponentTemplate[]>(), Slot.withType<WorkspaceTemplate[]>()];
 
-  private getComponentPath(componentId: ComponentID, customPath?: string) {
-    if (customPath) return path.join(customPath, componentId.fullName);
-    return path.join(componentId.scope, componentId.fullName);
-  }
-
-  static slots = [Slot.withType<ComponentTemplate[]>()];
-
-  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect];
+  static dependencies = [WorkspaceAspect, CLIAspect, GraphqlAspect, EnvsAspect];
 
   static runtime = MainRuntime;
 
   static async provider(
-    [workspace, cli, graphql]: [Workspace, CLIMain, GraphqlMain],
+    [workspace, cli, graphql, envs]: [Workspace, CLIMain, GraphqlMain, EnvsMain],
     config: GeneratorConfig,
-    [componentTemplateSlot]: [ComponentTemplateSlot]
+    [componentTemplateSlot, workspaceTemplateSlot]: [ComponentTemplateSlot, WorkspaceTemplateSlot]
   ) {
-    const generator = new GeneratorMain(componentTemplateSlot, config, workspace);
-    const commands = [new CreateCmd(generator), new TemplatesCmd(generator)];
+    const generator = new GeneratorMain(componentTemplateSlot, workspaceTemplateSlot, config, workspace, envs);
+    const commands = [new CreateCmd(generator), new TemplatesCmd(generator), new NewCmd(generator)];
     cli.register(...commands);
     graphql.register(generatorSchema(generator));
     return generator;

@@ -69,8 +69,9 @@ export class StartCmd implements Command {
 
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
-
-    const [, uiRoot] = this.ui.getUi();
+    const ui = this.ui.getUi();
+    if (!ui) throw new Error('ui not found');
+    const [, uiRoot] = ui;
     const appName = uiRoot.name;
     const uiServer = this.ui.createRuntime({
       uiRootName,

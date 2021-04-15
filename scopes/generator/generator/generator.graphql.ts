@@ -58,6 +58,9 @@ export function generatorSchema(generator: GeneratorMain): Schema {
           return generator.listComponentTemplates();
         },
       },
+      Query: {
+        generator: () => generator,
+      },
     },
   };
 }

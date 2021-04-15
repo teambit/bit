@@ -21,7 +21,7 @@ describe('sign command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(2);
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
       // we run "action" command from the remote to itself to clear the cache. (needed because
       // normally bit-sign is running from the fs but a different http service is running as well)
@@ -60,7 +60,7 @@ describe('sign command', function () {
       helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
       helper.command.addComponent('bar');
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       // yes, this is strange, it adds the remote-scope to itself as a remote. we need it because
       // we run "action" command from the remote to itself to clear the cache. (needed because
       // normally bit-sign is running from the fs but a different http service is running as well)

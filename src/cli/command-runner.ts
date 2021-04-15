@@ -90,8 +90,10 @@ export class CommandRunner {
   private determineConsoleWritingDuringCommand() {
     if (this.command.loader && !this.flags.json) {
       loader.on();
+      loader.start(`running command ${this.command.name}...`);
       logger.shouldWriteToConsole = true;
     } else {
+      loader.off();
       logger.shouldWriteToConsole = false;
     }
     if (this.flags.log) {
@@ -101,6 +103,7 @@ export class CommandRunner {
   }
 
   private async writeAndExit(data: string, exitCode: number) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.command.name));
   }
 
@@ -118,6 +121,7 @@ export class CommandRunner {
 function serializeErrAndExit(err, commandName: string) {
   const data = packCommand(buildCommandMessage(serializeError(err), undefined, false), false, false);
   const code = err.code && isNumeric(err.code) ? err.code : 1;
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return process.stderr.write(data, () => logger.exitAfterFlush(code, commandName));
 }
 

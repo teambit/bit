@@ -1,5 +1,8 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import webpack from 'webpack';
+
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -34,30 +37,31 @@ type Options = { envId: string; fileMapPath: string; distPaths: string[] };
 export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
-      sockPath: `_hmr/${envId}`,
-      stats: {
-        // - for webpack-dev-server, this property needs to be in the devServer configuration object.
-        // - webpack 5 will replace `stats.warningFilter` with `ignoreWarnings`.
-        warningsFilter: [/Failed to parse source map/],
+      // @ts-ignore - remove this once there is types package for webpack-dev-server v4
+      client: {
+        path: `_hmr/${envId}`,
       },
     },
     module: {
       rules: [
         {
-          // support packages with `*.mjs`, namely, 'graphql'
-          test: /\.mjs$/,
-          include: /node_modules/,
-          type: 'javascript/auto',
+          test: /\.m?js/,
+          resolve: {
+            fullySpecified: false,
+          },
         },
-        // {
-        //   test: /\.js$/,
-        //   enforce: 'pre',
-        //   include: distPaths,
-        //   use: [require.resolve('source-map-loader')],
-        // },
+        {
+          test: /\.js$/,
+          enforce: 'pre',
+          include: distPaths,
+          use: [require.resolve('source-map-loader')],
+        },
         {
           test: /\.js$/,
           include: distPaths,
+          // // apply to all installed components:
+          // include: path.join(workDir, 'node_modules'),
+          // exclude: [/babel/, /\.bin/, /\.cache/],
           use: [
             {
               loader: require.resolve('babel-loader'),
@@ -68,6 +72,9 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
                   // for component highlighting in preview.
                   [require.resolve('@teambit/babel.bit-react-transformer')],
                 ],
+                // turn off all optimizations (only slow down for node_modules)
+                compact: false,
+                minified: false,
               },
             },
           ],
@@ -76,6 +83,9 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
           test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
+          resolve: {
+            fullySpecified: false,
+          },
           loader: require.resolve('babel-loader'),
           options: {
             babelrc: false,
@@ -118,7 +128,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         },
         {
           test: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -140,7 +150,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         {
           test: /\.s(a|c)ss$/,
           exclude: /\.module\.s(a|c)ss$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -153,7 +163,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         },
         {
           test: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -175,7 +185,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         {
           test: /\.less$/,
           exclude: /\.module\.less$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
             {
@@ -188,7 +198,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         },
         {
           test: /\.module.css$/,
-          loader: [
+          use: [
             require.resolve('style-loader'),
             {
               loader: require.resolve('css-loader'),
@@ -204,7 +214,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         {
           test: /\.css$/,
           exclude: /\.module\.css$/,
-          loader: [require.resolve('style-loader'), require.resolve('css-loader')],
+          use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
     },

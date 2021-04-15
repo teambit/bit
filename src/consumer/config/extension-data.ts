@@ -1,6 +1,6 @@
 /* eslint-disable max-classes-per-file */
 import R, { forEachObjIndexed } from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 
 import { BitId, BitIds } from '../../bit-id';
 import { sortObject } from '../../utils';

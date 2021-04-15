@@ -32,6 +32,7 @@ import { ConsumerInfo } from '@teambit/legacy/dist/consumer/consumer-locator';
 import BitMap from '@teambit/legacy/dist/consumer/bit-map';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
 import { propogateUntil as propagateUntil } from '@teambit/legacy/dist/utils';
+import loader from '@teambit/legacy/dist/cli/loader';
 import { readdir } from 'fs-extra';
 import { resolve } from 'path';
 import { manifestsMap } from './manifests';
@@ -161,7 +162,7 @@ function getMainAspect() {
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
   const safeModeCommands = ['cc', 'clear-cache', 'init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane'];
-  const hasSafeModeFlag = process.argv[3] === '--safe-mode';
+  const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
   return isSafeModeCommand || hasSafeModeFlag;
 }
@@ -182,9 +183,10 @@ export async function loadBit(path = process.cwd()) {
     aspectsToLoad.push(BitAspect);
   }
   const harmony = await Harmony.load(aspectsToLoad, MainRuntime.name, configMap);
+
   await harmony.run(async (aspect: Extension, runtime: RuntimeDefinition) => requireAspects(aspect, runtime));
   if (loadCLIOnly) return harmony;
-
+  loader.start('loading aspects...');
   const aspectLoader = harmony.get<AspectLoaderMain>('teambit.harmony/aspect-loader');
   aspectLoader.setCoreAspects(Object.values(manifestsMap));
   aspectLoader.setMainAspect(getMainAspect());

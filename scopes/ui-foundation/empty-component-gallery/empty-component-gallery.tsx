@@ -37,7 +37,7 @@ export function EmptyComponentGallery({ name, children }: EmptyComponentGalleryP
 function IconLine() {
   return (
     <div className={styles.iconLine}>
-      <ExternalLink href="https://join.slack.com/t/bit-dev-community/shared_invite/enQtNzM2NzQ3MTQzMTg3LWI2YmFmZjQwMTkxNmFmNTVkYzU2MGI2YjgwMmJlZDdkNWVhOGIzZDFlYjg4MGRmOTM4ODAxNTIxMTMwNWVhMzg">
+      <ExternalLink href="https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w">
         <img alt="slack-logo" className={styles.logo} src="https://static.bit.dev/harmony/slack-round-icon.svg" />
       </ExternalLink>
       <ExternalLink href="https://github.com/teambit/bit">

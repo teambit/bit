@@ -23,7 +23,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importComponent('comp1');
@@ -58,7 +58,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.command.tagScope('0.0.2');
     });
     it('should not show the component as modified', () => {
@@ -210,6 +210,30 @@ describe('tag components on Harmony', function () {
         expect(output).to.have.string('comp2@0.1.0');
         expect(output).to.have.string('comp3@0.1.0');
       });
+    });
+  });
+  describe('with failing tests', () => {
+    let beforeTagScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('bar/index.js');
+      helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
+      helper.command.addComponent('bar');
+      beforeTagScope = helper.scopeHelper.cloneLocalScope();
+    });
+    it('should fail without --skip-tests', () => {
+      expect(() => helper.command.tagAllComponents()).to.throw(
+        'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
+      );
+    });
+    it('should succeed with --skip-tests', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+      expect(() => helper.command.tagAllComponents('--skip-tests')).to.not.throw();
+    });
+    it('should succeed with --force-deploy', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+      expect(() => helper.command.tagAllComponents('--force-deploy')).to.not.throw();
     });
   });
 });

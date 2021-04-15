@@ -46,7 +46,9 @@ export interface Command {
   internal?: boolean;
 
   /**
-   * should turn on Loader
+   * should turn on Loader.
+   * the default is false for internal-commands and true for others.
+   * @see cliMain.setDefaults()
    */
   loader?: boolean;
 

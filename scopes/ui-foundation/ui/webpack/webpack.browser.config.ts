@@ -1,7 +1,6 @@
 import { Configuration } from 'webpack';
 import TerserPlugin from 'terser-webpack-plugin';
-import OptimizeCSSAssetsPlugin from 'optimize-css-assets-webpack-plugin';
-import safePostCssParser from 'postcss-safe-parser';
+import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import path from 'path';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { merge } from 'webpack-merge';
@@ -76,25 +75,16 @@ function createBrowserConfig(workspaceDir: string, title: string, publicDir: str
               ascii_only: true,
             },
           },
-          sourceMap: shouldUseSourceMap,
         }),
-        // This is only used in production mode
-        new OptimizeCSSAssetsPlugin({
-          cssProcessorOptions: {
-            parser: safePostCssParser,
-            map: shouldUseSourceMap
-              ? {
-                  // `inline: false` forces the sourcemap to be output into a
-                  // separate file
-                  inline: false,
-                  // `annotation: true` appends the sourceMappingURL to the end of
-                  // the css file, helping the browser find the sourcemap
-                  annotation: true,
-                }
-              : false,
-          },
-          cssProcessorPluginOptions: {
-            preset: ['default', { minifyFontValues: { removeQuotes: false } }],
+        new CssMinimizerPlugin({
+          sourceMap: shouldUseSourceMap,
+          minimizerOptions: {
+            preset: [
+              'default',
+              {
+                minifyFontValues: { removeQuotes: false },
+              },
+            ],
           },
         }),
       ],

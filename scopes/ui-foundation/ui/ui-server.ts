@@ -15,7 +15,8 @@ import { StartPlugin } from './start-plugin';
 import { ProxyEntry, UIRoot } from './ui-root';
 import { UIRuntime } from './ui.aspect';
 import { UiMain } from './ui.main.runtime';
-import { devConfig } from './webpack/webpack.dev.config';
+
+const { devConfig } = require('./webpack/webpack.dev.config');
 
 export type UIServerProps = {
   graphql: GraphqlMain;
@@ -99,6 +100,7 @@ export class UIServer {
       });
 
       if (ssrMiddleware) {
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         app.get('*', ssrMiddleware);
         this.logger.debug('[ssr] serving for "*"');
       } else {
@@ -153,6 +155,7 @@ export class UIServer {
     const config = await this.getDevConfig();
     const compiler = webpack(config);
     const devServerConfig = await this.getDevServerConfig(config.devServer);
+    // @ts-ignore in the capsules it throws an error about compatibilities issues between webpack.compiler and webpackDevServer/webpack/compiler
     const devServer = new WebpackDevServer(compiler, devServerConfig);
     devServer.listen(selectedPort);
     return devServer;

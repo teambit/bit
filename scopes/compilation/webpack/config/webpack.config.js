@@ -1,4 +1,6 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+
 const html = require('./html');
 
 module.exports = (entries, rootPath) => {
@@ -10,17 +12,11 @@ module.exports = (entries, rootPath) => {
     // This means they will be the "root" imports that are included in JS bundle.
     entry: entries.filter(Boolean),
 
-    node: {
-      fs: 'empty',
-    },
-
     output: {
       // The build folder.
       path: `${rootPath}/public`,
 
       filename: 'static/js/[name].[contenthash:8].js',
-      // TODO: remove this when upgrading to webpack 5
-      futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: 'static/js/[name].[contenthash:8].chunk.js',
       // webpack uses `publicPath` to determine where the app is being served from.
@@ -30,6 +26,23 @@ module.exports = (entries, rootPath) => {
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
       globalObject: 'this',
+    },
+
+    resolve: {
+      alias: {
+        process: require.resolve('process/browser'),
+        buffer: require.resolve('buffer/'),
+      },
+
+      fallback: {
+        util: require.resolve('util'),
+        assert: require.resolve('assert'),
+        path: require.resolve('path-browserify'),
+        buffer: require.resolve('buffer/'),
+        process: require.resolve('process/browser'),
+        stream: require.resolve('stream-browserify'),
+        fs: false,
+      },
     },
 
     plugins: [
@@ -56,6 +69,10 @@ module.exports = (entries, rootPath) => {
           }
         )
       ),
+      new webpack.ProvidePlugin({
+        process: require.resolve('process/browser'),
+        Buffer: [require.resolve('buffer/'), 'Buffer'],
+      }),
     ],
   };
 };

@@ -22,6 +22,9 @@ export default class Symlink {
     return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
   }
 
+  /**
+   * @deprecated use write() instead, it was fixed to use the native fs.symlinkSync for non-windows
+   */
   writeWithNativeFS() {
     const dest = this.dest;
     this._throwForMissingDistOutsideComponent();

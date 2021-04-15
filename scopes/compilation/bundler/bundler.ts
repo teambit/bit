@@ -1,7 +1,7 @@
 import { Component } from '@teambit/component';
 
 export interface DevServer {
-  start();
+  start(): void;
 }
 
 export type BundlerResult = {

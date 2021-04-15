@@ -26,6 +26,7 @@ export default class Put implements LegacyCommand {
         .on('data', (chunk) => {
           data += chunk.toString();
         })
+        // eslint-disable-next-line @typescript-eslint/no-misused-promises
         .on('end', () => {
           logger.info('Checking if a migration is needed');
           const scopePath = fromBase64(path);

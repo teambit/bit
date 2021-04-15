@@ -1,4 +1,7 @@
 ---
+id: logger
+title: Logger
+slug: /aspects/logger
 description: Modern logging for component-driven applications.
 labels: ['logger', 'component-based', 'bit']
 ---
@@ -10,7 +13,7 @@ LoggerMain.createLogger('your-extension-id');
 ```
 
 # Log to a file
-The following standard methods are available to log into a file. By default it's the `debug.log` file located at  `~/Library/Caches/Bit/logs` for Mac/Linux or  `$LOCALAPPDATA\Bit` for Windows.
+The following standard methods are available to log into a file. By default it's the `debug.log` file located at  `~/Library/Caches/Bit/logs` for Mac/Linux or  `%LOCALAPPDATA%\Bit` for Windows.
 
 ```
 logger.trace(message: string, ...meta: any[]);
