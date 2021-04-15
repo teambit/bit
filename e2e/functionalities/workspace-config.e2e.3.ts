@@ -145,8 +145,8 @@ describe('workspace config', function () {
         });
         it('bit diff should show the tagged dependency version vs the version from overrides', () => {
           const diff = helper.command.diff('bar');
-          expect(diff).to.have.string('- [ foo@2.0.0 ]');
-          expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+          expect(diff).to.have.string('- foo@2.0.0');
+          expect(diff).to.have.string('+ foo@0.0.1');
         });
         describe('tagging the component', () => {
           before(() => {
