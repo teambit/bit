@@ -11,7 +11,13 @@ export default class Symlink {
   componentId: BitId | null | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forDistOutsideComponentsDir: boolean;
-  constructor(src: string, dest: string, componentId?: BitId, forDistOutsideComponentsDir = false) {
+  constructor(
+    src: string,
+    dest: string,
+    componentId?: BitId,
+    forDistOutsideComponentsDir = false,
+    private srcAbsolute?: string
+  ) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;
@@ -19,7 +25,12 @@ export default class Symlink {
   }
   write() {
     this._throwForMissingDistOutsideComponent();
-    return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
+    return createSymlinkOrCopy(
+      this.src,
+      this.dest,
+      this.componentId ? this.componentId.toString() : null,
+      this.srcAbsolute
+    );
   }
 
   /**
