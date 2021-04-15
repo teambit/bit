@@ -104,6 +104,7 @@ function enableLoaderIfPossible() {
     'log',
     'checkout',
     'merge',
+    'diff',
   ];
   if (
     safeCommandsForLoader.includes(process.argv[2]) &&
