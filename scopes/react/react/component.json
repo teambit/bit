@@ -29,7 +29,7 @@
           "react-app-polyfill": "1.0.6",
           "resolve-url-loader": "3.1.2",
           "file-loader": "6.2.0",
-          "jest-environment-jsdom-fourteen": "1.0.1",
+          "jest-environment-jsdom": "26.6.2",
           "identity-obj-proxy": "3.0.0",
           "url-loader": "4.1.1",
           "jest-watch-typeahead": "0.6.1",
@@ -60,7 +60,7 @@
         "peerDependencies": {
           "react": "^16.8.0 || ^17.0.0",
           "react-dom": "^16.8.0 || ^17.0.0",
-          "@teambit/legacy": "1.0.56"
+          "@teambit/legacy": "1.0.58"
         }
       }
     }
