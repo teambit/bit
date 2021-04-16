@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { EvaIconFont } from '@teambit/evangelist.theme.icon-font';
+import { IconFont } from '@teambit/theme.icons-font';
 import { RenderingContext } from '@teambit/preview';
 import { Base } from './base';
 
@@ -17,7 +17,7 @@ export function DocsApp({ Provider = Noop, docs, componentId, compositions, rend
   return (
     <Provider>
       <ThemeContext>
-        <EvaIconFont query="mxd7i0" />
+        <IconFont query="jyyv17" />
         <Base docs={docs} componentId={componentId} compositions={compositions} renderingContext={renderingContext} />
       </ThemeContext>
     </Provider>

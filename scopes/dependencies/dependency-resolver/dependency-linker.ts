@@ -226,14 +226,13 @@ export class DependencyLinker {
           from: `${linkSrc} ${origPath}`,
           to: linkTarget,
         };
-        const resolvedTarget = path.resolve(linkTarget, '..');
-        const relativeSrc = path.relative(resolvedTarget, linkSrc);
+        const linkTargetParent = path.resolve(linkTarget, '..');
+        const relativeSrc = path.relative(linkTargetParent, linkSrc);
         const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
         this.logger.info(
           `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
         );
-
-        symlink.writeWithNativeFS();
+        symlink.write();
         return linkDetail;
       });
 
@@ -450,7 +449,7 @@ export class DependencyLinker {
       if (fs.existsSync(target)) {
         return undefined;
       }
-      fs.symlinkSync(aspectPath, target);
+      createSymlinkOrCopy(aspectPath, target);
       return { aspectId: id, linkDetail: { from: aspectPath, to: target } };
     } catch (err) {
       throw new CoreAspectLinkError(id, err);
@@ -489,7 +488,7 @@ export class DependencyLinker {
       if (fs.existsSync(target)) {
         return undefined;
       }
-      fs.symlinkSync(harmonyPath, target);
+      createSymlinkOrCopy(harmonyPath, target);
       return { from: harmonyPath, to: target };
     } catch (err) {
       throw new HarmonyLinkError(err);
