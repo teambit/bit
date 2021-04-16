@@ -48,7 +48,7 @@ export default function createSymlinkOrCopy(
       }
       // the src is a relative-path of the dest, not of the cwd, that's why it got ENOENT
       if (IS_WINDOWS) {
-        const srcAbsolute = path.resolve(srcPath, '..', destPath);
+        const srcAbsolute = path.join(destPath, '..', srcPath);
         hardLinkOrJunction(srcAbsolute);
         return;
       }
