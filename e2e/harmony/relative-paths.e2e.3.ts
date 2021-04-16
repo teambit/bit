@@ -70,7 +70,7 @@ describe('relative paths flow (components requiring each other by relative paths
             helper.command.importComponent('comp1');
           });
           it('should write the component files with the short dirs (without rootDir)', () => {
-            expect(path.join(helper.scopes.localPath, 'components/comp1/index.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/index.js')).to.be.a.file();
           });
           it('should not generate link files', () => {
             expect(path.join(helper.scopes.localPath, 'components/comp1/comp2')).not.to.be.a.path();
