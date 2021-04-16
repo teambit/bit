@@ -18,9 +18,10 @@ export class ReactApp implements Application {
   ) {}
 
   applicationType = 'react';
+
   async run(context: AppContext): Promise<void> {
     const devServerContext = this.getDevServerContext(context);
-    const devServer = this.reactEnv.getDevServer(devServerContext);
+    const devServer = this.reactEnv.getDevServer(devServerContext, this.getConfig());
     const port = await getPort({ port: this.portRange });
     devServer.listen(port);
   }
@@ -54,6 +55,14 @@ export class ReactApp implements Application {
       publicDir: join(publicDir, 'public'),
     });
     return deployContext;
+  }
+
+  private getConfig() {
+    return {
+      output: {
+        publicPath: `/public/${this.name}`,
+      },
+    };
   }
 
   private getDevServerContext(context: AppContext): DevServerContext {

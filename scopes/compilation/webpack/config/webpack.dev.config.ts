@@ -44,7 +44,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       path: resolveWorkspacePath(publicDirectory),
 
-      publicPath: `${publicRoot}/`,
+      // publicPath: resolveWorkspacePath(publicDirectory),
 
       chunkFilename: 'static/js/[name].chunk.js',
 
@@ -88,7 +88,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       historyApiFallback: {
         disableDotRule: true,
-        index: publicUrlOrPath,
+        index: resolveWorkspacePath(publicDirectory),
       },
 
       client: {

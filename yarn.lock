@@ -6697,9 +6697,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.55, @teambit/legacy@npm:1.0.55::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.55.tgz":
-  version: 1.0.55
-  resolution: "@teambit/legacy@npm:1.0.55::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.55.tgz"
+"@teambit/legacy@npm:1.0.56, @teambit/legacy@npm:1.0.56::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.56.tgz":
+  version: 1.0.56
+  resolution: "@teambit/legacy@npm:1.0.56::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.56.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6820,7 +6820,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 1b3ee9d5000c07f9e8c03cdf6b5a2b4d868ab5065563ad9443eb3ea924f0a64b0ae0a8ea1e1ec6ce1163796cf0e39b90a3d7d8ce1ff8ff932620b8e47907cd49
+  checksum: 84ec99fe15f24a320568b06cc13a6cff600464b601f19d017a6233c8daa4a2a1792439c2190f6369e2bcf16a60faf396559dcc2bf6afb6f82de39c66b5cfd3d8
   languageName: node
   linkType: hard
 
@@ -6948,7 +6948,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.55
+    "@teambit/legacy": 1.0.56
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -6992,8 +6992,8 @@ __metadata:
     "@types/pino": 6.3.6
     "@types/proper-lockfile": 4.1.1
     "@types/puppeteer": 3.0.5
-    "@types/react": ^16.8.0
-    "@types/react-dom": ^16.8.0
+    "@types/react": 16.14.5
+    "@types/react-dom": 16.9.12
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
     "@types/react-tooltip": 3.11.0
@@ -7322,7 +7322,7 @@ __metadata:
     yaml: 1.10.2
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.55
+    "@teambit/legacy": 1.0.56
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8335,7 +8335,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^16.8.0":
+"@types/react-dom@npm:16.9.12":
   version: 16.9.12
   resolution: "@types/react-dom@npm:16.9.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact-dom%2F-%2Freact-dom-16.9.12.tgz"
   dependencies:
@@ -8393,17 +8393,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^16":
-  version: 16.14.4
-  resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
-  dependencies:
-    "@types/prop-types": "*"
-    csstype: ^3.0.2
-  checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
-  languageName: node
-  linkType: hard
-
-"@types/react@npm:^16.8.0":
+"@types/react@npm:16.14.5":
   version: 16.14.5
   resolution: "@types/react@npm:16.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.5.tgz"
   dependencies:
@@ -8411,6 +8401,16 @@ __metadata:
     "@types/scheduler": "*"
     csstype: ^3.0.2
   checksum: 76840cce4dae25a17b1f35950bb232b0bc98beceb45766695f4b0226758aff346cebd3830ffe5f67c3e0030ac24d3ea899750c46e49ee405a2b6d72e87a855ed
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^16":
+  version: 16.14.4
+  resolution: "@types/react@npm:16.14.4::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-16.14.4.tgz"
+  dependencies:
+    "@types/prop-types": "*"
+    csstype: ^3.0.2
+  checksum: f994d97aa05233e4f62cd42940ea4290ef1f9a8f3eb0ebda1ea39ed7ae20a16fff7ae1948952dce215b580c2a439fbf451556601be97ebe53a22dbce8a4e31a4
   languageName: node
   linkType: hard
 
@@ -18802,6 +18802,12 @@ fsevents@^1.2.7:
   checksum: cd8ee880be124d0f634e5f58027c2e6c9f600c2874a1e2481cb7acd369f0df6fb41b496aa3fbf247fb6a4a2de8d70b7587854c652493a6c6c21964ce70573100
   languageName: node
   linkType: hard
+
+"harmony-ui-app-839211@workspace:scopes/ui-foundation/harmony-ui-app/harmony-ui-app":
+  version: 0.0.0-use.local
+  resolution: "harmony-ui-app-839211@workspace:scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
+  languageName: unknown
+  linkType: soft
 
 "has-ansi@npm:^2.0.0":
   version: 2.0.0
