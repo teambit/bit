@@ -141,7 +141,7 @@ export default class NodeModuleLinker {
       this.dataToPersist.addSymlink(distSymlink);
     } else if (srcTarget !== '.') {
       // avoid creating symlinks from node_modules to itself
-      this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
+      this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId, true));
     }
     await this._populateDependenciesAndMissingLinks(component);
   }
@@ -252,7 +252,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, or it's Harmony version and above, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId, component.isLegacy));
       }
     });
     this._deleteExistingLinksRootIfSymlink(linkPath);

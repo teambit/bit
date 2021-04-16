@@ -6606,9 +6606,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.58, @teambit/legacy@npm:1.0.58::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.58.tgz":
-  version: 1.0.58
-  resolution: "@teambit/legacy@npm:1.0.58::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.58.tgz"
+"@teambit/legacy@npm:1.0.59, @teambit/legacy@npm:1.0.59::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.59.tgz":
+  version: 1.0.59
+  resolution: "@teambit/legacy@npm:1.0.59::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.59.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6729,7 +6729,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: dd927c42b492674815f8a75533e6a6d1e63f68bf11be616320971b6e855e93cb97d79ada59f7435102c5589584fac4cca1c34f55bb5f3ba91dc1ccfb92e860b5
+  checksum: d4e253c077798991791905883a8c89005a3a986db78a53a987dcc5d95e6f38123e4c297c92d446a145bf8b223a60e4f1e54bd3edda9d7f6dd837c0d7fd3333fa
   languageName: node
   linkType: hard
 
@@ -6857,7 +6857,7 @@ __metadata:
     "@teambit/evangelist.surfaces.tooltip": 0.5.4
     "@teambit/evangelist.theme.icon-font": 0.5.5
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.58
+    "@teambit/legacy": 1.0.59
     "@teambit/network.agent": 0.0.1
     "@teambit/string.ellipsis": 0.0.7
     "@teambit/ui.composition-card": 0.0.259
@@ -7232,7 +7232,7 @@ __metadata:
     yaml: 1.10.2
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.58
+    "@teambit/legacy": 1.0.59
   bin:
     bit: bin/bit.js
   languageName: unknown
