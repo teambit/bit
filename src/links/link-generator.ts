@@ -110,7 +110,9 @@ function getComponentLinks({
   }
 
   if (symlinks.length) {
-    dataToPersist.addManySymlinks(symlinks.map((symlink) => Symlink.makeInstance(symlink.source, symlink.dest)));
+    dataToPersist.addManySymlinks(
+      symlinks.map((symlink) => Symlink.makeInstance(symlink.source, symlink.dest, undefined, true))
+    );
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist.addManyFiles(linksToWrite.map((linkToWrite) => LinkFile.load(linkToWrite)));
@@ -161,11 +163,9 @@ function groupLinks(
     if (firstGroupItem.symlinkTo) {
       if (firstGroupItem.postInstallSymlink) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         postInstallSymlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
         return;
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       symlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
       return;
