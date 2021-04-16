@@ -70,6 +70,7 @@ export class ReactApp implements Application {
       entry: this.runEntry,
       rootPath: '',
       publicPath: `public/${this.name}`,
+      title: this.name,
     });
   }
 }
