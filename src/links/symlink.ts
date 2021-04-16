@@ -16,7 +16,7 @@ export default class Symlink {
     dest: string,
     componentId?: BitId,
     forDistOutsideComponentsDir = false,
-    private srcAbsolute?: string
+    private avoidHardLink = false
   ) {
     this.src = src;
     this.dest = dest;
@@ -29,7 +29,7 @@ export default class Symlink {
       this.src,
       this.dest,
       this.componentId ? this.componentId.toString() : null,
-      this.srcAbsolute
+      this.avoidHardLink
     );
   }
 
@@ -56,8 +56,8 @@ export default class Symlink {
     return fs.symlinkSync(this.src, dest);
   }
 
-  static makeInstance(src: string, dest: string, componentId?: BitId) {
-    return new Symlink(src, dest, componentId);
+  static makeInstance(src: string, dest: string, componentId?: BitId, avoidHardLink?: boolean) {
+    return new Symlink(src, dest, componentId, undefined, avoidHardLink);
   }
   _throwForMissingDistOutsideComponent() {
     if (!this.forDistOutsideComponentsDir) return;

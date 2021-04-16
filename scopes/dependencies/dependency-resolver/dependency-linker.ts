@@ -228,7 +228,7 @@ export class DependencyLinker {
         };
         const linkTargetParent = path.resolve(linkTarget, '..');
         const relativeSrc = path.relative(linkTargetParent, linkSrc);
-        const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false, linkSrc);
+        const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
         this.logger.info(
           `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
         );
