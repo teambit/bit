@@ -60,7 +60,7 @@ export function Compositions({ menuBarWidgets }: { menuBarWidgets?: Compositions
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
-          <CompositionsMenuBar menuBarWidgets={menuBarWidgets} />
+          <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar} />
           <CompositionContent component={component} selected={selected} queryParams={queryParams} />
         </Pane>
         <HoverSplitter className={styles.splitter}>

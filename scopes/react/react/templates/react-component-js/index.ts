@@ -1,8 +1,8 @@
 import { ComponentTemplate, ComponentContext } from '@teambit/generator';
-import { componentFile } from './component';
-import { compositionFile } from './composition';
-import { docsFile } from './docs';
-import { testFile } from './test';
+import { componentFile } from './files/component';
+import { compositionFile } from './files/composition';
+import { docsFile } from './files/docs';
+import { testFile } from './files/test';
 
 export const reactComponentJS: ComponentTemplate = {
   name: 'react-component-js',

@@ -4,16 +4,15 @@ import { compositionFile } from './files/composition';
 import { docsFile } from './files/docs';
 import { testFile } from './files/test';
 
-export const reactComponent: ComponentTemplate = {
-  name: 'react-component',
-  description: 'a generic react component',
+export const reactHook: ComponentTemplate = {
+  name: 'react-hook',
+  description: 'a generic react hook component',
 
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
     const indexFile = {
       relativePath: 'index.ts',
       content: `export { ${Name} } from './${name}';
-export type { ${Name}Props } from './${name}';
 `,
     };
 
