@@ -1,7 +1,7 @@
 import { Configuration } from 'webpack';
 import { mergeDeepLeft } from 'ramda';
 import { MainRuntime } from '@teambit/cli';
-import type { CompilerMain } from '@teambit/compiler';
+import type { CompilerMain, CompilerOptions } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
 import { BuildTask } from '@teambit/builder';
 import { Component } from '@teambit/component';
@@ -220,6 +220,17 @@ export class ReactMain {
     return this.envs.override({
       getCompiler: () => {
         return compiler;
+      },
+    });
+  }
+
+  /**
+   * compile mdx files into React components.
+   */
+  useMdx() {
+    return this.envs.override({
+      getCompiler: (targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) => {
+        return this.reactEnv.getCompiler(targetConfig, compilerOptions, tsModule, true);
       },
     });
   }
