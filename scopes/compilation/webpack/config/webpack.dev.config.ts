@@ -17,7 +17,7 @@ const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
+export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub, title?) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -45,7 +45,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       path: resolveWorkspacePath(publicDirectory),
 
-      publicPath: `${publicRoot}/`,
+      // publicPath: resolveWorkspacePath(publicDirectory),
 
       chunkFilename: 'static/js/[name].chunk.js',
 
@@ -89,7 +89,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       historyApiFallback: {
         disableDotRule: true,
-        index: publicUrlOrPath,
+        index: resolveWorkspacePath(publicDirectory),
       },
 
       client: {
@@ -147,7 +147,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
     plugins: [
       new HtmlWebpackPlugin({
-        templateContent: html('Component preview'),
+        templateContent: html(title || 'Component preview'),
         filename: 'index.html',
       }),
 
