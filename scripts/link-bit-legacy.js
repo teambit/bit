@@ -6,8 +6,12 @@ const destParent = path.join(bitDir, 'node_modules', '@teambit');
 const dest = path.join(destParent, 'legacy');
 
 try {
-  fs.unlinkSync(dest);
+  fs.rmdirSync(dest, { recursive: true });
 } catch (err) {} // maybe doesn't exist
+
+try {
+  fs.unlinkSync(dest);
+} catch (err) {} // maybe doesn't exist or not a symlink
 
 fs.mkdirSync(destParent, { recursive: true });
 fs.symlinkSync(bitDir, dest, 'junction');
