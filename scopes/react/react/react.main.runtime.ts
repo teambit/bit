@@ -213,6 +213,9 @@ export class ReactMain {
     });
   }
 
+  /**
+   * TODO: @gilad we need to implement this.
+   */
   overrideEslintConfig() {}
 
   /**
@@ -228,18 +231,6 @@ export class ReactMain {
       },
     });
   }
-
-  /**
-   * overrides the preview compositions mounter.
-   * this allows to create a custom DOM mounter for compositions of components.
-   */
-  // overrideCompositionsMounter(mounterPath: string) {
-  //   return this.envs.override({
-  //     getMounter: () => {
-  //       return mounterPath;
-  //     }
-  //   });
-  // }
 
   /**
    * returns doc adjusted specifically for react components.
