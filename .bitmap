@@ -33,7 +33,7 @@
     },
     "bit": {
         "scope": "teambit.harmony",
-        "version": "0.0.366",
+        "version": "0.0.367",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/bit"
     },
@@ -375,13 +375,13 @@
     },
     "network/agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.52",
+        "version": "0.0.53",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/agent"
     },
     "network/proxy-agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.52",
+        "version": "0.0.53",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
@@ -1251,7 +1251,7 @@
     },
     "yarn": {
         "scope": "teambit.dependencies",
-        "version": "0.0.365",
+        "version": "0.0.366",
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/yarn"
     },
