@@ -1,5 +1,6 @@
 import { BabelAspect, BabelMain } from '@teambit/babel';
 import { MainRuntime } from '@teambit/cli';
+import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import DocsAspect, { DocsMain } from '@teambit/docs';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
@@ -38,6 +39,7 @@ export class MDXMain {
     EnvsAspect,
     MultiCompilerAspect,
     BabelAspect,
+    CompilerAspect,
   ];
 
   static defaultConfig = {
@@ -45,19 +47,23 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, babel]: [
+    [docs, depResolver, react, envs, multiCompiler, babel, compiler]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
       EnvsMain,
       MultiCompilerMain,
-      BabelMain
+      BabelMain,
+      CompilerMain
     ],
     config: MDXConfig
   ) {
     const mdx = new MDXMain();
     const mdxCompiler = multiCompiler.createCompiler([mdx.createCompiler(), babel.createCompiler(babelConfig)], {});
-    const mdxEnv = envs.compose(react.reactEnv, [react.overrideCompiler(mdxCompiler)]);
+    const mdxEnv = envs.compose(react.reactEnv, [
+      react.overrideCompiler(mdxCompiler),
+      react.overrideCompilerTasks([compiler.createTask('mdx-compiler', mdxCompiler)]),
+    ]);
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
