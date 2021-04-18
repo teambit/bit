@@ -56,11 +56,8 @@ export class MDXMain {
     config: MDXConfig
   ) {
     const mdx = new MDXMain();
-    const mdxEnv = envs.compose(react.reactEnv, [
-      react.overrideCompiler(() => {
-        return multiCompiler.createCompiler([mdx.createCompiler(), babel.createCompiler(babelConfig)], {});
-      }),
-    ]);
+    const mdxCompiler = multiCompiler.createCompiler([mdx.createCompiler(), babel.createCompiler(babelConfig)], {});
+    const mdxEnv = envs.compose(react.reactEnv, [react.overrideCompiler(mdxCompiler)]);
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));

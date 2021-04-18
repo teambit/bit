@@ -205,10 +205,10 @@ export class ReactMain {
   /**
    * override the workspace compiler.
    */
-  overrideCompiler(compilerFn: () => Compiler) {
+  overrideCompiler(compiler: Compiler) {
     return this.envs.override({
       getCompiler: () => {
-        return compilerFn();
+        return compiler;
       },
     });
   }
