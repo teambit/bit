@@ -122,8 +122,8 @@
         "@teambit/harmony": "0.2.11",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
-        "@testing-library/jest-dom": "5.11.9",
-        "@testing-library/react": "11.0.4",
+        "@testing-library/jest-dom": "5.11.10",
+        "@testing-library/react": "11.2.6",
         "@tippyjs/react": "4.2.0",
         "@types/classnames": "2.2.11",
         "@types/cors": "2.8.10",
@@ -308,7 +308,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.57",
+        "@teambit/legacy": "1.0.61",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -369,7 +369,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.57"
+            "@teambit/legacy": "1.0.61"
           }
         }
       },
@@ -522,7 +522,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.57",
+            "@teambit/legacy": "1.0.61",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

@@ -1,5 +1,5 @@
-module.exports = function html(title, components) {
-  return ({ htmlWebpackPlugin }) => `
+module.exports = function html(title) {
+  return () => `
   <!DOCTYPE html>
   <html lang="en">
     <head>
