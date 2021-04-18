@@ -317,11 +317,11 @@ export class AspectLoaderMain {
       // TODO: improve texts
       const warning = UNABLE_TO_LOAD_EXTENSION_FROM_LIST(ids);
       this.logger.warn(warning, e);
-      console.log(e);
       if (this.logger.isLoaderStarted) {
         this.logger.consoleFailure(warning);
       } else {
         this.logger.console(warning);
+        this.logger.console(e);
       }
       if (throwOnError) {
         throw e;
