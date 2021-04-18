@@ -6,6 +6,7 @@ import DocsAspect, { DocsMain } from '@teambit/docs';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import MultiCompilerAspect, { MultiCompilerMain } from '@teambit/multi-compiler';
 import ReactAspect, { ReactMain } from '@teambit/react';
+import { TypescriptAspect, TypescriptMain } from '@teambit/typescript';
 import { MDXAspect } from './mdx.aspect';
 import { MDXCompiler } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
@@ -40,6 +41,7 @@ export class MDXMain {
     MultiCompilerAspect,
     BabelAspect,
     CompilerAspect,
+    TypescriptAspect,
   ];
 
   static defaultConfig = {
@@ -47,19 +49,23 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, babel, compiler]: [
+    [docs, depResolver, react, envs, multiCompiler, babel, compiler, ts]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
       EnvsMain,
       MultiCompilerMain,
       BabelMain,
-      CompilerMain
+      CompilerMain,
+      TypescriptMain
     ],
     config: MDXConfig
   ) {
     const mdx = new MDXMain();
-    const mdxCompiler = multiCompiler.createCompiler([mdx.createCompiler(), babel.createCompiler(babelConfig)], {});
+    const mdxCompiler = multiCompiler.createCompiler(
+      [mdx.createCompiler(), babel.createCompiler(babelConfig), react.reactEnv.getCompiler()],
+      {}
+    );
     const mdxEnv = envs.compose(react.reactEnv, [
       react.overrideCompiler(mdxCompiler),
       react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
