@@ -10,6 +10,8 @@ import { MDXCompiler } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
 
+const babelConfig = require('./babel/babel.config');
+
 export type MDXCompilerOpts = {};
 
 export type MDXConfig = {
@@ -56,7 +58,7 @@ export class MDXMain {
     const mdx = new MDXMain();
     const mdxEnv = envs.compose(react.reactEnv, [
       react.overrideCompiler(() => {
-        return multiCompiler.createCompiler([mdx.createCompiler(), babel.createCompiler({})], {});
+        return multiCompiler.createCompiler([mdx.createCompiler(), babel.createCompiler(babelConfig)], {});
       }),
     ]);
     envs.registerEnv(mdxEnv);
