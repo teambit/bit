@@ -37,7 +37,7 @@ export class TypescriptCompiler implements Compiler {
    * compile one file on the workspace
    */
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const supportedExtensions = ['.ts', '.tsx'];
+    const supportedExtensions = ['.ts', '.tsx', '.js', '.jsx'];
     const fileExtension = path.extname(options.filePath);
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
       return null; // file is not supported
@@ -139,7 +139,13 @@ export class TypescriptCompiler implements Compiler {
    * whether typescript is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
-    return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
+    return (
+      (filePath.endsWith('.ts') ||
+        filePath.endsWith('.tsx') ||
+        filePath.endsWith('.js') ||
+        filePath.endsWith('.jsx')) &&
+      !filePath.endsWith('.d.ts')
+    );
   }
 
   /**
