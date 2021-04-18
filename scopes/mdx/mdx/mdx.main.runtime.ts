@@ -6,7 +6,6 @@ import DocsAspect, { DocsMain } from '@teambit/docs';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import MultiCompilerAspect, { MultiCompilerMain } from '@teambit/multi-compiler';
 import ReactAspect, { ReactMain } from '@teambit/react';
-import { TypescriptAspect, TypescriptMain } from '@teambit/typescript';
 import { MDXAspect } from './mdx.aspect';
 import { MDXCompiler } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
@@ -41,7 +40,6 @@ export class MDXMain {
     MultiCompilerAspect,
     BabelAspect,
     CompilerAspect,
-    TypescriptAspect,
   ];
 
   static defaultConfig = {
@@ -49,15 +47,14 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, babel, compiler, ts]: [
+    [docs, depResolver, react, envs, multiCompiler, babel, compiler]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
       EnvsMain,
       MultiCompilerMain,
       BabelMain,
-      CompilerMain,
-      TypescriptMain
+      CompilerMain
     ],
     config: MDXConfig
   ) {
