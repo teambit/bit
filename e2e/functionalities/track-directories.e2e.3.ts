@@ -147,7 +147,7 @@ describe('track directories functionality', function () {
       });
       it('should change the files according to the new rootDir', () => {
         const files = helper.command.getComponentFiles('utils/bar');
-        expect(files).to.include('bar/foo.js');
+        expect(files).to.include(path.join('bar', 'foo.js'));
         expect(files).to.not.include('foo.js');
       });
     });
@@ -295,7 +295,7 @@ describe('track directories functionality', function () {
     });
     it('the files on the sub-dir should be auto-tracked', () => {
       const files = helper.command.getComponentFiles('bar');
-      expect(files).to.include('baz/baz.ts');
+      expect(files).to.include(path.join('baz', 'baz.ts'));
     });
   });
 });

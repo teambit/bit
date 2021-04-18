@@ -14,11 +14,17 @@ export default class Diff implements LegacyCommand {
   bit diff [id] [version] [to_version] => compare the specified version files to to_version files
   ${WILDCARD_HELP('diff')}`;
   alias = '';
-  opts = [['v', 'verbose', 'show a more verbose output when possible']] as CommandOptions;
+  opts = [
+    ['v', 'verbose', 'show a more verbose output when possible'],
+    ['t', 'table', 'show tables instead of plain text for dependencies diff'],
+  ] as CommandOptions;
   loader = true;
 
-  action([values]: [string[]], { verbose = false }: { verbose?: boolean }): Promise<DiffResults[]> {
-    return diff(values, verbose);
+  action(
+    [values]: [string[]],
+    { verbose = false, table = false }: { verbose?: boolean; table: boolean }
+  ): Promise<DiffResults[]> {
+    return diff(values, verbose, table);
   }
 
   report(diffResults: DiffResults[]): string {
