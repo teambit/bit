@@ -23,6 +23,10 @@ export type MDXConfig = {
 };
 
 export class MDXMain {
+  // icon() {
+  //   return 'https://static.bit.dev/file-icons/file_type_mdx.svg';
+  // }
+
   /**
    * create an instance of the MDX compiler.
    */
