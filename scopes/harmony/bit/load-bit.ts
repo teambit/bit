@@ -161,7 +161,18 @@ function getMainAspect() {
  */
 function shouldLoadInSafeMode() {
   const currentCommand = process.argv[2];
-  const safeModeCommands = ['cc', 'clear-cache', 'init', 'cat-scope', 'cat-object', 'cat-component', 'cmp', 'cat-lane'];
+  const safeModeCommands = [
+    'cc',
+    'clear-cache',
+    'init',
+    'cat-scope',
+    'cat-object',
+    'cat-component',
+    'cmp',
+    'cat-lane',
+    'login',
+    'logout',
+  ];
   const hasSafeModeFlag = process.argv.includes('--safe-mode');
   const isSafeModeCommand = safeModeCommands.includes(currentCommand);
   return isSafeModeCommand || hasSafeModeFlag;
