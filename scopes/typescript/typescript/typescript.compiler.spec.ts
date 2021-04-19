@@ -28,9 +28,13 @@ describe('TypescriptCompiler', () => {
       const tsCompiler = getTsCompiler();
       expect(tsCompiler.isFileSupported('index.tsx')).to.be.true;
     });
-    it('should not support .js files', () => {
+    it('should support .jsx files', () => {
       const tsCompiler = getTsCompiler();
-      expect(tsCompiler.isFileSupported('index.js')).to.be.false;
+      expect(tsCompiler.isFileSupported('index.jsx')).to.be.true;
+    });
+    it('should support .js files', () => {
+      const tsCompiler = getTsCompiler();
+      expect(tsCompiler.isFileSupported('index.js')).to.be.true;
     });
     it('should not support .d.ts files', () => {
       const tsCompiler = getTsCompiler();

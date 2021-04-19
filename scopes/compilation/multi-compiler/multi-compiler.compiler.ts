@@ -1,4 +1,5 @@
 import { join, extname } from 'path';
+import pMapSeries from 'p-map-series';
 import { Compiler, CompilerOptions, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/modules.merge-component-results';
@@ -74,12 +75,10 @@ export class MultiCompiler implements Compiler {
   }
 
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const builds = await Promise.all(
-      this.compilers.map(async (compiler) => {
-        const buildResult = await compiler.build(context);
-        return buildResult.componentsResults;
-      })
-    );
+    const builds = await pMapSeries(this.compilers, async (compiler) => {
+      const buildResult = await compiler.build(context);
+      return buildResult.componentsResults;
+    });
 
     return {
       componentsResults: mergeComponentResults(builds),
