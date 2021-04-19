@@ -21,7 +21,7 @@ import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import previewConfigFactory from './webpack/webpack.config.preview';
-import eslintConfig from './eslint/eslintrc';
+import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
