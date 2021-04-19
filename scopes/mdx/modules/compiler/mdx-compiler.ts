@@ -18,6 +18,7 @@ export type MDXCompileOptions = {
 };
 
 export const DEFAULT_RENDERER = `
+// @ts-nocheck
 import React from 'react'
 import { mdx } from '@mdx-js/react'
 
