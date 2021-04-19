@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import fsNative from 'fs';
 import * as path from 'path';
 import symlinkOrCopy from 'symlink-or-copy';
 import { IS_WINDOWS } from '../../constants';
@@ -40,6 +41,12 @@ export default function createSymlinkOrCopy(
     try {
       hardLinkOrJunction(srcPath);
     } catch (err) {
+      if (err.code === 'EXDEV') {
+        // this is docker, which for some weird reason, throw error: "EXDEV: cross-device link not permitted"
+        // only when using fs-extra. it doesn't happen with "fs".
+        fsNative.symlinkSync(srcPath, destPath);
+        return;
+      }
       if (err.code !== 'ENOENT') {
         throw err;
       }
