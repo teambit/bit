@@ -3,7 +3,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 const html = require('./html');
 
-module.exports = (entries, rootPath) => {
+export function configFactory(entries, rootPath) {
   return {
     mode: 'production',
     // Stop compilation early in production
@@ -75,4 +75,4 @@ module.exports = (entries, rootPath) => {
       }),
     ],
   };
-};
+}

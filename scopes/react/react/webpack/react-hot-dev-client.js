@@ -125,7 +125,7 @@ function handleWarnings(warnings) {
       // eslint-disable-next-line no-plusplus
       for (let i = 0; i < formatted.warnings.length; i++) {
         if (i === 5) {
-          // eslint-disable-next-line no-console
+          // eslint-disable-next-line
           console.warn('There were more warnings in other files.\n' + 'You can find a complete log in the terminal.');
           break;
         }

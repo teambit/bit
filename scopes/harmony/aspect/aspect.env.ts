@@ -49,8 +49,8 @@ export class AspectEnv implements Environment {
     const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
 
     return [
-      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
       this.compiler.createTask('TypescriptCompiler', tsCompiler), // for d.ts files
+      this.compiler.createTask('BabelCompiler', babelCompiler), // for dists
       ...pipeWithoutCompiler,
     ];
   }
