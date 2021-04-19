@@ -18,10 +18,8 @@ import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
-import { MDXAspect, MDXMain } from '@teambit/mdx';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
@@ -46,8 +44,6 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
-  MultiCompilerMain,
-  MDXMain,
   ApplicationMain,
   GeneratorMain
 ];
@@ -64,13 +60,6 @@ export type ReactMainConfig = {
    * can be either Jest ('jest') or Mocha ('mocha')
    */
   tester: 'jest' | 'mocha';
-
-  /**
-   * determine whether to compile MDX files or not.
-   * please note this does not apply to component documentation which will work anyway.
-   * configure this to `true` when sharing MDX components and MDX file compilation is required.
-   */
-  mdx: boolean;
 
   /**
    * version of React to configure.
@@ -224,6 +213,9 @@ export class ReactMain {
     });
   }
 
+  /**
+   * TODO: @gilad we need to implement this.
+   */
   overrideEslintConfig() {}
 
   /**
@@ -239,18 +231,6 @@ export class ReactMain {
       },
     });
   }
-
-  /**
-   * overrides the preview compositions mounter.
-   * this allows to create a custom DOM mounter for compositions of components.
-   */
-  // overrideCompositionsMounter(mounterPath: string) {
-  //   return this.envs.override({
-  //     getMounter: () => {
-  //       return mounterPath;
-  //     }
-  //   });
-  // }
 
   /**
    * returns doc adjusted specifically for react components.
@@ -282,8 +262,6 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
-    MultiCompilerAspect,
-    MDXAspect,
     ApplicationAspect,
     GeneratorAspect,
   ];
@@ -300,26 +278,12 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
-      multiCompiler,
-      mdx,
       application,
       generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(
-      jestAspect,
-      tsAspect,
-      compiler,
-      webpack,
-      workspace,
-      pkg,
-      tester,
-      config,
-      eslint,
-      multiCompiler,
-      mdx
-    );
+    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
     const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
