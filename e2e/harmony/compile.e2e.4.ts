@@ -83,7 +83,7 @@ describe('compile extension', function () {
           helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('*');
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
