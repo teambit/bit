@@ -261,6 +261,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     }
     this.command.link();
     this.fs.outputFile('app.js', `const comp1 = require('${nmPathPrefix}comp1').default;\nconsole.log(comp1())`);
+    this.command.compile();
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}`)
