@@ -114,6 +114,7 @@ export class ReactMain {
    * register a new React application.
    */
   registerReactApp(options: ReactAppOptions) {
+    if (!this.workspace) return;
     this.application.registerApp(
       new ReactApp(
         options.name,
