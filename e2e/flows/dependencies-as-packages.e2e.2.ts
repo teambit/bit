@@ -203,8 +203,8 @@ chai.use(require('chai-fs'));
             });
             it('bit diff should show the dependencies ', () => {
               const diff = helper.command.diff('bar/foo');
-              expect(diff).to.have.string(`- [ ${helper.scopes.remote}/utils/is-string@0.0.2 ]`);
-              expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/utils/is-string@0.0.1 ]`);
+              expect(diff).to.have.string(`- ${helper.scopes.remote}/utils/is-string@0.0.2`);
+              expect(diff).to.have.string(`+ ${helper.scopes.remote}/utils/is-string@0.0.1`);
             });
             describe('tagging the component', () => {
               before(() => {

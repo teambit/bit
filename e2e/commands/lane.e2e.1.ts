@@ -5,7 +5,7 @@ import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 
 import { AUTO_SNAPPED_MSG } from '../../src/cli/commands/public-cmds/snap-cmd';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { DEFAULT_LANE } from '../../src/constants';
+import { DEFAULT_LANE, IS_WINDOWS } from '../../src/constants';
 import { LANE_KEY } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -39,7 +39,7 @@ describe('bit lane command', function () {
     let beforeExport;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.snapAllComponents();
@@ -95,7 +95,7 @@ describe('bit lane command', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(beforeExport);
         helper.scopeHelper.reInitRemoteScope();
-        helper.command.export(helper.command.scopes.remote);
+        helper.command.export(`${helper.command.scopes.remote} --lanes`);
       });
       it('should export components on that lane', () => {
         const list = helper.command.listRemoteScopeParsed();
@@ -541,7 +541,7 @@ describe('bit lane command', function () {
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.createLane();
@@ -594,7 +594,7 @@ describe('bit lane command', function () {
       helper.command.tagAllComponents();
       helper.fixtures.createComponentBarFoo(fixtures.fooFixtureV2);
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
 
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.bitJsonc.setupDefault();
@@ -627,7 +627,7 @@ describe('bit lane command', function () {
         helper.bitJsonc.setupDefault();
         helper.fixtures.populateComponents();
         helper.command.snapAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
 
         helper.command.createLane();
         helper.command.snapComponent('comp1 -f');
@@ -648,7 +648,7 @@ describe('bit lane command', function () {
         let beforeRemove;
         before(() => {
           helper.command.switchLocalLane(DEFAULT_LANE);
-          beforeRemove = helper.scopeHelper.cloneLocalScope(false);
+          beforeRemove = helper.scopeHelper.cloneLocalScope(IS_WINDOWS);
         });
         describe('then removing without --force flag', () => {
           let output;
@@ -692,7 +692,7 @@ describe('bit lane command', function () {
         helper.command.createLane();
         helper.fixtures.populateComponents();
         helper.command.snapAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export(`${helper.command.scopes.remote} --lanes`);
       });
       it('as an intermediate step, make sure the lane is on the remote', () => {
         const lanes = helper.command.showRemoteLanesParsed();
@@ -737,7 +737,7 @@ describe('bit lane command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.snapAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
 
       helper.command.createLane();
       helper.fixtures.populateComponents(undefined, undefined, ' v2');
@@ -799,7 +799,7 @@ describe('bit lane command', function () {
       helper.command.snapAllComponents();
     });
     it('should export with no errors about missing artifact files from the first snap', () => {
-      expect(() => helper.command.exportAllComponents()).to.not.throw();
+      expect(() => helper.command.export(`${helper.command.scopes.remote} --lanes`)).to.not.throw();
     });
   });
   describe('auto-snap when on a lane', () => {
@@ -852,7 +852,7 @@ describe('bit lane command', function () {
     // @todo
     describe.skip('importing the component to another scope', () => {
       before(() => {
-        helper.command.exportAllComponents();
+        helper.command.export();
 
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
@@ -878,7 +878,7 @@ describe('bit lane command', function () {
       npmCiRegistry.configureCiInPackageJsonHarmony();
       await npmCiRegistry.init();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       npmCiRegistry.setResolver();
       helper.command.importComponent('comp1');
@@ -901,7 +901,7 @@ describe('bit lane command', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.command.createLane();
       helper.fixtures.populateComponents(1, undefined, 'v2');
       helper.command.snapAllComponentsWithoutBuild();

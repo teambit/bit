@@ -8,11 +8,9 @@ import { CompilerMain, CompilerOptions } from '@teambit/compiler';
 import { Environment, ExecutionContext } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
-import { MDXMain } from '@teambit/mdx';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
-import { MultiCompilerMain } from '@teambit/multi-compiler';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -23,7 +21,7 @@ import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import previewConfigFactory from './webpack/webpack.config.preview';
-import eslintConfig from './eslint/eslintrc';
+import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
 export const AspectEnvType = 'react';
@@ -73,11 +71,7 @@ export class ReactEnv implements Environment {
 
     private config: ReactMainConfig,
 
-    private eslint: ESLintMain,
-
-    private multiCompiler: MultiCompilerMain,
-
-    private mdx: MDXMain
+    private eslint: ESLintMain
   ) {}
 
   getTsConfig(targetTsConfig?: TsConfigSourceFile) {
@@ -112,12 +106,7 @@ export class ReactEnv implements Environment {
   }
 
   getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
-    if (!this.config.mdx) return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
-
-    return this.multiCompiler.createCompiler(
-      [this.createTsCompiler(targetConfig, compilerOptions, tsModule), this.mdx.createCompiler()],
-      compilerOptions
-    );
+    return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
   }
 
   /**
@@ -296,7 +285,7 @@ export class ReactEnv implements Environment {
 
   private getCompilerTask(tsconfig?: TsConfigSourceFile) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('MultiCompiler', this.getCompiler(targetConfig));
+    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig));
   }
 
   async __getDescriptor() {

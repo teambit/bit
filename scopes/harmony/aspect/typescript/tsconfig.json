@@ -15,6 +15,7 @@
     "esModuleInterop": true,
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
+    "allowSyntheticDefaultImports": true,
     "strictPropertyInitialization": false,
     "strict": true,
     "moduleResolution": "node",

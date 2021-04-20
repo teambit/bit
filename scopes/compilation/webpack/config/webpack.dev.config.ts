@@ -1,3 +1,4 @@
+import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
 import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
@@ -16,7 +17,7 @@ const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
+export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub, title?) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -44,7 +45,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       path: resolveWorkspacePath(publicDirectory),
 
-      publicPath: `${publicRoot}/`,
+      // publicPath: resolveWorkspacePath(publicDirectory),
 
       chunkFilename: 'static/js/[name].chunk.js',
 
@@ -88,7 +89,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       historyApiFallback: {
         disableDotRule: true,
-        index: publicUrlOrPath,
+        index: resolveWorkspacePath(publicDirectory),
       },
 
       client: {
@@ -128,17 +129,31 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
     resolve: {
       extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
+      alias: {
+        process: require.resolve('process/browser'),
+        buffer: require.resolve('buffer/'),
+      },
+
       fallback: {
         util: require.resolve('util'),
         assert: require.resolve('assert'),
         path: require.resolve('path-browserify'),
+        buffer: require.resolve('buffer/'),
+        process: require.resolve('process/browser'),
+        stream: require.resolve('stream-browserify'),
+        fs: false,
       },
     },
 
     plugins: [
       new HtmlWebpackPlugin({
-        templateContent: html('Component preview'),
+        templateContent: html(title || 'Component preview'),
         filename: 'index.html',
+      }),
+
+      new webpack.ProvidePlugin({
+        process: require.resolve('process/browser'),
+        Buffer: [require.resolve('buffer/'), 'Buffer'],
       }),
 
       new WebpackBitReporterPlugin({

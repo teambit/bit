@@ -18,18 +18,19 @@ import type { TypescriptMain } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
-import { MDXAspect, MDXMain } from '@teambit/mdx';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { ReactAppOptions } from './react-app-options';
+import { ReactApp } from './react.application';
 import { componentTemplates, workspaceTemplates } from './react.templates';
 
 type ReactDeps = [
@@ -43,8 +44,7 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
-  MultiCompilerMain,
-  MDXMain,
+  ApplicationMain,
   GeneratorMain
 ];
 
@@ -62,13 +62,6 @@ export type ReactMainConfig = {
   tester: 'jest' | 'mocha';
 
   /**
-   * determine whether to compile MDX files or not.
-   * please note this does not apply to component documentation which will work anyway.
-   * configure this to `true` when sharing MDX components and MDX file compilation is required.
-   */
-  mdx: boolean;
-
-  /**
    * version of React to configure.
    */
   reactVersion: string;
@@ -81,7 +74,11 @@ export class ReactMain {
      */
     readonly reactEnv: ReactEnv,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private application: ApplicationMain,
+
+    private workspace: Workspace
   ) {}
 
   readonly env = this.reactEnv;
@@ -111,6 +108,24 @@ export class ReactMain {
         return this.reactEnv.getBuildPipe(tsconfig);
       },
     });
+  }
+
+  /**
+   * register a new React application.
+   */
+  registerReactApp(options: ReactAppOptions) {
+    if (!this.workspace) return;
+    this.application.registerApp(
+      new ReactApp(
+        options.name,
+        options.buildEntry,
+        options.runEntry,
+        options.portRange || [3000, 4000],
+        this.reactEnv,
+        this.workspace.path,
+        options.deploy
+      )
+    );
   }
 
   /**
@@ -199,6 +214,9 @@ export class ReactMain {
     });
   }
 
+  /**
+   * TODO: @gilad we need to implement this.
+   */
   overrideEslintConfig() {}
 
   /**
@@ -214,18 +232,6 @@ export class ReactMain {
       },
     });
   }
-
-  /**
-   * overrides the preview compositions mounter.
-   * this allows to create a custom DOM mounter for compositions of components.
-   */
-  // overrideCompositionsMounter(mounterPath: string) {
-  //   return this.envs.override({
-  //     getMounter: () => {
-  //       return mounterPath;
-  //     }
-  //   });
-  // }
 
   /**
    * returns doc adjusted specifically for react components.
@@ -257,8 +263,7 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
-    MultiCompilerAspect,
-    MDXAspect,
+    ApplicationAspect,
     GeneratorAspect,
   ];
 
@@ -274,26 +279,13 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
-      multiCompiler,
-      mdx,
+      application,
       generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(
-      jestAspect,
-      tsAspect,
-      compiler,
-      webpack,
-      workspace,
-      pkg,
-      tester,
-      config,
-      eslint,
-      multiCompiler,
-      mdx
-    );
-    const react = new ReactMain(reactEnv, envs);
+    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
     generator.registerComponentTemplate(componentTemplates);

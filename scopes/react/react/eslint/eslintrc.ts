@@ -1,6 +1,7 @@
 // Using object
 import '@teambit/eslint-config-bit-react';
-module.exports = {
+
+export const eslintConfig = {
   extends: [require.resolve('@teambit/eslint-config-bit-react')],
   parserOptions: {
     createDefaultProgram: true,
@@ -8,6 +9,8 @@ module.exports = {
     project: require.resolve('../typescript/tsconfig.json'),
   },
 };
+
+module.exports = eslintConfig;
 
 // Using function
 // import generateEslint from '@teambit/eslint-config-bit-react';

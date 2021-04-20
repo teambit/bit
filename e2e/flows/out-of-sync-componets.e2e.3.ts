@@ -112,7 +112,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.addComponentBarFooAsDir();
       const bitMap = helper.bitMap.read();
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       // the mimic and import here is to make sure the local doesn't have the symlink object
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();

@@ -185,19 +185,11 @@ export default function (fileMapPath: string): Configuration {
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
-        process: require.resolve('process/browser'),
-        buffer: require.resolve('buffer'),
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
-      },
-      fallback: {
-        fs: false,
-        stream: false,
-        process: false,
-        assert: false,
       },
     },
     module: {
@@ -281,23 +273,6 @@ export default function (fileMapPath: string): Configuration {
                 name: 'static/media/[name].[hash:8].[ext]',
               },
             },
-            // {
-            //   test: /\.js$/,
-            //   include: distPaths,
-            //   use: [
-            //     {
-            //       loader: require.resolve('babel-loader'),
-            //       options: {
-            //         babelrc: false,
-            //         configFile: false,
-            //         plugins: [
-            //           // for component highlighting in preview.
-            //           [require.resolve('@teambit/babel.bit-react-transformer')],
-            //         ],
-            //       },
-            //     },
-            //   ],
-            // },
             // Process any JS outside of the app with Babel.
             // Unlike the application JS, we only compile the standard ES features.
             // Probably not needed in our use case
@@ -442,10 +417,6 @@ export default function (fileMapPath: string): Configuration {
         // both options are optional
         filename: 'static/css/[name].[contenthash:8].css',
         chunkFilename: 'static/css/[name].[contenthash:8].chunk.css',
-      }),
-      new webpack.ProvidePlugin({
-        process: require.resolve('process/browser'),
-        Buffer: [require.resolve('buffer'), 'Buffer'],
       }),
       // Generate an asset manifest file with the following content:
       // - "files" key: Mapping of all asset filenames to their corresponding

@@ -52,7 +52,8 @@ export class WebpackMain {
         this.workspace.path,
         context.id,
         context.rootPath,
-        context.publicPath
+        context.publicPath,
+        context.title
       ) as any,
       config
     );
@@ -71,9 +72,10 @@ export class WebpackMain {
     rootPath: string,
     devServerID: string,
     publicRoot?: string,
-    publicPath?: string
+    publicPath?: string,
+    title?: string
   ) {
-    return devServerConfigFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub);
+    return devServerConfigFactory(devServerID, rootPath, entry, publicRoot, publicPath, this.pubsub, title);
   }
 
   static slots = [];
