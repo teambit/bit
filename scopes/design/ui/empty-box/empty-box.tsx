@@ -9,11 +9,12 @@ export type EmptyBoxProps = {
   linkText: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function EmptyBox({ title, link, linkText, className, ...rest }: EmptyBoxProps) {
+export function EmptyBox({ title, link, linkText, children, className, ...rest }: EmptyBoxProps) {
   return (
     <div {...rest} className={classNames(styles.emptyCompositions, className)}>
       <div className={styles.innerBorder}>
         <div>{title}</div>
+        <div>{children}</div>
         <a href={link} target="_blank" rel="noopener noreferrer">
           {linkText}
           <Icon of="arrow_right" />

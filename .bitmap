@@ -313,6 +313,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
     },
+    "mfe": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/mfe"
+    },
     "model/composition-id": {
         "scope": "teambit.compositions",
         "version": "0.0.344",

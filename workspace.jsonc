@@ -6,6 +6,12 @@
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
   },
+  "teambit.ui-foundation/ui": {
+    // "port": 3003,
+    "portRange": [3003, 3100],
+    "host": "localhost",
+    "publicDir": "public/bit"
+  },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
     "policy": {
@@ -318,23 +324,17 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": [
-      "**/*.spec.ts"
-    ],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.generator/generator": {
-    "aspects": [
-      "teambit.harmony/aspect"
-    ]
+    "aspects": ["teambit.harmony/aspect"]
   },
   "teambit.workspace/variants": {
     "*": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -484,6 +484,12 @@
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
     },
+    "scopes/compositions/mfe": {
+      "teambit.mdx/mdx": {},
+      "teambit.envs/envs": {
+        "env": "teambit.mdx/mdx"
+      }
+    },
     "scopes/design": {
       "defaultScope": "teambit.design",
       "teambit.envs/envs": {
@@ -508,9 +514,7 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": [
-            "--access public"
-          ],
+          "packageManagerPublishArgs": ["--access public"],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
