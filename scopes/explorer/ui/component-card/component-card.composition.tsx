@@ -9,5 +9,9 @@ export const ComponentCardExample = () => {
   );
 };
 export const ComponentCardExample2 = () => {
-  return <ComponentCard id="ui/concrete/component-card" preview={<div>hello world</div>} />;
+  return (
+    <div style={{ width: '300px' }}>
+      <ComponentCard id="ui/concrete/component-card" preview={<div>hello world</div>} />
+    </div>
+  );
 };
