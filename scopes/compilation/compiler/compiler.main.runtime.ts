@@ -13,9 +13,17 @@ import { CompileCmd } from './compiler.cmd';
 import { CompilerTask } from './compiler.task';
 import { Compiler } from './types';
 import { WorkspaceCompiler } from './workspace-compiler';
+import { DistArtifact } from './dist-artifact';
+import { DistArtifactNotFound } from './exceptions';
+import { BuilderMain } from '@teambit/builder';
 
 export class CompilerMain {
-  constructor(private pubsub: PubsubMain, private workspaceCompiler: WorkspaceCompiler, private envs: EnvsMain) {}
+  constructor(
+    private pubsub: PubsubMain,
+    private workspaceCompiler: WorkspaceCompiler,
+    private envs: EnvsMain,
+    private builder: BuilderMain
+  ) {}
 
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
@@ -44,6 +52,13 @@ export class CompilerMain {
     return compilerInstance.getDistPathBySrcPath(srcPath);
   }
 
+  async getDistsFiles(component: Component): Promise<DistArtifact> {
+    const artifacts = await this.builder.getArtifactsVinylByExtension(component, CompilerAspect.id);
+    if (!artifacts.length) throw new DistArtifactNotFound(component.id);
+
+    return new DistArtifact(artifacts);
+  }
+
   static runtime = MainRuntime;
 
   static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect, PubsubAspect, AspectLoaderAspect];
@@ -54,11 +69,12 @@ export class CompilerMain {
     EnvsMain,
     LoggerMain,
     PubsubMain,
-    AspectLoaderMain
+    AspectLoaderMain,
+    BuilderMain
   ]) {
     const workspaceCompiler = new WorkspaceCompiler(workspace, envs, pubsub, aspectLoader);
     envs.registerService(new CompilerService());
-    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs);
+    const compilerMain = new CompilerMain(pubsub, workspaceCompiler, envs, builder);
     const logger = loggerMain.createLogger(CompilerAspect.id);
     cli.register(new CompileCmd(workspaceCompiler, logger, pubsub));
 
