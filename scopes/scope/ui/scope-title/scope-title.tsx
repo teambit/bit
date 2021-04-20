@@ -14,7 +14,7 @@ type ScopeTitleProps = {
 export function ScopeTitle({ scopeName, icon, className }: ScopeTitleProps) {
   return (
     <H1 className={styles.title} size="sm">
-      <UserAvatar size={32} account={{ name: scopeName.split('.')[1], profileImage: icon }} />
+      <UserAvatar size={32} account={{ name: scopeName.split('.')[1] || scopeName, profileImage: icon }} />
       <span className={classNames(mutedText, styles.orgName, className)}>{scopeName.replace('.', '/')}</span>
     </H1>
   );
