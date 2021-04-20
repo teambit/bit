@@ -1,11 +1,17 @@
 .highlighter {
+  overflow: scroll;
   border: solid var(--border-color, #ededed);
   border-width: 0px;
   box-sizing: border-box;
-  transition: all 300ms;
   height: 100vh;
+
+  transition: all 300ms;
 
   &.active {
     border-width: 8px;
   }
+}
+
+.label {
+  font-family: sans-serif;
 }

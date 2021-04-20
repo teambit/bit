@@ -43,14 +43,13 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       className={classnames(styles.highlighter, !disabled && styles.active)}
       onElementChange={handleElement}
       disabled={disabled}
-      style={{ fontFamily: 'sans-serif' }}
       data-ignore-component-highlight
     >
       {children}
       <Frame targetRef={target} data-ignore-component-highlight />
       {text && (
         <LabelContainer targetRef={target} offset={[0, 8]} placement="top" data-ignore-component-highlight>
-          <Label componentId={text} data-ignore-component-highlight />
+          <Label componentId={text} data-ignore-component-highlight className={styles.label} />
         </LabelContainer>
       )}
     </HoverSelector>
