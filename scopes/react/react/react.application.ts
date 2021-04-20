@@ -28,7 +28,10 @@ export class ReactApp implements Application {
 
   async build(context: BuildContext, aspectId: string): Promise<DeployContext> {
     const capsules = context.capsuleNetwork.seedersCapsules;
-    const appCapsule = capsules.find((capsule) => capsule.component.id.isEqual(ComponentID.fromString(aspectId)));
+    const appCapsule = capsules.find(
+      (capsule) =>
+        capsule.component.id.toStringWithoutVersion() === ComponentID.fromString(aspectId).toStringWithoutVersion()
+    );
 
     if (!appCapsule)
       return Object.assign(context, { applicationType: this.applicationType, aspectId, publicDir: null });
