@@ -1,4 +1,5 @@
 import { join, extname } from 'path';
+import pMapSeries from 'p-map-series';
 import { Compiler, CompilerOptions, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/modules.merge-component-results';
@@ -54,27 +55,30 @@ export class MultiCompiler implements Compiler {
    * the multi-compiler applies all applicable defined compilers on given content.
    */
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const output: TranspileOutput = [];
+    const outputs = this.compilers.reduce<any>(
+      (files, compiler) => {
+        return files?.flatMap((file) => {
+          if (!compiler.isFileSupported(file?.outputPath)) return [file];
+          const opts = Object.assign({}, options, {
+            filePath: file.outputPath,
+          });
+          const compiledContent = compiler.transpileFile(file.outputText, opts);
+          if (!compiledContent) return null;
 
-    this.compilers.forEach((compiler) => {
-      if (!compiler.isFileSupported(options.filePath)) return fileContent;
-      const compiledContent = compiler.transpileFile(fileContent, options);
-      if (!compiledContent) return null;
-      compiledContent[0].outputPath;
-      output.push(...compiledContent);
-      return compiledContent;
-    }, fileContent);
+          return compiledContent;
+        });
+      },
+      [{ outputText: fileContent, outputPath: options.filePath }]
+    );
 
-    return output;
+    return outputs;
   }
 
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const builds = await Promise.all(
-      this.compilers.map(async (compiler) => {
-        const buildResult = await compiler.build(context);
-        return buildResult.componentsResults;
-      })
-    );
+    const builds = await pMapSeries(this.compilers, async (compiler) => {
+      const buildResult = await compiler.build(context);
+      return buildResult.componentsResults;
+    });
 
     return {
       componentsResults: mergeComponentResults(builds),

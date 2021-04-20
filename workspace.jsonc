@@ -74,7 +74,7 @@
         "@teambit/base-ui.theme.dark-theme": "0.6.3",
         "@teambit/base-ui.theme.fonts.roboto": "0.6.7",
         "@teambit/base-ui.theme.sizes": "0.6.7",
-        "@teambit/base-ui.theme.theme-provider": "0.6.7",
+        "@teambit/base-ui.theme.theme-provider": "0.6.9",
         "@teambit/base-ui.utils.popper-js.ignore-popper-size": "0.6.8",
         "@teambit/base-ui.utils.popper-js.resize-to-match-reference": "0.6.8",
         "@teambit/base-ui.utils.string.affix": "0.0.2",
@@ -160,11 +160,11 @@
         "@types/webpack": "4.41.25",
         "@types/webpack-dev-server": "3.11.1",
         "@types/webpack-merge": "4.1.5",
-        "@yarnpkg/cli": "2.4.0",
-        "@yarnpkg/core": "2.4.0",
-        "@yarnpkg/fslib": "2.4.0",
-        "@yarnpkg/plugin-npm": "2.4.0",
-        "@yarnpkg/plugin-pack": "2.2.3",
+        "@yarnpkg/cli": "3.0.0-rc.2",
+        "@yarnpkg/core": "3.0.0-rc.2",
+        "@yarnpkg/fslib": "2.5.0-rc.2",
+        "@yarnpkg/plugin-npm": "2.5.0-rc.2",
+        "@yarnpkg/plugin-pack": "3.0.0-rc.2",
         "agentkeepalive": "4.1.4",
         "ansi-to-html": "0.6.14",
         "apollo-link-context": "1.0.20",
@@ -308,7 +308,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.61",
+        "@teambit/legacy": "1.0.62",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -369,7 +369,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.61"
+            "@teambit/legacy": "1.0.62"
           }
         }
       },
@@ -522,7 +522,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.61",
+            "@teambit/legacy": "1.0.62",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

@@ -26,3 +26,5 @@ src/scope/migrations/component-version/remove-latest-from-compiler.ts
 src/legacy-extensions/extension.ts
 src/consumer/component/environment/validate-plugin.ts
 src/addons/run-configuration.ts
+
+scripts

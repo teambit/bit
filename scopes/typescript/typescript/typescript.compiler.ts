@@ -37,9 +37,7 @@ export class TypescriptCompiler implements Compiler {
    * compile one file on the workspace
    */
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const supportedExtensions = ['.ts', '.tsx'];
-    const fileExtension = path.extname(options.filePath);
-    if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
+    if (!this.isFileSupported(options.filePath)) {
       return null; // file is not supported
     }
     const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
@@ -139,7 +137,13 @@ export class TypescriptCompiler implements Compiler {
    * whether typescript is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
-    return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
+    return (
+      (filePath.endsWith('.ts') ||
+        filePath.endsWith('.tsx') ||
+        filePath.endsWith('.jsx') ||
+        filePath.endsWith('.js')) &&
+      !filePath.endsWith('.d.ts')
+    );
   }
 
   /**
