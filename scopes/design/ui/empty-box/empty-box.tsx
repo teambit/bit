@@ -1,25 +1,14 @@
-import { Icon } from '@teambit/evangelist.elements.icon';
 import React from 'react';
 import classNames from 'classnames';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
 import styles from './empty-box.module.scss';
 
-export type EmptyBoxProps = {
-  title: string;
-  link: string;
-  linkText: string;
-} & React.HTMLAttributes<HTMLDivElement>;
+export type EmptyBoxProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
-export function EmptyBox({ title, link, linkText, children, className, ...rest }: EmptyBoxProps) {
+export function EmptyBox({ children, className, ...rest }: EmptyBoxProps) {
   return (
     <div {...rest} className={classNames(styles.emptyCompositions, className)}>
-      <div className={styles.innerBorder}>
-        <div>{title}</div>
-        <div>{children}</div>
-        <a href={link} target="_blank" rel="noopener noreferrer">
-          {linkText}
-          <Icon of="arrow_right" />
-        </a>
-      </div>
+      <MDXLayout>{children}</MDXLayout>
     </div>
   );
 }

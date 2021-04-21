@@ -1,0 +1,24 @@
+# No compositions found
+
+View components in any context you choose or incorporate it into separate standalone "apps" to validate its behavior in different situations.
+
+Create a file in the component directory with `.compositions.tsx/jsx` suffix.
+
+```shell
+touch --path/to/component/dir--/--component-name--.composition.tsx/jsx
+```
+
+Import the component, and any other relevant component or dependency, to the newly created compositions file, and use it to build a composition and export it with a named export. Each named export will be rendered as a separate composition, and you can create multiple composition files per component.
+
+```js
+import React from 'react'; // if using React
+import { MyComponent } from './my-component';
+
+export const BasicComposition = () => {
+  return <MyComponent />;
+};
+```
+
+Save the file to complete the process.
+
+[Learn more about compositions.](https://harmony-docs.bit.dev/building-with-bit/component-compositions)

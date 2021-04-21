@@ -10,18 +10,13 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
 import { EmptyBox } from '@teambit/ui.empty-box';
+
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
 
-import { MDXLayout } from '@teambit/ui.mdx-layout';
-
-import { MFE } from '@teambit/mfe';
-
-import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
-import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
+import { Instructions } from '@teambit/instructions';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -33,8 +28,6 @@ export type MenuBarWidget = {
   location: 'start' | 'end';
   content: ReactNode;
 };
-
-SyntaxHighlighter.registerLanguage('md', markDownSyntax);
 
 export function Compositions({ menuBarWidgets }: { menuBarWidgets?: CompositionsMenuSlot }) {
   const component = useContext(ComponentContext);
@@ -117,49 +110,14 @@ type CompositionContentProps = {
 };
 
 function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
+  console.warn('debbie', component);
   if (component.compositions.length === 0)
     return (
-      <EmptyBox
-        title="There are no compositions for this component"
-        linkText="Learn how to create compositions"
-        link="https://harmony-docs.bit.dev/compositions/overview/"
-      >
-        <p>Create a file(s) in the component directory with `.compositions.j/tsx` suffix.</p>
-        <CodeSnippet
-          className={styles.codeSnippetWrapper}
-          frameClass={styles.codeSnippet}
-          showLineNumbers
-          language={'bash'}
-        >
-          {'$ touch --path/to/component/dir--/--component-name--.composition.tsx/jsx'}
-        </CodeSnippet>
-        <p>
-          Import the component, and any other relevant component or dependency, to the newly created compositions file,
-          and use it to build a composition and export it with a named export. Each named export will be rendered as a
-          separate composition, and you can create multiple composition files per component.
-        </p>
-        <CodeSnippet
-          className={styles.codeSnippetWrapper}
-          frameClass={styles.codeSnippet}
-          showLineNumbers
-          language={'js'}
-        >
-          {`import { MyComponent } from './my-component'
-// if REACT add Import react from 'react'
-export const firstComposition = () => {
-  return (
-    <MyComponent />
-  );
-};
-           `}
-        </CodeSnippet>
-        <MDXLayout>
-          <MFE />
-        </MDXLayout>
-
-        <p>Save the file to complete the process.</p>
+      <EmptyBox>
+        <Instructions />
       </EmptyBox>
     );
+
   return (
     <ComponentComposition
       className={styles.compositionsIframe}

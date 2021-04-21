@@ -7,6 +7,7 @@ import { EmptyBox } from '@teambit/ui.empty-box';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import styles from './aspect-page.module.scss';
+import { EmptyAspectInstructions } from '@teambit/empty-aspect-instructions';
 
 const GET_COMPONENT = gql`
   query($id: String!) {
@@ -32,11 +33,9 @@ export function AspectPage() {
 
   if (aspectList && aspectList.length === 0) {
     return (
-      <EmptyBox
-        title="This component is new and doesn’t have any aspects."
-        linkText="Learn more about component aspects"
-        link="https://docs.bit.dev/docs/tag-component-version"
-      />
+      <EmptyBox>
+        <EmptyAspectInstructions />
+      </EmptyBox>
     );
   }
 

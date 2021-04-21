@@ -484,7 +484,19 @@
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
     },
-    "scopes/compositions/mfe": {
+    "scopes/compositions/instructions": {
+      "teambit.mdx/mdx": {},
+      "teambit.envs/envs": {
+        "env": "teambit.mdx/mdx"
+      }
+    },
+    "scopes/defender/instructions": {
+      "teambit.mdx/mdx": {},
+      "teambit.envs/envs": {
+        "env": "teambit.mdx/mdx"
+      }
+    },
+    "scopes/component/empty-aspect-instructions": {
       "teambit.mdx/mdx": {},
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"

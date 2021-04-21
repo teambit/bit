@@ -8,6 +8,8 @@ import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 
+import { Instructions } from '@teambit/defender.instructions';
+
 import styles from './tests-page.module.scss';
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
@@ -83,11 +85,9 @@ export function TestsPage({ className }: TestsPageProps) {
   const testResults = testData?.testsResults?.testFiles;
   if (testResults === null || testData?.testsResults === null) {
     return (
-      <EmptyBox
-        title="This component doesn’t have any tests."
-        linkText="Learn how to add tests to your components"
-        link="https://harmony-docs.bit.dev/testing/overview/"
-      />
+      <EmptyBox>
+        <Instructions />
+      </EmptyBox>
     );
   }
 

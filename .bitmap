@@ -163,6 +163,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/config"
     },
+    "defender/instructions": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/instructions"
+    },
     "dependency-resolver": {
         "scope": "teambit.dependencies",
         "version": "0.0.367",
@@ -198,6 +204,12 @@
         "version": "0.0.25",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
+    },
+    "empty-aspect-instructions": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/empty-aspect-instructions"
     },
     "envs": {
         "scope": "teambit.envs",
@@ -271,6 +283,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
+    "instructions": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/instructions"
+    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.367",
@@ -312,12 +330,6 @@
         "version": "0.0.347",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/mdx"
-    },
-    "mfe": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/mfe"
     },
     "model/composition-id": {
         "scope": "teambit.compositions",
@@ -474,6 +486,12 @@
         "version": "0.0.367",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
+    },
+    "scopes": {
+        "scope": "",
+        "version": "",
+        "mainFile": "design/zeplin/index.ts",
+        "rootDir": "scopes"
     },
     "sidebar": {
         "scope": "teambit.ui-foundation",
