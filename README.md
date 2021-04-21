@@ -6,7 +6,7 @@ It unlocks the development and composition of modern applications from independe
 
 The [component cloud platform](https://bit.dev/) is a component marketplace as-a-service, where teams can smoothly scale collaboration on components to many developers and applications. Developers can host, discover, and share components while continuously releasing small updates to everyone in the organization. Everything is free for open-source developers.
 
-Modularity benefits almost every part of the development process, from [accelerating releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. For teams, Bit is often used as a solution for a verity of ]use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as Micro Frontends, Design Systems, Delivery Speed, and Collaboration on components.
+Modularity benefits almost every part of the development process, from [accelerating releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. For teams, Bit is often used as a solution for a verity of [use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as Micro Frontends, Design Systems, Delivery Speed, and Collaboration on components.
 
 [![Bit](https://storage.googleapis.com/static.bit.dev/harmony-docs/homepage-components-micro-frontends.png)](https://bit.dev/)
 
