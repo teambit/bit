@@ -1,7 +1,7 @@
 import { ComponentContext } from '@teambit/generator';
 
 export const docsFile = (context: ComponentContext) => {
-  const { name, namePascalCase: Name } = context;
+  const { name, nameCamelCase: Name } = context;
 
   return {
     relativePath: `${name}.docs.mdx`,
@@ -22,9 +22,9 @@ A simple ${Name} Hook to increment a count by 1
 Code Snippet:
 
 \`\`\`js
-import { UseCounter } from './use-counter';
+import { ${Name} } from './${name}';
 ...
-const { count, increment } = UseCounter();
+const { count, increment } = ${Name}();
 
 \`\`\`
 
@@ -32,7 +32,7 @@ Live Playground:
 
 \`\`\`js live
 () => {
-  const { count, increment } = UseCounter();
+  const { count, increment } = ${Name}();
 
   return (
     <>

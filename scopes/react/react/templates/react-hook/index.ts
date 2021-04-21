@@ -9,7 +9,7 @@ export const reactHook: ComponentTemplate = {
   description: 'a react hook component',
 
   generateFiles: (context: ComponentContext) => {
-    const { name, namePascalCase: Name } = context;
+    const { name, nameCamelCase: Name } = context;
     const indexFile = {
       relativePath: 'index.ts',
       content: `export { ${Name} } from './${name}';
