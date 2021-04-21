@@ -5,15 +5,16 @@ export const compositionFile = (context: ComponentContext) => {
 
   return {
     relativePath: `${name}.composition.tsx`,
-    content: `import React, { useState } from 'react';
+    content: `import React from 'react';
+import { ${Name} } from './${name}';
 
 export const Basic${Name} = () => {
-  const [count, setCount] = useState(0);
+  const { count, increment } = ${Name}();
 
   return (
     <>
-      <h1>The number is {count}</h1>
-      <button onClick={() => setCount(count + 1)}>increment</button>
+      <h1>The count is {count}</h1>
+      <button onClick={increment}>increment</button>
     </>
   );
 };

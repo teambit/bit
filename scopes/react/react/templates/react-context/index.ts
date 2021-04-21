@@ -1,13 +1,13 @@
 import { ComponentTemplate, ComponentContext } from '@teambit/generator';
-import { themeContextFile } from './files/theme-context';
-import { themeContextProviderFile } from './files/theme-context-provider';
+import { contextFile } from './files/context';
+import { contextProviderFile } from './files/context-provider';
 import { compositionFile } from './files/composition';
 import { docsFile } from './files/docs';
 import { testFile } from './files/test';
 
-export const reactThemeContext: ComponentTemplate = {
-  name: 'react-theme-context',
-  description: 'a generic react theme-context component',
+export const reactContext: ComponentTemplate = {
+  name: 'react-context',
+  description: 'a react context component',
 
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
@@ -22,8 +22,8 @@ export type { ${Name}ProviderProps } from './${name}-context-provider';
 
     return [
       indexFile,
-      themeContextFile(context),
-      themeContextProviderFile(context),
+      contextFile(context),
+      contextProviderFile(context),
       compositionFile(context),
       docsFile(context),
       testFile(context),

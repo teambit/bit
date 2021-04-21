@@ -1,6 +1,6 @@
 import { ComponentContext } from '@teambit/generator';
 
-export const themeContextProviderFile = (context: ComponentContext) => {
+export const contextProviderFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
     relativePath: `${name}-context-provider.tsx`,
