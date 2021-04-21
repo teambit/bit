@@ -12,12 +12,7 @@ export function ComponentBubble({ componentId, className, ...rest }: ComponentBu
   const { version, fullName } = componentId;
 
   return (
-    <NativeLink
-      external
-      {...rest}
-      className={classnames(styles.componentName, className)}
-      href="https://bit.dev/teambit/base-ui/input/button"
-    >
+    <NativeLink external {...rest} className={classnames(styles.componentName, className)}>
       <div className={styles.fullName}>{fullName}</div>
 
       {version && version !== 'latest' && (

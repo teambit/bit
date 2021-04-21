@@ -8,32 +8,40 @@ import { isBitComponent } from './bit-react-component';
 
 import styles from './component-highlighter.module.scss';
 
+type HighlightTarget = {
+  id?: string;
+  element: HTMLElement | null;
+  link?: string;
+  scopeLink?: string;
+};
+
 export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {
   disabled?: boolean;
 }
 
 export function ComponentHighlighter({ children, disabled, ...rest }: ComponentHighlightProps) {
-  const [text, setText] = useState<string | undefined>(undefined);
-  const [target, setTarget] = useState<HTMLElement | null>(null);
+  const [target, setTarget] = useState<HighlightTarget | undefined>();
 
   const handleElement = useCallback((element: HTMLElement | null) => {
     if (!element) {
-      setTarget(null);
-      setText(undefined);
+      setTarget(undefined);
       return;
     }
 
     const bitComponent = bubbleToBitComponent(element, (elem) => !elem.hasAttribute('data-ignore-component-highlight'));
     if (!bitComponent) return;
 
-    setText(bitComponent.id);
-    setTarget(bitComponent.element);
+    setTarget({
+      element: bitComponent.element,
+      id: bitComponent.id,
+      scopeLink: undefined, // 'https://bit.dev/teambit/base-ui',
+      link: undefined, // 'https://bit.dev/teambit/base-ui/elements/button',
+    });
   }, []);
 
   useEffect(() => {
     if (disabled) {
-      setTarget(null);
-      setText(undefined);
+      setTarget(undefined);
     }
   }, [disabled]);
 
@@ -46,11 +54,25 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       data-ignore-component-highlight
     >
       {children}
-      <Frame targetRef={target} data-ignore-component-highlight />
-      {text && (
-        <LabelContainer targetRef={target} placement="top" data-ignore-component-highlight className={styles.label}>
-          <Label componentId={text} data-ignore-component-highlight />
-        </LabelContainer>
+      {target && (
+        <>
+          <Frame targetRef={target.element} data-ignore-component-highlight />
+          {target.id && (
+            <LabelContainer
+              targetRef={target.element}
+              placement="top"
+              data-ignore-component-highlight
+              className={styles.label}
+            >
+              <Label
+                componentId={target.id}
+                link={target.link}
+                scopeLink={target.link}
+                data-ignore-component-highlight
+              />
+            </LabelContainer>
+          )}
+        </>
       )}
     </HoverSelector>
   );

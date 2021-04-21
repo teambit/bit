@@ -50,12 +50,14 @@ export function LabelContainer({ targetRef, offset, placement, flip = true, clas
 
 export interface LabelProps extends CardProps {
   componentId: string;
+  link?: string;
+  scopeLink?: string;
 }
 
-export function Label({ componentId, ...rest }: LabelProps) {
+export function Label({ componentId, link, scopeLink, ...rest }: LabelProps) {
   const parsedId = useMemo(() => ComponentID.tryFromString(componentId), [componentId]);
 
   if (!parsedId) return <DefaultLabel {...rest}>{componentId}</DefaultLabel>;
 
-  return <ComponentLabel {...rest} componentId={parsedId} />;
+  return <ComponentLabel {...rest} componentId={parsedId} link={link} scopeLink={scopeLink} />;
 }

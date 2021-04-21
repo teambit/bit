@@ -10,13 +10,20 @@ import { ScopeBubble } from './scope-bubble';
 
 export interface ComponentLabelProps extends CardProps {
   componentId: ComponentID;
+  link?: string;
+  scopeLink?: string;
 }
 
-export function ComponentLabel({ componentId, className, ...rest }: ComponentLabelProps) {
+export function ComponentLabel({ componentId, className, link, scopeLink, ...rest }: ComponentLabelProps) {
   return (
     <Card {...rest} className={classNames(className, styles.duoComponentBubble)} data-ignore-component-highlight>
-      <ScopeBubble componentId={componentId} className={styles.scopeBubble} data-ignore-component-highlight />
-      <ComponentBubble componentId={componentId} data-ignore-component-highlight />
+      <ScopeBubble
+        href={scopeLink}
+        componentId={componentId}
+        className={styles.scopeBubble}
+        data-ignore-component-highlight
+      />
+      <ComponentBubble href={link} componentId={componentId} data-ignore-component-highlight />
     </Card>
   );
 }

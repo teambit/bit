@@ -14,7 +14,7 @@ export function ScopeBubble({ componentId, className, ...rest }: ScopeBubbleProp
   const scope = componentId.scope;
 
   return (
-    <NativeLink className={classNames(styles.scopeName, className)} href="https://bit.dev/teambit/base-ui" {...rest}>
+    <NativeLink className={classNames(styles.scopeName, className)} {...rest}>
       {scope}
     </NativeLink>
   );
