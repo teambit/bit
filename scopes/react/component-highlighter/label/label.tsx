@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { usePopper } from 'react-popper';
+import classnames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import type { CardProps } from '@teambit/base-ui.surfaces.card';
 import useAnimationFrame from 'use-animation-frame';
@@ -19,7 +20,7 @@ export interface LabelContainerProps extends React.HTMLAttributes<HTMLDivElement
 }
 
 // TODO - replace this with TippyJS, when it supports a `targetElement={targetRef.current}` prop
-export function LabelContainer({ targetRef, offset, placement, flip = true, ...rest }: LabelContainerProps) {
+export function LabelContainer({ targetRef, offset, placement, flip = true, className, ...rest }: LabelContainerProps) {
   const [sourceRef, setSourceRef] = useState<HTMLDivElement | null>(null);
 
   const modifiers = useMemo<Partial<Modifier<any, any>>[]>(() => [{ name: 'offset', options: { offset } }], [
@@ -36,7 +37,15 @@ export function LabelContainer({ targetRef, offset, placement, flip = true, ...r
 
   if (!targetRef) return null;
 
-  return <div {...rest} ref={setSourceRef} className={classes.label} style={styles.popper} {...attributes.popper} />;
+  return (
+    <div
+      {...rest}
+      ref={setSourceRef}
+      className={classnames(classes.label, className)}
+      style={styles.popper}
+      {...attributes.popper}
+    />
+  );
 }
 
 export interface LabelProps extends CardProps {

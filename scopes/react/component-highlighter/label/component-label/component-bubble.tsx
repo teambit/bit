@@ -1,17 +1,23 @@
 import { ComponentID } from '@teambit/component-id';
+import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
 import classnames from 'classnames';
 import React from 'react';
 import styles from './duo-component-bubble.module.scss';
 
-export type ComponentBubbleProps = {
+export interface ComponentBubbleProps extends LinkProps {
   componentId: ComponentID;
-} & React.HTMLAttributes<HTMLDivElement>;
+}
 
 export function ComponentBubble({ componentId, className, ...rest }: ComponentBubbleProps) {
   const { version, fullName } = componentId;
 
   return (
-    <div className={classnames(styles.componentName, className)} {...rest}>
+    <NativeLink
+      external
+      {...rest}
+      className={classnames(styles.componentName, className)}
+      href="https://bit.dev/teambit/base-ui/input/button"
+    >
       <div className={styles.fullName}>{fullName}</div>
 
       {version && version !== 'latest' && (
@@ -20,6 +26,6 @@ export function ComponentBubble({ componentId, className, ...rest }: ComponentBu
           {version}
         </div>
       )}
-    </div>
+    </NativeLink>
   );
 }

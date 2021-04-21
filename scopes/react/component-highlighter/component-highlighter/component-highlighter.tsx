@@ -48,8 +48,8 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       {children}
       <Frame targetRef={target} data-ignore-component-highlight />
       {text && (
-        <LabelContainer targetRef={target} offset={[0, 8]} placement="top" data-ignore-component-highlight>
-          <Label componentId={text} data-ignore-component-highlight className={styles.label} />
+        <LabelContainer targetRef={target} placement="top" data-ignore-component-highlight className={styles.label}>
+          <Label componentId={text} data-ignore-component-highlight />
         </LabelContainer>
       )}
     </HoverSelector>

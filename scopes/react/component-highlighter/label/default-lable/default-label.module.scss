@@ -2,11 +2,10 @@
   display: flex;
   align-items: center;
 
-  color: var(--component-highlighter-text, black);
   font-size: 12px;
 
   line-height: 1.68;
-  background: var(--scope-color-bg, #eebcc9); // TODO - what is this color??
+  background: var(--bit-highlighter-color, #eebcc9);
 
   transition: filter 300ms;
   transform: translateZ(0); //fix blurriness in Safari
