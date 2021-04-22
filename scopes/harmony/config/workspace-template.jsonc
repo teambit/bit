@@ -59,9 +59,10 @@
      **/
     "*": {
       /**
-       * uncomment to apply the react environment on all components.
+       * uncomment to apply the chosen environment on all components.
        **/
       // "teambit.react/react": { }
+      // "teambit.angular/angular": { }
     }
   }
 }
