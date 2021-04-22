@@ -162,9 +162,6 @@ export class IsolatorMain {
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
-    if (opts.host) {
-      console.log('i have host');
-    }
     legacyLogger.debug(
       `isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(
         Object.assign({}, opts, { host: opts.host?.name })
