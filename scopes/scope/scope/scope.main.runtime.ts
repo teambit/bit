@@ -369,6 +369,7 @@ export class ScopeMain implements ComponentFactory {
         skipIfExists: true,
         includeFromNestedHosts: true,
         installOptions: { copyPeerToRuntimeOnRoot: true },
+        host: this,
       },
       this.legacyScope
     );

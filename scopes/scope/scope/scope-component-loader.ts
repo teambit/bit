@@ -12,8 +12,9 @@ export class ScopeComponentLoader {
 
   async get(id: ComponentID): Promise<Component | undefined> {
     const idStr = id.toString();
-    if (this.componentsCache[idStr]) {
-      return this.componentsCache[idStr];
+    const fromCache = this.componentsCache[idStr];
+    if (fromCache) {
+      return fromCache;
     }
     this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id._legacy;
