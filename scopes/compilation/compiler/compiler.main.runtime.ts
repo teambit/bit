@@ -6,6 +6,8 @@ import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
 import { Component } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
+import { BuilderMain } from '@teambit/builder';
+
 import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
 import { CompilerService } from './compiler.service';
 import { CompilerAspect } from './compiler.aspect';
@@ -15,7 +17,6 @@ import { Compiler } from './types';
 import { WorkspaceCompiler } from './workspace-compiler';
 import { DistArtifact } from './dist-artifact';
 import { DistArtifactNotFound } from './exceptions';
-import { BuilderMain } from '@teambit/builder';
 
 export class CompilerMain {
   constructor(
@@ -63,7 +64,7 @@ export class CompilerMain {
 
   static dependencies = [CLIAspect, WorkspaceAspect, EnvsAspect, LoggerAspect, PubsubAspect, AspectLoaderAspect];
 
-  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader]: [
+  static async provider([cli, workspace, envs, loggerMain, pubsub, aspectLoader, builder]: [
     CLIMain,
     Workspace,
     EnvsMain,
