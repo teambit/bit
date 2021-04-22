@@ -57,6 +57,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
   return {
     // Environment mode
     mode: 'development',
+    snapshot: { managedPaths: [] },
+    module: { unsafeCache: false },
 
     devtool: 'inline-source-map',
 
