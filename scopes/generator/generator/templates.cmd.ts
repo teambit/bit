@@ -3,10 +3,8 @@ import chalk from 'chalk';
 import { groupBy } from 'lodash';
 import { GeneratorMain, TemplateDescriptor } from './generator.main.runtime';
 
-export type GeneratorOptions = {
-  namespace?: string;
-  aspect?: string;
-  scope?: string;
+export type TemplatesOptions = {
+  showAll?: boolean;
 };
 
 export class TemplatesCmd implements Command {
@@ -17,12 +15,19 @@ export class TemplatesCmd implements Command {
   alias = '';
   loader = true;
   group = 'development';
-  options = [] as CommandOptions;
+  options = [['s', 'show-all', 'show hidden templates']] as CommandOptions;
 
   constructor(private generator: GeneratorMain) {}
 
-  async report() {
-    const results = await this.generator.listComponentTemplates();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async report(args: [], templatesOptions: TemplatesOptions) {
+    let results = await this.generator.listComponentTemplates();
+
+    // Make sure that we don't list hidden templates
+    if (!templatesOptions.showAll) {
+      results = results.filter((template) => !template.hidden);
+    }
+
     const grouped = groupBy(results, 'aspectId');
     const title = chalk.green(`the following template(s) are available\n`);
     const templateOutput = (template: TemplateDescriptor) => {
