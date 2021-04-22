@@ -2,7 +2,8 @@ import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
-import { EmptyBox } from '@teambit/ui.empty-box';
+import { MdxPage } from '@teambit/ui.mdx-page';
+import { wideColumn } from '@teambit/base-ui.layout.page-frame';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
@@ -85,9 +86,12 @@ export function TestsPage({ className }: TestsPageProps) {
   const testResults = testData?.testsResults?.testFiles;
   if (testResults === null || testData?.testsResults === null) {
     return (
-      <EmptyBox>
-        <Instructions />
-      </EmptyBox>
+      <div className={wideColumn}>
+        <MdxPage>
+          <Instructions />
+          {'test'}
+        </MdxPage>
+      </div>
     );
   }
 

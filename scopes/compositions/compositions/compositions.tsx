@@ -9,7 +9,8 @@ import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
-import { EmptyBox } from '@teambit/ui.empty-box';
+import { MdxPage } from '@teambit/ui.mdx-page';
+import { wideColumn } from '@teambit/base-ui.layout.page-frame';
 
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
@@ -110,12 +111,13 @@ type CompositionContentProps = {
 };
 
 function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
-  console.warn('debbie', component);
   if (component.compositions.length === 0)
     return (
-      <EmptyBox>
-        <Instructions />
-      </EmptyBox>
+      <div className={wideColumn}>
+        <MdxPage>
+          <Instructions />
+        </MdxPage>
+      </div>
     );
 
   return (

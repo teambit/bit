@@ -496,12 +496,6 @@
         "env": "teambit.mdx/mdx"
       }
     },
-    "scopes/component/empty-aspect-instructions": {
-      "teambit.mdx/mdx": {},
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      }
-    },
     "scopes/design": {
       "defaultScope": "teambit.design",
       "teambit.envs/envs": {
