@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 
-import { Instructions } from '@teambit/defender.instructions';
+import { AddingTests } from '@teambit/defender.instructions.adding-tests';
 
 import styles from './tests-page.module.scss';
 
@@ -86,10 +86,9 @@ export function TestsPage({ className }: TestsPageProps) {
   const testResults = testData?.testsResults?.testFiles;
   if (testResults === null || testData?.testsResults === null) {
     return (
-      <div className={wideColumn}>
+      <div className={classNames(wideColumn, className)}>
         <MdxPage>
-          <Instructions />
-          {'test'}
+          <AddingTests />
         </MdxPage>
       </div>
     );

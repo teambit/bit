@@ -17,7 +17,7 @@ import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
 
-import { Instructions } from '@teambit/instructions';
+import { AddingCompositions } from '@teambit/compositions.instructions.adding-compositions';
 
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -115,7 +115,7 @@ function CompositionContent({ component, selected, queryParams }: CompositionCon
     return (
       <div className={wideColumn}>
         <MdxPage>
-          <Instructions />
+          <AddingCompositions />
         </MdxPage>
       </div>
     );

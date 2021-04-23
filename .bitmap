@@ -157,17 +157,23 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/compositions"
     },
+    "compositions/instructions/adding-compositions": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/instructions/adding-compositions"
+    },
     "config": {
         "scope": "teambit.harmony",
         "version": "0.0.344",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/config"
     },
-    "defender/instructions": {
+    "defender/instructions/adding-tests": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
-        "rootDir": "scopes/defender/instructions"
+        "rootDir": "scopes/defender/instructions/adding-tests"
     },
     "dependency-resolver": {
         "scope": "teambit.dependencies",
@@ -204,12 +210,6 @@
         "version": "0.0.25",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/eject"
-    },
-    "empty-aspect-instructions": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/empty-aspect-instructions"
     },
     "envs": {
         "scope": "teambit.envs",
@@ -282,12 +282,6 @@
         "version": "0.0.367",
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
-    },
-    "instructions": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/instructions"
     },
     "isolator": {
         "scope": "teambit.component",
