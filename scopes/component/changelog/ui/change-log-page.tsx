@@ -22,7 +22,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
       <EmptyBox
         title="This component is new and doesn’t have a changelog yet."
         linkText="Learn more about component versioning"
-        link="https://docs.bit.dev/docs/tag-component-version"
+        link="https://harmony-docs.bit.dev/building-with-bit/versioning-components"
       />
     );
   }
