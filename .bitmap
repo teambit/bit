@@ -301,6 +301,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/instructions/compositions-tip"
     },
+    "instructions/exporting-components": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/changelog/instructions/exporting-components"
+    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.369",

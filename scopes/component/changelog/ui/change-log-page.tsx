@@ -2,9 +2,12 @@ import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
-import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
 import { useSnaps } from '@teambit/ui.hooks.use-snaps';
+import { MdxPage } from '@teambit/ui.mdx-page';
+import { wideColumn } from '@teambit/base-ui.layout.page-frame';
+import { ExportingComponents } from '@teambit/instructions.exporting-components';
+
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';
@@ -19,11 +22,11 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (snaps.length === 0 && !loading) {
     return (
-      <EmptyBox
-        title="This component is new and doesn’t have a changelog yet."
-        linkText="Learn more about component versioning"
-        link="https://harmony-docs.bit.dev/building-with-bit/versioning-components"
-      />
+      <div className={classNames(wideColumn, className)}>
+        <MdxPage>
+          <ExportingComponents />
+        </MdxPage>
+      </div>
     );
   }
 

@@ -484,6 +484,12 @@
         "env": "teambit.mdx/mdx"
       }
     },
+    "scopes/component/changelog/instructions": {
+      "teambit.mdx/mdx": {},
+      "teambit.envs/envs": {
+        "env": "teambit.mdx/mdx"
+      }
+    },
     "scopes/defender/instructions": {
       "teambit.mdx/mdx": {},
       "teambit.envs/envs": {
