@@ -283,12 +283,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/react/docs/instructions/adding-docs"
     },
-    "instructions/adding-properties": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react/docs/instructions/adding-properties"
-    },
     "instructions/adding-tests": {
         "scope": "",
         "version": "",
