@@ -6,12 +6,6 @@
     "defaultScope": "teambit.bit",
     "defaultDirectory": "components"
   },
-  "teambit.ui-foundation/ui": {
-    // "port": 3003,
-    "portRange": [3003, 3100],
-    "host": "localhost",
-    "publicDir": "public/bit"
-  },
   "teambit.dependencies/dependency-resolver": {
     "packageManager": "teambit.dependencies/yarn",
     "policy": {
@@ -491,6 +485,12 @@
       }
     },
     "scopes/defender/instructions": {
+      "teambit.mdx/mdx": {},
+      "teambit.envs/envs": {
+        "env": "teambit.mdx/mdx"
+      }
+    },
+    "scopes/react/react/docs/instructions": {
       "teambit.mdx/mdx": {},
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"

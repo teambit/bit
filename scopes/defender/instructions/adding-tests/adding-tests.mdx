@@ -18,15 +18,13 @@ It is highly recommended to use the component compositions as test samples.
 ```tsx {4} title="button.tsx"
 import React from 'react';
 import { render } from '@testing-library/react';
-import { expect } from 'chai';
-import { BasicButton } from './button.composition';
+import { Button } from './button.composition';
 
-describe('button', () => {
-  it('should render', () => {
+describe('books-page', () => {
+  it('should render with the correct text', () => {
     const { getByText } = render(<BasicButton />);
     const rendered = getByText('click me');
-
-    expect(rendered).to.exist;
+    expect(rendered).toBeTruthy();
   });
 });
 ```

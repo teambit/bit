@@ -9,7 +9,7 @@ import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 
-import { AddingTests } from '@teambit/defender.instructions.adding-tests';
+import { AddingTests } from '@teambit/instructions.adding-tests';
 
 import styles from './tests-page.module.scss';
 

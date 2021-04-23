@@ -5,9 +5,13 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { RenderingContext } from '@teambit/preview';
+import { MdxPage } from '@teambit/ui.mdx-page';
+import { AddingDocs } from '@teambit/instructions.adding-docs';
+
 import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';
 import styles from './base.module.scss';
+
 import { ComponentOverview } from './component-overview';
 import { CompositionsSummary } from './compositions-summary/compositions-summary';
 import { ExamplesOverview } from './examples-overview';
@@ -24,7 +28,7 @@ export type DocsSectionProps = {
 const defaultDocs = {
   examples: [],
   labels: [],
-  abstract: '',
+  abstract: 'Add a description for your component in the _*.docs.mdx_ file.',
 };
 
 /**
@@ -41,7 +45,15 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
 
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName, description } = component;
-  const Content: any = isFunction(docs.default) ? docs.default : () => null;
+  const Content: any = isFunction(docs.default)
+    ? docs.default
+    : () => (
+        <div>
+          <MdxPage>
+            <AddingDocs />
+          </MdxPage>
+        </div>
+      );
   const reactContext = renderingContext.get(ReactAspect.id);
   const Provider = withProviders(reactContext?.providers);
 
