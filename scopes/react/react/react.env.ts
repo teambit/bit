@@ -254,6 +254,7 @@ export class ReactEnv implements Environment {
       dependencies: {
         react: '-',
         'react-dom': '-',
+        'core-js': '^3.0.0',
       },
       // TODO: add this only if using ts
       devDependencies: {
@@ -271,7 +272,6 @@ export class ReactEnv implements Environment {
       peerDependencies: {
         react: '^16.8.0 || ^17.0.0',
         'react-dom': '^16.8.0 || ^17.0.0',
-        'core-js': '^3.0.0',
       },
     };
   }

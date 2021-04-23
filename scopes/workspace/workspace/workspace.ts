@@ -1281,7 +1281,7 @@ export class Workspace implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 
-  async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {
+  async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>): Promise<ComponentID[]> {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 

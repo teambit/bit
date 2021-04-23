@@ -7,6 +7,7 @@ import { Workspace } from '.';
 type CreateOpts = {
   baseDir?: string;
   alwaysNew?: boolean;
+  seedersOnly?: boolean;
   id: string;
   installPackages?: boolean;
 };
@@ -21,6 +22,7 @@ export class CapsuleCreateCmd implements Command {
   options = [
     ['b', 'base-dir <name>', 'set base dir of all capsules'],
     ['a', 'always-new', 'create new environment for capsule'],
+    ['s', 'seeders-only', 'create capsules for the seeders only (not for the entire graph)'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['j', 'json', 'json format'],
     ['d', 'install-packages', 'install packages by the package-manager'],
@@ -31,7 +33,7 @@ export class CapsuleCreateCmd implements Command {
 
   async create(
     [componentIds]: [string[]],
-    { baseDir, alwaysNew = false, id, installPackages = false }: CreateOpts
+    { baseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
@@ -39,6 +41,8 @@ export class CapsuleCreateCmd implements Command {
       baseDir,
       installOptions: { installPackages },
       alwaysNew,
+      seedersOnly,
+      includeFromNestedHosts: true,
       name: id,
     };
     const ids = await this.workspace.resolveMultipleComponentIds(componentIds);

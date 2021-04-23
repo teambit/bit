@@ -1,12 +1,11 @@
 import { ComponentContext } from '@teambit/generator';
 
 export const testFile = (context: ComponentContext) => {
-  const { name, namePascalCase: Name } = context;
+  const { name, nameCamelCase: Name } = context;
 
   return {
     relativePath: `${name}.spec.tsx`,
-    content: `import React from 'react';
-import { renderHook, act } from '@testing-library/react-hooks';
+    content: `import { renderHook, act } from '@testing-library/react-hooks';
 import { ${Name} } from './${name}';
 
 test('should increment counter', () => {

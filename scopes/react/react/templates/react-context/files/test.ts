@@ -5,8 +5,7 @@ export const testFile = (context: ComponentContext) => {
 
   return {
     relativePath: `${name}-context.spec.tsx`,
-    content: `import React from 'react';
-import { BasicThemeUsage } from './${name}-context.composition';
+    content: `import { BasicThemeUsage } from './${name}-context.composition';
 import { render } from '@testing-library/react';
 
 describe('${Name}Provider', () => {

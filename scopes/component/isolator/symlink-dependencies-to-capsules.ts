@@ -36,6 +36,7 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
   if (!componentCapsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
   const allDeps = component.getAllDependenciesIds();
   const symlinks = allDeps.map((depId: BitId) => {
+    // TODO: this is dangerous - we might have 2 capsules for the same component with different version, then we might link to the wrong place
     const devCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(new ComponentID(depId));
     if (!devCapsule) {
       // happens when a dependency is not in the workspace. (it gets installed via the package manager)
