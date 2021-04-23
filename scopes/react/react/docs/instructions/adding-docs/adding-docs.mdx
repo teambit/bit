@@ -2,40 +2,27 @@
 
 Document your components by creating a file with _\*.docs.mdx_ extension.
 
-### Description
+### DisplayName, Description and Labels
 
 ```mdx
 ---
+displayName: My Component
 description: Description of my component
----
-```
-
-### Labels
-
-Keywords that describe and categorize the component (used by Bit.dev's search engine).
-
-```mdx
----
 labels: ['react', 'typescript', 'ui']
 ---
 ```
 
 ### Code Block and Live Playground
 
-```mdx
+```js
 import { Hello } from './hello';
 
-```
-
-````mdx
-```jsx live=true
 () => {
   return <Hello />;
 };
 ```
-````
 
-Live Playground:
+Add `live=true` to create a Live Playground:
 
 ```jsx live=true
 () => {

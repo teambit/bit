@@ -11,12 +11,14 @@ import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
 import { MdxPage } from '@teambit/ui.mdx-page';
 import { wideColumn } from '@teambit/base-ui.layout.page-frame';
-import classNames from 'classnames';
+
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
+
 import { AddingCompositions } from '@teambit/instructions.adding-compositions';
+
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -111,7 +113,7 @@ type CompositionContentProps = {
 function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
   if (component.compositions.length === 0)
     return (
-      <div className={classNames(wideColumn, classNames)}>
+      <div className={wideColumn}>
         <MdxPage>
           <AddingCompositions />
         </MdxPage>
