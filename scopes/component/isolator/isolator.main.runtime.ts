@@ -1,7 +1,7 @@
 import { MainRuntime } from '@teambit/cli';
 import { compact, pick } from 'lodash';
 import { Component, ComponentMap, ComponentAspect, ComponentID } from '@teambit/component';
-import type { ComponentMain } from '@teambit/component';
+import type { ComponentMain, ComponentFactory } from '@teambit/component';
 import { getComponentPackageVersion } from '@teambit/component-package-version';
 import { GraphAspect } from '@teambit/graph';
 import type { GraphBuilder } from '@teambit/graph';
@@ -59,6 +59,11 @@ type CreateGraphOptions = {
    * include components that exists in nested hosts. for example include components that exist in scope but not in the workspace
    */
   includeFromNestedHosts?: boolean;
+
+  /**
+   * Force specific host to get the component from.
+   */
+  host?: ComponentFactory;
 };
 
 export type IsolateComponentsOptions = CreateGraphOptions & {
@@ -105,6 +110,11 @@ export type IsolateComponentsOptions = CreateGraphOptions & {
    * do not build graph with all dependencies. isolate the seeders only.
    */
   seedersOnly?: boolean;
+
+  /**
+   * Force specific host to get the component from.
+   */
+  host?: ComponentFactory;
 };
 
 type CapsulePackageJsonData = {
@@ -152,8 +162,12 @@ export class IsolatorMain {
   ): Promise<Network> {
     const host = this.componentAspect.getHost();
     const longProcessLogger = this.logger.createLongProcessLogger('create capsules network');
-    legacyLogger.debug(`isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(opts)}`);
-    const createGraphOpts = pick(opts, 'includeFromNestedHosts');
+    legacyLogger.debug(
+      `isolatorExt, createNetwork ${seeders.join(', ')}. opts: ${JSON.stringify(
+        Object.assign({}, opts, { host: opts.host?.name })
+      )}`
+    );
+    const createGraphOpts = pick(opts, ['includeFromNestedHosts', 'host']);
     const componentsToIsolate = opts.seedersOnly
       ? await host.getMany(seeders)
       : await this.createGraph(seeders, createGraphOpts);
@@ -166,7 +180,8 @@ export class IsolatorMain {
 
   private async createGraph(seeders: ComponentID[], opts: CreateGraphOptions = {}): Promise<Component[]> {
     const host = this.componentAspect.getHost();
-    const graph = await this.graphBuilder.getGraph(seeders);
+    const getGraphOpts = pick(opts, ['host']);
+    const graph = await this.graphBuilder.getGraph(seeders, getGraphOpts);
     const successorsSubgraph = graph.successorsSubgraph(seeders.map((id) => id.toString()));
     const compsAndDeps = successorsSubgraph.nodes.map((node) => node.attr);
     // do not ignore the version here. a component might be in .bitmap with one version and
