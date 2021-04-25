@@ -113,8 +113,16 @@ export class WorkspaceComponentLoader {
       consumerComponent
     );
     if (componentFromScope) {
-      componentFromScope.state = state;
-      const workspaceComponent = WorkspaceComponent.fromComponent(componentFromScope, this.workspace);
+      // Removed by @gilad. do not mutate the component from the scope
+      // componentFromScope.state = state;
+      // const workspaceComponent = WorkspaceComponent.fromComponent(componentFromScope, this.workspace);
+      const workspaceComponent = new WorkspaceComponent(
+        componentFromScope.id,
+        componentFromScope.head,
+        state,
+        componentFromScope.tags,
+        this.workspace
+      );
       return this.executeLoadSlot(workspaceComponent);
     }
     return this.executeLoadSlot(this.newComponentFromState(id, state));

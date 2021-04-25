@@ -55,6 +55,11 @@ export interface ComponentTemplate {
   description?: string;
 
   /**
+   * hide this template so that it is not listed with `bit templates`
+   */
+  hidden?: boolean;
+
+  /**
    * template function for generating the file of a certain component.,
    */
   generateFiles(context: ComponentContext): ComponentFile[];
