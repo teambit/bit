@@ -219,42 +219,50 @@ export default class NodeModuleLinker {
       extensions: component.extensions,
     });
     const componentMap = component.componentMap as ComponentMap;
-    const filesToBind = componentMap.getAllFilesPaths();
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
-    filesToBind.forEach((file) => {
+    if (component.isLegacy) {
+      const filesToBind = componentMap.getAllFilesPaths();
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const isMain = file === componentMap.mainFile;
-      const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
-      const possiblyDist = component.dists.calculateDistFileForAuthored(
-        path.normalize(fileWithRootDir),
+      component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
+      filesToBind.forEach((file) => {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.consumer,
-        isMain
+        const isMain = file === componentMap.mainFile;
+        const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
+        const possiblyDist = component.dists.calculateDistFileForAuthored(
+          path.normalize(fileWithRootDir),
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          this.consumer,
+          isMain
+        );
+        const dest = path.join(linkPath, file);
+        const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
+        const fileContent = getLinkToFileContent(destRelative);
+        // if component.compiler is set, this component is working with the old compiler (< v15)
+        // and not with compile extension. as such, the dists for author are in the root, not in the
+        // component directory. Having symlinks here instead of links causes import of module-paths to
+        // break. try e2e-test: 'as author, move individual component files to dedicated directory with bit move --component'
+        if (fileContent && component.compiler) {
+          const linkFile = LinkFile.load({
+            filePath: dest,
+            content: fileContent,
+            srcPath: file,
+            componentId,
+            override: true,
+            ignorePreviousSymlink: true, // in case the component didn't have a compiler before, this file was a symlink
+          });
+          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+          this.dataToPersist.addFile(linkFile);
+        } else {
+          // it's an un-supported file, or it's Harmony version and above, create a symlink instead
+          this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId, true));
+        }
+      });
+    } else {
+      // on Harmony, just symlink the entire source directory into "src" in node-modules.
+      this.dataToPersist.addSymlink(
+        Symlink.makeInstance(componentMap.rootDir as string, path.join(linkPath, 'src'), componentId)
       );
-      const dest = path.join(linkPath, file);
-      const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
-      const fileContent = getLinkToFileContent(destRelative);
-      // if component.compiler is set, this component is working with the old compiler (< v15)
-      // and not with compile extension. as such, the dists for author are in the root, not in the
-      // component directory. Having symlinks here instead of links causes import of module-paths to
-      // break. try e2e-test: 'as author, move individual component files to dedicated directory with bit move --component'
-      if (fileContent && component.compiler) {
-        const linkFile = LinkFile.load({
-          filePath: dest,
-          content: fileContent,
-          srcPath: file,
-          componentId,
-          override: true,
-          ignorePreviousSymlink: true, // in case the component didn't have a compiler before, this file was a symlink
-        });
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this.dataToPersist.addFile(linkFile);
-      } else {
-        // it's an un-supported file, or it's Harmony version and above, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId, true));
-      }
-    });
+    }
+
     this._deleteExistingLinksRootIfSymlink(linkPath);
     this._deleteOldLinksOfIdWithoutScope(component);
     await this._createPackageJsonForAuthor(component);
@@ -428,6 +436,9 @@ export default class NodeModuleLinker {
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     if (!this.consumer?.isLegacy) {
       await this._applyTransformers(component, packageJson);
+      // in the workspace, override the "types" and add the "src" prefix.
+      // otherwise, the navigation and auto-complete won't work on the IDE.
+      packageJson.addOrUpdateProperty('types', `src/${component.mainFile}`);
     }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';

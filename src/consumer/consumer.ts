@@ -820,7 +820,11 @@ export default class Consumer {
 
   composeRelativeComponentPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
-    return composeComponentPath(bitId, componentsDefaultDirectory);
+    // in the past, scope was the full-scope (owner+scope-name), currently, scope is only the scope-name.
+    const compDirBackwardCompatible = this.isLegacy
+      ? componentsDefaultDirectory.replace('{scope}', '{scopeId}')
+      : componentsDefaultDirectory;
+    return composeComponentPath(bitId, compDirBackwardCompatible);
   }
 
   composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
