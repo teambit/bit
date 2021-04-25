@@ -22,6 +22,9 @@ export function composeComponentPath(
   if (componentsDefaultDirectory.includes('{scope}/') && !bitId.scope) {
     defaultDir = componentsDefaultDirectory.replace('{scope}/', '');
   }
+  if (componentsDefaultDirectory.includes('{scopeId}/') && !bitId.scope) {
+    defaultDir = componentsDefaultDirectory.replace('{scopeId}/', '');
+  }
   if (componentsDefaultDirectory.includes('{owner}.') && !owner) {
     defaultDir = componentsDefaultDirectory.replace('{owner}.', '');
   }

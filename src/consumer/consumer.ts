@@ -822,7 +822,7 @@ export default class Consumer {
     const { componentsDefaultDirectory } = this.dirStructure;
     // in the past, scope was the full-scope (owner+scope-name), currently, scope is only the scope-name.
     const compDirBackwardCompatible = this.isLegacy
-      ? componentsDefaultDirectory.replace('{scope}', '{scope-id}')
+      ? componentsDefaultDirectory.replace('{scope}', '{scopeId}')
       : componentsDefaultDirectory;
     return composeComponentPath(bitId, compDirBackwardCompatible);
   }
