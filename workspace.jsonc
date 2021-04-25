@@ -74,7 +74,7 @@
         "@teambit/base-ui.theme.dark-theme": "0.6.3",
         "@teambit/base-ui.theme.fonts.roboto": "0.6.7",
         "@teambit/base-ui.theme.sizes": "0.6.7",
-        "@teambit/base-ui.theme.theme-provider": "0.6.7",
+        "@teambit/base-ui.theme.theme-provider": "0.6.9",
         "@teambit/base-ui.utils.popper-js.ignore-popper-size": "0.6.8",
         "@teambit/base-ui.utils.popper-js.resize-to-match-reference": "0.6.8",
         "@teambit/base-ui.utils.string.affix": "0.0.2",

@@ -79,7 +79,7 @@ function getIdSetters(defs: AspectDefinition[], suffix: string) {
 }
 
 function getIdentifier(aspectDef: AspectDefinition, suffix: string): string {
-  if (!aspectDef.component) {
+  if (!aspectDef.component && !aspectDef.local) {
     return getCoreIdentifier(aspectDef.aspectPath, suffix);
   }
   return getRegularAspectIdentifier(aspectDef, suffix);
