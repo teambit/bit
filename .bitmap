@@ -271,36 +271,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
-    "instructions/adding-compositions": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/instructions/adding-compositions"
-    },
-    "instructions/adding-docs": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/react/docs/instructions/adding-docs"
-    },
-    "instructions/adding-tests": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/defender/instructions/adding-tests"
-    },
-    "instructions/compositions-tip": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/instructions/compositions-tip"
-    },
-    "instructions/exporting-components": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/changelog/instructions/exporting-components"
-    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.369",
@@ -405,13 +375,13 @@
     },
     "network/agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.58",
+        "version": "0.0.60",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/agent"
     },
     "network/proxy-agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.58",
+        "version": "0.0.60",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
@@ -498,12 +468,6 @@
         "version": "0.0.369",
         "mainFile": "index.ts",
         "rootDir": "scopes/scope/scope"
-    },
-    "scopes": {
-        "scope": "",
-        "version": "",
-        "mainFile": "design/zeplin/index.ts",
-        "rootDir": "scopes"
     },
     "sidebar": {
         "scope": "teambit.ui-foundation",
@@ -906,12 +870,6 @@
         "version": "0.0.347",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-layout"
-    },
-    "ui/mdx-page": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/mdx-page"
     },
     "ui/mdx-scope-context": {
         "scope": "teambit.mdx",
