@@ -320,7 +320,13 @@ export class ScopeMain implements ComponentFactory {
 
     return dirs.map((dir) => {
       const runtimeManifest = runtime ? this.findRuntime(dir, runtime) : undefined;
-      return new AspectDefinition(dir, runtimeManifest ? join(dir, 'dist', runtimeManifest) : null);
+      return new AspectDefinition(
+        dir,
+        runtimeManifest ? join(dir, 'dist', runtimeManifest) : null,
+        undefined,
+        undefined,
+        true
+      );
     });
   }
 
