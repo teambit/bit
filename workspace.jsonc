@@ -478,6 +478,12 @@
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
     },
+    // "[instructions/*]": {
+    //   "teambit.mdx/mdx": {},
+    //   "teambit.envs/envs": {
+    //     "env": "teambit.mdx/mdx"
+    //   }
+    // },
     "scopes/compositions/instructions": {
       "teambit.mdx/mdx": {},
       "teambit.envs/envs": {
@@ -496,7 +502,7 @@
         "env": "teambit.mdx/mdx"
       }
     },
-    "scopes/react/react/docs/instructions": {
+    "scopes/react/instructions": {
       "teambit.mdx/mdx": {},
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"

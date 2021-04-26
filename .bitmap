@@ -271,6 +271,36 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
+    "instructions/adding-compositions": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/instructions/adding-compositions"
+    },
+    "instructions/adding-docs": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/instructions/adding-docs"
+    },
+    "instructions/adding-tests": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/defender/instructions/adding-tests"
+    },
+    "instructions/compositions-tip": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/instructions/compositions-tip"
+    },
+    "instructions/exporting-components": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/instructions/exporting-components"
+    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.371",
@@ -870,6 +900,12 @@
         "version": "0.0.349",
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-layout"
+    },
+    "ui/mdx-page": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/ui/mdx-page"
     },
     "ui/mdx-scope-context": {
         "scope": "teambit.mdx",
