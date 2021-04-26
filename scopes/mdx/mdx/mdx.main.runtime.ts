@@ -64,8 +64,8 @@ export class MDXMain {
     const mdxCompiler = multiCompiler.createCompiler(
       [
         mdx.createCompiler({ ignoredPatterns: docs.getPatterns() }),
-        react.reactEnv.getCompiler(),
         babel.createCompiler(babelConfig),
+        react.reactEnv.getCompiler(),
       ],
       {}
     );
