@@ -23,3 +23,5 @@ export type TypeScriptCompilerOptions = {
    */
   compileJsx?: boolean;
 } & Partial<CompilerOptions>;
+
+export type TsCompilerOptionsWithoutTsConfig = Omit<TypeScriptCompilerOptions, 'tsconfig'>;

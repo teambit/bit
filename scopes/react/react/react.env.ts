@@ -10,7 +10,7 @@ import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
-import type { TypeScriptCompilerOptions } from '@teambit/typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
@@ -29,8 +29,6 @@ export const AspectEnvType = 'react';
 const jestM = require('jest');
 const defaultTsConfig = require('./typescript/tsconfig.json');
 const buildTsConfig = require('./typescript/tsconfig.build.json');
-
-export type TsCompilerOptionsWithoutTsConfig = Omit<TypeScriptCompilerOptions, 'tsconfig'>;
 
 /**
  * a component environment built for [React](https://reactjs.org) .
