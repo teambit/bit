@@ -15,6 +15,7 @@ import { AspectLoaderMain } from '@teambit/aspect-loader';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import logger from '@teambit/legacy/dist/logger/logger';
 import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
 import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
@@ -50,6 +51,7 @@ export class ComponentCompiler {
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
     const dataToPersist = new DataToPersist();
+    dataToPersist.removePath(new RemovePath(this.distDir));
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();

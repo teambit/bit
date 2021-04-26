@@ -1,4 +1,4 @@
-import { CompilerOptions } from '@teambit/compiler/types';
+import { CompilerOptions } from '@teambit/compiler';
 
 export type TypeScriptCompilerOptions = {
   /**
