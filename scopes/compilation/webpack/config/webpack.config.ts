@@ -1,5 +1,6 @@
 import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { fallbacks } from './webpack-fallbacks';
 
 const html = require('./html');
 
@@ -34,15 +35,7 @@ export function configFactory(entries, rootPath) {
         buffer: require.resolve('buffer/'),
       },
 
-      fallback: {
-        util: require.resolve('util'),
-        assert: require.resolve('assert'),
-        path: require.resolve('path-browserify'),
-        buffer: require.resolve('buffer/'),
-        process: require.resolve('process/browser'),
-        stream: require.resolve('stream-browserify'),
-        fs: false,
-      },
+      fallback: fallbacks,
     },
 
     plugins: [
