@@ -490,7 +490,7 @@
         "env": "teambit.mdx/mdx"
       }
     },
-    "scopes/component/changelog/instructions": {
+    "scopes/component/instructions": {
       "teambit.mdx/mdx": {},
       "teambit.envs/envs": {
         "env": "teambit.mdx/mdx"
