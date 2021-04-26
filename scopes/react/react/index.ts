@@ -5,4 +5,3 @@ export type { ReactPreview } from './react.preview.runtime';
 export type { ReactEnv } from './react.env';
 export { ReactAspect };
 export default ReactAspect;
-export * as jestConfig from './jest/jest.config.js';
