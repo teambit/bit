@@ -201,6 +201,7 @@
     "pino-pretty": "4.5.0",
     "porter-stemmer": "0.9.1",
     "prompt": "1.1.0",
+    "quick-lru": "6.0.0",
     "ramda": "0.27.1",
     "ramda-adjunct": "2.31.1",
     "react-docgen": "5.3.1",
