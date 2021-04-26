@@ -41,9 +41,10 @@ describe('set default owner and scope', function () {
       helper.command.tagAllComponents();
     });
     it('should create link with default owner as prefix', () => {
-      const linkFolderPath = path.normalize(`node_modules/${componentPackageName}/src`);
+      const linkFolderPath = path.normalize(`node_modules/${componentPackageName}`);
+      const linkFullPath = path.join(linkFolderPath, 'is-type.js');
       const outputLinkPath = parsedLinkOutput.legacyLinkResults[0].bound[0].to;
-      expect(outputLinkPath).to.equal(linkFolderPath);
+      expect(outputLinkPath).to.equal(linkFullPath);
       expect(path.join(helper.scopes.localPath, 'node_modules')).to.be.a.directory();
       expect(path.join(helper.scopes.localPath, linkFolderPath)).to.be.a.directory();
     });
