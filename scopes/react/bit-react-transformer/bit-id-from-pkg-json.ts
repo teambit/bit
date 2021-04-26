@@ -9,6 +9,11 @@ type Json = {
   [key: string]: Json | Primitive;
 };
 
+export type ComponentMetaData = {
+  id: string;
+  homepage?: string;
+};
+
 export function fileToBitId(filepath: string) {
   const root = safeFindRoot(filepath);
   if (!root) return undefined;
@@ -17,14 +22,20 @@ export function fileToBitId(filepath: string) {
   return id;
 }
 
-function bitIdFromPkgPath(pkgPath: string): string | undefined {
+function bitIdFromPkgPath(pkgPath: string): ComponentMetaData | undefined {
   const pkg = parsePkgJson(pkgPath);
-  const compId = pkg?.componentId;
+  if (!pkg) return undefined;
+
+  const compId = pkg.componentId;
+  const homepage = typeof pkg.homepage === 'string' ? pkg.homepage : undefined;
   if (!compId) return undefined;
 
   try {
     const parsed = ComponentID.fromObject(compId);
-    return parsed.toString();
+    return {
+      id: parsed.toString(),
+      homepage,
+    };
   } catch {
     return undefined;
   }

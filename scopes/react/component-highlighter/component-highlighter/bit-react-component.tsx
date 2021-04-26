@@ -1,7 +1,11 @@
+export interface ComponentMeta {
+  id: string;
+  homepage: string;
+}
 export interface BitComponent {
-  __bitComponentId: string;
+  __bit_component: ComponentMeta;
 }
 
 export function isBitComponent(component: any): component is BitComponent {
-  return component && typeof component.__bitComponentId === 'string';
+  return component && typeof component.__bit_component === 'object' && typeof component.__bit_component.id === 'string';
 }

@@ -1,27 +1,28 @@
-import type { Visitor, PluginObj, PluginPass } from '@babel/core';
+import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
-import type * as types from '@babel/types';
-import { fileToBitId } from './bit-id-from-pkg-json';
+import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import { fileToBitId, ComponentMetaData } from './bit-id-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
 
 export type BitReactTransformerOptions = {
   componentFilesPath: string;
 };
 
-const COMPONENT_IDENTIFIER = '__bitComponentId';
+const COMPONENT_META = '__bit_component';
 const PLUGIN_NAME = 'bit-react-transformer';
 
-type Api = {
-  types: typeof types;
-};
+type Api = { types: typeof Types };
 
 /**
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
  */
 export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
-  let componentMap: Record<string, string>;
+  let didInsertMetadata = false;
+  let componentMap: Record<string, ComponentMetaData>;
+  const types = api.types as typeof Types;
+
   function setMap(mapPath: string) {
     try {
       const json = readFileSync(mapPath, 'utf-8');
@@ -41,15 +42,14 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     }
   );
 
-  function addComponentId(path: any, filePath: string, identifier: string) {
-    const componentId = toComponentId(filePath);
-    if (!componentId) return;
+  function addComponentId(path: NodePath<any>, filePath: string, identifier: string) {
+    if (!didInsertMetadata) return;
 
-    const componentIdStaticProp = api.types.expressionStatement(
-      api.types.assignmentExpression(
+    const componentIdStaticProp = types.expressionStatement(
+      types.assignmentExpression(
         '=',
-        api.types.memberExpression(api.types.identifier(identifier), api.types.identifier(COMPONENT_IDENTIFIER)),
-        api.types.identifier(`'${componentId}'`)
+        types.memberExpression(types.identifier(identifier), types.identifier(COMPONENT_META)),
+        types.identifier(COMPONENT_META)
       )
     );
 
@@ -57,6 +57,29 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   }
 
   const visitor: Visitor<PluginPass> = {
+    Program(path, state) {
+      const filename = state.file.opts.filename;
+      if (!filename) return;
+
+      const meta = componentMap?.[filename] || fileToBitId(filename);
+      if (!meta) return;
+
+      const properties = [types.objectProperty(types.identifier('id'), types.stringLiteral(meta.id))];
+      if (meta.homepage)
+        properties.push(types.objectProperty(types.identifier('homepage'), types.stringLiteral(meta.homepage)));
+
+      const metadataDeceleration = types.variableDeclaration('var', [
+        types.variableDeclarator(
+          types.identifier(COMPONENT_META),
+
+          types.objectExpression(properties)
+        ),
+      ]);
+
+      path.unshiftContainer('body', metadataDeceleration);
+      didInsertMetadata = true;
+    },
+
     FunctionDeclaration(path, state) {
       // if (!isFunctionComponent(path.node.body)) return;
       const name = path.node.id?.name;
@@ -106,8 +129,10 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     visitor,
     pre() {
       const filepath = opts.componentFilesPath;
-
       if (filepath && !componentMap) setMap(filepath);
+
+      // will be set by `Program`
+      didInsertMetadata = false;
     },
     post() {
       // reset memoization, in case any file change between runs

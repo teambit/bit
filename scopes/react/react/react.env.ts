@@ -120,18 +120,24 @@ export class ReactEnv implements Environment {
     });
   }
 
-  private getFileMap(components: Component[]) {
-    return components.reduce<{ [key: string]: string }>((index, component: Component) => {
+  private getFileMap(components: Component[], local = false) {
+    // TODO - add type
+    return components.reduce<{ [key: string]: any }>((index, component: Component) => {
       component.state.filesystem.files.forEach((file) => {
-        index[file.path] = component.id.toString();
+        index[file.path] = {
+          id: component.id.toString(),
+          homepage: local
+            ? `/${component.id.fullName}`
+            : `https:/bit.dev/${component.id.toString({ ignoreVersion: false }).replace('.', '/')}`,
+        };
       });
 
       return index;
     }, {});
   }
 
-  private writeFileMap(components: Component[]) {
-    const fileMap = this.getFileMap(components);
+  private writeFileMap(components: Component[], local?: boolean) {
+    const fileMap = this.getFileMap(components, local);
     const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
     outputFileSync(path, JSON.stringify(fileMap));
     return path;
@@ -154,7 +160,7 @@ export class ReactEnv implements Environment {
    * get the default react webpack config.
    */
   private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components);
+    const fileMapPath = this.writeFileMap(context.components, true);
     const distPaths = this.calcDistPaths(context, this.workspace.path);
 
     return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths, workDir: this.workspace.path });

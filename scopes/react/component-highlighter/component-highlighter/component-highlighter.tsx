@@ -35,7 +35,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       element: bitComponent.element,
       id: bitComponent.id,
       scopeLink: undefined, // 'https://bit.dev/teambit/base-ui',
-      link: undefined, // 'https://bit.dev/teambit/base-ui/elements/button',
+      link: bitComponent.homepage,
     });
   }, []);
 
@@ -89,7 +89,8 @@ function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Eleme
       return {
         element: current,
         component,
-        id: component.__bitComponentId || 'unknown',
+        id: component.__bit_component.id || 'unknown',
+        homepage: component.__bit_component.homepage,
       };
   }
 
