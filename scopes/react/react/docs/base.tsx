@@ -48,11 +48,14 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const Content: any = isFunction(docs.default)
     ? docs.default
     : () => (
-        <div>
-          <MdxPage>
-            <AddingDocs />
-          </MdxPage>
-        </div>
+        <>
+          <div className={styles.title}>Oops looks like there are no docs for this components 😢</div>
+          <div className={styles.instructions}>
+            <MdxPage>
+              <AddingDocs />
+            </MdxPage>
+          </div>
+        </>
       );
   const reactContext = renderingContext.get(ReactAspect.id);
   const Provider = withProviders(reactContext?.providers);
@@ -78,7 +81,11 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
           <Content />
         )}
 
-        <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
+        <CompositionsSummary
+          componentId={componentId}
+          compositions={compositions}
+          className={styles.compositionSection}
+        />
 
         <ExamplesOverview examples={Content.examples || examples} />
 

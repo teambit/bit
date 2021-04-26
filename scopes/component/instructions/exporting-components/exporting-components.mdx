@@ -1,14 +1,16 @@
-# Versioning and Exporting Components
+## How to Version and Export Components
 
-To export your components to the cloud so that they can be installed elsewhere you first have to tag and then export your components. When we version or 'tag' a component, we commit changes and prepare it to be exported to a remote scope. This process most often includes compiling and testing, as well.
+> To export your components to the cloud so that they can be installed elsewhere you first have to tag and then export your components.
 
-## Tag a component
+When we version or 'tag' a component, we commit changes and prepare it to be exported to a remote scope. This process most often includes compiling and testing, as well.
+
+### How to Tag a component
 
 ```bash
 bit tag <component-id> --patch --message "this is the tag message"
 ```
 
-### Tag all components that have been modified
+#### How to Tag all components that have been modified
 
 Tag all components and bump the patch number of each component version
 
@@ -16,7 +18,7 @@ Tag all components and bump the patch number of each component version
 bit tag --all
 ```
 
-## Export your Components
+### How to Export your Components
 
 Once you have tagged your component you can then run the bit export command.
 

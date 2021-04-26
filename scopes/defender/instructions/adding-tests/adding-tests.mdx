@@ -1,14 +1,12 @@
-## Adding Tests
+## How to Add Tests
 
-Tests are added by placing test files inside the component's directory. Test files should be named with the pattern set by the component environment.
+> Adding tests to a component is done by creating a file in the component's directory, using `*.spec.[ts|tsx|js|jsx]` or `*.test.[ts|tsx|js|jsx]`.
 
-For example, the React environment runs tests in files named with the following pattern: `*.spec.[ts|tsx|js|jsx]` and `*.test.[ts|tsx|js|jsx]`
+The local dev server watches your components for any changes and reruns tests for your component and all its dependents for you.
 
-```bash {5}
+```bash{5}
 ├── ui/button
     ├── index.tsx
-    ├── button.compositions.tsx
-    ├── button.docs.mdx
     ├── button.spec.tsx
     └── button.tsx
 ```
@@ -20,15 +18,11 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import { Button } from './button.composition';
 
-describe('books-page', () => {
-  it('should render with the correct text', () => {
-    const { getByText } = render(<BasicButton />);
-    const rendered = getByText('click me');
-    expect(rendered).toBeTruthy();
-  });
+it('should render with the correct text', () => {
+  const { getByText } = render(<BasicButton />);
+  const rendered = getByText('click me');
+  expect(rendered).toBeTruthy();
 });
 ```
-
-The local dev server watches your components for any changes and reruns tests for your component and all its dependents for you.
 
 [Learn more about testing components.](https://harmony-docs.bit.dev/building-with-bit/testing-components)
