@@ -49,4 +49,12 @@ export const fallbacks = {
   vm: vmFallbackPath,
   zlib: zlibFallbackPath,
   fs: false,
+  net: false,
+  tls: false,
+  child_process: false,
+  // file: false,
+  // module: false,
+  // pnpapi: false,
+  // readline: false,
+  // worker_threads: false,
 };
