@@ -27,7 +27,7 @@ import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
-import { ReactEnv } from './react.env';
+import { ReactEnv, TsCompilerOptionsWithoutTsConfig } from './react.env';
 import { reactSchema } from './react.graphql';
 import { ReactAppOptions } from './react-app-options';
 import { ReactApp } from './react.application';
@@ -89,12 +89,16 @@ export class ReactMain {
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
-  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
+  overrideTsConfig(
+    tsconfig: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule: any = ts
+  ) {
     this.tsConfigOverride = tsconfig;
 
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
+        return this.reactEnv.getCompiler(tsconfig, compilerOptions, tsModule);
       },
     });
   }
@@ -102,10 +106,10 @@ export class ReactMain {
   /**
    * override the build tsconfig.
    */
-  overrideBuildTsConfig(tsconfig) {
+  overrideBuildTsConfig(tsconfig, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig);
+        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions);
       },
     });
   }
