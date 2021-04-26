@@ -7,13 +7,11 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import MultiCompilerAspect, { MultiCompilerMain } from '@teambit/multi-compiler';
 import ReactAspect, { ReactMain } from '@teambit/react';
 import { MDXAspect } from './mdx.aspect';
-import { MDXCompiler } from './mdx.compiler';
+import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
 
 const babelConfig = require('./babel/babel.config');
-
-export type MDXCompilerOpts = {};
 
 export type MDXConfig = {
   /**
@@ -23,9 +21,9 @@ export type MDXConfig = {
 };
 
 export class MDXMain {
-  // icon() {
-  //   return 'https://static.bit.dev/file-icons/file_type_mdx.svg';
-  // }
+  icon() {
+    return 'https://static.bit.dev/extensions-icons/mdx-icon-small.svg';
+  }
 
   /**
    * create an instance of the MDX compiler.
@@ -64,7 +62,11 @@ export class MDXMain {
   ) {
     const mdx = new MDXMain();
     const mdxCompiler = multiCompiler.createCompiler(
-      [mdx.createCompiler(), babel.createCompiler(babelConfig), react.reactEnv.getCompiler()],
+      [
+        mdx.createCompiler({ ignoredPatterns: docs.getPatterns() }),
+        babel.createCompiler(babelConfig),
+        react.reactEnv.getCompiler(),
+      ],
       {}
     );
     const mdxEnv = envs.compose(react.reactEnv, [

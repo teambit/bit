@@ -1,4 +1,4 @@
-import { DependencyDetector, FileContext } from '@teambit/dependency-resolver/dependency-detector';
+import { DependencyDetector, FileContext } from '@teambit/dependency-resolver';
 import { compileSync } from '@teambit/modules.mdx-compiler';
 
 export class MDXDependencyDetector implements DependencyDetector {

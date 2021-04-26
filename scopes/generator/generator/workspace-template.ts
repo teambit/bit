@@ -30,6 +30,11 @@ export interface WorkspaceTemplate {
   description?: string;
 
   /**
+   * hide this template so that it is not listed with `bit templates`
+   */
+  hidden?: boolean;
+
+  /**
    * template function for generating the template files,
    */
   generateFiles(context: WorkspaceContext): WorkspaceFile[];
