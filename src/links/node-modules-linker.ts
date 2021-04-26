@@ -5,7 +5,13 @@ import * as path from 'path';
 import R from 'ramda';
 
 import { BitId } from '../bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_BINDINGS_PREFIX, PACKAGE_JSON } from '../constants';
+import {
+  COMPONENT_ORIGINS,
+  DEFAULT_BINDINGS_PREFIX,
+  IS_WINDOWS,
+  PACKAGE_JSON,
+  SOURCE_DIR_SYMLINK_TO_NM,
+} from '../constants';
 import BitMap from '../consumer/bit-map/bit-map';
 import ComponentMap from '../consumer/bit-map/component-map';
 import ComponentsList from '../consumer/component/components-list';
@@ -274,21 +280,22 @@ export default class NodeModuleLinker {
   private symlinkDirAuthorHarmony(component: Component, linkPath: PathOsBasedRelative) {
     const componentMap = component.componentMap as ComponentMap;
 
-    this.dataToPersist.addSymlink(
-      Symlink.makeInstance(componentMap.rootDir as string, path.join(linkPath, 'src'), component.id)
-    );
-
-    // some files, such as .scss are imported with internal paths, not from the main index file.
-    // as such, the symlink of 'src' dir, won't help. bit-status shows missing packages.
     const filesToBind = componentMap.getAllFilesPaths();
-    const extToSymlink = ['.scss'];
     filesToBind.forEach((file) => {
-      if (extToSymlink.includes(path.extname(file))) {
-        const fileWithRootDir = path.join(componentMap.rootDir as string, file);
-        const dest = path.join(linkPath, file);
-        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
-      }
+      const fileWithRootDir = path.join(componentMap.rootDir as string, file);
+      const dest = path.join(linkPath, file);
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
     });
+
+    if (IS_WINDOWS) {
+      this.dataToPersist.addSymlink(
+        Symlink.makeInstance(
+          componentMap.rootDir as string,
+          path.join(linkPath, SOURCE_DIR_SYMLINK_TO_NM),
+          component.id
+        )
+      );
+    }
   }
 
   /**
@@ -459,9 +466,12 @@ export default class NodeModuleLinker {
     const packageJson = PackageJsonFile.createFromComponent(dest, component);
     if (!this.consumer?.isLegacy) {
       await this._applyTransformers(component, packageJson);
-      // in the workspace, override the "types" and add the "src" prefix.
-      // otherwise, the navigation and auto-complete won't work on the IDE.
-      packageJson.addOrUpdateProperty('types', `src/${component.mainFile}`);
+      if (IS_WINDOWS) {
+        // in the workspace, override the "types" and add the "src" prefix.
+        // otherwise, the navigation and auto-complete won't work on the IDE.
+        // this is for Windows only. For Linux, we use symlinks for the files.
+        packageJson.addOrUpdateProperty('types', `${SOURCE_DIR_SYMLINK_TO_NM}/${component.mainFile}`);
+      }
     }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';
