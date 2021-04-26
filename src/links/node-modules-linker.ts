@@ -284,7 +284,7 @@ export default class NodeModuleLinker {
     filesToBind.forEach((file) => {
       const fileWithRootDir = path.join(componentMap.rootDir as string, file);
       const dest = path.join(linkPath, file);
-      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id));
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
     });
 
     if (IS_WINDOWS) {
