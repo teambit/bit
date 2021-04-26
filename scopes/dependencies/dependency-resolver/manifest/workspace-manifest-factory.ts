@@ -139,7 +139,14 @@ function filterComponents(dependencyList: DependencyList, componentsToFilterOut:
       if (!component.id.hasVersion()) {
         return component.id.toString() === dep.componentId.toString({ ignoreVersion: true });
       }
-      return component.id._legacy.isEqual(dep.componentId._legacy);
+      // We are checking against both component.id._legacy and component.state._consumer.id
+      // Because during tag operation, the component.id._legacy has the current version (before the tag)
+      // while the component.state._consumer.id has the upcoming version (the version that will be after the tag)
+      // The dependency in some cases is already updated to the upcoming version
+      return (
+        component.id._legacy.isEqual(dep.componentId._legacy) ||
+        component.state._consumer.id.isEqual(dep.componentId._legacy)
+      );
     });
     if (existingComponent) return false;
     return true;

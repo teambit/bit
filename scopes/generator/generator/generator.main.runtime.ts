@@ -17,7 +17,7 @@ import { NewCmd, NewOptions } from './new.cmd';
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
 
-export type TemplateDescriptor = { aspectId: string; name: string; description?: string };
+export type TemplateDescriptor = { aspectId: string; name: string; description?: string; hidden?: boolean };
 
 export type GeneratorConfig = {
   /**
@@ -63,6 +63,7 @@ export class GeneratorMain {
         aspectId: id,
         name: template.name,
         description: template.description,
+        hidden: template.hidden,
       }));
     }
     const allTemplates = this.getAllWorkspaceTemplatesFlattened();
@@ -70,6 +71,7 @@ export class GeneratorMain {
       aspectId: id,
       name: template.name,
       description: template.description,
+      hidden: template.hidden,
     }));
   }
 

@@ -8,6 +8,7 @@ import camelcase from 'camelcase';
 import { PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
+import { composeComponentPath } from '@teambit/legacy/dist/utils/bit/compose-component-path';
 import { ComponentID } from '@teambit/component-id';
 import { ComponentTemplate, ComponentFile } from './component-template';
 import { CreateOptions } from './create.cmd';
@@ -107,6 +108,6 @@ export class ComponentGenerator {
 
   private getComponentPath(componentId: ComponentID) {
     if (this.options.path) return path.join(this.options.path, componentId.fullName);
-    return path.join(componentId.scope, componentId.fullName);
+    return composeComponentPath(componentId._legacy.changeScope(componentId.scope), this.workspace.defaultDirectory);
   }
 }

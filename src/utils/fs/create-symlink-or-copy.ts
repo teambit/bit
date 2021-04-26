@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
+import fsNative from 'fs';
 import * as path from 'path';
-import symlinkOrCopy from 'symlink-or-copy';
 import { IS_WINDOWS } from '../../constants';
 import ShowDoctorError from '../../error/show-doctor-error';
 import logger from '../../logger/logger';
@@ -33,13 +33,31 @@ export default function createSymlinkOrCopy(
   }
 
   function symlink() {
-    IS_WINDOWS ? symlinkOrCopy.sync(srcPath, destPath) : fs.symlinkSync(srcPath, destPath);
+    IS_WINDOWS ? symlinkOrHardLink() : fs.symlinkSync(srcPath, destPath);
+  }
+
+  /**
+   * for Windows. try to symlink, if fails (probably not-admin user), try to link.
+   */
+  function symlinkOrHardLink() {
+    try {
+      fs.symlinkSync(srcPath, destPath);
+    } catch (err) {
+      // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.
+      link();
+    }
   }
 
   function link() {
     try {
       hardLinkOrJunction(srcPath);
     } catch (err) {
+      if (err.code === 'EXDEV') {
+        // this is docker, which for some weird reason, throw error: "EXDEV: cross-device link not permitted"
+        // only when using fs-extra. it doesn't happen with "fs".
+        fsNative.symlinkSync(srcPath, destPath);
+        return;
+      }
       if (err.code !== 'ENOENT') {
         throw err;
       }

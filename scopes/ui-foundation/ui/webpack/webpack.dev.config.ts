@@ -57,6 +57,8 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
   return {
     // Environment mode
     mode: 'development',
+    // improves HMR
+    snapshot: { managedPaths: [] },
 
     devtool: 'inline-source-map',
 
@@ -178,6 +180,11 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
     },
 
     module: {
+      // Webpack by default includes node_modules under its managed paths which cause the whole directory to be cached
+      // Watch mode requires us to turn off unsafeCache as well
+      // this de-optimizes the dev build but ensures hmr works when writing/linking into node modules.
+      // However we do not lose the caching entirely like cache: false
+      unsafeCache: false,
       rules: [
         {
           test: /\.m?js/,

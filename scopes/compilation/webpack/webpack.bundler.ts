@@ -6,7 +6,7 @@ import mapSeries from 'p-map-series';
 import webpack, { Compiler, Configuration } from 'webpack';
 import { merge } from 'webpack-merge';
 
-import configFactory from './config/webpack.config';
+import { configFactory } from './config/webpack.config';
 
 export class WebpackBundler implements Bundler {
   constructor(

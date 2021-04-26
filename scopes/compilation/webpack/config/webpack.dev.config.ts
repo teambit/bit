@@ -1,3 +1,4 @@
+import path from 'path';
 import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
@@ -5,8 +6,8 @@ import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
 import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
 import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
 import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { fallbacks } from './webpack-fallbacks';
 
-import path from 'path';
 import html from './html';
 
 import WebpackBitReporterPlugin from '../plugins/webpack-bit-reporter-plugin';
@@ -134,15 +135,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         buffer: require.resolve('buffer/'),
       },
 
-      fallback: {
-        util: require.resolve('util'),
-        assert: require.resolve('assert'),
-        path: require.resolve('path-browserify'),
-        buffer: require.resolve('buffer/'),
-        process: require.resolve('process/browser'),
-        stream: require.resolve('stream-browserify'),
-        fs: false,
-      },
+      fallback: fallbacks,
     },
 
     plugins: [

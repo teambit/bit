@@ -21,6 +21,8 @@ import {
   PackageManagerInstallOptions,
   ComponentDependency,
   WorkspacePolicyEntry,
+  LinkingOptions,
+  LinkResults,
   DependencyList,
 } from '@teambit/dependency-resolver';
 import { EnvsMain, EnvsAspect, EnvServiceList, DEFAULT_ENV } from '@teambit/envs';
@@ -57,7 +59,6 @@ import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
 import { slice, uniqBy } from 'lodash';
 import path, { join } from 'path';
-import { LinkingOptions, LinkResults } from '@teambit/dependency-resolver/dependency-linker';
 import { difference } from 'ramda';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
@@ -1281,7 +1282,7 @@ export class Workspace implements ComponentFactory {
     return ComponentID.fromLegacy(legacyId, defaultScope);
   }
 
-  async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>) {
+  async resolveMultipleComponentIds(ids: Array<string | ComponentID | BitId>): Promise<ComponentID[]> {
     return Promise.all(ids.map(async (id) => this.resolveComponentId(id)));
   }
 

@@ -25,7 +25,11 @@ export class AspectDefinition {
     /**
      * id of the component (used instead of component in the case of core aspect)
      */
-    readonly id?: string
+    readonly id?: string,
+    /**
+     * aspect defined using 'file://' protocol
+     */
+    readonly local?: boolean
   ) {}
 
   get getId() {

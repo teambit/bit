@@ -12,8 +12,9 @@ export class ScopeComponentLoader {
 
   async get(id: ComponentID): Promise<Component | undefined> {
     const idStr = id.toString();
-    if (this.componentsCache[idStr]) {
-      return this.componentsCache[idStr];
+    const fromCache = this.componentsCache[idStr];
+    if (fromCache) {
+      return fromCache;
     }
     this.logger.debug(`ScopeComponentLoader.get, loading ${idStr}`);
     const legacyId = id._legacy;
@@ -59,7 +60,7 @@ export class ScopeComponentLoader {
   }
 
   async getSnap(id: ComponentID, hash: string): Promise<Snap> {
-    const version = (await this.scope.legacyScope.objects.load(new Ref(hash))) as Version;
+    const version = (await this.scope.legacyScope.objects.load(new Ref(hash), true)) as Version;
     return this.createSnapFromVersion(version);
   }
 

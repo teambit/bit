@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import classnames from 'classnames';
 import flatten from 'lodash.flatten';
-import { CompositionsMenuSlot } from '@teambit/compositions/compositions.ui.runtime';
+import { CompositionsMenuSlot } from '@teambit/compositions';
 import styles from './compositions-menu-bar.module.scss';
 
 interface CompositionsMenuBarProps extends React.HTMLAttributes<HTMLDivElement> {
