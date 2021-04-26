@@ -55,7 +55,8 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
-      globalObject: 'this',
+      // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
+      // globalObject: 'this',
     },
 
     devServer: {
