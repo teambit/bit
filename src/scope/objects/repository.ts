@@ -22,7 +22,7 @@ import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
 import { concurrentIOLimit } from '../../utils/concurrency';
 import { createInMemoryCache } from '../../cache/cache-factory';
-import { InMemoryCache } from '../../cache/in-memory-cache';
+import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -45,7 +45,7 @@ export default class Repository {
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
-    this.cache = createInMemoryCache();
+    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
