@@ -259,6 +259,9 @@ export const CFG_CONCURRENCY_IO = 'concurrency.io';
 export const CFG_CONCURRENCY_COMPONENTS = 'concurrency.components';
 export const CFG_CONCURRENCY_FETCH = 'concurrency.fetch';
 
+export const CFG_CACHE_MAX_ITEMS_COMPONENTS = 'cache.max.components';
+export const CFG_CACHE_MAX_ITEMS_OBJECTS = 'cache.max.objects';
+
 /**
  * git hooks
  */

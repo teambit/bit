@@ -4,15 +4,19 @@ import { SemVer } from 'semver';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import { ModelComponent, Version } from '@teambit/legacy/dist/scope/models';
 import { Ref } from '@teambit/legacy/dist/scope/objects';
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import type { ScopeMain } from './scope.main.runtime';
 
 export class ScopeComponentLoader {
-  private componentsCache: { [idStr: string]: Component } = {};
-  constructor(private scope: ScopeMain, private logger: Logger) {}
+  private componentsCache: InMemoryCache<Component>; // cache loaded components
+  constructor(private scope: ScopeMain, private logger: Logger) {
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+  }
 
   async get(id: ComponentID): Promise<Component | undefined> {
     const idStr = id.toString();
-    const fromCache = this.componentsCache[idStr];
+    const fromCache = this.componentsCache.get(idStr);
     if (fromCache) {
       return fromCache;
     }
@@ -35,7 +39,7 @@ export class ScopeComponentLoader {
     const tagMap = await this.getTagMap(modelComponent);
 
     const component = new Component(newId, snap, state, tagMap, this.scope);
-    this.componentsCache[idStr] = component;
+    this.componentsCache.set(idStr, component);
     return component;
   }
 
@@ -65,7 +69,7 @@ export class ScopeComponentLoader {
   }
 
   clearCache() {
-    this.componentsCache = {};
+    this.componentsCache.deleteAll();
   }
 
   private async getTagMap(modelComponent: ModelComponent): Promise<TagMap> {

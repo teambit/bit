@@ -94,6 +94,16 @@ export function listSync(): any {
   return config.toPlainObject();
 }
 
+export function getNumberFromConfig(name: string): number | null {
+  const fromConfig = getSync(name);
+  if (!fromConfig) return null;
+  const num = Number(fromConfig);
+  if (Number.isNaN(num)) {
+    throw new Error(`config of "${name}" is invalid. Expected number, got "${fromConfig}"`);
+  }
+  return num;
+}
+
 function cache() {
   return {
     get: () => {
