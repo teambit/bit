@@ -32,7 +32,7 @@ export class MDXCompiler implements Compiler {
     return [
       {
         outputText: output.contents,
-        outputPath: this.getDistPathBySrcPath(options.filePath),
+        outputPath: this.replaceFileExtToJs(options.filePath),
       },
     ];
   }
@@ -80,12 +80,16 @@ export class MDXCompiler implements Compiler {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string {
+    const fileWithNewExt = this.replaceFileExtToJs(srcPath);
+    return join(this.distDir, fileWithNewExt);
+  }
+
+  private replaceFileExtToJs(srcPath: string): string {
     let fileWithNewExt = srcPath;
     if (this.isFileSupported(srcPath)) {
       fileWithNewExt = srcPath.replace('.mdx', '.mdx.js');
     }
-
-    return join(this.distDir, fileWithNewExt);
+    return fileWithNewExt;
   }
 
   /**
