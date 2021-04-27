@@ -50,7 +50,7 @@ export class ReactApp implements Application {
       rootPath: '/',
     });
 
-    const bundler: Bundler = await context.env.getBundler(bundlerContext);
+    const bundler: Bundler = await context.env.getBundler(bundlerContext, { output: { publicPath: '/' } });
     await bundler.run();
     const deployContext = Object.assign(context, {
       applicationType: this.applicationType,
