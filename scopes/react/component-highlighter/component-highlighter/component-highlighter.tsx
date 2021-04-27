@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import classnames from 'classnames';
 import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
 import { HoverSelector } from '@teambit/ui.hover-selector';
+import { useDebouncedCallback } from 'use-debounce';
 import { Frame } from '../frame';
 import { Label, LabelContainer } from '../label';
 import { isBitComponent } from './bit-react-component';
@@ -22,7 +23,7 @@ export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivEle
 export function ComponentHighlighter({ children, disabled, ...rest }: ComponentHighlightProps) {
   const [target, setTarget] = useState<HighlightTarget | undefined>();
 
-  const handleElement = useCallback((element: HTMLElement | null) => {
+  const _handleElement = useCallback((element: HTMLElement | null) => {
     if (!element) {
       setTarget(undefined);
       return;
@@ -38,6 +39,8 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       link: bitComponent.homepage,
     });
   }, []);
+
+  const handleElement = useDebouncedCallback(_handleElement, target ? 300 : 0);
 
   useEffect(() => {
     if (disabled) {

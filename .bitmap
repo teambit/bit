@@ -145,6 +145,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree"
     },
+    "component-url": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-url"
+    },
     "component-version": {
         "scope": "teambit.component",
         "version": "0.0.345",

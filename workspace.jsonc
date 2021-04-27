@@ -292,6 +292,7 @@
         "url-loader": "4.1.1",
         "url-parse": "1.4.7",
         "use-animation-frame": "0.1.0",
+        "use-debounce": "6.0.1",
         "vfile": "4.2.0",
         "vscode-icons-js": "11.0.0",
         "vscode-languageclient": "6.1.3",
