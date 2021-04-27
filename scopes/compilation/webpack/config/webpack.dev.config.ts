@@ -60,8 +60,10 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     },
 
     infrastructureLogging: {
-      level: 'none',
+      level: 'error',
     },
+
+    stats: 'errors-only',
 
     devServer: {
       static: [
