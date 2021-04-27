@@ -11,8 +11,10 @@ import styles from './component-highlighter.module.scss';
 
 type HighlightTarget = {
   id?: string;
-  element: HTMLElement | null;
+  element: HTMLElement;
+  /** e.g. 'https://bit.dev/teambit/base-ui/elements/dots-loader', */
   link?: string;
+  /** e.g. 'https://bit.dev/teambit/base-ui' */
   scopeLink?: string;
 };
 
@@ -35,7 +37,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
     setTarget({
       element: bitComponent.element,
       id: bitComponent.id,
-      scopeLink: undefined, // 'https://bit.dev/teambit/base-ui',
+      scopeLink: undefined,
       link: bitComponent.homepage,
     });
   }, []);
@@ -70,7 +72,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
               <Label
                 componentId={target.id}
                 link={target.link}
-                scopeLink={target.link}
+                scopeLink={target.scopeLink}
                 data-ignore-component-highlight
               />
             </LabelContainer>
