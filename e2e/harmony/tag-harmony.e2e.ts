@@ -26,7 +26,7 @@ describe('tag components on Harmony', function () {
       helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent('comp1');
+      helper.command.importComponent('*');
     });
     it('should import successfully with the schema prop', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);

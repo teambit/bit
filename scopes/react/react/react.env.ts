@@ -2,14 +2,15 @@ import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
 import { BuildTask } from '@teambit/builder';
-import { merge } from 'lodash';
+import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
-import { CompilerMain, CompilerOptions } from '@teambit/compiler';
+import { CompilerMain } from '@teambit/compiler';
 import { Environment, ExecutionContext } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
@@ -90,22 +91,32 @@ export class ReactEnv implements Environment {
     return this.jestAspect.createTester(config, jestModule);
   }
 
-  createTsCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
+  createTsCompiler(targetConfig?: any, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}, tsModule = ts) {
     const tsconfig = this.getTsConfig(targetConfig);
     const pathToSource = pathNormalizeToLinux(__dirname).replace('/dist/', '/src/');
+    const additionalTypes = compilerOptions.types || [];
+    const compileJs = compilerOptions.compileJs ?? true;
+    const compileJsx = compilerOptions.compileJsx ?? true;
+    const genericCompilerOptions = omit(compilerOptions, ['types', 'compileJs', 'compileJsx']);
     return this.tsAspect.createCompiler(
       {
         tsconfig,
         // TODO: @david please remove this line and refactor to be something that makes sense.
-        types: [resolve(pathToSource, './typescript/style.d.ts'), resolve(pathToSource, './typescript/asset.d.ts')],
-        ...compilerOptions,
+        types: [
+          resolve(pathToSource, './typescript/style.d.ts'),
+          resolve(pathToSource, './typescript/asset.d.ts'),
+          ...additionalTypes,
+        ],
+        compileJs,
+        compileJsx,
+        ...genericCompilerOptions,
       },
       // @ts-ignore
       tsModule
     );
   }
 
-  getCompiler(targetConfig?: any, compilerOptions: Partial<CompilerOptions> = {}, tsModule = ts) {
+  getCompiler(targetConfig?: any, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}, tsModule = ts) {
     return this.createTsCompiler(targetConfig, compilerOptions, tsModule);
   }
 
@@ -285,13 +296,19 @@ export class ReactEnv implements Environment {
   /**
    * returns the component build pipeline.
    */
-  getBuildPipe(tsconfig?: TsConfigSourceFile): BuildTask[] {
-    return [this.getCompilerTask(tsconfig), this.tester.task];
+  getBuildPipe(
+    tsconfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+  ): BuildTask[] {
+    return [this.getCompilerTask(tsconfig, compilerOptions), this.tester.task];
   }
 
-  private getCompilerTask(tsconfig?: TsConfigSourceFile) {
+  private getCompilerTask(
+    tsconfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+  ) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig));
+    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions));
   }
 
   async __getDescriptor() {

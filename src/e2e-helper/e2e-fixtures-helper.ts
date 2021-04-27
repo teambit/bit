@@ -174,6 +174,7 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
     if (rewire) {
       this.command.linkAndRewire();
+      this.command.compile();
     }
     return Array(numOfComponents)
       .fill(null)
@@ -260,6 +261,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     }
     this.command.link();
     this.fs.outputFile('app.js', `const comp1 = require('${nmPathPrefix}comp1').default;\nconsole.log(comp1())`);
+    this.command.compile();
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}`)

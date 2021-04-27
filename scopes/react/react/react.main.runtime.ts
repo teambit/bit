@@ -14,7 +14,7 @@ import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
-import type { TypescriptMain } from '@teambit/typescript';
+import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
 import type { WebpackMain } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
@@ -89,12 +89,16 @@ export class ReactMain {
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
-  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
+  overrideTsConfig(
+    tsconfig: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule: any = ts
+  ) {
     this.tsConfigOverride = tsconfig;
 
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
+        return this.reactEnv.getCompiler(tsconfig, compilerOptions, tsModule);
       },
     });
   }
@@ -102,10 +106,10 @@ export class ReactMain {
   /**
    * override the build tsconfig.
    */
-  overrideBuildTsConfig(tsconfig) {
+  overrideBuildTsConfig(tsconfig, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig);
+        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions);
       },
     });
   }

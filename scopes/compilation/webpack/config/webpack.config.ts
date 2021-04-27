@@ -1,5 +1,6 @@
 import webpack from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
+import { fallbacks } from './webpack-fallbacks';
 
 const html = require('./html');
 
@@ -25,7 +26,8 @@ export function configFactory(entries, rootPath) {
       publicPath: ``,
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
-      globalObject: 'this',
+      // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
+      // globalObject: 'this',
     },
 
     resolve: {
@@ -34,15 +36,7 @@ export function configFactory(entries, rootPath) {
         buffer: require.resolve('buffer/'),
       },
 
-      fallback: {
-        util: require.resolve('util'),
-        assert: require.resolve('assert'),
-        path: require.resolve('path-browserify'),
-        buffer: require.resolve('buffer/'),
-        process: require.resolve('process/browser'),
-        stream: require.resolve('stream-browserify'),
-        fs: false,
-      },
+      fallback: fallbacks,
     },
 
     plugins: [

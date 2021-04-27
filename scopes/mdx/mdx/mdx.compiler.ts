@@ -3,7 +3,12 @@ import { outputFileSync } from 'fs-extra';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
 import { compileSync } from '@teambit/modules.mdx-compiler';
+import minimatch from 'minimatch';
 
+export type MDXCompilerOpts = {
+  ignoredExtensions?: string[];
+  ignoredPatterns?: string[];
+};
 export class MDXCompiler implements Compiler {
   displayName = 'MDX';
 
@@ -11,7 +16,7 @@ export class MDXCompiler implements Compiler {
 
   distDir = 'dist';
 
-  constructor(readonly id: string, readonly config: any) {}
+  constructor(readonly id: string, readonly config: MDXCompilerOpts) {}
 
   displayConfig() {
     return JSON.stringify(this.config, null, 2);
@@ -27,7 +32,7 @@ export class MDXCompiler implements Compiler {
     return [
       {
         outputText: output.contents,
-        outputPath: this.getDistPathBySrcPath(options.filePath),
+        outputPath: this.replaceFileExtToJs(options.filePath),
       },
     ];
   }
@@ -46,7 +51,7 @@ export class MDXCompiler implements Compiler {
       const errors = srcFiles.map((srcFile) => {
         try {
           const output = compileSync(srcFile.contents.toString('utf-8'));
-          outputFileSync(join(capsule.path, 'dist', this.getDistPathBySrcPath(srcFile.path)), output.contents);
+          outputFileSync(join(capsule.path, this.getDistPathBySrcPath(srcFile.path)), output.contents);
           return undefined;
         } catch (err) {
           return err;
@@ -75,14 +80,27 @@ export class MDXCompiler implements Compiler {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string {
-    return join(srcPath.replace('.mdx', '.mdx.js'));
+    const fileWithNewExt = this.replaceFileExtToJs(srcPath);
+    return join(this.distDir, fileWithNewExt);
+  }
+
+  private replaceFileExtToJs(srcPath: string): string {
+    let fileWithNewExt = srcPath;
+    if (this.isFileSupported(srcPath)) {
+      fileWithNewExt = srcPath.replace('.mdx', '.mdx.js');
+    }
+    return fileWithNewExt;
   }
 
   /**
    * only supported files matching get compiled. others, are copied to the dist dir.
    */
   isFileSupported(filePath: string): boolean {
-    return filePath.endsWith('.mdx') || filePath.endsWith('.md');
+    const ignoredExtensions = this.config.ignoredExtensions ?? [];
+    const ignoredExt = ignoredExtensions.find((ext) => filePath.endsWith(ext));
+    const ignoredPatterns = this.config.ignoredPatterns ?? [];
+    const ignoredPattern = ignoredPatterns.find((pattern) => minimatch(filePath, pattern));
+    return !ignoredExt && !ignoredPattern && (filePath.endsWith('.mdx') || filePath.endsWith('.md'));
   }
 
   /**

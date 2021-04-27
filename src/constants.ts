@@ -259,6 +259,9 @@ export const CFG_CONCURRENCY_IO = 'concurrency.io';
 export const CFG_CONCURRENCY_COMPONENTS = 'concurrency.components';
 export const CFG_CONCURRENCY_FETCH = 'concurrency.fetch';
 
+export const CFG_CACHE_MAX_ITEMS_COMPONENTS = 'cache.max.components';
+export const CFG_CACHE_MAX_ITEMS_OBJECTS = 'cache.max.objects';
+
 /**
  * git hooks
  */
@@ -467,3 +470,5 @@ export enum BuildStatus {
 export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
 
 export const CENTRAL_BIT_HUB_NAME = 'bit.dev';
+
+export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files

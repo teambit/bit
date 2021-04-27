@@ -42,6 +42,7 @@ export type DocsConfig = {
  */
 export class DocsMain {
   constructor(
+    private patterns: string[],
     /**
      * envs extension.
      */
@@ -127,6 +128,10 @@ export class DocsMain {
     return new Doc(docData.filePath, new DocPropList(docData.props));
   }
 
+  getPatterns() {
+    return this.patterns;
+  }
+
   /**
    * register a new doc reader. this allows to support further
    * documentation file formats.
@@ -168,7 +173,25 @@ export class DocsMain {
     [docPropSlot, docReaderSlot]: [DocPropSlot, DocReaderSlot]
   ) {
     const logger = loggerAspect.createLogger(DocsAspect.id);
-    const docs = new DocsMain(preview, pkg, compiler, workspace, logger, devFiles, docPropSlot, docReaderSlot);
+    const docs = new DocsMain(
+      config.patterns,
+
+      preview,
+
+      pkg,
+
+      compiler,
+
+      workspace,
+
+      logger,
+
+      devFiles,
+
+      docPropSlot,
+
+      docReaderSlot
+    );
     docs.registerDocReader(new DefaultDocReader(pkg, compiler, workspace));
     devFiles.registerDevPattern(config.patterns);
 
