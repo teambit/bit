@@ -62,6 +62,7 @@ import { E2eWorkspaceAspect } from '@teambit/e2e.workspace';
 import { ExportAspect } from '@teambit/export';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
+import { AngularAspect } from '@teambit/angular';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -128,6 +129,7 @@ export const manifestsMap = {
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
   [EjectAspect.id]: EjectAspect,
+  [AngularAspect.id]: AngularAspect,
 };
 
 export function isCoreAspect(id: string) {

@@ -501,6 +501,9 @@
     "scopes/react": {
       "defaultScope": "teambit.react"
     },
+    "scopes/angular": {
+      "defaultScope": "teambit.angular"
+    },
     "scopes/preview": {
       "defaultScope": "teambit.preview"
     },
