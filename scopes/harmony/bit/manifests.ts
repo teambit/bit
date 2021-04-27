@@ -62,6 +62,7 @@ import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
 import { HtmlAspect } from '@teambit/html';
 import LanesAspect from '@teambit/lanes';
+import { AngularAspect } from '@teambit/angular';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -128,6 +129,7 @@ export const manifestsMap = {
   [EjectAspect.id]: EjectAspect,
   [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
+  [AngularAspect.id]: AngularAspect,
 };
 
 export function isCoreAspect(id: string) {
