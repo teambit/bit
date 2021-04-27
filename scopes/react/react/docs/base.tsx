@@ -28,7 +28,7 @@ export type DocsSectionProps = {
 const defaultDocs = {
   examples: [],
   labels: [],
-  abstract: 'Add a description for your component in the _*.docs.mdx_ file.',
+  abstract: '',
 };
 
 /**
@@ -49,7 +49,6 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
     ? docs.default
     : () => (
         <>
-          <div className={styles.title}>Oops looks like there are no docs for this components 😢</div>
           <div className={styles.instructions}>
             <MdxPage>
               <AddingDocs />
@@ -57,6 +56,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
           </div>
         </>
       );
+
   const reactContext = renderingContext.get(ReactAspect.id);
   const Provider = withProviders(reactContext?.providers);
 

@@ -1,16 +1,26 @@
-## How to Add Compositions
+## How to Render your Component
 
-Compositions are a way to render your component so as to demonstrate that component for other developers looking to use it, and non-developers, such as designers and product managers, looking to inspect it.
+<iframe
+  width="560"
+  height="315"
+  src="https://www.youtube.com/embed/so8CcUzTrn4?rel=0"
+  title="YouTube video player"
+  frameborder="0"
+  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+  allowfullscreen
+></iframe>
+
+Bit supports rendering your component in isolation which works as your local development environment. You can have multiple compositions per component to showcase different use cases, themes etc.
 
 > Adding compositions to a component is done by creating a file in the component's directory, using the `*.composition.*` pattern.
 
 For example:
 
 ```bash {3}
-└── ui/button
-    ├── index.tsx
-    ├── button.composition.tsx
-    └── button.tsx
+button
+├── button.composition.tsx
+├── button.tsx
+└── index.ts
 ```
 
 You can create various compositions to showcase different usages of your component.

@@ -1,7 +1,6 @@
 import React, { createRef, IframeHTMLAttributes } from 'react';
 import { ComponentModel } from '@teambit/component';
 import { usePubSubIframe } from '@teambit/pubsub';
-
 import { toPreviewUrl } from './urls';
 
 // omitting 'referrerPolicy' because of an TS error during build. Re-include when needed
