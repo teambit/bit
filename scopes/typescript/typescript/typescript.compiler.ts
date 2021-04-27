@@ -137,11 +137,10 @@ export class TypescriptCompiler implements Compiler {
    * whether typescript is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
+    const isJsAndCompile = !!this.options.compileJs && filePath.endsWith('.js');
+    const isJsxAndCompile = !!this.options.compileJsx && filePath.endsWith('.jsx');
     return (
-      (filePath.endsWith('.ts') ||
-        filePath.endsWith('.tsx') ||
-        filePath.endsWith('.jsx') ||
-        filePath.endsWith('.js')) &&
+      (filePath.endsWith('.ts') || filePath.endsWith('.tsx') || isJsAndCompile || isJsxAndCompile) &&
       !filePath.endsWith('.d.ts')
     );
   }
