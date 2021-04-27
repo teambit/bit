@@ -3,7 +3,7 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
-export default (async function untrack(
+export default async function untrack(
   componentIds: string[],
   all: boolean | null | undefined
 ): Promise<Record<string, any>> {
@@ -38,4 +38,4 @@ export default (async function untrack(
   });
   await consumer.onDestroy();
   return { untrackedComponents, unRemovableComponents, missingComponents: missing };
-});
+}
