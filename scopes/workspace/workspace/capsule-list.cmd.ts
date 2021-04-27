@@ -9,7 +9,6 @@ export class CapsuleListCmd implements Command {
   description = `list all capsules`;
   shortDescription = 'list all capsules';
   group = 'capsules';
-  private = true;
   alias = '';
   options = [['j', 'json', 'json format']] as CommandOptions;
 
@@ -19,10 +18,14 @@ export class CapsuleListCmd implements Command {
     const list = await this.isolator.list(this.workspace.path);
     const workspaceRootDir = this.isolator.getCapsulesRootDir(this.workspace.path);
     const scopeRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.path);
+    const scopeAspectsRootDir = this.isolator.getCapsulesRootDir(this.workspace.scope.getAspectCapsulePath());
     // TODO: improve output
-    return chalk.green(`found ${list.capsules.length} capsule(s) for workspace ${list.workspace}.
-workspace capsules root-dir: ${workspaceRootDir}
-scope capsules root-dir: ${scopeRootDir}
+    return chalk.green(`found ${chalk.cyan(list.capsules.length.toString())} capsule(s) for workspace:  ${chalk.cyan(
+      list.workspace
+    )}
+workspace capsules root-dir:       ${chalk.cyan(workspaceRootDir)}
+scope capsules root-dir:           ${chalk.cyan(scopeRootDir)}
+scope's aspects capsules root-dir: ${chalk.cyan(scopeAspectsRootDir)}
 use --json to get the list of all workspace capsules`);
   }
 

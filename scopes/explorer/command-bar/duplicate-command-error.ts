@@ -1,4 +1,4 @@
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 import { CommandId } from './types';
 
 export class DuplicateCommandError extends BitError {

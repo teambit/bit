@@ -1,0 +1,62 @@
+---
+labels: ['react', 'typescript', 'avatar', 'icon']
+description: 'An avatar for all occasions'
+---
+
+import { DefaultAvatar, OrgAvatar, UserAvatar } from './index';
+
+### Overview
+
+An avatar component, consisting of 3 different types of Avatar:
+
+1. Default Avatar - no icon, just an '?' and size
+2. Organization Avatar - default org icon (see compositions)
+3. User Icon - icon with initials overlaid
+
+```js live
+() => {
+  const accounts = {
+    defAccount: { name: 'defaultAccount', type: 'default', profileImage: 'https://static.bit.dev/harmony/support.svg' },
+    orgAccount: { name: 'defaultAccount', type: 'organization', profileImage: 'https://static.bit.dev/bit-logo.svg' },
+    userAccount: { displayName: 'display name', name: 'defaultAccount', type: 'user', profileImage: 'https://static.bit.dev/harmony/github.svg' },
+  };
+
+  return (
+    <div>
+      <div>
+        Basic default avatar:
+        <DefaultAvatar size={32} account={accounts.defAccount} />
+      </div>
+      <div>
+        Organisation avatar with icon
+        <OrgAvatar size={32} account={accounts.orgAccount} />
+      </div>
+      <div>
+        User avatar
+        <UserAvatar size={32} account={accounts.userAccount} />
+      </div>
+      <div>
+        User avatar with tooltip
+        <UserAvatar size={32} account={accounts.userAccount} showTooltip />
+      </div>
+    </div>
+  );
+};
+```
+
+An Avatar with no picture, will show the initials of the user name, and use the first letter to determine the background-color.
+```js live
+() => {
+  const letters = [
+  'a' , 'b' , 'c' , 'd' , 'e' , 'f' , 'g' , 'h' , 'i' ,
+  'j' , 'k' , 'l' , 'm' , 'n' , 'o' , 'p' , 'q' , 'r' , 's' ,
+  't' , 'u' , 'v' , 'w' , 'x' , 'y' , 'z' ];
+  return (
+    <div>
+      {letters.map((value, index) => 
+        <UserAvatar size={32} account={{ name: `${value}k` }} showTooltip key={index} />
+      )}
+    </div>
+  )
+}
+```

@@ -1,13 +1,16 @@
 import cacache, { GetCacheObject } from 'cacache';
 import path from 'path';
+import fs from 'fs-extra';
 import { isFeatureEnabled, NO_FS_CACHE_FEATURE } from '../../api/consumer/lib/feature-toggle';
 import { PathOsBasedAbsolute } from '../../utils/path';
+import type { ComponentMapFile } from '../bit-map/component-map';
 
 const WORKSPACE_CACHE = 'cache';
 const COMPONENTS_CACHE = 'components';
 const LAST_TRACK = 'last-track';
 const DOCS = 'docs';
 const DEPS = 'deps';
+const FILE_PATHS = 'file-paths';
 
 export class ComponentFsCache {
   readonly basePath: PathOsBasedAbsolute;
@@ -24,6 +27,14 @@ export class ComponentFsCache {
 
   async setLastTrackTimestamp(idStr: string, timestamp: number): Promise<void> {
     await this.saveDataInCache(idStr, LAST_TRACK, Buffer.from(timestamp.toString()));
+  }
+
+  async getFilePathsFromCache(idStr: string): Promise<{ timestamp: number; data: string } | null> {
+    return this.getStringDataFromCache(idStr, FILE_PATHS);
+  }
+
+  async saveFilePathsInCache(idStr: string, filePaths: ComponentMapFile[]): Promise<void> {
+    await this.saveStringDataInCache(idStr, FILE_PATHS, filePaths);
   }
 
   async getDocsFromCache(filePath: string): Promise<{ timestamp: number; data: string } | null> {
@@ -81,6 +92,10 @@ export class ComponentFsCache {
     } catch (err) {
       if (err.code === 'ENOENT') {
         return null; // cache doesn't exists
+      }
+      if (err.code === 'EINTEGRITY') {
+        fs.removeSync(cachePath);
+        return null;
       }
       throw err;
     }

@@ -1,6 +1,5 @@
 import { capitalize } from '@teambit/string.capitalize';
-
-import { ComponentID } from './id';
+import { ComponentID } from '@teambit/component-id';
 
 export class ComponentMeta {
   constructor(

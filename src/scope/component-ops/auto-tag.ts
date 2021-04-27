@@ -1,11 +1,11 @@
 import graphlib, { Graph } from 'graphlib';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
 import Component from '../../consumer/component/consumer-component';
 import { Dependency } from '../../consumer/component/dependencies';
-import { isTag } from '../../version/version-parser';
 
 export async function getAutoTagPending(consumer: Consumer, changedComponents: BitIds): Promise<Component[]> {
   const autoTagInfo = await getAutoTagInfo(consumer, changedComponents);

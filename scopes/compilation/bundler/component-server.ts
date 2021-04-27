@@ -10,6 +10,7 @@ import { ComponentsServerStartedEvent } from './events';
 import { BundlerAspect } from './bundler.aspect';
 
 export class ComponentServer {
+  // why is this here
   errors?: Error[];
   constructor(
     /**
@@ -43,7 +44,7 @@ export class ComponentServer {
   }
 
   async listen() {
-    const server = this.devServer.listen(this.port);
+    const server = await this.devServer.listen(this.port);
     const address = server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
@@ -66,6 +67,8 @@ export class ComponentServer {
 
     return hostname;
   }
+
+  private onChange() {}
 
   private createComponentsServerStartedEvent: (
     DevServer,

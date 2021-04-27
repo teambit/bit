@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 /* eslint-disable no-nested-ternary */
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Capsule } from '@teambit/isolator';
-import { CACHE_ROOT } from 'bit-bin/dist/constants';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';

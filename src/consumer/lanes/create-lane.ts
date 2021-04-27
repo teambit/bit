@@ -2,7 +2,6 @@ import { Consumer } from '..';
 import { BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import Lane, { LaneComponent } from '../../scope/models/lane';
-import { isValidIdChunk } from '../../utils';
 import WorkspaceLane from '../bit-map/workspace-lane';
 
 export default async function createNewLane(
@@ -16,8 +15,7 @@ export default async function createNewLane(
       `lane "${laneName}" already exists, to switch to this lane, please use "bit switch" command`
     );
   }
-  if (!isValidIdChunk(laneName, false)) {
-    // @todo: should we allow slash?
+  if (!isValidLaneName(laneName)) {
     throw new GeneralError(
       `lane "${laneName}" has invalid characters. lane name can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
     );
@@ -41,11 +39,17 @@ export default async function createNewLane(
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
-  await consumer.scope.lanes.saveLane(newLane, true);
+  await consumer.scope.lanes.saveLane(newLane);
 
   const workspaceConfig = WorkspaceLane.load(laneName, consumer.scope.getPath());
   workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();
   await workspaceConfig.write();
 
   return newLane;
+}
+
+function isValidLaneName(val: unknown): boolean {
+  if (typeof val !== 'string') return false;
+  // @todo: should we allow slash?
+  return /^[$\-_!a-z0-9]+$/.test(val);
 }

@@ -1,3 +1,5 @@
+import { getAuthDataFromHeader } from '@teambit/legacy/dist/scope/network/http/http';
+
 export class Registry {
   constructor(
     /**
@@ -31,15 +33,15 @@ export class Registry {
   ) {}
 
   get token(): string | undefined {
-    if (!this.authHeaderValue || !this.authHeaderValue.startsWith('Bearer')) return undefined;
-    return this.authHeaderValue.replace('Bearer ', '');
+    const authData = getAuthDataFromHeader(this.authHeaderValue);
+    return authData && authData.type === 'Bearer' ? authData.credentials : undefined;
   }
 
   /**
    * Support for basic token or user/pass
    */
   get baseToken(): string | undefined {
-    if (!this.authHeaderValue || !this.authHeaderValue.startsWith('Basic')) return undefined;
-    return this.authHeaderValue.replace('Basic ', '');
+    const authData = getAuthDataFromHeader(this.authHeaderValue);
+    return authData && authData.type === 'Basic' ? authData.credentials : undefined;
   }
 }

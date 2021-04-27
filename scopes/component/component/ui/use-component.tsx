@@ -1,6 +1,6 @@
 import { useRouteMatch } from 'react-router-dom';
+import { ComponentID } from '@teambit/component-id';
 import { useQuery } from '@teambit/ui.react-router.use-query';
-import { ComponentID } from '../id';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';
@@ -16,7 +16,7 @@ export function useComponent(host: string, id?: ComponentID): Component {
     params: { componentId },
   } = useRouteMatch();
   const query = useQuery();
-  const version = query.get('v') || undefined;
+  const version = query.get('version') || undefined;
 
   const targetId = id || componentId;
 

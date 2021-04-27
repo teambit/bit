@@ -1,6 +1,7 @@
 import R from 'ramda';
 
 import { ParentNotFound } from '../exceptions';
+import { NoCommonSnap } from '../exceptions/no-common-snap';
 import { ModelComponent, Version } from '../models';
 import { Ref, Repository } from '../objects';
 import { DivergeData } from './diverge-data';
@@ -9,7 +10,7 @@ import { getAllVersionHashes } from './traverse-versions';
 /**
  * traversing the snaps history is not cheap, so we first try to avoid it and if not possible,
  * traverse by the local head, if it finds the remote head, no need to traverse by the remote
- * head. (it also means that we can do do fast-forward and no need for snap-merge).
+ * head. (it also means that we can do fast-forward and no need for snap-merge).
  */
 export async function getDivergeData(
   repo: Repository,
@@ -17,7 +18,8 @@ export async function getDivergeData(
   remoteHead: Ref | null,
   throws = true
 ): Promise<DivergeData> {
-  const localHead = modelComponent.laneHeadLocal || modelComponent.getHead();
+  const isOnLane = modelComponent.laneHeadLocal || modelComponent.laneHeadLocal === null;
+  const localHead = isOnLane ? modelComponent.laneHeadLocal : modelComponent.getHead();
   if (!remoteHead) {
     if (localHead) {
       const allLocalHashes = await getAllVersionHashes(modelComponent, repo, false);
@@ -80,10 +82,7 @@ export async function getDivergeData(
   }
 
   // @ts-ignore
-  if (!commonSnapBeforeDiverge)
-    throw new Error(
-      `fatal: local and remote of ${modelComponent.id()} could not possibly diverged as they don't have any snap in common`
-    );
+  if (!commonSnapBeforeDiverge) throw new NoCommonSnap(modelComponent.id());
   return new DivergeData(
     R.difference(snapsOnLocal, snapsOnRemote),
     R.difference(snapsOnRemote, snapsOnLocal),

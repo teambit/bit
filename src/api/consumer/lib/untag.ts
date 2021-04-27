@@ -13,7 +13,7 @@ import Component from '../../../scope/models/model-component';
 export default async function unTagAction(
   version: string | undefined,
   force: boolean,
-  persisted: boolean,
+  soft: boolean,
   id?: string
 ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
   const consumer: Consumer = await loadConsumer();
@@ -57,7 +57,7 @@ export default async function unTagAction(
       .filter((x) => x);
   };
   let results: untagResult[];
-  const isRealUntag = persisted || consumer.isLegacy;
+  const isRealUntag = !soft;
   if (isRealUntag) {
     results = await untag();
     await consumer.scope.objects.persist();

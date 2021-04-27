@@ -76,6 +76,9 @@ export default class ComponentMap {
   defaultVersion?: string | null;
   isAvailableOnCurrentLane? = true; // if a component was created on another lane, it might not be available on the current lane
   nextVersion?: NextVersion; // for soft-tag (harmony only), this data is used in the CI to persist
+  recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
+  scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
+  version?: string; // Harmony only. empty string if new. (undefined if legacy).
   constructor({
     id,
     files,
@@ -102,7 +105,7 @@ export default class ComponentMap {
     this.onLanesOnly = onLanesOnly;
     this.lanes = lanes || [];
     this.defaultVersion = defaultVersion;
-    this.isAvailableOnCurrentLane = isAvailableOnCurrentLane;
+    this.isAvailableOnCurrentLane = typeof isAvailableOnCurrentLane === 'undefined' ? true : isAvailableOnCurrentLane;
     this.nextVersion = nextVersion;
   }
 
@@ -121,18 +124,22 @@ export default class ComponentMap {
     return new ComponentMap(componentMapParams);
   }
 
-  toPlainObject(): Record<string, any> {
+  toPlainObject(isLegacy: boolean): Record<string, any> {
     let res = {
-      files: this.files.map((file) => sortObject(file)),
+      scope: this.scope,
+      version: this.version,
+      files: isLegacy || !this.rootDir ? this.files.map((file) => sortObject(file)) : null,
       mainFile: this.mainFile,
       rootDir: this.rootDir,
       trackDir: this.trackDir,
-      origin: this.origin,
+      origin: isLegacy ? this.origin : undefined,
       originallySharedDir: this.originallySharedDir,
       wrapDir: this.wrapDir,
       exported: this.exported,
       onLanesOnly: this.onLanesOnly || null, // if false, change to null so it won't be written
-      lanes: this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version })),
+      lanes: this.lanes.length
+        ? this.lanes.map((l) => ({ remoteLane: l.remoteLane.toString(), version: l.version }))
+        : null,
       nextVersion: this.nextVersion,
     };
     const notNil = (val) => {
@@ -368,7 +375,8 @@ export default class ComponentMap {
 
   /**
    * in case new files were created in the track-dir directory, add them to the component-map
-   * so then they'll be tracked by bitmap
+   * so then they'll be tracked by bitmap.
+   * this doesn't get called on Harmony, it's for legacy only.
    */
   async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
@@ -411,7 +419,7 @@ export default class ComponentMap {
       logger.info(`new file(s) have been added to .bitmap for ${id.toString()}`);
       consumer.bitMap.hasChanged = true;
     }
-    await consumer.componentFsCache.setLastTrackTimestamp(id.toString(), Date.now());
+    this.recentlyTracked = true;
   }
 
   updateNextVersion(nextVersion: NextVersion) {
@@ -457,11 +465,13 @@ export default class ComponentMap {
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new ValidationError(
-        `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
-      );
-    }
+    // commented out because when importing a legacy component into Harmony it may have originallySharedDir
+    // and on Harmony all components are Authored.
+    // if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
+    //   throw new ValidationError(
+    //     `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
+    //   );
+    // }
     if (this.nextVersion && !this.nextVersion.version) {
       throw new ValidationError(`${errorMessage} version attribute should be set when nextVersion prop is set`);
     }
@@ -474,7 +484,8 @@ export default class ComponentMap {
     });
     const foundMainFile = this.files.find((file) => file.relativePath === this.mainFile);
     if (!foundMainFile || R.isEmpty(foundMainFile)) {
-      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list.
+if you renamed the mainFile, please re-add the component with the "--main" flag pointing to the correct main-file`);
     }
     const filesPaths = this.files.map((file) => file.relativePath);
     const duplicateFiles = filesPaths.filter(

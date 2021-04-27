@@ -19,6 +19,6 @@ export async function mdxLoader(content: string) {
     const output = await compile(content, options);
     return callback(null, output.contents);
   } catch (err) {
-    return callback(err);
+    return callback(err, null);
   }
 }

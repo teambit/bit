@@ -1,8 +1,9 @@
-import { LegacyCommand } from 'bit-bin/dist/cli/legacy-command';
-import allHelp from 'bit-bin/dist/cli/templates/all-help';
+import { LegacyCommand } from '@teambit/legacy/dist/cli/legacy-command';
+import allHelp from '@teambit/legacy/dist/cli/templates/all-help';
 
-import { Command, CommandOptions, GenericObject, getID } from '.';
+import { Command, CommandOptions, GenericObject } from '.';
 import { CLIMain } from './cli.main.runtime';
+import { getCommandId } from './get-command-id';
 
 export class LegacyCommandAdapter implements Command {
   alias: string;
@@ -22,7 +23,7 @@ export class LegacyCommandAdapter implements Command {
     this.description = cmd.description;
     this.options = cmd.opts || [];
     this.alias = cmd.alias;
-    const commandID = getID(cmd.name);
+    const commandID = getCommandId(cmd.name);
     const { summery, group } = findLegacyDetails(commandID, cliExtension);
     this.shortDescription = summery;
     this.group = group;

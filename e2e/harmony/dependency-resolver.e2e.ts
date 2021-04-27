@@ -76,8 +76,8 @@ describe('dependency-resolver extension', function () {
         barFooOutput = helper.command.showComponentParsed('bar/foo');
       });
       it('should have the updated dependencies for bar/foo from the env', function () {
-        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.13.1');
-        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '16.9.43');
+        expect(barFooOutput.peerPackageDependencies).to.have.property('react', '^16.8.0 || ^17.0.0');
+        expect(barFooOutput.devPackageDependencies).to.have.property('@types/react', '^16.8.0');
       });
     });
     describe('policies added by extension', function () {
@@ -137,14 +137,7 @@ describe('dependency-resolver extension', function () {
       randomStr = generateRandomStr(4); // to avoid publishing the same package every time the test is running
       const name = `react.${randomStr}.{name}`;
       npmCiRegistry.configureCustomNameInPackageJsonHarmony(name);
-
       helper.fixtures.populateComponents(4);
-      const pkg = {
-        packageJson: {
-          name,
-        },
-      };
-      helper.bitJsonc.addToVariant(undefined, '*', Extensions.pkg, pkg);
 
       await npmCiRegistry.init();
 
@@ -166,7 +159,7 @@ describe('dependency-resolver extension', function () {
     });
     describe('exporting the component', () => {
       before(() => {
-        helper.command.exportAllComponents();
+        helper.command.export();
       });
       it('should change the component id to include the scope name', () => {
         const comp2 = helper.command.catComponent('comp2@latest');

@@ -1,0 +1,24 @@
+.mdxLinkedHeading {
+  margin-top: 40px;
+  width: 100%;
+  // mdx is aligning content using the deprecated html `align` attribute. this polyfills this behavior.
+  justify-content: start;
+  &[align='center'] {
+    justify-content: center;
+  }
+  &[align='left'] {
+    justify-content: start;
+  }
+  &[align='right'] {
+    justify-content: flex-end;
+  }
+
+  &.mainHeadingStyles {
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+}

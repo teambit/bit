@@ -1,10 +1,12 @@
-import { BitId } from 'bit-bin/dist/bit-id';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
+import { BitId } from '@teambit/legacy-bit-id';
+import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
-
+import { ComponentID } from '@teambit/component-id';
 import { Component } from './component';
-import { ComponentID } from './id';
 import { State } from './state';
+import { Snap } from './snap';
 
 export interface ComponentFactory {
   /**
@@ -39,14 +41,28 @@ export interface ComponentFactory {
   ): Promise<Component | undefined>;
 
   /**
-   * returns many components with a group of ids.
+   * returns many components by ids.
    */
   getMany(ids: ComponentID[]): Promise<Component[]>;
+
+  /**
+   * returns many components by their legacy representation.
+   */
+  getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
+
+  getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
+
+  getLogs(id: ComponentID): Promise<ComponentLog[]>;
 
   /**
    * returns a specific state of a component by hash or semver.
    */
   getState(id: ComponentID, snapId: string): Promise<State>;
+
+  /**
+   * returns a specific snap of a component by hash.
+   */
+  getSnap(id: ComponentID, snapId: string): Promise<Snap>;
 
   /**
    * load extension.
@@ -62,6 +78,16 @@ export interface ComponentFactory {
    * list all components in the host.
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
+
+  listIds(): Promise<ComponentID[]>;
+
+  hasId(componentId: ComponentID): Promise<boolean>;
+
+  /**
+   * Check if the host has the id, if no, search for the id in inner host (for example, workspace will search in the scope)
+   * @param componentId
+   */
+  hasIdNested(componentId: ComponentID, includeCache?: boolean): Promise<boolean>;
 
   /**
    * determine whether host should be the prior one in case multiple hosts persist.

@@ -1,7 +1,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
-
+import { BitError } from '@teambit/bit-error';
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ConfigKeyNotFound from '../api/consumer/lib/exceptions/config-key-not-found';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
@@ -12,13 +12,11 @@ import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnos
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import { BASE_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
 import { InvalidBitMap, MissingBitMapComponent, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
   DuplicateIds,
-  EmptyDirectory,
   ExcludedMainFile,
   IncorrectIdForImportedComponent,
   MainFileIsDir,
@@ -61,7 +59,6 @@ import {
 } from '../consumer/exceptions';
 import { LanesIsDisabled } from '../consumer/lanes/exceptions/lanes-is-disabled';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
-import { BitError } from '../error/bit-error';
 import GeneralError from '../error/general-error';
 import hashErrorIfNeeded from '../error/hash-error-object';
 import ValidationError from '../error/validation-error';
@@ -79,20 +76,16 @@ import {
   ComponentNotFound,
   CorruptedComponent,
   CyclicDependencies,
-  DependencyNotFound,
   HashMismatch,
   HashNotFound,
   HeadNotFound,
   InvalidIndexJson,
-  MergeConflict,
-  MergeConflictOnRemote,
   OutdatedIndexJson,
   ParentNotFound,
   ResolutionException,
   ScopeJsonNotFound,
   ScopeNotFound,
   VersionAlreadyExists,
-  VersionNotFound,
 } from '../scope/exceptions';
 import {
   AuthenticationFailed,
@@ -166,10 +159,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       'error: remote scope protocol is not supported, please use: `ssh://`, `file://`, `http://`, `https://` or `bit://`',
   ],
   [RemoteScopeNotFound, (err) => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
-  [
-    InvalidBitId,
-    (err) => `error: component ID "${chalk.bold(err.id)}" is invalid, please use the following format: [scope]/<name>`,
-  ],
+
   [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration',
@@ -199,11 +189,12 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     ComponentNotFound,
     (err) => {
-      const msg = err.dependentId
+      const baseMsg = err.dependentId
         ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
             err.dependentId
           )}" was not found`
         : `error: component "${chalk.bold(err.id)}" was not found`;
+      const msg = `${baseMsg}\nconsider running "bit dependents ${err.id}" to understand why this component was needed`;
       return msg;
     },
   ],
@@ -214,14 +205,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
         err.version
       } is missing.\n${reportIssueToGithubMsg}`,
   ],
-  [
-    DependencyNotFound,
-    (err) =>
-      `error: dependency "${chalk.bold(
-        err.id
-      )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`,
-  ],
-  [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [ValidationError, (err) => `${err.message}\n${reportIssueToGithubMsg}`],
   [ComponentNotFoundInPath, (err) => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [RemoteNotFound, (err) => `error: remote "${chalk.bold(err.name)}" was not found`],
@@ -236,41 +219,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [HashNotFound, (err) => `hash ${chalk.bold(err.hash)} not found`],
   [HeadNotFound, (err) => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
-    MergeConflict,
-    (err) =>
-      `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
-        ', '
-      )}
-to resolve it and merge your local and remote changes, please do the following:
-1) bit untag ${err.id} ${err.versions.join(' ')}
-2) bit import
-3) bit checkout ${err.versions.join(' ')} ${err.id}
-once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`,
-  ],
-  [
-    MergeConflictOnRemote,
-    (err) => {
-      let output = '';
-      if (err.idsAndVersions.length) {
-        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
-          .map((i) => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
-          .join(', ')} to the remote scope.
-  to resolve this conflict and merge your remote and local changes, please do the following:
-  1) bit untag [id] [version]
-  2) bit import
-  3) bit checkout [version] [id]
-  once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
-      }
-      if (err.idsNeedUpdate) {
-        output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
-          .map((i) => `${chalk.bold(i.id)} (lane: ${i.lane})`)
-          .join(', ')} to the remote scope.
-to resolve this error, please re-import the above components`;
-      }
-      return output;
-    },
-  ],
-  [
     OutdatedIndexJson,
     (err) => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
 the cache is deleted and will be rebuilt on the next command. please re-run the command.`,
@@ -278,7 +226,8 @@ the cache is deleted and will be rebuilt on the next command. please re-run the 
   [CyclicDependencies, (err) => `${err.msg.toString().toLocaleLowerCase()}`],
   [
     UnexpectedNetworkError,
-    (err) => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`,
+    (err) => `unexpected network error has occurred.
+${err.message ? `server responded with: "${err.message}"` : ''}`,
   ],
   [
     RemoteResolverError,
@@ -330,27 +279,6 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     },
   ],
   [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
-  [
-    InvalidIdChunk,
-    (err) =>
-      `error: "${chalk.bold(
-        err.id
-      )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
-  ],
-  [
-    InvalidName,
-    (err) =>
-      `error: "${chalk.bold(
-        err.componentName
-      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`,
-  ],
-  [
-    InvalidScopeName,
-    (err) =>
-      `error: "${chalk.bold(
-        err.id || err.scopeName
-      )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`,
-  ],
   [
     InvalidBitJson,
     (err) => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
@@ -444,8 +372,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [FlagHarmonyOnly, (err) => `the flag: "${chalk.bold(err.flag)}" allowed only on harmony workspace`],
   [WriteToNpmrcError, (err) => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, (err) => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
-
-  [VersionNotFound, (err) => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     ParentNotFound,
     (err) =>

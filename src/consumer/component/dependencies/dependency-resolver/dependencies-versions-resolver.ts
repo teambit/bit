@@ -14,6 +14,7 @@ import { ExtensionDataEntry, ExtensionDataList } from '../../../config/extension
 import { throwForNonLegacy } from '../../component-schema';
 import Dependencies from '../dependencies';
 import Dependency from '../dependency';
+import { DebugComponentsDependency } from './dependencies-resolver';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -36,7 +37,11 @@ import Dependency from '../dependency';
  * keep in mind that since v14.0.5 bit.json doesn't have the dependencies, so it's impossible
  * to change a dependency version from the component bit.json.
  */
-export default function updateDependenciesVersions(consumer: Consumer, component: Component) {
+export default function updateDependenciesVersions(
+  consumer: Consumer,
+  component: Component,
+  debugDependencies?: DebugComponentsDependency[]
+) {
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
   updateExtensions(component.extensions);
@@ -49,6 +54,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     const getFromComponentConfig = () => idFromComponentConfig;
     const getFromBitMap = () => idFromBitMap || null;
     const getFromModel = () => idFromModel || null;
+    const debugDep = debugDependencies?.find((dep) => dep.id.isEqualWithoutVersion(id));
 
     let strategies: Function[];
     if (consumer.isLegacy) {
@@ -84,6 +90,12 @@ export default function updateDependenciesVersions(consumer: Consumer, component
         logger.debug(
           `found dependency version ${strategyId.version} for ${id.toString()} in strategy ${strategy.name}`
         );
+        if (debugDep) {
+          debugDep.versionResolvedFrom =
+            strategy.name === 'getCurrentVersion' ? debugDep.versionResolvedFrom : strategy.name.replace('getFrom', '');
+          debugDep.version = strategyId.version;
+        }
+
         return strategyId.version;
       }
     }
@@ -144,11 +156,16 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
     const packageObject = resolvePackageData(basePath, modulePath);
     if (!packageObject || R.isEmpty(packageObject)) return null;
-    const packageId = Object.keys(packageObject)[0];
-    const version = packageObject[packageId];
+    const version =
+      getValidVersion(packageObject.concreteVersion) || getValidVersion(packageObject.versionUsedByDependent);
+    if (!version) return null;
+    return componentId.changeVersion(version);
+  }
+
+  function getValidVersion(version) {
+    if (!version) return null;
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
-    const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
-    return componentId.changeVersion(validVersion);
+    return version.replace(/[^0-9.]/g, '');
   }
 
   function getIdFromDependentPackageJson(componentId: BitId): BitId | null | undefined {

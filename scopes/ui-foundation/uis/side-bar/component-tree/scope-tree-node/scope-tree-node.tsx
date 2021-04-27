@@ -1,12 +1,12 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { clickable } from 'bit-bin/dist/to-eject/css-components/clickable';
+import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useState } from 'react';
 import AnimateHeight from 'react-animate-height';
 
-import { indentClass, indentStyle } from '../indent';
+import { indentClass, indentStyle } from '@teambit/base-ui.graph.tree.indent';
+import { TreeLayer, TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 import { PayloadType } from '../payload-type';
-import { TreeLayer, TreeNodeProps } from '../recursive-tree';
 import { getName } from '../utils/get-name';
 import styles from './scope-tree-node.module.scss';
 

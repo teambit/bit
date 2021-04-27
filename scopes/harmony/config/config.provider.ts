@@ -1,12 +1,12 @@
-import { getConsumerInfo } from 'bit-bin/dist/consumer';
-import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from 'bit-bin/dist/consumer/config';
-import { InvalidBitJson } from 'bit-bin/dist/consumer/config/exceptions';
+import { getConsumerInfo } from '@teambit/legacy/dist/consumer';
+import { ILegacyWorkspaceConfig, LegacyWorkspaceConfigProps } from '@teambit/legacy/dist/consumer/config';
+import { InvalidBitJson } from '@teambit/legacy/dist/consumer/config/exceptions';
 import LegacyWorkspaceConfig, {
   WorkspaceConfigEnsureFunction,
   WorkspaceConfigIsExistFunction,
   WorkspaceConfigLoadFunction,
-} from 'bit-bin/dist/consumer/config/workspace-config';
-import { PathOsBased } from 'bit-bin/dist/utils/path';
+} from '@teambit/legacy/dist/consumer/config/workspace-config';
+import { PathOsBased } from '@teambit/legacy/dist/utils/path';
 import path from 'path';
 
 import { Config } from './config';

@@ -1,5 +1,5 @@
-import { GraphqlAspect, GraphqlUI } from '@teambit/graphql';
-import { PreviewAspect, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
+import React, { ReactNode } from 'react';
+import { PreviewAspect, RenderingContext, PreviewPreview, PreviewRuntime, PreviewModule } from '@teambit/preview';
 
 import { DocsAspect } from './docs.aspect';
 
@@ -8,18 +8,13 @@ export class DocsPreview {
     /**
      * preview extension.
      */
-    private preview: PreviewPreview,
-
-    /**
-     * graphql extension.
-     */
-    private graphql: GraphqlUI
+    private preview: PreviewPreview
   ) {}
 
-  render = (componentId: string, modules: PreviewModule, [compositions]: [any]) => {
+  render = (componentId: string, modules: PreviewModule, [compositions]: [any], context: RenderingContext) => {
     const docsModule = this.selectPreviewModel(componentId, modules);
 
-    modules.mainModule.default(this.graphql.getProvider, componentId, docsModule, compositions);
+    modules.mainModule.default(NoopProvider, componentId, docsModule, compositions, context);
   };
 
   selectPreviewModel(componentId: string, modules: PreviewModule) {
@@ -31,10 +26,10 @@ export class DocsPreview {
   }
 
   static runtime = PreviewRuntime;
-  static dependencies = [PreviewAspect, GraphqlAspect];
+  static dependencies = [PreviewAspect];
 
-  static async provider([preview, graphql]: [PreviewPreview, GraphqlUI]) {
-    const docsPreview = new DocsPreview(preview, graphql);
+  static async provider([preview]: [PreviewPreview]) {
+    const docsPreview = new DocsPreview(preview);
     preview.registerPreview({
       name: 'overview',
       render: docsPreview.render.bind(docsPreview),
@@ -47,3 +42,7 @@ export class DocsPreview {
 }
 
 DocsAspect.addRuntime(DocsPreview);
+
+function NoopProvider({ children }: { children: ReactNode }) {
+  return <>{children}</>;
+}

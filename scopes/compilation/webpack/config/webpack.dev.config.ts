@@ -1,23 +1,24 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-const errorOverlayMiddleware = require('react-dev-utils/errorOverlayMiddleware');
-const evalSourceMapMiddleware = require('react-dev-utils/evalSourceMapMiddleware');
-const noopServiceWorkerMiddleware = require('react-dev-utils/noopServiceWorkerMiddleware');
-const redirectServedPath = require('react-dev-utils/redirectServedPathMiddleware');
-const getPublicUrlOrPath = require('react-dev-utils/getPublicUrlOrPath');
+import path from 'path';
+import webpack from 'webpack';
+import HtmlWebpackPlugin from 'html-webpack-plugin';
+import errorOverlayMiddleware from 'react-dev-utils/errorOverlayMiddleware';
+import evalSourceMapMiddleware from 'react-dev-utils/evalSourceMapMiddleware';
+import noopServiceWorkerMiddleware from 'react-dev-utils/noopServiceWorkerMiddleware';
+import redirectServedPath from 'react-dev-utils/redirectServedPathMiddleware';
+import getPublicUrlOrPath from 'react-dev-utils/getPublicUrlOrPath';
+import { fallbacks } from './webpack-fallbacks';
 
-const path = require('path');
-const html = require('./html');
+import html from './html';
 
-const WebpackCompilerDonePlugin = require('../plugins/webpack-compiler-done-plugin');
-const WebpackCompilerStartedPlugin = require('../plugins/webpack-compiler-started-plugin');
+import WebpackBitReporterPlugin from '../plugins/webpack-bit-reporter-plugin';
 
-const sockHost = process.env.WDS_SOCKET_HOST;
-const sockPath = process.env.WDS_SOCKET_PATH; // default: '/sockjs-node'
-const sockPort = process.env.WDS_SOCKET_PORT;
+const clientHost = process.env.WDS_SOCKET_HOST;
+const clientPath = process.env.WDS_SOCKET_PATH; // default is '/sockjs-node';
+const port = process.env.WDS_SOCKET_PORT;
 
 const publicUrlOrPath = getPublicUrlOrPath(process.env.NODE_ENV === 'development', '/', '/public');
 
-export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub) {
+export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot, publicPath, pubsub, title?) {
   const resolveWorkspacePath = (relativePath) => path.resolve(workspaceDir, relativePath);
 
   // Host
@@ -35,13 +36,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
     devtool: 'inline-source-map',
 
     // Entry point of app
-    entry: {
-      entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
-    },
-
-    node: {
-      fs: 'empty',
-    },
+    entry: entryFiles.map((filePath) => resolveWorkspacePath(filePath)),
 
     output: {
       // Development filename output
@@ -51,9 +46,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       path: resolveWorkspacePath(publicDirectory),
 
-      publicPath: `${publicRoot}/`,
-
-      futureEmitAssets: true,
+      // publicPath: resolveWorkspacePath(publicDirectory),
 
       chunkFilename: 'static/js/[name].chunk.js',
 
@@ -62,20 +55,27 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
-      globalObject: 'this',
+      // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
+      // globalObject: 'this',
     },
 
     devServer: {
-      quiet: true,
-      stats: 'none',
-
-      // Serve index.html as the base
-      contentBase: resolveWorkspacePath(publicDirectory),
-
-      // By default files from `contentBase` will not trigger a page reload.
-      watchContentBase: true,
-
-      contentBasePublicPath: publicDirectory,
+      static: [
+        {
+          directory: resolveWorkspacePath(publicDirectory),
+          staticOptions: {},
+          // Don't be confused with `dev.publicPath`, it is `publicPath` for static directory
+          // Can be:
+          // publicPath: ['/static-public-path-one/', '/static-public-path-two/'],
+          publicPath: publicDirectory,
+          // Can be:
+          // serveIndex: {} (options for the `serveIndex` option you can find https://github.com/expressjs/serve-index)
+          serveIndex: true,
+          // Can be:
+          // watch: {} (options for the `watch` option you can find https://github.com/paulmillr/chokidar)
+          watch: true,
+        },
+      ],
 
       // Enable compression
       compress: true,
@@ -84,9 +84,6 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       // websockets in `webpackHotDevClient`.
       transportMode: 'ws',
 
-      injectClient: false,
-
-      overlay: false,
       // Enable hot reloading
       hot: true,
 
@@ -94,14 +91,18 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
 
       historyApiFallback: {
         disableDotRule: true,
-        index: publicUrlOrPath,
+        index: resolveWorkspacePath(publicDirectory),
       },
 
-      sockHost,
-      sockPath,
-      sockPort,
+      client: {
+        needClientEntry: false,
+        overlay: false,
+        host: clientHost,
+        path: clientPath,
+        port,
+      },
 
-      before(app, server) {
+      onBeforeSetupMiddleware(app, server) {
         // Keep `evalSourceMapMiddleware` and `errorOverlayMiddleware`
         // middlewares before `redirectServedPath` otherwise will not have any effect
         // This lets us fetch source contents from webpack for the error overlay
@@ -110,7 +111,7 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(errorOverlayMiddleware());
       },
 
-      after(app) {
+      onAfterSetupMiddleware(app) {
         // Redirect to `PUBLIC_URL` or `homepage` from `package.json` if url not match
         app.use(redirectServedPath(publicUrlOrPath));
 
@@ -122,25 +123,34 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
         app.use(noopServiceWorkerMiddleware(publicUrlOrPath));
       },
 
-      // Public path is root of content base
-      publicPath: publicRoot,
+      dev: {
+        // Public path is root of content base
+        publicPath: publicRoot,
+      },
     },
 
     resolve: {
-      extensions: ['.ts', '.tsx', '.js', '.mdx'],
+      extensions: ['.ts', '.tsx', '.js', '.mdx', '.md'],
+      alias: {
+        process: require.resolve('process/browser'),
+        buffer: require.resolve('buffer/'),
+      },
+
+      fallback: fallbacks,
     },
 
     plugins: [
       new HtmlWebpackPlugin({
-        templateContent: html('Component preview'),
+        templateContent: html(title || 'Component preview'),
         filename: 'index.html',
       }),
 
-      new WebpackCompilerStartedPlugin({
-        options: { pubsub, devServerID },
+      new webpack.ProvidePlugin({
+        process: require.resolve('process/browser'),
+        Buffer: [require.resolve('buffer/'), 'Buffer'],
       }),
 
-      new WebpackCompilerDonePlugin({
+      new WebpackBitReporterPlugin({
         options: { pubsub, devServerID },
       }),
     ],

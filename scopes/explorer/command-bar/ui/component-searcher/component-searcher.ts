@@ -34,6 +34,7 @@ export class ComponentSearcher implements SearchProvider {
 
   search(term: string, limit: number): ComponentSearchResult[] {
     const searchResults = this.fuseCommands.search(term, { limit });
+    // @ts-ignore this shows error on Circle for some weird reason
     return searchResults.map((x) => x.item);
   }
 

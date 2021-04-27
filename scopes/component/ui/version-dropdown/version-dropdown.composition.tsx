@@ -1,17 +1,16 @@
 import React from 'react';
 import { Router } from 'react-router-dom';
 import { createBrowserHistory } from 'history';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { VersionDropdown } from './version-dropdown';
-import { Center } from './version-dropdown.docs';
+
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
 
 export const VersionDropdownWithOneVerion = () => {
   return (
-    <ThemeContext>
-      <Center>
-        <VersionDropdown versions={['0.1']} currentVersion="0.1" />
-      </Center>
-    </ThemeContext>
+    <ThemeCompositions style={style}>
+      <VersionDropdown versions={['0.1']} currentVersion="0.1" />
+    </ThemeCompositions>
   );
 };
 
@@ -19,24 +18,10 @@ export const VersionDropdownWithMultipleVerions = () => {
   const history = createBrowserHistory();
   const versions = ['0.3', '0.2', '0.1'];
   return (
-    <ThemeContext>
-      <Center>
-        <Router history={history}>
-          <VersionDropdown versions={versions} currentVersion={versions[0]} />
-        </Router>
-      </Center>
-    </ThemeContext>
+    <ThemeCompositions style={style}>
+      <Router history={history}>
+        <VersionDropdown versions={versions} currentVersion={versions[0]} />
+      </Router>
+    </ThemeCompositions>
   );
-};
-
-VersionDropdownWithOneVerion.canvas = {
-  height: 40,
-};
-
-VersionDropdownWithMultipleVerions.canvas = {
-  display: 'flex',
-  height: 200,
-  width: 300,
-  alignItems: 'flex-start',
-  justifyContent: 'flex-end',
 };

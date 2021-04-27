@@ -9,7 +9,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('harmony extension config', function () {
   this.timeout(0);
   let helper: Helper;
@@ -93,9 +92,9 @@ describe('harmony extension config', function () {
           it('should not insert extensions into the component dev deps', () => {
             expect(componentModel.devDependencies).to.be.of.length(0);
           });
-          it('should insert extensions flattened dependencies into the component dev flattened dependencies', () => {
-            expect(componentModel.flattenedDevDependencies).to.be.of.length(1);
-            expect(componentModel.flattenedDevDependencies[0].name).to.equal('dummy-extension');
+          it('should insert extensions flattened dependencies into the component flattened dependencies', () => {
+            expect(componentModel.flattenedDependencies).to.be.of.length(1);
+            expect(componentModel.flattenedDependencies[0].name).to.equal('dummy-extension');
           });
           it('should auto tag the component when tagging the extension again', () => {
             output = helper.command.tagComponent('dummy-extension', 'message', '-f');
@@ -133,12 +132,12 @@ describe('harmony extension config', function () {
             remoteBeforeExport = helper.scopeHelper.cloneRemoteScope();
           });
           it('should block exporting component without exporting the extension', () => {
-            output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote} bar/foo`);
+            output = helper.general.runWithTryCatch(`bit export bar/foo`);
             expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension@0.0.1" was not found`);
           });
           describe('exporting extension and component together', () => {
             before(() => {
-              helper.command.exportAllComponents();
+              helper.command.export();
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -151,8 +150,8 @@ describe('harmony extension config', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeExport);
               helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
-              helper.command.exportComponent('dummy-extension');
-              helper.command.exportComponent('bar/foo');
+              helper.command.export('dummy-extension');
+              helper.command.export('bar/foo');
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -171,10 +170,10 @@ describe('harmony extension config', function () {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.tagComponent('dummy-extension');
-          helper.command.exportComponent('dummy-extension');
+          helper.command.export('dummy-extension');
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
           helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
@@ -185,6 +184,28 @@ describe('harmony extension config', function () {
           expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
         });
       });
+    });
+  });
+  describe('changing config after the component had been cached', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      const depResolverConfig = {
+        policy: {
+          dependencies: {
+            'lodash.get': '4.0.0',
+          },
+        },
+      };
+      helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
+      helper.command.status(); // to cache the component.
+      depResolverConfig.policy.dependencies['lodash.get'] = '5.0.0';
+      helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
+    });
+    it('should show the updated dependency data and not the old data from the cache', () => {
+      const bar = helper.command.showComponentParsed('bar/foo');
+      expect(bar.packageDependencies['lodash.get']).to.equal('5.0.0');
     });
   });
 });

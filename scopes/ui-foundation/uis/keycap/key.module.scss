@@ -23,7 +23,9 @@
   background-color: var(--bg-dent);
   color: var(--text-muted);
   border-radius: 3px;
-  width: 1.7em;
+  min-width: 1.7em;
+  padding: 0 0.4em;
+  box-sizing: border-box;
   height: 1.7em;
   font-size: 12px;
   display: flex;

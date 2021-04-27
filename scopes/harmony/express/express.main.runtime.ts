@@ -6,12 +6,13 @@ import { concat, flatten, lowerCase } from 'lodash';
 import bodyParser from 'body-parser';
 import { ExpressAspect } from './express.aspect';
 import { catchErrors } from './middlewares';
-import { Middleware, Request, Response, Route } from './types';
+import { Middleware, Request, Response, Route, Verb } from './types';
 import { MiddlewareManifest } from './middleware-manifest';
 
 export type ExpressConfig = {
   port: number;
   namespace: string;
+  loggerIgnorePath: string[];
 };
 
 export type MiddlewareSlot = SlotRegistry<MiddlewareManifest[]>;
@@ -51,6 +52,7 @@ export class ExpressMain {
 
   /**
    * register a new express routes.
+   * route will be added as `/api/${route}`
    */
   register(routes: Route[]) {
     this.moduleSlot.register(routes);
@@ -77,20 +79,23 @@ export class ExpressMain {
     ];
   }
 
-  createApp(expressApp?: Express): Express {
+  createApp(expressApp?: Express, options?: { disableBodyParser: true }): Express {
     const internalRoutes = this.createRootRoutes();
     const routes = this.createRoutes();
     const allRoutes = concat(routes, internalRoutes);
     const app = expressApp || express();
     app.use((req, res, next) => {
+      if (this.config.loggerIgnorePath.includes(req.url)) return next();
       this.logger.debug(`express got a request to a URL: ${req.url}', headers:`, req.headers);
-      next();
+      return next();
     });
-    app.use(bodyParser.text({ limit: '5000mb' }));
-    app.use(bodyParser.json({ limit: '5000mb' }));
-    app.use(bodyParser.raw({ type: 'application/octet-stream', limit: '5000mb' }));
-    // app.use(cors());
+    if (!options?.disableBodyParser) this.bodyParser(app);
 
+    this.middlewareSlot
+      .toArray()
+      .flatMap(([, middlewares]) =>
+        middlewares.flatMap((middlewareManifest) => app.use(middlewareManifest.middleware))
+      );
     allRoutes.forEach((routeInfo) => {
       const { method, path, middlewares } = routeInfo;
       // TODO: @guy make sure to support single middleware here.
@@ -103,18 +108,38 @@ export class ExpressMain {
   private createRoutes() {
     const routesSlots = this.moduleSlot.toArray();
     const routeEntries = routesSlots.map(([, routes]) => {
-      return routes.map((route) => ({
-        method: lowerCase(route.method),
-        path: route.route,
-        middlewares: route.middlewares,
-      }));
+      return routes.map((route) => {
+        const middlewares = flatten([this.verbValidation(route), route.middlewares]);
+        return {
+          method: lowerCase(route.method),
+          path: route.route,
+          middlewares,
+        };
+      });
     });
 
     return flatten(routeEntries);
   }
 
+  private verbValidation(route: Route): Middleware {
+    return async (req: express.Request, res: express.Response, next: express.NextFunction) => {
+      if (!route.verb) return next();
+      const verb = req.headers['x-verb'] || Verb.READ;
+      if (verb !== route.verb) {
+        res.status(403);
+        return res.jsonp({ message: 'You are not authorized', error: 'forbidden' });
+      }
+      return next();
+    };
+  }
+
   private catchErrorsMiddlewares(middlewares: Middleware[]) {
     return middlewares.map((middleware) => catchErrors(middleware));
+  }
+
+  private bodyParser(app: Express) {
+    app.use(bodyParser.json({ limit: '5000mb' }));
+    app.use(bodyParser.raw({ type: 'application/octet-stream', limit: '5000mb' }));
   }
 
   static slots = [Slot.withType<Route[]>(), Slot.withType<MiddlewareManifest[]>()];
@@ -123,6 +148,7 @@ export class ExpressMain {
   static defaultConfig = {
     port: 4001,
     namespace: 'api',
+    loggerIgnorePath: ['/api/_health'],
   };
 
   static async provider(

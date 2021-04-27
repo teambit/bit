@@ -3,12 +3,13 @@ import React from 'react';
 import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { Text, Box } from 'ink';
-import { BASE_DOCS_DOMAIN } from 'bit-bin/dist/constants';
+import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { timeFormat } from '@teambit/time.time-format';
 import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
 import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
+import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
 import { RewireRow } from './rewire-row';
 
 type LinkCommandOpts = {
@@ -68,6 +69,7 @@ export class LinkCommand implements Command {
         <CoreAspectsLinks coreAspectsLinks={coreAspectsLinksWithMainAspect} verbose={opts.verbose} />
         <ComponentListLinks componentListLinks={linkResults.legacyLinkResults} verbose={opts.verbose} />
         <RewireRow legacyCodemodResults={linkResults.legacyLinkCodemodResults} />
+        <NestedComponentLinksLinks nestedDepsInNmLinks={linkResults.nestedDepsInNmLinks} verbose={opts.verbose} />
         <Text>Finished. {timeDiff}</Text>
       </Box>
     );

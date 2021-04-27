@@ -3,7 +3,7 @@ import { existsSync, mkdirpSync } from 'fs-extra';
 import { flatten } from 'lodash';
 import { ComponentMap } from '@teambit/component';
 import { Compiler } from '@teambit/compiler';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { Capsule } from '@teambit/isolator';
 import { BuildContext, ComponentResult } from '@teambit/builder';
 import { BundlerResult, BundlerContext } from '@teambit/bundler';
@@ -38,14 +38,16 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       return {
         component,
-        errors: result.errors,
+        errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
         warning: result.warnings,
       };
     });
 
+    const artifacts = this.getArtifactDef(context);
+
     return {
       componentsResults,
-      artifacts: this.getArtifactDef(context),
+      artifacts,
     };
   }
 

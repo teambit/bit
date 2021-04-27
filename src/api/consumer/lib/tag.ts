@@ -1,6 +1,5 @@
 import R from 'ramda';
 import semver from 'semver';
-
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import { POST_TAG_ALL_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, PRE_TAG_HOOK } from '../../../constants';
@@ -34,8 +33,11 @@ export type BasicTagParams = {
   skipTests: boolean;
   verbose: boolean;
   skipAutoTag: boolean;
+  build: boolean;
+  soft: boolean;
   persist: boolean;
   disableDeployPipeline: boolean;
+  forceDeploy: boolean;
 };
 
 type TagParams = {
@@ -45,7 +47,7 @@ type TagParams = {
   ignoreNewestVersion: boolean;
   id: string;
   all: boolean;
-  scope?: string;
+  scope?: string | boolean;
   includeImported: boolean;
 } & BasicTagParams;
 
@@ -120,7 +122,7 @@ async function getComponentsToTag(
   isAll: boolean,
   id?: string
 ): Promise<{ bitIds: BitId[]; warnings: string[] }> {
-  const warnings = [];
+  const warnings: string[] = [];
   const idHasWildcard = id && hasWildcard(id);
   if (id && !idHasWildcard) {
     const bitId = consumer.getParsedId(id);
@@ -140,12 +142,10 @@ async function getComponentsToTag(
     ? await componentsList.listTagPendingOfAllScope(includeImported)
     : await componentsList.listTagPendingComponents();
 
-  if (isAllScope) {
+  if (isAllScope && exactVersion) {
     const tagPendingComponentsLatest = await consumer.scope.latestVersions(tagPendingComponents, false);
     tagPendingComponentsLatest.forEach((componentId) => {
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-      if (semver.gt(componentId.version!, exactVersion as string)) {
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      if (componentId.version && semver.gt(componentId.version, exactVersion)) {
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${exactVersion}`);
       }
     });

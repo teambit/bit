@@ -3,8 +3,9 @@ import { ExpressAspect, ExpressMain, Route } from '@teambit/express';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ConfigAspect, Config } from '@teambit/config';
+import { ComponentID } from '@teambit/component-id';
 import { flatten, orderBy } from 'lodash';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
 import { ComponentFactory } from './component-factory';
 import { ComponentAspect } from './component.aspect';
 import { componentSchema } from './component.graphql';
@@ -12,7 +13,6 @@ import { ComponentRoute } from './component.route';
 import { AspectList } from './aspect-list';
 import { HostNotFound } from './exceptions';
 import { AspectEntry } from './aspect-entry';
-import { ComponentID } from './id';
 import {
   ShowCmd,
   ShowFragment,
@@ -112,6 +112,10 @@ export class ComponentMain {
   getShowFragments() {
     const fragments = orderBy(flatten(this.showFragmentSlot.values()), ['weight', ['asc']]);
     return fragments;
+  }
+
+  isHost(name: string) {
+    return !!this.hostSlot.get(name);
   }
 
   /**

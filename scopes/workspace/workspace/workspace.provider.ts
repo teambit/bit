@@ -1,7 +1,7 @@
 import { PubsubMain } from '@teambit/pubsub';
 import type { AspectLoaderMain } from '@teambit/aspect-loader';
 import { BundlerMain } from '@teambit/bundler';
-import { CLIMain } from '@teambit/cli';
+import { CLIMain, CommandList } from '@teambit/cli';
 import { ComponentMain } from '@teambit/component';
 import { DependencyResolverMain } from '@teambit/dependency-resolver';
 import { EnvsMain } from '@teambit/envs';
@@ -12,13 +12,13 @@ import { LoggerMain } from '@teambit/logger';
 import type { ScopeMain } from '@teambit/scope';
 import { UiMain } from '@teambit/ui';
 import type { VariantsMain } from '@teambit/variants';
-import { Consumer, loadConsumerIfExist } from 'bit-bin/dist/consumer';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { registerDefaultScopeGetter } from 'bit-bin/dist/api/consumer';
-import { BitId } from 'bit-bin/dist/bit-id';
-import ManyComponentsWriter from 'bit-bin/dist/consumer/component-ops/many-components-writer';
-import LegacyComponentLoader from 'bit-bin/dist/consumer/component/component-loader';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { Consumer, loadConsumerIfExist } from '@teambit/legacy/dist/consumer';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { registerDefaultScopeGetter } from '@teambit/legacy/dist/api/consumer';
+import { BitId } from '@teambit/legacy-bit-id';
+import ManyComponentsWriter from '@teambit/legacy/dist/consumer/component-ops/many-components-writer';
+import LegacyComponentLoader from '@teambit/legacy/dist/consumer/component/component-loader';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { CapsuleCreateCmd } from './capsule-create.cmd';
 import { CapsuleListCmd } from './capsule-list.cmd';
 import { EXT_NAME } from './constants';
@@ -57,21 +57,6 @@ export type OnComponentAddSlot = SlotRegistry<OnComponentAdd>;
 
 export type OnComponentRemoveSlot = SlotRegistry<OnComponentRemove>;
 
-export type WorkspaceCoreConfig = {
-  /**
-   * sets the default location of components.
-   */
-  componentsDefaultDirectory: string;
-
-  /**
-   * default scope for components to be exported to. absolute require paths for components
-   * will be generated accordingly.
-   */
-  defaultScope: string;
-
-  defaultOwner: string;
-};
-
 export default async function provideWorkspace(
   [
     pubsub,
@@ -97,11 +82,11 @@ export default async function provideWorkspace(
   ],
   harmony: Harmony
 ) {
-  const consumer = await getConsumer();
+  const bitConfig: any = harmony.config.get('teambit.harmony/bit');
+  const consumer = await getConsumer(bitConfig.cwd);
   if (!consumer) return undefined;
-  // TODO: get the 'worksacpe' name in a better way
+  // TODO: get the 'workspace' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
-
   const workspace = new Workspace(
     pubsub,
     config,
@@ -122,6 +107,14 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     graphql
   );
+
+  const getWorkspacePolicyFromPackageJson = () => {
+    const packageJson = workspace.consumer.packageJson?.packageJsonObject || {};
+    const policyFromPackageJson = dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
+    return policyFromPackageJson;
+  };
+
+  dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
 
   ManyComponentsWriter.registerExternalInstaller({
     install: async () => {
@@ -185,20 +178,22 @@ export default async function provideWorkspace(
   const workspaceSchema = getWorkspaceSchema(workspace, graphql);
   ui.registerUiRoot(new WorkspaceUIRoot(workspace, bundler));
   graphql.register(workspaceSchema);
-  cli.register(new InstallCmd(workspace, logger));
-  cli.register(new EjectConfCmd(workspace));
-
   const capsuleListCmd = new CapsuleListCmd(isolator, workspace);
-  const capsuleCreateCmd = new CapsuleCreateCmd(workspace);
-  cli.register(capsuleListCmd);
-  cli.register(capsuleCreateCmd);
+  const capsuleCreateCmd = new CapsuleCreateCmd(workspace, isolator);
+  const commands: CommandList = [
+    new InstallCmd(workspace, logger),
+    new EjectConfCmd(workspace),
+    capsuleListCmd,
+    capsuleCreateCmd,
+  ];
   const watcher = new Watcher(workspace, pubsub);
   if (workspace && !workspace.consumer.isLegacy) {
     cli.unregister('watch');
-    cli.register(new WatchCommand(pubsub, logger, watcher));
+    commands.push(new WatchCommand(pubsub, logger, watcher));
     cli.unregister('link');
-    cli.register(new LinkCommand(workspace, logger));
+    commands.push(new LinkCommand(workspace, logger));
   }
+  cli.register(...commands);
   component.registerHost(workspace);
 
   cli.registerOnStart(async () => {
@@ -216,20 +211,7 @@ export default async function provideWorkspace(
  * is passed to the provider, so before using it, make sure it exists.
  * keep in mind that you can't verify it in the provider itself, because the provider is running
  * always for all commands before anything else is happening.
- *
- * the reason for the try/catch when loading the consumer is because some bit files (e.g. bit.json)
- * can be corrupted and in this case we do want to throw an error explaining this. the only command
- * allow in such a case is `bit init --reset`, which fixes the corrupted files. sadly, at this
- * stage we don't have the commands objects, so we can't check the command/flags from there. we
- * need to check the `process.argv.` directly instead, which is not 100% accurate.
  */
-async function getConsumer(): Promise<Consumer | undefined> {
-  try {
-    return await loadConsumerIfExist();
-  } catch (err) {
-    if (process.argv.includes('init') && !process.argv.includes('-r')) {
-      return undefined;
-    }
-    throw err;
-  }
+async function getConsumer(path?: string): Promise<Consumer | undefined> {
+  return loadConsumerIfExist(path);
 }

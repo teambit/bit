@@ -21,6 +21,7 @@ export class CommandSearcher implements SearchProvider {
   search(term: string, limit: number): CommanderSearchResult[] {
     const unprefixedPattern = term.replace(/^>/, '');
     const searchResults = this.fuseCommands.search(unprefixedPattern, { limit });
+    // @ts-ignore this shows error on Circle for some weird reason
     return searchResults.map((x) => x.item);
   }
 

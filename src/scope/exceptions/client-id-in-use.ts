@@ -1,4 +1,4 @@
-import { BitError } from '../../error/bit-error';
+import { BitError } from '@teambit/bit-error';
 
 export default class ClientIdInUse extends BitError {
   code: number;

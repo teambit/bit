@@ -1,6 +1,6 @@
 import { stripTrailingChar } from '@teambit/string.strip-trailing-char';
 import { isPathInside } from '@teambit/path.is-path-inside';
-import R from 'ramda';
+import { sortBy, prop } from 'ramda';
 import _ from 'lodash';
 
 export const PATTERNS_DELIMITER = ',';
@@ -31,7 +31,7 @@ export type MatchedPatternItem = {
 };
 
 export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
-  const sortedMatches: MatchedPatternWithConfig[] = R.sortBy(R.prop('specificity'), matches).reverse();
+  const sortedMatches: MatchedPatternWithConfig[] = sortBy(prop('specificity'), matches).reverse();
   return sortedMatches;
 }
 
@@ -95,6 +95,7 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   let specificity = 0;
   const splittedComp = componentName.split('/');
   const splittedPattern = patternItemStriped.split('/');
+
   if (splittedPattern.length > splittedComp.length) {
     return {
       match: false,

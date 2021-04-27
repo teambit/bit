@@ -1,0 +1,64 @@
+@import '~@teambit/base-ui.theme.colors/colors.module.scss';
+
+.fileNode {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-right: 8px;
+  font-size: inherit;
+  font-size: var(--p-xs);
+
+  //TODO - move to a link component
+  text-decoration: none;
+  color: inherit;
+
+  box-sizing: border-box;
+  border-left: 0px solid transparent;
+
+  &:hover {
+    background: var(--bg-topping-highlight);
+  }
+
+  &.active {
+    background: var(--muted-color);
+    // .right {
+    // 	.componentIcon {
+    // 		color: $w10;
+    // 	}
+    // }
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    // opacity: 0.8;
+  }
+
+  .left {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+
+    > span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      padding: 0 8px;
+    }
+  }
+
+  .right {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+
+    > * {
+      margin-right: 4px;
+    }
+    > :last-child() {
+      margin-right: 0px;
+    }
+  }
+}

@@ -1,5 +1,5 @@
-import { ExtensionDataEntry, ExtensionDataList } from 'bit-bin/dist/consumer/config';
-import { PathOsBased, PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { ExtensionDataEntry, ExtensionDataList } from '@teambit/legacy/dist/consumer/config';
+import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 
 import { SetExtensionOptions } from './config';
 

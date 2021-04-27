@@ -1,8 +1,16 @@
-export function getOverrideColor(issuesCount: number, isModified?: boolean) {
+export function getOverrideColor({
+  issuesCount,
+  isModified,
+  isNew,
+}: {
+  issuesCount: number;
+  isModified?: boolean;
+  isNew?: boolean;
+}) {
   if (issuesCount > 0) {
     return 'error';
   }
-  if (isModified) {
+  if (isModified && !isNew) {
     return 'modified';
   }
   return '';

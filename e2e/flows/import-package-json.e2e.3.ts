@@ -265,12 +265,11 @@ describe('component with package.json as a file of the component', function () {
       helper.fs.outputFile('bar/package.json');
       helper.fs.outputFile('bar/foo.js');
       helper.command.addComponent('bar');
+      helper.command.tagAllWithoutBuild();
     });
     it('should not track the package.json file', () => {
-      const bitMap = helper.bitMap.read();
-      const files = bitMap.bar.files;
-      expect(files).to.have.lengthOf(1);
-      expect(files[0].relativePath).to.equal('foo.js');
+      const bar = helper.command.catComponent('bar@latest');
+      expect(bar.files).to.have.lengthOf(1);
     });
   });
 });

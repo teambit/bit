@@ -5,6 +5,12 @@ import path from 'path';
 import { TypescriptAspect } from './typescript.aspect';
 
 import { TypescriptCompiler } from './typescript.compiler';
+import type { TsCompilerOptionsWithoutTsConfig } from './compiler-options';
+
+const defaultOpts = {
+  tsconfig: {},
+  types: [],
+};
 
 describe('TypescriptCompiler', () => {
   describe('getDistPathBySrcPath', () => {
@@ -28,9 +34,21 @@ describe('TypescriptCompiler', () => {
       const tsCompiler = getTsCompiler();
       expect(tsCompiler.isFileSupported('index.tsx')).to.be.true;
     });
-    it('should not support .js files', () => {
+    it('should not support .jsx files by default', () => {
+      const tsCompiler = getTsCompiler();
+      expect(tsCompiler.isFileSupported('index.jsx')).to.be.false;
+    });
+    it('should not support .js files by default', () => {
       const tsCompiler = getTsCompiler();
       expect(tsCompiler.isFileSupported('index.js')).to.be.false;
+    });
+    it('should support .jsx files when passing compileJsx', () => {
+      const tsCompiler = getTsCompiler({ compileJsx: true, ...defaultOpts });
+      expect(tsCompiler.isFileSupported('index.jsx')).to.be.true;
+    });
+    it('should support .js files when passing compileJs', () => {
+      const tsCompiler = getTsCompiler({ compileJs: true, ...defaultOpts });
+      expect(tsCompiler.isFileSupported('index.js')).to.be.true;
     });
     it('should not support .d.ts files', () => {
       const tsCompiler = getTsCompiler();
@@ -39,14 +57,7 @@ describe('TypescriptCompiler', () => {
   });
 });
 
-function getTsCompiler() {
-  return new TypescriptCompiler(
-    TypescriptAspect.id,
-    new Logger('test'),
-    {
-      tsconfig: {},
-      types: [],
-    },
-    ts
-  );
+function getTsCompiler(opts: TsCompilerOptionsWithoutTsConfig = defaultOpts) {
+  const finalOpts = Object.assign({}, defaultOpts, opts);
+  return new TypescriptCompiler(TypescriptAspect.id, new Logger('test'), finalOpts, ts);
 }

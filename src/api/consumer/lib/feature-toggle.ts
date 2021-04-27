@@ -54,6 +54,10 @@ export const HARMONY_FEATURE = 'harmony';
 
 export const NO_FS_CACHE_FEATURE = 'no-fs-cache';
 
+export const BUILD_ON_CI = 'build-on-ci';
+
+export const EXPORT_CENTRAL = 'export-central';
+
 export function isHarmonyEnabled() {
   return isFeatureEnabled(HARMONY_FEATURE);
 }

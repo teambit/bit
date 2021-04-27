@@ -6,27 +6,30 @@ import { ConfigAspect } from '@teambit/config';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import * as globalConfig from 'bit-bin/dist/api/consumer/lib/global-config';
-import { CFG_PACKAGE_MANAGER_CACHE } from 'bit-bin/dist/constants';
+import { CFG_PACKAGE_MANAGER_CACHE, CFG_USER_TOKEN_KEY } from '@teambit/legacy/dist/constants';
 // TODO: it's weird we take it from here.. think about it../workspace/utils
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { DetectorHook } from '@teambit/legacy/dist/consumer/component/dependencies/files-dependency-builder/detector-hook';
+import { Http, ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
 import {
   registerUpdateDependenciesOnTag,
   onTagIdTransformer,
-} from 'bit-bin/dist/scope/component-ops/tag-model-component';
+} from '@teambit/legacy/dist/scope/component-ops/tag-model-component';
 import {
   registerUpdateDependenciesOnExport,
   OnExportIdTransformer,
-} from 'bit-bin/dist/scope/component-ops/export-scope-components';
-import { Version as VersionModel } from 'bit-bin/dist/scope/models';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
+} from '@teambit/legacy/dist/scope/component-ops/export-scope-components';
+import { Version as VersionModel } from '@teambit/legacy/dist/scope/models';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import fs from 'fs-extra';
-import { BitId } from 'bit-bin/dist/bit-id';
+import { BitId } from '@teambit/legacy-bit-id';
 import { flatten } from 'ramda';
 import { SemVer } from 'semver';
 import AspectLoaderAspect, { AspectLoaderMain } from '@teambit/aspect-loader';
+import GlobalConfigAspect, { GlobalConfigMain } from '@teambit/global-config';
 import { Registries, Registry } from './registry';
 import { ROOT_NAME } from './dependencies/constants';
 import { DependencyInstaller, PreInstallSubscriberList, PostInstallSubscriberList } from './dependency-installer';
@@ -62,9 +65,13 @@ import {
   DependencyList,
 } from './dependencies';
 import { DependenciesFragment, DevDependenciesFragment, PeerDependenciesFragment } from './show-fragments';
+import { dependencyResolverSchema } from './dependency-resolver.graphql';
+import { DependencyDetector } from './dependency-detector';
 
 export const BIT_DEV_REGISTRY = 'https://node.bit.dev/';
 export const NPM_REGISTRY = 'https://registry.npmjs.org/';
+
+export { ProxyConfig } from '@teambit/legacy/dist/scope/network/http';
 
 export interface DependencyResolverWorkspaceConfig {
   policy: WorkspacePolicyConfigObject;
@@ -74,6 +81,49 @@ export interface DependencyResolverWorkspaceConfig {
    * and totally removes the need of a 'node_modules' directory in your project.
    */
   packageManager: string;
+
+  /**
+   * A proxy server for out going network requests by the package manager
+   * Used for both http and https requests (unless the httpsProxy is defined)
+   */
+  proxy?: string;
+
+  /**
+   * A proxy server for outgoing https requests by the package manager (fallback to proxy server if not defined)
+   * Use this in case you want different proxy for http and https requests.
+   */
+  httpsProxy?: string;
+
+  /**
+   * A path to a file containing one or multiple Certificate Authority signing certificates.
+   * allows for multiple CA's, as well as for the CA information to be stored in a file on disk.
+   */
+  ca?: string;
+
+  /**
+   * Whether or not to do SSL key validation when making requests to the registry via https
+   */
+  strictSsl?: string;
+
+  /**
+   * A client certificate to pass when accessing the registry. Values should be in PEM format (Windows calls it "Base-64 encoded X.509 (.CER)") with newlines replaced by the string "\n". For example:
+   * cert="-----BEGIN CERTIFICATE-----\nXXXX\nXXXX\n-----END CERTIFICATE-----"
+   * It is not the path to a certificate file (and there is no "certfile" option).
+   */
+  cert?: string;
+
+  /**
+   * A client key to pass when accessing the registry. Values should be in PEM format with newlines replaced by the string "\n". For example:
+   * key="-----BEGIN PRIVATE KEY-----\nXXXX\nXXXX\n-----END PRIVATE KEY-----"
+   * It is not the path to a key file (and there is no "keyfile" option).
+   */
+  key?: string;
+
+  /**
+   * A comma-separated string of domain extensions that a proxy should not be used for.
+   */
+  noProxy?: string;
+
   /**
    * If true, then Bit will add the "--strict-peer-dependencies" option when invoking package managers.
    * This causes "bit install" to fail if there are unsatisfied peer dependencies, which is
@@ -101,6 +151,7 @@ export interface DependencyResolverVariantConfig {
   policy: VariantPolicyConfigObject;
 }
 
+export type RootPolicyRegistry = SlotRegistry<WorkspacePolicy>;
 export type PoliciesRegistry = SlotRegistry<VariantPolicyConfigObject>;
 export type PackageManagerSlot = SlotRegistry<PackageManager>;
 export type DependencyFactorySlot = SlotRegistry<DependencyFactory[]>;
@@ -145,6 +196,11 @@ export class DependencyResolverMain {
     /**
      * Registry for changes by other extensions.
      */
+    private rootPolicyRegistry: RootPolicyRegistry,
+
+    /**
+     * Registry for changes by other extensions.
+     */
     private policiesRegistry: PoliciesRegistry,
 
     /**
@@ -157,6 +213,8 @@ export class DependencyResolverMain {
     private configAspect: Config,
 
     private aspectLoader: AspectLoaderMain,
+
+    private globalConfig: GlobalConfigMain,
 
     /**
      * component aspect.
@@ -251,7 +309,23 @@ export class DependencyResolverMain {
     return deps;
   }
 
+  /**
+   * Getting the merged workspace policy (from dep resolver config and others like root package.json)
+   * @returns
+   */
   getWorkspacePolicy(): WorkspacePolicy {
+    const policyFromConfig = this.getWorkspacePolicyFromConfig();
+    const externalPolicies = this.rootPolicyRegistry.toArray().map(([, policy]) => policy);
+    return this.mergeWorkspacePolices([policyFromConfig, ...externalPolicies]);
+  }
+
+  /**
+   * Getting the workspace policy as defined in the workspace.jsonc in the dependencyResolver aspect
+   * This will not take into account packages that defined in the package.json of the root for example
+   * in most cases you should use getWorkspacePolicy
+   * @returns
+   */
+  getWorkspacePolicyFromConfig(): WorkspacePolicy {
     const factory = new WorkspacePolicyFactory();
     return factory.fromConfigObject(this.config.policy);
   }
@@ -312,7 +386,7 @@ export class DependencyResolverMain {
   getInstaller(options: GetInstallerOptions = {}) {
     const packageManagerName = options.packageManager || this.config.packageManager;
     const packageManager = this.packageManagerSlot.get(packageManagerName);
-    const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
@@ -367,7 +441,7 @@ export class DependencyResolverMain {
 
   getVersionResolver(options: GetVersionResolverOptions = {}) {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
-    const cacheRootDir = options.cacheRootDirectory || globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
+    const cacheRootDir = options.cacheRootDirectory || this.globalConfig.getSync(CFG_PACKAGE_MANAGER_CACHE);
 
     if (!packageManager) {
       throw new PackageManagerNotFound(this.config.packageManager);
@@ -391,11 +465,71 @@ export class DependencyResolverMain {
     return packageManager;
   }
 
+  async getProxyConfig(): Promise<ProxyConfig> {
+    const proxyConfigFromDepResolverConfig = this.getProxyConfigFromDepResolverConfig();
+    let httpProxy = proxyConfigFromDepResolverConfig.httpProxy;
+    let httpsProxy = proxyConfigFromDepResolverConfig.httpsProxy;
+
+    // Take config from the aspect config if defined
+    if (httpProxy || httpsProxy) {
+      this.logger.debug(
+        `proxy config taken from the dep resolver config. proxy: ${httpProxy} httpsProxy: ${httpsProxy}`
+      );
+      return proxyConfigFromDepResolverConfig;
+    }
+
+    // Take config from the package manager (npmrc) config if defined
+    const proxyConfigFromPackageManager = await this.getProxyConfigFromPackageManager();
+    if (proxyConfigFromPackageManager?.httpProxy || proxyConfigFromPackageManager?.httpsProxy) {
+      this.logger.debug(
+        `proxy config taken from the package manager config (npmrc). proxy: ${proxyConfigFromPackageManager.httpProxy} httpsProxy: ${proxyConfigFromPackageManager.httpsProxy}`
+      );
+      return proxyConfigFromPackageManager;
+    }
+
+    // Take config from global bit config
+    const proxyConfigFromGlobalConfig = await this.getProxyConfigFromGlobalConfig();
+    httpProxy = proxyConfigFromGlobalConfig.httpProxy;
+    httpsProxy = proxyConfigFromGlobalConfig.httpsProxy;
+    if (httpProxy || httpsProxy) {
+      this.logger.debug(`proxy config taken from the global bit config. proxy: ${httpProxy} httpsProxy: ${httpsProxy}`);
+      return proxyConfigFromGlobalConfig;
+    }
+    return {};
+  }
+
+  private getProxyConfigFromDepResolverConfig(): ProxyConfig {
+    return {
+      ca: this.config.ca,
+      cert: this.config.cert,
+      httpProxy: this.config.proxy,
+      httpsProxy: this.config.httpsProxy || this.config.proxy,
+      key: this.config.key,
+      noProxy: this.config.noProxy,
+      strictSSL: this.config.strictSsl?.toLowerCase() === 'true',
+    };
+  }
+
+  private async getProxyConfigFromPackageManager(): Promise<ProxyConfig> {
+    const packageManager = this.packageManagerSlot.get(this.config.packageManager);
+    let proxyConfigFromPackageManager: ProxyConfig = {};
+    if (packageManager?.getProxyConfig && typeof packageManager?.getProxyConfig === 'function') {
+      proxyConfigFromPackageManager = await packageManager?.getProxyConfig();
+    } else {
+      const systemPm = this.getSystemPackageManager();
+      if (!systemPm.getProxyConfig) throw new Error('system package manager must implement `getProxyConfig()`');
+      proxyConfigFromPackageManager = await systemPm.getProxyConfig();
+    }
+    return proxyConfigFromPackageManager;
+  }
+
+  private async getProxyConfigFromGlobalConfig(): Promise<ProxyConfig> {
+    return Http.getProxyConfig();
+  }
+
   async getRegistries(): Promise<Registries> {
     const packageManager = this.packageManagerSlot.get(this.config.packageManager);
     let registries;
-    // eslint-disable-next-line global-require, import/no-dynamic-require
-    // TODO: support getting from default package manager
     if (packageManager?.getRegistries && typeof packageManager?.getRegistries === 'function') {
       registries = await packageManager?.getRegistries();
     } else {
@@ -405,18 +539,35 @@ export class DependencyResolverMain {
     }
 
     const bitScope = registries.scopes.bit;
-    const bitAuthHeaderValue = bitScope?.authHeaderValue;
-    const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
-    const bitOriginalAuthType = bitScope?.originalAuthType;
-    const bitOriginalAuthValue = bitScope?.originalAuthValue;
-    const alwaysAuth = bitAuthHeaderValue !== undefined;
-    const bitDefaultRegistry = new Registry(
-      bitRegistry,
-      alwaysAuth,
-      bitAuthHeaderValue,
-      bitOriginalAuthType,
-      bitOriginalAuthValue
-    );
+
+    const getDefaultBitRegistry = (): Registry => {
+      const bitGlobalConfigToken = this.globalConfig.getSync(CFG_USER_TOKEN_KEY);
+
+      const bitRegistry = bitScope?.uri || BIT_DEV_REGISTRY;
+
+      let bitAuthHeaderValue = bitScope?.authHeaderValue;
+      let bitOriginalAuthType = bitScope?.originalAuthType;
+      let bitOriginalAuthValue = bitScope?.originalAuthValue;
+
+      // In case there is no auth configuration in the npmrc, but there is token in bit config, take it from the config
+      if ((!bitScope || !bitScope.authHeaderValue) && bitGlobalConfigToken) {
+        bitOriginalAuthType = 'authToken';
+        bitAuthHeaderValue = `Bearer ${bitGlobalConfigToken}`;
+        bitOriginalAuthValue = bitGlobalConfigToken;
+      }
+
+      const alwaysAuth = bitAuthHeaderValue !== undefined;
+      const bitDefaultRegistry = new Registry(
+        bitRegistry,
+        alwaysAuth,
+        bitAuthHeaderValue,
+        bitOriginalAuthType,
+        bitOriginalAuthValue
+      );
+      return bitDefaultRegistry;
+    };
+
+    const bitDefaultRegistry = getDefaultBitRegistry();
 
     // Override default registry to use bit registry in case npmjs is the default - bit registry will proxy it
     // We check also NPM_REGISTRY.startsWith because the uri might not have the trailing / we have in NPM_REGISTRY
@@ -444,7 +595,7 @@ export class DependencyResolverMain {
   }
 
   addToRootPolicy(entries: WorkspacePolicyEntry[], options?: WorkspacePolicyAddEntryOptions): WorkspacePolicy {
-    const workspacePolicy = this.getWorkspacePolicy();
+    const workspacePolicy = this.getWorkspacePolicyFromConfig();
     entries.forEach((entry) => workspacePolicy.add(entry, options));
     const workspacePolicyObject = workspacePolicy.toConfigObject();
     this.config.policy = workspacePolicyObject;
@@ -467,6 +618,13 @@ export class DependencyResolverMain {
   }
 
   /**
+   * register new dependencies policies
+   */
+  registerRootPolicy(policy: WorkspacePolicy): void {
+    return this.rootPolicyRegistry.register(policy);
+  }
+
+  /**
    * Merge the dependencies provided by:
    * 1. envs configured in the component - via dependencies method
    * 2. extensions that registered to the registerDependencyPolicy slot (and configured for the component)
@@ -478,7 +636,7 @@ export class DependencyResolverMain {
     let policiesFromEnv: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromSlots: VariantPolicy = variantPolicyFactory.getEmpty();
     let policiesFromConfig: VariantPolicy = variantPolicyFactory.getEmpty();
-    const env = this.envs.getEnvFromExtensions(configuredExtensions).env;
+    const env = this.envs.calculateEnvFromExtensions(configuredExtensions).env;
     if (env.getDependencies && typeof env.getDependencies === 'function') {
       const policiesFromEnvConfig = await env.getDependencies();
       if (policiesFromEnvConfig) {
@@ -546,16 +704,35 @@ export class DependencyResolverMain {
     return version;
   }
 
+  /**
+   * Register a new dependency detector. Detectors allow to extend Bit's dependency detection
+   * mechanism to support new file extensions and types.
+   */
+  registerDetector(detector: DependencyDetector) {
+    DetectorHook.hooks.push(detector);
+    return this;
+  }
+
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, LoggerAspect, ConfigAspect, AspectLoaderAspect, ComponentAspect];
+  static dependencies = [
+    EnvsAspect,
+    LoggerAspect,
+    ConfigAspect,
+    AspectLoaderAspect,
+    ComponentAspect,
+    GraphqlAspect,
+    GlobalConfigAspect,
+  ];
 
   static slots = [
+    Slot.withType<WorkspacePolicy>(),
     Slot.withType<VariantPolicyConfigObject>(),
     Slot.withType<PackageManager>(),
     Slot.withType<RegExp>(),
     Slot.withType<DependencyFactory>(),
     Slot.withType<PreInstallSubscriberList>(),
     Slot.withType<PostInstallSubscriberList>(),
+    Slot.withType<DependencyDetector>(),
   ];
 
   static defaultConfig: DependencyResolverWorkspaceConfig = {
@@ -565,20 +742,30 @@ export class DependencyResolverMain {
     packageManager: 'teambit.dependencies/pnpm',
     policy: {},
     packageManagerArgs: [],
-    devFilePatterns: ['*.spec.ts'],
+    devFilePatterns: ['**/*.spec.ts'],
     strictPeerDependencies: true,
   };
 
   static async provider(
-    [envs, loggerExt, configMain, aspectLoader, componentAspect]: [
+    [envs, loggerExt, configMain, aspectLoader, componentAspect, graphql, globalConfig]: [
       EnvsMain,
       LoggerMain,
       Config,
       AspectLoaderMain,
-      ComponentMain
+      ComponentMain,
+      GraphqlMain,
+      GlobalConfigMain
     ],
     config: DependencyResolverWorkspaceConfig,
-    [policiesRegistry, packageManagerSlot, dependencyFactorySlot, preInstallSlot, postInstallSlot]: [
+    [
+      rootPolicyRegistry,
+      policiesRegistry,
+      packageManagerSlot,
+      dependencyFactorySlot,
+      preInstallSlot,
+      postInstallSlot,
+    ]: [
+      RootPolicyRegistry,
       PoliciesRegistry,
       PackageManagerSlot,
       DependencyFactorySlot,
@@ -590,11 +777,13 @@ export class DependencyResolverMain {
     const logger = loggerExt.createLogger(DependencyResolverAspect.id);
     const dependencyResolver = new DependencyResolverMain(
       config,
+      rootPolicyRegistry,
       policiesRegistry,
       envs,
       logger,
       configMain,
       aspectLoader,
+      globalConfig,
       componentAspect,
       packageManagerSlot,
       dependencyFactorySlot,
@@ -626,6 +815,8 @@ export class DependencyResolverMain {
     });
     registerUpdateDependenciesOnTag(dependencyResolver.updateDepsOnLegacyTag.bind(dependencyResolver));
     registerUpdateDependenciesOnExport(dependencyResolver.updateDepsOnLegacyExport.bind(dependencyResolver));
+
+    graphql.register(dependencyResolverSchema(dependencyResolver));
 
     return dependencyResolver;
   }

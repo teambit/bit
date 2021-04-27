@@ -3,6 +3,7 @@ import classnames from 'classnames';
 
 import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
 import { compareUrl } from '@teambit/ui.routing.compare-url';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 export type NavLinkProps = LinkProps & {
   /** class name to apply when active */
@@ -13,6 +14,8 @@ export type NavLinkProps = LinkProps & {
   exact?: boolean;
   /** take in consideration trailing slash on the location pathname */
   strict?: boolean;
+  /** explicit active state override */
+  isActive?: (() => boolean) | undefined;
 };
 
 /**
@@ -22,25 +25,31 @@ export type NavLinkProps = LinkProps & {
 export function NativeNavLink({
   activeClassName,
   activeStyle,
+  isActive,
   exact,
   strict,
   style,
   className,
   ...rest
 }: NavLinkProps) {
-  const activeHref = window.location.href;
+  // TODO - consider using getLocation()
+  const activeHref = isBrowser ? window.location.href : '/';
 
-  const isActive = useMemo(() => rest.href && compareUrl(activeHref, rest.href), [
+  const isDefaultActive = useMemo(() => rest.href && compareUrl(activeHref, rest.href), [
     exact,
     strict,
     activeHref,
     rest.href,
   ]);
 
-  const combinedStyles = useMemo(() => (isActive && activeStyle ? { ...style, ...activeStyle } : style), [
-    isActive,
+  const calcIsActive = isActive?.() || isDefaultActive;
+
+  const combinedStyles = useMemo(() => (calcIsActive && activeStyle ? { ...style, ...activeStyle } : style), [
+    calcIsActive,
     style,
   ]);
 
-  return <NativeLink {...rest} style={combinedStyles} className={classnames(className, isActive && activeClassName)} />;
+  return (
+    <NativeLink {...rest} style={combinedStyles} className={classnames(className, calcIsActive && activeClassName)} />
+  );
 }

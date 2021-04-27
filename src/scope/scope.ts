@@ -3,7 +3,6 @@ import mapSeries from 'p-map-series';
 import * as pathLib from 'path';
 import R from 'ramda';
 import semver from 'semver';
-
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -17,7 +16,6 @@ import {
   COMPONENT_ORIGINS,
   CURRENT_UPSTREAM,
   DEFAULT_BIT_VERSION,
-  DEFAULT_LANE,
   DOT_GIT_DIR,
   LATEST,
   NODE_PATH_SEPARATOR,
@@ -27,14 +25,14 @@ import {
 } from '../constants';
 import Component from '../consumer/component/consumer-component';
 import Dists from '../consumer/component/sources/dists';
-import { ExtensionDataList } from '../consumer/config';
+import { ExtensionDataEntry } from '../consumer/config';
 import Consumer from '../consumer/consumer';
 import SpecsResults from '../consumer/specs-results';
 import { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import GeneralError from '../error/general-error';
-import LaneId, { RemoteLaneId } from '../lane-id/lane-id';
+import LaneId from '../lane-id/lane-id';
 import logger from '../logger/logger';
-import { MigrationResult } from '../migration/migration-helper';
+import getMigrationVersions, { MigrationResult } from '../migration/migration-helper';
 import { currentDirName, first, pathHasAll, propogateUntil, readDirSyncIgnoreDsStore } from '../utils';
 import { PathOsBasedAbsolute } from '../utils/path';
 import RemoveModelComponents from './component-ops/remove-model-components';
@@ -58,9 +56,16 @@ import { getPath as getScopeJsonPath, ScopeJson, getHarmonyPath } from './scope-
 import VersionDependencies from './version-dependencies';
 import { ObjectItem, ObjectList } from './objects/object-list';
 import ClientIdInUse from './exceptions/client-id-in-use';
+import { UnexpectedPackageName } from '../consumer/exceptions/unexpected-package-name';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
+
+type HasIdOpts = {
+  includeSymlink?: boolean;
+  includeOrphaned?: boolean;
+  includeVersion?: boolean;
+};
 
 export type ScopeDescriptor = {
   name: string;
@@ -92,12 +97,17 @@ export type ComponentsAndVersions = {
   versionStr: string;
 };
 
-export type OnTagResult = {
+export type LegacyOnTagResult = {
   id: BitId;
-  extensions: ExtensionDataList;
+  builderData: ExtensionDataEntry;
 };
-export type OnTagOpts = { disableDeployPipeline?: boolean };
-export type OnTagFunc = (ids: BitId[], options?: OnTagOpts) => Promise<OnTagResult[]>;
+export type OnTagOpts = {
+  disableDeployPipeline?: boolean;
+  throwOnError?: boolean; // on the CI it helps to save the results on failure so this is set to false
+  forceDeploy?: boolean; // whether run the deploy-pipeline although the build-pipeline has failed
+  skipTests?: boolean;
+};
+export type OnTagFunc = (components: Component[], options?: OnTagOpts) => Promise<LegacyOnTagResult[]>;
 
 export default class Scope {
   created = false;
@@ -125,13 +135,13 @@ export default class Scope {
   }
 
   public onTag: OnTagFunc[] = []; // enable extensions to hook during the tag process
-  public onPostExport: Function[] = []; // enable extensions to hook after the export process
+  static onPostExport: (ids: BitId[], lanes: Lane[]) => Promise<void>; // enable extensions to hook after the export process
 
   /**
    * import components to the `Scope.
    */
-  async import(ids: BitIds, cache = true, persist = true): Promise<VersionDependencies[]> {
-    return this.scopeImporter.importMany(ids, cache, persist);
+  async import(ids: BitIds, cache = true): Promise<VersionDependencies[]> {
+    return this.scopeImporter.importMany(ids, cache);
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -147,7 +157,6 @@ export default class Scope {
     return this.scopeJson.groupName;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get name(): string {
     return this.scopeJson.name;
   }
@@ -231,15 +240,20 @@ export default class Scope {
       'scope.migrate',
       `start scope migration. scope version ${scopeVersion}, bit version ${BIT_VERSION}`
     );
-    const rawObjects = await this.objects.listRawObjects();
-    const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
-    // Add the new / updated objects
-    this.objects.addMany(resultObjects.newObjects);
-    // Remove old objects
-    this.objects.removeManyObjects(resultObjects.refsToRemove);
-    // Persists new / remove objects
-    const validateBeforePersist = false;
-    await this.objects.persist(validateBeforePersist);
+    const migrations = getMigrationVersions(BIT_VERSION, scopeVersion, migratonManifest, verbose);
+    const rawObjects = migrations.length ? await this.objects.listRawObjects() : [];
+    // @ts-ignore
+    const resultObjects: ScopeMigrationResult = await migrate(migrations, rawObjects, verbose);
+    if (!R.isEmpty(resultObjects.newObjects) || !R.isEmpty(resultObjects.refsToRemove)) {
+      // Add the new / updated objects
+      this.objects.addMany(resultObjects.newObjects);
+      // Remove old objects
+      this.objects.removeManyObjects(resultObjects.refsToRemove);
+      // Persists new / remove objects
+      const validateBeforePersist = false;
+      await this.objects.persist(validateBeforePersist);
+    }
+
     // Update the scope version
     this.scopeJson.set('version', BIT_VERSION);
     logger.debugAndAddBreadCrumb('scope.migrate', `updating scope version to version ${BIT_VERSION}`);
@@ -264,6 +278,23 @@ export default class Scope {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         .map((c) => c.toConsumerComponent(c.latestExisting(this.objects).toString(), this.name, this.objects))
     );
+  }
+
+  async hasId(id: BitId, opts: HasIdOpts) {
+    const filter = (comp: ComponentItem) => {
+      const symlinkCond = opts.includeSymlink ? true : !comp.isSymlink;
+      const idMatch = comp.id.scope === id.scope && comp.id.name === id.name;
+      return symlinkCond && idMatch;
+    };
+    const modelComponentList = await this.objects.listObjectsFromIndex(IndexType.components, filter);
+    if (!modelComponentList || !modelComponentList.length) return false;
+    if (!opts.includeVersion || !id.version) return true;
+    if (id.getVersion().latest) return true;
+    const modelComponent = modelComponentList[0] as ModelComponent;
+    if (opts.includeOrphaned) {
+      return modelComponent.hasTagIncludeOrphaned(id.version);
+    }
+    return modelComponent.hasTag(id.version);
   }
 
   async list(): Promise<ModelComponent[]> {
@@ -426,46 +457,6 @@ export default class Scope {
     return (await mapSeries(components, test)) as SpecsResultsWithComponentId;
   }
 
-  /**
-   * Writes components as objects into the 'objects' directory
-   */
-  async writeManyComponentsToModel(objectList: ObjectList, persist = true, ids: BitId[]): Promise<any> {
-    logger.debugAndAddBreadCrumb('scope.writeManyComponentsToModel', `total objects ${objectList.objects.length}`);
-    const bitObjectList = await objectList.toBitObjects();
-    const components = bitObjectList.getComponents();
-    const versions = bitObjectList.getVersions();
-    const laneObjects = bitObjectList.getLanes();
-    await mapSeries(components, (component: ModelComponent) => this.mergeModelComponent(component, versions));
-    let nonLaneIds: BitId[] = ids;
-    await Promise.all(
-      laneObjects.map(async (lane) => {
-        if (!lane.scope) {
-          throw new Error(`writeManyComponentsToModel scope is missing from a lane ${lane.name}`);
-        }
-        await this.objects.remoteLanes.syncWithLaneObject(lane.scope, lane);
-        nonLaneIds = nonLaneIds.filter((id) => id.name !== lane.name || id.scope !== lane.scope);
-        nonLaneIds.push(...lane.components.map((c) => c.id));
-      })
-    );
-    // components and lanes were merged previously, add the rest.
-    const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
-    this.sources.putObjects(objectsToAdd);
-    if (persist) await this.objects.persist();
-    return nonLaneIds;
-  }
-
-  async mergeModelComponent(component: ModelComponent, versions: Version[]) {
-    const { mergedComponent } = await this.sources.merge(component, versions);
-    if (mergedComponent.remoteHead) {
-      // when importing a component, save the remote head into the remote master ref file
-      await this.objects.remoteLanes.addEntry(
-        RemoteLaneId.from(DEFAULT_LANE, mergedComponent.scope as string),
-        mergedComponent.toBitId(),
-        mergedComponent.remoteHead
-      );
-    }
-  }
-
   getObject(hash: string): Promise<BitObject> {
     return new Ref(hash).load(this.objects);
   }
@@ -481,6 +472,13 @@ export default class Scope {
         buffer: await this.objects.loadRaw(ref),
       }))
     );
+  }
+
+  async getObjectItem(ref: Ref): Promise<ObjectItem> {
+    return {
+      ref,
+      buffer: await this.objects.loadRaw(ref),
+    };
   }
 
   async getModelComponentIfExist(id: BitId): Promise<ModelComponent | undefined> {
@@ -525,7 +523,7 @@ export default class Scope {
         const allRefs = await getAllVersionHashes(component, this.objects, false);
         const loadedVersions = await Promise.all(
           allRefs.map(async (ref) => {
-            const componentVersion = await component.loadVersion(ref.toString(), this.objects);
+            const componentVersion = await component.loadVersion(ref.toString(), this.objects, false);
             if (!componentVersion) return null;
             // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
             componentVersion.id = component.toBitId();
@@ -594,7 +592,8 @@ export default class Scope {
   }
 
   async loadComponentLogs(id: BitId): Promise<ComponentLog[]> {
-    const componentModel = await this.getModelComponent(id);
+    const componentModel = await this.getModelComponentIfExist(id);
+    if (!componentModel) return [];
     const logs = await componentModel.collectLogs(this.objects);
     return logs;
   }
@@ -670,9 +669,7 @@ export default class Scope {
   async getVersionInstance(id: BitId): Promise<Version> {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
     const component: ModelComponent = await this.getModelComponent(id);
-    // $FlowFixMe id.version is not null, was checked above
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return component.loadVersion(id.version, this.objects);
+    return component.loadVersion(id.version as string, this.objects);
   }
 
   async getComponentsAndVersions(ids: BitIds, defaultToLatestVersion = false): Promise<ComponentsAndVersions[]> {
@@ -830,6 +827,9 @@ export default class Scope {
   }
 
   async getParsedId(id: BitIdStr): Promise<BitId> {
+    if (id.startsWith('@')) {
+      throw new UnexpectedPackageName(id);
+    }
     const component = await this.loadModelComponentByIdStr(id);
     const idHasScope = Boolean(component && component.scope);
     if (!idHasScope) {

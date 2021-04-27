@@ -2,7 +2,6 @@ import BitNotInScope from './bit-not-in-scope';
 import ComponentNotFound from './component-not-found';
 import CorruptedComponent from './corrupted-component';
 import CyclicDependencies from './cyclic-dependencie';
-import DependencyNotFound from './dependency-not-found';
 import HashMismatch from './hash-mismatch';
 import HashNotFound from './hash-not-found';
 import HeadNotFound from './head-not-found';
@@ -34,7 +33,6 @@ export {
   BitNotInScope,
   HashMismatch,
   ResolutionException,
-  DependencyNotFound,
   CorruptedComponent,
   CyclicDependencies,
   InvalidIndexJson,

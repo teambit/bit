@@ -1,0 +1,44 @@
+.dependencyDrawer {
+  > div:first-child {
+    font-size: 14px;
+    border: unset;
+    padding-left: 16px;
+  }
+}
+
+.dependencyLink {
+  height: 32px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  padding-left: 32px;
+  font-size: inherit;
+  font-size: var(--p-xs);
+  text-decoration: none;
+  color: inherit;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  box-sizing: border-box;
+  border-left: 0px solid transparent;
+  > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: var(--base-color);
+    margin-right: 5px;
+  }
+}
+
+.depNode {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  &:hover {
+    background: var(--bg-topping-highlight);
+  }
+}

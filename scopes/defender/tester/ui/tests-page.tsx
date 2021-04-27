@@ -1,11 +1,10 @@
-import { useSubscription, useQuery } from '@apollo/react-hooks';
+import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
-import { gql } from 'apollo-boost';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 
@@ -40,6 +39,7 @@ const TESTS_SUBSCRIPTION_CHANGED = gql`
 const GET_COMPONENT = gql`
   query($id: String!) {
     getHost {
+      id # for GQL caching
       getTests(id: $id) {
         loading
         testsResults {
@@ -81,12 +81,12 @@ export function TestsPage({ className }: TestsPageProps) {
   if (testData?.loading) return <TestLoader />;
 
   const testResults = testData?.testsResults?.testFiles;
-  if (testResults === null) {
+  if (testResults === null || testData?.testsResults === null) {
     return (
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
-        link="https://bit-new-docs.netlify.app/docs/testing/test-components"
+        link="https://harmony-docs.bit.dev/testing/overview/"
       />
     );
   }

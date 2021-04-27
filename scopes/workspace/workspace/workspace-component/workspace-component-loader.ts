@@ -1,41 +1,49 @@
 import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
-import { BitId } from 'bit-bin/dist/bit-id';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import BluebirdPromise from 'bluebird';
-import { compact } from 'ramda-adjunct';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { MissingBitMapComponent } from 'bit-bin/dist/consumer/bit-map/exceptions';
-import { getLatestVersionNumber } from 'bit-bin/dist/utils';
-import { ComponentNotFound } from 'bit-bin/dist/scope/exceptions';
+import { BitId } from '@teambit/legacy-bit-id';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import mapSeries from 'p-map-series';
+import { compact } from 'lodash';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import { getLatestVersionNumber } from '@teambit/legacy/dist/utils';
+import { ComponentNotFound } from '@teambit/legacy/dist/scope/exceptions';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import ComponentNotFoundInPath from 'bit-bin/dist/consumer/component/exceptions/component-not-found-in-path';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
+import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
 export class WorkspaceComponentLoader {
-  _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components
-  _componentsCacheForCapsule: { [idStr: string]: Component } = {}; // cache loaded components for capsule, must not use the cache for the workspace
+  private componentsCache: InMemoryCache<Component>; // cache loaded components
+  private componentsCacheForCapsule: InMemoryCache<Component>; // cache loaded components for capsule, must not use the cache for the workspace
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain
-  ) {}
+  ) {
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+  }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
     const errors: { id: ComponentID; err: Error }[] = [];
     const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
-    const componentsP = BluebirdPromise.mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+    const componentsP = mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
       longProcessLogger.logProgress(id.toString());
       return this.get(id, forCapsule).catch((err) => {
-        errors.push({
-          id,
-          err,
-        });
-        return undefined;
+        if (this.isComponentNotExistsError(err)) {
+          errors.push({
+            id,
+            err,
+          });
+          return undefined;
+        }
+        throw err;
       });
     });
     const components = await componentsP;
@@ -58,7 +66,10 @@ export class WorkspaceComponentLoader {
     useCache = true,
     storeInCache = true
   ): Promise<Component> {
-    const bitIdWithVersion: BitId = getLatestVersionNumber(this.workspace.consumer.bitmapIds, componentId._legacy);
+    const bitIdWithVersion: BitId = getLatestVersionNumber(
+      this.workspace.consumer.bitmapIdsFromCurrentLane,
+      componentId._legacy
+    );
     const id = bitIdWithVersion.version ? componentId.changeVersion(bitIdWithVersion.version) : componentId;
     const fromCache = this.getFromCache(id, forCapsule);
     if (fromCache && useCache) {
@@ -73,13 +84,13 @@ export class WorkspaceComponentLoader {
   }
 
   clearCache() {
-    this._componentsCache = {};
-    this._componentsCacheForCapsule = {};
+    this.componentsCache.deleteAll();
+    this.componentsCacheForCapsule.deleteAll();
   }
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    delete this._componentsCache[idStr];
-    delete this._componentsCacheForCapsule[idStr];
+    this.componentsCache.delete(idStr);
+    this.componentsCacheForCapsule.delete(idStr);
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
@@ -106,8 +117,16 @@ export class WorkspaceComponentLoader {
       consumerComponent
     );
     if (componentFromScope) {
-      componentFromScope.state = state;
-      const workspaceComponent = WorkspaceComponent.fromComponent(componentFromScope, this.workspace);
+      // Removed by @gilad. do not mutate the component from the scope
+      // componentFromScope.state = state;
+      // const workspaceComponent = WorkspaceComponent.fromComponent(componentFromScope, this.workspace);
+      const workspaceComponent = new WorkspaceComponent(
+        componentFromScope.id,
+        componentFromScope.head,
+        state,
+        componentFromScope.tags,
+        this.workspace
+      );
       return this.executeLoadSlot(workspaceComponent);
     }
     return this.executeLoadSlot(this.newComponentFromState(id, state));
@@ -115,14 +134,14 @@ export class WorkspaceComponentLoader {
 
   private saveInCache(component: Component, forCapsule: boolean): void {
     if (forCapsule) {
-      this._componentsCacheForCapsule[component.id.toString()] = component;
+      this.componentsCacheForCapsule.set(component.id.toString(), component);
     } else {
-      this._componentsCache[component.id.toString()] = component;
+      this.componentsCache.set(component.id.toString(), component);
     }
   }
 
   private getFromCache(id: ComponentID, forCapsule: boolean) {
-    return forCapsule ? this._componentsCacheForCapsule[id.toString()] : this._componentsCache[id.toString()];
+    return forCapsule ? this.componentsCacheForCapsule.get(id.toString()) : this.componentsCache.get(id.toString());
   }
 
   private async getConsumerComponent(id: ComponentID, forCapsule = false) {
@@ -135,14 +154,19 @@ export class WorkspaceComponentLoader {
       // file is missing) it returns the model component later unexpectedly, or if it's new, it
       // shows MissingBitMapComponent error incorrectly.
       this.logger.error(`failed loading component ${id.toString()}`, err);
-      if (
-        err instanceof ComponentNotFound ||
-        err instanceof MissingBitMapComponent ||
-        err instanceof ComponentNotFoundInPath
-      )
+      if (this.isComponentNotExistsError(err)) {
         return undefined;
+      }
       throw err;
     }
+  }
+
+  private isComponentNotExistsError(err: Error): boolean {
+    return (
+      err instanceof ComponentNotFound ||
+      err instanceof MissingBitMapComponent ||
+      err instanceof ComponentNotFoundInPath
+    );
   }
 
   private async executeLoadSlot(component: Component) {
@@ -155,6 +179,7 @@ export class WorkspaceComponentLoader {
     // Special load events which runs from the workspace but should run from the correct aspect
     // TODO: remove this once those extensions dependent on workspace
     const envsData = await this.workspace.getEnvSystemDescriptor(component);
+
     // Move to deps resolver main runtime once we switch ws<> deps resolver direction
     const dependencies = await this.dependencyResolver.extractDepsFromLegacy(component);
     const policy = await this.dependencyResolver.mergeVariantPolicies(component.config.extensions);
@@ -164,8 +189,8 @@ export class WorkspaceComponentLoader {
       policy: policy.serialize(),
     };
 
-    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
     promises.push(this.upsertExtensionData(component, EnvsAspect.id, envsData));
+    promises.push(this.upsertExtensionData(component, DependencyResolverAspect.id, depResolverData));
 
     await Promise.all(promises);
 

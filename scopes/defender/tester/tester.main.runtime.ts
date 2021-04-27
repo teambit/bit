@@ -4,12 +4,13 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
+import { BuilderAspect, BuilderMain } from '@teambit/builder';
 import { UiMain, UIAspect } from '@teambit/ui';
 import { merge } from 'lodash';
 import DevFilesAspect, { DevFilesMain } from '@teambit/dev-files';
+import { TestsResult } from '@teambit/tests-results';
 
 import { ComponentsResults, CallbackFn } from './tester';
-import { TestsResult } from './tests-results';
 import { TestCmd } from './test.cmd';
 import { TesterAspect } from './tester.aspect';
 import { TesterService } from './tester.service';
@@ -56,7 +57,16 @@ export type TesterOptions = {
 
 export class TesterMain {
   static runtime = MainRuntime;
-  static dependencies = [CLIAspect, EnvsAspect, WorkspaceAspect, LoggerAspect, GraphqlAspect, UIAspect, DevFilesAspect];
+  static dependencies = [
+    CLIAspect,
+    EnvsAspect,
+    WorkspaceAspect,
+    LoggerAspect,
+    GraphqlAspect,
+    UIAspect,
+    DevFilesAspect,
+    BuilderAspect,
+  ];
 
   constructor(
     /**
@@ -84,7 +94,9 @@ export class TesterMain {
      */
     readonly task: TesterTask,
 
-    private devFiles: DevFilesMain
+    private devFiles: DevFilesMain,
+
+    private builder: BuilderMain
   ) {}
 
   _testsResults: { [componentId: string]: ComponentsResults } | undefined[] = [];
@@ -124,9 +136,10 @@ export class TesterMain {
 
   async getTestsResults(component: Component): Promise<{ testsResults?: TestsResult; loading: boolean } | undefined> {
     const entry = component.state.aspects.get(TesterAspect.id);
-    const isModified = await component.isModified();
-    if (entry && !isModified) {
-      return { testsResults: entry?.data.tests, loading: false };
+    const componentStatus = await this.workspace?.getComponentStatus(component);
+    const data = this.builder.getDataByAspect(component, TesterAspect.id) as { tests: TestsResult };
+    if ((entry || data) && !componentStatus?.modifyInfo?.hasModifiedFiles) {
+      return { testsResults: data?.tests || entry?.data.tests, loading: false };
     }
     return this.getTestsResultsFromState(component);
   }
@@ -156,7 +169,7 @@ export class TesterMain {
     /**
      * default test regex for which files tester to apply on.
      */
-    patterns: ['*.spec.*', '*.test.*'],
+    patterns: ['**/*.spec.+(js|ts|jsx|tsx)', '**/*.test.+(js|ts|jsx|tsx)'],
 
     /**
      * determine whether to watch on start.
@@ -165,14 +178,15 @@ export class TesterMain {
   };
 
   static async provider(
-    [cli, envs, workspace, loggerAspect, graphql, ui, devFiles]: [
+    [cli, envs, workspace, loggerAspect, graphql, ui, devFiles, builder]: [
       CLIMain,
       EnvsMain,
       Workspace,
       LoggerMain,
       GraphqlMain,
       UiMain,
-      DevFilesMain
+      DevFilesMain,
+      BuilderMain
     ],
     config: TesterExtensionConfig
   ) {
@@ -186,14 +200,16 @@ export class TesterMain {
       workspace,
       testerService,
       new TesterTask(TesterAspect.id, devFiles),
-      devFiles
+      devFiles,
+      builder
     );
 
     if (workspace && !workspace.consumer.isLegacy) {
       cli.unregister('test');
       ui.registerOnStart(async () => {
-        if (!config.watchOnStart) return false;
-        return tester.uiWatch();
+        if (!config.watchOnStart) return undefined;
+        await tester.uiWatch();
+        return undefined;
       });
 
       cli.register(new TestCmd(tester, workspace, logger));

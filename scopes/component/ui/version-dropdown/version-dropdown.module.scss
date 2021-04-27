@@ -1,5 +1,4 @@
 .versionDropdown {
-  z-index: 2;
   height: 100%;
   > div {
     height: 100%;
@@ -8,7 +7,6 @@
   }
   .menu {
     width: 300px;
-    z-index: 3;
     padding: 0;
     right: 0;
     // top: 43px;
@@ -66,6 +64,9 @@
   border: 1px solid var(--separator-color);
   > span {
     display: none;
+  }
+  > div {
+    max-width: 80px;
   }
 }
 

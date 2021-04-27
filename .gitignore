@@ -42,6 +42,7 @@ jspm_packages
 
 # Output of 'npm pack'
 *.tgz
+!e2e/fixtures/**/*.tgz
 
 # Yarn Integrity file
 .yarn-Integrity
@@ -91,4 +92,13 @@ bin/bit
 
 # package managers
 pnpm-lock.yaml
-yarn.lock
+package-lock.json
+build-harmony/yarn.lock
+
+# yarn2 (as suggested here https://yarnpkg.com/getting-started/qa)
+.yarn/*
+!.yarn/cache
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions

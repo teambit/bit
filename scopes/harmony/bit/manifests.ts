@@ -15,7 +15,8 @@ import { EnvsAspect } from '@teambit/envs';
 import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
 import { YarnAspect } from '@teambit/yarn';
-import { CreateAspect } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
 import { InsightsAspect } from '@teambit/insights';
@@ -29,6 +30,7 @@ import { PkgAspect } from '@teambit/pkg';
 import { PnpmAspect } from '@teambit/pnpm';
 import { PreviewAspect } from '@teambit/preview';
 import { ReactAspect } from '@teambit/react';
+import { ReactNativeAspect } from '@teambit/react-native';
 import { ReactRouterAspect } from '@teambit/react-router';
 import { SchemaAspect } from '@teambit/schema';
 import { PubsubAspect } from '@teambit/pubsub';
@@ -43,14 +45,23 @@ import { WebpackAspect } from '@teambit/webpack';
 import { WorkspaceAspect } from '@teambit/workspace';
 import { LinterAspect } from '@teambit/linter';
 import { ChangelogAspect } from '@teambit/changelog';
+import { CodeAspect } from '@teambit/code';
 import { CommandBarAspect } from '@teambit/command-bar';
 import { SidebarAspect } from '@teambit/sidebar';
 import { ComponentTreeAspect } from '@teambit/component-tree';
 import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
+import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
+import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
+import { ApplicationAspect } from '@teambit/application';
+import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
+import { E2eWorkspaceAspect } from '@teambit/e2e.workspace';
+import { ExportAspect } from '@teambit/export';
+import { EjectAspect } from '@teambit/eject';
+import { UserAgentAspect } from '@teambit/user-agent';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -67,11 +78,12 @@ export const manifestsMap = {
   [DocsAspect.id]: DocsAspect,
   [YarnAspect.id]: YarnAspect,
   [CompositionsAspect.id]: CompositionsAspect,
+  [GlobalConfigAspect.id]: GlobalConfigAspect,
   [GraphqlAspect.id]: GraphqlAspect,
   [PnpmAspect.id]: PnpmAspect,
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
-  [CreateAspect.id]: CreateAspect,
+  [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
   [FlowsAspect.id]: FlowsAspect,
   [GraphAspect.id]: GraphAspect,
@@ -82,6 +94,7 @@ export const manifestsMap = {
   [LoggerAspect.id]: LoggerAspect,
   [PkgAspect.id]: PkgAspect,
   [ReactAspect.id]: ReactAspect,
+  [ReactNativeAspect.id]: ReactNativeAspect,
   [WorkerAspect.id]: WorkerAspect,
   // [StencilAspect.id]: StencilAspect,
   [ScopeAspect.id]: ScopeAspect,
@@ -94,8 +107,8 @@ export const manifestsMap = {
   [WebpackAspect.id]: WebpackAspect,
   [SchemaAspect.id]: SchemaAspect,
   [ReactRouterAspect.id]: ReactRouterAspect,
-  [PanelUiAspect.id]: PanelUiAspect,
   [TypescriptAspect.id]: TypescriptAspect,
+  [PanelUiAspect.id]: PanelUiAspect,
   [BabelAspect.id]: BabelAspect,
   [NodeAspect.id]: NodeAspect,
   [NotificationsAspect.id]: NotificationsAspect,
@@ -103,9 +116,18 @@ export const manifestsMap = {
   [JestAspect.id]: JestAspect,
   [CacheAspect.id]: CacheAspect,
   [ChangelogAspect.id]: ChangelogAspect,
+  [CodeAspect.id]: CodeAspect,
   [CommandBarAspect.id]: CommandBarAspect,
   [SidebarAspect.id]: SidebarAspect,
   [ComponentTreeAspect.id]: ComponentTreeAspect,
+  [SignAspect.id]: SignAspect,
+  [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
+  [ExportAspect.id]: ExportAspect,
+  [E2eWorkspaceAspect.id]: E2eWorkspaceAspect,
+  [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
+  [UserAgentAspect.id]: UserAgentAspect,
+  [ApplicationAspect.id]: ApplicationAspect,
+  [EjectAspect.id]: EjectAspect,
 };
 
 export function isCoreAspect(id: string) {

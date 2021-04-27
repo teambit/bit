@@ -21,10 +21,22 @@ export async function snapAction(args: {
   force: boolean;
   verbose: boolean;
   ignoreUnresolvedDependencies: boolean;
+  build: boolean;
   skipTests: boolean;
   skipAutoSnap: boolean;
+  forceDeploy: boolean;
 }): Promise<SnapResults | null> {
-  const { id, message, force, verbose, ignoreUnresolvedDependencies, skipTests, skipAutoSnap } = args;
+  const {
+    id,
+    message,
+    force,
+    verbose,
+    ignoreUnresolvedDependencies,
+    skipTests,
+    skipAutoSnap,
+    build,
+    forceDeploy,
+  } = args;
   const consumer: Consumer = await loadConsumer();
   if (consumer.isLegacy) throw new LanesIsDisabled();
   const componentsList = new ComponentsList(consumer);
@@ -36,9 +48,11 @@ export async function snapAction(args: {
     ignoreUnresolvedDependencies,
     message,
     force,
+    build,
     skipTests,
     verbose,
     skipAutoSnap,
+    forceDeploy,
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   tagResults.newComponents = newComponents;

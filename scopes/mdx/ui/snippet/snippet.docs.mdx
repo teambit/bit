@@ -1,0 +1,26 @@
+---
+labels: ['react', 'typescript', 'code', 'live', 'playground']
+description: 'Displays static/live code snippets'
+---
+
+import { Snippet } from './snippet';
+
+Displays code examples. Use it to display static code snippets or live examples.
+
+Simple code snippet example:
+
+```js
+() => {
+  const code = `<div>simple div element</div>`;
+  return <Snippet>{code}</Snippet>;
+};
+```
+
+Live code snippet example:
+
+```js live
+() => {
+  const code = `<div>simple div element</div>`;
+  return <Snippet live>{code}</Snippet>;
+};
+```

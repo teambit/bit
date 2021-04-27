@@ -51,6 +51,10 @@ const allCommands = [
         name: 'untrack',
         description: 'Untrack a new component(s).',
       },
+      {
+        name: 'dependents',
+        description: 'Show all dependents of a given component-id',
+      },
     ],
   },
   {

@@ -1,4 +1,4 @@
-import R from 'ramda';
+import { uniqBy, prop } from 'ramda';
 import { Dependency, DependencyLifecycleType, SerializedDependency, SemverVersion, PackageName } from './dependency';
 import { KEY_NAME_BY_LIFECYCLE_TYPE } from './constants';
 
@@ -19,8 +19,19 @@ export class DependencyList {
     return this._dependencies;
   }
 
+  /**
+   * @param componentIdStr complete string include the scope and the version
+   */
+  findDependency(componentIdStr: string): Dependency | undefined {
+    return this.dependencies.find((dep) => dep.id === componentIdStr);
+  }
+
   forEach(predicate: (dep: Dependency, index?: number) => void): void {
     this.dependencies.forEach(predicate);
+  }
+
+  map(predicate: (dep: Dependency, index?: number) => any) {
+    return this.dependencies.map(predicate);
   }
 
   filter(predicate: (dep: Dependency, index?: number) => boolean): DependencyList {
@@ -81,6 +92,6 @@ export class DependencyList {
 }
 
 function uniqDeps(dependencies: Array<Dependency>): Array<Dependency> {
-  const uniq = R.uniqBy(R.prop('id'), dependencies);
+  const uniq = uniqBy(prop('id'), dependencies);
   return uniq;
 }

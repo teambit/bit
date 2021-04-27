@@ -174,10 +174,11 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
     if (rewire) {
       this.command.linkAndRewire();
+      this.command.compile();
     }
     return Array(numOfComponents)
       .fill(null)
-      .map((val, key) => `comp${key + 1}`)
+      .map((val, key) => `comp${key + 1}${additionalStr}`)
       .join(' and ');
   }
 
@@ -232,11 +233,11 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
       this.fs.outputFile(path.join('extensions', `ext${i}`, `ext${i}.main.runtime.ts`), mainImp(i));
       this.command.addComponent(`extensions/ext${i}`, { m: aspectFileName });
     }
-    // this.scopeHelper.linkBitBin();
+    // this.scopeHelper.linkBitLegacy();
     // this.npm.installNpmPackage('@teambit/harmony');
   }
 
-  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = false): string {
+  populateComponentsTS(numOfComponents = 3, owner = '@bit', isHarmony = true): string {
     let nmPathPrefix = `${owner}/${this.scopes.remote}.`;
     if (isHarmony) {
       const remoteSplit = this.scopes.remote.split('.');
@@ -260,6 +261,7 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
     }
     this.command.link();
     this.fs.outputFile('app.js', `const comp1 = require('${nmPathPrefix}comp1').default;\nconsole.log(comp1())`);
+    this.command.compile();
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}`)
@@ -352,6 +354,16 @@ export default () => 'comp${index} and ' + ${nextComp}();`;
       sync: true,
       file: scopeFile,
       cwd: this.scopes.e2eDir,
+    });
+  }
+
+  extractCompressedFixture(filePathRelativeToFixtures: string, destDir: string) {
+    fs.ensureDirSync(destDir);
+    const compressedFile = path.join(this.getFixturesDir(), filePathRelativeToFixtures);
+    tar.extract({
+      sync: true,
+      file: compressedFile,
+      cwd: destDir,
     });
   }
 }

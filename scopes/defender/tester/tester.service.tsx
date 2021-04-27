@@ -1,12 +1,11 @@
 import { Logger } from '@teambit/logger';
 import { resolve } from 'path';
 import React from 'react';
-import { flatten } from 'lodash';
 import { Text, Newline } from 'ink';
 import { EnvService, ExecutionContext, EnvDefinition } from '@teambit/envs';
 import { ComponentMap } from '@teambit/component';
 import { Workspace } from '@teambit/workspace';
-import syntaxHighlighter from 'consolehighlighter';
+import highlight from 'cli-highlight';
 import { PubSub } from 'graphql-subscriptions';
 import { DevFilesMain } from '@teambit/dev-files';
 import { Tester, Tests, CallbackFn } from './tester';
@@ -73,7 +72,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
         <Newline />
         <Text>
           {/* refactor a separate component which highlights for cli */}
-          {syntaxHighlighter.highlight(descriptor?.config, 'javascript')}
+          {highlight(descriptor?.config || '', {language: 'javascript', ignoreIllegals: true})}
         </Text>
         <Newline />
       </Text>
@@ -114,15 +113,11 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
     if (!options.ui)
       this.logger.console(`testing ${componentWithTests} components with environment ${chalk.cyan(context.id)}\n`);
 
-    const patterns = flatten(
-      await Promise.all(
-        context.components.map(async (component) => {
-          const dir = await this.workspace.componentDir(component.id);
-          const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
-          return componentPatterns.map((pattern) => resolve(dir, pattern));
-        })
-      )
-    );
+    const patterns = ComponentMap.as(context.components, (component) => {
+      const dir = this.workspace.componentDir(component.id);
+      const componentPatterns = this.devFiles.getDevPatterns(component, TesterAspect.id);
+      return componentPatterns.map((pattern: string) => ({ path: resolve(dir, pattern), relative: pattern }));
+    });
 
     const testerContext = Object.assign(context, {
       release: false,

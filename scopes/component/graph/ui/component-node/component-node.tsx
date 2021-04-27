@@ -31,7 +31,7 @@ export function ComponentNode({ node, type = 'defaultNode', ...rest }: Component
       </div>
       <div className={styles.nameLine}>
         <span className={classnames(styles.name, ellipsis)}>{id.name}</span>
-        {id.version && <span className={styles.version}>{id.version}</span>}
+        {id.version && <span className={classnames(styles.version, ellipsis)}>{id.version}</span>}
 
         <div className={styles.buffs}>
           <DeprecationIcon component={component} />

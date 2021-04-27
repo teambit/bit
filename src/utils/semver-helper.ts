@@ -1,5 +1,5 @@
 import { ReleaseType, valid, prerelease, maxSatisfying } from 'semver';
-import { InvalidVersion } from '../version/exceptions';
+import { InvalidVersion } from '@teambit/component-version';
 import GeneralError from '../error/general-error';
 
 export function isStrReleaseType(str: string): boolean {

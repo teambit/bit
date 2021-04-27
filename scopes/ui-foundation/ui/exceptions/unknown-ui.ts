@@ -4,6 +4,6 @@ export class UnknownUI extends Error {
   }
 
   toString() {
-    return `Unknown UI root: ${this.uiRoot}. Available ui roots are: [${this.available?.join(', ')}]`;
+    return `Unknown UI root: "${this.uiRoot}". Available ui roots are: [${this.available?.join(', ')}]`;
   }
 }

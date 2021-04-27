@@ -1,18 +1,25 @@
 import { AnyFS } from '@teambit/any-fs';
 import { capitalize } from '@teambit/string.capitalize';
 import { SemVer } from 'semver';
+import { ComponentID } from '@teambit/component-id';
+import { BitError } from '@teambit/bit-error';
 
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
 // import { NothingToSnap } from './exceptions';
 import ComponentConfig from './config';
 // eslint-disable-next-line import/no-cycle
-import { ComponentID } from './id';
-// eslint-disable-next-line import/no-cycle
 import { Snap } from './snap';
 import { State } from './state';
 import { TagMap } from './tag-map';
+import { Tag } from './tag';
+import { CouldNotFindLatest } from './exceptions';
 // import { Author } from './types';
+
+type SnapsIterableOpts = {
+  firstParentOnly?: boolean;
+  stopFn?: (snap: Snap) => Promise<boolean>;
+};
 
 /**
  * in-memory representation of a component.
@@ -74,7 +81,14 @@ export class Component {
 
   get latest(): string | undefined {
     if (!this.head) return undefined;
-    return this.tags.getLatest();
+    try {
+      return this.tags.getLatest();
+    } catch (err) {
+      if (err instanceof CouldNotFindLatest) {
+        return this.head.toString();
+      }
+      throw err;
+    }
   }
 
   stringify(): string {
@@ -122,6 +136,17 @@ export class Component {
   }
 
   /**
+   * is component isOutdated
+   */
+  isOutdated(): boolean {
+    if (!this.latest) return false;
+    const latestTag = this.tags.byVersion(this.latest);
+    if (!latestTag) return false;
+    if (this.head?.hash !== latestTag?.hash) return true;
+    return false;
+  }
+
+  /**
    * determines whether this component is new.
    */
   isNew(): Promise<boolean> {
@@ -131,6 +156,78 @@ export class Component {
   // TODO: @david after snap we need to make sure to refactor here.
   loadState(snapId: string): Promise<State> {
     return this.factory.getState(this.id, snapId);
+  }
+
+  loadSnap(snapId?: string): Promise<Snap> {
+    const snapToGet = snapId || this.head?.hash;
+    if (!snapToGet) {
+      throw new BitError('could not load snap for new components');
+    }
+    return this.factory.getSnap(this.id, snapToGet);
+  }
+
+  /**
+   * Get iterable which iterate over snap parents lazily
+   * @param snapId
+   * @param options
+   */
+  snapsIterable(snapId?: string, options: SnapsIterableOpts = {}): AsyncIterable<Snap> {
+    const snapToStart = snapId || this.head?.hash;
+    let nextSnaps = [snapToStart];
+    let done;
+    if (!snapToStart) {
+      done = true;
+    }
+
+    const iterator: AsyncIterator<Snap> = {
+      next: async () => {
+        if (done) {
+          return { value: undefined, done };
+        }
+        const currSnapId = nextSnaps.shift();
+        const snap = await this.loadSnap(currSnapId);
+        if (snap.parents && snap.parents.length) {
+          if (options.firstParentOnly) {
+            nextSnaps.push(snap.parents[0]);
+          } else {
+            nextSnaps = nextSnaps.concat(snap.parents);
+          }
+        }
+        if (!nextSnaps.length) {
+          done = true;
+        } else if (options.stopFn) {
+          done = await options.stopFn(snap);
+        }
+        return { value: snap, done: undefined };
+      },
+    };
+    return {
+      [Symbol.asyncIterator]: () => iterator,
+    };
+  }
+
+  /**
+   * traverse recursively from the provided snap (or head) upwards until it finds a tag
+   * @param snapToStartFrom
+   */
+  async getClosestTag(snapToStartFrom?: string): Promise<Tag | undefined> {
+    const tagsHashMap = this.tags.getHashMap();
+    const stopFn = async (snap: Snap) => {
+      if (tagsHashMap.has(snap.hash)) {
+        return true;
+      }
+      return false;
+    };
+    const iterable = this.snapsIterable(snapToStartFrom, { firstParentOnly: true, stopFn });
+    const snaps: Snap[] = [];
+    for await (const snap of iterable) {
+      snaps.push(snap);
+    }
+    if (snaps.length) {
+      const hashOfLastSnap = snaps[snaps.length - 1].hash;
+      return tagsHashMap.get(hashOfLastSnap);
+    }
+    return undefined;
   }
 
   /**

@@ -1,11 +1,10 @@
 import Bluebird from 'bluebird';
 import fs from 'fs-extra';
 import * as path from 'path';
-
 import Capsule from '../../../../legacy-capsule/core/capsule';
-import { CONCURRENT_IO_LIMIT as concurrency } from '../../../constants';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
+import { concurrentIOLimit } from '../../../utils/concurrency';
 import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
 import AbstractVinyl from './abstract-vinyl';
 import RemovePath from './remove-path';
@@ -164,9 +163,11 @@ export default class DataToPersist {
     return dataToPersist;
   }
   async _persistFilesToFS() {
+    const concurrency = concurrentIOLimit();
     return Bluebird.map(this.files, (file) => file.write(), { concurrency });
   }
   async _persistSymlinksToFS() {
+    const concurrency = concurrentIOLimit();
     return Bluebird.map(this.symlinks, (symlink) => symlink.write(), { concurrency });
   }
   async _deletePathsFromFS() {
@@ -175,6 +176,7 @@ export default class DataToPersist {
     if (pathWithRemoveItsDirIfEmptyEnabled.length) {
       await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
     }
+    const concurrency = concurrentIOLimit();
     return Bluebird.map(restPaths, (removePath) => removePath.persistToFS(), { concurrency });
   }
   _validateAbsolute() {

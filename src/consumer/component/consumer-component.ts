@@ -11,6 +11,7 @@ import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import {
   BASE_WEB_DOMAIN,
   BIT_WORKSPACE_TMP_DIRNAME,
+  BuildStatus,
   COMPILER_ENV_TYPE,
   COMPONENT_ORIGINS,
   DEFAULT_BINDINGS_PREFIX,
@@ -84,7 +85,6 @@ export type ComponentProps = {
   dependencies?: Dependency[];
   devDependencies?: Dependency[];
   flattenedDependencies?: BitIds;
-  flattenedDevDependencies?: BitIds;
   packageDependencies?: Record<string, any>;
   devPackageDependencies?: Record<string, any>;
   peerPackageDependencies?: Record<string, any>;
@@ -108,6 +108,7 @@ export type ComponentProps = {
   scopesList?: ScopeListItem[];
   extensions: ExtensionDataList;
   componentFromModel?: Component;
+  buildStatus?: BuildStatus;
 };
 
 export default class Component {
@@ -125,6 +126,7 @@ export default class Component {
 
   name: string;
   version: string | undefined;
+  previouslyUsedVersion: string | undefined;
   scope: string | null | undefined;
   lang: string;
   bindingPrefix: string;
@@ -137,7 +139,6 @@ export default class Component {
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   devDependencies: Dependencies;
   flattenedDependencies: BitIds;
-  flattenedDevDependencies: BitIds;
   packageDependencies: any;
   devPackageDependencies: any;
   peerPackageDependencies: any;
@@ -181,6 +182,7 @@ export default class Component {
   scopesList: ScopeListItem[] | undefined;
   extensions: ExtensionDataList = new ExtensionDataList();
   _capsuleDir?: string; // @todo: remove this. use CapsulePaths once it's public and available
+  buildStatus?: BuildStatus;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get id(): BitId {
     return new BitId({
@@ -204,7 +206,6 @@ export default class Component {
     dependencies,
     devDependencies,
     flattenedDependencies,
-    flattenedDevDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -227,6 +228,7 @@ export default class Component {
     customResolvedPaths,
     scopesList,
     extensions,
+    buildStatus,
   }: ComponentProps) {
     this.name = name;
     this.version = version;
@@ -241,7 +243,6 @@ export default class Component {
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
-    this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
@@ -264,6 +265,7 @@ export default class Component {
     this.extensions = extensions || [];
     this.componentFromModel = componentFromModel;
     this.schema = schema;
+    this.buildStatus = buildStatus;
   }
 
   validateComponent() {
@@ -407,11 +409,7 @@ export default class Component {
   }
 
   getAllFlattenedDependencies(): BitId[] {
-    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
-  }
-
-  getAllNonEnvsFlattenedDependencies(): BitId[] {
-    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
+    return [...this.flattenedDependencies];
   }
 
   /**
@@ -896,13 +894,11 @@ export default class Component {
     };
 
     const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
-    const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
-    const extensionDependencies = await getDependenciesComponents(this.extensions.extensionsBitIds);
     return new ComponentWithDependencies({
       component: this,
       dependencies,
-      devDependencies,
-      extensionDependencies,
+      devDependencies: [],
+      extensionDependencies: [],
     });
   }
 
@@ -1041,6 +1037,8 @@ export default class Component {
     const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
+      // @todo: change the logic here for Harmony. it doesn't need the full blown track logic
+      // see bitMap.loadFiles() for example.
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
       componentMap.files.forEach((file) => {
@@ -1068,6 +1066,10 @@ export default class Component {
         });
         componentMap.removeFiles(filesToDelete);
         bitMap.hasChanged = true;
+      }
+      const filePaths = componentMap.getAllFilesPaths();
+      if (!filePaths.includes(componentMap.mainFile)) {
+        throw new MainFileRemoved(componentMap.mainFile, id.toString());
       }
       return sourceFiles;
     };
@@ -1196,6 +1198,7 @@ export default class Component {
       packageJsonFile,
       packageJsonChangedProps,
       extensions,
+      buildStatus: componentFromModel ? componentFromModel.buildStatus : undefined,
     });
   }
 }

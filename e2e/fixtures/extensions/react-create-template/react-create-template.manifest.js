@@ -1,5 +1,5 @@
-// const { CreateExt } = require('bit-bin/extensions/create');
-const { getDeclarationCoreExtension } = require('bit-bin');
+// const { CreateExt } = require('@teambit/legacy/extensions/create');
+const { getDeclarationCoreExtension } = require('@teambit/legacy');
 const CreateExt = getDeclarationCoreExtension('teambit.generator/create');
 
 module.exports = {

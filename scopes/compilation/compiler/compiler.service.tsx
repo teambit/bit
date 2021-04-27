@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, Newline } from 'ink';
-import syntaxHighlighter from 'consolehighlighter';
 import { EnvService, EnvDefinition } from '@teambit/envs';
+import highlight from 'cli-highlight';
 
 export type CompilerDescriptor = {
   id: string;
@@ -24,7 +24,8 @@ export class CompilerService implements EnvService<{}, CompilerDescriptor> {
         <Newline />
         <Text color="cyan">compiler config:</Text>
         <Newline />
-        <Text>{descriptor?.config && syntaxHighlighter.highlight(descriptor?.config, 'javascript')}</Text>
+        <Text>{descriptor?.config && highlight(descriptor?.config, {language: 'javascript', ignoreIllegals: true})}</Text>
+        <Newline />
       </Text>
     );
   }

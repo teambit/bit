@@ -1,11 +1,12 @@
 import chalk from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
+import { isTag } from '@teambit/component-version';
 import { getRemoteBitIdsByWildcards } from '../../api/consumer/lib/list-scope';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
-import { COMPONENT_ORIGINS, LATEST_BIT_VERSION } from '../../constants';
+import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '../../consumer';
 import GeneralError from '../../error/general-error';
 import ShowDoctorError from '../../error/show-doctor-error';
@@ -19,7 +20,6 @@ import { Lane, ModelComponent, Version } from '../../scope/models';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { pathNormalizeToLinux } from '../../utils';
 import hasWildcard from '../../utils/string/has-wildcard';
-import { isTag } from '../../version/version-parser';
 import Component from '../component';
 import { NothingToImport } from '../exceptions';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
@@ -45,6 +45,7 @@ export type ImportOptions = {
   saveDependenciesAsComponents?: boolean; // default: false,
   importDependenciesDirectly?: boolean; // default: false, normally it imports them as packages or nested, not as imported
   importDependents?: boolean; // default: false,
+  fromOriginalScope?: boolean; // default: false, otherwise, it fetches flattened dependencies from their dependents
   skipLane?: boolean; // save on master instead of current lane
   lanes?: { laneIds: RemoteLaneId[]; lanes?: Lane[] };
 };
@@ -59,6 +60,7 @@ export type ImportDetails = {
   versions: string[];
   status: ImportStatus;
   filesStatus: FilesStatus | null | undefined;
+  missingDeps: BitId[];
 };
 export type ImportResult = Promise<{
   dependencies: ComponentWithDependencies[];
@@ -226,13 +228,15 @@ export default class ImportComponents {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
-    const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
+    // this is probably not needed anymore because the build-one-graph already imports all
+    // missing objects.
+    // const idsOfDepsInstalledAsPackages = await this.getIdsOfDepsInstalledAsPackages();
     // @todo: when .bitmap has a remote-lane, it should import the lane object as well
-    const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
+    const importedComponents = this.consumer.bitMap.getAllIdsAvailableOnLane([COMPONENT_ORIGINS.IMPORTED]);
     const componentsIdsToImport = BitIds.fromArray([
       ...authoredExportedComponents,
       ...importedComponents,
-      ...idsOfDepsInstalledAsPackages,
+      // ...idsOfDepsInstalledAsPackages,
     ]);
 
     let compiler;
@@ -254,8 +258,11 @@ export default class ImportComponents {
     let componentsAndDependencies: ComponentWithDependencies[] = [];
     if (componentsIdsToImport.length) {
       // change all ids version to 'latest'. otherwise, it tries to import local tags/snaps from a remote
-      const idsWithLatestVersion = componentsIdsToImport.map((id) => id.changeVersion(LATEST_BIT_VERSION));
-      componentsAndDependencies = await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
+      const idsWithLatestVersion = componentsIdsToImport.toVersionLatest();
+      componentsAndDependencies =
+        !this.consumer.isLegacy && this.options.objectsOnly
+          ? await this.consumer.importComponentsObjectsHarmony(componentsIdsToImport, this.options.fromOriginalScope)
+          : await this.consumer.importComponents(BitIds.fromArray(idsWithLatestVersion), true);
       await this._throwForModifiedOrNewDependencies(componentsAndDependencies);
       await this._writeToFileSystem(componentsAndDependencies);
     }
@@ -313,7 +320,7 @@ export default class ImportComponents {
 
   async _getCurrentVersions(ids: BitIds): Promise<ImportedVersions> {
     const versionsP = ids.map(async (id) => {
-      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
       const idStr = id.toStringWithoutVersion();
       if (!modelComponent) return [idStr, []];
       return [idStr, modelComponent.listVersions()];
@@ -350,7 +357,13 @@ export default class ImportComponents {
         return 'updated';
       };
       const filesStatus = this.mergeStatus && this.mergeStatus[idStr] ? this.mergeStatus[idStr] : null;
-      return { id: idStr, versions: versionDifference, status: getStatus(), filesStatus };
+      return {
+        id: idStr,
+        versions: versionDifference,
+        status: getStatus(),
+        filesStatus,
+        missingDeps: component.missingDependencies,
+      };
     });
     return Promise.all(detailsP);
   }
@@ -426,7 +439,7 @@ export default class ImportComponents {
       otherComponent: fsComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       otherLabel: `${currentlyUsedVersion} modified`,
-      currentComponent, // $FlowFixMe
+      currentComponent,
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       currentLabel: component.id.version,
       baseComponent,
@@ -543,7 +556,7 @@ export default class ImportComponents {
         await Promise.all(updateAllCompsP);
       })
     );
-    await this.scope.lanes.saveLane(currentLane, true);
+    await this.scope.lanes.saveLane(currentLane);
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {

@@ -39,6 +39,7 @@ import InjectConf from './commands/public-cmds/inject-conf-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
 import Lane from './commands/public-cmds/lane-cmd';
 import Link from './commands/public-cmds/link-cmd';
+import Dependents from './commands/public-cmds/dependents-cmd';
 import List from './commands/public-cmds/list-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Login from './commands/public-cmds/login-cmd';
@@ -58,6 +59,8 @@ import Undeprecate from './commands/public-cmds/undeprecate-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
+import RunAction from './commands/private-cmds/run-action.cmd';
+import Dependencies from './commands/public-cmds/dependencies-cmd';
 
 export default function registerCommands(extensionsCommands: Array<Commands>): CommandRegistry {
   return new CommandRegistry(
@@ -86,6 +89,8 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new CatComponent(),
       new CatLane(),
+      new Dependents(),
+      new Dependencies(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Show(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -157,6 +162,7 @@ export default function registerCommands(extensionsCommands: Array<Commands>): C
       new Switch(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new Fetch(),
+      new RunAction(),
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       new ScopeLanesList(),
     ],

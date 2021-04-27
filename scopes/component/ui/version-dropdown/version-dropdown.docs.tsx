@@ -11,9 +11,9 @@ export default function Overview() {
     <ThemeContext>
       <>
         <Section>
-          The version-dropdown displays the latest version of the viewed component. If previous versions are available,
-          the component will display a list of them, when clicked. This allows the user to navigate to previous
-          versions, and explore them.
+          The version-dropdown displays the latest version of the viewed component. <br />
+          If previous versions are available, the component will display a list of them, when clicked. <br />
+          This allows the user to navigate to previous versions, and explore them.
         </Section>
         <Separator />
       </>
@@ -21,36 +21,34 @@ export default function Overview() {
   );
 }
 
-export const Center = ({ children }: React.HTMLAttributes<HTMLDivElement>) => {
-  return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{children}</div>;
-};
-
 Overview.abstract = 'The version-dropdown lists the latest and previous versions of the viewed component.';
 
 Overview.labels = ['react', 'typescript', 'version', 'dropdown'];
 
+const style = { display: 'flex', justifyContent: 'center', alignContent: 'center' };
+
 Overview.examples = [
   {
     scope: {
-      Center,
       VersionDropdown,
+      style,
     },
     title: 'Version Dropdown',
     description: 'Using the Version Dropdown component with one verion',
     code: `
     () => {
       return (
-        <Center>
+        <div style={{...style, minHeight: 150 }}>
           <VersionDropdown versions={['0.1']} currentVersion="0.1" />
-        </Center>
+        </div>
       );
     }
       `,
   },
   {
     scope: {
-      Center,
       VersionDropdown,
+      style,
       Router,
       createBrowserHistory,
     },
@@ -61,11 +59,11 @@ Overview.examples = [
       const history = createBrowserHistory();
       const versions = ['0.3', '0.2', '0.1'];
       return (
-        <Center>
+        <div style={{...style, minHeight: 400, alignItems: 'end', justifyContent: 'flex-end', margin: 10 }}>
           <Router history={history}>
             <VersionDropdown versions={versions} currentVersion={versions[0]} />
           </Router>
-        </Center>
+        </div>
       );
     }
       `,

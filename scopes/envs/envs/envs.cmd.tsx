@@ -53,8 +53,9 @@ export class EnvsCmd implements Command {
   async render([name]: [string]): Promise<JSX.Element> {
     const host = await this.componentAspect.getHost();
     // TODO: think what to do re this line with gilad.
-    const components = await host.list();
+    if (!host) throw new Error('error: workspace not found');
     if (name) return this.showEnv(name, host);
+    const components = await host.list();
     // TODO: refactor to a react table
     return <Text>{this.getTable(components)}</Text>;
   }

@@ -1,6 +1,7 @@
 import R from 'ramda';
 
 import BitId, { BitIdStr } from '../bit-id/bit-id';
+import { LATEST_BIT_VERSION } from '../constants';
 import forEach from '../utils/object/foreach';
 import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
@@ -142,6 +143,12 @@ export default class BitIds extends Array<BitId> {
     return duplications;
   }
 
+  add(bitIds: BitId[]) {
+    bitIds.forEach((bitId) => {
+      if (!this.search(bitId)) this.push(bitId);
+    });
+  }
+
   static fromObject(dependencies: { [key: string]: string }) {
     const array = [];
 
@@ -172,6 +179,10 @@ export default class BitIds extends Array<BitId> {
 ${found.map((id) => id.toString()).join('\n')}`);
       }
     });
+  }
+
+  toVersionLatest(): BitIds {
+    return BitIds.fromArray(this.map((id) => id.changeVersion(LATEST_BIT_VERSION)));
   }
 
   clone(): BitIds {

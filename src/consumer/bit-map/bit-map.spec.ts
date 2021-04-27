@@ -5,8 +5,19 @@ import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import BitMap from './bit-map';
+import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
+
+const scope = {
+  path: path.join(__dirname, '.bit'),
+  lanes: { getCurrentLaneName: () => 'master' },
+};
 
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
+const getBitmapInstance = async () => {
+  const consumer = { getPath: () => __dirname, isLegacy: true, scope };
+  // @ts-ignore
+  return BitMap.load(consumer);
+};
 
 const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
@@ -32,8 +43,8 @@ describe('BitMap', function () {
   describe('toObject', () => {
     let bitMap: BitMap;
     let componentMap;
-    before(() => {
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+    before(async () => {
+      bitMap = await getBitmapInstance();
       bitMap.addComponent(addComponentParamsFixture);
       const allComponents = bitMap.toObjects();
       componentMap = allComponents['is-string'];
@@ -51,9 +62,9 @@ describe('BitMap', function () {
       const componentMapImported = allComponents['my-scope/is-string-imported@0.0.1'];
       expect(componentMapImported).to.not.have.property('exported');
     });
-    it('should sort the components alphabetically', () => {
+    it('should sort the components alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = await getBitmapInstance();
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string1', version: '0.0.1' });
       bitMap.addComponent(exampleComponent);
       exampleComponent.componentId = new BitId({ scope: 'my-scope', name: 'is-string3', version: '0.0.1' });
@@ -66,9 +77,9 @@ describe('BitMap', function () {
       expect(ids[1]).to.equal('my-scope/is-string2@0.0.1');
       expect(ids[2]).to.equal('my-scope/is-string3@0.0.1');
     });
-    it('should sort the files in the component alphabetically', () => {
+    it('should sort the files in the component alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = await getBitmapInstance();
       exampleComponent.files = [
         { name: 'is-string1.js', relativePath: 'is-string1.js', test: false },
         { name: 'is-string3.js', relativePath: 'is-string3.js', test: false },
@@ -82,9 +93,9 @@ describe('BitMap', function () {
       expect(files[1].relativePath).to.equal('is-string2.js');
       expect(files[2].relativePath).to.equal('is-string3.js');
     });
-    it('should sort the fields in the component files alphabetically', () => {
+    it('should sort the fields in the component files alphabetically', async () => {
       const exampleComponent = { ...addComponentParamsFixture };
-      bitMap = BitMap.load(__dirname, path.join(__dirname, '.bit'));
+      bitMap = await getBitmapInstance();
       bitMap.addComponent(exampleComponent);
       const allComponents = bitMap.toObjects();
       const files = allComponents['is-string'].files;
@@ -94,9 +105,46 @@ describe('BitMap', function () {
       expect(fields[2]).to.equal('test');
     });
   });
+  describe('loadComponents', () => {
+    let bitMap: BitMap;
+    before(async () => {
+      bitMap = await getBitmapInstance();
+    });
+    it('should throw DuplicateRootDir error when multiple ids have the same rootDir', () => {
+      const invalidBitMap = {
+        comp1: {
+          mainFile: 'index.js',
+          rootDir: 'comp1',
+        },
+        comp2: {
+          mainFile: 'index.js',
+          rootDir: 'comp1',
+        },
+      };
+      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(DuplicateRootDir);
+    });
+    it('should throw when a component has scope but not version', () => {
+      const invalidBitMap = {
+        'scope/comp1': {
+          mainFile: 'index.js',
+          rootDir: 'comp1',
+          exported: true,
+        },
+      };
+      expect(() => bitMap.loadComponents(invalidBitMap)).to.throw(
+        '.bitmap entry of "scope/comp1" is invalid, it has a scope-name "scope", however, it does not have any version'
+      );
+    });
+  });
   describe('getAuthoredExportedComponents', () => {
-    it('should return an empty array when there are no authored components', () => {
-      const bitMap = BitMap.load(path.join(bitMapFixtureDir, 'only-imported'), '');
+    it('should return an empty array when there are no authored components', async () => {
+      const consumer = {
+        getPath: () => path.join(bitMapFixtureDir, 'only-imported'),
+        isLegacy: true,
+        scope,
+      };
+      // @ts-ignore
+      const bitMap = await BitMap.load(consumer);
       const results = bitMap.getAuthoredExportedComponents();
       expect(results).to.be.an('array');
       expect(results).to.have.lengthOf(0);

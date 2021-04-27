@@ -1,9 +1,9 @@
 import { ComponentID } from '@teambit/component';
 import { Logger } from '@teambit/logger';
-import { BitId } from 'bit-bin/dist/bit-id';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import Symlink from 'bit-bin/dist/links/symlink';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { BitId } from '@teambit/legacy-bit-id';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import Symlink from '@teambit/legacy/dist/links/symlink';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import path from 'path';
 
 import { Capsule } from './capsule';
@@ -28,7 +28,7 @@ export async function symlinkOnCapsuleRoot(capsuleList: CapsuleList, logger: Log
     return new Symlink(src, dest, capsule.component.id._legacy);
   });
 
-  await Promise.all(symlinks.map((symlink) => symlink.writeWithNativeFS()));
+  await Promise.all(symlinks.map((symlink) => symlink.write()));
 }
 
 async function symlinkComponent(component: ConsumerComponent, capsuleList: CapsuleList, logger: Logger) {
@@ -36,6 +36,7 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
   if (!componentCapsule) throw new Error(`unable to find the capsule for ${component.id.toString()}`);
   const allDeps = component.getAllDependenciesIds();
   const symlinks = allDeps.map((depId: BitId) => {
+    // TODO: this is dangerous - we might have 2 capsules for the same component with different version, then we might link to the wrong place
     const devCapsule = capsuleList.getCapsuleIgnoreScopeAndVersion(new ComponentID(depId));
     if (!devCapsule) {
       // happens when a dependency is not in the workspace. (it gets installed via the package manager)
@@ -53,10 +54,5 @@ async function symlinkComponent(component: ConsumerComponent, capsuleList: Capsu
     return new Symlink(src, dest, component.id);
   });
 
-  // using native fs to write the symlink instead of using `symlink-or-copy` package.
-  // because we want symlink src to be relative to symlink dest, and not relative to the cwd (which used by the symlink-or-copy)
-  // from the symlink-or-copy package readme -
-  // If you pass a relative srcPath, it will be resolved relative to process.cwd(), akin to a copy function.
-  // Note that this is unlike fs.symlinkSync, whose srcPath is relative to destPath.
-  await Promise.all(symlinks.map((symlink) => symlink && symlink.writeWithNativeFS()));
+  await Promise.all(symlinks.map((symlink) => symlink && symlink.write()));
 }

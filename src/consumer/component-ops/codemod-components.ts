@@ -48,7 +48,7 @@ async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
 }
 
 async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Component[]> {
-  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIds;
+  const componentsIds = bitIds.length ? BitIds.fromArray(bitIds) : consumer.bitmapIdsFromCurrentLane;
   const { components } = await consumer.loadComponents(componentsIds);
 
   return components;

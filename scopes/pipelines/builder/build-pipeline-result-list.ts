@@ -1,12 +1,12 @@
 import { ComponentID, ComponentMap, Component } from '@teambit/component';
 import { isEmpty } from 'ramda';
-import { compact } from 'ramda-adjunct';
-import type { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import { compact } from 'lodash';
+import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Artifact, ArtifactList } from './artifact';
 import { TaskResults } from './build-pipe';
 import { Serializable, TaskMetadata } from './types';
 
-type PipelineReport = {
+export type PipelineReport = {
   taskId: string;
   taskName?: string;
   taskDescription?: string;
@@ -14,6 +14,11 @@ type PipelineReport = {
   endTime?: number;
   errors?: Array<Error | string>;
   warnings?: string[];
+};
+
+export type AspectData = {
+  aspectId: string;
+  data: Serializable;
 };
 
 /**
@@ -26,9 +31,7 @@ export class BuildPipelineResultList {
   }
 
   private getFlattenedArtifactListsMapFromAllTasks(): ComponentMap<ArtifactList> {
-    const artifactListsMaps: ComponentMap<ArtifactList>[] = this.tasksResults.map(
-      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
-    );
+    const artifactListsMaps = this.tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
     return ComponentMap.as<ArtifactList>(this.components, (component) => {
       const artifacts: Artifact[] = [];
       artifactListsMaps.forEach((artifactListMap) => {
@@ -67,6 +70,14 @@ export class BuildPipelineResultList {
       return pipelineReport;
     });
     return compact(compResults);
+  }
+
+  public getDataOfComponent(componentId: ComponentID): AspectData[] {
+    const tasksData = this.getMetadataFromTaskResults(componentId);
+    return Object.keys(tasksData).map((taskId) => ({
+      aspectId: taskId,
+      data: tasksData[taskId],
+    }));
   }
 
   public getArtifactsDataOfComponent(componentId: ComponentID): ArtifactObject[] | undefined {

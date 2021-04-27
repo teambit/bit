@@ -65,10 +65,11 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
     describe('when rootDir is not the same as the sharedDir', () => {
       before(() => {
         helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+        helper.bitJsonc.setupDefault();
         helper.fs.outputFile('src/bar/foo.js');
         helper.command.addComponent('src', { i: 'comp' });
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.scopeHelper.reInitLocalScope();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('comp');
@@ -106,11 +107,12 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
         });
         it('should replace trackDir by rootDir', () => {
           const bitMap = helper.bitMap.read();
-          const componentMap = bitMap['foo@0.0.1'];
+          const componentMap = bitMap.foo;
           expect(componentMap).to.not.have.property('trackDir');
           expect(componentMap).to.have.property('rootDir');
           expect(componentMap.rootDir).to.equal('src');
-          expect(componentMap.files[0].relativePath).to.equal('foo.js');
+          const files = helper.command.getComponentFiles('foo@0.0.1');
+          expect(files).to.include('foo.js');
         });
       });
     });

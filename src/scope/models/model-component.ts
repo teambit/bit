@@ -1,12 +1,15 @@
 import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
 import * as semver from 'semver';
+import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';
-import BitId from '../../bit-id/bit-id';
+import { LegacyComponentLog } from '@teambit/legacy-component-log';
+import { BitId } from '../../bit-id';
 import {
   COMPILER_ENV_TYPE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
+  DEFAULT_LANE,
   DEFAULT_LANGUAGE,
   TESTER_ENV_TYPE,
 } from '../../constants';
@@ -23,7 +26,6 @@ import { makeEnvFromModel } from '../../legacy-extensions/env-factory';
 import logger from '../../logger/logger';
 import { empty, filterObject, forEach, getStringifyArgs, mapObject, sha1 } from '../../utils';
 import findDuplications from '../../utils/array/find-duplications';
-import versionParser, { isHash, isTag } from '../../version/version-parser';
 import ComponentObjects from '../component-objects';
 import { DivergeData } from '../component-ops/diverge-data';
 import { getDivergeData } from '../component-ops/get-diverge-data';
@@ -48,23 +50,16 @@ type State = {
   };
 };
 
-// @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
 type Versions = { [version: string]: Ref };
 export type ScopeListItem = { url: string; name: string; date: string };
 
-export type ComponentLog = {
-  message: string;
-  username?: string;
-  email?: string;
-  date?: string;
-  hash: string;
-  tag?: string;
-};
+export type ComponentLog = LegacyComponentLog;
 
 export type ComponentProps = {
   scope: string | null | undefined;
   name: string;
   versions?: Versions;
+  orphanedVersions?: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -89,15 +84,24 @@ export default class Component extends BitObject {
   scope: string | null | undefined;
   name: string;
   versions: Versions;
+  orphanedVersions: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
+  /**
+   * @deprecated since 0.12.6 (long long ago :) probably can be removed)
+   */
   local: boolean | null | undefined;
   state: State;
   scopesList: ScopeListItem[];
   head?: Ref;
   remoteHead?: Ref | null; // doesn't get saved in the scope, used to easier access the remote master head
-  laneHeadLocal?: Ref | null; // doesn't get saved in the scope, used to easier access the local snap head data
+  /**
+   * doesn't get saved in the scope, used to easier access the local snap head data
+   * when checked out to a lane, this prop is either Ref or null. otherwise (when on master), this
+   * prop is undefined.
+   */
+  laneHeadLocal?: Ref | null;
   laneHeadRemote?: Ref | null; // doesn't get saved in the scope, used to easier access the remote snap head data
   private divergeData?: DivergeData;
 
@@ -107,6 +111,7 @@ export default class Component extends BitObject {
     this.scope = props.scope || null;
     this.name = props.name;
     this.versions = props.versions || {};
+    this.orphanedVersions = props.orphanedVersions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
@@ -116,16 +121,29 @@ export default class Component extends BitObject {
     this.head = props.head;
   }
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   get versionArray(): Ref[] {
     return Object.values(this.versions);
+  }
+
+  setVersion(tag: string, ref: Ref) {
+    this.versions[tag] = ref;
+    delete this.orphanedVersions[tag]; // just in case it's there.
+  }
+
+  setOrphanedVersion(tag: string, ref: Ref) {
+    if (this.versions[tag]) {
+      throw new Error(
+        `unable to save orphanedVersion "${tag}" for "${this.id()}" because this tag is already part of the versions prop`
+      );
+    }
+    this.orphanedVersions[tag] = ref;
   }
 
   getRef(version: string): Ref | null {
     if (isHash(version)) {
       return new Ref(version);
     }
-    return this.versions[version];
+    return this.versionsIncludeOrphaned[version];
   }
 
   getHeadStr(): string | null {
@@ -154,14 +172,34 @@ export default class Component extends BitObject {
     return versions.sort(semver.compare).reverse();
   }
 
-  async hasVersion(version: string, repo: Repository): Promise<boolean> {
-    if (isTag(version)) return this.hasTag(version);
+  listVersionsIncludeOrphaned(sort?: 'ASC' | 'DESC'): string[] {
+    const versions = Object.keys(this.versionsIncludeOrphaned);
+    if (!sort) return versions;
+    if (sort === 'ASC') {
+      return versions.sort(semver.compare);
+    }
+
+    return versions.sort(semver.compare).reverse();
+  }
+
+  async hasVersion(version: string, repo: Repository, includeOrphaned = true): Promise<boolean> {
+    if (isTag(version)) {
+      return includeOrphaned ? this.hasTagIncludeOrphaned(version) : this.hasTag(version);
+    }
     const allHashes = await getAllVersionHashes(this, repo, false);
     return allHashes.some((hash) => hash.toString() === version);
   }
 
   hasTag(version: string): boolean {
     return Boolean(this.versions[version]);
+  }
+
+  get versionsIncludeOrphaned(): Versions {
+    return { ...this.orphanedVersions, ...this.versions };
+  }
+
+  hasTagIncludeOrphaned(version: string): boolean {
+    return Boolean(this.versions[version] || this.orphanedVersions[version]);
   }
 
   /**
@@ -206,6 +244,8 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
+      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
 
@@ -338,7 +378,10 @@ export default class Component extends BitObject {
     return versionsInfo.map((versionInfo) => {
       const log = versionInfo.version ? versionInfo.version.log : { message: '<no-data-available>' };
       return {
-        ...log,
+        ...log, // @ts-ignore
+        username: log?.username || 'unknown',
+        // @ts-ignore
+        email: log?.email || 'unknown',
         tag: versionInfo.tag,
         hash: versionInfo.ref.toString(),
       };
@@ -354,12 +397,15 @@ export default class Component extends BitObject {
     );
   }
 
-  getTagOfRefIfExists(ref: Ref): string | undefined {
-    return Object.keys(this.versions).find((versionRef) => this.versions[versionRef].isEqual(ref));
+  getTagOfRefIfExists(ref: Ref, allTags = this.versionsIncludeOrphaned): string | undefined {
+    return Object.keys(allTags).find((versionRef) => allTags[versionRef].isEqual(ref));
   }
 
   switchHashesWithTagsIfExist(refs: Ref[]): string[] {
-    return refs.map((ref) => this.getTagOfRefIfExists(ref) || ref.toString());
+    // cache the this.versionsIncludeOrphaned results into "allTags", looks strange but it improved
+    // the performance on bit-bin with 188 components during source.merge in 4 seconds.
+    const allTags = this.versionsIncludeOrphaned;
+    return refs.map((ref) => this.getTagOfRefIfExists(ref, allTags) || ref.toString());
   }
 
   /**
@@ -373,6 +419,35 @@ export default class Component extends BitObject {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
     return exactVersion || this.version(releaseType);
+  }
+
+  isEqual(component: Component, considerOrphanedVersions = true): boolean {
+    if ((this.hasHead() && !component.hasHead()) || (!this.hasHead() && component.hasHead())) {
+      return false; // only one of them has head
+    }
+    if (this.head && component.head && !this.head.isEqual(component.head)) {
+      return false; // the head is not equal.
+    }
+    // the head is equal or they both don't have head. check the versions
+    if (this.versionArray.length !== component.versionArray.length) {
+      return false;
+    }
+    const hasSameVersions = Object.keys(this.versions).every(
+      (tag) => component.versions[tag] && component.versions[tag].isEqual(this.versions[tag])
+    );
+    if (considerOrphanedVersions) {
+      if (Object.keys(this.orphanedVersions).length !== Object.keys(component.orphanedVersions).length) {
+        return false;
+      }
+      const hasSameOrphanedVersions = Object.keys(this.orphanedVersions).every(
+        (tag) => component.orphanedVersions[tag] && component.orphanedVersions[tag].isEqual(this.orphanedVersions[tag])
+      );
+      if (!hasSameOrphanedVersions) {
+        return false;
+      }
+    }
+
+    return hasSameVersions;
   }
 
   getSnapToAdd() {
@@ -414,7 +489,7 @@ export default class Component extends BitObject {
     }
     if (!version.isLegacy) this.setHead(version.hash());
     if (isTag(versionToAdd)) {
-      this.versions[versionToAdd] = version.hash();
+      this.setVersion(versionToAdd, version.hash());
     }
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
@@ -466,6 +541,8 @@ export default class Component extends BitObject {
     if (this.local) componentObject.local = this.local;
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     if (!isEmpty(this.state)) componentObject.state = this.state;
+    // @ts-ignore
+    if (!isEmpty(this.orphanedVersions)) componentObject.orphanedVersions = versions(this.orphanedVersions);
     const headStr = this.getHeadStr();
     // @ts-ignore
     if (headStr) componentObject.head = headStr;
@@ -473,16 +550,17 @@ export default class Component extends BitObject {
     return componentObject;
   }
 
-  async loadVersion(version: string, repository: Repository): Promise<Version> {
-    const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-    return versionRef.load(repository);
+  async loadVersion(versionStr: string, repository: Repository, throws = true): Promise<Version> {
+    const versionRef = this.getRef(versionStr);
+    if (!versionRef) throw new VersionNotFound(versionStr, this.id());
+    const version = await versionRef.load(repository);
+    if (!version && throws) throw new VersionNotFound(versionStr, this.id(), true);
+    return version as Version;
   }
 
   loadVersionSync(version: string, repository: Repository, throws = true): Version {
     const versionRef = this.getRef(version);
-    if (!versionRef) throw new VersionNotFound(version);
+    if (!versionRef) throw new VersionNotFound(version, this.id());
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     return versionRef.loadSync(repository, throws);
   }
@@ -501,7 +579,15 @@ export default class Component extends BitObject {
       return refsCollection;
     };
     const refs = await collectRefs();
-    return Promise.all(refs.map(async (ref) => ({ ref, buffer: await ref.loadRaw(repo) })));
+    try {
+      return await repo.loadManyRaw(refs);
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        throw new Error(`unable to find an object file "${err.path}"
+for a component "${this.id()}", versions: ${versions.join(', ')}`);
+      }
+      throw err;
+    }
   }
 
   async collectObjects(repo: Repository): Promise<ComponentObjects> {
@@ -532,13 +618,21 @@ export default class Component extends BitObject {
     return objectRef || Ref.from(version);
   }
 
-  toComponentVersion(versionStr: string): ComponentVersion {
+  toComponentVersion(versionStr: string | undefined): ComponentVersion {
     const versionParsed = versionParser(versionStr);
-    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersions());
+    const versionNum = versionParsed.latest ? this.latest() : versionParsed.resolve(this.listVersionsIncludeOrphaned());
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (isTag(versionNum) && !this.hasTag(versionNum!)) {
+    if (versionNum === VERSION_ZERO) {
+      throw new Error(`the component ${this.id()} has no versions and the head is empty.
+this is probably a component from another lane which should not be loaded in this lane.
+make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    if (isTag(versionNum) && !this.hasTagIncludeOrphaned(versionNum!)) {
       throw new ShowDoctorError(
-        `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
+        `the version ${versionNum} of "${this.id()}" does not exist in ${this.listVersionsIncludeOrphaned().join(
+          '\n'
+        )}, versions array.`
       );
     }
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -565,7 +659,10 @@ export default class Component extends BitObject {
     const loadFileInstance = (ClassName) => async (file) => {
       const loadP = file.file.load(repository);
       const content: Source = await loadP;
-      if (!content) throw new ShowDoctorError(`failed loading file ${file.relativePath} from the model`);
+      if (!content)
+        throw new ShowDoctorError(
+          `failed loading file ${file.relativePath} from the model of ${this.id()}@${versionStr}`
+        );
       return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
@@ -610,7 +707,6 @@ export default class Component extends BitObject {
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
-      flattenedDevDependencies: version.flattenedDevDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
@@ -634,6 +730,7 @@ export default class Component extends BitObject {
       scopesList: clone(this.scopesList),
       schema: version.schema,
       extensions,
+      buildStatus: version.buildStatus,
     });
     if (manipulateDirData) {
       consumerComponent.stripOriginallySharedDir(manipulateDirData);
@@ -645,7 +742,7 @@ export default class Component extends BitObject {
 
   // @todo: make sure it doesn't have the same ref twice, once as a version and once as a head
   refs(): Ref[] {
-    const versions = Object.values(this.versions);
+    const versions = Object.values(this.versionsIncludeOrphaned);
     if (this.head) versions.push(this.head);
     return versions;
   }
@@ -699,15 +796,22 @@ export default class Component extends BitObject {
     return Object.keys(this.state.versions).filter((version) => this.state.versions[version].local);
   }
 
+  hasLocalTag(tag: string): boolean {
+    const localVersions = this.getLocalVersions();
+    return localVersions.includes(tag);
+  }
+
+  hasLocalVersion(version: string): boolean {
+    const localVersions = this.getLocalTagsOrHashes();
+    return localVersions.includes(version);
+  }
+
   getLocalTagsOrHashes(): string[] {
     const localVersions = this.getLocalVersions();
     if (!this.divergeData) return localVersions;
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
-    // @todo: this doesn't make sense when creating a new lane locally.
-    // the laneHeadRemote is not set. it needs to be compare to the head
-    if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
@@ -723,6 +827,8 @@ export default class Component extends BitObject {
     if (this.local) return true; // backward compatibility for components created before 0.12.6
     const localVersions = this.getLocalVersions();
     if (localVersions.length) return true;
+    // @todo: why this is needed? on master, the localVersion must be populated if changed locally
+    // regardless the laneHeadLocal/laneHeadRemote.
     if (this.laneHeadLocal && !this.laneHeadRemote) return true;
     return false;
   }
@@ -738,6 +844,7 @@ export default class Component extends BitObject {
       bindingPrefix: rawComponent.bindingPrefix,
       local: rawComponent.local,
       state: rawComponent.state,
+      orphanedVersions: mapObject(rawComponent.orphanedVersions || {}, (val) => Ref.from(val)),
       scopesList: rawComponent.remotes,
       head: rawComponent.head ? Ref.from(rawComponent.head) : undefined,
     });
@@ -770,5 +877,12 @@ export default class Component extends BitObject {
     if (hashDuplications.length) {
       throw new ValidationError(`${message}, the following hash(es) are duplicated ${hashDuplications.join(', ')}`);
     }
+    Object.keys(this.orphanedVersions).forEach((version) => {
+      if (this.versions[version]) {
+        throw new ValidationError(
+          `${message}, the version "${version}" exists in orphanedVersions but it exits also in "versions" prop`
+        );
+      }
+    });
   }
 }

@@ -2,63 +2,87 @@
  * Please Notice: This file will run in the preview iframe.
  */
 
-// TODO: Use log aspect - currently do not work with the legacy log.
-// TODO: Decide and configure a consistent this alias.
-/* eslint-disable @typescript-eslint/no-this-alias */
-
 import { PreviewRuntime } from '@teambit/preview';
+import { isBrowser } from '@teambit/ui.is-browser';
 
-import { connectToParent } from 'penpal';
+import { EventEmitter2 } from 'eventemitter2';
+import { connectToParent, ErrorCode } from 'penpal';
 
 import { BitBaseEvent } from './bit-base-event';
+import { PubSubNoParentError } from './no-parent-error';
 import { PubsubAspect } from './pubsub.aspect';
+import { Callback } from './types';
+
+type ParentMethods = {
+  pub: (topic: string, event: BitBaseEvent<any>) => Promise<any>;
+};
 
 export class PubsubPreview {
-  private _parentPubsub;
+  private _parentPubsub?: ParentMethods;
+  private events = new EventEmitter2();
 
-  public async updateParentPubsub() {
-    return connectToParent({ timeout: 300 })
-      .promise.then((parentPubsub) => {
-        this._parentPubsub = parentPubsub;
-      })
-      .catch(() => {
-        return this.updateParentPubsub();
-      });
+  public sub(topic: string, callback: Callback) {
+    const emitter = this.events;
+    emitter.on(topic, callback);
+
+    const unSub = () => {
+      emitter.off(topic, callback);
+    };
+    return unSub;
   }
 
-  // TODO[uri]: need to run on every possibility of adding new IFrames
-  // TODO[uri]: Role back to 'focus' event?
-  public async updateParentPubsubWithRetry() {
-    window.addEventListener('load', () => {
-      this.init();
+  public pub(topic: string, event: BitBaseEvent<any>) {
+    this.events.emit(topic, event);
+    this._parentPubsub?.pub(topic, event).catch((err) => {
+      // eslint-disable-next-line no-console
+      console.error('[Pubsub.preview]', err);
     });
   }
 
-  public init() {
-    const _this = this;
-    // Making sure parent call connect-to-child before the child call connect-to-parent
-    setTimeout(() => {
-      _this.updateParentPubsub();
-    }, 0);
-  }
-
-  public sub(topicUUID, callback) {
-    if (this._parentPubsub) {
-      this._parentPubsub.sub(topicUUID, callback);
+  private inIframe() {
+    try {
+      return isBrowser && window.self !== window.top;
+    } catch (e) {
+      return false;
     }
   }
 
-  public pub(topicUUID, event: BitBaseEvent<any>) {
-    if (this._parentPubsub) {
-      this._parentPubsub.pub(topicUUID, event);
-    }
-  }
+  private connectToParentPubSub = (retries = 10): Promise<ParentMethods | undefined> => {
+    if (retries <= 0) throw new PubSubNoParentError();
+
+    return connectToParent<ParentMethods>({
+      timeout: 300,
+      methods: {
+        pub: this.handleMessageFromParent,
+      },
+    })
+      .promise.then((parentPubsub) => (this._parentPubsub = parentPubsub))
+      .catch((e: any) => {
+        if (e.code !== ErrorCode.ConnectionTimeout) throw e;
+
+        return this.connectToParentPubSub(retries - 1);
+      });
+  };
+
+  private handleMessageFromParent = (topic: string, message: BitBaseEvent<any>) => {
+    this.events.emit(topic, message);
+  };
 
   static runtime = PreviewRuntime;
 
-  static async provider() {
+  static async provider(): Promise<PubsubPreview> {
     const pubsubPreview = new PubsubPreview();
-    await pubsubPreview.updateParentPubsubWithRetry();
+
+    if (pubsubPreview.inIframe()) {
+      pubsubPreview.connectToParentPubSub().catch((err) => {
+        // parent window is not required to accept connections
+        if (err instanceof PubSubNoParentError) return;
+
+        // eslint-disable-next-line no-console
+        console.error('[Pubsub.preview]', err);
+      });
+    }
+
     return pubsubPreview;
   }
 }

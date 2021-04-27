@@ -12,7 +12,7 @@ module.exports = {
   },
   parserOptions: {
     project: require.resolve('./tsconfig.json'),
-    createDefaultProgram: true,
+    // createDefaultProgram: true,
     ecmaFeatures: {
       jsx: true, // Allows for the parsing of JSX
     },
@@ -45,6 +45,8 @@ module.exports = {
       'error',
       { functions: false, classes: true, variables: true, typedefs: true },
     ],
+    '@typescript-eslint/return-await': 'error',
+    '@typescript-eslint/no-misused-promises': 'error',
     '@typescript-eslint/no-floating-promises': 'error',
     '@typescript-eslint/explicit-module-boundary-types': 'off',
     '@typescript-eslint/ban-ts-comment': 'off',

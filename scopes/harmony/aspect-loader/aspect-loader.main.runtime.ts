@@ -266,6 +266,7 @@ export class AspectLoaderMain {
         }
         const error = errAfterReLoad || e;
         if (throwOnError) {
+          this.logger.console(error);
           throw new CannotLoadExtension(idStr, error);
         }
         if (this.logger.isLoaderStarted) {
@@ -292,7 +293,7 @@ export class AspectLoaderMain {
     return manifests.map((manifest: any) => {
       if (this.isAspect(manifest)) return manifest;
       manifest.runtime = MainRuntime;
-      if (!manifest.id) throw new Error();
+      if (!manifest.id) throw new Error('manifest must have static id');
       const aspect = Aspect.create({
         id: manifest.id,
       });
@@ -309,7 +310,8 @@ export class AspectLoaderMain {
         if (!isValid) this.logger.warn(`${manifest.id} is invalid. please make sure the extension is valid.`);
         return isValid;
       });
-      await this.harmony.load(this.prepareManifests(manifests));
+      const preparedManifests = this.prepareManifests(manifests);
+      await this.harmony.load(preparedManifests);
     } catch (e) {
       const ids = extensionsManifests.map((manifest) => manifest.id || 'unknown');
       // TODO: improve texts
@@ -319,6 +321,7 @@ export class AspectLoaderMain {
         this.logger.consoleFailure(warning);
       } else {
         this.logger.console(warning);
+        this.logger.console(e);
       }
       if (throwOnError) {
         throw e;

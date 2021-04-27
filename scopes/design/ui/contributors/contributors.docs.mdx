@@ -1,0 +1,40 @@
+---
+labels: ['react', 'typescript', 'contributor', 'avatar', 'contributors']
+description: 'contributors component'
+---
+
+import { Contributors } from './index';
+
+### Overview
+
+Component for displaying contributors in Bit, as follows:
+
+1. One contributor - displays just that contributor plus contribution message
+2. Two contributors - displays two icons, then both names, then contribution message
+3. Three or more contributors - displays all icons, then name of first contributor, then "and x others", then contribution message
+
+Contributors example: Remove items from the data to see how 1 and 2 contributors looks:
+
+```js live
+() => {
+  const contributors = [
+    {
+      name: 'Should Not Appear',
+      accountType: 'user',
+      displayName: 'shouldDisplayThis',
+      profileImage: 'https://static.bit.dev/harmony/support.svg',
+    },
+    {
+      name: 'Mark Mock No DisplayName',
+      accountType: 'user',
+      profileImage: 'https://static.bit.dev/harmony/github.svg',
+    },
+    {
+      name: "Three's a crowd",
+      accountType: 'user',
+    },
+  ];
+  const timestamp = 'Thu Dec 24 2020 20:53:10 GMT+0200 (Israel Standard Time)';
+  return <Contributors contributors={contributors} timestamp={timestamp} />;
+};
+```

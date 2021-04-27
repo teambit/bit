@@ -31,6 +31,7 @@ import { Lane } from '../../../scope/models';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { LanesIsDisabled } from '../../../consumer/lanes/exceptions/lanes-is-disabled';
+import { Scope } from '../../../scope';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -41,18 +42,22 @@ export function registerDefaultScopeGetter(func: DefaultScopeGetter) {
   getDefaultScope = func;
 }
 
-export default (async function exportAction(params: {
+type ExportParams = {
   ids: string[];
   remote: string | null | undefined;
   eject: boolean;
   includeDependencies: boolean;
   setCurrentScope: boolean;
   allVersions: boolean;
+  originDirectly: boolean;
   includeNonStaged: boolean;
   codemod: boolean;
   force: boolean;
   lanes: boolean;
-}) {
+  resumeExportId: string | undefined;
+};
+
+export default async function exportAction(params: ExportParams) {
   HooksManagerInstance.triggerHook(PRE_EXPORT_HOOK, params);
   const { updatedIds, nonExistOnBitMap, missingScope, exported, exportedLanes } = await exportComponents(params);
   let ejectResults;
@@ -65,8 +70,13 @@ export default (async function exportAction(params: {
     exportedLanes,
   };
   HooksManagerInstance.triggerHook(POST_EXPORT_HOOK, exportResults);
+  if (Scope.onPostExport) {
+    await Scope.onPostExport(exported, exportedLanes).catch((err) => {
+      logger.error('fatal: onPostExport encountered an error (this error does not stop the process)', err);
+    });
+  }
   return exportResults;
-});
+}
 
 async function exportComponents({
   ids,
@@ -78,17 +88,9 @@ async function exportComponents({
   force,
   lanes,
   allVersions,
-}: {
-  ids: string[];
-  remote: string | null | undefined;
-  includeDependencies: boolean;
-  setCurrentScope: boolean;
-  includeNonStaged: boolean;
-  codemod: boolean;
-  allVersions: boolean;
-  force: boolean;
-  lanes: boolean;
-}): Promise<{
+  originDirectly,
+  resumeExportId,
+}: ExportParams): Promise<{
   updatedIds: BitId[];
   nonExistOnBitMap: BitId[];
   missingScope: BitId[];
@@ -98,6 +100,11 @@ async function exportComponents({
 }> {
   const consumer: Consumer = await loadConsumer();
   if (consumer.isLegacy && lanes) throw new LanesIsDisabled();
+  if (!consumer.isLegacy && !lanes && remote) {
+    // on Harmony, we don't allow to specify a remote (except lanes), it exports to the default-scope
+    ids.push(remote);
+    remote = null;
+  }
   const { idsToExport, missingScope, idsWithFutureScope, lanesObjects } = await getComponentsToExport(
     ids,
     consumer,
@@ -127,7 +134,9 @@ async function exportComponents({
     codemod,
     lanesObjects,
     allVersions,
+    originDirectly,
     idsWithFutureScope,
+    resumeExportId,
   });
   if (lanesObjects) await updateLanesAfterExport(consumer, lanesObjects);
   const { updatedIds, nonExistOnBitMap } = _updateIdsOnBitMap(consumer.bitMap, updatedLocally);

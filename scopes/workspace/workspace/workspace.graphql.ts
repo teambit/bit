@@ -33,6 +33,9 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
 
         # does the component exists in the scope.
         isInScope: Boolean
+
+        # does the component is outdated (pending for update).
+        isOutdated: Boolean
       }
 
       extend type Component {

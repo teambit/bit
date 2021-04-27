@@ -6,7 +6,7 @@ import rightpad from 'pad-right';
 import * as path from 'path';
 import tar from 'tar';
 
-import { ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
+import { BUILD_ON_CI, ENV_VAR_FEATURE_TOGGLE } from '../api/consumer/lib/feature-toggle';
 import { NOTHING_TO_TAG_MSG } from '../api/consumer/lib/tag';
 import { NOTHING_TO_SNAP_MSG } from '../cli/commands/public-cmds/snap-cmd';
 import { CURRENT_UPSTREAM, LANE_REMOTE_DELIMITER } from '../constants';
@@ -88,9 +88,9 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
-  catScope(includeExtraData = false) {
+  catScope(includeExtraData = false, cwd = this.scopes.localPath) {
     const extraData = includeExtraData ? '--json-extra' : '';
-    const result = this.runCmd(`bit cat-scope --json ${extraData}`);
+    const result = this.runCmd(`bit cat-scope --json ${extraData}`, cwd);
     return JSON.parse(result);
   }
 
@@ -117,6 +117,12 @@ export default class CommandHelper {
             .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
+  sign(ids: string[], flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit sign ${ids.join(' ')} ${flags}`, cwd);
+  }
+  updateDependencies(data: Record<string, any>, flags = '', cwd = this.scopes.localPath) {
+    return this.runCmd(`bit update-dependencies '${JSON.stringify(data)}' ${flags}`, cwd);
+  }
   getConfig(configName: string) {
     return this.runCmd(`bit config get ${configName}`);
   }
@@ -139,14 +145,24 @@ export default class CommandHelper {
     return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg = 'tag-message', options = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --persist`);
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options} --build`);
   }
   tagWithoutMessage(id: string, version = '', options = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options} --persist`);
+    return this.runCmd(`bit tag ${id} ${version} ${options} --build`);
   }
   tagAllComponents(options = '', version = '', assertTagged = true) {
-    const result = this.runCmd(`bit tag -a ${version} ${options} --persist`);
+    const result = this.runCmd(`bit tag -a ${version} ${options} --build`);
     if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  tagAllWithoutBuild(options = '') {
+    const result = this.runCmd(`bit tag -a ${options}`, undefined, undefined, BUILD_ON_CI);
+    expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  tagWithoutBuild(id: string, options = '') {
+    const result = this.runCmd(`bit tag ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
+    expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
     return result;
   }
   rewireAndTagAllComponents(options = '', version = '', assertTagged = true) {
@@ -154,31 +170,38 @@ export default class CommandHelper {
     return this.tagAllComponents(options, version, assertTagged);
   }
   tagScope(version: string, message = 'tag-message', options = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --persist`);
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options} --build`);
+  }
+  tagScopeWithoutBuild(version = '', options = '') {
+    return this.runCmd(`bit tag -s ${version} ${options}`, undefined, undefined, BUILD_ON_CI);
   }
   softTag(options = '') {
-    return this.runCmd(`bit tag ${options}`);
+    return this.runCmd(`bit tag --soft ${options}`);
   }
-  tagAndPersistAllHarmony(options = '', version = '', assertTagged = true) {
-    let result = this.runCmd(`bit tag -a ${version} ${options}`);
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    result = this.runCmd('bit tag --persist');
-    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
-    return result;
-  }
-  hardTag(options = '') {
+  persistTag(options = '') {
     return this.runCmd(`bit tag --persist ${options}`);
   }
   snapComponent(id: string, tagMsg = 'snap-message', options = '') {
     return this.runCmd(`bit snap ${id} -m ${tagMsg} ${options}`);
+  }
+  snapComponentWithoutBuild(id: string, options = '') {
+    return this.runCmd(`bit snap ${id} ${options}`, undefined, undefined, BUILD_ON_CI);
   }
   snapAllComponents(options = '', assertSnapped = true) {
     const result = this.runCmd(`bit snap -a ${options} `);
     if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
     return result;
   }
+  snapAllComponentsWithoutBuild(options = '', assertSnapped = true) {
+    const result = this.runCmd(`bit snap -a ${options} `, undefined, undefined, BUILD_ON_CI);
+    if (assertSnapped) expect(result).to.not.have.string(NOTHING_TO_SNAP_MSG);
+    return result;
+  }
   createLane(laneName = 'dev') {
     return this.runCmd(`bit switch ${laneName} --create`);
+  }
+  clearCache() {
+    return this.runCmd('bit clear-cache');
   }
   removeLane(laneName = 'dev', options = '') {
     return this.runCmd(`bit remove ${laneName} ${options} --lane --silent`);
@@ -206,8 +229,8 @@ export default class CommandHelper {
     const parsed = JSON.parse(results);
     return parsed.lanes[0];
   }
-  getHead(id: string) {
-    const comp = this.catComponent(id);
+  getHead(id: string, cwd?: string) {
+    const comp = this.catComponent(id, cwd);
     return comp.head;
   }
   getHeadOfLane(laneName: string, componentName: string) {
@@ -224,10 +247,10 @@ export default class CommandHelper {
     return artifacts;
   }
   untag(id: string) {
-    return this.runCmd(`bit untag ${id} --persisted`);
+    return this.runCmd(`bit untag ${id}`);
   }
   untagSoft(id: string) {
-    return this.runCmd(`bit untag ${id}`);
+    return this.runCmd(`bit untag ${id} --soft`);
   }
   exportComponent(id: string, scope: string = this.scopes.remote, assert = true, flags = '') {
     const result = this.runCmd(`bit export ${scope} ${id} ${flags}`);
@@ -245,13 +268,18 @@ export default class CommandHelper {
   exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --rewire --force`);
   }
+  exportToDefaultAndRewire() {
+    return this.runCmd(`bit export --rewire --force`);
+  }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  export(options? = '') {
+  export(options = '') {
     // --force just silents the prompt, which obviously needed for CIs
-    return this.runCmd(`bit export --force ${options}`);
+    return this.runCmd(`bit export ${options} --force`);
+  }
+  resumeExport(exportId: string, remotes: string[]) {
+    return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);
   }
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
@@ -264,6 +292,9 @@ export default class CommandHelper {
   }
   importComponent(id: string) {
     return this.runCmd(`bit import ${this.scopes.remote}/${id}`);
+  }
+  import(value = '') {
+    return this.runCmd(`bit import ${value}`);
   }
   fetchLane(id: string) {
     return this.runCmd(`bit fetch ${id} --lanes`);
@@ -395,6 +426,12 @@ export default class CommandHelper {
     return JSON.parse(output);
   }
 
+  getComponentFiles(id: string): string[] {
+    const output = this.runCmd(`bit show ${id} --json`);
+    const comp = JSON.parse(output);
+    return comp.find((c) => c.title === 'files').json;
+  }
+
   showComponentWithOptions(id = 'bar/foo', options: Record<string, any>) {
     const value = Object.keys(options)
       .map((key) => `-${key} ${options[key]}`)
@@ -442,8 +479,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(name: string) {
-    return this.runCmd(`bit create ${name}`);
+  create(templateName: string, componentName: string, flags = '') {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);
@@ -561,6 +598,10 @@ export default class CommandHelper {
       })
       .join(' ');
     return value;
+  }
+
+  init(options = '') {
+    return this.runCmd(`bit init ${options}`);
   }
 
   async runInteractiveCmd({

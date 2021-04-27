@@ -13,4 +13,10 @@
   &.staged {
     color: #0d2de3;
   }
+  &.dependency {
+    color: #0d2de3; //TODO - check if we want to give this a different color
+  }
+  &.updates {
+    color: #0d2de3; //TODO - check if we want to give this a different color
+  }
 }

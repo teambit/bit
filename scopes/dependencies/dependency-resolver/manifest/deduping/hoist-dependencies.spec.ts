@@ -177,9 +177,11 @@ describe('hoistDependencies', () => {
         );
       });
     });
-    describe('item is peer dependency', () => {
+    describe('item is peer dependency with one version only', () => {
       const dependencyName = 'package-dependency';
       const dependencyVersion = '1.0.0';
+      const depKeyName = KEY_NAME_BY_LIFECYCLE_TYPE[PEER_DEP_LIFECYCLE_TYPE];
+
       beforeEach(() => {
         index = new Map();
         const item: PackageNameIndexComponentItem = {
@@ -194,7 +196,9 @@ describe('hoistDependencies', () => {
         expectAllComponentsDependenciesMapToBeEmpty(dedupedDependencies);
       });
       it('should not hoist the dependency to the root', () => {
-        expectRootToNotHaveDependency(dedupedDependencies, dependencyName);
+        // Behavior was changed to hoist peers as well in case they are appear only with one version
+        // expectRootToNotHaveDependency(dedupedDependencies, dependencyName);
+        expectRootToHave(dedupedDependencies, depKeyName, dependencyName, '1.0.0');
       });
     });
   });

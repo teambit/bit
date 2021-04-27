@@ -353,9 +353,8 @@ describe('bit checkout command', function () {
 
       helper.command.checkoutVersion('0.0.1', 'bar/foo');
     });
-    it('should not delete the new files', () => {
-      // because the author may still need them
-      expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.be.a.file();
+    it('should delete the new files', () => {
+      expect(path.join(helper.scopes.localPath, 'bar/foo2.js')).to.not.be.a.path();
     });
     it('should update bitmap to not track the new files', () => {
       const bitMap = helper.bitMap.read();
@@ -720,7 +719,7 @@ describe('bit checkout command', function () {
           expect(bitMap).to.not.have.property('bar/foo2@0.0.1');
         });
         it('should show a failure message when trying to checkout again to the latest versions', () => {
-          output = helper.command.checkout('latest --all');
+          output = helper.command.checkout('latest --all --verbose');
           expect(output).to.have.string('component bar/foo2 is already at the latest version, which is 0.0.3');
           expect(output).to.have.string('component bar/foo is already at the latest version, which is 0.0.2');
         });

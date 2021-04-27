@@ -25,9 +25,9 @@ import { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
 export const componentOverridesForbiddenFields = [...overridesForbiddenFields, ...overridesBitInternalFields];
 
 export type DependenciesOverridesData = {
-  dependencies?: Record<string, any>;
-  devDependencies?: Record<string, any>;
-  peerDependencies?: Record<string, any>;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  peerDependencies?: Record<string, string>;
 };
 
 export type ComponentOverridesData = DependenciesOverridesData & {
@@ -173,46 +173,12 @@ export default class ComponentOverrides {
       .filter((rule) => rule.startsWith(OVERRIDE_FILE_PREFIX))
       .map((rule) => rule.replace(OVERRIDE_FILE_PREFIX, ''));
   }
-  getIgnoredComponents(field: string): string[] {
-    const ignoredRules = this.getIgnored(field);
-    return R.flatten(
-      ignoredRules
-        .filter((rule) => rule.startsWith(OVERRIDE_COMPONENT_PREFIX))
-        .map((rule) => rule.replace(OVERRIDE_COMPONENT_PREFIX, ''))
-        .map((idStr) => [idStr, ...this._getComponentNamesFromPackages(idStr)])
-    );
-  }
 
-  // TODO: This strategy should be stopped using since harmony, because a package name
-  // TODO: might be completely different than a component id
-  // TODO: instead we should go to the package.json and check the component name there
-  // TODO: Like we do in resolvePackageData()
-  // TODO: or use some index that store it (doesn't exist at the moment)
-  /**
-   * it is possible that a user added the component into the overrides as a package.
-   * e.g. `@bit/david.utils.is-string` instead of `@bit/david.utils/is-string`
-   * or, if not using bit.dev, `@bit/utils.is-string` instead of `@bit/utils/is-string`
-   */
-  _getComponentNamesFromPackages(idStr: string): string[] {
-    const idSplitByDot = idStr.split('.');
-    const numberOfDots = idSplitByDot.length - 1;
-    if (numberOfDots === 0) return []; // nothing to do. it wasn't entered as a package
-    const localScopeComponent = idSplitByDot.join('/'); // convert all dots to slashes
-    if (numberOfDots === 1) {
-      // it can't be from bit.dev, it must be locally
-      return [localScopeComponent];
-    }
-    // there are two dots or more. it can be from bit.dev and it can be locally
-    // for a remoteScopeComponent, leave the first dot and convert only the rest to a slash
-    const remoteScopeComponent = `${R.head(idSplitByDot)}.${R.tail(idSplitByDot).join('/')}`;
-    return [localScopeComponent, remoteScopeComponent];
-  }
   getIgnoredPackages(field: string): string[] {
     const ignoredRules = this.getIgnored(field);
-    return ignoredRules.filter(
-      (rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX) && !rule.startsWith(OVERRIDE_COMPONENT_PREFIX)
-    );
+    return ignoredRules.filter((rule) => !rule.startsWith(OVERRIDE_FILE_PREFIX));
   }
+
   stripOriginallySharedDir(sharedDir: string | null | undefined) {
     if (!sharedDir) return;
     DEPENDENCIES_FIELDS.forEach((field) => {

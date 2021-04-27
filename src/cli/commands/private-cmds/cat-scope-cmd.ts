@@ -8,6 +8,7 @@ export default class CatScope implements LegacyCommand {
   name = 'cat-scope [scopePath]';
   description = 'cat a scope and show all the contents';
   private = true;
+  loader = false;
   alias = '';
   opts = [
     ['f', 'full', 'show all of the objects in the scope'],

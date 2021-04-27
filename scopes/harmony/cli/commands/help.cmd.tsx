@@ -1,18 +1,20 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Command } from 'bit-bin/dist/cli/command';
 import { Box, render, Text } from 'ink';
 import React from 'react';
+import { CommandList } from '../cli.main.runtime';
+import { getCommandId } from '../get-command-id';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function Help(Renderer = DefaultHelpRender) {
-  return function getHelpProps(commands: { [k: string]: Command }, groups: { [k: string]: string }) {
-    const help: HelpProps = Object.entries(commands)
-      .filter(([, command]) => !command.private && (command.shortDescription || command.description))
-      .reduce(function (partialHelp, [id, command]) {
+  return function getHelpProps(commands: CommandList, groups: { [k: string]: string }) {
+    const help: HelpProps = commands
+      .filter((command) => !command.private && (command.shortDescription || command.description))
+      .reduce(function (partialHelp, command) {
         partialHelp[command.group!] = partialHelp[command.group!] || {
           commands: {},
           description: groups[command.group!] || command.group,
         };
-        partialHelp[command.group!].commands[id] = command.shortDescription || command.description;
+        const cmdId = getCommandId(command.name);
+        partialHelp[command.group!].commands[cmdId] = command.shortDescription || command.description;
         return partialHelp;
       }, {});
     return render(<Renderer {...help} />);
@@ -66,7 +68,8 @@ function HelpHeader() {
 }
 
 function HelpFooter() {
-  const footer = `please use 'bit <command> --help' for more information and guides on specific commands.`;
+  const footer = `please use 'bit <command> --help' for more information and guides on specific commands.
+`;
   return (
     <Box>
       <Text color="grey">{footer}</Text>

@@ -1,0 +1,28 @@
+.codeTabTree {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.codeTabDrawer {
+  > div:first-child {
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+  }
+  > div:last-child {
+    border-bottom: 1px solid var(--border-color);
+  }
+}
+
+.drawerIcon {
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.label {
+  font-size: 10px;
+  font-weight: unset;
+  padding: 4px;
+}

@@ -1,4 +1,11 @@
-import { PreviewAspect, PreviewPreview, PreviewRuntime, PreviewModule, ModuleFile } from '@teambit/preview';
+import {
+  PreviewAspect,
+  PreviewPreview,
+  RenderingContext,
+  PreviewRuntime,
+  PreviewModule,
+  ModuleFile,
+} from '@teambit/preview';
 import head from 'lodash.head';
 
 import { CompositionsAspect } from './compositions.aspect';
@@ -11,13 +18,13 @@ export class CompositionsPreview {
     private preview: PreviewPreview
   ) {}
 
-  render(componentId: string, modules: PreviewModule) {
+  render(componentId: string, modules: PreviewModule, otherPreviewDefs, context: RenderingContext) {
     if (!modules.componentMap[componentId]) return;
 
     const compositions = this.selectPreviewModel(componentId, modules);
     const active = this.getActiveComposition(compositions);
 
-    modules.mainModule.default(active);
+    modules.mainModule.default(active, context);
   }
 
   /** gets relevant information for this preview to render */

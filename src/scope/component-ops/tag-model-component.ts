@@ -1,14 +1,13 @@
 import mapSeries from 'p-map-series';
 import R from 'ramda';
-import * as RA from 'ramda-adjunct';
+import { isNilOrEmpty, compact } from 'ramda-adjunct';
 import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
-
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import loader from '../../cli/loader';
-import { CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS } from '../../constants';
+import { BuildStatus, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import { CURRENT_SCHEMA } from '../../consumer/component/component-schema';
 import Component from '../../consumer/component/consumer-component';
 import Consumer from '../../consumer/consumer';
@@ -21,7 +20,7 @@ import { PathLinux } from '../../utils/path';
 import { AutoTagResult, getAutoTagInfo } from './auto-tag';
 import { FlattenedDependenciesGetter } from './get-flattened-dependencies';
 import { getValidVersionOrReleaseType } from '../../utils/semver-helper';
-import { OnTagResult } from '../scope';
+import { LegacyOnTagResult } from '../scope';
 import { Log } from '../models/version';
 import { BasicTagParams } from '../../api/consumer/lib/tag';
 
@@ -78,15 +77,16 @@ async function setFutureVersions(
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
+      componentToTag.previouslyUsedVersion = componentToTag.version;
       if (nextVersion && persist) {
         const exactVersionOrReleaseType = getValidVersionOrReleaseType(nextVersion);
-        if (exactVersionOrReleaseType.exactVersion) exactVersion = exactVersionOrReleaseType.exactVersion;
-        if (exactVersionOrReleaseType.releaseType) releaseType = exactVersionOrReleaseType.releaseType;
+        componentToTag.version = modelComponent.getVersionToAdd(
+          exactVersionOrReleaseType.releaseType,
+          exactVersionOrReleaseType.exactVersion
+        );
+      } else {
+        componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       }
-      const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
-      // @ts-ignore usedVersion is needed only for this, that's why it's not declared on the instance
-      componentToTag.usedVersion = componentToTag.version;
-      componentToTag.version = version;
     })
   );
 }
@@ -170,10 +170,13 @@ export default async function tagModelComponent({
   skipTests = false,
   verbose = false,
   skipAutoTag,
+  soft,
+  build,
   persist,
   resolveUnmerged,
   isSnap = false,
   disableDeployPipeline,
+  forceDeploy,
 }: {
   consumerComponents: Component[];
   scope: Scope;
@@ -187,7 +190,6 @@ export default async function tagModelComponent({
   autoTaggedResults: AutoTagResult[];
   publishedPackages: string[];
 }> {
-  if (!persist) skipTests = true;
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
   // the same dependency more then once, it's mainly for performance purpose
@@ -228,7 +230,7 @@ export default async function tagModelComponent({
     });
     const newestVersions = await Promise.all(newestVersionsP);
     const newestVersionsWithoutEmpty = newestVersions.filter((newest) => newest);
-    if (!RA.isNilOrEmpty(newestVersionsWithoutEmpty)) {
+    if (!isNilOrEmpty(newestVersionsWithoutEmpty)) {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       throw new NewerVersionFound(newestVersionsWithoutEmpty);
     }
@@ -273,31 +275,31 @@ export default async function tagModelComponent({
 
   await addLogToComponents(componentsToTag, autoTagComponents, persist, message);
 
-  if (persist) {
+  if (soft) {
+    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
+  } else {
     if (!skipTests) addSpecsResultsToComponents(allComponentsToTag, testsResults);
     await addFlattenedDependenciesToComponents(consumer.scope, allComponentsToTag);
+    emptyBuilderData(allComponentsToTag);
+    addBuildStatus(consumer, allComponentsToTag, BuildStatus.Pending);
     await addComponentsToScope(consumer, allComponentsToTag, Boolean(resolveUnmerged));
     validateDirManipulation(allComponentsToTag);
     await consumer.updateComponentsVersions(allComponentsToTag);
-  } else {
-    consumer.updateNextVersionOnBitmap(allComponentsToTag, exactVersion, releaseType);
   }
 
   const publishedPackages: string[] = [];
-  if (!consumer.isLegacy && persist) {
-    const ids = allComponentsToTag.map((consumerComponent) => consumerComponent.id);
-
-    const results: Array<OnTagResult[]> = await mapSeries(scope.onTag, (func) => func(ids, { disableDeployPipeline }));
+  if (!consumer.isLegacy && build) {
+    const onTagOpts = { disableDeployPipeline, throwOnError: true, forceDeploy, skipTests };
+    const results: Array<LegacyOnTagResult[]> = await mapSeries(scope.onTag, (func) =>
+      func(allComponentsToTag, onTagOpts)
+    );
     results.forEach((tagResult) => updateComponentsByTagResult(allComponentsToTag, tagResult));
-    allComponentsToTag.forEach((comp) => {
-      const pkgExt = comp.extensions.findCoreExtension('teambit.pkg/pkg');
-      const publishedPackage = pkgExt?.data?.publishedPackage;
-      if (publishedPackage) publishedPackages.push(publishedPackage);
-    });
+    publishedPackages.push(...getPublishedPackages(allComponentsToTag));
+    addBuildStatus(consumer, allComponentsToTag, BuildStatus.Succeed);
     await mapSeries(allComponentsToTag, (consumerComponent) => scope.sources.enrichSource(consumerComponent));
   }
 
-  if (persist) {
+  if (!soft) {
     await scope.objects.persist();
   }
 
@@ -316,7 +318,14 @@ async function addComponentsToScope(consumer: Consumer, components: Component[],
   });
 }
 
-async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
+function emptyBuilderData(components: Component[]) {
+  components.forEach((component) => {
+    const existingBuilder = component.extensions.findCoreExtension(Extensions.builder);
+    if (existingBuilder) existingBuilder.data = {};
+  });
+}
+
+export async function addFlattenedDependenciesToComponents(scope: Scope, components: Component[]) {
   loader.start('importing missing dependencies...');
   const flattenedDependenciesGetter = new FlattenedDependenciesGetter(scope, components);
   await flattenedDependenciesGetter.populateFlattenedDependencies();
@@ -374,11 +383,29 @@ function setCurrentSchema(components: Component[], consumer: Consumer) {
  * by the last called function. when/if this happen, some kind of merge need to be done between the
  * results.
  */
-function updateComponentsByTagResult(components: Component[], tagResult: OnTagResult[]) {
+export function updateComponentsByTagResult(components: Component[], tagResult: LegacyOnTagResult[]) {
   tagResult.forEach((result) => {
     const matchingComponent = components.find((c) => c.id.isEqual(result.id));
     if (matchingComponent) {
-      matchingComponent.extensions = result.extensions;
+      const existingBuilder = matchingComponent.extensions.findCoreExtension(Extensions.builder);
+      if (existingBuilder) existingBuilder.data = result.builderData.data;
+      else matchingComponent.extensions.push(result.builderData);
     }
+  });
+}
+
+export function getPublishedPackages(components: Component[]): string[] {
+  const publishedPackages = components.map((comp) => {
+    const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
+    const pkgData = builderExt?.data?.aspectsData.find((a) => a.aspectId === Extensions.pkg);
+    return pkgData?.data?.publishedPackage;
+  });
+  return compact(publishedPackages);
+}
+
+function addBuildStatus(consumer: Consumer, components: Component[], buildStatus: BuildStatus) {
+  if (consumer.isLegacy) return;
+  components.forEach((component) => {
+    component.buildStatus = buildStatus;
   });
 }

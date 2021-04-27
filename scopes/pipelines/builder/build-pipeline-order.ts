@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { Graph } from 'cleargraph';
+import TesterAspect from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
 import { BuildTask, BuildTaskHelper } from './build-task';
 import type { TaskSlot } from './builder.main.runtime';
@@ -44,7 +45,9 @@ type DataPerLocation = { location: Location; graph: TaskDependenciesGraph; pipel
 export function calculatePipelineOrder(
   taskSlot: TaskSlot,
   envs: EnvDefinition[],
-  pipeNameOnEnv = 'getBuildPipe'
+  pipeNameOnEnv = 'getBuildPipe',
+  tasks: string[] = [],
+  skipTests = false
 ): TasksQueue {
   const graphs: TasksLocationGraph[] = [];
   const locations: Location[] = ['start', 'middle', 'end']; // the order is important here!
@@ -75,6 +78,14 @@ export function calculatePipelineOrder(
 
   const tasksQueue = new TasksQueue();
   locations.forEach((location) => addTasksToGraph(tasksQueue, dataPerLocation, location));
+  if (tasks.length) {
+    return new TasksQueue(
+      ...tasksQueue.filter(({ task }) => tasks.includes(task.name) || tasks.includes(task.aspectId))
+    );
+  }
+  if (skipTests) {
+    return new TasksQueue(...tasksQueue.filter(({ task }) => task.aspectId !== TesterAspect.id));
+  }
   return tasksQueue;
 }
 
@@ -82,8 +93,8 @@ function addTasksToGraph(tasksQueue: TasksQueue, dataPerLocation: DataPerLocatio
   const data = dataPerLocation.find((d) => d.location === location);
   if (!data) return;
   const sorted = data.graph.toposort();
-  sorted.forEach((taskId) => {
-    const { aspectId, name } = BuildTaskHelper.deserializeId(taskId);
+  sorted.forEach((taskNode) => {
+    const { aspectId, name } = BuildTaskHelper.deserializeId(taskNode.attr);
     data.pipelineEnvs.forEach(({ env, pipeline }) => {
       const taskIndex = pipeline.findIndex(
         (pipelineTask) => pipelineTask.aspectId === aspectId && pipelineTask.name === name

@@ -4,16 +4,20 @@ import { History, UnregisterCallback, LocationListener, LocationDescriptor, Acti
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import { RouteSlot } from '@teambit/ui.react-router.slot-router';
+import { isBrowser } from '@teambit/ui.is-browser';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
 import { Routing } from './routing-method';
 
 type RouteChangeSlot = SlotRegistry<LocationListener>;
+type RenderRoutesOptions = {
+  initialLocation?: string;
+};
 
 export class ReactRouterUI {
   private routerHistory?: History;
-  private routingMode = Routing.url;
+  private routingMode = isBrowser ? Routing.url : Routing.static;
 
   constructor(
     /**
@@ -29,9 +33,9 @@ export class ReactRouterUI {
   /**
    * render all slot routes.
    */
-  renderRoutes(routes: RouteProps[]): JSX.Element {
+  renderRoutes(routes: RouteProps[], options: RenderRoutesOptions = {}): JSX.Element {
     return (
-      <RouteContext reactRouterUi={this} routing={this.routingMode}>
+      <RouteContext reactRouterUi={this} routing={this.routingMode} location={options.initialLocation}>
         <RootRoute routeSlot={this.routeSlot} rootRoutes={routes}></RootRoute>
       </RouteContext>
     );

@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useDataQuery } from '@teambit/ui';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
 import { GraphQlError } from '@teambit/graphql';
 import { GET_GRAPH, RawGraphQuery } from './get-graph.query';
 import { GraphModel } from './graph-model';

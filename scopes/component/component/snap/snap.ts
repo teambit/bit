@@ -3,7 +3,7 @@ import { Author } from './author';
 export type SnapProps = {
   hash: string;
   timestamp: string;
-  parents: SnapProps[];
+  parents: string[];
   author: Author;
   message: string;
 };
@@ -26,7 +26,7 @@ export class Snap {
     /**
      * parent snap
      */
-    readonly parents: Snap[],
+    readonly parents: string[],
 
     /**
      * author of the component `Snap`.
@@ -45,7 +45,7 @@ export class Snap {
     return new Snap(
       snapObject.hash,
       new Date(parseInt(snapObject.timestamp)),
-      parents.map((props) => Snap.fromObject(props)),
+      parents,
       snapObject.author,
       snapObject.message
     );
@@ -57,7 +57,7 @@ export class Snap {
       hash: this.hash,
       author: this.author,
       message: this.message,
-      parents: this.parents.map((snap) => snap.toObject()),
+      parents: this.parents,
     };
   }
 }

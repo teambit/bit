@@ -56,7 +56,7 @@ export default class DependencyGraph {
    * @todo: refactor this to work with the newer method `buildGraphFromScope`.
    */
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  static async buildGraphWithAllVersions(scope: Scope): Graph {
+  static async buildGraphWithAllVersions(scope: Scope): Promise<Graph> {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
     const allComponents = await scope.list();
@@ -66,8 +66,8 @@ export default class DependencyGraph {
       allComponents.map(async (component) => {
         graph.setNode(component.id(), component);
         await Promise.all(
-          Object.keys(component.versions).map(async (version) => {
-            const componentVersion = await component.loadVersion(version, scope.objects);
+          Object.keys(component.versionsIncludeOrphaned).map(async (version) => {
+            const componentVersion = await component.loadVersion(version, scope.objects, false);
             if (!componentVersion) return;
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);
@@ -93,8 +93,8 @@ export default class DependencyGraph {
     const graph = new Graph();
     const allModelComponents: ModelComponent[] = await scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
-      const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
-        const version = await modelComponent.loadVersion(versionNum, scope.objects);
+      const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
+        const version = await modelComponent.loadVersion(versionNum, scope.objects, false);
         if (!version) {
           // a component might be in the scope with only the latest version
           return;
@@ -116,13 +116,13 @@ export default class DependencyGraph {
     const allModelComponents: ModelComponent[] = await consumer.scope.list();
     const buildGraphP = allModelComponents.map(async (modelComponent) => {
       const latestVersion = modelComponent.latest();
-      const buildVersionP = modelComponent.listVersions().map(async (versionNum) => {
+      const buildVersionP = modelComponent.listVersionsIncludeOrphaned().map(async (versionNum) => {
         if (onlyLatest && latestVersion !== versionNum) return;
         const id = modelComponent.toBitId().changeVersion(versionNum);
         const componentFromWorkspace = workspaceComponents.find((comp) => comp.id.isEqual(id));
         // if the same component exists in the workspace, use it as it might be modified
         const version =
-          componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects));
+          componentFromWorkspace || (await modelComponent.loadVersion(versionNum, consumer.scope.objects, false));
         if (!version) {
           // a component might be in the scope with only the latest version (happens when it's a nested dep)
           return;

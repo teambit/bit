@@ -35,6 +35,7 @@ import { tagAction } from './lib/tag';
 import test from './lib/test';
 import unTagAction from './lib/untag';
 import untrack from './lib/untrack';
+import { clearCache } from './lib/clear-cache';
 
 export {
   init,
@@ -79,4 +80,5 @@ export {
   lane,
   switchAction,
   fetch,
+  clearCache,
 };

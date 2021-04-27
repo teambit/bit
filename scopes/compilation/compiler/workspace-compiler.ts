@@ -1,21 +1,22 @@
 /* eslint-disable max-classes-per-file */
+import mapSeries from 'p-map-series';
 import { Component, ComponentID } from '@teambit/component';
 import { EnvsMain } from '@teambit/envs';
 import type { PubsubMain } from '@teambit/pubsub';
 import { SerializableResults, Workspace } from '@teambit/workspace';
-import BluebirdPromise from 'bluebird';
 import path from 'path';
-import { BitId } from 'bit-bin/dist/bit-id';
-import loader from 'bit-bin/dist/cli/loader';
-import { DEFAULT_DIST_DIRNAME } from 'bit-bin/dist/constants';
-import ConsumerComponent from 'bit-bin/dist/consumer/component';
-import { Dist, SourceFile } from 'bit-bin/dist/consumer/component/sources';
-import DataToPersist from 'bit-bin/dist/consumer/component/sources/data-to-persist';
+import { BitId } from '@teambit/legacy-bit-id';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { DEFAULT_DIST_DIRNAME } from '@teambit/legacy/dist/constants';
+import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
+import { Dist, SourceFile } from '@teambit/legacy/dist/consumer/component/sources';
+import DataToPersist from '@teambit/legacy/dist/consumer/component/sources/data-to-persist';
 import { AspectLoaderMain } from '@teambit/aspect-loader';
-import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
-import logger from 'bit-bin/dist/logger/logger';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
-import { PathOsBasedAbsolute, PathOsBasedRelative } from 'bit-bin/dist/utils/path';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import logger from '@teambit/legacy/dist/logger/logger';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
+import RemovePath from '@teambit/legacy/dist/consumer/component/sources/remove-path';
+import { PathOsBasedAbsolute, PathOsBasedRelative } from '@teambit/legacy/dist/utils/path';
 import { CompilerAspect } from './compiler.aspect';
 import { CompilerErrorEvent, ComponentCompilationOnDoneEvent } from './events';
 import { Compiler } from './types';
@@ -50,6 +51,7 @@ export class ComponentCompiler {
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
     const dataToPersist = new DataToPersist();
+    dataToPersist.removePath(new RemovePath(this.distDir));
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
@@ -180,9 +182,8 @@ export class WorkspaceCompiler {
         );
       }
     });
-    const newCompilersResultOnWorkspace = await BluebirdPromise.mapSeries(
-      componentsAndNewCompilers,
-      (componentAndNewCompilers) => componentAndNewCompilers.compile(noThrow)
+    const newCompilersResultOnWorkspace = await mapSeries(componentsAndNewCompilers, (componentAndNewCompilers) =>
+      componentAndNewCompilers.compile(noThrow)
     );
 
     return newCompilersResultOnWorkspace;

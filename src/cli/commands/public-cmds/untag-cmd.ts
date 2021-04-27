@@ -9,13 +9,12 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
-  For Harmony, without "--persisted" flag, it removes only the soft-tags.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components
   ${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
-    ['', 'persisted', 'harmony - revert not only the soft-tags but also the actual tags'],
+    ['', 'soft', 'harmony - revert only soft-tags (components tagged with --soft flag)'],
     [
       'f',
       'force',
@@ -27,7 +26,7 @@ export default class Untag implements LegacyCommand {
 
   action(
     [id, version]: [string, string],
-    { all = false, force = false, persisted = false }: { all?: boolean; force?: boolean; persisted?: boolean }
+    { all = false, force = false, soft = false }: { all?: boolean; force?: boolean; soft?: boolean }
   ): Promise<{ results: untagResult[]; isSoftUntag: boolean }> {
     if (!id && !all) {
       throw new GeneralError('please specify a component ID or use --all flag');
@@ -35,20 +34,17 @@ export default class Untag implements LegacyCommand {
 
     if (all) {
       version = id;
-      return unTagAction(version, force, persisted);
+      return unTagAction(version, force, soft);
     }
-    return unTagAction(version, force, persisted, id);
+    return unTagAction(version, force, soft, id);
   }
 
   report({ results, isSoftUntag }: { results: untagResult[]; isSoftUntag: boolean }): string {
     const titleSuffix = isSoftUntag ? 'soft-untagged (are not candidate for tagging anymore)' : 'untagged';
     const title = chalk.green(`${results.length} component(s) were ${titleSuffix}:\n`);
-    const softTagSuggestion = isSoftUntag
-      ? chalk.bold('\nto actually remove the local tags, use --persisted flag')
-      : '';
     const components = results.map((result) => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;
     });
-    return title + components.join('\n') + softTagSuggestion;
+    return title + components.join('\n');
   }
 }

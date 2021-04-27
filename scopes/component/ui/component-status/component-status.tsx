@@ -1,12 +1,13 @@
 import classNames from 'classnames';
 import React from 'react';
 
-import { StatusTypes } from '@teambit/ui.side-bar';
 import styles from './component-status.module.scss';
 
 export type ComponentStatusProps = {
   status?: StatusTypes;
 } & React.HTMLAttributes<HTMLDivElement>;
+
+export type StatusTypes = 'modified' | 'error' | 'new' | 'staged' | 'dependency' | 'updates';
 
 export function ComponentStatus({ status, className, ...rest }: ComponentStatusProps) {
   if (!status) return null;

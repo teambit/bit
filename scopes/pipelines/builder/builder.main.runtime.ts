@@ -1,33 +1,40 @@
 import { flatten } from 'lodash';
-import { ArtifactVinyl } from 'bit-bin/dist/consumer/component/sources/artifact';
+import { ArtifactVinyl } from '@teambit/legacy/dist/consumer/component/sources/artifact';
 import { AspectLoaderAspect, AspectLoaderMain } from '@teambit/aspect-loader';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import { AspectList, Component, ComponentAspect, ComponentID, ComponentMap } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
-import { ScopeAspect, ScopeMain } from '@teambit/scope';
+import { ScopeAspect, ScopeMain, OnTagResults } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { IsolateComponentsOptions } from '@teambit/isolator';
-import { OnTagOpts } from 'bit-bin/dist/scope/scope';
-import { ArtifactObject } from 'bit-bin/dist/consumer/component/sources/artifact-files';
+import { IsolateComponentsOptions, IsolatorAspect, IsolatorMain } from '@teambit/isolator';
+import { OnTagOpts } from '@teambit/legacy/dist/scope/scope';
+import { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { ArtifactList } from './artifact';
 import { ArtifactFactory } from './artifact/artifact-factory'; // it gets undefined when importing it from './artifact'
 import { BuilderAspect } from './builder.aspect';
 import { builderSchema } from './builder.graphql';
-import { BuilderService } from './builder.service';
+import { BuilderService, BuilderServiceOptions } from './builder.service';
 import { BuilderCmd } from './build.cmd';
 import { BuildTask } from './build-task';
 import { StorageResolver } from './storage';
 import { TaskResults } from './build-pipe';
 import { TaskResultsList } from './task-results-list';
 import { ArtifactStorageError } from './exceptions';
-import { BuildPipelineResultList } from './build-pipeline-result-list';
+import { BuildPipelineResultList, AspectData, PipelineReport } from './build-pipeline-result-list';
+import { Serializable } from './types';
 
 export type TaskSlot = SlotRegistry<BuildTask[]>;
 
 export type StorageResolverSlot = SlotRegistry<StorageResolver>;
+
+export type BuilderData = {
+  pipeline: PipelineReport[];
+  artifacts: ArtifactObject[] | undefined;
+  aspectsData: AspectData[];
+};
 
 export class BuilderMain {
   constructor(
@@ -36,6 +43,7 @@ export class BuilderMain {
     private buildService: BuilderService,
     private deployService: BuilderService,
     private scope: ScopeMain,
+    private isolator: IsolatorMain,
     private aspectLoader: AspectLoaderMain,
     private buildTaskSlot: TaskSlot,
     private deployTaskSlot: TaskSlot,
@@ -43,9 +51,7 @@ export class BuilderMain {
   ) {}
 
   private async storeArtifacts(tasksResults: TaskResults[]) {
-    const artifacts: ComponentMap<ArtifactList>[] = tasksResults.map(
-      (taskResult) => taskResult.artifacts as ComponentMap<ArtifactList>
-    );
+    const artifacts = tasksResults.flatMap((t) => (t.artifacts ? [t.artifacts] : []));
     const storeP = artifacts.map(async (artifactMap: ComponentMap<ArtifactList>) => {
       return Promise.all(
         artifactMap.toArray().map(async ([component, artifactList]) => {
@@ -60,46 +66,43 @@ export class BuilderMain {
     await Promise.all(storeP);
   }
 
-  private pipelineResultsToAspectList(
+  private pipelineResultsToBuilderData(
     components: Component[],
     buildPipelineResults: TaskResults[]
-  ): ComponentMap<AspectList> {
+  ): ComponentMap<BuilderData> {
     const buildPipelineResultList = new BuildPipelineResultList(buildPipelineResults, components);
-    return ComponentMap.as<AspectList>(components, (component) => {
-      const taskResultsOfComponent = buildPipelineResultList.getMetadataFromTaskResults(component.id);
-      const aspectList = component.state.aspects.map((aspectEntry) => {
-        const dataFromBuildPipeline = taskResultsOfComponent[aspectEntry.id.toString()];
-        const newAspectEntry = dataFromBuildPipeline ? aspectEntry.transform(dataFromBuildPipeline) : aspectEntry;
-        return newAspectEntry;
-      });
-      Object.keys(taskResultsOfComponent).forEach((taskId) => {
-        const taskComponentId = ComponentID.fromString(taskId);
-        if (!component.state.aspects.find(taskComponentId)) {
-          const dataFromBuildPipeline = taskResultsOfComponent[taskId];
-          aspectList.addEntry(taskComponentId, dataFromBuildPipeline);
-        }
-      });
-      const buildId = BuilderAspect.id;
-      const buildAspectEntry = aspectList.get(buildId) || aspectList.addEntry(ComponentID.fromString(buildId));
+    return ComponentMap.as<BuilderData>(components, (component) => {
+      const aspectsData = buildPipelineResultList.getDataOfComponent(component.id);
       const pipelineReport = buildPipelineResultList.getPipelineReportOfComponent(component.id);
       const artifactsData = buildPipelineResultList.getArtifactsDataOfComponent(component.id);
-      buildAspectEntry.data = { pipeline: pipelineReport, artifacts: artifactsData };
-      return aspectList;
+      return { pipeline: pipelineReport, artifacts: artifactsData, aspectsData };
     });
   }
 
-  async tagListener(components: Component[], options: OnTagOpts = {}): Promise<ComponentMap<AspectList>> {
-    const envsExecutionResults = await this.build(components, { emptyRootDir: true });
-    envsExecutionResults.throwErrorsIfExist();
+  async tagListener(
+    components: Component[],
+    options: OnTagOpts = {},
+    isolateOptions: IsolateComponentsOptions = {}
+  ): Promise<OnTagResults> {
+    const pipeResults: TaskResultsList[] = [];
+    const { throwOnError, forceDeploy, disableDeployPipeline } = options;
+    const envsExecutionResults = await this.build(
+      components,
+      { emptyRootDir: true, ...isolateOptions },
+      { skipTests: options.skipTests }
+    );
+    if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
-    if (!options.disableDeployPipeline) {
-      const deployEnvsExecutionResults = await this.deploy(components);
-      deployEnvsExecutionResults.throwErrorsIfExist();
+    pipeResults.push(envsExecutionResults);
+    if (forceDeploy || (!disableDeployPipeline && !envsExecutionResults.hasErrors())) {
+      const deployEnvsExecutionResults = await this.deploy(components, isolateOptions);
+      if (throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
+      pipeResults.push(deployEnvsExecutionResults);
     }
     await this.storeArtifacts(allTasksResults);
-    const aspectList = this.pipelineResultsToAspectList(components, allTasksResults);
-    return aspectList;
+    const builderDataMap = this.pipelineResultsToBuilderData(components, allTasksResults);
+    return { builderDataMap, pipeResults };
   }
 
   /**
@@ -157,9 +160,18 @@ export class BuilderMain {
     return artifacts?.filter((artifact) => artifact.task.id === aspectName && artifact.name === name);
   }
 
+  getDataByAspect(component: Component, aspectName: string): Serializable | undefined {
+    const aspectsData = this.getBuilderData(component)?.aspectsData;
+    const data = aspectsData?.find((aspectData) => aspectData.aspectId === aspectName);
+    return data?.data;
+  }
+
   private getArtifacts(component: Component): ArtifactObject[] | undefined {
-    const dataEntry = component.state.aspects.get(BuilderAspect.id);
-    return dataEntry?.data.artifacts;
+    return this.getBuilderData(component)?.artifacts;
+  }
+
+  getBuilderData(component: Component): BuilderData | undefined {
+    return component.state.aspects.get(BuilderAspect.id)?.data as BuilderData | undefined;
   }
 
   /**
@@ -168,17 +180,22 @@ export class BuilderMain {
    * in case of an error in a task, it stops the execution of that env and continue to the next
    * env. at the end, the results contain the data and errors per env.
    */
-  async build(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
-    const idsStr = components.map((c) => c.id.toString());
-    const network = await this.workspace.createNetwork(idsStr, isolateOptions);
+  async build(
+    components: Component[],
+    isolateOptions?: IsolateComponentsOptions,
+    builderOptions?: BuilderServiceOptions
+  ): Promise<TaskResultsList> {
+    const ids = components.map((c) => c.id);
+    const network = await this.isolator.isolateComponents(ids, isolateOptions);
     const envs = await this.envs.createEnvironment(network.graphCapsules.getAllComponents());
-    const buildResult = await envs.runOnce(this.buildService);
+    const builderServiceOptions = { seedersOnly: isolateOptions?.seedersOnly, ...(builderOptions || {}) };
+    const buildResult = await envs.runOnce(this.buildService, builderServiceOptions);
     return buildResult;
   }
 
-  async deploy(components: Component[]): Promise<TaskResultsList> {
+  async deploy(components: Component[], isolateOptions?: IsolateComponentsOptions): Promise<TaskResultsList> {
     const envs = await this.envs.createEnvironment(components);
-    const buildResult = await envs.runOnce(this.deployService);
+    const buildResult = await envs.runOnce(this.deployService, { seedersOnly: isolateOptions?.seedersOnly });
 
     return buildResult;
   }
@@ -209,6 +226,7 @@ export class BuilderMain {
     EnvsAspect,
     WorkspaceAspect,
     ScopeAspect,
+    IsolatorAspect,
     LoggerAspect,
     AspectLoaderAspect,
     GraphqlAspect,
@@ -216,11 +234,12 @@ export class BuilderMain {
   ];
 
   static async provider(
-    [cli, envs, workspace, scope, loggerExt, aspectLoader, graphql]: [
+    [cli, envs, workspace, scope, isolator, loggerExt, aspectLoader, graphql]: [
       CLIMain,
       EnvsMain,
       Workspace,
       ScopeMain,
+      IsolatorMain,
       LoggerMain,
       AspectLoaderMain,
       GraphqlMain
@@ -230,15 +249,24 @@ export class BuilderMain {
   ) {
     const artifactFactory = new ArtifactFactory(storageResolversSlot);
     const logger = loggerExt.createLogger(BuilderAspect.id);
-    const buildService = new BuilderService(workspace, logger, buildTaskSlot, 'getBuildPipe', 'build', artifactFactory);
+    const buildService = new BuilderService(
+      isolator,
+      logger,
+      buildTaskSlot,
+      'getBuildPipe',
+      'build',
+      artifactFactory,
+      scope
+    );
     envs.registerService(buildService);
     const deployService = new BuilderService(
-      workspace,
+      isolator,
       logger,
       deployTaskSlot,
       'getDeployPipe',
       'deploy',
-      artifactFactory
+      artifactFactory,
+      scope
     );
     const builder = new BuilderMain(
       envs,
@@ -246,6 +274,7 @@ export class BuilderMain {
       buildService,
       deployService,
       scope,
+      isolator,
       aspectLoader,
       buildTaskSlot,
       deployTaskSlot,

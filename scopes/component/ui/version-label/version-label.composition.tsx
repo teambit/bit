@@ -1,19 +1,19 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { VersionLabel } from './version-label';
 
 export const VersionLabelLatest = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <VersionLabel status="latest" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const VersionLabelCheckedOut = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <VersionLabel status="checked-out" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };

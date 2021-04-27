@@ -5,23 +5,19 @@ import * as path from 'path';
 
 import { generateRandomStr } from '../utils';
 
+export const DEFAULT_OWNER = 'ci';
+
 export type ScopesOptions = {
   remoteScopeWithDot?: boolean;
-  remoteScopePrefix?: string;
+  remoteScopePrefix?: string; // if not specify, and remoteScopeWithDot is true, it defaults to DEFAULT_OWNER.
 };
 export default class ScopesData {
   e2eDir: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   local: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   localPath: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   remote: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   remotePath: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   env: string;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   envPath: string;
   globalRemote: string;
   globalRemotePath: string;
@@ -38,7 +34,7 @@ export default class ScopesData {
     this.localPath = path.join(this.e2eDir, this.local);
     fs.ensureDirSync(this.localPath);
   }
-  setRemoteScope(remoteScopeWithDot = false, prefix = generateRandomStr(), remoteScope?: string) {
+  setRemoteScope(remoteScopeWithDot = false, prefix = DEFAULT_OWNER, remoteScope?: string) {
     if (remoteScope) {
       this.remote = remoteScope;
     } else if (remoteScopeWithDot) {
@@ -51,5 +47,10 @@ export default class ScopesData {
   setEnvScope() {
     this.env = `${generateRandomStr()}-env`;
     this.envPath = path.join(this.e2eDir, this.env);
+  }
+  get remoteWithoutOwner(): string {
+    if (!this.remote.includes('.')) return this.remote;
+    const [, remoteScope] = this.remote.split('.');
+    return remoteScope;
   }
 }

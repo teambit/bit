@@ -1,21 +1,23 @@
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
+import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
-import ComponentAspect, { Component, ComponentMain, Tag } from '@teambit/component';
+import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { IsolatorAspect, IsolatorMain } from '@teambit/isolator';
 import { LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { PackageJsonTransformer } from 'bit-bin/dist/consumer/component/package-json-transformer';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { PackageJsonTransformer } from '@teambit/legacy/dist/consumer/component/package-json-transformer';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { BuilderMain, BuilderAspect, BuildTaskHelper } from '@teambit/builder';
-import { BitError } from 'bit-bin/dist/error/bit-error';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
+import { BitError } from '@teambit/bit-error';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
 import { GraphqlMain, GraphqlAspect } from '@teambit/graphql';
 import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/dependency-resolver';
+
 import { Packer, PackOptions, PackResult, TAR_FILE_ARTIFACT_NAME } from './packer';
 // import { BitCli as CLI, BitCliExt as CLIExtension } from '@teambit/cli';
 import { PackCmd } from './pack.cmd';
@@ -149,9 +151,7 @@ export class PkgMain {
 
     PackageJsonTransformer.registerPackageJsonTransformer(pkg.transformPackageJson.bind(pkg));
     // TODO: consider passing the pkg instead of packer
-    cli.register(new PackCmd(packer));
-    cli.register(new PublishCmd(publisher));
-
+    cli.register(new PackCmd(packer), new PublishCmd(publisher));
     return pkg;
   }
 
@@ -160,6 +160,15 @@ export class PkgMain {
    */
   getPackageName(component: Component) {
     return componentIdToPackageName(component.state._consumer);
+  }
+
+  /**
+   * returns the package path in the /node_modules/ folder
+   */
+  getModulePath(component: Component) {
+    const pkgName = this.getPackageName(component);
+    const path = join('node_modules', pkgName);
+    return path;
   }
 
   /**
@@ -228,7 +237,7 @@ export class PkgMain {
    */
   async mergePackageJsonProps(component: Component): Promise<PackageJsonProps> {
     let newProps = {};
-    const env = this.envs.getEnv(component)?.env;
+    const env = this.envs.calculateEnv(component)?.env;
     if (env?.getPackageJsonProps && typeof env.getPackageJsonProps === 'function') {
       const propsFromEnv = env.getPackageJsonProps();
       newProps = Object.assign(newProps, propsFromEnv);
@@ -275,10 +284,8 @@ export class PkgMain {
     const distTags = {
       latest: latestVersion,
     };
-    const versionsP = component.tags.toArray().map((tag: Tag) => {
-      return this.getVersionManifest(component, tag);
-    });
-    const versions = await Promise.all(versionsP);
+
+    const versions = await this.getAllSnapsManifests(component);
     const versionsWithoutEmpty: VersionPackageManifest[] = compact(versions);
     const externalRegistry = this.isPublishedToExternalRegistry(component);
     return {
@@ -287,6 +294,18 @@ export class PkgMain {
       externalRegistry,
       versions: versionsWithoutEmpty,
     };
+  }
+
+  private async getAllSnapsManifests(component: Component): Promise<VersionPackageManifest[]> {
+    const iterable = component.snapsIterable();
+    const result: VersionPackageManifest[] = [];
+    for await (const snap of iterable) {
+      const manifest = await this.getSnapManifest(component, snap);
+      if (manifest) {
+        result.push(manifest);
+      }
+    }
+    return result;
   }
 
   /**
@@ -301,16 +320,24 @@ export class PkgMain {
     return !!(pkgExt.config?.packageJson?.name || pkgExt.config?.packageJson?.publishConfig);
   }
 
-  async getVersionManifest(component: Component, tag: Tag): Promise<VersionPackageManifest | undefined> {
-    const idWithCorrectVersion = component.id.changeVersion(tag.version.toString());
+  private getComponentBuildData(component: Component): ComponentPkgExtensionData | undefined {
+    const data = this.builder.getDataByAspect(component, PkgAspect.id);
+    if (data) return data as ComponentPkgExtensionData;
+    // backward compatibility. the data used to be saved on the pkg aspect rather than on the
+    // builder aspect
+    const currentExtension = component.state.aspects.get(PkgAspect.id);
+    return currentExtension?.data as ComponentPkgExtensionData | undefined;
+  }
+
+  async getSnapManifest(component: Component, snap: Snap): Promise<VersionPackageManifest | undefined> {
+    const idWithCorrectVersion = component.id.changeVersion(snap.hash);
     // const state = await this.scope.getState(component.id, tag.hash);
     // const currentExtension = state.aspects.get(PkgAspect.id);
     const updatedComponent = await this.componentAspect.getHost().get(idWithCorrectVersion, true);
     if (!updatedComponent) {
-      throw new BitError(`version ${tag.version.toString()} for component ${component.id.toString()} is missing`);
+      throw new BitError(`snap ${snap.hash} for component ${component.id.toString()} is missing`);
     }
-    const currentExtension = updatedComponent.state.aspects.get(PkgAspect.id);
-    const currentData = (currentExtension?.data as unknown) as ComponentPkgExtensionData;
+    const currentData = this.getComponentBuildData(updatedComponent);
     // If for some reason the version has no package.json manifest, return undefined
     if (!currentData?.pkgJson) {
       return undefined;
@@ -349,7 +376,7 @@ export class PkgMain {
   ): Promise<Record<string, any>> {
     // const newId = await this.workspace.resolveComponentId(component.id);
     // const newComponent = await this.workspace.get(newId);
-    const host = await this.componentAspect.getHost();
+    const host = this.componentAspect.getHost();
     const id = await host.resolveComponentId(legacyComponent.id);
     const newComponent = await host.get(id);
     if (!newComponent) throw new Error(`cannot transform package.json of component: ${legacyComponent.id.toString()}`);

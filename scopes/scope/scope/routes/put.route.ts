@@ -1,6 +1,6 @@
-import { Route, Request, Response } from '@teambit/express';
-import { ObjectList } from 'bit-bin/dist/scope/objects/object-list';
-import { put } from 'bit-bin/dist/api/scope';
+import { Route, Verb, Request, Response } from '@teambit/express';
+import { ObjectList } from '@teambit/legacy/dist/scope/objects/object-list';
+import { put } from '@teambit/legacy/dist/api/scope';
 import { OnPostPutSlot, ScopeMain } from '../scope.main.runtime';
 
 export class PutRoute implements Route {
@@ -8,9 +8,11 @@ export class PutRoute implements Route {
 
   method = 'post';
   route = '/scope/put';
+  verb = Verb.WRITE;
 
   middlewares = [
     async (req: Request, res: Response) => {
+      req.setTimeout(this.scope.config.httpTimeOut);
       const pushOptionsStr = req.headers['push-options'];
       if (!pushOptionsStr) throw new Error('http is missing the push-options header');
       const pushOptions = JSON.parse(pushOptionsStr as string);

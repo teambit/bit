@@ -1,12 +1,12 @@
 import { join } from 'path';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect, ComponentMap } from '@teambit/component';
+import { Component, ComponentAspect, ComponentMap, AspectData } from '@teambit/component';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { PreviewAspect, PreviewMain } from '@teambit/preview';
 import { SchemaAspect, SchemaMain } from '@teambit/schema';
-import { ExtensionData, Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { flatten } from 'bit-bin/dist/utils';
+import { Workspace, WorkspaceAspect } from '@teambit/workspace';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { flatten } from '@teambit/legacy/dist/utils';
 import { DevFilesAspect, DevFilesMain } from '@teambit/dev-files';
 import { Composition } from './composition';
 import { CompositionsAspect } from './compositions.aspect';
@@ -81,7 +81,7 @@ export class CompositionsMain {
     );
   }
 
-  async onComponentLoad(component: Component): Promise<ExtensionData> {
+  async onComponentLoad(component: Component): Promise<AspectData> {
     const compositions = this.readCompositions(component);
     return {
       compositions: compositions.map((composition) => composition.toObject()),
@@ -100,7 +100,7 @@ export class CompositionsMain {
   }
 
   static defaultConfig = {
-    compositionFilePattern: ['*.composition.*', '*.compositions.*'],
+    compositionFilePattern: ['**/*.composition.*', '**/*.compositions.*'],
   };
 
   static runtime = MainRuntime;

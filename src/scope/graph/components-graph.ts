@@ -1,18 +1,17 @@
 import graphLib, { Graph as GraphLib } from 'graphlib';
-import mapSeries from 'p-map-series';
 import R from 'ramda';
 
 import { Scope } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { Consumer } from '../../consumer';
-import { FlattenedDependencyLoader } from '../../consumer/component-ops/load-flattened-dependencies';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import GeneralError from '../../error/general-error';
 import ComponentWithDependencies from '../component-dependencies';
 import { ComponentsAndVersions } from '../scope';
 import Graph from './graph';
-import { MissingBitMapComponent } from '../../consumer/bit-map/exceptions';
+import { GraphFromFsBuilder } from './build-graph-from-fs';
+import ScopeComponentsImporter from '../component-ops/scope-components-importer';
 
 export type AllDependenciesGraphs = {
   graphDeps: GraphLib;
@@ -30,6 +29,21 @@ export function buildComponentsGraph(components: Component[]): AllDependenciesGr
     _setGraphEdges(component.id, component.extensionDependencies, graphExtensionDeps);
   });
   return { graphDeps, graphDevDeps, graphExtensionDeps };
+}
+
+/**
+ * one graph of the given components. it doesn't fetch/load anything. it builds the graph with the
+ * given data. the node is a BitId and the edge has the label of the dependency type. it can be
+ * either "dependencies" or "devDependencies".
+ */
+export function buildComponentsGraphCombined(components: Component[]): Graph {
+  const graph = new Graph();
+  components.forEach((component) => {
+    _setGraphEdges(component.id, component.dependencies, graph);
+    _setGraphEdges(component.id, component.devDependencies, graph, 'devDependencies');
+    _setGraphEdges(component.id, component.extensionDependencies, graph, 'devDependencies');
+  });
+  return graph;
 }
 
 export function buildComponentsGraphForComponentsAndVersion(
@@ -64,46 +78,18 @@ export function buildOneGraphForComponentsAndMultipleVersions(components: Compon
 }
 
 /**
+ * Note - this gets called from Harmony only.
  * returns one graph that includes all dependencies types. each edge has a label of the dependency
  * type. the nodes content is the Component object.
- * note that the graph only includes the dependencies of the gives ids, but not the dependents,
- * regardless the `direction` parameter.
  */
 export async function buildOneGraphForComponents(
   ids: BitId[],
   consumer: Consumer,
-  direction: 'normal' | 'reverse' = 'normal',
   loadComponentsFunc?: (bitIds: BitId[]) => Promise<Component[]>,
   ignoreIds?: BitIds
 ): Promise<Graph> {
-  const getComponents = async () => {
-    if (loadComponentsFunc) {
-      return loadComponentsFunc(ids);
-    }
-
-    try {
-      const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-      return components;
-    } catch (err) {
-      if (err instanceof MissingBitMapComponent) {
-        const componentsP = ids.map((id) => {
-          return consumer.loadComponentFromModel(id);
-        });
-
-        return Promise.all(componentsP);
-      }
-
-      throw err;
-    }
-  };
-  const components = await getComponents();
-  const flattenedDependencyLoader = new FlattenedDependencyLoader(consumer, ignoreIds, loadComponentsFunc);
-  const componentsWithDeps = await mapSeries(components, (component: Component) =>
-    flattenedDependencyLoader.load(component)
-  );
-  const allComponents: Component[] = R.flatten(componentsWithDeps.map((c) => [c.component, ...c.allDependencies]));
-
-  return buildGraphFromComponentsObjects(allComponents, direction, ignoreIds);
+  const graphFromFsBuilder = new GraphFromFsBuilder(consumer, ignoreIds, loadComponentsFunc);
+  return graphFromFsBuilder.buildGraph(ids);
 }
 
 /**
@@ -116,16 +102,16 @@ export async function buildOneGraphForComponentsUsingScope(
   direction: 'normal' | 'reverse' = 'normal'
 ): Promise<Graph> {
   const components = await scope.getManyConsumerComponents(ids);
-  const loadFlattened = async (component: Component): Promise<Component[]> => {
-    return scope.getManyConsumerComponents(component.getAllFlattenedDependencies());
-  };
-  const dependencies = await Promise.all(components.map((component) => loadFlattened(component)));
-  const allComponents: Component[] = [...components, ...R.flatten(dependencies)];
+  const allFlattened = components.map((component) => component.getAllFlattenedDependencies()).flat();
+  const scopeComponentImporter = new ScopeComponentsImporter(scope);
+  await scopeComponentImporter.importMany(BitIds.uniqFromArray(allFlattened));
+  const dependencies = await scope.getManyConsumerComponents(allFlattened);
+  const allComponents: Component[] = [...components, ...dependencies];
 
   return buildGraphFromComponentsObjects(allComponents, direction);
 }
 
-function buildGraphFromComponentsObjects(
+export function buildGraphFromComponentsObjects(
   components: Component[],
   direction: 'normal' | 'reverse' = 'normal',
   ignoreIds = new BitIds()
@@ -164,14 +150,14 @@ function buildGraphFromComponentsObjects(
   return graph;
 }
 
-function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: GraphLib) {
+function _setGraphEdges(bitId: BitId, dependencies: Dependencies, graph: GraphLib, label = 'dependencies') {
   const id = bitId.toString();
   dependencies.get().forEach((dependency) => {
     const depId = dependency.id.toString();
     // save the full BitId of a string id to be able to retrieve it later with no confusion
     if (!graph.hasNode(id)) graph.setNode(id, bitId);
     if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-    graph.setEdge(id, depId);
+    graph.setEdge(id, depId, label);
   });
 }
 

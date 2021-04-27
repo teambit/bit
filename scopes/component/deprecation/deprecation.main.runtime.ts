@@ -1,10 +1,11 @@
-import { deprecate, undeprecate } from 'bit-bin/dist/api/scope';
+import { deprecate, undeprecate } from '@teambit/legacy/dist/api/scope';
 import { MainRuntime } from '@teambit/cli';
-import { Component, ComponentAspect } from '@teambit/component';
+import { ComponentMain, ComponentAspect, Component } from '@teambit/component';
 import { ScopeMain, ScopeAspect } from '@teambit/scope';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DeprecationAspect } from './deprecation.aspect';
 import { deprecationSchema } from './deprecation.graphql';
+import { DeprecationFragment } from './deprecation.fragment';
 
 export type DeprecationInfo = {
   isDeprecate: boolean;
@@ -24,17 +25,16 @@ export class DeprecationMain {
   }
 
   async deprecate(ids: string[]) {
-    await deprecate({ path: this.scope.path, ids }, null);
-    return true;
+    return deprecate({ path: this.scope.path, ids }, null);
   }
 
   async unDeprecate(ids: string[]) {
-    await undeprecate({ path: this.scope.path, ids }, null);
-    return true;
+    return undeprecate({ path: this.scope.path, ids }, null);
   }
 
-  static async provider([graphql, scope]: [GraphqlMain, ScopeMain, Component]) {
+  static async provider([graphql, scope, componentAspect]: [GraphqlMain, ScopeMain, ComponentMain]) {
     const deprecation = new DeprecationMain(scope);
+    componentAspect.registerShowFragments([new DeprecationFragment(deprecation)]);
     graphql.register(deprecationSchema(deprecation));
   }
 }

@@ -2,22 +2,17 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
-import Helper, { HelperOptions } from '../../src/e2e-helper/e2e-helper';
+import Helper from '../../src/e2e-helper/e2e-helper';
+import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import * as fixtures from '../../src/fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-// (supportNpmCiRegistryTesting ? describe : describe.skip)(
 describe('set default owner and scope', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
-    const helperOptions: HelperOptions = {
-      scopesOptions: {
-        remoteScopeWithDot: true,
-      },
-    };
-    helper = new Helper(helperOptions);
+    helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
   });
   after(() => {
     helper.scopeHelper.destroy();
@@ -25,19 +20,16 @@ describe('set default owner and scope', function () {
   describe('author components', () => {
     let parsedLinkOutput;
     let scopeWithoutOwner;
-    let defaultOwner;
     let defaultScope;
     let componentId;
     let componentPackageName;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.disablePreview();
-      const remoteScopeParts = helper.scopes.remote.split('.');
-      defaultOwner = remoteScopeParts[0];
-      scopeWithoutOwner = remoteScopeParts[1];
+      scopeWithoutOwner = helper.scopes.remoteWithoutOwner;
       defaultScope = helper.scopes.remote;
       componentId = `${defaultScope}/utils/is-type`;
-      componentPackageName = `@${defaultOwner}/${scopeWithoutOwner}.utils.is-type`;
+      componentPackageName = `@${DEFAULT_OWNER}/${scopeWithoutOwner}.utils.is-type`;
       const workspaceExtConfig = {
         defaultScope,
       };
@@ -59,10 +51,10 @@ describe('set default owner and scope', function () {
     describe('after export', () => {
       let exportOutput;
       before(() => {
-        exportOutput = helper.command.exportAllComponents();
+        exportOutput = helper.command.export();
       });
       it('should export the component to correct scope', () => {
-        expect(exportOutput).to.have.string('exported 1 components');
+        expect(exportOutput).to.have.string('exported the following 1 component');
         expect(exportOutput).to.have.string(defaultScope);
       });
       describe('validate models data', () => {
@@ -76,8 +68,8 @@ describe('set default owner and scope', function () {
           expect(compModel.scope).to.equal(defaultScope);
         });
         it('should store scope name with the format owner.scope in the models', () => {
-          expect(compModel.bindingPrefix).to.equal(`@${defaultOwner}`);
-          expect(versionModel.bindingPrefix).to.equal(`@${defaultOwner}`);
+          expect(compModel.bindingPrefix).to.equal(`@${DEFAULT_OWNER}`);
+          expect(versionModel.bindingPrefix).to.equal(`@${DEFAULT_OWNER}`);
         });
       });
       describe('post import', () => {

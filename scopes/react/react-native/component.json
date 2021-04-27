@@ -1,0 +1,57 @@
+{
+  "componentId": {
+    "scope": "teambit.react",
+    "name": "react-native",
+    "version": "0.0.197"
+  },
+  "propagate": false,
+  "extensions": {
+    "teambit.pkg/pkg": {
+      "packageManagerPublishArgs": ["--access public"],
+      "packageJson": {
+        "name": "@teambit/{name}",
+        "private": false,
+        "engines": {
+          "node": ">=12.15.0"
+        },
+        "repository": {
+          "type": "git",
+          "url": "https://github.com/teambit/bit"
+        },
+        "keywords": [
+          "bit",
+          "components",
+          "collaboration",
+          "web",
+          "react",
+          "react-components",
+          "angular",
+          "angular-components",
+          "vue",
+          "vue-components"
+        ]
+      }
+    },
+    "teambit.dependencies/dependency-resolver": {
+      "policy": {
+        "dependencies": {
+          "@teambit/legacy": "-"
+        },
+        "devDependencies": {
+          "@teambit/legacy": "-",
+          "@types/react": "^16.8.0",
+          "@types/react-dom": "^16.8.0"
+        },
+        "peerDependencies": {
+          "react": "^16.8.0",
+          "react-dom": "^16.8.0",
+          "react-native-web": "^0.14.0",
+          "@teambit/legacy": "1.0.67"
+        }
+      }
+    },
+    "teambit.envs/envs": {
+      "env": "teambit.harmony/aspect"
+    }
+  }
+}

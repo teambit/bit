@@ -1,7 +1,7 @@
 import { ComponentID, AspectList } from '@teambit/component';
-import { COMPONENT_CONFIG_FILE_NAME } from 'bit-bin/dist/constants';
-import { ExtensionDataList } from 'bit-bin/dist/consumer/config/extension-data';
-import { PathOsBasedAbsolute } from 'bit-bin/dist/utils/path';
+import { COMPONENT_CONFIG_FILE_NAME } from '@teambit/legacy/dist/constants';
+import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
+import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import detectIndent from 'detect-indent';
 import detectNewline from 'detect-newline';
 import fs from 'fs-extra';

@@ -4,7 +4,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
-import graphqlHTTP from 'express-graphql';
+import { graphqlHTTP } from 'express-graphql';
 import getPort from 'get-port';
 import { execute, subscribe } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
@@ -16,6 +16,11 @@ import { GraphQLServer } from './graphql-server';
 import { createRemoteSchemas } from './create-remote-schemas';
 import { GraphqlAspect } from './graphql.aspect';
 import { Schema } from './schema';
+
+export enum Verb {
+  WRITE = 'write',
+  READ = 'read',
+}
 
 export type GraphQLConfig = {
   port: number;
@@ -32,6 +37,8 @@ export type GraphQLServerOptions = {
   app?: Express;
   graphiql?: boolean;
   remoteSchemas?: GraphQLServer[];
+  subscriptionsPortRange?: number[];
+  onWsConnect?: Function;
 };
 
 export class GraphqlMain {
@@ -71,17 +78,36 @@ export class GraphqlMain {
     const localSchema = this.createRootModule(options.schemaSlot);
     const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
     const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
-
     const schema = mergeSchemas({
       schemas,
     });
 
     // TODO: @guy please consider to refactor to express extension.
     const app = options.app || express();
-    app.use(cors());
+    app.use(
+      // @ts-ignore todo: it's not clear what's the issue.
+      cors({
+        origin(origin, callback) {
+          callback(null, true);
+        },
+        credentials: true,
+      })
+    );
+
     app.use(
       '/graphql',
-      graphqlHTTP((request) => ({
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      graphqlHTTP((request, res, params) => ({
+        customFormatErrorFn: (err) => {
+          this.logger.error('graphql got an error during running the following query:', params);
+          this.logger.error('graphql error ', err);
+          return Object.assign(err, {
+            // @ts-ignore
+            ERR_CODE: err?.originalError?.errors?.[0].ERR_CODE || err.originalError?.constructor?.name,
+            // @ts-ignore
+            HTTP_CODE: err?.originalError?.errors?.[0].HTTP_CODE || err.originalError?.code,
+          });
+        },
         schema,
         rootValue: request,
         graphiql,
@@ -89,8 +115,9 @@ export class GraphqlMain {
     );
 
     const server = createServer(app);
-    const subscriptionServerPort = await this.getPort(this.config.subscriptionsPortRange);
-    const { port } = this.createSubscription(options, subscriptionServerPort);
+    const subscriptionsPort = options.subscriptionsPortRange || this.config.subscriptionsPortRange;
+    const subscriptionServerPort = await this.getPort(subscriptionsPort);
+    const { port } = await this.createSubscription(options, subscriptionServerPort);
     this.proxySubscription(server, port);
 
     return server;
@@ -135,7 +162,7 @@ export class GraphqlMain {
 
   /** create Subscription server with different port */
 
-  private createSubscription(options: GraphQLServerOptions, port: number) {
+  private async createSubscription(options: GraphQLServerOptions, port: number) {
     // Create WebSocket listener server
     const websocketServer = createServer((request, response) => {
       response.writeHead(404);
@@ -147,13 +174,20 @@ export class GraphqlMain {
       this.logger.debug(`Websocket Server is now running on http://localhost:${port}`)
     );
 
-    const schema = this.createRootModule(options.schemaSlot);
+    const localSchema = this.createRootModule(options.schemaSlot);
+    const remoteSchemas = await createRemoteSchemas(options.remoteSchemas || this.graphQLServerSlot.values());
+    const schemas = [localSchema.schema].concat(remoteSchemas).filter((x) => x);
+    const schema = mergeSchemas({
+      schemas,
+    });
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const subServer = new SubscriptionServer(
       {
         execute,
         subscribe,
-        schema: schema.schema,
+        schema,
+        onConnect: options.onWsConnect,
       },
       {
         server: websocketServer,
@@ -193,6 +227,12 @@ export class GraphqlMain {
         typeDefs: schema.typeDefs,
         resolvers: schema.resolvers,
         imports: moduleDeps,
+        context: (session) => {
+          return {
+            ...session,
+            verb: session?.headers?.['x-verb'] || Verb.READ,
+          };
+        },
       });
 
       this.modules.set(extensionId, module);

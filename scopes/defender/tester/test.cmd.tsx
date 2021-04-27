@@ -1,8 +1,8 @@
 import { Command, CommandOptions, Flags } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
 import { Workspace } from '@teambit/workspace';
-import { ConsumerNotFound } from 'bit-bin/dist/consumer/exceptions';
-import { Timer } from 'bit-bin/dist/toolbox/timer';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
+import { Timer } from '@teambit/legacy/dist/toolbox/timer';
 import { Box, Text } from 'ink';
 import React from 'react';
 import { NoMatchingComponents } from './exceptions';
@@ -15,7 +15,6 @@ export class TestCmd implements Command {
   name = 'test [pattern]';
   description = 'test set of components in your workspace';
   alias = 'at';
-  private = true;
   group = 'development';
   shortDescription = '';
   options = [
@@ -44,6 +43,7 @@ export class TestCmd implements Command {
       `testing total of ${components.length} components in workspace '${chalk.cyan(this.workspace.name)}'`
     );
 
+    let code = 0;
     if (watch && !debug) {
       await this.tester.watch(components, {
         watch: Boolean(watch),
@@ -51,23 +51,27 @@ export class TestCmd implements Command {
         env: env as string | undefined,
       });
     } else {
-      await this.tester.test(components, {
+      const tests = await this.tester.test(components, {
         watch: Boolean(watch),
         debug: Boolean(debug),
         env: env as string | undefined,
       });
+      tests?.results?.forEach((test) => (test.data?.errors?.length ? (code = 1) : null));
     }
     const { seconds } = timer.stop();
 
     if (watch) return <Box></Box>;
-    return (
-      <Box>
-        <Text>tested </Text>
-        <Text color="cyan">{components.length} </Text>
-        <Text>components in </Text>
-        <Text color="cyan">{seconds} </Text>
-        <Text>seconds.</Text>
-      </Box>
-    );
+    return {
+      code,
+      data: (
+        <Box>
+          <Text>tested </Text>
+          <Text color="cyan">{components.length} </Text>
+          <Text>components in </Text>
+          <Text color="cyan">{seconds} </Text>
+          <Text>seconds.</Text>
+        </Box>
+      ),
+    };
   }
 }

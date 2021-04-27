@@ -1,3 +1,7 @@
+/**
+ * this command is not in-use currently. consider deleting it.
+ */
+
 /* eslint max-classes-per-file: 0 */
 
 import chalk from 'chalk';
@@ -10,6 +14,7 @@ class ResolverSet implements LegacyCommand {
   description = 'set remote resolver to scope (use from scope directory)';
   alias = 's';
   private = true;
+  loader = false;
   opts = [];
 
   action([resolverPath]: [string]): Promise<any> {

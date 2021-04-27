@@ -1,5 +1,5 @@
-import { useDataQuery } from '@teambit/ui';
-import gql from 'graphql-tag';
+import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
+import { gql } from '@apollo/client';
 
 import { ScopeModel } from './scope-model';
 

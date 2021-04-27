@@ -4,8 +4,6 @@ import { Component, ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRoot } from '@teambit/ui';
-
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
@@ -45,18 +43,16 @@ export class BundlerMain {
    * load all given components in corresponding dev servers.
    * @param components defaults to all components in the workspace.
    */
-  async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
+  async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
-    this.devService.uiRoot = root;
-    const executionResults = await envRuntime.run<ComponentServer>(this.devService);
-    executionResults.throwErrorsIfExist();
-    this._componentServers = executionResults.results.map((res) => res.data as ComponentServer);
+    // TODO: this must be refactored away from here. this logic should be in the Preview.
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    this._componentServers = servers;
 
     this.indexByComponent();
+
     return this._componentServers;
   }
-
-  getPublicPath() {}
 
   /**
    * get a dev server instance containing a component.
@@ -64,7 +60,11 @@ export class BundlerMain {
    */
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
-    const server = this._componentServers.find((componentServer) => componentServer.hasComponent(component));
+    const envId = this.envs.getEnvId(component);
+    const server = this._componentServers.find(
+      (componentServer) =>
+        componentServer.context.relatedContexts.includes(envId) || componentServer.context.id === envId
+    );
 
     return server;
   }

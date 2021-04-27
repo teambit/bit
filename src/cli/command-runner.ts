@@ -63,9 +63,15 @@ export class CommandRunner {
     if (!this.command.render) throw new Error('runRenderHandler expects command.render to be implemented');
     const result = await this.command.render(this.args, this.flags);
     loader.off();
-    const { waitUntilExit } = render(result);
+    // @ts-ignore
+    // eslint-disable-next-line no-prototype-builtins
+    const data = result.data && result.hasOwnProperty('code') ? result.data : result;
+    // @ts-ignore
+    // eslint-disable-next-line no-prototype-builtins
+    const code = result.data && result.hasOwnProperty('code') ? result.code : 0;
+    const { waitUntilExit } = render(data);
     await waitUntilExit();
-    return logger.exitAfterFlush(result.props.code, this.command.name);
+    return logger.exitAfterFlush(code, this.command.name);
   }
 
   private async runReportHandler() {
@@ -84,8 +90,10 @@ export class CommandRunner {
   private determineConsoleWritingDuringCommand() {
     if (this.command.loader && !this.flags.json) {
       loader.on();
+      loader.start(`running command ${this.command.name}...`);
       logger.shouldWriteToConsole = true;
     } else {
+      loader.off();
       logger.shouldWriteToConsole = false;
     }
     if (this.flags.log) {
@@ -95,6 +103,7 @@ export class CommandRunner {
   }
 
   private async writeAndExit(data: string, exitCode: number) {
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.command.name));
   }
 
@@ -112,6 +121,7 @@ export class CommandRunner {
 function serializeErrAndExit(err, commandName: string) {
   const data = packCommand(buildCommandMessage(serializeError(err), undefined, false), false, false);
   const code = err.code && isNumeric(err.code) ? err.code : 1;
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return process.stderr.write(data, () => logger.exitAfterFlush(code, commandName));
 }
 

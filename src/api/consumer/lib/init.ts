@@ -10,6 +10,7 @@ export default async function init(
   absPath: string = process.cwd(),
   noGit = false,
   reset = false,
+  resetNew = false,
   resetHard = false,
   force = false,
   workspaceConfigProps: WorkspaceConfigProps
@@ -20,6 +21,9 @@ export default async function init(
   const consumer: Consumer = await Consumer.create(absPath, noGit, workspaceConfigProps);
   if (!force) {
     await throwForOutOfSyncScope(consumer);
+  }
+  if (resetNew) {
+    await consumer.resetNew();
   }
   return consumer.write();
 }

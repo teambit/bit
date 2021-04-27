@@ -1,6 +1,6 @@
 import mapSeries from 'p-map-series';
 import { get, flatten } from 'lodash';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';

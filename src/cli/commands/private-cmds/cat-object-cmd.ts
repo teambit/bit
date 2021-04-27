@@ -5,11 +5,12 @@ export default class CatObject implements LegacyCommand {
   name = 'cat-object <hash>';
   description = 'cat a bit object by hash';
   private = true;
+  loader = false;
   alias = '';
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],
     ['s', 'stringify', 'JSON.stringify the object to see special characters, such as "\n"'],
-    ['h', 'headers', 'shows the headers only'],
+    ['', 'headers', 'shows the headers only'],
   ] as CommandOptions;
 
   action(

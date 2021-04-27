@@ -2,19 +2,19 @@ import { PubsubMain } from '@teambit/pubsub';
 import { dirname } from 'path';
 import { ComponentID } from '@teambit/component';
 
-import { BitId } from 'bit-bin/dist/bit-id';
-import loader from 'bit-bin/dist/cli/loader';
-import { BIT_MAP, COMPONENT_ORIGINS } from 'bit-bin/dist/constants';
-import { Consumer } from 'bit-bin/dist/consumer';
-import logger from 'bit-bin/dist/logger/logger';
-import { pathNormalizeToLinux } from 'bit-bin/dist/utils';
+import { BitId } from '@teambit/legacy-bit-id';
+import loader from '@teambit/legacy/dist/cli/loader';
+import { BIT_MAP, COMPONENT_ORIGINS } from '@teambit/legacy/dist/constants';
+import { Consumer } from '@teambit/legacy/dist/consumer';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 
 import mapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { ChildProcess } from 'child_process';
 import chokidar, { FSWatcher } from 'chokidar';
 import R from 'ramda';
-import ComponentMap from 'bit-bin/dist/consumer/bit-map/component-map';
+import ComponentMap from '@teambit/legacy/dist/consumer/bit-map/component-map';
 
 import { WorkspaceAspect } from '../';
 import { OnComponentChangeEvent, OnComponentAddEvent, OnComponentRemovedEvent } from '../events';
@@ -57,12 +57,14 @@ export class Watcher {
       watcher.on('ready', () => {
         opts?.msgs?.onReady(this.workspace, this.trackDirs, _verbose);
       });
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
         const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('add', async (filePath) => {
         const startTime = new Date().getTime();
         const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];

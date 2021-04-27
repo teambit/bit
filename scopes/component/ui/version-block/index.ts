@@ -1,2 +1,2 @@
 export { VersionBlock } from './version-block';
-export { JobStatus, AccountObj } from './change-log.data';
+export { JobStatus } from './change-log.data';

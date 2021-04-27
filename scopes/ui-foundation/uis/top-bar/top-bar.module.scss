@@ -1,3 +1,4 @@
+@import '~@teambit/ui.constants.z-indexes/z-indexes.module.scss';
 $topbarHeight: 56px;
 
 .topbar {
@@ -8,4 +9,5 @@ $topbarHeight: 56px;
   background: #ededed;
   box-sizing: border-box;
   font-size: var(--p-xs, 14px);
+  z-index: $nav-z-index;
 }

@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
 import { Linter } from 'eslint';
+import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
 
@@ -21,21 +22,23 @@ export type ESLintOptions = {
 };
 
 export class ESLintMain {
+  constructor(private logger: Logger) {}
   /**
    * create a eslint linter instance.
    * @param options eslint options.
    * @param ESLintModule reference to an `eslint` module.
    */
   createLinter(options: ESLintOptions, ESLintModule?: any): ESLintLinter {
-    return new ESLintLinter(options, ESLintModule);
+    return new ESLintLinter(this.logger, options, ESLintModule);
   }
 
   static runtime = MainRuntime;
 
-  static dependencies = [];
+  static dependencies = [LoggerAspect];
 
-  static async provider(): Promise<ESLintMain> {
-    return new ESLintMain();
+  static async provider([loggerExt]: [LoggerMain]): Promise<ESLintMain> {
+    const logger = loggerExt.createLogger(ESLintAspect.id);
+    return new ESLintMain(logger);
   }
 }
 

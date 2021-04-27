@@ -3,12 +3,14 @@ import { flatten } from 'lodash';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
-import { DependencyResolver } from 'bit-bin/dist/consumer/component/dependencies/dependency-resolver';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { DependencyResolver } from '@teambit/legacy/dist/consumer/component/dependencies/dependency-resolver';
 import { Component, ComponentMain, ComponentAspect } from '@teambit/component';
+import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { DevFilesAspect } from './dev-files.aspect';
 import { DevFiles } from './dev-files';
 import { DevFilesFragment } from './dev-files.fragment';
+import { devFilesSchema } from './dev-files.graphql';
 
 /**
  * dev pattern is of type string. an example to a pattern can be "*.spec.ts"
@@ -44,7 +46,7 @@ export class DevFilesMain {
   computeDevPatterns(component: Component) {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const configuredPatterns = entry?.config.devFilePatterns || [];
-    const envDef = this.envs.getEnv(component);
+    const envDef = this.envs.calculateEnv(component);
     const envPatterns: DevPatterns[] = envDef.env?.getDevPatterns ? envDef.env.getDevPatterns() : [];
 
     const patternSlot = this.devPatternSlot.toArray();
@@ -68,7 +70,7 @@ export class DevFilesMain {
   /**
    * get all dev files configured on a component.
    */
-  getDevPatterns(component: Component, aspectId?: string) {
+  getDevPatterns(component: Component, aspectId?: string): string[] {
     const entry = component.state.aspects.get(DevFilesAspect.id);
     const devPatterns = entry?.data.devPatterns || {};
     return aspectId ? devPatterns[aspectId] : flatten(Object.values(devPatterns));
@@ -92,6 +94,7 @@ export class DevFilesMain {
 
   /**
    * get all dev patterns registered.
+   * If you want to use this during onLoad event you might need to use computeDevFiles instead, since the component might not include this data yet
    */
   getDevFiles(component: Component): DevFiles {
     const entry = component.state.aspects.get(DevFilesAspect.id);
@@ -122,10 +125,10 @@ export class DevFilesMain {
 
   static runtime = MainRuntime;
 
-  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect];
+  static dependencies = [EnvsAspect, WorkspaceAspect, ComponentAspect, GraphqlAspect];
 
   static async provider(
-    [envs, workspace, componentAspect]: [EnvsMain, Workspace, ComponentMain],
+    [envs, workspace, componentAspect, graphql]: [EnvsMain, Workspace, ComponentMain, GraphqlMain],
     config: DevFilesConfig,
     [devPatternSlot]: [DevPatternSlot]
   ) {
@@ -142,13 +145,15 @@ export class DevFilesMain {
 
       DependencyResolver.getDevFiles = async (consumerComponent: LegacyComponent): Promise<string[]> => {
         const componentId = await workspace.resolveComponentId(consumerComponent.id);
-        const component = await workspace.get(componentId, false, consumerComponent);
+        // Do not change the storeInCache=false arg. if you think you need to change it, please talk to Gilad first
+        const component = await workspace.get(componentId, false, consumerComponent, true, false);
         if (!component) throw Error(`failed to transform component ${consumerComponent.id.toString()} in harmony`);
         const computedDevFiles = devFiles.computeDevFiles(component);
         return computedDevFiles.list();
       };
     }
 
+    graphql.register(devFilesSchema(devFiles));
     return devFiles;
   }
 }

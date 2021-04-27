@@ -1,16 +1,14 @@
 import { GraphqlMain } from '@teambit/graphql';
-import { ScopeMain } from '@teambit/scope';
-import { Workspace } from '@teambit/workspace';
 import { ComponentMain } from '@teambit/component';
 
 import { GraphBuilder } from './graph-builder';
 import { graphSchema } from './graph.graphql';
 
-export type GraphDeps = [GraphqlMain, ComponentMain, Workspace, ScopeMain];
+export type GraphDeps = [GraphqlMain, ComponentMain];
 
-export async function provide([graphql, componentMain, workspace, scope]: GraphDeps) {
-  const graphBuilder = new GraphBuilder(workspace, scope);
-  const host = componentMain.getHost();
-  graphql.register(graphSchema(graphBuilder, host));
+export async function provide([graphql, componentAspect]: GraphDeps): Promise<GraphBuilder> {
+  const graphBuilder = new GraphBuilder(componentAspect);
+  // TODO: make sure it's working (the host here might be undefined?)
+  graphql.register(graphSchema(graphBuilder, componentAspect));
   return graphBuilder;
 }

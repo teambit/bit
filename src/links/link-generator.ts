@@ -61,7 +61,7 @@ function getComponentLinks({
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
-  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap, createNpmLinkFiles);
+  const flattenedDependencies: BitIds = component.flattenedDependencies;
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
     const getDependencyIdWithResolvedVersion = (): BitId => {
@@ -110,7 +110,9 @@ function getComponentLinks({
   }
 
   if (symlinks.length) {
-    dataToPersist.addManySymlinks(symlinks.map((symlink) => Symlink.makeInstance(symlink.source, symlink.dest)));
+    dataToPersist.addManySymlinks(
+      symlinks.map((symlink) => Symlink.makeInstance(symlink.source, symlink.dest, undefined, true))
+    );
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   dataToPersist.addManyFiles(linksToWrite.map((linkToWrite) => LinkFile.load(linkToWrite)));
@@ -142,16 +144,6 @@ function _getDirectDependencies(
     : component.getAllNonEnvsDependencies();
 }
 
-function _getFlattenedDependencies(
-  component: Component,
-  componentMap: ComponentMap,
-  createNpmLinkFiles: boolean
-): BitIds {
-  return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
-    ? component.flattenedDependencies
-    : BitIds.fromArray(component.getAllNonEnvsFlattenedDependencies());
-}
-
 function groupLinks(
   flattenLinks: LinkFileType[]
 ): {
@@ -171,11 +163,9 @@ function groupLinks(
     if (firstGroupItem.symlinkTo) {
       if (firstGroupItem.postInstallSymlink) {
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
         postInstallSymlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
         return;
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       symlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
       return;

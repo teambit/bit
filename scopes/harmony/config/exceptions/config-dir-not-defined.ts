@@ -1,4 +1,4 @@
-import { BitError } from 'bit-bin/dist/error/bit-error';
+import { BitError } from '@teambit/bit-error';
 
 export class ConfigDirNotDefined extends BitError {
   constructor() {

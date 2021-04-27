@@ -17,16 +17,16 @@ import Component from '../component/consumer-component';
 import PackageJsonFile from '../component/package-json-file';
 import { PackageJsonTransformer } from '../component/package-json-transformer';
 import { preparePackageJsonToWrite } from '../component/package-json-utils';
+import DataToPersist from '../component/sources/data-to-persist';
+import RemovePath from '../component/sources/remove-path';
+import ComponentConfig from '../config/component-config';
+import Consumer from '../consumer';
 import { ArtifactVinyl } from '../component/sources/artifact';
 import {
   ArtifactFiles,
   deserializeArtifactFiles,
   getArtifactFilesByExtension,
 } from '../component/sources/artifact-files';
-import DataToPersist from '../component/sources/data-to-persist';
-import RemovePath from '../component/sources/remove-path';
-import ComponentConfig from '../config/component-config';
-import Consumer from '../consumer';
 
 export type ComponentWriterProps = {
   component: Component;
@@ -138,7 +138,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir(packageManager);
-    await this.populateArtifacts();
+    if (this.isolated) await this.populateArtifacts();
     return this.component;
   }
 
@@ -188,7 +188,7 @@ export default class ComponentWriter {
       componentConfig.setTester(this.component.tester ? this.component.tester.toBitJsonObject() : {});
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
 
-      if (!this.consumer?.isLegacy && this.applyPackageJsonTransformers) {
+      if ((!this.consumer?.isLegacy || !this.scope?.isLegacy) && this.applyPackageJsonTransformers) {
         await this._applyTransformers(this.component, packageJson);
       }
 

@@ -1,0 +1,30 @@
+.menuItem {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  text-decoration: none;
+  color: var(--highlighted-text);
+
+  .icon {
+    color: var(--text-muted);
+    margin-right: 0.76em;
+    font-size: 1.15em;
+  }
+}
+
+.interactive:hover {
+  background: var(--bg-topping-highlight);
+  cursor: pointer;
+}
+
+.active {
+  background: var(--muted-color);
+
+  &:hover {
+    background: var(--muted-color);
+  }
+
+  .icon {
+    color: var(--base-color);
+  }
+}

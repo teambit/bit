@@ -12,7 +12,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('component config', function () {
   this.timeout(0);
   let helper: Helper;
@@ -145,7 +144,7 @@ describe('component config', function () {
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext2', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('*', 'my-scope/ext5', { key: 'val-ws-defaults' });
       helper.extensions.addExtensionToVariant('extensions', 'teambit.harmony/aspect');
-      helper.bitJsonc.addToVariant(helper.scopes.localPath, 'extensions', 'propagate', false);
+      helper.bitJsonc.addToVariant('extensions', 'propagate', false);
       helper.command.install();
       helper.command.compile();
       helper.extensions.addExtensionToVariant('bar', 'my-scope/ext2', { key: 'val-variant' });
@@ -172,7 +171,7 @@ describe('component config', function () {
     describe('stop on variant - component.json propagate true and variant propagate false', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
+        helper.bitJsonc.addToVariant('bar', 'propagate', false);
         output = helper.command.showComponentParsed('bar/foo');
         configuredExtensions = output.extensions.filter((extEntry) => {
           return !isEmpty(extEntry.config);
@@ -193,7 +192,7 @@ describe('component config', function () {
     describe('propagate all the way - component.json propagate true and variant propagate true', () => {
       before(() => {
         helper.componentJson.setPropagate(true);
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', true);
+        helper.bitJsonc.addToVariant('bar', 'propagate', true);
         output = helper.command.showComponentParsed('bar/foo');
         configuredExtensions = output.extensions.filter((extEntry) => {
           return !isEmpty(extEntry.config);

@@ -27,6 +27,7 @@ describe('pkg extension', function () {
 
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
       helper.fixtures.createComponentUtilsIsType();
@@ -55,7 +56,7 @@ describe('pkg extension', function () {
     describe('after import', () => {
       before(() => {
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.scopeHelper.reInitLocalScopeHarmony();
         helper.scopeHelper.addRemoteScope();
         helper.command.importComponent('bar/foo');
@@ -92,10 +93,9 @@ describe('pkg extension', function () {
         const extensionFolder = path.join(EXTENSIONS_BASE_FOLDER, 'simple-config');
         helper.fixtures.copyFixtureExtensions(extensionFolder);
         helper.command.addComponent(extensionFolder);
-        helper.extensions.addExtensionToVariant(extensionFolder, 'teambit.harmony/aspect');
+        helper.extensions.addExtensionToVariant(`${EXTENSIONS_BASE_FOLDER}/simple-config`, 'teambit.harmony/aspect');
         helper.extensions.addExtensionToVariant('bar', 'my-scope/simple-config', config);
-        helper.scopeHelper.linkBitBin();
-        helper.command.link();
+        helper.command.install();
         helper.command.compile();
         helper.command.createCapsuleHarmony('bar/foo');
         helper.command.createCapsuleHarmony('utils/is-type');

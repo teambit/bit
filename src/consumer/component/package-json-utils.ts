@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 
 import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
@@ -206,18 +206,14 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
   await packageJsonFile.write();
 }
 
-async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
+export async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
   // paths without scope name, don't have a symlink in node-modules
-  const pathsToRemove = components
-    .map((c) => {
-      return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
-    })
-    .filter((a) => a); // remove null
-
+  const pathsToRemoveWithNulls = components.map((c) => {
+    return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
+  });
+  const pathsToRemove = compact(pathsToRemoveWithNulls);
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);
-  // $FlowFixMe nulls were removed in the previous filter function
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   return Promise.all(pathsToRemove.map((componentPath) => fs.remove(consumer.toAbsolutePath(componentPath))));
 }
 

@@ -38,12 +38,30 @@
   margin-right: 10px;
 }
 
-.enhancedText {
-  code {
-    background-color: var(--muted-color);
-    padding: 4px;
-    border-radius: 4px;
-    font-family: monospace;
-    font-size: 14px;
+.compositionSection {
+  margin-top: 40px;
+}
+
+.mdx {
+  font-size: 16px;
+  // to allow user to control culumn alignment via mdx table
+  table,
+  th,
+  td,
+  tr,
+  thead {
+    text-align: start;
+    &[align='center'] {
+      text-align: center;
+    }
+    &[align='left'] {
+      text-align: start;
+    }
+    &[align='right'] {
+      text-align: end;
+    }
+  }
+  > * {
+    margin-bottom: 16px;
   }
 }

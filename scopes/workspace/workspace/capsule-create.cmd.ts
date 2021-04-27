@@ -1,5 +1,5 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import { CapsuleList, IsolateComponentsOptions } from '@teambit/isolator';
+import { CapsuleList, IsolateComponentsOptions, IsolatorMain } from '@teambit/isolator';
 import chalk from 'chalk';
 
 import { Workspace } from '.';
@@ -7,6 +7,7 @@ import { Workspace } from '.';
 type CreateOpts = {
   baseDir?: string;
   alwaysNew?: boolean;
+  seedersOnly?: boolean;
   id: string;
   installPackages?: boolean;
 };
@@ -21,17 +22,18 @@ export class CapsuleCreateCmd implements Command {
   options = [
     ['b', 'base-dir <name>', 'set base dir of all capsules'],
     ['a', 'always-new', 'create new environment for capsule'],
+    ['s', 'seeders-only', 'create capsules for the seeders only (not for the entire graph)'],
     ['i', 'id <name>', 'reuse capsule of certain name'],
     ['j', 'json', 'json format'],
     ['d', 'install-packages', 'install packages by the package-manager'],
     ['p', 'package-manager <name>', 'npm, yarn or pnpm, default to npm'],
   ] as CommandOptions;
 
-  constructor(private workspace: Workspace) {}
+  constructor(private workspace: Workspace, private isolator: IsolatorMain) {}
 
   async create(
     [componentIds]: [string[]],
-    { baseDir, alwaysNew = false, id, installPackages = false }: CreateOpts
+    { baseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?
     if (componentIds && !Array.isArray(componentIds)) componentIds = [componentIds];
@@ -39,10 +41,13 @@ export class CapsuleCreateCmd implements Command {
       baseDir,
       installOptions: { installPackages },
       alwaysNew,
+      seedersOnly,
+      includeFromNestedHosts: true,
       name: id,
     };
-    const isolatedEnvironment = await this.workspace.createNetwork(componentIds, capsuleOptions);
-    const capsules = isolatedEnvironment.graphCapsules;
+    const ids = await this.workspace.resolveMultipleComponentIds(componentIds);
+    const network = await this.isolator.isolateComponents(ids, capsuleOptions);
+    const capsules = network.graphCapsules;
     return capsules;
   }
 

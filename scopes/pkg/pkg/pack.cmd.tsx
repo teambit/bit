@@ -1,8 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Command, CommandOptions } from '@teambit/cli';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { Text } from 'ink';
-import React from 'react';
+import chalk from 'chalk';
 
 import { Packer, PackOptions } from './packer';
 
@@ -32,16 +30,16 @@ export class PackCmd implements Command {
 
   constructor(private packer: Packer) {}
 
-  async render(args: PackArgs, options: PackCmdOptions) {
+  async report(args: PackArgs, options: PackCmdOptions) {
     const packResult = await this.json(args, options);
-    if (packResult.data?.errors?.length) {
-      return <Text color="red">{packResult.data?.errors[0]}</Text>;
-    }
-    return (
-      <Text color="green">
-        tar path for component {packResult.data.id}: {packResult.data.metadata?.tarPath}
-      </Text>
-    );
+    const warnings: any = packResult.data?.warnings || [];
+    const warningsOutput: any = warnings.map((warning) => chalk.yellow(warning)).join('\n');
+    const errors: any = packResult.data?.errors || [];
+    const errorsOutput: any = errors.map((error) => chalk.yellow(error)).join('\n');
+    const tarPathOutput = packResult.data.metadata?.tarPath
+      ? chalk.green(`tar path for component ${packResult.data.id}: ${packResult.data.metadata?.tarPath}`)
+      : '';
+    return `${warningsOutput}\n${errorsOutput}\n${tarPathOutput}`;
   }
 
   async json([componentId, scopePath]: PackArgs, options: PackCmdOptions) {

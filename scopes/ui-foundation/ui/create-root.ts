@@ -9,51 +9,86 @@ export async function createRoot(
   aspectDefs: AspectDefinition[],
   rootExtensionName?: string,
   rootAspect = UIAspect.id,
-  runtime = 'ui'
+  runtime = 'ui',
+  config = {}
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
-  const defs = aspectDefs.filter((def) => def.runtimePath);
+  const identifiers = getIdentifiers(aspectDefs, 'Aspect');
+
+  const idSetters = getIdSetters(aspectDefs, 'Aspect');
 
   return `
-import { Harmony } from '@teambit/harmony';
-${getImportStatements(
-  aspectDefs.map((def) => def.aspectPath),
-  'Aspect'
-)} 
-${getImportStatements(
-  // @ts-ignore no nulls can be found here - see above.
-  defs.map((def) => def.runtimePath),
-  'Runtime'
-)}
+${createImports(aspectDefs)}
 
-Harmony.load([${getIdentifiers(
-    aspectDefs.map((def) => def.aspectPath),
-    'Aspect'
-  )}], '${runtime}', {})
-  .then((harmony) => {
-    harmony
+const isBrowser = typeof window !== "undefined";
+const config = JSON.parse('${toWindowsCompatiblePath(JSON.stringify(config))}');
+${idSetters.join('\n')}
+
+export function render(...props){
+  return Harmony.load([${identifiers.join(', ')}], '${runtime}', config)
+    .then((harmony) => {
+      return harmony
       .run()
       .then(() => {
         const rootExtension = harmony.get('${rootAspect}');
-        rootExtension.render(${rootId});
+
+        if (isBrowser) {
+          return rootExtension.render(${rootId}, ...props);
+        } else {
+          return rootExtension.renderSsr(${rootId}, ...props);
+        }
       })
       .catch((err) => {
         throw err;
       });
-  });
-  `;
+    });
 }
 
-function getImportStatements(extensionPaths: string[], suffix: string): string {
-  return extensionPaths
-    .map((path) => `import ${getIdentifier(path, suffix)} from '${toWindowsCompatiblePath(path)}';`)
+if (isBrowser) render();
+`;
+}
+
+function createImports(aspectDefs: AspectDefinition[]) {
+  const defs = aspectDefs.filter((def) => def.runtimePath);
+
+  return `import { Harmony } from '@teambit/harmony';
+${getImportStatements(aspectDefs, 'aspectPath', 'Aspect')}
+${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
+}
+
+function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, suffix: string): string {
+  return aspectDefs
+    .map(
+      (aspectDef) =>
+        `import ${getIdentifier(aspectDef, suffix)} from '${toWindowsCompatiblePath(aspectDef[pathProp])}';`
+    )
     .join('\n');
 }
 
-function getIdentifiers(extensionsPaths: string[], suffix: string): string {
-  return extensionsPaths.map((path) => `${getIdentifier(path, suffix)}`).join(', ');
+function getIdentifiers(aspectDefs: AspectDefinition[], suffix: string): string[] {
+  return aspectDefs.map((aspectDef) => `${getIdentifier(aspectDef, suffix)}`);
 }
 
-function getIdentifier(path: string, suffix: string): string {
+function getIdSetters(defs: AspectDefinition[], suffix: string) {
+  return defs
+    .map((def) => {
+      if (!def.getId) return undefined;
+      return `${getIdentifier(def, suffix)}.id = '${def.getId}';`;
+    })
+    .filter((val) => !!val);
+}
+
+function getIdentifier(aspectDef: AspectDefinition, suffix: string): string {
+  if (!aspectDef.component && !aspectDef.local) {
+    return getCoreIdentifier(aspectDef.aspectPath, suffix);
+  }
+  return getRegularAspectIdentifier(aspectDef, suffix);
+}
+
+function getRegularAspectIdentifier(aspectDef: AspectDefinition, suffix: string): string {
+  return camelCase(`${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${suffix}`);
+}
+
+function getCoreIdentifier(path: string, suffix: string): string {
   return camelCase(`${parse(path).name.split('.')[0]}${suffix}`);
 }

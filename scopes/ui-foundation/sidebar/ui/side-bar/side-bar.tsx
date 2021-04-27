@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
 import { MenuSection } from '@teambit/ui.surfaces.menu.section';
+import { DrawerUI } from '@teambit/ui.tree.drawer';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
-import { DrawerUI } from '../drawer';
 import styles from './side-bar.module.scss';
 
 export type SideBarProps = {
@@ -40,8 +40,10 @@ export function SideBar({ drawerSlot, itemSlot, ...rest }: SideBarProps) {
             isOpen={openDrawerList.includes(id)}
             onToggle={() => handleDrawerToggle(id)}
             key={id}
-            drawer={drawer}
-          />
+            name={drawer.name}
+          >
+            <drawer.render />
+          </DrawerUI>
         );
       })}
     </div>

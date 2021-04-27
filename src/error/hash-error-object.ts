@@ -13,14 +13,21 @@ export default function hashErrorIfNeeded(error: Error) {
   } catch (e) {
     logger.warn('could not clone error', error);
   }
+
   const shouldHash = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
   if (!shouldHash) return clonedError;
   const fields = Object.getOwnPropertyNames(clonedError);
   const fieldToHash = fields.filter((field) => !systemFields.includes(field) && field !== 'message');
   if (!fieldToHash.length) return clonedError;
+
   fieldToHash.forEach((field) => {
-    clonedError[field] = hashValue(clonedError[field]);
+    try {
+      clonedError[field] = hashValue(clonedError[field]);
+    } catch (e) {
+      logger.debug(`could not hash field ${field}`);
+    }
   });
+
   return clonedError;
 }
 
@@ -35,7 +42,8 @@ function hashValue(value: any): string {
     case 'object':
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       if (Array.isArray(value)) return value.map((v) => hash(v));
-      return hash(value);
+      // ignoreUnknown helps to not throw error for some errors with custom props.
+      return hash(value, { ignoreUnknown: true });
     default:
       return hash(value);
   }

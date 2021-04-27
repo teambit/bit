@@ -1,7 +1,7 @@
 import { Component, ComponentID, ComponentMap } from '@teambit/component';
 import { ExecutionContext } from '@teambit/envs';
-import { AbstractVinyl } from 'bit-bin/dist/consumer/component/sources';
-import { TestsResult } from './tests-results';
+import { AbstractVinyl } from '@teambit/legacy/dist/consumer/component/sources';
+import { TestsResult } from '@teambit/tests-results';
 
 export type Tests = {
   components: ComponentsResults[];
@@ -15,6 +15,7 @@ export type ComponentsResults = {
 };
 
 export type SpecFiles = ComponentMap<AbstractVinyl[]>;
+export type ComponentPatternsMap = ComponentMap<{ path: string; relative: string }[]>;
 
 export interface TesterContext extends ExecutionContext {
   /**
@@ -60,7 +61,7 @@ export interface TesterContext extends ExecutionContext {
   /**
    * array of patterns to test.
    */
-  patterns: string[];
+  patterns: ComponentPatternsMap;
 }
 
 /**

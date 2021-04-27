@@ -1,11 +1,11 @@
 import { ComponentModel } from '@teambit/component';
 import React, { useMemo } from 'react';
-import { ComponentTreeContextProvider } from './component-tree-context';
-import { indentStyle } from './indent';
-import { inflateToTree, attachPayload } from './inflate-paths';
+import { TreeContextProvider } from '@teambit/base-ui.graph.tree.tree-context';
+import { indentStyle } from '@teambit/base-ui.graph.tree.indent';
+import { inflateToTree, attachPayload } from '@teambit/base-ui.graph.tree.inflate-paths';
+import { TreeNodeContext, TreeNodeRenderer } from '@teambit/base-ui.graph.tree.recursive-tree';
+import { RootNode } from '@teambit/base-ui.graph.tree.root-node';
 import { PayloadType, ScopePayload } from './payload-type';
-import { TreeNodeContext, TreeNodeRenderer } from './recursive-tree';
-import { RootNode } from './root-node';
 import { DefaultTreeNodeRenderer } from './default-tree-node-renderer';
 
 type ComponentTreeProps = {
@@ -34,9 +34,9 @@ export function ComponentTree({
   return (
     <div style={indentStyle(1)}>
       <TreeNodeContext.Provider value={TreeNode}>
-        <ComponentTreeContextProvider onSelect={onSelect} selected={selected}>
+        <TreeContextProvider onSelect={onSelect} selected={selected}>
           <RootNode node={rootNode} depth={1} />
-        </ComponentTreeContextProvider>
+        </TreeContextProvider>
       </TreeNodeContext.Provider>
     </div>
   );

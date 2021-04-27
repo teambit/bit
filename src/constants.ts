@@ -247,6 +247,21 @@ export const CFG_FEATURE_TOGGLE = 'features';
 
 export const CFG_PACKAGE_MANAGER_CACHE = 'package-manager.cache';
 
+export const CFG_PROXY = 'proxy';
+export const CFG_HTTPS_PROXY = 'https_proxy';
+export const CFG_PROXY_CA = 'proxy.ca';
+export const CFG_PROXY_STRICT_SSL = 'proxy.strict_ssl';
+export const CFG_PROXY_CERT = 'proxy.cert';
+export const CFG_PROXY_KEY = 'proxy.key';
+export const CFG_PROXY_NO_PROXY = 'proxy.no_proxy';
+
+export const CFG_CONCURRENCY_IO = 'concurrency.io';
+export const CFG_CONCURRENCY_COMPONENTS = 'concurrency.components';
+export const CFG_CONCURRENCY_FETCH = 'concurrency.fetch';
+
+export const CFG_CACHE_MAX_ITEMS_COMPONENTS = 'cache.max.components';
+export const CFG_CACHE_MAX_ITEMS_OBJECTS = 'cache.max.objects';
+
 /**
  * git hooks
  */
@@ -324,14 +339,6 @@ export const HOOKS_NAMES = [
  */
 export const CACHE_ROOT = getCacheDirectory();
 
-export const CFG_GLOBAL_REPOSITORY = 'global_repository';
-export const REPOSITORY_CACHE_ROOT = path.join(CACHE_ROOT, 'component-map');
-
-/**
- * app cache directory
- */
-export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
-
 /**
  * global config directories
  */
@@ -365,8 +372,6 @@ export const BIT_TMP_DIRNAME = 'tmp';
 export const BIT_WORKSPACE_TMP_DIRNAME = '.bitTmp';
 
 export const BIT_CACHE_DIRNAME = 'cache';
-
-export const LATEST_TESTED_MARK = '*';
 
 export const SUB_DIRECTORIES_GLOB_PATTERN = '/**/*';
 
@@ -441,8 +446,6 @@ const MISSING_DEPS_SPACE_COUNT = 10;
 export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
 
-export const CONCURRENT_IO_LIMIT = 100; // limit number of files to read/write/delete/symlink at the same time
-
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
 export const WATCHER_COMPLETED_MSG = 'watching for changes';
@@ -457,3 +460,15 @@ export enum Extensions {
   envs = 'teambit.envs/envs',
   builder = 'teambit.pipelines/builder',
 }
+
+export enum BuildStatus {
+  Pending = 'pending',
+  Failed = 'failed',
+  Succeed = 'succeed',
+}
+
+export const CENTRAL_BIT_HUB_URL = `https://${SYMPHONY_URL}/exporter`;
+
+export const CENTRAL_BIT_HUB_NAME = 'bit.dev';
+
+export const SOURCE_DIR_SYMLINK_TO_NM = '_src'; // symlink from node_modules to the workspace sources files

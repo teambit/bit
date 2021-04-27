@@ -116,6 +116,7 @@ export default class Isolator {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult,
       isolated: true,
+      isLegacy: this.consumer?.isLegacy,
       applyPackageJsonTransformers: !this.consumer?.isLegacy,
     };
     this.componentWithDependencies = componentWithDependencies;

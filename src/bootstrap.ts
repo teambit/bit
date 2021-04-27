@@ -9,6 +9,7 @@ import { handleUnhandledRejection } from './cli/command-runner';
 import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
 import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
+import loader from './cli/loader';
 
 const MINIMUM_NODE_VERSION = '12.15.0';
 
@@ -18,6 +19,7 @@ require('events').EventEmitter.defaultMaxListeners = 100; // set max listeners t
 
 require('regenerator-runtime/runtime');
 
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 process.on('unhandledRejection', async (err) => handleUnhandledRejection(err));
 
 // by default Bluebird enables the longStackTraces when env is `development`, or when
@@ -29,6 +31,7 @@ Bluebird.config({
 });
 
 export async function bootstrap() {
+  enableLoaderIfPossible();
   printBitVersionIfAsked();
   warnIfRunningAsRoot();
   verifyNodeVersionCompatibility();
@@ -68,7 +71,7 @@ function printBitVersionIfAsked() {
     if (['-V', '-v', '--version'].includes(process.argv[2])) {
       const harmonyVersion = getHarmonyVersion();
       if (harmonyVersion) {
-        console.log(`${harmonyVersion} (bit-bin: ${BIT_VERSION})`); // eslint-disable-line no-console
+        console.log(harmonyVersion); // eslint-disable-line no-console
       } else {
         console.log(BIT_VERSION); // eslint-disable-line no-console
       }
@@ -77,8 +80,44 @@ function printBitVersionIfAsked() {
   }
 }
 
+/**
+ * once commander and Harmony are fully loaded we have all commands instances and we are able to
+ * determine whether or not the loader should be loaded.
+ * in this phase, all we have are the args from the cli, so we can only guess when it's ok to start
+ * the loader. the reason we start it here is to have the loader report the progress of bit
+ * bootstrap process, which can slow at times.
+ */
+function enableLoaderIfPossible() {
+  const safeCommandsForLoader = [
+    'status',
+    'compile',
+    'start',
+    'add',
+    'show',
+    'tag',
+    'build',
+    'create',
+    'test',
+    'install',
+    'link',
+    'import',
+    'log',
+    'checkout',
+    'merge',
+    'diff',
+  ];
+  if (
+    safeCommandsForLoader.includes(process.argv[2]) &&
+    !process.argv.includes('--json') &&
+    !process.argv.includes('-j')
+  ) {
+    loader.on();
+    loader.start('loading bit...');
+  }
+}
+
 // @todo: improve.
-function getHarmonyVersion() {
+export function getHarmonyVersion() {
   try {
     const teambitBit = require.resolve('@teambit/bit');
     // eslint-disable-next-line

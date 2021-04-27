@@ -52,38 +52,8 @@ describe('merge functionality', function () {
     it('should throw MergeConflict error when importing the component', () => {
       const importFunc = () => helper.command.importComponent('bar/foo');
       const error = new MergeConflict(`${helper.scopes.remote}/bar/foo`, ['0.0.2']);
-      helper.general.expectToThrow(importFunc, error);
-    });
-  });
-  describe('import an older version of a component', () => {
-    before(() => {
-      helper.scopeHelper.setNewLocalAndRemoteScopes();
-
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.fixtures.addComponentUtilsIsType();
-      helper.fs.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.fixtures.addComponentUtilsIsString();
-
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-      const clonedScope = helper.scopeHelper.cloneRemoteScope();
-
-      helper.fs.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
-      helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
-
-      helper.scopeHelper.reInitLocalScope();
-      helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent('utils/is-type'); // v2
-
-      helper.scopeHelper.getClonedRemoteScope(clonedScope);
-      helper.command.importComponent('utils/is-string'); // v1
-    });
-    it('the second import should not override the previously imported component', () => {
-      const catScope = helper.command.catScope();
-      const isTypeObject = catScope.find((c) => c.name === 'utils/is-type');
-      expect(Object.keys(isTypeObject.versions).length).to.equal(2);
-      expect(isTypeObject.versions).to.have.property('0.0.2');
+      expect(importFunc).to.throw(error.message);
+      expect(importFunc).to.not.throw('unhandled rejection found');
     });
   });
   describe('importing a component with --merge flag', () => {

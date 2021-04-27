@@ -27,7 +27,7 @@ describe('compile extension', function () {
       helper.bitJsonc.addDefaultScope();
       helper.bitJsonc.disablePreview();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      appOutput = helper.fixtures.populateComponentsTS(3, undefined, true);
+      appOutput = helper.fixtures.populateComponentsTS(3);
       scopeBeforeTag = helper.scopeHelper.cloneLocalScope();
     });
     describe('compile from the cmd (compilation for development)', () => {
@@ -71,7 +71,7 @@ describe('compile extension', function () {
       it('should save the dists in the objects', () => {
         const catComp2 = helper.command.catComponent('comp2@latest');
         expect(catComp2).to.have.property('extensions');
-        const builderExt = catComp2.extensions.find((e) => e.name === Extensions.builder);
+        const builderExt = helper.general.getExtension(catComp2, Extensions.builder);
         expect(builderExt.data).to.have.property('artifacts');
         const compilerArtifacts = builderExt.data.artifacts.find((a) => a.task.id === Extensions.compiler);
         const files = compilerArtifacts.files.map((d) => d.relativePath);
@@ -80,10 +80,10 @@ describe('compile extension', function () {
       });
       describe('export and import to another scope', () => {
         before(() => {
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('*');
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
@@ -93,7 +93,8 @@ describe('compile extension', function () {
           expect(path.join(artifactsPath, 'dist/index.js')).to.be.a.file();
           expect(path.join(artifactsPath, 'package.json')).to.be.a.file();
         });
-        it('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
+        // @todo: @gilad will handle NESTED differently by creating capsules for them
+        it.skip('should save the artifacts and package.json for NESTED in the component dir, same as legacy', () => {
           const nestedPath = path.join(
             helper.scopes.localPath,
             'components/.dependencies/comp2',
@@ -127,7 +128,7 @@ describe('compile extension', function () {
         helper.fs.outputFile('bar/foo.js');
         helper.command.addComponent('bar');
         helper.bitJsonc.setVariant(undefined, 'bar', {});
-        helper.bitJsonc.addToVariant(helper.scopes.localPath, 'bar', 'propagate', false);
+        helper.bitJsonc.addToVariant('bar', 'propagate', false);
         output = helper.command.tagAllComponents();
       });
       // a guard for Flows bug that exits unexpectedly
@@ -150,7 +151,7 @@ describe('compile extension', function () {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.addDefaultScope();
       helper.extensions.addExtensionToVariant('*', 'teambit.react/react', {});
-      helper.fixtures.populateComponentsTS(1, undefined, true);
+      helper.fixtures.populateComponentsTS(1);
       helper.fs.outputFile('comp1/style.css', 'h1{}');
       helper.fs.outputFile('comp1/types.d.ts', 'export const myField: number');
       helper.command.runCmd('bit compile');
@@ -180,6 +181,21 @@ describe('compile extension', function () {
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/style.css')).to.be.a.file();
       });
+    });
+  });
+  describe('component with nested directories', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponentsTS(1);
+      helper.fs.outputFile('comp1/nested/foo.ts');
+      helper.command.compile();
+    });
+    it('the sourceMap should include the path to the nested dir properly', () => {
+      // before, the "sources" was just ["foo.ts"] without the "nested" dir
+      // it has been fixed once the typescript compiler programmatically added "rootDir": "."
+      const sourceMapPath = 'node_modules/@my-scope/comp1/dist/nested/foo.js.map';
+      const sourceMapPathContent = helper.fs.readJsonFile(sourceMapPath);
+      expect(sourceMapPathContent.sources).to.deep.equal(['nested/foo.ts']);
     });
   });
 });

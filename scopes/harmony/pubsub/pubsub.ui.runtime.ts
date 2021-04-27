@@ -1,82 +1,98 @@
-// TODO: Use log aspect - currently do not work with the legacy log.
-// TODO: Decide and configure a consistent this alias.
-/* eslint-disable @typescript-eslint/no-this-alias */
-
-import { UIRuntime } from '@teambit/ui';
-
+import { UIRuntime, UIAspect, UiUI } from '@teambit/ui';
+import { EventEmitter2 } from 'eventemitter2';
 import { connectToChild } from 'penpal';
-import MutationObserver from 'mutation-observer';
-
+import type { AsyncMethodReturns } from 'penpal/lib/types';
 import { BitBaseEvent } from './bit-base-event';
 import { PubsubAspect } from './pubsub.aspect';
+import { createProvider } from './pubsub-context';
+import { Callback } from './types';
 
+type PubOptions = {
+  /** forward the event to adjacent windows (including the preview iframe)  */
+  propagate?: boolean;
+};
+
+type ChildMethods = {
+  pub: (topic: string, event: BitBaseEvent<any>) => any;
+};
 export class PubsubUI {
-  private topicMap = {};
-  private _childs;
+  private childApi?: AsyncMethodReturns<ChildMethods>;
+  private events = new EventEmitter2();
 
-  private getAllIframes = () => {
-    return Array.from(document.getElementsByTagName('iframe'));
+  /**
+   * subscribe to events
+   */
+  public sub = (topic: string, callback: Callback) => {
+    const events = this.events;
+    events.on(topic, callback);
+
+    const unSub = () => {
+      events.off(topic, callback);
+    };
+
+    return unSub;
   };
 
-  private connectToIframe = async (iframe) => {
-    const _this = this;
+  /**
+   * publish event to all subscribers, including nested iframes.
+   */
+  public pub = (topic: string, event: BitBaseEvent<any>, { propagate }: PubOptions = {}) => {
+    this.emitEvent(topic, event);
 
-    return connectToChild({
-      timeout: 500,
+    // opt-in to forward to iframe, as we would not want 'private' messages automatically passing to iframe
+    if (propagate) {
+      this.pubToChild(topic, event);
+    }
+  };
+
+  private connectToIframe = (iframe: HTMLIFrameElement) => {
+    const connection = connectToChild<ChildMethods>({
       iframe,
       methods: {
-        sub(topicUUID, callback) {
-          return _this.sub(topicUUID, callback);
-        },
-        pub(topicUUID, event: BitBaseEvent<any>) {
-          return _this.pub(topicUUID, event);
-        },
+        pub: this.emitEvent,
       },
-    })
-      .promise.then((child) => child)
-      .catch(() => {
-        return this.connectToIframe(iframe);
-      });
-  };
-
-  private updateConnectionsList() {
-    const _iframes = this.getAllIframes();
-    return _iframes.map((iframe) => this.connectToIframe(iframe));
-  }
-
-  private createOrGetTopic = (topicUUID) => {
-    this.topicMap[topicUUID] = this.topicMap[topicUUID] || [];
-  };
-
-  public async updateConnectionListWithRetry() {
-    this.updateConnectionsList();
-    const config = { childList: true, subtree: true };
-
-    const observer = new MutationObserver((e: MutationRecord[]) => {
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const addedIframes = e
-        .map((x) => Array.from(x.addedNodes).filter((element) => element.nodeName === 'IFRAME'))
-        .flat();
-      this.updateConnectionsList();
     });
-    observer.observe(document.body, config);
-  }
 
-  public sub = (topicUUID, callback) => {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].push(callback);
+    // absorb valid errors like 'connection destroyed'
+    connection.promise
+      .then((childConnection) => (this.childApi = childConnection))
+      .catch(() => {
+        // eslint-disable-next-line no-console
+        console.error('[Pubsub.ui]', 'failed connecting to child iframe');
+      });
+
+    const destroy = () => {
+      connection && connection.destroy();
+    };
+    return destroy;
   };
 
-  public pub = (topicUUID, event: BitBaseEvent<any>) => {
-    this.createOrGetTopic(topicUUID);
-    this.topicMap[topicUUID].forEach((callback) => callback(event));
+  /**
+   * publish event to all subscribers in this window
+   */
+  private emitEvent = (topic: string, event: BitBaseEvent<any>) => {
+    this.events.emit(topic, event);
+  };
+
+  /**
+   * publish event to nested iframes
+   */
+  private pubToChild = (topic: string, event: BitBaseEvent<any>) => {
+    return this.childApi?.pub(topic, event);
   };
 
   static runtime = UIRuntime;
+  static dependencies = [UIAspect];
 
-  static async provider() {
+  static async provider([uiUI]: [UiUI]) {
     const pubsubUI = new PubsubUI();
-    await pubsubUI.updateConnectionListWithRetry();
+
+    const reactContext = createProvider({
+      connect: pubsubUI.connectToIframe,
+    });
+
+    uiUI.registerRenderHooks({ reactContext });
+
     return pubsubUI;
   }
 }

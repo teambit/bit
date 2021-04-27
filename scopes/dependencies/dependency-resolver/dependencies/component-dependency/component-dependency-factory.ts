@@ -1,10 +1,10 @@
 import mapSeries from 'p-map-series';
 import { ComponentMain, ComponentID } from '@teambit/component';
-import { compact } from 'ramda-adjunct';
-import { Dependency as LegacyDependency } from 'bit-bin/dist/consumer/component/dependencies';
-import LegacyComponent from 'bit-bin/dist/consumer/component';
-import { ExtensionDataEntry } from 'bit-bin/dist/consumer/config';
-import componentIdToPackageName from 'bit-bin/dist/utils/bit/component-id-to-package-name';
+import { compact } from 'lodash';
+import { Dependency as LegacyDependency } from '@teambit/legacy/dist/consumer/component/dependencies';
+import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-id-to-package-name';
 import { ComponentDependency, SerializedComponentDependency, TYPE } from './component-dependency';
 import { DependencyLifecycleType } from '../dependency';
 import { DependencyFactory } from '../dependency-factory';

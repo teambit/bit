@@ -11,6 +11,7 @@ import {
 import GeneralError from '../../../error/general-error';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { AUTO_SNAPPED_MSG } from './snap-cmd';
+import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
 
 export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
   const tab = addName ? '\t' : '';
@@ -53,6 +54,7 @@ export default class Merge implements LegacyCommand {
       'EXPERIMENTAL. relevant for lanes. checkout only components in a lane that exist in the workspace',
     ],
     ['', 'no-snap', 'EXPERIMENTAL. do not auto snap in case the merge completed without conflicts'],
+    ['', 'build', 'in case of snap during the merge, run the build-pipeline (similar to bit snap --build)'],
     ['m', 'message <message>', 'EXPERIMENTAL. override the default message for the auto snap'],
   ] as CommandOptions;
   loader = true;
@@ -66,6 +68,7 @@ export default class Merge implements LegacyCommand {
       abort = false,
       resolve = false,
       lane = false,
+      build = false,
       noSnap = false,
       existing = false,
       message,
@@ -76,15 +79,17 @@ export default class Merge implements LegacyCommand {
       abort?: boolean;
       resolve?: boolean;
       lane?: boolean;
+      build?: boolean;
       noSnap?: boolean;
       existing?: boolean;
       message: string;
     }
   ): Promise<ApplyVersionResults> {
+    build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     if (abort && resolve) throw new GeneralError('unable to use "abort" and "resolve" flags together');
     if (noSnap && message) throw new GeneralError('unable to use "noSnap" and "message" flags together');
-    return merge(values, mergeStrategy as any, abort, resolve, lane, noSnap, message, existing);
+    return merge(values, mergeStrategy as any, abort, resolve, lane, noSnap, message, existing, build);
   }
 
   report({

@@ -1,36 +1,51 @@
-// import { AccountObj } from '../../types/account';
-
-import { Icon } from '@teambit/evangelist.elements.icon';
-import classNames from 'classnames';
 import React, { PureComponent } from 'react';
-
+import classNames from 'classnames';
+import Tooltip, { Place, Type, Effect } from 'react-tooltip';
+import { v1 } from 'uuid';
+import { Icon } from '@teambit/evangelist.elements.icon';
+import { addAvatarQueryParams } from '@teambit/url.add-avatar-query-params';
+import { getInitials } from '@teambit/string.get-initials';
+import { letterBgColors } from '@teambit/ui.styles.colors-by-letter';
+import { ellipsis } from '@teambit/ui.styles.ellipsis';
 import { AccountObj } from './avatar';
-import avatarColors from './avatar-colors.module.scss';
 import styles from './styles.module.scss';
-// import Tooltip from 'components/Tooltip';
-import { addQueryParams, getInitials } from './utils';
-// import { v1 } from 'uuid';
 
-type UserAvatarProps = {
+type tooltipProps = {
+  place: Place;
+  type: Type;
+  effect: Effect;
+};
+const tooltipDefaultProps: tooltipProps = {
+  place: 'bottom',
+  type: 'dark',
+  effect: 'solid',
+};
+
+export type UserAvatarProps = {
   account: AccountObj;
   size: number;
   imageSize?: number;
   fontSize?: number;
   className?: string;
   imgClassName?: string;
-  // hideTooltip?: boolean;
-};
+  /**
+   * showing or not a tooltip when hover on the avatar, this value is false by default
+   */
+  showTooltip?: boolean;
+} & React.HTMLAttributes<HTMLDivElement>;
 
 export class UserAvatar extends PureComponent<UserAvatarProps> {
-  // state = {
-  //   tooltipId: null
-  // };
-  // componentDidMount() {
-  // 	//mount only happens in client side
-  // 	//setting state here will prevent id reallocated after serverside rendering
-  // 	//prevent double render when id change in clinet side after serverside rendering
-  // 	this.setState({ tooltipId: v1() });
-  // }
+  state = {
+    tooltipId: '',
+    isMobile: false,
+  };
+
+  componentDidMount() {
+    this.setState({ tooltipId: v1() });
+    if (window.innerWidth <= 1080) {
+      this.setState({ isMobile: true });
+    }
+  }
 
   render() {
     const {
@@ -40,20 +55,22 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
       fontSize = Math.round(size * 0.4),
       className,
       imgClassName,
-      // hideTooltip = false
+      showTooltip = false,
+      ...rest
     } = this.props;
-    // const { tooltipId } = this.state;
-
+    const { tooltipId, isMobile } = this.state;
     const { profileImage = '', name = '', displayName = '' } = account;
     const firstLetter = name[0] || displayName[0];
-    const profileImageWithParams = addQueryParams(profileImage, imageSize);
-    // if(!account) return
+    const profileImageWithParams = addAvatarQueryParams(profileImage, imageSize, styles.defaultAvatarBgColor);
+    const colors = firstLetter && letterBgColors[firstLetter.toLowerCase()];
+    const isTooltipOn = showTooltip && !!tooltipId && !isMobile;
     return (
       <div
-        className={classNames(avatarColors[firstLetter], styles.avatar, className)}
+        className={classNames(colors, styles.avatar, className)}
         style={{ width: `${size}px`, height: `${size}px` }}
-        // data-for={tooltipId}
-        // data-tip={displayName || name}
+        data-for={tooltipId}
+        data-tip={displayName || name}
+        {...rest}
       >
         {profileImageWithParams && (
           <img src={profileImageWithParams} className={classNames(styles.avatarImg, imgClassName)} />
@@ -63,19 +80,12 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
             {getInitials(displayName || name)}
           </span>
         )}
-        {!displayName && !name && !profileImageWithParams && (
+        {!displayName && !name && !profileImageWithParams && !firstLetter && (
           <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
         )}
-        {/* {tooltipId && (
-					<Tooltip
-						className={styles.tooltip}
-						id={tooltipId}
-						place="bottom"
-						type="dark"
-						effect="solid"
-						disable={hideTooltip}
-					/>
-				)} */}
+        {isTooltipOn && (
+          <Tooltip className={classNames(styles.tooltip, ellipsis)} id={tooltipId} {...tooltipDefaultProps} />
+        )}
       </div>
     );
   }

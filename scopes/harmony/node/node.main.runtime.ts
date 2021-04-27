@@ -1,12 +1,16 @@
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
+import { TsConfigSourceFile } from 'typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
+import { nodeEnvTemplate } from './templates/node-env';
 
 export class NodeMain {
   constructor(
@@ -24,7 +28,11 @@ export class NodeMain {
   /**
    * override the TS config of the environment.
    */
-  overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
+  overrideTsConfig: (
+    tsconfig: TsConfigSourceFile,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
+    tsModule?: any
+  ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
 
   /**
    * override the jest config of the environment.
@@ -39,7 +47,10 @@ export class NodeMain {
   /**
    * override the build ts config.
    */
-  overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
+  overrideBuildTsConfig: (
+    tsconfig: any,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
+  ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
   /**
    * override package json properties.
@@ -75,11 +86,12 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, ReactAspect];
+  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
 
-  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
+    generator.registerComponentTemplate([nodeEnvTemplate]);
     return new NodeMain(react, nodeEnv, envs);
   }
 }
