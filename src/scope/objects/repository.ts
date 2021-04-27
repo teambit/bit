@@ -112,28 +112,28 @@ export default class Repository {
     if (cached) {
       return cached;
     }
-    // @ts-ignore @todo: fix! it should return BitObject | null.
-    return fs
-      .readFile(this.objectPath(ref))
-      .then((fileContents) => {
-        return this.onRead(fileContents);
-      })
-      .then((fileContents) => {
-        return BitObject.parseObject(fileContents);
-      })
-      .then((parsedObject: BitObject) => {
-        this.setCache(parsedObject);
-        return parsedObject;
-      })
-      .catch((err) => {
-        if (err.code !== 'ENOENT') {
-          logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
-          throw err;
-        }
-        logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
-        if (throws) throw err;
-        return null;
-      });
+    let fileContentsRaw: Buffer;
+    try {
+      fileContentsRaw = await fs.readFile(this.objectPath(ref));
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+        throw err;
+      }
+      logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
+      if (throws) throw err;
+      // @ts-ignore @todo: fix! it should return BitObject | null.
+      return null;
+    }
+    const size = fileContentsRaw.byteLength;
+    const fileContents = await this.onRead(fileContentsRaw);
+    const parsedObject = await BitObject.parseObject(fileContents);
+    const maxSizeToCache = 100 * 1024; // 100KB
+    if (size < maxSizeToCache) {
+      // don't cache big files (mainly artifacts) to prevent out-of-memory
+      this.setCache(parsedObject);
+    }
+    return parsedObject;
   }
 
   async list(): Promise<BitObject[]> {
