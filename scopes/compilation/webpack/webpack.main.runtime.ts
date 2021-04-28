@@ -1,15 +1,24 @@
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
-import { BundlerAspect, BundlerContext, BundlerMain, DevServer, DevServerContext } from '@teambit/bundler';
+import { BundlerAspect, BundlerContext, BundlerMain, DevServer, DevServerContext, BundlerMode } from '@teambit/bundler';
 import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { Configuration } from 'webpack';
 import { merge } from 'webpack-merge';
+import { WebpackConfigMutator } from '@teambit/utils.config-mutator';
 
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { WebpackAspect } from './webpack.aspect';
 import { WebpackBundler } from './webpack.bundler';
 import { WebpackDevServer } from './webpack.dev-server';
+
+export type WebpackConfigTransformContext = {
+  mode: BundlerMode;
+};
+export type WebpackConfigTransform = (
+  config: WebpackConfigMutator,
+  context: WebpackConfigTransformContext
+) => WebpackConfigMutator | Configuration;
 
 export class WebpackMain {
   constructor(
@@ -44,7 +53,7 @@ export class WebpackMain {
     return new WebpackDevServer(mergedConfig);
   }
 
-  getWebpackDevServerConfig(context: DevServerContext, config: any): any {
+  private getWebpackDevServerConfig(context: DevServerContext, config: any): any {
     return merge(
       // TODO: create the type for the webpack config
       this.createDevServerConfig(
