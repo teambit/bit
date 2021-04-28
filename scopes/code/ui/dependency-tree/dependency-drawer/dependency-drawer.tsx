@@ -57,6 +57,6 @@ function getDependencyLink(dep: DependencyType) {
   const npmPrefix = 'https://npmjs.com/package';
   return {
     name: dep.packageName || dep.id,
-    link: `${npmPrefix}/${dep.packageName || dep.id}?version=${version}`,
+    link: `${npmPrefix}/${dep.packageName || dep.id}/v/${version}`,
   };
 }
