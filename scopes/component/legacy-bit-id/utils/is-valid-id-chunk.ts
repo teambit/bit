@@ -3,5 +3,7 @@ const validationRegExpDisallowSlash = /^[-_a-z0-9]+$/;
 
 export default function isValidIdChunk(val: any, allowSlash = true): boolean {
   if (typeof val !== 'string') return false;
-  return allowSlash ? validationRegExp.test(val) : validationRegExpDisallowSlash.test(val);
+  if (val.includes('//')) return false;
+  const regex = allowSlash ? validationRegExp : validationRegExpDisallowSlash;
+  return regex.test(val);
 }
