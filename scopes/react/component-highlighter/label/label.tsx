@@ -7,7 +7,7 @@ import useAnimationFrame from 'use-animation-frame';
 import type { Placement, Modifier } from '@popperjs/core';
 import '@popperjs/core';
 
-import { DefaultLabel } from './default-lable';
+import { DefaultLabel } from './default-label';
 import { ComponentLabel } from './component-label';
 
 import classes from './label.module.scss';
@@ -57,7 +57,7 @@ export interface LabelProps extends CardProps {
 export function Label({ componentId, link, scopeLink, ...rest }: LabelProps) {
   const parsedId = useMemo(() => ComponentID.tryFromString(componentId), [componentId]);
 
-  if (!parsedId) return <DefaultLabel {...rest}>{componentId}</DefaultLabel>;
+  if (!parsedId) return <DefaultLabel href={link}>{componentId}</DefaultLabel>;
 
   return <ComponentLabel {...rest} componentId={parsedId} link={link} scopeLink={scopeLink} />;
 }
