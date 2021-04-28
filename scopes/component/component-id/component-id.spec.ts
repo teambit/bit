@@ -24,4 +24,42 @@ describe('component id', () => {
       expect(componentId.namespace).to.equal('ui/data');
     });
   });
+
+  describe('', () => {
+    it('should return true for valid object', () => {
+      const obj = {
+        name: 'josh',
+        scope: 'world',
+      };
+
+      const result = ComponentID.isValidObject(obj);
+
+      expect(result).to.equal(true);
+    });
+  });
+
+  it('should return false for non objects', () => {
+    expect(ComponentID.isValidObject(undefined)).to.equal(false);
+    expect(ComponentID.isValidObject('a-string')).to.equal(false);
+  });
+
+  it('should return false when name is missing', () => {
+    const obj = {
+      scope: 'cats',
+    };
+
+    const result = ComponentID.isValidObject(obj);
+
+    expect(result).to.equal(false);
+  });
+
+  it('should return false when scope is missing', () => {
+    const obj = {
+      name: 'bob',
+    };
+
+    const result = ComponentID.isValidObject(obj);
+
+    expect(result).to.equal(false);
+  });
 });
