@@ -2,9 +2,9 @@ import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
-import { metaFromPackageJson, ComponentMetaData } from './bit-id-from-pkg-json';
+import { metaFromPackageJson } from './meta-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
-import { componentMetaField, fieldComponentId, fieldHomepageUrl } from './model';
+import { ComponentMeta, componentMetaField, fieldComponentId, fieldHomepageUrl } from './model';
 
 export type BitReactTransformerOptions = {
   componentFilesPath: string;
@@ -19,7 +19,7 @@ type Api = { types: typeof Types };
  * for showcase and debugging purposes.
  */
 export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
-  let componentMap: Record<string, ComponentMetaData>;
+  let componentMap: Record<string, ComponentMeta>;
   const types = api.types as typeof Types;
 
   function setMap(mapPath: string) {

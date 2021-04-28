@@ -4,14 +4,11 @@ import findRoot from 'find-root';
 
 import { ComponentID } from '@teambit/component-id';
 
+import { ComponentMeta } from './model';
+
 type Primitive = string | number | boolean | undefined | null;
 type Json = {
   [key: string]: Json | Primitive;
-};
-
-export type ComponentMetaData = {
-  id: string;
-  homepage?: string;
 };
 
 export function metaFromPackageJson(filepath: string) {
@@ -22,7 +19,7 @@ export function metaFromPackageJson(filepath: string) {
   return id;
 }
 
-function extractMetadata(pkgPath: string): ComponentMetaData | undefined {
+function extractMetadata(pkgPath: string): ComponentMeta | undefined {
   const pkg = praseJsonFile(pkgPath);
   if (!pkg) return undefined;
 
