@@ -83,7 +83,7 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () => helper.command.removeComponent('none/* -s');
+          const removeFunc = () => helper.command.removeComponent('none/*');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.general.expectToThrow(removeFunc, error);
         });
@@ -95,7 +95,7 @@ describe('component id with wildcard', function () {
           const status = helper.command.statusJson();
           expect(status.stagedComponents).to.have.lengthOf(5);
 
-          output = helper.command.removeComponent('"utils/fs/*" -s');
+          output = helper.command.removeComponent('"utils/fs/*"');
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -119,7 +119,7 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const removeFunc = () => helper.command.removeComponent(`${helper.scopes.remote}/none/* --silent --remote`);
+          const removeFunc = () => helper.command.removeComponent(`${helper.scopes.remote}/none/* --remote`);
           const error = new NoIdMatchWildcard([`${helper.scopes.remote}/none/*`]);
           helper.general.expectToThrow(removeFunc, error);
         });
@@ -127,7 +127,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --silent --remote`);
+          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');
@@ -145,7 +145,7 @@ describe('component id with wildcard', function () {
         helper.scopeHelper.reInitRemoteScope();
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
-        helper.command.removeComponent(`${helper.scopes.remote}/* -s`);
+        helper.command.removeComponent(`${helper.scopes.remote}/*`);
 
         // as an intermediate step, make sure the remote scope has all components
         const ls = helper.command.listRemoteScopeParsed();
@@ -158,7 +158,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard match some of the components', () => {
         let output;
         before(() => {
-          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --silent --remote`);
+          output = helper.command.removeComponent(`${helper.scopes.remote}/utils/fs/* --remote`);
         });
         it('should indicate the removed components', () => {
           expect(output).to.have.string('utils/fs/read');

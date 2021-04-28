@@ -404,7 +404,7 @@ describe('components that are not synced between the scope and the consumer', fu
         const bitMap = helper.bitMap.read();
         helper.scopeHelper.getClonedLocalScope(scopeAfterV1);
         helper.bitMap.write(bitMap);
-        helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '-r -s');
+        helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '-r');
         scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
       });
       describe('bit status', () => {
