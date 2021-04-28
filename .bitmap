@@ -621,7 +621,7 @@
     },
     "ui/composition-card": {
         "scope": "teambit.compositions",
-        "version": "0.0.351",
+        "version": "0.0.352",
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/ui/composition-card"
     },
