@@ -12,6 +12,7 @@ import { Remotes } from '../../remotes';
 import RemovedLocalObjects from '../../scope/removed-local-objects';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import deleteComponentsFiles from '../component-ops/delete-component-files';
+import ComponentsList from '../component/components-list';
 import Component from '../component/consumer-component';
 import * as packageJsonUtils from '../component/package-json-utils';
 
@@ -117,8 +118,14 @@ async function removeLocal(
     );
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
-  const idsToRemoveFromScope = BitIds.fromArray(idsToRemove.filter((id) => id.hasScope()));
-  const idsToCleanFromWorkspace = BitIds.fromArray(idsToRemove.filter((id) => !id.hasScope()));
+  const componentsList = new ComponentsList(consumer);
+  const newComponents = (await componentsList.listNewComponents(false)) as BitIds;
+  const idsToRemoveFromScope = BitIds.fromArray(
+    idsToRemove.filter((id) => !newComponents.hasWithoutScopeAndVersion(id))
+  );
+  const idsToCleanFromWorkspace = BitIds.fromArray(
+    idsToRemove.filter((id) => newComponents.hasWithoutScopeAndVersion(id))
+  );
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const {
     removedComponentIds,
