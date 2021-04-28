@@ -1,5 +1,6 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import webpack from 'webpack';
@@ -59,9 +60,12 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         },
         {
           test: /\.js$/,
-          // limit loader to files in the current project, to skip any files linked from other projects (like Bit itself)
+          descriptionData: {
+            componentId: ComponentID.isValidObject,
+          },
+          // limit loader to files in the current project,
+          // to skip any files linked from other projects (like Bit itself)
           include: path.join(workDir, 'node_modules'),
-          exclude: [/babel/, /\.bin/, /\.cache/],
           use: [
             {
               loader: require.resolve('babel-loader'),

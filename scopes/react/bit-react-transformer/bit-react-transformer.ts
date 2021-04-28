@@ -19,7 +19,6 @@ type Api = { types: typeof Types };
  * for showcase and debugging purposes.
  */
 export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
-  let didInsertMetadata = false;
   let componentMap: Record<string, ComponentMetaData>;
   const types = api.types as typeof Types;
 
@@ -43,8 +42,6 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   );
 
   function addComponentId(path: NodePath<any>, filePath: string, identifier: string) {
-    if (!didInsertMetadata) return;
-
     const componentIdStaticProp = types.expressionStatement(
       types.assignmentExpression(
         '=',
@@ -59,10 +56,16 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   const visitor: Visitor<PluginPass> = {
     Program(path, state) {
       const filename = state.file.opts.filename;
-      if (!filename) return;
+      if (!filename) {
+        path.stop(); // stop traversal
+        return;
+      }
 
       const meta = componentMap?.[filename] || fileToBitId(filename);
-      if (!meta) return;
+      if (!meta) {
+        path.stop(); // stop traversal
+        return;
+      }
 
       const properties = [types.objectProperty(types.identifier('id'), types.stringLiteral(meta.id))];
       if (meta.homepage)
@@ -77,7 +80,6 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
       ]);
 
       path.unshiftContainer('body', metadataDeceleration);
-      didInsertMetadata = true;
     },
 
     FunctionDeclaration(path, state) {
@@ -130,9 +132,6 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     pre() {
       const filepath = opts.componentFilesPath;
       if (filepath && !componentMap) setMap(filepath);
-
-      // will be set by `Program`
-      didInsertMetadata = false;
     },
     post() {
       // reset memoization, in case any file change between runs
