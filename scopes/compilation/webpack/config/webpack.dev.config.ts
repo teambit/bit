@@ -59,6 +59,12 @@ export function configFactory(devServerID, workspaceDir, entryFiles, publicRoot,
       // globalObject: 'this',
     },
 
+    infrastructureLogging: {
+      level: 'error',
+    },
+
+    stats: 'errors-only',
+
     devServer: {
       static: [
         {

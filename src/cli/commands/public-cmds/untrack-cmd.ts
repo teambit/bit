@@ -8,7 +8,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untrack implements LegacyCommand {
   name = 'untrack [ids...]';
-  description = `untrack a new component(s)
+  description = `DEPRECATED (use "bit remove" instead). untrack a new component(s)
   https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#untracking-components
   ${WILDCARD_HELP('untrack')}`;
   alias = 'u';
@@ -34,7 +34,7 @@ export default class Untrack implements LegacyCommand {
     unRemovableComponents: Array<string>;
     missingComponents: Array<string>;
   }): string {
-    const msg = [];
+    const msg = [chalk.yellow(`untrack has deprecated, please use "bit remove".`)];
     if (R.isEmpty(untrackedComponents) && R.isEmpty(unRemovableComponents) && R.isEmpty(missingComponents)) {
       return chalk.underline.red('no components untracked');
     }

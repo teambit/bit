@@ -41,6 +41,8 @@ export type TesterDescriptor = {
 };
 
 export class TesterService implements EnvService<Tests, TesterDescriptor> {
+  name = 'tester';
+
   constructor(
     readonly workspace: Workspace,
     /**
@@ -72,7 +74,7 @@ export class TesterService implements EnvService<Tests, TesterDescriptor> {
         <Newline />
         <Text>
           {/* refactor a separate component which highlights for cli */}
-          {highlight(descriptor?.config || '', {language: 'javascript', ignoreIllegals: true})}
+          {highlight(descriptor?.config || '', { language: 'javascript', ignoreIllegals: true })}
         </Text>
         <Newline />
       </Text>

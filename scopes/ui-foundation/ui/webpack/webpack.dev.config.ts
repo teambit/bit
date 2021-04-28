@@ -89,6 +89,12 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
       // globalObject: 'this',
     },
 
+    infrastructureLogging: {
+      level: 'error',
+    },
+
+    stats: 'errors-only',
+
     // @ts-ignore - remove this once there is types package for webpack-dev-server v4
     devServer: {
       static: [
