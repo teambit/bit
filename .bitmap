@@ -901,12 +901,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/mdx-layout"
     },
-    "ui/mdx-page": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/mdx/ui/mdx-page"
-    },
     "ui/mdx-scope-context": {
         "scope": "teambit.mdx",
         "version": "0.0.351",

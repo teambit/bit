@@ -6,7 +6,7 @@ import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { wideColumn } from '@teambit/base-ui.layout.page-frame';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
-import React, { HTMLAttributes, useContext, useEffect } from 'react';
+import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 
 import { AddingTests } from '@teambit/instructions.adding-tests';
