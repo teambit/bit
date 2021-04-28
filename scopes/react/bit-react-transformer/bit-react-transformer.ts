@@ -2,14 +2,14 @@ import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
 import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
-import { fileToBitId, ComponentMetaData } from './bit-id-from-pkg-json';
+import { metaFromPackageJson, ComponentMetaData } from './bit-id-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
+import { componentMetaField, fieldComponentId, fieldHomepageUrl } from './model';
 
 export type BitReactTransformerOptions = {
   componentFilesPath: string;
 };
 
-const COMPONENT_META = '__bit_component';
 const PLUGIN_NAME = 'bit-react-transformer';
 
 type Api = { types: typeof Types };
@@ -32,9 +32,9 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     }
   }
 
-  const toComponentId = memoize(
+  const extractMeta = memoize(
     (filePath: string) => {
-      return componentMap?.[filePath] || fileToBitId(filePath);
+      return componentMap?.[filePath] || metaFromPackageJson(filePath);
     },
     {
       primitive: true, // optimize for strings
@@ -45,8 +45,8 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     const componentIdStaticProp = types.expressionStatement(
       types.assignmentExpression(
         '=',
-        types.memberExpression(types.identifier(identifier), types.identifier(COMPONENT_META)),
-        types.identifier(COMPONENT_META)
+        types.memberExpression(types.identifier(identifier), types.identifier(componentMetaField)),
+        types.identifier(componentMetaField)
       )
     );
 
@@ -61,22 +61,18 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
         return;
       }
 
-      const meta = componentMap?.[filename] || fileToBitId(filename);
+      const meta = extractMeta(filename);
       if (!meta) {
         path.stop(); // stop traversal
         return;
       }
 
-      const properties = [types.objectProperty(types.identifier('id'), types.stringLiteral(meta.id))];
+      const properties = [types.objectProperty(types.identifier(fieldComponentId), types.stringLiteral(meta.id))];
       if (meta.homepage)
-        properties.push(types.objectProperty(types.identifier('homepage'), types.stringLiteral(meta.homepage)));
+        properties.push(types.objectProperty(types.identifier(fieldHomepageUrl), types.stringLiteral(meta.homepage)));
 
       const metadataDeceleration = types.variableDeclaration('var', [
-        types.variableDeclarator(
-          types.identifier(COMPONENT_META),
-
-          types.objectExpression(properties)
-        ),
+        types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
       ]);
 
       path.unshiftContainer('body', metadataDeceleration);
@@ -135,7 +131,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
     },
     post() {
       // reset memoization, in case any file change between runs
-      toComponentId.clear();
+      extractMeta.clear();
     },
   };
 

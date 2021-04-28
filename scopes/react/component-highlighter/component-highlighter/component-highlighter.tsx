@@ -5,7 +5,7 @@ import { HoverSelector } from '@teambit/ui.hover-selector';
 import { useDebouncedCallback } from 'use-debounce';
 import { Frame } from '../frame';
 import { Label, LabelContainer } from '../label';
-import { isBitComponent } from './bit-react-component';
+import { hasComponentMeta } from './bit-react-component';
 
 import styles from './component-highlighter.module.scss';
 
@@ -90,13 +90,16 @@ function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Eleme
 
     const component = domToReact(current);
 
-    if (isBitComponent(component))
+    if (hasComponentMeta(component)) {
+      const meta = component.__bit_component;
+
       return {
         element: current,
         component,
-        id: component.__bit_component.id || 'unknown',
-        homepage: component.__bit_component.homepage,
+        id: meta.id || 'unknown',
+        homepage: meta.homepage,
       };
+    }
   }
 
   return undefined;

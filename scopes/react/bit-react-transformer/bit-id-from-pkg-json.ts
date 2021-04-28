@@ -14,21 +14,21 @@ export type ComponentMetaData = {
   homepage?: string;
 };
 
-export function fileToBitId(filepath: string) {
+export function metaFromPackageJson(filepath: string) {
   const root = safeFindRoot(filepath);
   if (!root) return undefined;
 
-  const id = bitIdFromPkgPath(join(root, 'package.json'));
+  const id = extractMetadata(join(root, 'package.json'));
   return id;
 }
 
-function bitIdFromPkgPath(pkgPath: string): ComponentMetaData | undefined {
-  const pkg = parsePkgJson(pkgPath);
+function extractMetadata(pkgPath: string): ComponentMetaData | undefined {
+  const pkg = praseJsonFile(pkgPath);
   if (!pkg) return undefined;
 
   const compId = pkg.componentId;
   const homepage = typeof pkg.homepage === 'string' ? pkg.homepage : undefined;
-  if (!compId) return undefined;
+  if (!compId || !ComponentID.isValidObject(compId)) return undefined;
 
   try {
     const parsed = ComponentID.fromObject(compId);
@@ -41,7 +41,7 @@ function bitIdFromPkgPath(pkgPath: string): ComponentMetaData | undefined {
   }
 }
 
-function parsePkgJson(pkgPath: string): Json | undefined {
+function praseJsonFile(pkgPath: string): Json | undefined {
   if (!existsSync(pkgPath)) return undefined;
   try {
     const content = readFileSync(pkgPath, 'utf-8');

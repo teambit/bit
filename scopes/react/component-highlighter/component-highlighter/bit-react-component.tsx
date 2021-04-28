@@ -1,11 +1,5 @@
-export interface ComponentMeta {
-  id: string;
-  homepage: string;
-}
-export interface BitComponent {
-  __bit_component: ComponentMeta;
-}
+import type { ComponentMetaHolder } from '@teambit/babel.bit-react-transformer';
 
-export function isBitComponent(component: any): component is BitComponent {
+export function hasComponentMeta(component: any): component is ComponentMetaHolder {
   return component && typeof component.__bit_component === 'object' && typeof component.__bit_component.id === 'string';
 }
