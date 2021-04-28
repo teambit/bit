@@ -1,6 +1,6 @@
 import React from 'react';
-import { MdxPage } from './mdx-page';
+import { MDXPage } from './mdx-page';
 
-export const MdxPageExample = () => {
-  return <MdxPage>{'# hello'}</MdxPage>;
+export const MDXPageExample = () => {
+  return <MDXPage>{'# hello'}</MDXPage>;
 };

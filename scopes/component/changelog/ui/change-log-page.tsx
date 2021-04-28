@@ -4,7 +4,7 @@ import { Separator } from '@teambit/documenter.ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
 import classNames from 'classnames';
 import { useSnaps } from '@teambit/ui.hooks.use-snaps';
-import { MdxPage } from '@teambit/ui.mdx-page';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { wideColumn } from '@teambit/base-ui.layout.page-frame';
 import { ExportingComponents } from '@teambit/instructions.exporting-components';
 
@@ -23,9 +23,9 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   if (snaps.length === 0 && !loading) {
     return (
       <div className={classNames(wideColumn, className)}>
-        <MdxPage>
+        <MDXLayout>
           <ExportingComponents />
-        </MdxPage>
+        </MDXLayout>
       </div>
     );
   }

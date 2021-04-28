@@ -5,7 +5,6 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { RenderingContext } from '@teambit/preview';
-import { MdxPage } from '@teambit/ui.mdx-page';
 import { AddingDocs } from '@teambit/instructions.adding-docs';
 
 import { withProviders } from '../mount';
@@ -49,10 +48,11 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
     ? docs.default
     : () => (
         <>
+          <h3> There are no docs for this Component. Learn how to add docs:</h3>
           <div className={styles.instructions}>
-            <MdxPage>
+            <MDXLayout>
               <AddingDocs />
-            </MdxPage>
+            </MDXLayout>
           </div>
         </>
       );

@@ -65,9 +65,11 @@
     margin-bottom: 16px;
   }
 }
+
 .instructions {
   background-color: #fafafa;
-  padding: 20px;
+  padding: 0 20px;
   border-radius: 8px;
-  margin-top: 0px;
+  border: 1px solid grey;
+  margin: 20px 0;
 }

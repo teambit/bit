@@ -3,20 +3,12 @@ labels: ['react', 'typescript', 'mdx-page']
 description: 'A MDX Page component.'
 ---
 
-import { MdxPage } from './mdx-page';
+import { MDXPage } from './mdx-page';
 
-MDX Page Example:
-
-A component that allows you to render MDX complete with MDX styling.
-
-Code Snippet:
+MDX Page component for rendering MDX content inside. This component is wrapped in the MDX Layout component for MDX and syntax highlighting.
 
 ```js
-<MdxPage>{'# hello'}</MdxPage>
-```
-
-Live Playground:
-
-```js live
-<MdxPage>{'# hello'}</MdxPage>
+<MDXPage>
+  <SomeMDXPage />
+</MDXPage>
 ```

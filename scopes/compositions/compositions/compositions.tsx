@@ -9,9 +9,8 @@ import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
-import { MdxPage } from '@teambit/ui.mdx-page';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { wideColumn } from '@teambit/base-ui.layout.page-frame';
-import { NotificationContext } from '@teambit/ui.notifications.notification-context';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
@@ -109,30 +108,14 @@ type CompositionContentProps = {
 };
 
 function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
-  // add notification for empty state
-  const notifications = useContext(NotificationContext);
-  const isEmpty = component.compositions.length === 0;
-
-  useEffect(() => {
-    if (!isEmpty) {
-      return () => {};
-    }
-
-    const message = notifications.log("you've got no compositions! let Debbie show you how it's done");
-    const timeoutId = setTimeout(() => notifications.dismiss(message), 10 * 1000);
-
-    return () => {
-      clearTimeout(timeoutId);
-      notifications.dismiss(message);
-    };
-  }, []);
-
-  if (isEmpty)
+  if (component.compositions.length === 0)
     return (
       <div className={wideColumn}>
-        <MdxPage>
-          <AddingCompositions />
-        </MdxPage>
+        <div className={styles.instructions}>
+          <MDXLayout>
+            <AddingCompositions />
+          </MDXLayout>
+        </div>
       </div>
     );
 

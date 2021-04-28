@@ -1,8 +1,8 @@
 import React from 'react';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 
-export type MdxPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
+export type MDXPageProps = {} & React.HTMLAttributes<HTMLDivElement>;
 
-export function MdxPage({ children }: MdxPageProps) {
+export function MDXPage({ children }: MDXPageProps) {
   return <MDXLayout>{children}</MDXLayout>;
 }

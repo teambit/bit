@@ -1,1 +1,1 @@
-export { MdxPage } from './mdx-page';
+export { MDXPage } from './mdx-page';
