@@ -1,5 +1,4 @@
 import { expect } from 'chai';
-import { ComponentID } from '@teambit/component-id';
 import { ScopeUrl } from './scope-url';
 
 describe('scope url', () => {
