@@ -410,6 +410,9 @@
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
     },
+    "scopes/webpack": {
+      "defaultScope": "teambit.webpack"
+    },
     "scopes/scope": {
       "defaultScope": "teambit.scope"
     },
