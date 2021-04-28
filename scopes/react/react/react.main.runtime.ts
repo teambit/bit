@@ -1,4 +1,3 @@
-import { Configuration } from 'webpack';
 import { mergeDeepLeft } from 'ramda';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
@@ -16,7 +15,7 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
-import type { WebpackMain } from '@teambit/webpack';
+import type { WebpackMain, Configuration, WebpackConfigTransform } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -65,6 +64,11 @@ export type ReactMainConfig = {
    * version of React to configure.
    */
   reactVersion: string;
+};
+
+export type UseWebpackModifiers = {
+  previewConfig?: WebpackConfigTransform;
+  devServerConfig?: WebpackConfigTransform;
 };
 
 export class ReactMain {
@@ -235,6 +239,18 @@ export class ReactMain {
         };
       },
     });
+  }
+
+  useWebpack(modifiers?: UseWebpackModifiers) {
+    const overrides: any = {};
+    if (modifiers?.devServerConfig) {
+      overrides.getDevServer = (context: DevServerContext) => this.reactEnv.getDevServer(context, config);
+      overrides.getDevEnvId = (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id);
+    }
+    if (modifiers?.previewConfig) {
+      overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, config);
+    }
+    return this.envs.override(overrides);
   }
 
   /**
