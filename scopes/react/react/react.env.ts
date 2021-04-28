@@ -15,6 +15,7 @@ import { WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import type { ComponentMeta } from '@teambit/babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
@@ -132,8 +133,7 @@ export class ReactEnv implements Environment {
   }
 
   private getFileMap(components: Component[], local = false) {
-    // TODO - add type
-    return components.reduce<{ [key: string]: any }>((index, component: Component) => {
+    return components.reduce<{ [key: string]: ComponentMeta }>((index, component: Component) => {
       component.state.filesystem.files.forEach((file) => {
         index[file.path] = {
           id: component.id.toString(),
