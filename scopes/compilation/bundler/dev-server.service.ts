@@ -9,6 +9,8 @@ import { getEntry } from './get-entry';
 import { selectPort } from './select-port';
 
 export class DevServerService implements EnvService<ComponentServer> {
+  name = 'dev server';
+
   constructor(
     /**
      * browser runtime slot

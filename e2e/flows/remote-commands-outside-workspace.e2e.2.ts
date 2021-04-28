@@ -74,7 +74,7 @@ describe('bit remote command', function () {
     describe('bit remove with --remote flag', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '--silent --remote');
+        output = helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '--remote');
       });
       it('should not throw an error', () => {
         expect(output).to.have.string('successfully removed');

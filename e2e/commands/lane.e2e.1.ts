@@ -750,7 +750,7 @@ describe('bit lane command', function () {
     describe('removing a component that has dependents', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent('comp3 --silent');
+        output = helper.command.removeComponent('comp3');
       });
       it('should stop the process and indicate that a component has dependents', () => {
         expect(output).to.have.string('error: unable to delete');
@@ -759,7 +759,7 @@ describe('bit lane command', function () {
     describe('removing a component that has no dependents', () => {
       let output;
       before(() => {
-        output = helper.command.removeComponent('comp1 --silent');
+        output = helper.command.removeComponent('comp1');
       });
       it('should indicate that the component was removed from the lane', () => {
         expect(output).to.have.string('lane');

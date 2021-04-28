@@ -136,7 +136,7 @@ export default class CommandHelper {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
   removeComponent(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} ${flags}`);
+    return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
   deprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);

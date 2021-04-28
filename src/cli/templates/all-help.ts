@@ -49,7 +49,7 @@ const allCommands = [
       },
       {
         name: 'untrack',
-        description: 'Untrack a new component(s).',
+        description: 'DEPRECATED (use "bit remove" instead). untrack a new component(s).',
       },
       {
         name: 'dependents',
