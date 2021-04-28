@@ -55,7 +55,7 @@ describe('scope components index mechanism', function () {
       });
       describe('removing the component', () => {
         before(() => {
-          helper.command.removeComponent('bar/foo', '-s');
+          helper.command.removeComponent('bar/foo');
         });
         it('should remove the record from index.json', () => {
           const indexJson = helper.general.getComponentsFromIndexJson();
@@ -78,7 +78,7 @@ describe('scope components index mechanism', function () {
         });
         describe('removing the component', () => {
           before(() => {
-            helper.command.removeComponent('bar/foo', '-s');
+            helper.command.removeComponent('bar/foo');
           });
           it('should remove the record from index.json', () => {
             const indexJson = helper.general.getComponentsFromIndexJson();

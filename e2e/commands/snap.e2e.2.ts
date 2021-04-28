@@ -459,7 +459,7 @@ describe('bit snap command', function () {
         describe('removing the component', () => {
           before(() => {
             helper.scopeHelper.getClonedLocalScope(scopeWithConflicts);
-            helper.command.removeComponent('bar/foo --silent -f');
+            helper.command.removeComponent('bar/foo -f');
           });
           it('bit status should not show the component', () => {
             const status = helper.command.status();

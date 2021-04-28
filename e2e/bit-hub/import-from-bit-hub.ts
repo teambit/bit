@@ -285,9 +285,9 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     before(() => {
       helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
 
-      let removeOutput = helper.command.removeComponent('bar/foo', '--delete-files --silent');
+      let removeOutput = helper.command.removeComponent('bar/foo', '--delete-files');
       expect(removeOutput).to.have.string('successfully removed');
-      removeOutput = helper.command.removeComponent('utils/is-string', '--delete-files --silent');
+      removeOutput = helper.command.removeComponent('utils/is-string', '--delete-files');
       expect(removeOutput).to.have.string('successfully removed');
 
       output = helper.command.runCmd(`bit import ${scopeId}/utils/is-string`);

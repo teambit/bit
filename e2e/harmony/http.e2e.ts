@@ -66,12 +66,12 @@ import { HttpHelper } from '../http-helper';
         helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
       });
       it('should show descriptive error when removing component that has dependents', () => {
-        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp2`, '--remote --silent');
+        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp2`, '--remote');
         expect(output).to.have.string(`error: unable to delete ${helper.scopes.remote}/comp2`);
         expect(output).to.have.string(`${helper.scopes.remote}/comp1`);
       });
       it('should remove successfully components that has no dependents', () => {
-        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp1`, '--remote --silent');
+        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp1`, '--remote');
         expect(output).to.have.string('successfully removed components');
         expect(output).to.have.string('comp1');
       });

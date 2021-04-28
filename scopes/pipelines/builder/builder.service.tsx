@@ -27,6 +27,8 @@ export type BuilderDescriptor = { tasks: string[] };
 export type EnvsBuildContext = { [envId: string]: BuildContext };
 
 export class BuilderService implements EnvService<BuildServiceResults, BuilderDescriptor> {
+  name = 'builder';
+
   constructor(
     /**
      * isolator extension.
