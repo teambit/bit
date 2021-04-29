@@ -6,7 +6,7 @@ It extends the benefits of micro-services to everything you build, front and bac
 
 Bit's extendible toolset (and visual development UI) creates a simple yet powerful experience for every developer, while larger teams can smoothly scale to build many developers and projects in the [component cloud](https://bit.dev/).
 
-Modularity benefits almost every part of the development process, from [speedin up releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. You can use Bit gradually through one of many popular [use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as **Micro Frontends**, **Design Systems**, **Development Speed**, and **Collaboration on components**.
+Modularity benefits almost every part of the development process, from [speeding up releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. You can start enjoying Bit through one of many popular [use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as **Micro Frontends**, **Design Systems**, **Development Speed**, and **Collaboration on components**.
 
 [![Bit](https://storage.googleapis.com/static.bit.dev/harmony-docs/homepage-components-micro-frontends.png)](https://bit.dev/)
 
