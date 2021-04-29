@@ -1,6 +1,6 @@
 # Bit
 
-Bit is a component-based approach to modern application development.  
+Bit is a tool for connecting repositories through shared components.  
 
 It unlocks the development and composition of modern applications from independent components, which can be independent developed and integrated into many projects. Bit's rich and extendable toolset, with a visual UI, creates an enjoyable developer experience for every step of modular development.  
 
@@ -35,21 +35,6 @@ Modularity benefits almost every part of the development process, from [accelera
 - [Live streams](https://harmony-docs.bit.dev/resources/live-streams)
 - [Articles](https://harmony-docs.bit.dev/resources/articles)
 - [Community](https://harmony-docs.bit.dev/resources/community)
-
-## What is Bit?
-
-Bit is a tool for connecting code repositories through shared components.  
-Use this approach to build using service-oriented architecture, where **components are services**. This simplifies our codebase, as it promotes composability and modularity.
-
-## Why Bit?
-
-- A first-class development experience for discovering, navigating, and refactoring an organization's codebase.
-- Feature ownership through components.
-- Ensure different product teams remain independent while depending on other team's code.
-- Compose apps and services from ready-made components.
-- Share components as services for other teams to compose with.
-- Build scalable products and improve collaboration between different teams in a consistent, repeatable, and non-intrusive manner.
-- Reduce code duplications.
 
 ## Large scale example of building with Bit
 
