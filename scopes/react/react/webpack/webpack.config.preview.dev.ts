@@ -110,7 +110,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         // MDX support (move to the mdx aspect and extend from there)
         {
           test: /\.mdx?$/,
-          exclude: [/node_modules/],
+          exclude: [/node_modules/, /dist/],
           use: [
             {
               loader: require.resolve('babel-loader'),
