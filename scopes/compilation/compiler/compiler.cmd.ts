@@ -37,7 +37,7 @@ export class CompileCmd implements Command {
     this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));
 
     let outputString = '';
-
+    compilerOptions.deleteDistDir = true;
     await this.compile.compileComponents(components, compilerOptions);
     const compileTimeLength = process.hrtime(startTimestamp);
 
@@ -57,6 +57,7 @@ export class CompileCmd implements Command {
   }
 
   async json([components]: [string[]], compilerOptions: CompileOptions) {
+    compilerOptions.deleteDistDir = true;
     // @ts-ignore
     const compileResults = await this.compile.compileComponents(components, compilerOptions);
     return {
