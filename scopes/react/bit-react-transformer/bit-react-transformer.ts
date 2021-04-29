@@ -86,6 +86,7 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
         types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
       ]);
 
+      // inserts to the top of file
       path.unshiftContainer('body', metadataDeceleration);
     },
 
