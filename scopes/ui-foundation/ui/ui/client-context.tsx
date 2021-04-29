@@ -1,10 +1,10 @@
 import React, { ReactNode } from 'react';
-import { Theme } from '@teambit/base-ui.theme.theme-provider';
+// import { Theme } from '@teambit/base-ui.theme.theme-provider';
 import { IconFont } from '@teambit/theme.icons-font';
 import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 import { Roboto } from '@teambit/base-ui.theme.fonts.roboto';
 import { TooltipMountPoint } from '@teambit/ui.tooltip';
-
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { LoaderContext, useLoaderApi } from '@teambit/ui.global-loader';
 import styles from './client-context.module.scss';
 
@@ -16,12 +16,12 @@ export function ClientContext({ children }: { children: ReactNode }) {
       {/* TODO - try moving LoaderContext to contextSlot, and LoaderRibbon to hudSlot */}
       <LoaderContext.Provider value={loaderApi}>
         <IconFont query="jyyv17" />
-        <Theme>
+        <ThemeContext>
           <Roboto />
           <LoaderRibbon active={isLoading} className={styles.loader} />
           {children}
           <TooltipMountPoint />
-        </Theme>
+        </ThemeContext>
       </LoaderContext.Provider>
     </React.StrictMode>
   );

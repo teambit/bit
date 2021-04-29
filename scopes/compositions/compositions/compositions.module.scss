@@ -70,10 +70,22 @@ $panelBg: #fafafa;
   padding: 16px 8px 0 8px;
 }
 
-.instructions {
-  background-color: #fafafa;
-  padding: 0 20px;
-  border-radius: 8px;
-  border: 1px solid grey;
-  margin: 20px 0;
+.noCompositionsPage {
+  padding: 50px 40px 100px 40px;
+  width: 100%;
+  > div {
+    max-width: 1440px;
+    margin: 0 auto;
+  }
+
+  @media screen and (max-width: 768px) {
+    width: unset;
+  }
+  .title {
+    margin-bottom: 25px;
+    font-size: var(--h-xs);
+  }
+  .separator {
+    margin-bottom: 41px;
+  }
 }

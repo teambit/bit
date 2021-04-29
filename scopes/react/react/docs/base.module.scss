@@ -44,7 +44,7 @@
 
 .mdx {
   font-size: 16px;
-  // to allow user to control culumn alignment via mdx table
+  // to allow user to control column alignment via mdx table
   table,
   th,
   td,
@@ -64,12 +64,4 @@
   > * {
     margin-bottom: 16px;
   }
-}
-
-.instructions {
-  background-color: #fafafa;
-  padding: 0 20px;
-  border-radius: 8px;
-  border: 1px solid grey;
-  margin: 20px 0;
 }

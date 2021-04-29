@@ -10,7 +10,9 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { wideColumn } from '@teambit/base-ui.layout.page-frame';
+import { Separator } from '@teambit/documenter.ui.separator';
+import { H1 } from '@teambit/documenter.ui.heading';
+import { InfoCard } from '@teambit/ui.info-card';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
@@ -110,11 +112,19 @@ type CompositionContentProps = {
 function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
   if (component.compositions.length === 0)
     return (
-      <div className={wideColumn}>
-        <div className={styles.instructions}>
-          <MDXLayout>
-            <AddingCompositions />
-          </MDXLayout>
+      <div className={styles.noCompositionsPage}>
+        <div>
+          <H1 className={styles.title}>Compositions</H1>
+          <Separator className={styles.separator} />
+          <InfoCard
+            level="info"
+            title="There are no
+            compositions for this Component. Learn how to add compositions:"
+          >
+            <MDXLayout>
+              <AddingCompositions />
+            </MDXLayout>
+          </InfoCard>
         </div>
       </div>
     );

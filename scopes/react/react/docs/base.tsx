@@ -6,7 +6,7 @@ import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { RenderingContext } from '@teambit/preview';
 import { AddingDocs } from '@teambit/instructions.adding-docs';
-
+import { InfoCard } from '@teambit/ui.info-card';
 import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';
 import styles from './base.module.scss';
@@ -30,6 +30,20 @@ const defaultDocs = {
   abstract: '',
 };
 
+const AddingDocsInstructions = () => {
+  return (
+    <InfoCard
+      level="info"
+      title="There are no docs
+      for this Component. Learn how to add docs:"
+    >
+      <MDXLayout>
+        <AddingDocs />
+      </MDXLayout>
+    </InfoCard>
+  );
+};
+
 /**
  * base template for react component documentation.
  */
@@ -44,18 +58,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
 
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName, description } = component;
-  const Content: any = isFunction(docs.default)
-    ? docs.default
-    : () => (
-        <>
-          <h3> There are no docs for this Component. Learn how to add docs:</h3>
-          <div className={styles.instructions}>
-            <MDXLayout>
-              <AddingDocs />
-            </MDXLayout>
-          </div>
-        </>
-      );
+  const Content: any = isFunction(docs.default) ? docs.default : AddingDocsInstructions;
 
   const reactContext = renderingContext.get(ReactAspect.id);
   const Provider = withProviders(reactContext?.providers);

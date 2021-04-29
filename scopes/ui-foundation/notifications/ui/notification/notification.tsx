@@ -4,11 +4,10 @@ import { TimeAgo } from '@teambit/ui.time-ago';
 import { XButton } from '@teambit/evangelist.elements.x-button';
 import classNames from 'classnames';
 import React, { useCallback, useContext, useState } from 'react';
-
+import { LevelIcon } from '@teambit/ui.elements.level-icon';
 import { NotificationContext } from '@teambit/ui.notifications.notification-context';
 import { Message } from '@teambit/ui.notifications.store';
 import styles from './notification.module.scss';
-import { LevelIcon } from './level-icon';
 
 const DISMISS_TIME = +styles.dismissTime;
 

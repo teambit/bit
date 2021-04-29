@@ -5,9 +5,8 @@ import { VersionBlock } from '@teambit/ui.version-block';
 import classNames from 'classnames';
 import { useSnaps } from '@teambit/ui.hooks.use-snaps';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { wideColumn } from '@teambit/base-ui.layout.page-frame';
 import { ExportingComponents } from '@teambit/instructions.exporting-components';
-
+import { InfoCard } from '@teambit/ui.info-card';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';
@@ -22,10 +21,18 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (snaps.length === 0 && !loading) {
     return (
-      <div className={classNames(wideColumn, className)}>
-        <MDXLayout>
-          <ExportingComponents />
-        </MDXLayout>
+      <div className={styles.changeLogPage}>
+        <H1 className={styles.title}>History</H1>
+        <Separator className={styles.separator2} />
+        <InfoCard
+          level="info"
+          title="There is no change log as this component has not been exported yet.
+          Learn how to export components:"
+        >
+          <MDXLayout>
+            <ExportingComponents />
+          </MDXLayout>
+        </InfoCard>
       </div>
     );
   }
