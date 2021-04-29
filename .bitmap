@@ -289,12 +289,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/instructions/adding-tests"
     },
-    "instructions/compositions-tip": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/instructions/compositions-tip"
-    },
     "instructions/exporting-components": {
         "scope": "",
         "version": "",
