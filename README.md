@@ -1,6 +1,6 @@
 # Bit
 
-Bit is a component-based approach to modern application development.  
+Bit is a tool for connecting repositories through shared components.  
 
 It unlocks the development and composition of modern applications from independent components, which can be independent developed and integrated into many projects. Bit's rich and extendable toolset, with a visual UI, creates an enjoyable developer experience for every step of modular development.  
 
@@ -35,40 +35,6 @@ Modularity benefits almost every part of the development process, from [accelera
 - [Live streams](https://harmony-docs.bit.dev/resources/live-streams)
 - [Articles](https://harmony-docs.bit.dev/resources/articles)
 - [Community](https://harmony-docs.bit.dev/resources/community)
-
-## What is Bit?
-
-Bit allows us to compose apps and codebases from components. We use this approach to build using service-oriented architecture, where components are services. This simplifies our codebase, as it promotes composability and modularity.
-
-Use this approach to build using service-oriented architecture, where **components are services**. This simplifies our codebase, as it promotes composability and modularity.
-
-<div style={{textAlign: 'center'}}>
-    <img src="https://storage.googleapis.com/static.bit.dev/harmony-docs/readme-virtual-component-monorepo.png" width="200" alt="Bit in a Nutshell" />
-</div>
-
-With Bit we sort components in **Scopes**, where each Scope "implements" a set of components that handle a feature or a business functionality. Each component in a Scope is essentially a service for other developers to use when composing their app.
-
-## Why Bit?
-
-- A new way of working with software that focuses on simplicity, productivity, and composability.
-- A first-class development experience for discovering, navigating, and refactoring an organization's codebase.
-- Feature ownership across the orgnaization.
-- Ensure different product teams remain independent while depending on other team's code.
-- Compose apps and services from ready-made components and share components as services for other teams to compose with.
-- Build scalable products and improve collaboration between different teams in a consistent, repeatable, and non-intrusive manner.
-- Reduce code duplications.
-- Easily build systems of any size.
-
-**Develop in harmony.**
-
-## Benefits of Using Bit
-
-- Components simplify the design of our tools and services by giving us building blocks at the required level of abstraction.
-- Components maximize code reuse to the point of having zero code duplication across our entire codebase.
-- Composing apps and services with components removes the need for architecture layers in our codebase and allows for a much smoother dev-experience of working in a service-oriented codebase where each component is a service that can be composed with other components to solve concrete problems.
-- Bit's scopes implement feature ownership across the organization and host cross-cutting concern components that facilitate services.
-- Workspaces are flexible and can be used to maintain components from many scopes, making it easier to reuse and collaborate on available components.
-- Lanes helps distributed teams to communicate and collaborate on API changes by understanding the underline dependency graph of components and "bundling" together changes that affect many teams and should be synced.
 
 ## Large scale example of building with Bit
 
