@@ -14,7 +14,7 @@
         "@babel/core": "7.11.6",
         "@babel/preset-react": "7.13.13",
         "@babel/preset-typescript": "7.12.7",
-        "@babel/types": "7.13.12",
+        "@babel/types": "7.13.14",
         "@graphql-modules/core": "0.7.17",
         "@jest/test-result": "26.6.2",
         "@mdx-js/loader": "1.6.21",
