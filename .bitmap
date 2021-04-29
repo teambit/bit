@@ -699,7 +699,7 @@
     },
     "ui/empty-box": {
         "scope": "teambit.design",
-        "version": "0.0.342",
+        "version": "0.0.343",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/empty-box"
     },

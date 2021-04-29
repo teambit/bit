@@ -1,12 +1,12 @@
 # Bit
 
-Bit is a tool for connecting repositories through shared components.  
+Bit is a tool for composing modern applications of independent components.  
 
-It unlocks the development and composition of modern applications from independent components, which can be independent developed and integrated into many projects. Bit's rich and extendable toolset, with a visual UI, creates an enjoyable developer experience for every step of modular development.  
+It extends the benefits of micro-services to everything you build, front and back. With Bit teams can autonomously develop, build, and release components, while continuously collaborating and integrating to compose larger applications together.  
 
-The [component cloud platform](https://bit.dev/) is a component marketplace as-a-service, where teams can smoothly scale collaboration on components to many developers and applications. Developers can host, discover, and share components while continuously releasing small updates to everyone in the organization. Everything is free for open-source developers.
+Bit's extendible toolset (and visual development UI) creates a simple yet powerful experience for every developer, while larger teams can smoothly scale to build many developers and projects in the [component cloud](https://bit.dev/).
 
-Modularity benefits almost every part of the development process, from [accelerating releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. For teams, Bit is often used as a solution for a verity of [use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as Micro Frontends, Design Systems, Delivery Speed, and Collaboration on components.
+Modularity benefits almost every part of the development process, from [speeding up releases](https://www.youtube.com/watch?v=yDjTcBKXKDE) to making debugging or refactoring much simpler. You can start enjoying Bit through one of many popular [use-cases](https://blog.bitsrc.io/4-bit-use-cases-build-like-the-best-teams-1c36560c7c6e) such as **Micro Frontends**, **Design Systems**, **Development Speed**, and **Collaboration on components**.
 
 [![Bit](https://storage.googleapis.com/static.bit.dev/harmony-docs/homepage-components-micro-frontends.png)](https://bit.dev/)
 
@@ -19,9 +19,32 @@ Modularity benefits almost every part of the development process, from [accelera
 
 [Docs](https://harmony-docs.bit.dev/) • [Bit Cloud](https://bit.dev/) • [Slack](https://join.slack.com/t/bit-dev-community/shared_invite/zt-o2tim18y-UzwOCFdTafmFKEqm2tXE4w) • [Twitter](https://twitter.com/bitdev_) • [YouTube](https://www.youtube.com/channel/UCuNkM3qIO79Q3-VrkcDiXfw) • [Blog](https://blog.bitsrc.io/tagged/bit) • [Resources](https://harmony-docs.bit.dev/resources/conference-talks/)
 
-## Getting Started
+## Install Bit
 
-### Docs
+Install Bit Version Manager:
+
+```
+npm i -g @teambit/bvm
+
+# or
+
+yarn global add @teambit/bvm
+```
+
+Intall Bit:
+
+```
+bvm install
+```
+
+Init a Bit Workspace:
+
+```
+bit init --harmony
+```
+
+
+### Getting Started
 
 - [Getting started](https://harmony-docs.bit.dev/getting-started/installing-bit)
 - [What is Bit?](https://harmony-docs.bit.dev/essentials/what-is-bit)
@@ -29,6 +52,7 @@ Modularity benefits almost every part of the development process, from [accelera
 
 ### Resources & Community
 
+- [Videos](https://www.youtube.com/c/Bitdev/videos)
 - [Conference talks](https://harmony-docs.bit.dev/resources/interviews)
 - [Interviews](https://harmony-docs.bit.dev/resources/interviews)
 - [Podcasts](https://harmony-docs.bit.dev/resources/podcasts)
