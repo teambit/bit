@@ -1,6 +1,7 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component-url';
 import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -137,9 +138,7 @@ export class ReactEnv implements Environment {
       component.state.filesystem.files.forEach((file) => {
         index[file.path] = {
           id: component.id.toString(),
-          homepage: local
-            ? `/${component.id.fullName}`
-            : `https:/bit.dev/${component.id.toString({ ignoreVersion: false }).replace('.', '/')}`,
+          homepage: local ? `/${component.id.fullName}` : ComponentUrl.toUrl(component.id),
         };
       });
 
