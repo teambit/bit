@@ -13,6 +13,8 @@ import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
 
+const codeFileRegex = /\.(j|t)sx?$/;
+
 export type CompositionsConfig = {
   /**
    * regex for detection of composition files
@@ -49,7 +51,10 @@ export class CompositionsMain {
   getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
       const compositionFiles = this.devFiles.computeDevFiles(component).get(CompositionsAspect.id);
-      const files = component.state.filesystem.files.filter((file) => compositionFiles.includes(file.relative));
+      const files = component.state.filesystem.files
+        .filter((file) => compositionFiles.includes(file.relative))
+        .filter((file) => codeFileRegex.test(file.path));
+
       return files;
     });
   }
