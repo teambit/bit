@@ -2,6 +2,8 @@ import { Configuration } from 'webpack';
 import { merge as webpackMerge } from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import { TsConfigSourceFile } from 'typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { BuildTask } from '@teambit/builder';
@@ -32,7 +34,11 @@ export class ReactNativeMain {
   /**
    * override the TS config of the environment.
    */
-  overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
+  overrideTsConfig: (
+    tsconfig: TsConfigSourceFile,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
+    tsModule?: any
+  ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
 
   /**
    * override the jest config of the environment.
@@ -47,7 +53,10 @@ export class ReactNativeMain {
   /**
    * override the build ts config.
    */
-  overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
+  overrideBuildTsConfig: (
+    tsconfig: any,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
+  ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
   /**
    * override package json properties.

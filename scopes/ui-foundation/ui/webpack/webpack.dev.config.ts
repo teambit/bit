@@ -85,8 +85,15 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
 
       // this defaults to 'window', but by setting it to 'this' then
       // module chunks which are built will work in web workers as well.
-      globalObject: 'this',
+      // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
+      // globalObject: 'this',
     },
+
+    infrastructureLogging: {
+      level: 'error',
+    },
+
+    stats: 'errors-only',
 
     // @ts-ignore - remove this once there is types package for webpack-dev-server v4
     devServer: {

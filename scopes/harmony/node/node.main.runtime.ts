@@ -1,5 +1,7 @@
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
+import { TsConfigSourceFile } from 'typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
@@ -26,7 +28,11 @@ export class NodeMain {
   /**
    * override the TS config of the environment.
    */
-  overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
+  overrideTsConfig: (
+    tsconfig: TsConfigSourceFile,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
+    tsModule?: any
+  ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
 
   /**
    * override the jest config of the environment.
@@ -41,7 +47,10 @@ export class NodeMain {
   /**
    * override the build ts config.
    */
-  overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
+  overrideBuildTsConfig: (
+    tsconfig: any,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
+  ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
   /**
    * override package json properties.

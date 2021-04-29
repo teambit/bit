@@ -5,7 +5,7 @@ import GeneralError from '../../../error/general-error';
 import { Version } from '../../../scope/models';
 import { SourceFileModel } from '../../../scope/models/version';
 import { Tmp } from '../../../scope/repositories';
-import { sha1 } from '../../../utils';
+import { eol, sha1 } from '../../../utils';
 import mergeFiles, { MergeFileParams, MergeFileResult } from '../../../utils/merge-files';
 import { PathLinux, pathNormalizeToLinux, PathOsBased } from '../../../utils/path';
 import Component from '../../component';
@@ -81,9 +81,14 @@ export default async function threeWayMergeVersions({
   // in the previous it was implemented this way and caused a bug, which now has an e2e-test to
   // block it. see https://github.com/teambit/bit/pull/2070 PR.
   // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
+  // one thing we have to change is the end-of-line, it should be set as LF, same way we do before
+  // saving the file as an object.
   const baseFiles: SourceFileModel[] = baseComponent.files;
   const currentFiles: SourceFileModel[] = currentComponent.files;
   const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
+  fsFiles.forEach((fsFile) => {
+    fsFile.contents = eol.lf(fsFile.contents) as Buffer;
+  });
   const results: MergeResultsThreeWay = {
     addFiles: [],
     removeFiles: [],

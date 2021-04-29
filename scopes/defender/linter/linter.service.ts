@@ -4,6 +4,8 @@ import { LinterContext } from './linter-context';
 import { LinterConfig } from './linter.main.runtime';
 
 export class LinterService implements EnvService<LintResults> {
+  name = 'linter';
+
   constructor(private linterConfig: LinterConfig) {}
 
   async run(context: ExecutionContext): Promise<LintResults> {

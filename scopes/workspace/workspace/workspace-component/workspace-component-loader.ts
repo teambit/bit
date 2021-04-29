@@ -11,19 +11,23 @@ import { DependencyResolverAspect, DependencyResolverMain } from '@teambit/depen
 import { Logger } from '@teambit/logger';
 import { EnvsAspect } from '@teambit/envs';
 import { ExtensionDataEntry } from '@teambit/legacy/dist/consumer/config';
+import { getMaxSizeForComponents, InMemoryCache } from '@teambit/legacy/dist/cache/in-memory-cache';
+import { createInMemoryCache } from '@teambit/legacy/dist/cache/cache-factory';
 import ComponentNotFoundInPath from '@teambit/legacy/dist/consumer/component/exceptions/component-not-found-in-path';
-
 import { Workspace } from '../workspace';
 import { WorkspaceComponent } from './workspace-component';
 
 export class WorkspaceComponentLoader {
-  _componentsCache: { [idStr: string]: Component } = {}; // cache loaded components
-  _componentsCacheForCapsule: { [idStr: string]: Component } = {}; // cache loaded components for capsule, must not use the cache for the workspace
+  private componentsCache: InMemoryCache<Component>; // cache loaded components
+  private componentsCacheForCapsule: InMemoryCache<Component>; // cache loaded components for capsule, must not use the cache for the workspace
   constructor(
     private workspace: Workspace,
     private logger: Logger,
     private dependencyResolver: DependencyResolverMain
-  ) {}
+  ) {
+    this.componentsCache = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+    this.componentsCacheForCapsule = createInMemoryCache({ maxSize: getMaxSizeForComponents() });
+  }
 
   async getMany(ids: Array<ComponentID>, forCapsule = false): Promise<Component[]> {
     const idsWithoutEmpty = compact(ids);
@@ -80,13 +84,13 @@ export class WorkspaceComponentLoader {
   }
 
   clearCache() {
-    this._componentsCache = {};
-    this._componentsCacheForCapsule = {};
+    this.componentsCache.deleteAll();
+    this.componentsCacheForCapsule.deleteAll();
   }
   clearComponentCache(id: ComponentID) {
     const idStr = id.toString();
-    delete this._componentsCache[idStr];
-    delete this._componentsCacheForCapsule[idStr];
+    this.componentsCache.delete(idStr);
+    this.componentsCacheForCapsule.delete(idStr);
   }
 
   private async loadOne(id: ComponentID, consumerComponent?: ConsumerComponent) {
@@ -130,14 +134,14 @@ export class WorkspaceComponentLoader {
 
   private saveInCache(component: Component, forCapsule: boolean): void {
     if (forCapsule) {
-      this._componentsCacheForCapsule[component.id.toString()] = component;
+      this.componentsCacheForCapsule.set(component.id.toString(), component);
     } else {
-      this._componentsCache[component.id.toString()] = component;
+      this.componentsCache.set(component.id.toString(), component);
     }
   }
 
   private getFromCache(id: ComponentID, forCapsule: boolean) {
-    return forCapsule ? this._componentsCacheForCapsule[id.toString()] : this._componentsCache[id.toString()];
+    return forCapsule ? this.componentsCacheForCapsule.get(id.toString()) : this.componentsCache.get(id.toString());
   }
 
   private async getConsumerComponent(id: ComponentID, forCapsule = false) {

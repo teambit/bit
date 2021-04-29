@@ -1,14 +1,14 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { CompositionCard } from './composition-card';
 
 export function Preview() {
   const CompositionWithButton = () => <button>ClickMe!</button>;
 
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <CompositionCard Composition={CompositionWithButton} name="CompositionWithButton" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 
@@ -26,8 +26,18 @@ export function LargeComposition() {
   );
 
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <CompositionCard Composition={CompositionWithLotsOfText} name="CompositionWithLotsOfText" />
-    </ThemeContext>
+    </ThemeCompositions>
+  );
+}
+
+export function CompositionCardWithLink() {
+  const CompositionWithButton = () => <button>ClickMe!</button>;
+
+  return (
+    <ThemeCompositions>
+      <CompositionCard Composition={CompositionWithButton} name="CompositionWithButton" link="https://bit.dev" />
+    </ThemeCompositions>
   );
 }
