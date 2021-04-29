@@ -1,4 +1,4 @@
-import { Configuration } from 'webpack';
+import { Configuration, ResolveOptions } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 
@@ -100,13 +100,59 @@ export class WebpackConfigMutator {
     return this;
   }
 
+  addAliases(aliases: { [index: string]: string | false | string[] }): WebpackConfigMutator {
+    if (!this.raw.resolve) {
+      this.raw.resolve = {};
+    }
+    if (!this.raw.resolve.alias) {
+      this.raw.resolve.alias = {};
+    }
+    Object.assign(this.raw.resolve.alias, aliases);
+    return this;
+  }
+
+  addResolve(resolve: ResolveOptions): WebpackConfigMutator {
+    if (!this.raw.resolve) {
+      this.raw.resolve = {};
+    }
+    Object.assign(this.raw.resolve, resolve);
+    return this;
+  }
+
+  // to be used to ignore replace packages with global variable
+  // Useful when trying to offload libs to CDN
+  addExternals(externalDeps: Configuration['externals']): WebpackConfigMutator {
+    if (!externalDeps) return this;
+    let externals = this.raw.externals;
+    if (!externals) {
+      externals = externalDeps;
+    } else if (Array.isArray(externalDeps)) {
+      externals = externalDeps.concat(externals);
+    } else if (
+      Array.isArray(externals) ||
+      externalDeps.constructor === Function ||
+      externalDeps.constructor === RegExp
+    ) {
+      externals = [externalDeps].concat(externals);
+    } else if (externalDeps instanceof Object && externals instanceof Object) {
+      // @ts-ignore
+      externals = {
+        ...externals,
+        ...externalDeps,
+      };
+    }
+
+    this.raw.externals = externals;
+    return this;
+  }
+
   /**
    * Merge external configs with the current config (utilize webpack-merge)
    * @param configs
    * @param opts
    */
-  merge(configs: Configuration[], opts: MergeOpts): WebpackConfigMutator {
-    const concreteOpts = Object.assign({}, defaultMergeOpts, opts);
+  merge(configs: Configuration[], opts?: MergeOpts): WebpackConfigMutator {
+    const concreteOpts = Object.assign({}, defaultMergeOpts, opts || {});
     const { firstConfig, configs: otherConfigs } = getConfigsToMerge(this.raw, configs, concreteOpts.rawConfigPosition);
     const merged = merge(firstConfig, ...otherConfigs);
     this.raw = merged;
