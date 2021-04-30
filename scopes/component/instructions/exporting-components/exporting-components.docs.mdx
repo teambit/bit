@@ -1,16 +1,27 @@
 ---
-labels: ['react', 'MDX', 'Instructions']
-description: 'Instructions on how to export components'
+description: MDX component with instructions for how to add export components
+labels: ['docs', 'instructions']
 ---
 
-import { ExportingComponents } from './index';
+MDX component that gives instructions on how to add export components.
 
-Exporting Components:
-
-Instructions for how to export components which is shown instead of the changelog when there are no component versions.
-
-Code Snippet:
+Basic Component Usage:
 
 ```js
 <ExportingComponents />
+```
+
+For styling and syntax highlighting this can be wrapped in the MDXLayout Component and Theme Provider.
+
+Themed Component Usage:
+
+```js
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+
+<ThemeContext>
+  <MDXLayout>
+    <ExportingComponents />
+  </MDXLayout>
+</ThemeContext>;
 ```
