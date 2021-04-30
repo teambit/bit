@@ -70,10 +70,12 @@ async function setFutureVersions(
   scope: Scope,
   releaseType: ReleaseType | undefined,
   exactVersion: string | null | undefined,
-  persist: boolean
+  persist: boolean,
+  autoTagIds: BitIds
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
+      const isAutoTag = autoTagIds.hasWithoutVersion(componentToTag.id);
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const nextVersion = componentToTag.componentMap?.nextVersion?.version;
@@ -85,7 +87,9 @@ async function setFutureVersions(
           exactVersionOrReleaseType.exactVersion
         );
       } else {
-        componentToTag.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+        componentToTag.version = isAutoTag
+          ? modelComponent.getVersionToAdd() // auto-tag always bumped as patch
+          : modelComponent.getVersionToAdd(releaseType, exactVersion);
       }
     })
   );
@@ -207,6 +211,7 @@ export default async function tagModelComponent({
   const autoTagData = skipAutoTag ? [] : await getAutoTagInfo(consumer, BitIds.fromArray(idsToTriggerAutoTag));
   const autoTagComponents = autoTagData.map((autoTagItem) => autoTagItem.component);
   const autoTagComponentsFiltered = autoTagComponents.filter((c) => !idsToTag.has(c.id));
+  const autoTagIds = BitIds.fromArray(autoTagComponentsFiltered.map((autoTag) => autoTag.id));
   const allComponentsToTag = [...componentsToTag, ...autoTagComponentsFiltered];
 
   // check for each one of the components whether it is using an old version
@@ -268,7 +273,7 @@ export default async function tagModelComponent({
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
-    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist);
+    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist, autoTagIds);
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);
