@@ -1,0 +1,30 @@
+---
+description: 'A Card component to show info, warning, error or success messages.'
+labels: ['info', 'warn', 'success', 'error']
+---
+
+import { AlertCard } from './alert-card';
+
+A card for showing info, error, warning or success messages.
+
+Features:
+
+- Modify the level to show a different icon
+- Modify the title of the card
+- Add any content to be rendered in the card such as text, a component or even an MDX component
+
+How to use the Component:
+
+```js
+<AlertCard level="info" title="Info message">
+  Content to be rendered
+</AlertCard>
+```
+
+Modify the level, title and content:
+
+```js live
+<AlertCard level="info" title="Info message">
+  Content to be rendered
+</AlertCard>
+```

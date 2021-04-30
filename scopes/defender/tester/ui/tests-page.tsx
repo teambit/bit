@@ -3,7 +3,7 @@ import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { InfoCard } from '@teambit/ui.info-card';
+import { AlertCard } from '@teambit/ui.alert-card';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
@@ -90,7 +90,7 @@ export function TestsPage({ className }: TestsPageProps) {
         <div>
           <H1 className={styles.title}>Tests</H1>
           <Separator className={styles.separator} />
-          <InfoCard
+          <AlertCard
             level="info"
             title="There are no
             tests for this Component. Learn how to add tests:"
@@ -98,7 +98,7 @@ export function TestsPage({ className }: TestsPageProps) {
             <MDXLayout>
               <AddingTests />
             </MDXLayout>
-          </InfoCard>
+          </AlertCard>
         </div>
       </div>
     );

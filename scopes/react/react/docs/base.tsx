@@ -6,7 +6,7 @@ import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { RenderingContext } from '@teambit/preview';
 import { AddingDocs } from '@teambit/instructions.adding-docs';
-import { InfoCard } from '@teambit/ui.info-card';
+import { AlertCard } from '@teambit/ui.alert-card';
 import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';
 import styles from './base.module.scss';
@@ -32,7 +32,7 @@ const defaultDocs = {
 
 const AddingDocsInstructions = () => {
   return (
-    <InfoCard
+    <AlertCard
       level="info"
       title="There are no docs
       for this Component. Learn how to add docs:"
@@ -40,7 +40,7 @@ const AddingDocsInstructions = () => {
       <MDXLayout>
         <AddingDocs />
       </MDXLayout>
-    </InfoCard>
+    </AlertCard>
   );
 };
 

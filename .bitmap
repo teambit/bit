@@ -571,6 +571,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui"
     },
+    "ui/alert-card": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/alert-card"
+    },
     "ui/aspect-box": {
         "scope": "teambit.harmony",
         "version": "0.0.351",
@@ -858,12 +864,6 @@
         "version": "0.0.28",
         "mainFile": "index.ts",
         "rootDir": "scopes/react/hover-selector"
-    },
-    "ui/info-card": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/design/ui/info-card"
     },
     "ui/input/option-button": {
         "scope": "teambit.design",

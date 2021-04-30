@@ -12,7 +12,7 @@ import { Collapser } from '@teambit/ui.buttons.collapser';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
-import { InfoCard } from '@teambit/ui.info-card';
+import { AlertCard } from '@teambit/ui.alert-card';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
@@ -116,7 +116,7 @@ function CompositionContent({ component, selected, queryParams }: CompositionCon
         <div>
           <H1 className={styles.title}>Compositions</H1>
           <Separator className={styles.separator} />
-          <InfoCard
+          <AlertCard
             level="info"
             title="There are no
             compositions for this Component. Learn how to add compositions:"
@@ -124,7 +124,7 @@ function CompositionContent({ component, selected, queryParams }: CompositionCon
             <MDXLayout>
               <AddingCompositions />
             </MDXLayout>
-          </InfoCard>
+          </AlertCard>
         </div>
       </div>
     );
