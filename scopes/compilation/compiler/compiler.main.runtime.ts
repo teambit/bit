@@ -14,7 +14,7 @@ import { CompilerAspect } from './compiler.aspect';
 import { CompileCmd } from './compiler.cmd';
 import { CompilerTask } from './compiler.task';
 import { Compiler } from './types';
-import { WorkspaceCompiler } from './workspace-compiler';
+import { CompileOptions, WorkspaceCompiler } from './workspace-compiler';
 import { DistArtifact } from './dist-artifact';
 import { DistArtifactNotFound } from './exceptions';
 
@@ -28,10 +28,7 @@ export class CompilerMain {
 
   compileOnWorkspace(
     componentsIds: string[] | BitId[], // when empty, it compiles all
-    options: {
-      noCache?: boolean;
-      verbose?: boolean;
-    } = {}
+    options: CompileOptions = {}
   ) {
     return this.workspaceCompiler.compileComponents(componentsIds, options);
   }
