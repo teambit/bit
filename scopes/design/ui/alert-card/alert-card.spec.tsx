@@ -12,22 +12,22 @@ it('should render with some content', () => {
   const rendered = getByText('Content to be rendered');
   expect(rendered).toBeTruthy();
 });
-it('should render with the info icon', () => {
+it('info level should render with the info icon', () => {
   const { getByLabelText } = render(<InfoAlertCard />);
   const rendered = getByLabelText('info');
   expect(rendered).toBeTruthy();
 });
-it('should render with the warning icon', () => {
+it('warning level should render with the warning icon', () => {
   const { getByLabelText } = render(<WarningAlertCard />);
-  const rendered = getByLabelText('warn');
+  const rendered = getByLabelText('warning');
   expect(rendered).toBeTruthy();
 });
-it('should render with the error icon', () => {
+it('error level should render with the error icon', () => {
   const { getByLabelText } = render(<ErrorAlertCard />);
   const rendered = getByLabelText('error');
   expect(rendered).toBeTruthy();
 });
-it('should render with the success icon', () => {
+it('success level should render with the success icon', () => {
   const { getByLabelText } = render(<SuccessAlertCard />);
   const rendered = getByLabelText('success');
   expect(rendered).toBeTruthy();

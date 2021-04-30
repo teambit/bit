@@ -1,22 +1,25 @@
 ---
-labels: ['react', 'typescript', 'level-icon']
-description: 'A LevelIcon component.'
+description: 'An Icon component that shows different icons based on the level'
+labels: ['warning', 'success', 'error', 'info']
 ---
 
 import { LevelIcon } from './level-icon';
 
-LevelIcon example:
+Icon Component with various levels:
 
-A simple LevelIcon component with some text
+- info
+- warning
+- success
+- error
 
-Code Snippet:
+Component usage.
 
 ```js
-<LevelIcon text="hello from LevelIcon" />
+<LevelIcon level="info" />
 ```
 
-Live Playground:
+Modify the level to see the icon change:
 
 ```js live
-<LevelIcon text="hello from LevelIcon" />
+<LevelIcon level="info" />
 ```
