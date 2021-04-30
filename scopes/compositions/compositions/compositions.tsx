@@ -9,15 +9,17 @@ import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
-import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { Separator } from '@teambit/ui.separator';
-import { H1 } from '@teambit/documenter.ui.heading';
-import { AlertCard } from '@teambit/ui.alert-card';
+import { EmptyBox } from '@teambit/ui.empty-box';
 import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
-import { AddingCompositions } from '@teambit/instructions.adding-compositions';
+// TODO uncomment these when if in local workspace has been added
+// import { MDXLayout } from '@teambit/ui.mdx-layout';
+// import { Separator } from '@teambit/ui.separator';
+// import { H1 } from '@teambit/documenter.ui.heading';
+// import { AlertCard } from '@teambit/ui.alert-card';
+// import { AddingCompositions } from '@teambit/instructions.adding-compositions';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -112,21 +114,28 @@ type CompositionContentProps = {
 function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
   if (component.compositions.length === 0)
     return (
-      <div className={styles.noCompositionsPage}>
-        <div>
-          <H1 className={styles.title}>Compositions</H1>
-          <Separator className={styles.separator} />
-          <AlertCard
-            level="info"
-            title="There are no
-            compositions for this Component. Learn how to add compositions:"
-          >
-            <MDXLayout>
-              <AddingCompositions />
-            </MDXLayout>
-          </AlertCard>
-        </div>
-      </div>
+      // TODO if in remote return this
+      <EmptyBox
+        title="There are no compositions for this component."
+        linkText="Learn how to create compositions"
+        link="https://harmony-docs.bit.dev/compositions/overview/"
+      />
+      // TODO if in local workspace return this
+      // <div className={styles.noCompositionsPage}>
+      //   <div>
+      //     <H1 className={styles.title}>Compositions</H1>
+      //     <Separator className={styles.separator} />
+      //     <AlertCard
+      //       level="info"
+      //       title="There are no
+      //           compositions for this Component. Learn how to add compositions:"
+      //     >
+      //       <MDXLayout>
+      //         <AddingCompositions />
+      //       </MDXLayout>
+      //     </AlertCard>
+      //   </div>
+      // </div>;
     );
 
   return (

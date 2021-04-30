@@ -5,8 +5,9 @@ import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { RenderingContext } from '@teambit/preview';
-import { AddingDocs } from '@teambit/instructions.adding-docs';
-import { AlertCard } from '@teambit/ui.alert-card';
+// TODO uncomment this when if in local workspace is done
+// import { AddingDocs } from '@teambit/instructions.adding-docs';
+// import { AlertCard } from '@teambit/ui.alert-card';
 import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';
 import styles from './base.module.scss';
@@ -32,15 +33,19 @@ const defaultDocs = {
 
 const AddingDocsInstructions = () => {
   return (
-    <AlertCard
-      level="info"
-      title="There are no docs
-      for this Component. Learn how to add docs:"
-    >
-      <MDXLayout>
-        <AddingDocs />
-      </MDXLayout>
-    </AlertCard>
+    // TODO if in remote return this
+    <div></div>
+
+    // TODO if in local workspace return this
+    // <AlertCard
+    //   level="info"
+    //   title="There are no docs
+    //   for this Component. Learn how to add docs:"
+    // >
+    //   <MDXLayout>
+    //     <AddingDocs />
+    //   </MDXLayout>
+    // </AlertCard>
   );
 };
 

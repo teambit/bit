@@ -2,14 +2,15 @@ import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { Separator } from '@teambit/ui.separator';
-import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { AlertCard } from '@teambit/ui.alert-card';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
-
-import { AddingTests } from '@teambit/instructions.adding-tests';
+import { EmptyBox } from '@teambit/ui.empty-box';
+// TODO uncomment these when if in local workspace is added
+// import { MDXLayout } from '@teambit/ui.mdx-layout';
+// import { AlertCard } from '@teambit/ui.alert-card';
+// import { AddingTests } from '@teambit/instructions.adding-tests';
 
 import styles from './tests-page.module.scss';
 
@@ -86,23 +87,30 @@ export function TestsPage({ className }: TestsPageProps) {
 
   if (testResults === null || testData?.testsResults === null) {
     return (
-      <div className={classNames(styles.testsPage, className)}>
-        <div>
-          <H1 className={styles.title}>Tests</H1>
-          <Separator className={styles.separator} />
-          <AlertCard
-            level="info"
-            title="There are no
-            tests for this Component. Learn how to add tests:"
-          >
-            <MDXLayout>
-              <AddingTests />
-            </MDXLayout>
-          </AlertCard>
-        </div>
-      </div>
+      // if in remote return this
+      <EmptyBox
+        title="This component doesn’t have any tests."
+        linkText="Learn how to add tests to your components"
+        link="https://harmony-docs.bit.dev/testing/overview/"
+      />
     );
   }
+  // TODO add this when if in local workspace
+  // <div className={classNames(styles.testsPage, className)}>
+  //       <div>
+  //         <H1 className={styles.title}>Tests</H1>
+  //         <Separator className={styles.separator} />
+  //         <AlertCard
+  //           level="info"
+  //           title="There are no
+  //           tests for this Component. Learn how to add tests:"
+  //         >
+  //           <MDXLayout>
+  //             <AddingTests />
+  //           </MDXLayout>
+  //         </AlertCard>
+  //       </div>
+  //     </div>
 
   return (
     <div className={classNames(styles.testsPage, className)}>
