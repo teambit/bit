@@ -73,16 +73,14 @@ $panelBg: #fafafa;
 .noCompositionsPage {
   padding: 50px 40px 100px 40px;
   width: 100%;
-  > div {
-    max-width: 1440px;
-    margin: 0 auto;
-  }
+  max-width: 1440px;
+  margin: 0 auto;
 
   @media screen and (max-width: 768px) {
     width: unset;
   }
   .title {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     font-size: var(--h-xs);
   }
   .separator {

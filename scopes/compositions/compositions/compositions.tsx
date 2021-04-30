@@ -10,7 +10,7 @@ import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
 import { useDocs } from '@teambit/ui.queries.get-docs';
 import { Collapser } from '@teambit/ui.buttons.collapser';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { Separator } from '@teambit/documenter.ui.separator';
+import { Separator } from '@teambit/ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/ui.alert-card';
 import { toPreviewUrl } from '@teambit/ui.component-preview';

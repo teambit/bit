@@ -8,17 +8,14 @@
     width: unset;
   }
   .title {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     font-size: var(--h-xs);
   }
   .separator {
     margin-bottom: 0;
   }
-  // .versions {
-  //     overflow-y: scroll;
-  // }
 }
 
-.separator2 {
+.separatorNoChangeLog {
   margin-bottom: 41px;
 }

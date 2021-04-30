@@ -4,6 +4,7 @@ import { LevelIcon, Level } from '@teambit/ui.elements.level-icon';
 import { backgrounds } from '@teambit/base-ui.surfaces.background';
 import { H6 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
+import { Separator } from '@teambit/ui.separator';
 import styles from './alert-card.module.scss';
 
 interface InfoCardProps extends CardProps {
@@ -24,6 +25,7 @@ export function AlertCard({ title, children, className, level, ...rest }: InfoCa
         <LevelIcon level={level} className={classNames(styles.icon, className)} />
         <H6 className={classNames(styles.title, className)}>{title}</H6>
       </div>
+      <Separator />
       {children}
     </Card>
   );
