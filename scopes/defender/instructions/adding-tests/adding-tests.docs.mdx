@@ -1,16 +1,16 @@
 ---
-description: MDX component with instructions for how to add compositions
+description: MDX component with instructions for how to add tests
 labels: ['docs', 'instructions']
 ---
 
 ## MDX component with instructions
 
-Renders an MDX page with instructions on how to add compositions
+Renders an MDX page with instructions on how to add tests
 
 ### Component usage
 
 ```js
-<AddingDocs />
+<AddingTests />
 ```
 
 ### Themed usage
@@ -20,10 +20,11 @@ For styling and syntax highlighting this can be wrapped in the MDXLayout Compone
 ```js
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { AddingTests } from './index';
 
 <ThemeContext>
   <MDXLayout>
-    <AddingDocs />
+    <AddingTests />
   </MDXLayout>
 </ThemeContext>;
 ```
