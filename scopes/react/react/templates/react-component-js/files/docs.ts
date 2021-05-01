@@ -6,23 +6,24 @@ export const docsFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.docs.mdx`,
     content: `---
-labels: ['react', 'jsx', '${name}']
 description: 'A ${Name} component.'
+labels: ['label1', 'label2', 'label3']
 ---
 
 import { ${Name} } from './${name}';
 
-${Name} example:
+## React Component for rendering text
 
-A simple ${Name} component with some text
+A basic div that renders some text
 
-Code Snippet:
+### Component usage
 \`\`\`js
 <${Name} text="hello from ${Name}" />
 \`\`\`
 
+### Using props to customize the text
 
-Live Playground:
+Modify the text to see it change live:
 \`\`\`js live
 <${Name} text="hello from ${Name}" />
 \`\`\`
