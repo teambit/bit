@@ -349,6 +349,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/defender/eslint"
     },
+    "eslint-config-bit-angular": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.js",
+        "rootDir": "scopes/angular/eslint-config-bit-angular"
+    },
     "eslint-config-bit-react": {
         "scope": "teambit.react",
         "version": "0.0.365",

@@ -1,3 +1,5 @@
+import { Linter } from '@teambit/linter';
+
 /**
  * add a custom type and include all properties from within the environment.
  */
@@ -18,4 +20,9 @@ export interface Environment {
   icon?: string;
 
   [key: string]: any; // :TODO need to define an abstract type for service handlers (now using any)
+
+  /**
+   * Returns the linter to use (ESLint, ...)
+   */
+  getLinter?: () => Linter;
 }
