@@ -5,7 +5,6 @@ import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import getPort from 'get-port';
 import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';
-import { config } from 'bluebird';
 
 export class ReactApp implements Application {
   constructor(
