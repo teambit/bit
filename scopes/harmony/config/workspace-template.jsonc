@@ -31,7 +31,7 @@
     /**
      * default scope for all components in workspace.
      **/
-    "defaultScope": "my-scope"
+    "defaultScope": "my-org.my-scope"
   },
 
   /**
