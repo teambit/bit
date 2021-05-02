@@ -49,11 +49,6 @@ export class StencilEnv implements Environment {
   }
 
   /**
-   * returns and configures the component linter.
-   */
-  getLinter() {}
-
-  /**
    * returns and configures the React component dev server.
    */
   getDevServer(context: DevServerContext): DevServer {

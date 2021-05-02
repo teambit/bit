@@ -1,5 +1,6 @@
 import { MainRuntime } from '@teambit/cli';
-import { Linter } from 'eslint';
+import { Linter as ESLinter } from 'eslint';
+import { Linter } from '@teambit/linter';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { ESLintAspect } from './eslint.aspect';
 import { ESLintLinter } from './eslint.linter';
@@ -8,7 +9,7 @@ export type ESLintOptions = {
   /**
    * linter config for eslint.
    */
-  config: Linter.Config;
+  config: ESLinter.Config;
 
   /**
    * specify to path to resolve eslint plugins from.
@@ -28,7 +29,7 @@ export class ESLintMain {
    * @param options eslint options.
    * @param ESLintModule reference to an `eslint` module.
    */
-  createLinter(options: ESLintOptions, ESLintModule?: any): ESLintLinter {
+  createLinter(options: ESLintOptions, ESLintModule?: any): Linter {
     return new ESLintLinter(this.logger, options, ESLintModule);
   }
 

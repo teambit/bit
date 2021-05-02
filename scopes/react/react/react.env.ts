@@ -15,6 +15,7 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
+import { Linter } from '@teambit/linter';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { join, resolve } from 'path';
@@ -138,7 +139,7 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the component linter.
    */
-  getLinter() {
+  getLinter(): Linter {
     return this.eslint.createLinter({
       config: eslintConfig,
       // resolve all plugins from the react environment.
