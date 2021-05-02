@@ -67,8 +67,8 @@ export type ReactMainConfig = {
 };
 
 export type UseWebpackModifiers = {
-  previewConfig?: WebpackConfigTransformer;
-  devServerConfig?: WebpackConfigTransformer;
+  previewConfig?: WebpackConfigTransformer[];
+  devServerConfig?: WebpackConfigTransformer[];
 };
 
 export class ReactMain {
@@ -136,17 +136,17 @@ export class ReactMain {
     );
   }
 
-  useWebpack(modifiers?: UseWebpackModifiers) {
+  useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
     const overrides: any = {};
     const devServerTransformers = modifiers?.devServerConfig;
     if (devServerTransformers) {
       overrides.getDevServer = (context: DevServerContext) =>
-        this.reactEnv.getDevServer(context, [devServerTransformers]);
+        this.reactEnv.getDevServer(context, devServerTransformers);
       overrides.getDevEnvId = (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id);
     }
     const previewTransformers = modifiers?.previewConfig;
     if (previewTransformers) {
-      overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, [previewTransformers]);
+      overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
     }
     return this.envs.override(overrides);
   }

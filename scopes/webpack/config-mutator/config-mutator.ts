@@ -38,6 +38,10 @@ const defaultMergeOpts: MergeOpts = {
 export class WebpackConfigMutator {
   constructor(public raw: Configuration) {}
 
+  clone(): WebpackConfigMutator {
+    return new WebpackConfigMutator(merge({}, this.raw));
+  }
+
   /**
    * Add a key value to the top level config
    * @param key

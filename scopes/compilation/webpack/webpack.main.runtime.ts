@@ -29,7 +29,7 @@ export type WebpackConfigTransformContext = {
 export type WebpackConfigTransformer = (
   config: WebpackConfigMutator,
   context: WebpackConfigTransformContext
-) => WebpackConfigMutator | Configuration;
+) => WebpackConfigMutator;
 
 export class WebpackMain {
   constructor(
@@ -72,7 +72,8 @@ export class WebpackMain {
     const transformerContext: WebpackConfigTransformContext = {
       mode: 'dev',
     };
-    const afterMutation = flow(transformers)(configMutator, transformerContext);
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    // @ts-ignore - fix this
     return new WebpackDevServer(afterMutation.raw);
   }
 
@@ -87,7 +88,7 @@ export class WebpackMain {
     };
     const mutatedConfigs = configs.map((config) => {
       const configMutator = new WebpackConfigMutator(config);
-      const afterMutation = flow(transformers)(configMutator, transformerContext);
+      const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
       return afterMutation.raw;
     });
     return new WebpackBundler(context.targets, mutatedConfigs, this.logger);
@@ -122,3 +123,14 @@ export class WebpackMain {
 }
 
 WebpackAspect.addRuntime(WebpackMain);
+
+function runTransformersWithContext(
+  config: WebpackConfigMutator,
+  transformers: WebpackConfigTransformer[] = [],
+  context: WebpackConfigTransformContext
+): WebpackConfigMutator {
+  const newConfig = transformers.reduce((acc, transformer) => {
+    return transformer(acc, context);
+  }, config);
+  return newConfig;
+}
