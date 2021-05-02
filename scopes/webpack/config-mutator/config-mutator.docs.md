@@ -39,7 +39,7 @@ import JSONFormatter from 'json-formatter-js';
     <div>
       <div
         ref={(nodeElement) => {
-          nodeElement && nodeElement.appendChild(dataContent.render());
+          nodeElement && nodeElement.replaceWith(dataContent.render());
         }}
       />
     </div>
