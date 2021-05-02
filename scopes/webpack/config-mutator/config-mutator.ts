@@ -1,4 +1,4 @@
-import { Configuration, ResolveOptions } from 'webpack';
+import { Configuration, ResolveOptions, RuleSetRule } from 'webpack';
 import { merge, mergeWithCustomize, mergeWithRules, CustomizeRule } from 'webpack-merge';
 import { ICustomizeOptions } from 'webpack-merge/dist/types';
 
@@ -86,7 +86,25 @@ export class WebpackConfigMutator {
     if (!Array.isArray(this.raw.entry)) {
       throw new Error(`can't add an entry to a function type raw entry`);
     }
-    addToArray(this.raw.entry, entry, opts);
+    this.raw.entry = addToArray(this.raw.entry, entry, opts);
+    return this;
+  }
+
+  /**
+   * Add rule to the module config
+   * @param entry
+   * @param opts
+   * @returns
+   */
+  addModuleRule(rule: RuleSetRule, opts: AddToArrayOpts = {}): WebpackConfigMutator {
+    if (!this.raw.module) {
+      this.raw.module = {};
+    }
+    if (!this.raw.module.rules) {
+      this.raw.module.rules = [];
+    }
+
+    addToArray(this.raw.module.rules, rule, opts);
     return this;
   }
 
@@ -104,6 +122,11 @@ export class WebpackConfigMutator {
     return this;
   }
 
+  /**
+   * Add aliases
+   * @param aliases
+   * @returns
+   */
   addAliases(aliases: { [index: string]: string | false | string[] }): WebpackConfigMutator {
     if (!this.raw.resolve) {
       this.raw.resolve = {};
@@ -115,6 +138,11 @@ export class WebpackConfigMutator {
     return this;
   }
 
+  /**
+   * Add resolve
+   * @param resolve
+   * @returns
+   */
   addResolve(resolve: ResolveOptions): WebpackConfigMutator {
     if (!this.raw.resolve) {
       this.raw.resolve = {};
@@ -123,8 +151,12 @@ export class WebpackConfigMutator {
     return this;
   }
 
-  // to be used to ignore replace packages with global variable
-  // Useful when trying to offload libs to CDN
+  /**
+   * to be used to ignore replace packages with global variable
+   * Useful when trying to offload libs to CDN
+   * @param externalDeps
+   * @returns
+   */
   addExternals(externalDeps: Configuration['externals']): WebpackConfigMutator {
     if (!externalDeps) return this;
     let externals = this.raw.externals;
@@ -212,7 +244,7 @@ function getConfigsToMerge(
 
 function addToArray(array: Array<any>, val: any, opts: AddToArrayOpts = {}): Array<any> {
   const concreteOpts = Object.assign({}, defaultAddToArrayOpts, opts);
-  if (concreteOpts.position === 'append') {
+  if (concreteOpts.position === 'prepend') {
     array?.unshift(val);
   } else {
     array?.push(val);
