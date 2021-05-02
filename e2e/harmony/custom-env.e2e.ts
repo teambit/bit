@@ -24,6 +24,7 @@ describe('custom env', function () {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
       envName = helper.env.setCustomEnv();
       envId = `${helper.scopes.remote}/${envName}`;
       helper.fixtures.populateComponents(3);
