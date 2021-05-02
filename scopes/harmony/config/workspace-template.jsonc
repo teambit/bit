@@ -59,9 +59,11 @@
      **/
     "*": {
       /**
-       * uncomment to apply the react environment on all components.
+       * uncomment the next 3 lines to apply the react environment on all components.
        **/
-      // "teambit.react/react": { }
+      //  "teambit.envs/envs": {
+      //    "teambit.react/react": {}
+      //  }
     }
   }
 }
