@@ -1225,7 +1225,7 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
     },
-    "utils/config-mutator": {
+    "modules/config-mutator": {
         "scope": "",
         "version": "",
         "mainFile": "index.ts",
