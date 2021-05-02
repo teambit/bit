@@ -18,7 +18,6 @@ import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
-import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import previewConfigFactory from './webpack/webpack.config.preview';
