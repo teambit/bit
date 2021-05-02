@@ -2,15 +2,21 @@
   margin: auto;
   padding: 20px;
   font-size: var(--p-sm);
+  * {
+    text-overflow: ellipsis;
+  }
 }
 
 .innerBorder {
   border: 1px solid var(--border-color);
   padding: 24px;
+  border-radius: 8px;
+  overflow: hidden;
 
   > div {
     font-weight: bold;
     margin-bottom: 14px;
+    overflow: hidden;
   }
 
   > a {
