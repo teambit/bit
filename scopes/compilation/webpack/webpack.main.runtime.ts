@@ -11,10 +11,8 @@ import {
 import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { Configuration } from 'webpack';
 import { merge } from 'webpack-merge';
 import { WebpackConfigMutator } from '@teambit/utils.config-mutator';
-import { flow } from 'lodash';
 
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { configFactory as previewConfigFactory } from './config/webpack.config';
