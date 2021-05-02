@@ -1,9 +1,7 @@
 .highlighter {
-  overflow: auto;
   border: solid var(--border-color, #ededed);
   border-width: 0px;
   box-sizing: border-box;
-  height: 100vh;
 
   transition: border 300ms;
 
@@ -13,6 +11,8 @@
 
   &.active {
     border-width: 8px;
+    height: 100vh;
+    overflow: auto;
   }
 }
 
