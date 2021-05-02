@@ -1,8 +1,7 @@
 import { WebpackConfigMutator } from './config-mutator';
 
 class MyPlugin {
-  //@ts-ignore
-  apply(compiler) {}
+  apply() {}
 }
 
 const cssRule = {
