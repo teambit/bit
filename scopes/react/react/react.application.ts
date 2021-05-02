@@ -5,6 +5,7 @@ import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import getPort from 'get-port';
 import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';
+import { config } from 'bluebird';
 
 export class ReactApp implements Application {
   constructor(
@@ -21,7 +22,12 @@ export class ReactApp implements Application {
 
   async run(context: AppContext): Promise<void> {
     const devServerContext = this.getDevServerContext(context);
-    const devServer = this.reactEnv.getDevServer(devServerContext, this.getConfig());
+    const devServer = this.reactEnv.getDevServer(devServerContext, [
+      (configMutator) => {
+        configMutator.addTopLevel('output', { publicPath: `/public/${this.name}` });
+        return configMutator;
+      },
+    ]);
     const port = await getPort({ port: this.portRange });
     devServer.listen(port);
   }
@@ -58,14 +64,6 @@ export class ReactApp implements Application {
       publicDir: join(publicDir, 'public'),
     });
     return deployContext;
-  }
-
-  private getConfig() {
-    return {
-      output: {
-        publicPath: `/public/${this.name}`,
-      },
-    };
   }
 
   private getDevServerContext(context: AppContext): DevServerContext {
