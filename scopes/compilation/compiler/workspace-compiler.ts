@@ -24,8 +24,14 @@ import { Compiler } from './types';
 export type BuildResult = { component: string; buildResults: string[] | null | undefined };
 
 export type CompileOptions = {
-  changed?: boolean;
-  verbose?: boolean;
+  changed?: boolean; // compile only new and modified components
+  verbose?: boolean; // show more data, such as, dist paths
+  /**
+   * whether the dist root dir should be deleted before writing new dists.
+   * defaults to true for `bit compile` and false everywhere else, such as `bit watch` and `bit
+   * start` to avoid webpack "EINTR" error.
+   */
+  deleteDistDir?: boolean;
 };
 
 export type CompileError = { path: string; error: Error };
@@ -41,7 +47,7 @@ export class ComponentCompiler {
     private compileErrors: CompileError[] = []
   ) {}
 
-  async compile(noThrow = true): Promise<BuildResult> {
+  async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
     if (!this.compilerInstance.transpileFile) {
       throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
     }
@@ -51,7 +57,7 @@ export class ComponentCompiler {
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
     const dataToPersist = new DataToPersist();
-    dataToPersist.removePath(new RemovePath(this.distDir));
+    if (options.deleteDistDir) dataToPersist.removePath(new RemovePath(this.distDir));
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
@@ -183,7 +189,7 @@ export class WorkspaceCompiler {
       }
     });
     const newCompilersResultOnWorkspace = await mapSeries(componentsAndNewCompilers, (componentAndNewCompilers) =>
-      componentAndNewCompilers.compile(noThrow)
+      componentAndNewCompilers.compile(noThrow, options)
     );
 
     return newCompilersResultOnWorkspace;
