@@ -87,6 +87,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
+          include: workDir,
           resolve: {
             fullySpecified: false,
           },
