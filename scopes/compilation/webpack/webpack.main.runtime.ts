@@ -69,7 +69,10 @@ export class WebpackMain {
       context.title
     ) as any;
     const configMutator = new WebpackConfigMutator(config);
-    const afterMutation = flow(transformers)(configMutator);
+    const transformerContext: WebpackConfigTransformContext = {
+      mode: 'dev',
+    };
+    const afterMutation = flow(transformers)(configMutator, transformerContext);
     return new WebpackDevServer(afterMutation.raw);
   }
 
@@ -79,9 +82,12 @@ export class WebpackMain {
 
   createBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
     const configs = this.createPreviewConfig(context.targets);
+    const transformerContext: WebpackConfigTransformContext = {
+      mode: 'prod',
+    };
     const mutatedConfigs = configs.map((config) => {
       const configMutator = new WebpackConfigMutator(config);
-      const afterMutation = flow(transformers)(configMutator);
+      const afterMutation = flow(transformers)(configMutator, transformerContext);
       return afterMutation.raw;
     });
     return new WebpackBundler(context.targets, mutatedConfigs, this.logger);
