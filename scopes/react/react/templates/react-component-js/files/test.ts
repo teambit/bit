@@ -9,13 +9,13 @@ export const testFile = (context: ComponentContext) => {
 import { render } from '@testing-library/react';
 import { Basic${Name} } from './${name}.composition';
 
-describe('${name}', () => {
-  it('should render with the correct text', () => {
-    const { getByText } = render(<Basic${Name} />);
-    const rendered = getByText('hello from ${Name}');
-    expect(rendered).toBeTruthy();
-  });
+
+it('should render with the correct text', () => {
+  const { getByText } = render(<Basic${Name} />);
+  const rendered = getByText('hello from ${Name}');
+  expect(rendered).toBeTruthy();
 });
+
 `,
   };
 };
