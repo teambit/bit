@@ -463,7 +463,7 @@ export default class NodeModuleLinker {
         allowNonScope: true,
       })
     );
-    const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    const packageJson = PackageJsonFile.createFromComponent(dest, component, undefined, true);
     if (!this.consumer?.isLegacy) {
       await this._applyTransformers(component, packageJson);
       if (IS_WINDOWS) {
