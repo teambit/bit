@@ -735,7 +735,7 @@ export class Workspace implements ComponentFactory {
     const promises = extensionsToMerge.map((list) => this.resolveExtensionListIds(list));
     await Promise.all(promises);
 
-    let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge);
+    let mergedExtensions = ExtensionDataList.mergeConfigs(extensionsToMerge).filterRemovedExtensions();
 
     // remove self from merged extensions
     const selfInMergedExtensions = mergedExtensions.findExtension(

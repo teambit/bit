@@ -13,15 +13,18 @@ import {
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
   id: string;
-  config: Record<string, any>;
+  config: Record<string, any> | RemoveExtensionSpecialSign;
 };
+
+export const REMOVE_EXTENSION_SPECIAL_SIGN = '-';
+type RemoveExtensionSpecialSign = '-';
 
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    public config: { [key: string]: any } = {},
+    public config: { [key: string]: any } | RemoveExtensionSpecialSign = {},
     public data: { [key: string]: any } = {},
     public newExtensionId: any = undefined
   ) {}
@@ -41,7 +44,7 @@ export class ExtensionDataEntry {
   }
 
   get isLegacy(): boolean {
-    if (this.config?.__legacy) return true;
+    if (this.config !== REMOVE_EXTENSION_SPECIAL_SIGN && this.config?.__legacy) return true;
     return false;
   }
 
@@ -141,6 +144,16 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
         return entry.stringId !== id.toString() && entry.stringId !== id.toStringWithoutVersion();
       })
     );
+  }
+
+  /**
+   * Filter extension marked to be removed with the special remove sign REMOVE_EXTENSION_SPECIAL_SIGN ("-")
+   */
+  filterRemovedExtensions(): ExtensionDataEntry | undefined {
+    const filtered = this.filter((entry) => {
+      return entry.config !== REMOVE_EXTENSION_SPECIAL_SIGN;
+    });
+    return ExtensionDataList.fromArray(filtered);
   }
 
   toConfigObject() {
