@@ -13,13 +13,17 @@ import { CompositionsAspect } from './compositions.aspect';
 import { compositionsSchema } from './compositions.graphql';
 import { CompositionPreviewDefinition } from './compositions.preview-definition';
 
-const codeFileRegex = /\.(j|t)sx?$/;
-
 export type CompositionsConfig = {
   /**
-   * regex for detection of composition files
+   * glob pattern to detect composition files. This includes all related files, like styles and jsons.
+   * @example ['/*.composition?(s).*']
    */
   compositionFilePattern: string[];
+  /**
+   * glob pattern to select Preview files. this will only include files matched by compositionFilePattern.
+   * @example ['*.{t,j}s', '*.{t,j}sx']
+   */
+  compositionPreviewFilePattern: string[];
 };
 
 /**
@@ -27,6 +31,16 @@ export type CompositionsConfig = {
  */
 export class CompositionsMain {
   constructor(
+    /**
+     * Glob pattern to select all composition files
+     */
+    private compositionFilePattern: string[],
+
+    /**
+     * Glob pattern to select composition preview files
+     */
+    private previewFilePattern: string[],
+
     /**
      * envs extension.
      */
@@ -48,12 +62,16 @@ export class CompositionsMain {
   /**
    * returns an array of doc file paths for a set of components.
    */
-  getCompositionFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
+  getPreviewFiles(components: Component[]): ComponentMap<AbstractVinyl[]> {
     return ComponentMap.as<AbstractVinyl[]>(components, (component) => {
-      const compositionFiles = this.devFiles.computeDevFiles(component).get(CompositionsAspect.id);
-      const files = component.state.filesystem.files
-        .filter((file) => compositionFiles.includes(file.relative))
-        .filter((file) => codeFileRegex.test(file.path));
+      // this includes non executables, like `button.compositions.module.scss` or `presets.compositions.json`
+      const compositionFiles = component.state.filesystem.byGlob(this.compositionFilePattern);
+
+      // select only relevant preview files (.tsx, etc)
+      const previewFiles = new Set(
+        component.state.filesystem.byGlob(this.previewFilePattern).map((file) => file.relative)
+      );
+      const files = compositionFiles.filter((file) => previewFiles.has(file.relative));
 
       return files;
     });
@@ -75,7 +93,7 @@ export class CompositionsMain {
    * read composition from the component source code.
    */
   readCompositions(component: Component): Composition[] {
-    const maybeFiles = this.getCompositionFiles([component]).byComponent(component);
+    const maybeFiles = this.getPreviewFiles([component]).byComponent(component);
 
     if (!maybeFiles) return [];
     const [, files] = maybeFiles;
@@ -104,8 +122,9 @@ export class CompositionsMain {
     });
   }
 
-  static defaultConfig = {
-    compositionFilePattern: ['**/*.composition.*', '**/*.compositions.*'],
+  static defaultConfig: CompositionsConfig = {
+    compositionFilePattern: ['**/*.composition?(s).*'],
+    compositionPreviewFilePattern: ['**/*.{t,j}s?(x)'],
   };
 
   static runtime = MainRuntime;
@@ -115,7 +134,14 @@ export class CompositionsMain {
     [preview, graphql, workspace, schema, devFiles]: [PreviewMain, GraphqlMain, Workspace, SchemaMain, DevFilesMain],
     config: CompositionsConfig
   ) {
-    const compositions = new CompositionsMain(preview, workspace, schema, devFiles);
+    const compositions = new CompositionsMain(
+      config.compositionFilePattern,
+      config.compositionPreviewFilePattern,
+      preview,
+      workspace,
+      schema,
+      devFiles
+    );
     devFiles.registerDevPattern(config.compositionFilePattern);
 
     graphql.register(compositionsSchema(compositions));
