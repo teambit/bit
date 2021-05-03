@@ -1225,6 +1225,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
     },
+    "modules/config-mutator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/config-mutator"
+    },
     "variants": {
         "scope": "teambit.workspace",
         "version": "0.0.353",
