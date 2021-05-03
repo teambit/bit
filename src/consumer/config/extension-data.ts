@@ -61,12 +61,26 @@ export class ExtensionDataEntry {
     return this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN;
   }
 
+  toModelObject() {
+    const extensionId =
+      this.extensionId && this.extensionId.serialize ? this.extensionId.serialize() : this.extensionId;
+    return {
+      extensionId,
+      // Do not use raw config here
+      config: this.config,
+      data: this.data,
+      legacyId: this.legacyId,
+      name: this.name,
+      newExtensionId: this.newExtensionId,
+    };
+  }
+
   clone(): ExtensionDataEntry {
     return new ExtensionDataEntry(
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
-      R.clone(this.config),
+      R.clone(this.rawConfig),
       R.clone(this.data)
     );
   }
@@ -120,7 +134,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     });
     convertBuildArtifactsToModelObject(extensionsClone);
 
-    return extensionsClone;
+    return extensionsClone.map((ext) => ext.toModelObject());
   }
 
   static fromModelObject(entries: ExtensionDataEntry[]): ExtensionDataList {
