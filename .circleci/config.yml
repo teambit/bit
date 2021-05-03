@@ -90,7 +90,7 @@ commands: # reusable commands
       - run: 'bit config set error_reporting false'
       - run: 'bit config set user.name tester'
       - run: 'bit config set user.email ci@bit.dev'
-      - run: 'bit config set user.token <<parameters.token>>'
+      # - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
 
