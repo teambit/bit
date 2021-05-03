@@ -14,9 +14,28 @@ import { ${Name}Context } from './${name}-context';
 import { ${Name}Provider } from './${name}-context-provider';
 import { MockComponent } from './${name}-context.composition';
 
-A ${name} context.
+## React Theme Context
 
-Live Playground:
+This is a simple [React Context](https://reactjs.org/docs/context.html) shared as a Bit component.
+Use this component to apply a theme as a context to set on it's children.
+
+### Component usage
+
+\`\`\`tsx
+() => {
+import React, { useContext } from 'react';
+import { ThemeProvider } from './theme-context-provider';
+import { ThemeContext } from './theme-context';
+
+<${Name}Provider color="blue">
+  // My lovely children now get a theme!
+  <MockComponent />
+</${Name}Provider>;
+\`\`\`
+
+### Using props to customize the theme
+
+Change the color to see the text change:
 
 \`\`\`tsx live
 () => {

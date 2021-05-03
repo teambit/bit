@@ -6,41 +6,27 @@ export const docsFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.docs.mdx`,
     content: `---
-labels: ['react', 'hooks', 'typescript', '${name}']
-description: 'A ${Name} Hook component.'
+description: 'A React Hook that increments a count by 1 each time it is called.'
+labels: ['hook', 'counter']
 ---
 
 import { ${Name} } from './${name}';
-import useState from 'react';
 
-${Name} example:
+## A React Hook to increment a count
 
-A simple ${Name} Hook to increment a count by 1
+Increments the state of \`count\` by 1 each time \`increment\` is called
 
+### Component usage
 
-
-Code Snippet:
+In this example clicking the button calls \`increment\` which increments the \`count\` by 1
 
 \`\`\`js
 import { ${Name} } from './${name}';
-...
+
 const { count, increment } = ${Name}();
 
-\`\`\`
-
-Live Playground:
-
-\`\`\`js live
-() => {
-  const { count, increment } = ${Name}();
-
-  return (
-    <>
-      <h1>The count is {count}</h1>
-      <button onClick={increment}>increment</button>
-    </>
-  );
-};
+<h1>The count is {count}</h1>
+<button onClick={increment}>increment</button>
 \`\`\`
 `,
   };
