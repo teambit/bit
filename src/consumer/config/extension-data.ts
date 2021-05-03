@@ -24,7 +24,7 @@ export class ExtensionDataEntry {
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    private rawConfig: { [key: string]: any } | RemoveExtensionSpecialSign = {},
+    public rawConfig: { [key: string]: any } | RemoveExtensionSpecialSign = {},
     public data: { [key: string]: any } = {},
     public newExtensionId: any = undefined
   ) {}
@@ -46,6 +46,10 @@ export class ExtensionDataEntry {
   get config(): { [key: string]: any } {
     if (this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN) return {};
     return this.rawConfig;
+  }
+
+  set config(val: { [key: string]: any }) {
+    this.rawConfig = val;
   }
 
   get isLegacy(): boolean {
@@ -168,8 +172,8 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   toConfigObject() {
     const res = {};
     this.forEach((entry) => {
-      if (entry.config && !R.isEmpty(entry.config)) {
-        res[entry.stringId] = entry.config;
+      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
+        res[entry.stringId] = entry.rawConfig;
       }
     });
     return res;
@@ -178,8 +182,8 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
       // Remove extensions without config
-      if (entry.config && !R.isEmpty(entry.config)) {
-        return { id: entry.stringId, config: entry.config };
+      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
+        return { id: entry.stringId, config: entry.rawConfig };
       }
       return undefined;
     });

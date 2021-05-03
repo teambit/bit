@@ -29,7 +29,11 @@ export class AspectEntry {
     return this.legacy.config;
   }
 
-  get data() {
+  set config(config) {
+    this.legacy.config = config;
+  }
+
+  get data(): { [key: string]: any } {
     return this.legacy.data;
   }
 
@@ -37,7 +41,8 @@ export class AspectEntry {
     return this.legacy.isRemoved;
   }
 
-  set data(val: Record<string, any>) {
+  // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
+  set data(val: { [key: string]: any }) {
     this.legacy.data = val;
   }
 
