@@ -12,8 +12,8 @@ const mdxInput = `
 
   import { compileSync } from './mdx-compiler';
 
-  The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.  
-  In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.  
+  The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.
+  In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.
   This is an example of Bit flavoured MDX:
 
   # A markdown title
@@ -29,7 +29,7 @@ export const CompileSyncExample = () => {
       <div>
         <div
           ref={(nodeElement) => {
-            nodeElement && nodeElement.appendChild(dataContent.render());
+            nodeElement && nodeElement.replaceWith(dataContent.render());
           }}
         />
       </div>

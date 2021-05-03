@@ -375,13 +375,13 @@
     },
     "network/agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.68",
+        "version": "0.0.69",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/agent"
     },
     "network/proxy-agent": {
         "scope": "teambit.toolbox",
-        "version": "0.0.68",
+        "version": "0.0.69",
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
@@ -1224,6 +1224,12 @@
         "version": "0.0.62",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
+    },
+    "modules/config-mutator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/config-mutator"
     },
     "variants": {
         "scope": "teambit.workspace",

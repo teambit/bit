@@ -1,4 +1,3 @@
-import { Configuration } from 'webpack';
 import { mergeDeepLeft } from 'ramda';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
@@ -16,7 +15,7 @@ import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
 import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
-import type { WebpackMain } from '@teambit/webpack';
+import type { WebpackMain, Configuration, WebpackConfigTransformer } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
@@ -65,6 +64,11 @@ export type ReactMainConfig = {
    * version of React to configure.
    */
   reactVersion: string;
+};
+
+export type UseWebpackModifiers = {
+  previewConfig?: WebpackConfigTransformer[];
+  devServerConfig?: WebpackConfigTransformer[];
 };
 
 export class ReactMain {
@@ -132,13 +136,46 @@ export class ReactMain {
     );
   }
 
+  useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
+    const overrides: any = {};
+    const devServerTransformers = modifiers?.devServerConfig;
+    if (devServerTransformers) {
+      overrides.getDevServer = (context: DevServerContext) =>
+        this.reactEnv.getDevServer(context, devServerTransformers);
+      overrides.getDevEnvId = (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id);
+    }
+    const previewTransformers = modifiers?.previewConfig;
+    if (previewTransformers) {
+      overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
+    }
+    return this.envs.override(overrides);
+  }
+
   /**
+   * @deprecated use useWebpack()
    * override the dev server webpack config.
    */
   overrideDevServerConfig(config: Configuration) {
+    const transformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([config]);
+    };
+
     return this.envs.override({
-      getDevServer: (context: DevServerContext) => this.reactEnv.getDevServer(context, config),
+      getDevServer: (context: DevServerContext) => this.reactEnv.getDevServer(context, [transformer]),
       getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id),
+    });
+  }
+
+  /**
+   * @deprecated use useWebpack()
+   * override the preview webpack config.
+   */
+  overridePreviewConfig(config: Configuration) {
+    const transformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([config]);
+    };
+    return this.envs.override({
+      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, [transformer]),
     });
   }
 
@@ -147,15 +184,6 @@ export class ReactMain {
    */
   compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactEnv), transformers);
-  }
-
-  /**
-   * override the preview webpack config.
-   */
-  overridePreviewConfig(config: Configuration) {
-    return this.envs.override({
-      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, config),
-    });
   }
 
   /**

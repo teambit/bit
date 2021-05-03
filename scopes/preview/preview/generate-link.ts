@@ -1,7 +1,8 @@
 import { toWindowsCompatiblePath } from '@teambit/path.to-windows-compatible-path';
+import type { ComponentMap } from '@teambit/component';
 
 // :TODO refactor to building an AST and generate source code based on it.
-export function generateLink(prefix: string, componentMap: any, defaultModule?: string): string {
+export function generateLink(prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string): string {
   return `
 import { linkModules } from '${toWindowsCompatiblePath(require.resolve('./preview.preview.runtime'))}';
 import harmony from '${toWindowsCompatiblePath(require.resolve('@teambit/harmony'))}';

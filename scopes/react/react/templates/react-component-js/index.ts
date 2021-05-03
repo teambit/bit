@@ -6,7 +6,7 @@ import { testFile } from './files/test';
 
 export const reactComponentJS: ComponentTemplate = {
   name: 'react-component-js',
-  description: 'a generic react component in js',
+  description: 'a basic react component in js',
 
   generateFiles: (context: ComponentContext) => {
     const { name, namePascalCase: Name } = context;
