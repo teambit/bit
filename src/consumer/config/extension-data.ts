@@ -149,7 +149,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   /**
    * Filter extension marked to be removed with the special remove sign REMOVE_EXTENSION_SPECIAL_SIGN ("-")
    */
-  filterRemovedExtensions(): ExtensionDataEntry | undefined {
+  filterRemovedExtensions(): ExtensionDataList {
     const filtered = this.filter((entry) => {
       return entry.config !== REMOVE_EXTENSION_SPECIAL_SIGN;
     });
