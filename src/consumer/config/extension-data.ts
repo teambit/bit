@@ -75,6 +75,19 @@ export class ExtensionDataEntry {
     };
   }
 
+  toComponentObject() {
+    const extensionId = this.extensionId ? this.extensionId.toString() : this.extensionId;
+    return {
+      extensionId,
+      // Do not use raw config here
+      config: this.config,
+      data: this.data,
+      legacyId: this.legacyId,
+      name: this.name,
+      newExtensionId: this.newExtensionId,
+    };
+  }
+
   clone(): ExtensionDataEntry {
     return new ExtensionDataEntry(
       this.legacyId,
