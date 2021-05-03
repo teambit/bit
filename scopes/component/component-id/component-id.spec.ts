@@ -25,7 +25,7 @@ describe('component id', () => {
     });
   });
 
-  describe('', () => {
+  describe('.isValidObject()', () => {
     it('should return true for valid object', () => {
       const obj = {
         name: 'josh',
