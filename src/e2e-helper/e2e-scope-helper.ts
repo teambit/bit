@@ -32,6 +32,7 @@ export default class ScopeHelper {
     fsHelper: FsHelper,
     npmHelper: NpmHelper
   ) {
+    this.debugMode = debugMode;
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
     this.scopes = scopes;
     this.command = commandHelper;
