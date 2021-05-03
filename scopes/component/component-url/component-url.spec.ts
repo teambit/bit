@@ -18,7 +18,7 @@ describe('component url', () => {
 
     const result = ComponentUrl.toUrl(id);
 
-    expect(result).to.equal(`${BASE_URL}/teambit/component/component-id');
+    expect(result).to.equal(`${BASE_URL}/teambit/component/component-id`);
   });
 
   it('should skip url when opt out in options', () => {
