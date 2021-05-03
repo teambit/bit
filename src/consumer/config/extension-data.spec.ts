@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { BitId } from '../../bit-id';
 import { ExtensionDataEntry, ExtensionDataList } from './extension-data';
 
-describe.only('ExtensionDataList', () => {
+describe('ExtensionDataList', () => {
   describe('merge lists', () => {
     let mergedAsObject;
     before(() => {
