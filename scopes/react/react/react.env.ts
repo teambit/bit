@@ -1,6 +1,7 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component-url';
 import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -15,6 +16,7 @@ import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import type { ComponentMeta } from '@teambit/babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
@@ -130,18 +132,21 @@ export class ReactEnv implements Environment {
     });
   }
 
-  private getFileMap(components: Component[]) {
-    return components.reduce<{ [key: string]: string }>((index, component: Component) => {
+  private getFileMap(components: Component[], local = false) {
+    return components.reduce<{ [key: string]: ComponentMeta }>((index, component: Component) => {
       component.state.filesystem.files.forEach((file) => {
-        index[file.path] = component.id.toString();
+        index[file.path] = {
+          id: component.id.toString(),
+          homepage: local ? `/${component.id.fullName}` : ComponentUrl.toUrl(component.id),
+        };
       });
 
       return index;
     }, {});
   }
 
-  private writeFileMap(components: Component[]) {
-    const fileMap = this.getFileMap(components);
+  private writeFileMap(components: Component[], local?: boolean) {
+    const fileMap = this.getFileMap(components, local);
     const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
     outputFileSync(path, JSON.stringify(fileMap));
     return path;
@@ -164,10 +169,10 @@ export class ReactEnv implements Environment {
    * get the default react webpack config.
    */
   private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components);
+    const fileMapPath = this.writeFileMap(context.components, true);
     const distPaths = this.calcDistPaths(context, this.workspace.path);
 
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
+    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths, workDir: this.workspace.path });
   }
 
   getDevEnvId(id?: string) {

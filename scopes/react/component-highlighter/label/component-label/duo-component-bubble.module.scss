@@ -1,9 +1,6 @@
 .duoComponentBubble {
   display: flex;
 
-  color: var(--component-highlighter-text, black);
-  font-size: 12px;
-
   //reset styles from card:
   padding: 0;
   border: none;
@@ -22,23 +19,6 @@
   }
 }
 
-.bubble {
-  line-height: 1.68;
-  padding: 0 12px;
-
-  transition: filter 300ms;
-  transform: translateZ(0); //fix blurriness in Safari
-}
-
-.scopeName {
-  @extend .bubble;
-
-  background: var(--scope-color-bg, #eebcc9);
-}
-
 .componentName {
-  @extend .bubble;
-
   display: flex;
-  background-color: var(--component-highlighter-bg, #eebcc9);
 }
