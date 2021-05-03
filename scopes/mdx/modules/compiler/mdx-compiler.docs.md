@@ -7,8 +7,8 @@ description: Bit MDX format compiler.
 import JSONFormatter from 'json-formatter-js';
 import { compileSync, compile } from './mdx-compiler';
 
-The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.  
-In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.  
+The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.
+In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.
 This is an example of Bit flavoured MDX:
 
 ```md
@@ -27,7 +27,7 @@ This is a Bit flavoured MDX file.
 
 ### compileSync example
 
-The compiler transpiles the MDX to JSX. It returns an object with the transpiled output.  
+The compiler transpiles the MDX to JSX. It returns an object with the transpiled output.
 Set the `bitFlavour` to `true` to have the transpiled output wrapped with a React Provider that makes all imported modules available for the live playground components.
 
 ```js live
@@ -41,8 +41,8 @@ Set the `bitFlavour` to `true` to have the transpiled output wrapped with a Reac
 
   import { compileSync } from './mdx-compiler';
 
-  The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.  
-  In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.  
+  The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.
+  In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.
   This is an example of Bit flavoured MDX:
 
   # A markdown title
@@ -55,7 +55,7 @@ Set the `bitFlavour` to `true` to have the transpiled output wrapped with a Reac
     <div>
       <div
         ref={(nodeElement) => {
-          nodeElement && nodeElement.appendChild(dataContent.render());
+          nodeElement && nodeElement.replaceWith(dataContent.render());
         }}
       />
     </div>
@@ -78,8 +78,8 @@ async function foo() {
 
   import { compile } from './mdx-compiler';
 
-  The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.  
-  In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.  
+  The MDX compiler enables the compilation of Bit-flavoured MDX files. That includes parsing-out and removing Bit's frontmatter properties (which are part of the Bit flavored MDX) from the output code.
+  In addition to that, the MDX compiler creates a React context provider that wraps the entire JSX tree (produced by the MDX file) to make all imported modules available to be used by all instances of the live playground.
   This is an example of Bit flavoured MDX:
 
   # A markdown title
@@ -92,7 +92,7 @@ async function foo() {
     <div>
       <div
         ref={(nodeElement) => {
-          nodeElement && nodeElement.appendChild(dataContent.render());
+          nodeElement && nodeElement.replaceWith(dataContent.render());
         }}
       />
     </div>

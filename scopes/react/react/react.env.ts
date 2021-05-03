@@ -12,7 +12,7 @@ import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
-import { WebpackMain } from '@teambit/webpack';
+import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
@@ -20,7 +20,6 @@ import type { ComponentMeta } from '@teambit/babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
-import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import previewConfigFactory from './webpack/webpack.config.preview';
@@ -191,32 +190,23 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
+  getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const defaultConfig = this.getDevWebpackConfig(context);
-    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([defaultConfig]);
+    };
 
-    return this.webpack.createDevServer(context, config);
+    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
-  async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
+  async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
     const defaultConfig = previewConfigFactory(path);
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([defaultConfig]);
+    };
 
-    if (targetConfig?.entry) {
-      const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
-
-      const targetsWithGlobalEntries = context.targets.map((target) => {
-        // Putting the additionalEntries first to support globals defined there (like regenerator-runtime)
-        target.entries = additionalEntries.concat(target.entries);
-        return target;
-      });
-      context.targets = targetsWithGlobalEntries;
-    }
-
-    delete targetConfig?.entry;
-
-    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
-    return this.webpack.createBundler(context, config as any);
+    return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
   }
 
   private getEntriesFromWebpackConfig(config?: Configuration): string[] {

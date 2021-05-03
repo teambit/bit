@@ -1,10 +1,10 @@
-import webpack from 'webpack';
+import webpack, { Configuration } from 'webpack';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import { fallbacks } from './webpack-fallbacks';
 
 const html = require('./html');
 
-export function configFactory(entries, rootPath) {
+export function configFactory(entries, rootPath): Configuration {
   return {
     mode: 'production',
     // Stop compilation early in production
@@ -36,6 +36,7 @@ export function configFactory(entries, rootPath) {
         buffer: require.resolve('buffer/'),
       },
 
+      // @ts-ignore
       fallback: fallbacks,
     },
 
