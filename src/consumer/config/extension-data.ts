@@ -24,7 +24,7 @@ export class ExtensionDataEntry {
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    public config: { [key: string]: any } | RemoveExtensionSpecialSign = {},
+    private rawConfig: { [key: string]: any } | RemoveExtensionSpecialSign = {},
     public data: { [key: string]: any } = {},
     public newExtensionId: any = undefined
   ) {}
@@ -43,9 +43,18 @@ export class ExtensionDataEntry {
     return '';
   }
 
+  get config(): { [key: string]: any } {
+    if (this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN) return {};
+    return this.rawConfig;
+  }
+
   get isLegacy(): boolean {
-    if (this.config !== REMOVE_EXTENSION_SPECIAL_SIGN && this.config?.__legacy) return true;
+    if (this.config?.__legacy) return true;
     return false;
+  }
+
+  get isRemoved(): boolean {
+    return this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN;
   }
 
   clone(): ExtensionDataEntry {
@@ -151,7 +160,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
    */
   filterRemovedExtensions(): ExtensionDataList {
     const filtered = this.filter((entry) => {
-      return entry.config !== REMOVE_EXTENSION_SPECIAL_SIGN;
+      return !entry.isRemoved;
     });
     return ExtensionDataList.fromArray(filtered);
   }

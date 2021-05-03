@@ -21,7 +21,7 @@ export class AspectEntry {
   }
 
   get isLegacy(): boolean {
-    if (this.legacy.config?.__legacy) return true;
+    if (this.config?.__legacy) return true;
     return false;
   }
 
@@ -31,6 +31,10 @@ export class AspectEntry {
 
   get data() {
     return this.legacy.data;
+  }
+
+  get isRemoved(): boolean {
+    return this.legacy.isRemoved;
   }
 
   set data(val: Record<string, any>) {
