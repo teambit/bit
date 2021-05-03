@@ -28,6 +28,7 @@ export type ComponentModelProps = {
   deprecation?: DeprecationInfo; // deprecation aspect
   env?: Descriptor; // env aspect.
   labels?: string[];
+  host?: string;
 };
 
 export type ComponentServer = {
@@ -66,6 +67,11 @@ export class ComponentModel {
      * tags of the component.
      */
     readonly tags: TagMap,
+
+    /**
+     * host of the component.
+     */
+    readonly host?: string,
 
     /**
      * issues of component.
@@ -112,6 +118,7 @@ export class ComponentModel {
     deprecation,
     env,
     status,
+    host,
     issuesCount,
     description,
     labels,
@@ -123,6 +130,7 @@ export class ComponentModel {
       server,
       Composition.fromArray(compositions),
       TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
+      host,
       issuesCount,
       status,
       deprecation,

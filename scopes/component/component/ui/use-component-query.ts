@@ -24,6 +24,10 @@ const componentFields = gql`
     tags {
       version
     }
+    env {
+      id
+      icon
+    }
   }
 `;
 
@@ -87,6 +91,7 @@ export function useComponentQuery(componentId: string, host: string) {
   }, []);
 
   const rawComponent = data?.getHost?.get;
+  rawComponent.host = host;
 
   return useMemo(() => {
     return {
