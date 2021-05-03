@@ -133,6 +133,7 @@ export default class PackageJsonFile {
       // TODO: replace by better way to identify that something is a component for sure
       // TODO: Maybe need to add the binding prefix here
       componentId: componentIdWithDefaultScope.serialize(),
+      exported: component.id.hasScope(),
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
