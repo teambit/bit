@@ -79,6 +79,7 @@ export default class ComponentMap {
   recentlyTracked?: boolean; // eventually the timestamp is saved in the filesystem cache so it won't be re-tracked if not changed
   scope?: string | null; // Harmony only. empty string if new/staged. (undefined if legacy).
   version?: string; // Harmony only. empty string if new. (undefined if legacy).
+  noFilesError?: Error; // set if during finding the files an error was found
   constructor({
     id,
     files,
