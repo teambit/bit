@@ -1,7 +1,4 @@
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
-import path from 'path';
-
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
@@ -10,7 +7,7 @@ import { IgnoredDirectory } from '../../src/consumer/component-ops/add-component
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
 
-describe.only('component files are missing', function () {
+describe('component files are missing', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
