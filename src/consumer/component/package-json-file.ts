@@ -115,7 +115,8 @@ export default class PackageJsonFile {
     component: Component,
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     excludeRegistryPrefix? = false,
-    addDefaultScopeToCompId? = false // for the capsule, we want the default-scope because it gets published
+    addDefaultScopeToCompId? = false, // for the capsule, we want the default-scope because it gets published
+    addExportProperty? = false
   ): PackageJsonFile {
     const filePath = composePath(componentDir);
     const name = componentIdToPackageName({ withPrefix: !excludeRegistryPrefix, ...component, id: component.id });
@@ -133,7 +134,6 @@ export default class PackageJsonFile {
       // TODO: replace by better way to identify that something is a component for sure
       // TODO: Maybe need to add the binding prefix here
       componentId: componentIdWithDefaultScope.serialize(),
-      exported: component.id.hasScope(),
       dependencies: {
         ...component.packageDependencies,
         // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -157,6 +157,8 @@ export default class PackageJsonFile {
       },
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`,
     };
+    // @ts-ignore
+    if (addExportProperty) packageJsonObject.exported = component.id.hasScope();
     if (!packageJsonObject.homepage) delete packageJsonObject.homepage;
     return new PackageJsonFile({ filePath, packageJsonObject, fileExist: false });
   }
