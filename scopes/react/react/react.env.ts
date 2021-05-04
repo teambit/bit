@@ -6,7 +6,7 @@ import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { Environment, ExecutionContext } from '@teambit/envs';
+import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
@@ -152,27 +152,13 @@ export class ReactEnv implements Environment {
     return path;
   }
 
-  private calcDistPaths(context: ExecutionContext, rootDir: string) {
-    const components = context.components;
-    const distDir = this.getCompiler().distDir;
-
-    const distPaths = components.map((comp) => {
-      const modulePath = this.pkg.getModulePath(comp);
-      const dist = join(rootDir, modulePath, distDir);
-      return dist;
-    });
-
-    return distPaths;
-  }
-
   /**
    * get the default react webpack config.
    */
   private getDevWebpackConfig(context: DevServerContext): Configuration {
     const fileMapPath = this.writeFileMap(context.components, true);
-    const distPaths = this.calcDistPaths(context, this.workspace.path);
 
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths, workDir: this.workspace.path });
+    return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
   }
 
   getDevEnvId(id?: string) {
