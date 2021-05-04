@@ -96,6 +96,10 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
   packageData.name = packageInfo.name;
   packageData.concreteVersion = packageInfo.version;
   if (packageInfo.componentId) {
+    if (packageInfo.exported === false) {
+      // @ts-ignore
+      delete packageInfo.componentId.scope;
+    }
     packageData.componentId = new BitId(packageInfo.componentId);
   }
 }
