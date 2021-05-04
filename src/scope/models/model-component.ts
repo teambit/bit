@@ -411,10 +411,7 @@ export default class Component extends BitObject {
   /**
    * if exactVersion is defined, add exact version instead of using the semver mechanism
    */
-  getVersionToAdd(
-    releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
-    exactVersion: string | null | undefined
-  ): string {
+  getVersionToAdd(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, exactVersion?: string | null): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
