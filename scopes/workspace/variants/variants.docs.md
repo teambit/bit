@@ -148,18 +148,3 @@ Configurations set on one group of components are inherited by its sub-groups (i
         }
 }
 ```
-
-### maxSpecificity
-
-Determines the number of levels to propagate configurations downwards. For example, the number of levels to go from `components/react` to `components/react/button` is 3.
-
-```json
-"teambit.workspace/variants": {
-    "components/react": {
-        "maxSpecificity": 3
-        }
-    },
-    "components/react/button": {
-
-    }
-```
