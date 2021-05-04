@@ -16,7 +16,7 @@ Configurations set on a specific set of components can:
 
 ### The Wildcard (*) variant
 
-To select all components in the workspace use a wildcard (`a`). This is useful when wanting to apply a very general rules on all components. For example:
+To select all components in the workspace use a wildcard (`*`). This is useful when wanting to apply a very general rules on all components. For example:
 
 ```json
 "teambit.workspace/variants": {
