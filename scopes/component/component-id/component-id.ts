@@ -119,6 +119,17 @@ export class ComponentID {
   }
 
   /**
+   * generate a component ID from a string. Returns undefined if input is malformed
+   */
+  static tryFromString(idStr: string, scope?: string) {
+    try {
+      return ComponentID.fromString(idStr, scope);
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * generate a component ID from a string.
    */
   static fromString(idStr: string, scope?: string) {
@@ -139,6 +150,14 @@ export class ComponentID {
 
   static fromObject(object: any, scope?: string) {
     return ComponentID.fromLegacy(new BitId(object), scope);
+  }
+
+  /**
+   * check if object can be correctly deserialized to be a ComponentID
+   */
+  static isValidObject(o: any): boolean {
+    return typeof o === 'object' && typeof o.name === 'string' && typeof o.scope === 'string';
+    // consider validating values with regex
   }
 
   /**

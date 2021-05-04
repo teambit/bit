@@ -321,6 +321,7 @@ export class AspectLoaderMain {
         this.logger.consoleFailure(warning);
       } else {
         this.logger.console(warning);
+        this.logger.console(e);
       }
       if (throwOnError) {
         throw e;

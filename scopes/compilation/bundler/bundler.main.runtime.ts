@@ -4,8 +4,6 @@ import { Component, ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRoot } from '@teambit/ui';
-
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
@@ -45,15 +43,14 @@ export class BundlerMain {
    * load all given components in corresponding dev servers.
    * @param components defaults to all components in the workspace.
    */
-  async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
+  async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     // TODO: this must be refactored away from here. this logic should be in the Preview.
-    this.devService.uiRoot = root;
-    const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService);
     this._componentServers = servers;
 
     this.indexByComponent();
-    // @ts-ignore
+
     return this._componentServers;
   }
 

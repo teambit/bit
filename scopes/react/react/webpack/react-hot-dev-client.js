@@ -45,14 +45,14 @@ if (module.hot && typeof module.hot.dispose === 'function') {
 }
 
 // Connect to WebpackDevServer via a socket.
-const querystring = module.i.substring(module.i.indexOf('?'));
+const querystring = module.id.substring(module.id.indexOf('?'));
 const urlParams = new URLSearchParams(querystring);
 
 const connection = new WebSocket(
   url.format({
     protocol: window.location.protocol === 'https:' ? 'wss' : 'ws',
-    hostname: process.env.WDS_SOCKET_HOST || window.location.hostname,
-    port: process.env.WDS_SOCKET_PORT || window.location.port,
+    hostname: window.location.hostname,
+    port: window.location.port,
     // Hardcoded in WebpackDevServer
     pathname: urlParams.get('sockPath') || '/sockjs-node',
     // pathname: '_hmr/teambit.bad-jokes/extensions/harmony-react',
@@ -125,7 +125,7 @@ function handleWarnings(warnings) {
       // eslint-disable-next-line no-plusplus
       for (let i = 0; i < formatted.warnings.length; i++) {
         if (i === 5) {
-          // eslint-disable-next-line no-console
+          // eslint-disable-next-line
           console.warn('There were more warnings in other files.\n' + 'You can find a complete log in the terminal.');
           break;
         }
@@ -220,7 +220,6 @@ function isUpdateAvailable() {
   /* globals __webpack_hash__ */
   // __webpack_hash__ is the hash of the current compilation.
   // It's a global variable injected by webpack.
-  // eslint-disable-next-line @typescript-eslint/camelcase
   return mostRecentCompilationHash !== __webpack_hash__;
 }
 

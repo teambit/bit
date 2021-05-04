@@ -47,6 +47,7 @@ describe('relative paths flow (components requiring each other by relative paths
       describe('tagging the component', () => {
         let tagOutput;
         before(() => {
+          helper.command.compile();
           tagOutput = helper.command.tagAllComponents();
         });
         it('should allow tagging the component', () => {
@@ -64,13 +65,13 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         describe('should work after importing to another workspace', () => {
           before(() => {
-            helper.command.exportAllComponentsAndRewire();
-            helper.scopeHelper.reInitLocalScope();
+            helper.command.exportToDefaultAndRewire();
+            helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
-            helper.command.importComponent('comp1');
+            helper.command.importComponent('*');
           });
           it('should write the component files with the short dirs (without rootDir)', () => {
-            expect(path.join(helper.scopes.localPath, 'components/comp1/index.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/index.js')).to.be.a.file();
           });
           it('should not generate link files', () => {
             expect(path.join(helper.scopes.localPath, 'components/comp1/comp2')).not.to.be.a.path();

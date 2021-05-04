@@ -9,7 +9,7 @@ import { CompilerAspect, CompilerMain } from '@teambit/compiler';
 import { AspectAspect } from './aspect.aspect';
 import { AspectEnv } from './aspect.env';
 import { CoreExporterTask } from './core-exporter.task';
-import { componentTemplates } from './aspect.template';
+import { aspectTemplate } from './templates/aspect';
 
 export class AspectMain {
   constructor(readonly aspectEnv: AspectEnv, private envs: EnvsMain) {}
@@ -48,7 +48,7 @@ export class AspectMain {
     }
 
     envs.registerEnv(aspectEnv);
-    generator.registerComponentTemplate(componentTemplates);
+    generator.registerComponentTemplate([aspectTemplate]);
     return new AspectMain(aspectEnv, envs);
   }
 }

@@ -3,7 +3,7 @@ description: Highlights Bit Components and links to their Bit scope
 labels: ['component', 'highlight', 'react']
 ---
 
-import {highlightComponents} from './component-highlighter'
+import {ComponentHighlighter} from './component-highlighter'
 import {useEffect} from 'react';
 
 Highlights React components in web pages and add links to their Bit scope and component page.
@@ -12,12 +12,12 @@ Highlights React components in web pages and add links to their Bit scope and co
 
 ## How to use?
 
-Invoke the `highlightComponents()` to start highlighting components.
+Invoke the `ComponentHighlighter()` to start highlighting components.
 
 ```ts
-import { highlightComponents } from '@teambit/ui.component-highlighter';
+import { ComponentHighlighter } from '@teambit/ui.component-highlighter';
 
 // 'options' are optional.
-highlightComponents({ borderColor: 'red' });
+ComponentHighlighter({ borderColor: 'red' });
 ReactDOM.render(App);
 ```

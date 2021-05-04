@@ -1,22 +1,31 @@
 import arrayDifference from 'array-difference';
 import chalk from 'chalk';
+import Table from 'tty-table';
 import normalize from 'normalize-path';
 import diff from 'object-diff';
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
-
+import { compact } from 'lodash';
+import { lt, gt } from 'semver';
 import { Consumer } from '..';
 import Component from '../component/consumer-component';
 import { ExtensionDataList } from '../config';
 import { FieldsDiff } from './components-diff';
+import { BitIds } from '../../bit-id';
 
 type ConfigDiff = {
   fieldName: string;
   diffOutput: string;
 };
+type DepDiffType = 'added' | 'removed' | 'upgraded' | 'downgraded' | 'changed';
+type DepDiff = {
+  name: string;
+  type: DepDiffType;
+  left?: string;
+  right?: string;
+};
 export function componentToPrintableForDiff(component: Component): Record<string, any> {
-  const obj = {};
-  const parsePackages = (packages) => {
+  const obj: Record<string, any> = {};
+  const parsePackages = (packages: Record<string, string>): string[] | null => {
     return !R.isEmpty(packages) && !R.isNil(packages)
       ? Object.keys(packages).map((key) => `${key}@${packages[key]}`)
       : null;
@@ -45,23 +54,17 @@ export function componentToPrintableForDiff(component: Component): Record<string
   } = component;
   const allDevPackages = {
     ...devPackageDependencies,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.devDependencies,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...testerPackageDependencies.devDependencies,
   };
   const allPackages = {
     ...packageDependencies,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.dependencies,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...testerPackageDependencies.dependencies,
   };
   const allPeerPackages = {
     ...component.peerPackageDependencies,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...compilerPackageDependencies.peerDependencies,
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     ...testerPackageDependencies.peerDependencies,
   };
   const parsedDevPackageDependencies = parsePackages(allDevPackages) || [];
@@ -69,59 +72,38 @@ export function componentToPrintableForDiff(component: Component): Record<string
   const peerPackageDependencies = [].concat(parsePackages(allPeerPackages)).filter((x) => x);
   const overrides = component.overrides.componentOverridesData;
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.id = component.id.toStringWithoutScope();
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.compiler = compiler ? compiler.name : null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.language = lang || null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.bindingPrefix = bindingPrefix || null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.tester = tester ? tester.name : null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.mainFile = mainFile ? normalize(mainFile) : null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.dependencies = dependencies
     .toStringOfIds()
     .sort()
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     .concat(parsePackages(allPackages))
     .filter((x) => x);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .sort()
     .concat(parsedDevPackageDependencies)
     .filter((x) => x);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
 
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.files =
     files && !R.isEmpty(files) && !R.isNil(files)
-      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        files.filter((file) => !file.test).map((file) => normalize(file.relative))
+      ? files.filter((file) => !file.test).map((file) => normalize(file.relative))
       : null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.specs =
     files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
-      ? // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        files.filter((file) => file.test).map((file) => normalize(file.relative))
+      ? files.filter((file) => file.test).map((file) => normalize(file.relative))
       : null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.extensions = parseExtensions(extensions);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.deprecated = deprecated ? 'True' : null;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesDependencies = parsePackages(overrides.dependencies);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   obj.overridesPackageJsonProps = JSON.stringify(component.overrides.componentOverridesPackageJsonData);
   return obj;
 }
@@ -150,14 +132,29 @@ export function getDiffBetweenObjects(
   );
 }
 
+function componentToPrintableForDiffCommand(component: Component, verbose = false): Record<string, any> {
+  const comp = componentToPrintableForDiff(component);
+  delete comp.dependencies;
+  delete comp.devDependencies;
+  delete comp.peerDependencies;
+  if (!verbose) {
+    delete comp.overridesDependencies;
+    delete comp.overridesDevDependencies;
+    delete comp.overridesPeerDependencies;
+    delete comp.overridesPackageJsonProps;
+  }
+  return comp;
+}
+
 export function diffBetweenComponentsObjects(
   consumer: Consumer,
   componentLeft: Component,
   componentRight: Component,
-  verbose: boolean
-): FieldsDiff[] | null | undefined {
-  const printableLeft = componentToPrintableForDiff(componentLeft);
-  const printableRight = componentToPrintableForDiff(componentRight);
+  verbose: boolean,
+  table: boolean
+): FieldsDiff[] | undefined {
+  const printableLeft = componentToPrintableForDiffCommand(componentLeft, verbose);
+  const printableRight = componentToPrintableForDiffCommand(componentRight, verbose);
   const leftVersion = componentLeft.version;
   const rightVersion = componentRight.version;
   const fieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);
@@ -188,7 +185,7 @@ export function diffBetweenComponentsObjects(
     return { fieldName: field, diffOutput };
   });
 
-  const dependenciesOutput = () => {
+  const dependenciesRelativePathsOutput = (): FieldsDiff[] => {
     if (!verbose) return [];
     const dependenciesLeft = componentLeft.getAllDependencies();
     const dependenciesRight = componentRight.getAllDependencies();
@@ -212,17 +209,177 @@ export function diffBetweenComponentsObjects(
         chalk.green(getValue(dependencyRight.relativePaths, false));
       const diffOutput = title + value;
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       acc.push({ fieldName, diffOutput });
       return acc;
     }, []);
   };
 
+  const getDepDiffType = (left?: string, right?: string): DepDiffType => {
+    if (left && !right) return 'removed';
+    if (!left && right) return 'added';
+    if (!left || !right) throw new Error('diff.getType expect at least one of the component to have value');
+    const opts = { loose: true, includePrerelease: true };
+    try {
+      if (lt(left, right, opts)) return 'upgraded';
+      if (gt(left, right, opts)) return 'downgraded';
+    } catch (err) {
+      // the semver is probably a range, no need to compare, just fallback to the "changed"
+    }
+    return 'changed';
+  };
+
+  const formatDepsDiffAsTable = (diffs: DepDiff[], fieldName: string): string => {
+    diffs.forEach((oneDiff) => {
+      // oneDiff.name = `> ${oneDiff.name}`;
+      oneDiff.left = oneDiff.left || '---';
+      oneDiff.right = oneDiff.right || '---';
+    });
+    const options = {
+      borderStyle: 'solid',
+      compact: true,
+    };
+    const headerOpts = {
+      headerAlign: 'left',
+      headerColor: 'cyan',
+      align: 'left',
+    };
+    const headers = [
+      {
+        ...headerOpts,
+        alias: 'name',
+        value: 'name',
+      },
+      {
+        ...headerOpts,
+        alias: 'diff',
+        value: 'type',
+      },
+      {
+        ...headerOpts,
+        width: 20,
+        alias: labelLeft(leftVersion, rightVersion),
+        value: 'left',
+      },
+      {
+        ...headerOpts,
+        width: 20,
+        alias: labelRight(leftVersion, rightVersion),
+        value: 'right',
+      },
+    ];
+    const diffTable = new Table(headers, diffs, options);
+    return `\n${chalk.bold(fieldName)}\n${diffTable.render()}`;
+  };
+
+  const formatDepsDiffAsPlainText = (diffs: DepDiff[], fieldName: string): string => {
+    diffs.forEach((oneDiff) => {
+      oneDiff.left = oneDiff.left ? chalk.red(`- ${oneDiff.name}@${oneDiff.left}\n`) : '';
+      oneDiff.right = oneDiff.right ? chalk.green(`+ ${oneDiff.name}@${oneDiff.right}\n`) : '';
+    });
+    const output = diffs.map((d) => `${d.name}\n${d.left}${d.right}`).join('\n');
+    const depTitleLeft = `--- ${fieldName} ${labelLeft(leftVersion, rightVersion)}`;
+    const depTitleRight = `+++ ${fieldName} ${labelRight(leftVersion, rightVersion)}`;
+    const title = `${depTitleLeft}\n${chalk.bold(depTitleRight)}`;
+
+    return `\n${title}\n${output}`;
+  };
+
+  const formatDepsDiff = (diffs: DepDiff[], fieldName: string): string => {
+    return table ? formatDepsDiffAsTable(diffs, fieldName) : formatDepsDiffAsPlainText(diffs, fieldName);
+  };
+
+  const packageDependenciesOutput = (fieldName: string): string | null => {
+    const dependenciesLeft = componentLeft[fieldName];
+    const dependenciesRight = componentRight[fieldName];
+    if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
+    const diffsLeft = Object.keys(dependenciesLeft).reduce<DepDiff[]>((acc, dependencyName) => {
+      const dependencyLeft = dependenciesLeft[dependencyName];
+      const dependencyRight = dependenciesRight[dependencyName];
+      if (dependencyLeft === dependencyRight) return acc;
+
+      acc.push({
+        name: dependencyName,
+        type: getDepDiffType(dependencyLeft, dependencyRight),
+        left: dependencyLeft,
+        right: dependencyRight,
+      });
+      return acc;
+    }, []);
+    const diffs = Object.keys(dependenciesRight).reduce<DepDiff[]>((acc, dependencyName) => {
+      if (!dependenciesLeft[dependencyName]) {
+        // otherwise it was taken care already above
+        acc.push({
+          name: dependencyName,
+          type: getDepDiffType(undefined, dependenciesRight[dependencyName]),
+          left: undefined,
+          right: dependenciesRight[dependencyName],
+        });
+      }
+      return acc;
+    }, diffsLeft);
+    if (!diffs.length) return null;
+
+    return formatDepsDiff(diffs, fieldName);
+  };
+
+  const componentDependenciesOutput = (fieldName: string): string | null => {
+    const dependenciesLeft: BitIds = componentLeft.depsIdsGroupedByType[fieldName];
+    const dependenciesRight: BitIds = componentRight.depsIdsGroupedByType[fieldName];
+    if (R.isEmpty(dependenciesLeft) && R.isEmpty(dependenciesRight)) return null;
+    const diffsLeft = dependenciesLeft.reduce<DepDiff[]>((acc, dependencyLeft) => {
+      const dependencyRight = dependenciesRight.searchWithoutScopeAndVersion(dependencyLeft);
+      if (dependencyRight && dependencyLeft.isEqual(dependencyRight)) return acc;
+
+      acc.push({
+        name: dependencyLeft.toStringWithoutVersion(),
+        type: getDepDiffType(dependencyLeft.version, dependencyRight?.version),
+        left: dependencyLeft.version,
+        right: dependencyRight?.version,
+      });
+      return acc;
+    }, []);
+    const diffs = dependenciesRight.reduce<DepDiff[]>((acc, dependencyRight) => {
+      if (!dependenciesLeft.hasWithoutScopeAndVersion(dependencyRight)) {
+        // otherwise it was taken care already above
+        acc.push({
+          name: dependencyRight.toStringWithoutVersion(),
+          type: getDepDiffType(undefined, dependencyRight.version),
+          left: undefined,
+          right: dependencyRight?.version,
+        });
+      }
+      return acc;
+    }, diffsLeft);
+    if (!diffs.length) return null;
+
+    return formatDepsDiff(diffs, fieldName);
+  };
+
+  const getAllDepsOutput = (): FieldsDiff[] => {
+    const depsDiff: FieldsDiff[] = [];
+    ['packageDependencies', 'devPackageDependencies', 'peerPackageDependencies'].forEach((fieldName) => {
+      const diffOutput = packageDependenciesOutput(fieldName);
+      if (diffOutput) depsDiff.push({ fieldName, diffOutput });
+    });
+    ['dependencies', 'devDependencies', 'extensionDependencies'].forEach((fieldName) => {
+      const diffOutput = componentDependenciesOutput(fieldName);
+      if (diffOutput) depsDiff.push({ fieldName, diffOutput });
+    });
+
+    return depsDiff;
+  };
+
   const fieldsEnvsConfigOutput = getEnvsConfigOutput(componentLeft, componentRight);
   const extensionsConfigOutput = getExtensionsConfigOutput(componentLeft, componentRight);
 
-  const allDiffs = [...fieldsDiffOutput, ...fieldsEnvsConfigOutput, ...extensionsConfigOutput, ...dependenciesOutput()];
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+  const allDiffs = [
+    ...fieldsDiffOutput,
+    ...fieldsEnvsConfigOutput,
+    ...extensionsConfigOutput,
+    ...dependenciesRelativePathsOutput(),
+    ...getAllDepsOutput(),
+  ];
+
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
 }
 

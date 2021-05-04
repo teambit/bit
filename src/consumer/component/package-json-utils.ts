@@ -1,6 +1,6 @@
 import fs from 'fs-extra';
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 
 import { BitId, BitIds } from '../../bit-id';
 import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
@@ -208,9 +208,10 @@ async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute,
 
 export async function removeComponentsFromNodeModules(consumer: Consumer, components: Component[]) {
   logger.debug(`removeComponentsFromNodeModules: ${components.map((c) => c.id.toString()).join(', ')}`);
-  // paths without scope name, don't have a symlink in node-modules
   const pathsToRemoveWithNulls = components.map((c) => {
-    return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
+    // for legacy, paths without scope name, don't have a symlink in node-modules
+    if (consumer.isLegacy) return c.id.scope ? getNodeModulesPathOfComponent(c) : null;
+    return getNodeModulesPathOfComponent({ ...c, id: c.id, allowNonScope: true });
   });
   const pathsToRemove = compact(pathsToRemoveWithNulls);
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);

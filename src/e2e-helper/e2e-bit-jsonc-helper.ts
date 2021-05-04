@@ -64,8 +64,19 @@ export default class BitJsoncHelper {
     this.addKeyVal(bitJsoncDir, 'teambit.workspace/workspace', workspace);
   }
 
+  addKeyValToDependencyResolver(key: string, val: any, bitJsoncDir: string = this.scopes.localPath) {
+    const bitJsonc = this.read(bitJsoncDir);
+    const depResolver = bitJsonc['teambit.dependencies/dependency-resolver'];
+    assign(depResolver, { [key]: val });
+    this.addKeyVal(bitJsoncDir, 'teambit.dependencies/dependency-resolver', depResolver);
+  }
+
   addDefaultScope(scope = this.scopes.remote) {
     this.addKeyValToWorkspace('defaultScope', scope);
+  }
+
+  setPackageManager(packageManager = 'teambit.dependencies/yarn') {
+    this.addKeyValToDependencyResolver('packageManager', packageManager);
   }
 
   addDefaultOwner(owner: string) {

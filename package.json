@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.44",
+  "version": "1.0.71",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -19,7 +19,7 @@
     }
   },
   "lint-staged": {
-    "*.{ts,js,tsx,css,scss}": [
+    "*.{ts,js,jsx,tsx,css,scss,md,mdx}": [
       "prettier --write",
       "git add"
     ]
@@ -59,8 +59,8 @@
     "lint:html": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format html -o eslint-report.html",
     "lint-circle": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --format junit -o junit/eslint-results.xml",
     "lint:fix": "eslint \"{src,e2e,scopes,components}/**/*.{ts,tsx}\" --fix",
-    "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,css,scss,tsx}\" --write",
-    "prettier:check": "prettier --list-different \"{ts,js,css,tsx}/**/*.{ts,js,css,scss,tsx}\"",
+    "format": "prettier \"{src,e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\" --write",
+    "prettier:check": "prettier --list-different \"{src,e2e,scopes,components}/**/*.{ts,js,jsx,css,scss,tsx,md,mdx}\"",
     "test": "mocha --require ./babel-register './src/**/*.spec.ts'",
     "test:extensions": "mocha --require ./babel-register './scopes/**/*.spec.ts'",
     "test:appveyor": "mocha --require ./babel-register --reporter mocha-appveyor-reporter ./src/**/*.spec.ts",
@@ -81,14 +81,17 @@
     "clean": "rm -rf dist && rm -rf types",
     "build": "npm run build:src",
     "build:types": "./scripts/build-types.bash",
+    "build:types:windows": ".\\scripts\\build-types.bat",
     "install-harmony": "cd build-harmony && yarn",
-    "link-bit-legacy": "rm -rf node_modules/@teambit/legacy && ln -sf `pwd` node_modules/@teambit/legacy",
+    "link-bit-legacy": "node ./scripts/link-bit-legacy.js",
     "import-harmony": "build-harmony/node_modules/.bin/bbit import",
     "status-harmony": "build-harmony/node_modules/.bin/bbit status",
     "build-harmony": "build-harmony/node_modules/.bin/bbit install && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
+    "build-harmony:windows": "build-harmony\\node_modules\\.bin\\bbit.cmd install && npm run link-bit-legacy && build-harmony\\node_modules\\.bin\\bbit.cmd compile",
     "build-harmony-skip-import": "build-harmony/node_modules/.bin/bbit install --skip-import && npm run link-bit-legacy && build-harmony/node_modules/.bin/bbit compile",
     "link-harmony": "build-harmony/node_modules/.bin/bbit link",
     "full-setup": "npm run install-harmony && npm run build-harmony && npm run build && npm run build:types",
+    "full-setup:windows": "npm run install-harmony && npm run build-harmony:windows && npm run build && npm run build:types:windows",
     "full-setup:bbit": "rm -rf node_modules/@teambit/legacy && bbit install && npm run link-bit-legacy && bbit compile && npm run build && npm run build:types",
     "build-centos-image": "docker build ./scripts/linux/centos -t centos-rpm",
     "build-debian-image": "docker build ./scripts/linux/debian -t debian-deb",
@@ -172,6 +175,7 @@
     "lodash.set": "4.3.2",
     "lodash.toarray": "4.4.0",
     "lodash.unionby": "4.8.0",
+    "lru-cache": "6.0.0",
     "make-fetch-happen": "4.0.2",
     "memfs": "2.17.1",
     "minimatch": "3.0.4",
@@ -243,7 +247,7 @@
     "@babel/plugin-transform-modules-commonjs": "7.12.13",
     "@babel/plugin-transform-runtime": "7.12.17",
     "@babel/preset-env": "7.12.17",
-    "@babel/preset-react": "7.12.13",
+    "@babel/preset-react": "7.13.13",
     "@babel/preset-typescript": "7.12.17",
     "@babel/register": "7.12.13",
     "@types/bluebird": "3.5.33",

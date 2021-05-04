@@ -2,8 +2,6 @@ import timeAgo from '@teambit/base-ui.utils.time-ago';
 import classNames from 'classnames';
 import React, { useEffect, useMemo, useReducer } from 'react';
 
-import styles from './time-ago.module.scss';
-
 type TimeAgoProps = {
   date: string | number;
 } & React.HTMLAttributes<HTMLSpanElement>;
@@ -23,7 +21,7 @@ export function TimeAgo(props: TimeAgoProps) {
   }, [date, refreshIdx]);
 
   return (
-    <span {...rest} className={classNames(styles.timeAgo, className)}>
+    <span {...rest} className={classNames(className)}>
       {formatted}
     </span>
   );

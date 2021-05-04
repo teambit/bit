@@ -61,16 +61,17 @@ export class StartCmd implements Command {
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    const processWrite = process.stdout.write.bind(process.stdout);
-    process.stdout.write = (data, cb) => {
-      if (data.includes('｢wds｣') && !verbose) return processWrite('', cb);
-      return processWrite(data, cb);
-    };
+    // const processWrite = process.stdout.write.bind(process.stdout);
+    // process.stdout.write = (data, cb) => {
+    //   if (data.includes('｢wds｣') && !verbose) return processWrite('', cb);
+    //   return processWrite(data, cb);
+    // };
 
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
-
-    const [, uiRoot] = this.ui.getUi();
+    const ui = this.ui.getUi();
+    if (!ui) throw new Error('ui not found');
+    const [, uiRoot] = ui;
     const appName = uiRoot.name;
     const uiServer = this.ui.createRuntime({
       uiRootName,

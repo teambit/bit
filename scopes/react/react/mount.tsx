@@ -45,5 +45,4 @@ export default (Composition: React.ComponentType = StandaloneNotFoundPage, previ
     </Provider>,
     document.getElementById('root')
   );
-  // ReactDOM.render(<Composition />, document.getElementById('root'));
 };

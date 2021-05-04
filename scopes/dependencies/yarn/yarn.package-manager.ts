@@ -26,6 +26,7 @@ import {
   StreamReport,
   ResolveOptions,
   LightReport,
+  WorkspaceResolver,
 } from '@yarnpkg/core';
 import { getPluginConfiguration } from '@yarnpkg/cli';
 import { npath, PortablePath } from '@yarnpkg/fslib';
@@ -89,9 +90,21 @@ export class YarnPackageManager implements PackageManager {
     this.logger.debug('root manifest for installation', rootManifest);
     this.logger.debug('components manifests for installation', manifests);
 
+    const workspacesIdents = {};
+
     const workspacesP = Object.keys(manifests).map(async (path) => {
       const manifest = manifests[path];
-      return this.createWorkspace(path, project, manifest);
+      const workspace = await this.createWorkspace(path, project, manifest);
+      const workspaceIdentHash = workspace.locator.identHash;
+      //
+      if (workspacesIdents[workspaceIdentHash]) {
+        this.logger.debug(
+          `overriding internal workspace fields to prevent duplications for workspace ${workspace.cwd}`
+        );
+        this.overrideInternalWorkspaceParams(workspace);
+      }
+      workspacesIdents[workspace.locator.identHash] = true;
+      return workspace;
     });
 
     const workspaces = await Promise.all(workspacesP);
@@ -99,7 +112,7 @@ export class YarnPackageManager implements PackageManager {
     this.setupWorkspaces(project, workspaces.concat(rootWs));
 
     const cache = await Cache.find(config);
-    const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
+    // const existingPackageJsons = await this.backupPackageJsons(rootDir, componentDirectoryMap);
 
     const installReport = await StreamReport.start(
       {
@@ -108,9 +121,7 @@ export class YarnPackageManager implements PackageManager {
       },
       async (report) => {
         await project.install({
-          // this should be uncomment in order to not mutate the root package.json and / or the package json in components
-          // Currently it's commented since it produce an error in the link step of "Error: Manifest not found"
-          // persistProject: false,
+          persistProject: false,
           cache,
           report,
         });
@@ -120,7 +131,7 @@ export class YarnPackageManager implements PackageManager {
     // TODO: check if package.json and link files generation can be prevented through the yarn API or
     // mock the files by hooking to `xfs`.
     // see the persistProject: false above
-    await this.restorePackageJsons(existingPackageJsons);
+    // await this.restorePackageJsons(existingPackageJsons);
 
     if (installReport.hasErrors()) process.exit(installReport.exitCode());
 
@@ -187,13 +198,43 @@ export class YarnPackageManager implements PackageManager {
     const ws = new Workspace(wsPath, { project });
     await ws.setup();
     const identity = structUtils.parseIdent(name);
+    // const needOverrideInternal = !!ws.manifest.name && !!manifest.name;
     ws.manifest.name = identity;
     ws.manifest.version = manifest.version;
     ws.manifest.dependencies = this.computeDeps(manifest.dependencies);
     ws.manifest.devDependencies = this.computeDeps(manifest.devDependencies);
     ws.manifest.peerDependencies = this.computeDeps(manifest.peerDependencies);
 
+    // if (needOverrideInternal) this.overrideInternalWorkspaceParams(ws);
+
     return ws;
+  }
+
+  /**
+   * This is used to handle cases where in the capsules dirs we have the same component with different versions
+   * The yarn ident is calculated by the manifest (package.json) name if exist
+   * in our case for the same component with different versions we will get the same ident which will result errors later.
+   * This is make sense in the original case of yarn workspace (it make sense you don't have 2 workspace with same name)
+   * However in our case it doesn't make sense.
+   * This function will make sure the ident will use the version as well
+   * @param ws
+   */
+  private overrideInternalWorkspaceParams(ws: Workspace) {
+    const ident = structUtils.makeIdent(
+      ws.manifest.name?.scope || null,
+      `${ws.manifest.name?.name}-${ws.manifest.version}`
+    );
+
+    ws.manifest.name = ident;
+
+    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    ws.locator = structUtils.makeLocator(ident, ws.reference);
+
+    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    ws.anchoredDescriptor = structUtils.makeDescriptor(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
+
+    // @ts-expect-error: It's ok to initialize it now, even if it's readonly (setup is called right after construction)
+    ws.anchoredLocator = structUtils.makeLocator(ws.locator, `${WorkspaceResolver.protocol}${ws.relativeCwd}`);
   }
 
   private setupWorkspaces(project: Project, workspaces: Workspace[]) {
@@ -265,9 +306,8 @@ export class YarnPackageManager implements PackageManager {
       installStatePath: `${rootDirPath}/.yarn/install-state.gz`,
       cacheFolder,
       pnpDataPath: `${rootDirPath}/.pnp.meta.json`,
-      bstatePath: `${rootDirPath}/.yarn/build-state.yml`,
       npmScopes: scopedRegistries,
-      virtualFolder: `${rootDirPath}/.yarn/$$virtual`,
+      virtualFolder: `${rootDirPath}/.yarn/__virtual__`,
       npmRegistryServer: defaultRegistry.uri || 'https://registry.yarnpkg.com',
       npmAlwaysAuth: defaultRegistry.alwaysAuth,
       httpProxy: proxyConfig?.httpProxy,

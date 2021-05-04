@@ -114,6 +114,10 @@ export class ComponentMain {
     return fragments;
   }
 
+  isHost(name: string) {
+    return !!this.hostSlot.get(name);
+  }
+
   /**
    * register a show fragment to display further information in the `bit show` command.
    */

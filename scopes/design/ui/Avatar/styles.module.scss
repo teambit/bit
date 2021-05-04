@@ -8,12 +8,9 @@
   text-align: center;
   text-transform: uppercase;
   font-weight: bold;
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--border-color, #ededed);
 
   .tooltip {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
     max-width: 13ch;
   }
 
@@ -21,7 +18,7 @@
     text-align: center;
     display: inline-block;
     justify-self: center;
-    color: white;
+    color: var(--bg-color, #ffffff);
   }
   .orgDefault {
     text-align: center;
@@ -42,12 +39,12 @@
 }
 
 .default {
-  background-color: var(--border-color);
-  border: 1px solid var(--border-color);
+  background-color: var(--border-color, #ededed);
+  border: 1px solid var(--border-color, #ededed);
   box-sizing: border-box;
 }
 
 :export {
   //text without hash
-  defaultAvatarBgColor: str-slice(inspect(var(--border-color)), 2);
+  defaultAvatarBgColor: str-slice(inspect(var(--border-color, #ededed)), 2);
 }

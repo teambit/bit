@@ -48,6 +48,7 @@ async function _deprecationMany(
   const modelComponentsP = foundComponents.map((bitId) => deprecationAction(scope, bitId));
   const modelComponents = await Promise.all(modelComponentsP);
   await scope.objects.writeObjectsToTheFS(modelComponents);
+  scope.objects.clearCache();
   const missingComponentsStrings = missingComponents.map((id) => id.toStringWithoutVersion());
   const bitIds = modelComponents.map((comp) => comp.id());
   return { bitIds, missingComponents: missingComponentsStrings };

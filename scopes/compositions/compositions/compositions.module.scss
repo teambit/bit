@@ -30,6 +30,10 @@ $panelBg: #fafafa;
   max-width: calc(100% - 200px);
 }
 
+.menuBar {
+  border-bottom: 1px solid var(--border-color);
+}
+
 .splitter {
   position: relative;
 
@@ -64,9 +68,4 @@ $panelBg: #fafafa;
 
 .compositions {
   padding: 16px 8px 0 8px;
-}
-
-.compositionsIframe:not(:only-child) {
-  border: 8px solid var(--border-color, #ededed);
-  box-sizing: border-box;
 }

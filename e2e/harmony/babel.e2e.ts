@@ -37,7 +37,7 @@ describe('babel compiler', function () {
         helper.extensions.addExtensionToVariant(EXTENSIONS_BASE_FOLDER, 'teambit.dependencies/dependency-resolver', {
           policy: {
             dependencies: {
-              '@babel/runtime': '^7.8.4',
+              '@babel/runtime': '^7.12.0',
               '@babel/core': '7.11.6',
               '@babel/preset-env': '7.11.5',
             },
@@ -63,7 +63,7 @@ describe('babel compiler', function () {
         const mapFile = path.join(distDir, 'foo.js.map');
         const mapFileParsed = fs.readJSONSync(mapFile);
         expect(mapFileParsed).to.have.property('sourceRoot');
-        expect(mapFileParsed.sourceRoot).to.endsWith('/bar');
+        expect(mapFileParsed.sourceRoot).to.endsWith(`${path.sep}bar`);
         expect(mapFileParsed).to.have.property('sources');
       });
       it('should be able to run the dist file', () => {

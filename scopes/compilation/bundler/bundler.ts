@@ -1,7 +1,7 @@
 import { Component } from '@teambit/component';
 
 export interface DevServer {
-  start();
+  start(): void;
 }
 
 export type BundlerResult = {
@@ -13,3 +13,5 @@ export type BundlerResult = {
 export interface Bundler {
   run(): Promise<BundlerResult[]>;
 }
+
+export type BundlerMode = 'dev' | 'prod';

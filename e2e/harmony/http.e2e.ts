@@ -1,9 +1,11 @@
 import { expect } from 'chai';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
+import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import { HttpHelper } from '../http-helper';
 
-describe('http protocol', function () {
+// @TODO: fix for Windows
+(IS_WINDOWS ? describe.skip : describe)('http protocol', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -28,14 +30,14 @@ describe('http protocol', function () {
       helper.scopeHelper.addRemoteHttpScope();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      exportOutput = helper.command.exportAllComponents();
+      exportOutput = helper.command.export();
       scopeAfterExport = helper.scopeHelper.cloneLocalScope();
     });
     after(() => {
       httpHelper.killHttp();
     });
     it('should export successfully', () => {
-      expect(exportOutput).to.have.string('exported 3 components');
+      expect(exportOutput).to.have.string('exported the following 3 component');
     });
     describe('bit log', () => {
       let logOutput: string;
@@ -64,12 +66,12 @@ describe('http protocol', function () {
         helper.scopeHelper.getClonedLocalScope(scopeAfterExport);
       });
       it('should show descriptive error when removing component that has dependents', () => {
-        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp2`, '--remote --silent');
+        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp2`, '--remote');
         expect(output).to.have.string(`error: unable to delete ${helper.scopes.remote}/comp2`);
         expect(output).to.have.string(`${helper.scopes.remote}/comp1`);
       });
       it('should remove successfully components that has no dependents', () => {
-        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp1`, '--remote --silent');
+        const output = helper.command.removeComponent(`${helper.scopes.remote}/comp1`, '--remote');
         expect(output).to.have.string('successfully removed components');
         expect(output).to.have.string('comp1');
       });

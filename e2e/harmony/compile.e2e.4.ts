@@ -80,10 +80,10 @@ describe('compile extension', function () {
       });
       describe('export and import to another scope', () => {
         before(() => {
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('*');
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();

@@ -38,12 +38,15 @@
           "@teambit/legacy": "-"
         },
         "devDependencies": {
-          "@teambit/legacy": "-"
+          "@teambit/legacy": "-",
+          "@types/react": "^16.8.0",
+          "@types/react-dom": "^16.8.0"
         },
         "peerDependencies": {
-          "react": "16.13.1",
-          "@teambit/legacy": "1.0.44",
-          "react-dom": "16.13.1"
+          "react": "^16.8.0",
+          "react-dom": "^16.8.0",
+          "react-native-web": "^0.14.0",
+          "@teambit/legacy": "1.0.71"
         }
       }
     },

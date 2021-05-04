@@ -513,7 +513,7 @@ console.log(barFoo.default());`;
       describe('removing is-string', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(localScope);
-          helper.command.removeComponent(`${helper.scopes.remote}/utils/is-string`, '-f -d -s');
+          helper.command.removeComponent(`${helper.scopes.remote}/utils/is-string`, '-f -d');
         });
         it('should not delete is-type from the filesystem', () => {
           localConsumerFiles = helper.fs.getConsumerFiles();
@@ -581,8 +581,8 @@ console.log(barFoo.default());`;
       });
       it('bit diff should show that the modification is about version bump of is-type', () => {
         const diff = helper.command.diff();
-        expect(diff).to.have.string(`- [ ${helper.scopes.remote}/utils/is-type@0.0.1 ]`);
-        expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/utils/is-type@0.0.2 ]`);
+        expect(diff).to.have.string(`- ${helper.scopes.remote}/utils/is-type@0.0.1`);
+        expect(diff).to.have.string(`+ ${helper.scopes.remote}/utils/is-type@0.0.2`);
       });
       it('should use the new version of is-type', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -1069,7 +1069,7 @@ console.log(barFoo.default());`;
       // intermediate step to make sure all are exported
       expect(exportOutput).to.have.string('exported 2 components');
 
-      const removeOutput = helper.command.removeComponent('utils/is-string', '--delete-files --silent');
+      const removeOutput = helper.command.removeComponent('utils/is-string', '--delete-files');
       expect(removeOutput).to.have.string('successfully removed');
 
       output = helper.command.importComponent('utils/is-string');
