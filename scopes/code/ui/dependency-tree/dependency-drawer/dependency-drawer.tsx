@@ -1,6 +1,8 @@
 import React from 'react';
 import { DrawerUI, DrawerProps } from '@teambit/ui.tree.drawer';
 import { Link } from '@teambit/ui.routing.link';
+import { ComponentUrl } from '@teambit/component-url';
+import { ComponentID } from '@teambit/component-id';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
 import styles from './dependency-drawer.module.scss';
 
@@ -37,16 +39,24 @@ function DependencyList({ deps }: { deps: DependencyType[] }) {
 
 // remove this once the links are calculated in the dependency resolver
 function getDependencyLink(dep: DependencyType) {
+  // TODO - this doesn't work for range semver, like `^16.0.0 || ^17.0.0`
   const version = dep.version.replace('^', '').replace('~', '');
-  const linkPrefix = dep.__typename === 'ComponentDependency' ? 'https://bit.dev/' : 'https://npmjs.com/package/';
-  if (dep.packageName) {
+
+  // maybe can deduce isBitComponent iff dep.packageName is defined?
+  // or if dep.packageName !== dep.id
+  const isBitComponent = dep.__typename === 'ComponentDependency';
+  const compId = ComponentID.tryFromString(dep.id);
+
+  if (dep.packageName && isBitComponent && compId) {
     return {
       name: dep.packageName,
-      link: `${linkPrefix}${dep.id.replace('.', '/').split('@')[0]}?version=${version}`,
+      link: ComponentUrl.toUrl(compId),
     };
   }
+
+  const npmPrefix = 'https://npmjs.com/package';
   return {
-    name: dep.id,
-    link: `${linkPrefix}${dep.id}/v/${version}`,
+    name: dep.packageName || dep.id,
+    link: `${npmPrefix}/${dep.packageName || dep.id}/v/${version}`,
   };
 }

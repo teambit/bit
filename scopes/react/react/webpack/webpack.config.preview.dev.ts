@@ -1,5 +1,7 @@
 import '@teambit/ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { ComponentID } from '@teambit/component-id';
+import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import webpack from 'webpack';
 
@@ -32,9 +34,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-type Options = { envId: string; fileMapPath: string; distPaths: string[] };
+type Options = { envId: string; fileMapPath: string; distPaths: string[]; workDir: string };
 
-export default function ({ envId, fileMapPath, distPaths }: Options): WebpackConfigWithDevServer {
+export default function ({ envId, fileMapPath, distPaths, workDir }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       // @ts-ignore - remove this once there is types package for webpack-dev-server v4
@@ -58,10 +60,12 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
         },
         {
           test: /\.js$/,
-          include: distPaths,
-          // // apply to all installed components:
-          // include: path.join(workDir, 'node_modules'),
-          // exclude: [/babel/, /\.bin/, /\.cache/],
+          descriptionData: {
+            componentId: ComponentID.isValidObject,
+          },
+          // limit loader to files in the current project,
+          // to skip any files linked from other projects (like Bit itself)
+          include: path.join(workDir, 'node_modules'),
           use: [
             {
               loader: require.resolve('babel-loader'),
@@ -83,6 +87,7 @@ export default function ({ envId, fileMapPath, distPaths }: Options): WebpackCon
           test: /\.(mjs|js|jsx|tsx|ts)$/,
           // TODO: use a more specific exclude for our selfs
           exclude: [/node_modules/, /dist/],
+          include: workDir,
           resolve: {
             fullySpecified: false,
           },

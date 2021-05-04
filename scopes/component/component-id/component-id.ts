@@ -153,6 +153,14 @@ export class ComponentID {
   }
 
   /**
+   * check if object can be correctly deserialized to be a ComponentID
+   */
+  static isValidObject(o: any): boolean {
+    return typeof o === 'object' && typeof o.name === 'string' && typeof o.scope === 'string';
+    // consider validating values with regex
+  }
+
+  /**
    * create a `ComponentID` instance from the legacy `BitId`.
    */
   static fromLegacy(legacyId: BitId, scope?: string) {
