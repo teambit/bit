@@ -103,7 +103,10 @@ export class WorkspaceComponentLoader {
     let extensionDataList = await this.workspace.componentExtensions(id, componentFromScope);
     const extensionsFromConsumerComponent = consumerComponent.extensions || new ExtensionDataList();
     // Merge extensions added by the legacy code in memory (for example data of dependency resolver)
-    extensionDataList = ExtensionDataList.mergeConfigs([extensionsFromConsumerComponent, extensionDataList]);
+    extensionDataList = ExtensionDataList.mergeConfigs([
+      extensionsFromConsumerComponent,
+      extensionDataList,
+    ]).filterRemovedExtensions();
 
     // temporarily mutate consumer component extensions until we remove all direct access from legacy to extensions data
     // TODO: remove this once we remove all direct access from legacy code to extensions data

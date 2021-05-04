@@ -818,11 +818,7 @@ export default class Component {
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
       extensions: this.extensions.map((ext) => {
-        const res = Object.assign({}, ext);
-        if (res.extensionId) {
-          // @ts-ignore
-          res.extensionId = res.extensionId.toString();
-        }
+        const res = Object.assign({}, ext.toComponentObject());
         return res;
       }),
       packageDependencies: this.packageDependencies,

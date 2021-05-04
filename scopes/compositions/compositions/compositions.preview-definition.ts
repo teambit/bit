@@ -15,7 +15,7 @@ export class CompositionPreviewDefinition implements PreviewDefinition {
   }
 
   async getModuleMap(components: Component[]): Promise<ComponentMap<AbstractVinyl[]>> {
-    const map = this.compositions.getCompositionFiles(components);
+    const map = this.compositions.getPreviewFiles(components);
     return map.filter((value) => value.length !== 0);
   }
 }

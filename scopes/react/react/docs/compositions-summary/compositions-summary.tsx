@@ -9,7 +9,7 @@ export type CompositionsSummaryProps = {
 
 export function CompositionsSummary({ compositions, ...rest }: CompositionsSummaryProps) {
   if (!compositions || Object.keys(compositions).length === 0) {
-    return <div></div>;
+    return null;
   }
 
   return (

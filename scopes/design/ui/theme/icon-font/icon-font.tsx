@@ -19,6 +19,6 @@ export type IconFontProps = {
  * </html>
  */
 export function IconFont(props: IconFontProps) {
-  const { query = 'c7i2v4' } = props;
+  const { query = 'cr084i' } = props;
   return <link rel="stylesheet" href={`${EMBED_LINK}?${query}`} />;
 }

@@ -13,3 +13,5 @@ export type BundlerResult = {
 export interface Bundler {
   run(): Promise<BundlerResult[]>;
 }
+
+export type BundlerMode = 'dev' | 'prod';
