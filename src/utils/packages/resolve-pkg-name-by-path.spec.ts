@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 
-describe.only('resolvePackageNameByPath', () => {
+describe('resolvePackageNameByPath', () => {
   it('should return the correct package for non-scoped package', () => {
     expect(resolvePackageNameByPath('lodash/internal/file')).to.equal('lodash');
   });
