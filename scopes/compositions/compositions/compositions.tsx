@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode, HTMLAttributes } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useRef, ReactNode } from 'react';
 import head from 'lodash.head';
 import queryString from 'query-string';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
