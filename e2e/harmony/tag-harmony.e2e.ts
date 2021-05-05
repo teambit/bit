@@ -269,4 +269,54 @@ describe('tag components on Harmony', function () {
       });
     });
   });
+  describe('using --incremented-by flag', () => {
+    let afterFirstTag: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      afterFirstTag = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('increment the default (patch)', () => {
+      before(() => {
+        helper.fixtures.populateComponents(3, undefined, 'v2-patch');
+        helper.command.tagAllWithoutBuild('--increment-by 4');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('0.0.5');
+        expect(bitMap.comp2.version).to.equal('0.0.5');
+        expect(bitMap.comp3.version).to.equal('0.0.5');
+      });
+    });
+    describe('increment the default (minor)', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        helper.fixtures.populateComponents(3, undefined, 'v2-minor');
+        helper.command.tagAllWithoutBuild('--minor --increment-by 2');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('0.2.0');
+        expect(bitMap.comp2.version).to.equal('0.2.0');
+        expect(bitMap.comp3.version).to.equal('0.2.0');
+      });
+    });
+    describe('auto-tag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        // modify only comp3. so then comp1 and comp2 are auto-tag pending
+        helper.fs.appendFile('comp3/index.js');
+        helper.command.tagAllWithoutBuild('--increment-by 3');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('0.0.4');
+        expect(bitMap.comp2.version).to.equal('0.0.4');
+        expect(bitMap.comp3.version).to.equal('0.0.4');
+      });
+    });
+  });
 });
