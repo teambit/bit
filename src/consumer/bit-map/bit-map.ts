@@ -160,7 +160,10 @@ export default class BitMap {
     if (this.isLegacy) return;
     const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
     const { currentLocation } = BitMap.getBitMapLocation(this.projectRoot);
-    const bitMapChanged = await getLastModifiedPathsTimestampMs([currentLocation as string]);
+    // .bitmap might changed manually and will be very confused for the end user
+    // as to why the files look the way they look.
+    // similar with .gitignore, if changed, some files may need to be removed/added
+    const impactFilesChanged = await getLastModifiedPathsTimestampMs([currentLocation as string, '.gitignore']);
     await Promise.all(
       this.components.map(async (componentMap) => {
         const idStr = componentMap.id.toString();
@@ -170,17 +173,20 @@ export default class BitMap {
         if (dataFromCache) {
           const lastModified = await getLastModifiedDirTimestampMs(rootDir);
           const wasModifiedAfterLastTrack = lastModified > dataFromCache.timestamp;
-          // .bitmap might changed manually and will be very confused for the end user
-          // as to why the files look the way they look.
-          const wasBitMapModifiedAfterLastTrack = bitMapChanged > dataFromCache.timestamp;
-          if (!wasModifiedAfterLastTrack && !wasBitMapModifiedAfterLastTrack) {
+          const wereImpactFilesModifiedAfterLastTrack = impactFilesChanged > dataFromCache.timestamp;
+          if (!wasModifiedAfterLastTrack && !wereImpactFilesModifiedAfterLastTrack) {
             const files = JSON.parse(dataFromCache.data);
             componentMap.files = files;
             return;
           }
         }
-        componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
-        componentMap.recentlyTracked = true;
+        try {
+          componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
+          componentMap.recentlyTracked = true;
+        } catch (err) {
+          componentMap.files = [];
+          componentMap.noFilesError = err;
+        }
       })
     );
   }
