@@ -784,15 +784,13 @@ jobs:
       - bit_global_for_npm
       - bit_config:
           env: "hub"
-      - run: 'bit config set user.token <<parameters.token>>'
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
-      # temporarily to understand the issue with the "EMFILE, too many open files" error.
-      - run: ulimit -a
+      - run: bit config set user.token ${BIT_DEV_PROD_TOKEN}
       - run:
           name: export components
           command: cd bit && BIT_FEATURES=export-central bit export
@@ -840,8 +838,8 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      #   run: 'chmod 400 ~/.ssh/id_rsa'
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      # - run: 'chmod 400 ~/.ssh/id_rsa'
       # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
