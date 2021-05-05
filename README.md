@@ -31,7 +31,7 @@ npm i -g @teambit/bvm
 yarn global add @teambit/bvm
 ```
 
-Intall Bit:
+Install Bit:
 
 ```
 bvm install
