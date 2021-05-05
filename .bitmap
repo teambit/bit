@@ -331,6 +331,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
+    "modules/config-mutator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/config-mutator"
+    },
     "modules/dom-to-react": {
         "scope": "teambit.react",
         "version": "0.0.351",
@@ -372,6 +378,12 @@
         "version": "0.0.350",
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
+    },
+    "modules/style-regexps": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/style-regexps"
     },
     "multi-compiler": {
         "scope": "teambit.compilation",
@@ -1230,12 +1242,6 @@
         "version": "0.0.63",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
-    },
-    "modules/config-mutator": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/webpack/config-mutator"
     },
     "variants": {
         "scope": "teambit.workspace",
