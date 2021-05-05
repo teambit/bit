@@ -1,11 +1,11 @@
 ---
-labels: ['typescript', 'utils', 'webpack']
-description: 'A set of style regexps to use in loaders's test field.'
+labels: ['typescript', 'utils', 'webpack', 'regex']
+description: 'A set of style regexps to use in loaders test field'
 ---
 
-A set of style regexps to use in loaders's test field
+A set of style regexps to use in loaders' test field
 
-Available regexps
+## Available regexps
 
 ```js
 // css
