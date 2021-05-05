@@ -571,7 +571,7 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --all --ignore-newest-version
           # command: cd bit && bit tag --scope 0.0.297
-          command: cd bit && bit tag --all
+          command: cd bit && bit tag --all --increment-by 2
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
           environment:
