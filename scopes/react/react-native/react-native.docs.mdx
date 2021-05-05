@@ -46,7 +46,7 @@ React Native, like all over Environments must implement a set of Service Handler
 | -------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Compilation          | [TypeScript](https://bit.dev/teambit/typescript/typescript) | [tsconfig.json](https://bit.dev/teambit/react/react/~code/typescript/tsconfig.json)                                                |
 | Testing              | **Jest**                                                    | [jest.config.js](https://bit.dev/teambit/react/react/~code/jest/jest.config.js)                                                    |
-| Linting              | **ESLint**                                                  | [eslintrc.js](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.js)                                                        |
+| Linting              | **ESLint**                                                  | [eslintrc.ts](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
 | DevServer            | **Webpack**                                                 | [webpack.config.preview.dev.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.dev.ts)                   |
 | Preview (simulation) | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
 | Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
@@ -106,7 +106,7 @@ Now that you have a basic customized extension to start from, you can go ahead a
 
 ### Customize configuration
 
-React Native implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).  
+React Native implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).
 In case of a conflict, your config will override the default.
 
 ```typescript {4,14} title="Customized TypeScript configuration"
@@ -288,7 +288,7 @@ export class CustomReactNative {
 
 #### `overrideDependencies(dependencyPolicy: DependenciesPolicy): EnvTransformer`
 
-This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.  
+This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.
 Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (dev, peer or standard).
 
 ```js
@@ -364,7 +364,7 @@ bit create <template name> [components...]
 
 ## Runtime (framework) dependencies
 
-Similar to many Frontend frameworks React Native must have a singleton instance in your app's runtime. When building reuseable components we need to adhere to that and have `react` and `react-native` set as `peerDependencies`, thus allowing the consuming app to determine runtime version. React environment implements this via the **Dependencies** service which is used to override [dependency-resolver](https://bit.dev/teambit/dependencies/dependency-resolver) and set your prefered dependencies.  
+Similar to many Frontend frameworks React Native must have a singleton instance in your app's runtime. When building reuseable components we need to adhere to that and have `react` and `react-native` set as `peerDependencies`, thus allowing the consuming app to determine runtime version. React environment implements this via the **Dependencies** service which is used to override [dependency-resolver](https://bit.dev/teambit/dependencies/dependency-resolver) and set your prefered dependencies.
 It is recommended to for you to extend the base React environment and define a semantic version rule to fit your current tech stack and guidelines for reuseable React components.
 
 ## Default Configuration and Services
@@ -377,7 +377,7 @@ React Native, like all over Environments must implement a set of Service Handler
 | -------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Compilation          | [TypeScript](https://bit.dev/teambit/typescript/typescript) | [tsconfig.json](https://bit.dev/teambit/react/react/~code/typescript/tsconfig.json)                                                |
 | Testing              | **Jest**                                                    | [jest.config.js](https://bit.dev/teambit/react/react-native/~code/jest/jest.config.js)                                             |
-| Linting              | **ESLint**                                                  | [eslintrc.js](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.js)                                                        |
+| Linting              | **ESLint**                                                  | [eslintrc.ts](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
 | DevServer            | **Webpack**                                                 | [webpack.config.preview.dev.ts](https://bit.dev/teambit/react/react-native/~code/webpack/webpack.config.js)                        |
 | Preview (simulation) | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react-native/~code/webpack/webpack.config.js)                            |
 | Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
@@ -437,7 +437,7 @@ Now that you have a base extension to start from, you can already go ahead and c
 
 ### Customize configuration
 
-React implements a set of APIs you can use to merge you preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find all [Available transformers here](#transformers-api-docs).  
+React implements a set of APIs you can use to merge you preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find all [Available transformers here](#transformers-api-docs).
 In case of a conflict, your config will override the default.
 
 ```typescript {4,13} title="Customized TypeScript configuration"
@@ -465,8 +465,8 @@ export class CustomReactNativeExtension {
 
 ### Composing tools and services
 
-Environments use Environment Services by implementing a special class of methods called Service Handlers.  
-You can override an environment's compiler replacing its Compiler Service Handler with the method `getCompiler()`.  
+Environments use Environment Services by implementing a special class of methods called Service Handlers.
+You can override an environment's compiler replacing its Compiler Service Handler with the method `getCompiler()`.
 [Find all service handlers here](#service-providers-api-docs).
 
 The below example uses a Service Handler to change compilation service.
@@ -600,7 +600,7 @@ export class ReactNative {
 
 #### `overrideDependencies(dependencyPolicy: DependenciesPolicy): EnvTransformer`
 
-This method receives a Bit dependency-policy object. It overrides the default dependency policy for components using this environment.  
+This method receives a Bit dependency-policy object. It overrides the default dependency policy for components using this environment.
 Each key-value pair in a dependency-policy object signifies the package and the version to be used. It also uses the `-` notation to signify a module should not be defined as a dependency of a certain type (dev, peer or standard).
 
 ```js
