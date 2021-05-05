@@ -379,6 +379,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/modules/resolved-component"
     },
+    "modules/style-regexps": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/style-regexps"
+    },
     "multi-compiler": {
         "scope": "teambit.compilation",
         "version": "0.0.379",

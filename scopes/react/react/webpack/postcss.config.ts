@@ -1,7 +1,7 @@
 import postcssNormalize from 'postcss-normalize';
 // import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 
-const config = {
+export const postCssConfig = {
   // Necessary for external CSS imports to work
   // https://github.com/facebook/create-react-app/issues/2677
   ident: 'postcss',
@@ -21,4 +21,3 @@ const config = {
     postcssNormalize(),
   ],
 };
-module.exports = config;
