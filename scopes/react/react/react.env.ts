@@ -1,24 +1,25 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
+import { ComponentUrl } from '@teambit/component-url';
 import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
 import { CompilerMain } from '@teambit/compiler';
-import { Environment, ExecutionContext } from '@teambit/envs';
+import { Environment } from '@teambit/envs';
 import { JestMain } from '@teambit/jest';
 import { PkgMain } from '@teambit/pkg';
 import { Tester, TesterMain } from '@teambit/tester';
 import { TypescriptMain } from '@teambit/typescript';
 import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
-import { WebpackMain } from '@teambit/webpack';
+import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
+import type { ComponentMeta } from '@teambit/babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
-import { merge as webpackMerge } from 'webpack-merge';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import previewConfigFactory from './webpack/webpack.config.preview';
@@ -131,44 +132,33 @@ export class ReactEnv implements Environment {
     });
   }
 
-  private getFileMap(components: Component[]) {
-    return components.reduce<{ [key: string]: string }>((index, component: Component) => {
+  private getFileMap(components: Component[], local = false) {
+    return components.reduce<{ [key: string]: ComponentMeta }>((index, component: Component) => {
       component.state.filesystem.files.forEach((file) => {
-        index[file.path] = component.id.toString();
+        index[file.path] = {
+          id: component.id.toString(),
+          homepage: local ? `/${component.id.fullName}` : ComponentUrl.toUrl(component.id),
+        };
       });
 
       return index;
     }, {});
   }
 
-  private writeFileMap(components: Component[]) {
-    const fileMap = this.getFileMap(components);
+  private writeFileMap(components: Component[], local?: boolean) {
+    const fileMap = this.getFileMap(components, local);
     const path = join(tmpdir(), `${Math.random().toString(36).substr(2, 9)}.json`);
     outputFileSync(path, JSON.stringify(fileMap));
     return path;
-  }
-
-  private calcDistPaths(context: ExecutionContext, rootDir: string) {
-    const components = context.components;
-    const distDir = this.getCompiler().distDir;
-
-    const distPaths = components.map((comp) => {
-      const modulePath = this.pkg.getModulePath(comp);
-      const dist = join(rootDir, modulePath, distDir);
-      return dist;
-    });
-
-    return distPaths;
   }
 
   /**
    * get the default react webpack config.
    */
   private getDevWebpackConfig(context: DevServerContext): Configuration {
-    const fileMapPath = this.writeFileMap(context.components);
-    const distPaths = this.calcDistPaths(context, this.workspace.path);
+    const fileMapPath = this.writeFileMap(context.components, true);
 
-    return devPreviewConfigFactory({ envId: context.id, fileMapPath, distPaths });
+    return devPreviewConfigFactory({ envId: context.id, fileMapPath, workDir: this.workspace.path });
   }
 
   getDevEnvId(id?: string) {
@@ -186,32 +176,23 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext, targetConfig?: Configuration): DevServer {
+  getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const defaultConfig = this.getDevWebpackConfig(context);
-    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([defaultConfig]);
+    };
 
-    return this.webpack.createDevServer(context, config);
+    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
-  async getBundler(context: BundlerContext, targetConfig?: Configuration): Promise<Bundler> {
+  async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     const path = this.writeFileMap(context.components);
     const defaultConfig = previewConfigFactory(path);
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([defaultConfig]);
+    };
 
-    if (targetConfig?.entry) {
-      const additionalEntries = this.getEntriesFromWebpackConfig(targetConfig);
-
-      const targetsWithGlobalEntries = context.targets.map((target) => {
-        // Putting the additionalEntries first to support globals defined there (like regenerator-runtime)
-        target.entries = additionalEntries.concat(target.entries);
-        return target;
-      });
-      context.targets = targetsWithGlobalEntries;
-    }
-
-    delete targetConfig?.entry;
-
-    const config = targetConfig ? webpackMerge(targetConfig as any, defaultConfig as any) : defaultConfig;
-    return this.webpack.createBundler(context, config as any);
+    return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
   }
 
   private getEntriesFromWebpackConfig(config?: Configuration): string[] {

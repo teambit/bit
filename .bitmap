@@ -145,6 +145,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree"
     },
+    "component-url": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-url"
+    },
     "component-version": {
         "scope": "teambit.component",
         "version": "0.0.353",
@@ -1224,6 +1230,12 @@
         "version": "0.0.63",
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/user-agent"
+    },
+    "modules/config-mutator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/webpack/config-mutator"
     },
     "variants": {
         "scope": "teambit.workspace",

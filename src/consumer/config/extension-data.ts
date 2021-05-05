@@ -13,15 +13,18 @@ import {
 const mergeReducer = (accumulator, currentValue) => R.unionWith(ignoreVersionPredicate, accumulator, currentValue);
 type ConfigOnlyEntry = {
   id: string;
-  config: Record<string, any>;
+  config: Record<string, any> | RemoveExtensionSpecialSign;
 };
+
+export const REMOVE_EXTENSION_SPECIAL_SIGN = '-';
+type RemoveExtensionSpecialSign = '-';
 
 export class ExtensionDataEntry {
   constructor(
     public legacyId?: string,
     public extensionId?: BitId,
     public name?: string,
-    public config: { [key: string]: any } = {},
+    public rawConfig: { [key: string]: any } | RemoveExtensionSpecialSign = {},
     public data: { [key: string]: any } = {},
     public newExtensionId: any = undefined
   ) {}
@@ -40,9 +43,49 @@ export class ExtensionDataEntry {
     return '';
   }
 
+  get config(): { [key: string]: any } {
+    if (this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN) return {};
+    return this.rawConfig;
+  }
+
+  set config(val: { [key: string]: any }) {
+    this.rawConfig = val;
+  }
+
   get isLegacy(): boolean {
     if (this.config?.__legacy) return true;
     return false;
+  }
+
+  get isRemoved(): boolean {
+    return this.rawConfig === REMOVE_EXTENSION_SPECIAL_SIGN;
+  }
+
+  toModelObject() {
+    const extensionId =
+      this.extensionId && this.extensionId.serialize ? this.extensionId.serialize() : this.extensionId;
+    return {
+      extensionId,
+      // Do not use raw config here
+      config: this.config,
+      data: this.data,
+      legacyId: this.legacyId,
+      name: this.name,
+      newExtensionId: this.newExtensionId,
+    };
+  }
+
+  toComponentObject() {
+    const extensionId = this.extensionId ? this.extensionId.toString() : this.extensionId;
+    return {
+      extensionId,
+      // Do not use raw config here
+      config: this.config,
+      data: this.data,
+      legacyId: this.legacyId,
+      name: this.name,
+      newExtensionId: this.newExtensionId,
+    };
   }
 
   clone(): ExtensionDataEntry {
@@ -50,7 +93,7 @@ export class ExtensionDataEntry {
       this.legacyId,
       this.extensionId?.clone(),
       this.name,
-      R.clone(this.config),
+      R.clone(this.rawConfig),
       R.clone(this.data)
     );
   }
@@ -104,7 +147,7 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     });
     convertBuildArtifactsToModelObject(extensionsClone);
 
-    return extensionsClone;
+    return extensionsClone.map((ext) => ext.toModelObject());
   }
 
   static fromModelObject(entries: ExtensionDataEntry[]): ExtensionDataList {
@@ -143,11 +186,21 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
     );
   }
 
+  /**
+   * Filter extension marked to be removed with the special remove sign REMOVE_EXTENSION_SPECIAL_SIGN ("-")
+   */
+  filterRemovedExtensions(): ExtensionDataList {
+    const filtered = this.filter((entry) => {
+      return !entry.isRemoved;
+    });
+    return ExtensionDataList.fromArray(filtered);
+  }
+
   toConfigObject() {
     const res = {};
     this.forEach((entry) => {
-      if (entry.config && !R.isEmpty(entry.config)) {
-        res[entry.stringId] = entry.config;
+      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
+        res[entry.stringId] = entry.rawConfig;
       }
     });
     return res;
@@ -156,8 +209,8 @@ export class ExtensionDataList extends Array<ExtensionDataEntry> {
   toConfigArray(): ConfigOnlyEntry[] {
     const arr = this.map((entry) => {
       // Remove extensions without config
-      if (entry.config && !R.isEmpty(entry.config)) {
-        return { id: entry.stringId, config: entry.config };
+      if (entry.rawConfig && !R.isEmpty(entry.rawConfig)) {
+        return { id: entry.stringId, config: entry.rawConfig };
       }
       return undefined;
     });

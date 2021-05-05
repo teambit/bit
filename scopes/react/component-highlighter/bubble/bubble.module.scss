@@ -1,0 +1,24 @@
+.bubble {
+  padding: 0.23em 1em;
+
+  transition: filter 300ms, background-color 300ms;
+  transform: translateZ(0); //fix blurriness in Safari
+
+  // override styles from <a>
+  &:link,
+  &:visited {
+    text-decoration: inherit;
+    color: inherit;
+
+    background: var(--bit-highlighter-color, #eebcc9);
+
+    &:hover {
+      background: var(--bit-highlighter-color-light, #f6dae2);
+    }
+
+    &:active {
+      background: var(--bit-highlighter-color-active, #e79db1);
+      color: inherit;
+    }
+  }
+}
