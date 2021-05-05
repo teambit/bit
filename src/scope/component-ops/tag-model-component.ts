@@ -71,7 +71,8 @@ async function setFutureVersions(
   releaseType: ReleaseType | undefined,
   exactVersion: string | null | undefined,
   persist: boolean,
-  autoTagIds: BitIds
+  autoTagIds: BitIds,
+  incrementBy?: number
 ): Promise<void> {
   await Promise.all(
     componentsToTag.map(async (componentToTag) => {
@@ -88,8 +89,8 @@ async function setFutureVersions(
         );
       } else {
         componentToTag.version = isAutoTag
-          ? modelComponent.getVersionToAdd() // auto-tag always bumped as patch
-          : modelComponent.getVersionToAdd(releaseType, exactVersion);
+          ? modelComponent.getVersionToAdd('patch', undefined, incrementBy) // auto-tag always bumped as patch
+          : modelComponent.getVersionToAdd(releaseType, exactVersion, incrementBy);
       }
     })
   );
@@ -181,11 +182,13 @@ export default async function tagModelComponent({
   isSnap = false,
   disableDeployPipeline,
   forceDeploy,
+  incrementBy,
 }: {
   consumerComponents: Component[];
   scope: Scope;
   exactVersion?: string | null | undefined;
   releaseType?: ReleaseType;
+  incrementBy?: number;
   consumer: Consumer;
   resolveUnmerged?: boolean;
   isSnap?: boolean;
@@ -273,7 +276,7 @@ export default async function tagModelComponent({
   // go through all components and find the future versions for them
   isSnap
     ? setHashes(allComponentsToTag)
-    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist, autoTagIds);
+    : await setFutureVersions(allComponentsToTag, scope, releaseType, exactVersion, persist, autoTagIds, incrementBy);
   setCurrentSchema(allComponentsToTag, consumer);
   // go through all dependencies and update their versions
   updateDependenciesVersions(allComponentsToTag);

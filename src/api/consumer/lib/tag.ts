@@ -49,6 +49,7 @@ type TagParams = {
   all: boolean;
   scope?: string | boolean;
   includeImported: boolean;
+  incrementBy: number;
 } & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams) {
