@@ -74,6 +74,7 @@ export default class Tag implements LegacyCommand {
       ignoreMissingDependencies?: boolean;
       ignoreUnresolvedDependencies?: boolean;
       scope?: string | boolean;
+      incrementBy: number;
     } & Partial<BasicTagParams>
   ): Promise<any> {
     build = isFeatureEnabled(BUILD_ON_CI) ? Boolean(build) : true;
