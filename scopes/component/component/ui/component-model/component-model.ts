@@ -28,6 +28,7 @@ export type ComponentModelProps = {
   deprecation?: DeprecationInfo; // deprecation aspect
   env?: Descriptor; // env aspect.
   labels?: string[];
+  host?: string;
 };
 
 export type ComponentServer = {
@@ -89,9 +90,15 @@ export class ComponentModel {
     /**
      * description of the component.
      */
+
     readonly description = '',
 
-    readonly labels: string[] = []
+    readonly labels: string[] = [],
+
+    /**
+     * host of the component
+     */
+    readonly host?: string
   ) {}
 
   get version() {
@@ -115,6 +122,7 @@ export class ComponentModel {
     issuesCount,
     description,
     labels,
+    host,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -128,7 +136,8 @@ export class ComponentModel {
       deprecation,
       env,
       description,
-      labels
+      labels,
+      host
     );
   }
 
