@@ -2,7 +2,7 @@ import { Section } from '@teambit/component';
 import React from 'react';
 import { Compositions } from './compositions';
 import type { CompositionsUI, CompositionsMenuSlot } from './compositions.ui.runtime';
-import { EmptyStateSlot } from './compositions.ui.runtime';
+import type { EmptyStateSlot } from './compositions.ui.runtime';
 
 type Options = { menuBarWidgetSlot: CompositionsMenuSlot };
 
