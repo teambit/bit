@@ -69,11 +69,6 @@ export class ComponentModel {
     readonly tags: TagMap,
 
     /**
-     * host of the component
-     */
-    readonly host?: string,
-
-    /**
      * issues of component.
      */
     readonly issuesCount?: number,
@@ -95,9 +90,15 @@ export class ComponentModel {
     /**
      * description of the component.
      */
+
     readonly description = '',
 
-    readonly labels: string[] = []
+    readonly labels: string[] = [],
+
+    /**
+     * host of the component
+     */
+    readonly host?: string
   ) {}
 
   get version() {
@@ -118,10 +119,10 @@ export class ComponentModel {
     deprecation,
     env,
     status,
-    host,
     issuesCount,
     description,
     labels,
+    host,
   }: ComponentModelProps) {
     return new ComponentModel(
       ComponentID.fromObject(id),
@@ -130,13 +131,13 @@ export class ComponentModel {
       server,
       Composition.fromArray(compositions),
       TagMap.fromArray(tags.map((tag) => Tag.fromObject(tag))),
-      host,
       issuesCount,
       status,
       deprecation,
       env,
       description,
-      labels
+      labels,
+      host
     );
   }
 
