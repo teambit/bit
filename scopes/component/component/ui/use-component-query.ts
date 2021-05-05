@@ -90,10 +90,7 @@ export function useComponentQuery(componentId: string, host: string) {
     };
   }, []);
 
-  const rawComponent = data?.getHost?.get ? Object.assign({}, data.getHost.get) : undefined;
-  if (rawComponent) {
-    rawComponent.host = host;
-  }
+  const rawComponent = { ...data?.getHost?.get, host };
 
   return useMemo(() => {
     return {
