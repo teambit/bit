@@ -1,4 +1,3 @@
-import path from 'path';
 import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
@@ -6,6 +5,8 @@ import TerserPlugin from 'terser-webpack-plugin';
 import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
+import * as stylesRegexps from '@teambit/modules.style-regexps';
+import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/babel.bit-react-transformer';
@@ -30,16 +31,6 @@ const moduleFileExtensions = [
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
-
-// style files regexes
-
-// css regex - will catch .css but not .module.css
-const cssRegex = /(?<!\.module)\.css$/;
-const cssModuleRegex = /\.module\.css$/;
-const sassRegex = /\.(scss|sass)$/;
-const sassModuleRegex = /\.module\.(scss|sass)$/;
-const lessRegex = /\.less$/;
-const lessModuleRegex = /\.module\.less$/;
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -73,9 +64,8 @@ export default function (fileMapPath: string): Configuration {
         // package.json
         loader: require.resolve('postcss-loader'),
         options: {
-          postcssOptions: {
-            config: path.resolve(__dirname, 'postcss.config.js'),
-          },
+          // We don't use the config file way to make it easier to mutate it by other envs
+          postcssOptions: postCssConfig,
           sourceMap: isEnvProduction && shouldUseSourceMap,
         },
       },
@@ -214,7 +204,7 @@ export default function (fileMapPath: string): Configuration {
             // of CSS.
             // By default we support CSS Modules with the extension .module.css
             {
-              test: cssRegex,
+              test: stylesRegexps.cssNoModulesRegex,
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -317,7 +307,7 @@ export default function (fileMapPath: string): Configuration {
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
             // using the extension .module.css
             {
-              test: cssModuleRegex,
+              test: stylesRegexps.cssModuleRegex,
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -330,8 +320,7 @@ export default function (fileMapPath: string): Configuration {
             // By default we support SASS Modules with the
             // extensions .module.scss or .module.sass
             {
-              test: sassRegex,
-              exclude: sassModuleRegex,
+              test: stylesRegexps.sassNoModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 3,
@@ -348,7 +337,7 @@ export default function (fileMapPath: string): Configuration {
             // Adds support for CSS Modules, but using SASS
             // using the extension .module.scss or .module.sass
             {
-              test: sassModuleRegex,
+              test: stylesRegexps.sassModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 3,
@@ -361,8 +350,7 @@ export default function (fileMapPath: string): Configuration {
               ),
             },
             {
-              test: lessRegex,
-              exclude: lessModuleRegex,
+              test: stylesRegexps.lessNoModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 1,
@@ -377,7 +365,7 @@ export default function (fileMapPath: string): Configuration {
               sideEffects: true,
             },
             {
-              test: lessModuleRegex,
+              test: stylesRegexps.lessModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 1,
