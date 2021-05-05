@@ -236,4 +236,37 @@ describe('tag components on Harmony', function () {
       expect(() => helper.command.tagAllComponents('--force-deploy')).to.not.throw();
     });
   });
+  describe('modified one component, the rest are auto-tag pending', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      // modify only comp3. so then comp1 and comp2 are auto-tag pending
+      helper.fs.appendFile('comp3/index.js');
+    });
+    describe('tag with specific version', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('1.0.0');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('1.0.0');
+        expect(bitMap.comp1.version).to.equal('0.0.2');
+        expect(bitMap.comp2.version).to.equal('0.0.2');
+      });
+    });
+    describe('tag with --scope flag', () => {
+      before(() => {
+        helper.fs.appendFile('comp3/index.js');
+        helper.command.tagScopeWithoutBuild('2.0.0');
+      });
+      it('should set all components versions to the scope flag', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('2.0.0');
+        expect(bitMap.comp1.version).to.equal('2.0.0');
+        expect(bitMap.comp2.version).to.equal('2.0.0');
+      });
+    });
+  });
 });

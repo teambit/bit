@@ -17,7 +17,7 @@ export class ReactNativeEnvUI {
       return (
         <EmptyBox
           title="This component doesn’t have any tests."
-          linkText="Learn how to add tests to your MDX components"
+          linkText="Learn how to add tests to your React Native components"
           link="https://harmony-docs.bit.dev/testing/overview/"
         />
       );
@@ -27,7 +27,7 @@ export class ReactNativeEnvUI {
       return (
         <EmptyBox
           title="This component doesn’t have any compositions."
-          linkText="Learn how to add compositions to your MDX components"
+          linkText="Learn how to add compositions to your React Native components"
           link="https://harmony-docs.bit.dev/testing/overview/"
         />
       );

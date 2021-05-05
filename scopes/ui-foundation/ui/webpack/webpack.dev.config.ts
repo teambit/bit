@@ -199,12 +199,14 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
             fullySpecified: false,
           },
         },
-        // {
-        //   test: /\.js$/,
-        //   enforce: 'pre',
-        //   include: /node_modules/,
-        //   use: [require.resolve('source-map-loader')],
-        // },
+        {
+          test: /\.js$/,
+          enforce: 'pre',
+          include: /node_modules/,
+          // only apply to packages with componentId in their package.json (ie. bit components)
+          descriptionData: { componentId: (value) => !!value },
+          use: [require.resolve('source-map-loader')],
+        },
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
