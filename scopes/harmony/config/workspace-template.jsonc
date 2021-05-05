@@ -54,16 +54,10 @@
    * new set of dependencies.
    **/
   "teambit.workspace/variants": {
-    /**
-     * "*" is a special rule which applied on all components in the workspace.
-     **/
-    "*": {
-      /**
-       * uncomment the next 3 lines to apply the react environment on all components.
-       **/
-      //  "teambit.envs/envs": {
-      //    "teambit.react/react": {}
-      //  }
-    }
+    // Add a variant like so. In this example we are adding a variant for any components inside the "components" directory in the workspace
+    // "components": {
+    //  "teambit.react/react: {} // this line applies the base bit react environment to components in this rule
+    // }
+    // variants docs can be found here - https://harmony-docs.bit.dev/aspects/variants
   }
 }
