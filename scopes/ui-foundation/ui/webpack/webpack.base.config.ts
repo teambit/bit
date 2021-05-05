@@ -4,6 +4,7 @@ import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
+import * as stylesRegexps from '@teambit/modules.style-regexps';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -24,15 +25,6 @@ const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 
 const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
 
-// style files regexes
-
-// css regex - will catch .css but not .module.css
-const cssRegex = /(?<!\.module)\.css$/;
-const cssModuleRegex = /\.module\.css$/;
-const sassRegex = /\.(scss|sass)$/;
-const sassModuleRegex = /\.module\.(scss|sass)$/;
-const lessRegex = /\.less$/;
-const lessModuleRegex = /\.module\.less$/;
 const isEnvProduction = true;
 
 // common function to get style loaders
@@ -176,7 +168,7 @@ export default function createWebpackConfig(
             // of CSS.
             // By default we support CSS Modules with the extension .module.css
             {
-              test: cssRegex,
+              test: stylesRegexps.cssNoModulesRegex,
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -259,7 +251,7 @@ export default function createWebpackConfig(
             // Adds support for CSS Modules (https://github.com/css-modules/css-modules)
             // using the extension .module.css
             {
-              test: cssModuleRegex,
+              test: stylesRegexps.cssModuleRegex,
               use: getStyleLoaders({
                 importLoaders: 1,
                 sourceMap: isEnvProduction && shouldUseSourceMap,
@@ -272,8 +264,7 @@ export default function createWebpackConfig(
             // By default we support SASS Modules with the
             // extensions .module.scss or .module.sass
             {
-              test: sassRegex,
-              exclude: sassModuleRegex,
+              test: stylesRegexps.sassNoModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 3,
@@ -290,7 +281,7 @@ export default function createWebpackConfig(
             // Adds support for CSS Modules, but using SASS
             // using the extension .module.scss or .module.sass
             {
-              test: sassModuleRegex,
+              test: stylesRegexps.sassModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 3,
@@ -303,8 +294,7 @@ export default function createWebpackConfig(
               ),
             },
             {
-              test: lessRegex,
-              exclude: lessModuleRegex,
+              test: stylesRegexps.lessNoModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 1,
@@ -319,7 +309,7 @@ export default function createWebpackConfig(
               sideEffects: true,
             },
             {
-              test: lessModuleRegex,
+              test: stylesRegexps.lessModuleRegex,
               use: getStyleLoaders(
                 {
                   importLoaders: 1,
