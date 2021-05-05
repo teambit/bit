@@ -309,7 +309,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.71",
+        "@teambit/legacy": "1.0.72",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -370,7 +370,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.71"
+            "@teambit/legacy": "1.0.72"
           }
         }
       },
@@ -526,7 +526,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.71",
+            "@teambit/legacy": "1.0.72",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
