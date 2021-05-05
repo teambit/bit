@@ -1,4 +1,5 @@
 import { Configuration } from 'webpack';
+import * as stylesRegexps from '@teambit/modules.style-regexps';
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
@@ -199,12 +200,14 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
             fullySpecified: false,
           },
         },
-        // {
-        //   test: /\.js$/,
-        //   enforce: 'pre',
-        //   include: /node_modules/,
-        //   use: [require.resolve('source-map-loader')],
-        // },
+        {
+          test: /\.js$/,
+          enforce: 'pre',
+          include: /node_modules/,
+          // only apply to packages with componentId in their package.json (ie. bit components)
+          descriptionData: { componentId: (value) => !!value },
+          use: [require.resolve('source-map-loader')],
+        },
         {
           test: /\.(js|jsx|tsx|ts)$/,
           exclude: /node_modules/,
@@ -221,7 +224,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
           },
         },
         {
-          test: /\.module\.s(a|c)ss$/,
+          test: stylesRegexps.sassModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -242,8 +245,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
           ],
         },
         {
-          test: /\.s(a|c)ss$/,
-          exclude: /\.module.(s(a|c)ss)$/,
+          test: stylesRegexps.sassNoModuleRegex,
           use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -256,7 +258,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
           ],
         },
         {
-          test: /\.module\.less$/,
+          test: stylesRegexps.lessModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -277,8 +279,7 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
           ],
         },
         {
-          test: /\.less$/,
-          exclude: /\.module\.less$/,
+          test: stylesRegexps.lessNoModuleRegex,
           use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -291,8 +292,22 @@ function createWebpackConfig(workspaceDir, entryFiles, title, aspectPaths): Conf
           ],
         },
         {
-          test: /\.css$/,
-          exclude: /\.(s(a|c)ss)$/,
+          test: stylesRegexps.cssModuleRegex,
+          use: [
+            require.resolve('style-loader'),
+            {
+              loader: require.resolve('css-loader'),
+              options: {
+                modules: {
+                  localIdentName: '[name]__[local]--[hash:base64:5]',
+                },
+                sourceMap: true,
+              },
+            },
+          ],
+        },
+        {
+          test: stylesRegexps.cssNoModulesRegex,
           use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],

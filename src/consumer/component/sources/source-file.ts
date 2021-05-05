@@ -16,7 +16,7 @@ export default class SourceFile extends AbstractVinyl {
     base: PathOsBased,
     consumerPath: PathOsBased,
     extendedProps: Record<string, any>
-  ): SourceFile | null {
+  ): SourceFile {
     try {
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));

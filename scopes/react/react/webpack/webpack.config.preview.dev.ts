@@ -4,6 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import webpack from 'webpack';
+import * as stylesRegexps from '@teambit/modules.style-regexps';
 
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 
@@ -34,9 +35,9 @@ const moduleFileExtensions = [
   'md',
 ];
 
-type Options = { envId: string; fileMapPath: string; distPaths: string[]; workDir: string };
+type Options = { envId: string; fileMapPath: string; workDir: string };
 
-export default function ({ envId, fileMapPath, distPaths, workDir }: Options): WebpackConfigWithDevServer {
+export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
       // @ts-ignore - remove this once there is types package for webpack-dev-server v4
@@ -55,17 +56,20 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
         {
           test: /\.js$/,
           enforce: 'pre',
-          include: distPaths,
+          // limit loader to files in the current project,
+          // to skip any files linked from other projects (like Bit itself)
+          include: path.join(workDir, 'node_modules'),
+          // only apply to packages with componentId in their package.json (ie. bit components)
+          descriptionData: { componentId: (value) => !!value },
           use: [require.resolve('source-map-loader')],
         },
         {
           test: /\.js$/,
-          descriptionData: {
-            componentId: ComponentID.isValidObject,
-          },
           // limit loader to files in the current project,
           // to skip any files linked from other projects (like Bit itself)
           include: path.join(workDir, 'node_modules'),
+          // only apply to packages with componentId in their package.json (ie. bit components)
+          descriptionData: { componentId: ComponentID.isValidObject },
           use: [
             {
               loader: require.resolve('babel-loader'),
@@ -132,7 +136,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           ],
         },
         {
-          test: /\.module\.s(a|c)ss$/,
+          test: stylesRegexps.sassModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -153,8 +157,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           ],
         },
         {
-          test: /\.s(a|c)ss$/,
-          exclude: /\.module\.s(a|c)ss$/,
+          test: stylesRegexps.sassNoModuleRegex,
           use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -167,7 +170,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           ],
         },
         {
-          test: /\.module\.less$/,
+          test: stylesRegexps.lessModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -188,8 +191,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           ],
         },
         {
-          test: /\.less$/,
-          exclude: /\.module\.less$/,
+          test: stylesRegexps.lessNoModuleRegex,
           use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -202,7 +204,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           ],
         },
         {
-          test: /\.module.css$/,
+          test: stylesRegexps.cssModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -217,8 +219,7 @@ export default function ({ envId, fileMapPath, distPaths, workDir }: Options): W
           ],
         },
         {
-          test: /\.css$/,
-          exclude: /\.module\.css$/,
+          test: stylesRegexps.cssNoModulesRegex,
           use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],
