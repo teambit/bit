@@ -11,7 +11,7 @@ import { isValidPath, pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux, so
 import { getLastModifiedDirTimestampMs } from '../../utils/fs/last-modified';
 import { PathLinux, PathLinuxRelative, PathOsBased, PathOsBasedRelative } from '../../utils/path';
 import AddComponents from '../component-ops/add-components';
-import { AddContext } from '../component-ops/add-components/add-components';
+import { AddContext, getFilesByDir, getGitIgnoreHarmony } from '../component-ops/add-components/add-components';
 import { EmptyDirectory, NoFiles } from '../component-ops/add-components/exceptions';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 import Consumer from '../consumer';
@@ -421,6 +421,28 @@ export default class ComponentMap {
       consumer.bitMap.hasChanged = true;
     }
     this.recentlyTracked = true;
+  }
+
+  /**
+   * if the component dir has changed since the last tracking, re-scan the component-dir to get the
+   * updated list of the files
+   */
+  async trackDirectoryChangesHarmony(consumer: Consumer, id: BitId): Promise<void> {
+    const trackDir = this.rootDir;
+    if (!trackDir) {
+      return;
+    }
+    const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
+    const lastTrack = await consumer.componentFsCache.getLastTrackTimestamp(id.toString());
+    const wasModifiedAfterLastTrack = async () => {
+      const lastModified = await getLastModifiedDirTimestampMs(trackDirAbsolute);
+      return lastModified > lastTrack;
+    };
+    if (!(await wasModifiedAfterLastTrack())) {
+      return;
+    }
+    const gitIgnore = getGitIgnoreHarmony(consumer.getPath());
+    this.files = await getFilesByDir(trackDir, consumer.getPath(), gitIgnore);
   }
 
   updateNextVersion(nextVersion: NextVersion) {
