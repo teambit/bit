@@ -1,2 +1,2 @@
 export type { NodeMain } from './node.main.runtime';
-export { NodeAspect } from './node.aspect';
+export { NodeAspect, NodeAspect as default } from './node.aspect';
