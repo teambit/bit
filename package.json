@@ -51,6 +51,7 @@
   ],
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
+    "dev-link:windows": "node ./scripts/establish-dev-link-windows.js $1",
     "ts-coverage": "type-coverage",
     "check-types": "tsc",
     "ts-watch": "tsc -w",

@@ -34,6 +34,6 @@ exec(`ln -sf ${source} ${dest}`, (error, stdout, stderr) => {
 
     if (sout) console.log(sout);
     if (serr) console.error(serr);
-    console.log(`now you can use the "${linkName}" command to run you dev app`);
+    console.log(`Now you can use the "${linkName}" command to run your dev app.`);
   });
 });
