@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-
+import os from 'os';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -15,6 +15,11 @@ describe('create extension', function () {
   });
   after(() => {
     helper.scopeHelper.destroy();
+  });
+  describe('when running outside the workspace', () => {
+    it('should throw ConsumerNotFound error', () => {
+      expect(() => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir())).to.throw('workspace not found');
+    });
   });
   describe('with --namespace flag', () => {
     before(() => {
