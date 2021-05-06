@@ -7,11 +7,8 @@ import classNames from 'classnames';
 import React, { HTMLAttributes, useContext } from 'react';
 import { TestTable } from '@teambit/ui.test-table';
 import { EmptyBox } from '@teambit/ui.empty-box';
-// TODO uncomment these when if in local workspace is added
-// import { MDXLayout } from '@teambit/ui.mdx-layout';
-// import { AlertCard } from '@teambit/ui.alert-card';
-// import { AddingTests } from '@teambit/instructions.adding-tests';
-
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { AlertCard } from '@teambit/ui.alert-card';
 import { EmptyStateSlot } from '../tester.ui.runtime';
 import styles from './tests-page.module.scss';
 
@@ -96,12 +93,27 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     component.host === 'teambit.workspace/workspace' &&
     EmptyStateTemplate
   ) {
-    return <EmptyStateTemplate />;
+    return (
+      <div className={classNames(styles.testsPage, className)}>
+        <div>
+          <H1 className={styles.title}>Tests</H1>
+          <Separator className={styles.separator} />
+          <AlertCard
+            level="info"
+            title="There are no
+                tests for this Component. Learn how to add tests:"
+          >
+            <MDXLayout>
+              <EmptyStateTemplate />
+            </MDXLayout>
+          </AlertCard>
+        </div>
+      </div>
+    );
   }
 
   if (testResults === null || testData?.testsResults === null) {
     return (
-      // if in remote return this
       <EmptyBox
         title="This component doesn’t have any tests."
         linkText="Learn how to add tests to your components"
@@ -109,22 +121,6 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
       />
     );
   }
-  // TODO add this when if in local workspace
-  // <div className={classNames(styles.testsPage, className)}>
-  //       <div>
-  //         <H1 className={styles.title}>Tests</H1>
-  //         <Separator className={styles.separator} />
-  //         <AlertCard
-  //           level="info"
-  //           title="There are no
-  //           tests for this Component. Learn how to add tests:"
-  //         >
-  //           <MDXLayout>
-  //             <AddingTests />
-  //           </MDXLayout>
-  //         </AlertCard>
-  //       </div>
-  //     </div>
 
   return (
     <div className={classNames(styles.testsPage, className)}>

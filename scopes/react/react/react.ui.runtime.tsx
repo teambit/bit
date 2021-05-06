@@ -5,6 +5,8 @@ import { TesterAspect, TesterUI } from '@teambit/tester';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { ReactAspect } from './react.aspect';
 import { HighlighterWidget } from './highlighter-widget';
+// import { AddingTests } from '@teambit/instructions.adding-tests';
+// import { AddingCompositions } from '@teambit/instructions.adding-compositions';
 
 export class ReactUI {
   static runtime = UIRuntime;
@@ -20,6 +22,7 @@ export class ReactUI {
           linkText="Learn how to add tests to your react components"
           link="https://harmony-docs.bit.dev/testing/overview/"
         />
+        // <AddingTests />
       );
     });
     compositionsUI.registerEmptyState(() => {
@@ -29,6 +32,7 @@ export class ReactUI {
           linkText="Learn how to add tests to your react components"
           link="https://harmony-docs.bit.dev/testing/overview/"
         />
+        // <AddingCompositions />
       );
     });
 
