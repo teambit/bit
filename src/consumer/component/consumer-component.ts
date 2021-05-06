@@ -40,6 +40,7 @@ import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import BitMap from '../bit-map';
 import ComponentMap, { ComponentOrigin } from '../bit-map/component-map';
+import { IgnoredDirectory } from '../component-ops/add-components/exceptions/ignored-directory';
 import buildComponent from '../component-ops/build-component';
 import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 import injectConf from '../component-ops/inject-conf';
@@ -866,6 +867,7 @@ export default class Component {
       ComponentsPendingImport,
       ExtensionFileNotFound,
       NoComponentDir,
+      IgnoredDirectory,
     ];
     return invalidComponentErrors.some((errorType) => err instanceof errorType);
   }
@@ -1020,7 +1022,6 @@ export default class Component {
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const workspaceConfig: ILegacyWorkspaceConfig = consumer.config;
-    const bitMap: BitMap = consumer.bitMap;
     const componentFromModel = await consumer.loadComponentFromModelIfExist(id);
     if (!componentFromModel && id.scope) {
       const inScopeWithAnyVersion = await consumer.scope.getModelComponentIfExist(id.changeVersion(undefined));
@@ -1031,44 +1032,6 @@ export default class Component {
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
-    const getLoadedFiles = async (): Promise<SourceFile[]> => {
-      const sourceFiles = [];
-      // @todo: change the logic here for Harmony. it doesn't need the full blown track logic
-      // see bitMap.loadFiles() for example.
-      await componentMap.trackDirectoryChanges(consumer, id);
-      const filesToDelete = [];
-      componentMap.files.forEach((file) => {
-        const filePath = path.join(bitDir, file.relativePath);
-        try {
-          const sourceFile = SourceFile.load(filePath, bitDir, consumerPath, {
-            test: file.test,
-          });
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          sourceFiles.push(sourceFile);
-        } catch (err) {
-          if (!(err instanceof FileSourceNotFound)) throw err;
-          logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          filesToDelete.push(file);
-        }
-      });
-      if (filesToDelete.length) {
-        if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
-        filesToDelete.forEach((fileToDelete) => {
-          // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-          if (fileToDelete.relativePath === componentMap.mainFile) {
-            throw new MainFileRemoved(componentMap.mainFile, id.toString());
-          }
-        });
-        componentMap.removeFiles(filesToDelete);
-        bitMap.hasChanged = true;
-      }
-      const filePaths = componentMap.getAllFilesPaths();
-      if (!filePaths.includes(componentMap.mainFile)) {
-        throw new MainFileRemoved(componentMap.mainFile, id.toString());
-      }
-      return sourceFiles;
-    };
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
 
@@ -1149,7 +1112,9 @@ export default class Component {
 
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || undefined;
     const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : undefined;
-    const files = await getLoadedFiles();
+    const files = consumer.isLegacy
+      ? await getLoadedFilesLegacy(consumer, componentMap, id, bitDir)
+      : await getLoadedFilesHarmony(consumer, componentMap, id, bitDir);
     const docsP = _getDocsForFiles(files, consumer.componentFsCache);
     const docs = await Promise.all(docsP);
     const flattenedDocs = docs ? R.flatten(docs) : [];
@@ -1197,6 +1162,73 @@ export default class Component {
       buildStatus: componentFromModel ? componentFromModel.buildStatus : undefined,
     });
   }
+}
+
+async function getLoadedFilesLegacy(
+  consumer: Consumer,
+  componentMap: ComponentMap,
+  id: BitId,
+  bitDir: string
+): Promise<SourceFile[]> {
+  const bitMap: BitMap = consumer.bitMap;
+  const sourceFiles = [];
+  await componentMap.trackDirectoryChanges(consumer, id);
+  const filesToDelete = [];
+  componentMap.files.forEach((file) => {
+    const filePath = path.join(bitDir, file.relativePath);
+    try {
+      const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {
+        test: file.test,
+      });
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      sourceFiles.push(sourceFile);
+    } catch (err) {
+      if (!(err instanceof FileSourceNotFound)) throw err;
+      logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      filesToDelete.push(file);
+    }
+  });
+  if (filesToDelete.length) {
+    if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
+    filesToDelete.forEach((fileToDelete) => {
+      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      if (fileToDelete.relativePath === componentMap.mainFile) {
+        throw new MainFileRemoved(componentMap.mainFile, id.toString());
+      }
+    });
+    componentMap.removeFiles(filesToDelete);
+    bitMap.hasChanged = true;
+  }
+  const filePaths = componentMap.getAllFilesPaths();
+  if (!filePaths.includes(componentMap.mainFile)) {
+    throw new MainFileRemoved(componentMap.mainFile, id.toString());
+  }
+  return sourceFiles;
+}
+
+async function getLoadedFilesHarmony(
+  consumer: Consumer,
+  componentMap: ComponentMap,
+  id: BitId,
+  bitDir: string
+): Promise<SourceFile[]> {
+  if (componentMap.noFilesError) {
+    throw componentMap.noFilesError;
+  }
+  await componentMap.trackDirectoryChangesHarmony(consumer, id);
+  const sourceFiles = componentMap.files.map((file) => {
+    const filePath = path.join(bitDir, file.relativePath);
+    const sourceFile = SourceFile.load(filePath, bitDir, consumer.getPath(), {
+      test: file.test,
+    });
+    return sourceFile;
+  });
+  const filePaths = componentMap.getAllFilesPaths();
+  if (!filePaths.includes(componentMap.mainFile)) {
+    throw new MainFileRemoved(componentMap.mainFile, id.toString());
+  }
+  return sourceFiles;
 }
 
 function _getDocsForFiles(files: SourceFile[], componentFsCache: ComponentFsCache): Array<Promise<Doclet[]>> {

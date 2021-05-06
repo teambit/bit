@@ -4,6 +4,7 @@ import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import webpack from 'webpack';
+import * as stylesRegexps from '@teambit/modules.style-regexps';
 
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 
@@ -135,7 +136,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           ],
         },
         {
-          test: /\.module\.s(a|c)ss$/,
+          test: stylesRegexps.sassModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -156,8 +157,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           ],
         },
         {
-          test: /\.s(a|c)ss$/,
-          exclude: /\.module\.s(a|c)ss$/,
+          test: stylesRegexps.sassNoModuleRegex,
           use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -170,7 +170,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           ],
         },
         {
-          test: /\.module\.less$/,
+          test: stylesRegexps.lessModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -191,8 +191,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           ],
         },
         {
-          test: /\.less$/,
-          exclude: /\.module\.less$/,
+          test: stylesRegexps.lessNoModuleRegex,
           use: [
             require.resolve('style-loader'),
             require.resolve('css-loader'),
@@ -205,7 +204,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           ],
         },
         {
-          test: /\.module.css$/,
+          test: stylesRegexps.cssModuleRegex,
           use: [
             require.resolve('style-loader'),
             {
@@ -220,8 +219,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           ],
         },
         {
-          test: /\.css$/,
-          exclude: /\.module\.css$/,
+          test: stylesRegexps.cssNoModulesRegex,
           use: [require.resolve('style-loader'), require.resolve('css-loader')],
         },
       ],

@@ -413,12 +413,13 @@ export default class Component extends BitObject {
    */
   getVersionToAdd(
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
-    exactVersion: string | null | undefined
+    exactVersion?: string | null,
+    incrementBy?: number
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType);
+    return exactVersion || this.version(releaseType, incrementBy);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -495,11 +496,17 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): string {
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1): string {
     const latest = this.latestVersion();
+    if (!latest) return DEFAULT_BIT_VERSION;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (latest) return semver.inc(latest, releaseType)!;
-    return DEFAULT_BIT_VERSION;
+    let result = semver.inc(latest, releaseType)!;
+    if (incrementBy === 1) return result;
+    for (let i = 1; i < incrementBy; i += 1) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      result = semver.inc(result, releaseType)!;
+    }
+    return result;
   }
 
   id(): string {
