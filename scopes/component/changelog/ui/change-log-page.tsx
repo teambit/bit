@@ -23,9 +23,9 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   if (snaps.length === 0 && !loading) {
     return (
       <EmptyBox
-        title="This component doesn’t have any tests."
-        linkText="Learn how to add tests to your components"
-        link="https://harmony-docs.bit.dev/testing/overview/"
+        title="This component is new and doesn’t have a changelog yet."
+        linkText="Learn more about component versioning"
+        link="https://docs.bit.dev/docs/tag-component-version"
       />
       // <div className={classNames(styles.changeLogPage, className)}>
       //   <H1 className={styles.title}>History</H1>
