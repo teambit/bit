@@ -128,6 +128,10 @@ export default function validateVersionInstance(version: Version): void {
     if (extension.extensionId) {
       validateBitId(extension.extensionId, `extensions.${extension.extensionId.toString()}`, true, false);
     }
+    // Make sure we don't insert the remove sign ("-") by mistake to the models
+    if (extension.config) {
+      validateType(message, extension.config, 'extension.config', 'object');
+    }
   };
 
   const validateArtifacts = (extensions: ExtensionDataList) => {

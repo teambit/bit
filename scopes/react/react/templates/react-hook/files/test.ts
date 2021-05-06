@@ -8,7 +8,7 @@ export const testFile = (context: ComponentContext) => {
     content: `import { renderHook, act } from '@testing-library/react-hooks';
 import { ${Name} } from './${name}';
 
-test('should increment counter', () => {
+it('should increment counter', () => {
   const { result } = renderHook(() => ${Name}())
   act(() => {
     result.current.increment()

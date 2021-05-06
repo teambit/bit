@@ -27,6 +27,10 @@ To use this environment for your components, add it to any of the `variants` in 
 React implements several component templates:
 
 - `react-component` a basic React UI component.
+- `react-context` a react context component.
+- `react-hook` a react hook component.
+- `mdx-component` an MDX component.
+- `react-component-js` a basic React component in JS.
 - `react-env` boilerplate for a customized environment configuration.
 
 Use any of these templates with the `bit create` command:
@@ -37,7 +41,7 @@ bit create <template name> [components...]
 
 ## Runtime (framework) dependencies
 
-As with many Frontend frameworks React requires a singleton instance in your app's runtime. When building reuseable components that means setting `react` and `react-dom` as `peerDependencies`, thus allowing the consuming app to determine the runtime version. Bit's base React environment implements this via the **Dependencies** service which is used to override [dependency-resolver](https://bit.dev/teambit/dependencies/dependency-resolver) and set your preferred dependencies.  
+As with many Frontend frameworks React requires a singleton instance in your app's runtime. When building reuseable components that means setting `react` and `react-dom` as `peerDependencies`, thus allowing the consuming app to determine the runtime version. Bit's base React environment implements this via the **Dependencies** service which is used to override [dependency-resolver](https://bit.dev/teambit/dependencies/dependency-resolver) and set your preferred dependencies.
 It is recommended for you to extend the base React environment and define a semantic version rule and range to fit your current tech stack and guidelines for reuseable React components.
 
 ## Development services
@@ -48,7 +52,7 @@ React, like all other Bit Environments must implement a set of Service Handlers.
 | -------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Compilation          | [TypeScript](https://bit.dev/teambit/typescript/typescript) | [tsconfig.json](https://bit.dev/teambit/react/react/~code/typescript/tsconfig.json)                                                |
 | Testing              | **Jest**                                                    | [jest.config.js](https://bit.dev/teambit/react/react/~code/jest/jest.config.js)                                                    |
-| Linting              | **ESLint**                                                  | [eslintrc.js](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.js)                                                        |
+| Linting              | **ESLint**                                                  | [eslintrc.ts](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
 | DevServer            | **Webpack**                                                 | [webpack.config.preview.dev.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.dev.ts)                   |
 | Preview (simulation) | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
 | Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
@@ -108,7 +112,7 @@ Now that you have a basic customized extension to start from, you can go ahead a
 
 ### Customize configuration
 
-React implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).  
+React implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).
 In case of a conflict, your config will override the default.
 
 ```typescript {4,14} title="Customized TypeScript configuration"
@@ -350,7 +354,7 @@ export class CustomReact {
 
 #### `overrideDependencies(dependencyPolicy: DependenciesPolicy): EnvTransformer`
 
-This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.  
+This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.
 Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (dev, peer or standard).
 
 ```ts

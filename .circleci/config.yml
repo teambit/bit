@@ -90,7 +90,7 @@ commands: # reusable commands
       - run: 'bit config set error_reporting false'
       - run: 'bit config set user.name tester'
       - run: 'bit config set user.email ci@bit.dev'
-      - run: 'bit config set user.token <<parameters.token>>'
+      # - run: 'bit config set user.token <<parameters.token>>'
       - run: 'bit config set hub_domain <<parameters.env>>.bit.dev'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
 
@@ -519,7 +519,7 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - update_ssh_agent
+      # - update_ssh_agent
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
@@ -571,6 +571,7 @@ jobs:
           name: tag persist
           # command: cd bit && bit tag --all --ignore-newest-version
           # command: cd bit && bit tag --scope 0.0.297
+          # command: cd bit && bit tag --all --increment-by 2
           command: cd bit && bit tag --all
           # command: cd bit && bit tag --persist --ignore-newest-version
           no_output_timeout: '25m'
@@ -789,8 +790,7 @@ jobs:
           key: bitsrc-registry8
       - update_ssh_agent
       - set_git_credentials
-      # temporarily to understand the issue with the "EMFILE, too many open files" error.
-      - run: ulimit -a
+      - run: bit config set user.token ${BIT_DEV_PROD_TOKEN}
       - run:
           name: export components
           command: cd bit && BIT_FEATURES=export-central bit export
@@ -838,9 +838,9 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-        run: 'chmod 400 ~/.ssh/id_rsa'
-      - run: 'ssh-add ~/.ssh/id_rsa'
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      # - run: 'chmod 400 ~/.ssh/id_rsa'
+      # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
@@ -938,10 +938,9 @@ jobs:
 
   windows_checkout_code:
     <<: *windows_defaults
-    environment:
-      Path: C:\Users\circleci\.npm-global;$ENV:PATH
     steps:
-      - checkout
+      # - checkout
+      - run: git clone https://github.com/teambit/bit.git
       - persist_to_workspace:
           root: C:\Users\circleci\project
           paths:
@@ -1030,6 +1029,151 @@ jobs:
           paths:
             - bit/dist
 
+  windows_bvm_install:
+    <<: *windows_defaults
+    environment:
+      Path: C:\Users\circleci\.npm-global;C:\Users\circleci\AppData\Local\.bvm;$ENV:PATH
+    steps:
+      - attach_workspace:
+          at: .
+      - run: npm view @teambit/bit version | Out-File -FilePath .\version.txt
+      - run: Get-Content -Path .\version.txt
+      - restore_cache:
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
+      - run: 'npm i -g @teambit/bvm'
+      - run: 'bvm upgrade'
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: 'bit -v'
+      - run: bit -v | Out-File -FilePath .\version.txt
+      - run: Get-Content -Path .\version.txt
+      - save_cache:
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - C:\Users\circleci\AppData\Local\.bvm
+      - persist_to_workspace:
+          root: .
+          paths:
+            - version.txt
+
+  windows_build_bvm:
+    <<: *windows_defaults
+    environment:
+      BITSRC_ENV: stg
+      SKIP_REGISTRY_TESTS: true
+      SKIP_BIT_DEV_TESTS: true
+    parallelism: 1
+    steps:
+      - attach_workspace:
+          at: .
+      - run: cinst nodejs --version 12.15.0
+      - run: node -v
+      - run: npm -v
+      # - run: Get-Content -Path .\version.txt
+      # - restore_cache:
+      #     key: bvm-folder-v1
+      - restore_cache:
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
+      # - run: bit -v
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: bit -v
+      # - run: 'npm i -g @teambit/bvm'
+      # - run: 'bvm list'
+      # - run: 'bvm link'
+      # - run: bit -v
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - restore_cache:
+          key: windows_bitsrc-ssh-key-v1
+      - restore_cache:
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v2
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'builded-{{ checksum ".circle-sha" }}'
+      # -
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      #   run: 'chmod 400 ~/.ssh/id_rsa'
+      # -
+      #   run: 'ssh-add ~/.ssh/id_rsa'
+      - bit_config:
+          token: "fake-token"
+      - run: 'pwd'
+      - run: 'ls'
+      - run: 'ls bit\bit'
+      - run: 'cd bit\bit; bit install'
+      - run: 'cd bit\bit; bit compile'
+      - run: 'cd bit\bit; npm run build'
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit
+  windows_e2e_test_bvm:
+    <<: *windows_defaults
+    environment:
+      BITSRC_ENV: stg
+      SKIP_REGISTRY_TESTS: true
+      SKIP_BIT_DEV_TESTS: true
+    parallelism: 25
+    steps:
+      - attach_workspace:
+          at: .
+      - run: cinst nodejs --version 12.15.0
+      - run: node -v
+      - run: npm -v
+      # - run: Get-Content -Path .\version.txt
+      # - restore_cache:
+      #     key: bvm-folder-v1
+      - restore_cache:
+          key: v1-bvm-folder-{{ checksum "version.txt" }}
+      # - run: bit -v
+      - run: 'setx path "%path%;C:\Users\circleci\AppData\Local\.bvm"'
+      - run: bit -v
+      # - run: 'npm i -g @teambit/bvm'
+      # - run: 'bvm list'
+      # - run: 'bvm link'
+      # - run: bit -v
+      - run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      - restore_cache:
+          key: windows_bitsrc-ssh-key-v1
+      - restore_cache:
+          key: windows_bitsrc-registry-v1
+          # key: windows_bitsrc-registry-stg-v2
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'builded-{{ checksum ".circle-sha" }}'
+      # -
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
+      #   run: 'chmod 400 ~/.ssh/id_rsa'
+      # -
+      #   run: 'ssh-add ~/.ssh/id_rsa'
+      - run: 'cd bit\bit; mkdir junit'
+      - bit_config:
+          token: "fake-token"
+      - run:
+          name: 'write e2e files'
+          command: 'cd bit\bit; circleci tests glob "e2e\*\*.e2e*.ts" | circleci tests split --split-by=filesize | Out-File -FilePath .\spec-files.txt'
+      - run: Get-Content -Path .\bit\bit\spec-files.txt
+      - run: 'cd bit\bit; cmd /c rmdir /s /q .\node_modules\@teambit\legacy; New-Item -Path node_modules\@teambit\legacy -ItemType SymbolicLink -Value .'
+      - run:
+          name: 'run e2e tests'
+          command: 'cd bit\bit; $content = get-content spec-files.txt; npm run mocha-circleci $content'
+          # command which support only - for debug purpose - this needed to be tested on windows (the glob might not work)
+          # command: cd bit; npm run e2e-test-circle --debug
+          environment:
+            MOCHA_FILE: junit\e2e-test-results.xml
+          when: always
+      - store_test_results:
+          path: bit\junit
+      - store_artifacts:
+          path: bit\junit
+      -
+        store_artifacts:
+          path: C:\Users\circleci\AppData\Local\Bit\logs\debug.log
   windows_e2e_test:
     <<: *windows_defaults
     environment:
@@ -1123,7 +1267,6 @@ workflows:
       - bit_build:
           requires:
             - generate_and_check_types
-
 
   # windows_e2e:
   #   jobs:
@@ -1292,7 +1435,7 @@ workflows:
 
   nightly:
     triggers:
-      - schedule: # every day at 3AM UTC (= 10PM EST)
+      - schedule: # every day at 3AM UTC (= 11PM EST = 6AM IST)
           cron: '0 3 * * *'
           filters:
             branches:
@@ -1335,6 +1478,52 @@ workflows:
       - docker_build:
           requires:
             - bit_tag
+
+  windows-nightly:
+    triggers:
+      - schedule: # every day at 5AM UTC (= 1AM EST = 8AM IST)
+          cron: '0 5 * * *'
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - windows_checkout_code
+      - windows_set_ssh_key
+      - windows_bvm_install:
+          <<: *master_only_filter
+          requires:
+            - windows_checkout_code
+      - windows_build_bvm:
+          <<: *master_only_filter
+          requires:
+            - windows_bvm_install
+      - windows_e2e_test_bvm:
+          <<: *master_only_filter
+          requires:
+            - windows_checkout_code
+            - windows_set_ssh_key
+            - windows_bvm_install
+            - windows_build_bvm
+
+  # Uncomment in cse you want to run the windows tests
+  # build_and_test_windows:
+  #   jobs:
+  #     - windows_set_ssh_key
+  #     - windows_checkout_code
+  #     - windows_bvm_install:
+  #         requires:
+  #           - windows_checkout_code
+  #     - windows_build_bvm:
+  #         requires:
+  #           - windows_bvm_install
+  #     - windows_e2e_test_bvm:
+  #         requires:
+  #           - windows_checkout_code
+  #           - windows_set_ssh_key
+  #           - windows_bvm_install
+  #           - windows_build_bvm
+
   # TODO: check if we can combine it with the regular nightly somehow
   harmony_deploy:
     jobs:

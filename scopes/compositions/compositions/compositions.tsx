@@ -20,6 +20,8 @@ import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
 // import { H1 } from '@teambit/documenter.ui.heading';
 // import { AlertCard } from '@teambit/ui.alert-card';
 // import { AddingCompositions } from '@teambit/instructions.adding-compositions';
+import { EmptyStateSlot } from './compositions.ui.runtime';
+
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -30,8 +32,9 @@ export type MenuBarWidget = {
   location: 'start' | 'end';
   content: ReactNode;
 };
+export type CompositionsProp = { menuBarWidgets?: CompositionsMenuSlot; emptyState?: EmptyStateSlot };
 
-export function Compositions({ menuBarWidgets }: { menuBarWidgets?: CompositionsMenuSlot }) {
+export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const component = useContext(ComponentContext);
   const [selected, selectComposition] = useState(head(component.compositions));
   const selectedRef = useRef(selected);
@@ -66,7 +69,12 @@ export function Compositions({ menuBarWidgets }: { menuBarWidgets?: Compositions
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
           <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar} />
-          <CompositionContent component={component} selected={selected} queryParams={queryParams} />
+          <CompositionContent
+            emptyState={emptyState}
+            component={component}
+            selected={selected}
+            queryParams={queryParams}
+          />
         </Pane>
         <HoverSplitter className={styles.splitter}>
           <Collapser
@@ -109,34 +117,40 @@ type CompositionContentProps = {
   component: ComponentModel;
   selected?: Composition;
   queryParams?: string | string[];
+  emptyState?: EmptyStateSlot;
 };
 
-function CompositionContent({ component, selected, queryParams }: CompositionContentProps) {
-  if (component.compositions.length === 0)
+function CompositionContent({ component, selected, queryParams, emptyState }: CompositionContentProps) {
+  const env = component.environment?.id;
+  const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
+
+  if (component.compositions.length === 0 && component.host === 'teambit.workspace/workspace' && EmptyStateTemplate) {
+    return <EmptyStateTemplate />;
+    // <div className={styles.noCompositionsPage}>
+    //   <div>
+    //     <H1 className={styles.title}>Compositions</H1>
+    //     <Separator className={styles.separator} />
+    //     <AlertCard
+    //       level="info"
+    //       title="There are no
+    //           compositions for this Component. Learn how to add compositions:"
+    //     >
+    //       <MDXLayout>
+    //         <AddingCompositions />
+    //       </MDXLayout>
+    //     </AlertCard>
+    //   </div>
+    // </div>;
+  }
+  if (component.compositions.length === 0) {
     return (
-      // TODO if in remote return this
       <EmptyBox
         title="There are no compositions for this component."
         linkText="Learn how to create compositions"
         link="https://harmony-docs.bit.dev/compositions/overview/"
       />
-      // TODO if in local workspace return this
-      // <div className={styles.noCompositionsPage}>
-      //   <div>
-      //     <H1 className={styles.title}>Compositions</H1>
-      //     <Separator className={styles.separator} />
-      //     <AlertCard
-      //       level="info"
-      //       title="There are no
-      //           compositions for this Component. Learn how to add compositions:"
-      //     >
-      //       <MDXLayout>
-      //         <AddingCompositions />
-      //       </MDXLayout>
-      //     </AlertCard>
-      //   </div>
-      // </div>;
     );
+  }
 
   return (
     <ComponentComposition

@@ -1,8 +1,8 @@
 # Bit
 
-Bit is a tool for composing modern applications of independent components.  
+Bit is a tool for composing modern applications of independent components.
 
-It extends the benefits of micro-services to everything you build, front and back. With Bit teams can autonomously develop, build, and release components, while continuously collaborating and integrating to compose larger applications together.  
+It extends the benefits of micro-services to everything you build, front and back. With Bit teams can autonomously develop, build, and release components, while continuously collaborating and integrating to compose larger applications together.
 
 Bit's extendible toolset (and visual development UI) creates a simple yet powerful experience for every developer, while larger teams can smoothly scale to build many developers and projects in the [component cloud](https://bit.dev/).
 
@@ -31,7 +31,7 @@ npm i -g @teambit/bvm
 yarn global add @teambit/bvm
 ```
 
-Intall Bit:
+Install Bit:
 
 ```
 bvm install
@@ -42,7 +42,6 @@ Init a Bit Workspace:
 ```
 bit init --harmony
 ```
-
 
 ### Getting Started
 

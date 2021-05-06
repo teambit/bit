@@ -34,14 +34,16 @@ export function getInvalidComponentLabel(error: Error) {
       return 'main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)';
     case 'MissingFilesFromComponent':
     case 'ComponentNotFoundInPath':
-      return 'component files were deleted (use "bit remove [component_id]" or "bit untrack [component_id]" to remove the component from your workspace)';
-    case 'ExtensionFileNotFound': // $FlowFixMe error.path is set for ExtensionFileNotFound
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+      return 'component files were deleted (use "bit remove [component_id]") or moved (use "bit move <old-dir> <new-dir>")';
+    case 'ExtensionFileNotFound':
+      // @ts-ignore error.path is set for ExtensionFileNotFound
       return `extension file is missing at ${chalk.bold(error.path)}`;
     case 'ComponentsPendingImport':
       return 'component objects are missing from the scope (use "bit import [component_id] --objects" to get them back)';
     case 'NoComponentDir':
       return `component files were added individually without root directory (invalid on Harmony. re-add as a directory or use "bit move --component" to help with the move)`;
+    case 'IgnoredDirectory':
+      return `component files or directory were ignored (probably by .gitignore)`;
     default:
       return error.name;
   }

@@ -12,6 +12,7 @@ import { EmptyBox } from '@teambit/ui.empty-box';
 // import { AlertCard } from '@teambit/ui.alert-card';
 // import { AddingTests } from '@teambit/instructions.adding-tests';
 
+import { EmptyStateSlot } from '../tester.ui.runtime';
 import styles from './tests-page.module.scss';
 
 const TESTS_SUBSCRIPTION_CHANGED = gql`
@@ -70,9 +71,11 @@ const GET_COMPONENT = gql`
   }
 `;
 
-type TestsPageProps = {} & HTMLAttributes<HTMLDivElement>;
+type TestsPageProps = {
+  emptyState: EmptyStateSlot;
+} & HTMLAttributes<HTMLDivElement>;
 
-export function TestsPage({ className }: TestsPageProps) {
+export function TestsPage({ className, emptyState }: TestsPageProps) {
   const component = useContext(ComponentContext);
   const onTestsChanged = useSubscription(TESTS_SUBSCRIPTION_CHANGED, { variables: { id: component.id.toString() } });
   const { data } = useQuery(GET_COMPONENT, {
@@ -84,6 +87,17 @@ export function TestsPage({ className }: TestsPageProps) {
 
   // TODO: change loading EmptyBox
   if (testData?.loading) return <TestLoader />;
+
+  const env = component.environment?.id;
+  const EmptyStateTemplate = emptyState.get(env || ''); // || defaultTemplate;
+
+  if (
+    (testResults === null || testData?.testsResults === null) &&
+    component.host === 'teambit.workspace/workspace' &&
+    EmptyStateTemplate
+  ) {
+    return <EmptyStateTemplate />;
+  }
 
   if (testResults === null || testData?.testsResults === null) {
     return (

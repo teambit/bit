@@ -46,7 +46,7 @@ Node, like all over Environments must implement a set of Service Handlers. For e
 | -------------------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | Compilation          | [TypeScript](https://bit.dev/teambit/typescript/typescript) | [tsconfig.json](https://bit.dev/teambit/react/react/~code/typescript/tsconfig.json)                                                |
 | Testing              | **Jest**                                                    | [jest.config.js](https://bit.dev/teambit/react/react/~code/jest/jest.config.js)                                                    |
-| Linting              | **ESLint**                                                  | [eslintrc.js](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.js)                                                        |
+| Linting              | **ESLint**                                                  | [eslintrc.ts](https://bit.dev/teambit/react/react/~code/eslint/eslintrc.ts)                                                        |
 | DevServer            | **Webpack**                                                 | [webpack.config.preview.dev.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.dev.ts)                   |
 | Preview (simulation) | **Webpack**                                                 | [webpack.config.preview.ts](https://bit.dev/teambit/react/react/~code/webpack/webpack.config.preview.ts)                           |
 | Package              | **PKG**                                                     | Base `package.json` props from [TypeScript Aspect](https://bit.dev/teambit/typescript/typescript/~code/typescript.main.runtime.ts) |
@@ -106,7 +106,7 @@ Now that you have a basic customized extension to start from, you can go ahead a
 
 ### Customize configuration
 
-Node implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).  
+Node implements a set of APIs you can use to merge your preferred configuration with its defaults. These APIs are called **transformers** and they all start with the `override` pre-fix. Find [Available transformers here](#transformers-api-docs).
 In case of a conflict, your config will override the default.
 
 ```typescript {4,14} title="Customized TypeScript configuration"
@@ -288,7 +288,7 @@ export class CustomNode {
 
 #### `overrideDependencies(dependencyPolicy: DependenciesPolicy): EnvTransformer`
 
-This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.  
+This method receives a dependency-policy object and merges it with the environment's default dependency policy for components using this environment.
 Each key-value pair in a dependency-policy object signifies the package and the version to be used. Use also the `-` and `+` notation to signify a module should moved between dependency types (dev, peer or standard).
 
 ```js
