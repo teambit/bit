@@ -4,10 +4,9 @@ import { Separator } from '@teambit/ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
 import classNames from 'classnames';
 import { useSnaps } from '@teambit/ui.hooks.use-snaps';
-// import { MDXLayout } from '@teambit/ui.mdx-layout';
-// import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
 import { AlertCard } from '@teambit/ui.alert-card';
-import { EmptyBox } from '@teambit/ui.empty-box';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';
@@ -30,15 +29,9 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
           title="There is no change log as this component has not been exported yet.
           Learn how to export components:"
         >
-          <EmptyBox
-            title="This component is new and doesn’t have a changelog yet."
-            linkText="Learn more about component versioning"
-            link="https://docs.bit.dev/docs/tag-component-version"
-          />
-
-          {/* <MDXLayout>
+          <MDXLayout>
             <ExportingComponents />
-          </MDXLayout> */}
+          </MDXLayout>
         </AlertCard>
       </div>
     );
