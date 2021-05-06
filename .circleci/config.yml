@@ -519,7 +519,7 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - update_ssh_agent
+      # - update_ssh_agent
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
