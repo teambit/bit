@@ -5,6 +5,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { ComponentTemplate } from './component-template';
 import { GeneratorAspect } from './generator.aspect';
 import { CreateCmd, CreateOptions } from './create.cmd';
@@ -118,6 +119,9 @@ export class GeneratorMain {
     const template = this.getComponentTemplate(templateName, aspectId);
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const scope = options.scope || this.workspace.defaultScope;
+    if (!isValidScopeName(scope)) {
+      throw new InvalidScopeName(scope);
+    }
     if (!scope) throw new Error(`failed finding defaultScope`);
 
     const componentIds = componentNames.map((componentName) => {
