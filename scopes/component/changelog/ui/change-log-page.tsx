@@ -4,9 +4,10 @@ import { Separator } from '@teambit/ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
 import classNames from 'classnames';
 import { useSnaps } from '@teambit/ui.hooks.use-snaps';
-import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { ExportingComponents } from '@teambit/instructions.exporting-components';
-import { AlertCard } from '@teambit/ui.alert-card';
+// import { MDXLayout } from '@teambit/ui.mdx-layout';
+// import { ExportingComponents } from '@teambit/instructions.exporting-components';
+// import { AlertCard } from '@teambit/ui.alert-card';
+import { EmptyBox } from '@teambit/ui.empty-box';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';
@@ -21,19 +22,24 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
 
   if (snaps.length === 0 && !loading) {
     return (
-      <div className={classNames(styles.changeLogPage, className)}>
-        <H1 className={styles.title}>History</H1>
-        <Separator className={styles.separatorNoChangeLog} />
-        <AlertCard
-          level="info"
-          title="There is no change log as this component has not been exported yet.
-          Learn how to export components:"
-        >
-          <MDXLayout>
-            <ExportingComponents />
-          </MDXLayout>
-        </AlertCard>
-      </div>
+      <EmptyBox
+        title="This component doesn’t have any tests."
+        linkText="Learn how to add tests to your components"
+        link="https://harmony-docs.bit.dev/testing/overview/"
+      />
+      // <div className={classNames(styles.changeLogPage, className)}>
+      //   <H1 className={styles.title}>History</H1>
+      //   <Separator className={styles.separatorNoChangeLog} />
+      //   <AlertCard
+      //     level="info"
+      //     title="There is no change log as this component has not been exported yet.
+      //     Learn how to export components:"
+      //   >
+      //     <MDXLayout>
+      //       <ExportingComponents />
+      //     </MDXLayout>
+      //   </AlertCard>
+      // </div>
     );
   }
 
