@@ -519,7 +519,7 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      - update_ssh_agent
+      # - update_ssh_agent
       - run:
           name: 'bit status'
           command: 'cd bit && bit status'
@@ -838,9 +838,6 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
           key: bitsrc-registry8
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      # - run: 'chmod 400 ~/.ssh/id_rsa'
-      # - run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit && mkdir junit'
       - run: 'bit config set package-manager.cache /home/circleci/package-manager-cache'
       # Make sure when we run bit from e2e tests we run it from the global not from here
@@ -1093,10 +1090,6 @@ jobs:
       #     keys:
       #       - 'builded-{{ checksum ".circle-sha" }}'
       # -
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      #   run: 'chmod 400 ~/.ssh/id_rsa'
-      # -
-      #   run: 'ssh-add ~/.ssh/id_rsa'
       - bit_config:
           token: "fake-token"
       - run: 'pwd'
@@ -1147,10 +1140,6 @@ jobs:
       #     keys:
       #       - 'builded-{{ checksum ".circle-sha" }}'
       # -
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      #   run: 'chmod 400 ~/.ssh/id_rsa'
-      # -
-      #   run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit\bit; mkdir junit'
       - bit_config:
           token: "fake-token"
@@ -1208,10 +1197,6 @@ jobs:
       #     keys:
       #       - 'builded-{{ checksum ".circle-sha" }}'
       # -
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      #   run: 'chmod 400 ~/.ssh/id_rsa'
-      # -
-      #   run: 'ssh-add ~/.ssh/id_rsa'
       - run: 'cd bit; mkdir junit'
       - run:
           name: 'npm link bit to global'
