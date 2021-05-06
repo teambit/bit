@@ -15,11 +15,11 @@ export class ReactUI {
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const reactUI = new ReactUI();
     testerUi.registerEmptyState(() => {
-      return null;
+      return <AddingTests />;
     });
 
     compositionsUI.registerEmptyState(() => {
-      return null;
+      return <AddingCompositions />;
     });
 
     if (typeof window !== 'undefined' && window.location.search.includes('highlighter')) {
