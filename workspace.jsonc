@@ -478,30 +478,6 @@
     "scopes/mdx": {
       "defaultScope": "teambit.mdx"
     },
-    "scopes/compositions/instructions": {
-      "teambit.mdx/mdx": {},
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      }
-    },
-    "scopes/component/instructions": {
-      "teambit.mdx/mdx": {},
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      }
-    },
-    "scopes/defender/instructions": {
-      "teambit.mdx/mdx": {},
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      }
-    },
-    "scopes/react/instructions": {
-      "teambit.mdx/mdx": {},
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      }
-    },
     "scopes/design": {
       "defaultScope": "teambit.design",
       "teambit.envs/envs": {

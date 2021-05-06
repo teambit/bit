@@ -271,30 +271,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/explorer/insights"
     },
-    "instructions/adding-compositions": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/compositions/instructions/adding-compositions"
-    },
-    "instructions/adding-docs": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/react/instructions/adding-docs"
-    },
-    "instructions/adding-tests": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/defender/instructions/adding-tests"
-    },
-    "instructions/exporting-components": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/component/instructions/exporting-components"
-    },
     "isolator": {
         "scope": "teambit.component",
         "version": "0.0.375",
