@@ -90,11 +90,11 @@ export function useComponentQuery(componentId: string, host: string) {
     };
   }, []);
 
-  const rawComponent = { ...data?.getHost?.get, host };
+  const rawComponent = data?.getHost?.get;
 
   return useMemo(() => {
     return {
-      component: rawComponent ? ComponentModel.from(rawComponent) : undefined,
+      component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error
         ? new ComponentError(500, error.message)
@@ -102,5 +102,5 @@ export function useComponentQuery(componentId: string, host: string) {
         ? new ComponentError(404)
         : undefined,
     };
-  }, [rawComponent, error]);
+  }, [rawComponent, host, error]);
 }
