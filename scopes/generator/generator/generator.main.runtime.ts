@@ -2,6 +2,7 @@ import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
+import { ConsumerNotFound } from '@teambit/legacy/dist/consumer/exceptions';
 import { ComponentID } from '@teambit/component-id';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { ComponentTemplate } from './component-template';
@@ -111,6 +112,7 @@ export class GeneratorMain {
     templateName: string,
     options: CreateOptions
   ): Promise<GenerateResult[]> {
+    if (!this.workspace) throw new ConsumerNotFound();
     await this.loadAspects();
     const { namespace, aspect: aspectId } = options;
     const template = this.getComponentTemplate(templateName, aspectId);
