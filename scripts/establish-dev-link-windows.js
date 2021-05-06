@@ -18,19 +18,14 @@ if (process.env.PATH.includes(dest)) {
   return;
 }
 
-exec(
-  `powershell -NoProfile -ExecutionPolicy Bypass -Command "[Environment]::SetEnvironmentVariable('path', [Environment]::GetEnvironmentVariable('path', [EnvironmentVariableTarget]::User) + ';${dest}', 'User');"`,
-  (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return;
-    }
-
-    if (stdout) console.log(stdout);
-    if (stderr) console.error(stderr);
-
-    console.log(
-      `Success!!!\nPlease close and reopen the terminal.\nIf you are using VSCode, you need to close it and reopen.\nThen you will be able to use the "${linkName}" command to run your dev app :)`
-    );
+exec(`powershell -NoProfile -ExecutionPolicy Bypass -Command "[Environment]::SetEnvironmentVariable('path', [Environment]::GetEnvironmentVariable('path', [EnvironmentVariableTarget]::User) + ';${dest}', 'User');"`, (error, stdout, stderr) => {
+  if (error) {
+    console.error(`exec error: ${error}`);
+    return;
   }
-);
+
+  if (stdout) console.log(stdout);
+  if (stderr) console.error(stderr);
+
+  console.log(`Success!!!\nPlease close and reopen the terminal.\nIf you are using VSCode, you need to close it and reopen.\nThen you will be able to use the "${linkName}" command to run your dev app :)`);
+});
