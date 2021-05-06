@@ -1,5 +1,4 @@
 import React, { ReactNode } from 'react';
-// import { Theme } from '@teambit/base-ui.theme.theme-provider';
 import { IconFont } from '@teambit/theme.icons-font';
 import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 import { Roboto } from '@teambit/base-ui.theme.fonts.roboto';
