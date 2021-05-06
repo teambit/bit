@@ -52,12 +52,14 @@
    * workspace variants allow to set different subsets of configuration for components in your workspace.
    * this is extremely useful for upgrading, aligning and building components with a
    * new set of dependencies.
+   * Variants docs can be found here - https://harmony-docs.bit.dev/aspects/variants
    **/
   "teambit.workspace/variants": {
-    // Add a variant like so. In this example we are adding a variant for any components inside the "components" directory in the workspace
-    // "components": {
-    //  "teambit.react/react: {} // this line applies the base bit react environment to components in this rule
-    // }
-    // variants docs can be found here - https://harmony-docs.bit.dev/aspects/variants
+    /** 
+    * Add a variant like so. In this example we are adding a variant for any components inside the "components" directory in the workspace
+    * "components": {
+    * "teambit.react/react: {} // this line applies the base bit react environment to components in this rule
+    * }
+    **/
   }
 }
