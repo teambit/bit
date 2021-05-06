@@ -97,4 +97,13 @@ describe('create extension', function () {
       expect(compRootDir).to.not.be.a.path();
     });
   });
+  describe('with an invalid scope-name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+    });
+    it('should throw InvalidScopeName error', () => {
+      expect(() => helper.command.create('aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
+    });
+  });
 });

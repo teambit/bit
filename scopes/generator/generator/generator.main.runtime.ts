@@ -13,6 +13,7 @@ import { ComponentGenerator, GenerateResult } from './component-generator';
 import { WorkspaceGenerator } from './workspace-generator';
 import { WorkspaceTemplate } from './workspace-template';
 import { NewCmd, NewOptions } from './new.cmd';
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 
 export type ComponentTemplateSlot = SlotRegistry<ComponentTemplate[]>;
 export type WorkspaceTemplateSlot = SlotRegistry<WorkspaceTemplate[]>;
@@ -116,6 +117,9 @@ export class GeneratorMain {
     const template = this.getComponentTemplate(templateName, aspectId);
     if (!template) throw new Error(`template "${templateName}" was not found`);
     const scope = options.scope || this.workspace.defaultScope;
+    if (!isValidScopeName(scope)) {
+      throw new InvalidScopeName(scope);
+    }
     if (!scope) throw new Error(`failed finding defaultScope`);
 
     const componentIds = componentNames.map((componentName) => {
