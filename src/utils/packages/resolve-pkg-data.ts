@@ -10,6 +10,7 @@ import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 export interface ResolvedPackageData {
   fullPath: PathLinuxAbsolute; // package path
   packageJsonPath?: PathOsBased;
+  packageJsonContent?: Record<string, any>;
   dependentPackageJsonPath?: PathOsBased;
   name: string; // package name
   concreteVersion?: string; // version from the package.json of the package itself
@@ -93,6 +94,7 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
     return;
   }
   packageData.packageJsonPath = path.join(packageDir, PACKAGE_JSON);
+  packageData.packageJsonContent = packageInfo;
   packageData.name = packageInfo.name;
   packageData.concreteVersion = packageInfo.version;
   if (packageInfo.componentId) {

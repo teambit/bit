@@ -51,6 +51,7 @@ export default (async function status(): Promise<StatusResult> {
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     if (consumer.isLegacy && component.issues) {
       delete component.issues.relativeComponentsAuthored;
+      delete component.issues.importNonMainFiles;
     }
     return Boolean(component.issues) && !R.isEmpty(component.issues);
   });

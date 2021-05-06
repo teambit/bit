@@ -24,6 +24,7 @@ export const componentIssuesLabels = {
     'component is using an unsupported resolve-modules (aka aliases) feature, replace to module paths',
   parseErrors: 'error found while parsing the file (edit the file and fix the parsing error)',
   resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)',
+  importNonMainFiles: 'importing non-main files (the dependency should expose its API from the main file)',
 };
 
 export const MISSING_PACKAGES_FROM_OVERRIDES_LABEL = 'from overrides configuration';

@@ -75,6 +75,7 @@ export type Issues = {
   parseErrors: { [filePath: string]: string };
   resolveErrors: { [filePath: string]: string };
   missingBits: { [filePath: string]: BitId[] }; // temporarily. it's combined later with missingComponents. see combineIssues
+  importNonMainFiles?: { [filePath: string]: string[] }; // warning on Harmony
 };
 
 export type DebugDependencies = {
@@ -165,6 +166,7 @@ export default class DependencyResolver {
       parseErrors: {},
       resolveErrors: {},
       missingBits: {},
+      importNonMainFiles: {},
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
@@ -794,12 +796,29 @@ either, use the ignore file syntax or change the require statement to have a mod
           // no need to enter anything to the dependencies
           return;
         }
+        const depMain = bitDep.packageJsonContent?.main;
+        if (depMain && !bitDep.fullPath.endsWith(depMain)) {
+          this.addImportNonMainIssue(originFile, bitDep.fullPath);
+        }
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);
       }
     });
+  }
+
+  private addImportNonMainIssue(filePath: string, nonMainFile: string) {
+    const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
+    if (!extDisallowNonMain.includes(path.extname(nonMainFile))) return;
+    const nonMainFileSplit = nonMainFile.split(`node_modules/`);
+    const nonMainFileShort = nonMainFileSplit[1] || nonMainFileSplit[0];
+    if (!this.issues.importNonMainFiles) this.issues.importNonMainFiles = {};
+    if (this.issues.importNonMainFiles[filePath]) {
+      this.issues.importNonMainFiles[filePath].push(nonMainFileShort);
+    } else {
+      this.issues.importNonMainFiles[filePath] = [nonMainFileShort];
+    }
   }
 
   private getValidVersion(version: string | undefined) {
