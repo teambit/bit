@@ -1,10 +1,11 @@
 import * as path from 'path';
+import fs from 'fs-extra';
 import R from 'ramda';
 import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
-import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
@@ -796,10 +797,7 @@ either, use the ignore file syntax or change the require statement to have a mod
           // no need to enter anything to the dependencies
           return;
         }
-        const depMain = bitDep.packageJsonContent?.main;
-        if (depMain && !bitDep.fullPath.endsWith(depMain)) {
-          this.addImportNonMainIssue(originFile, bitDep.fullPath);
-        }
+        this.addImportNonMainIssueIfNeeded(originFile, bitDep);
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
@@ -808,10 +806,32 @@ either, use the ignore file syntax or change the require statement to have a mod
     });
   }
 
-  private addImportNonMainIssue(filePath: string, nonMainFile: string) {
+  private isDistDirExistsOnHarmony(pkgName: string) {
+    if (this.consumer.isLegacy) throw new Error(`isDistDirExistsOnHarmony should gets called on Harmony only`);
+    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
+    return fs.existsSync(distDir);
+  }
+
+  private addImportNonMainIssueIfNeeded(filePath: string, dependencyPkgData: ResolvedPackageData) {
+    if (this.consumer.isLegacy) return; // this is relevant for Harmony only
+    const depMain = dependencyPkgData.packageJsonContent?.main;
+    if (!depMain) return;
+    const depFullPath = dependencyPkgData.fullPath;
+    if (depFullPath.endsWith(depMain)) {
+      // it requires the main-file. all is good.
+      return;
+    }
+    if (!this.isDistDirExistsOnHarmony(dependencyPkgData.name)) {
+      // if dists is missing (bit compile was not running), then depFullPath points to the source
+      // later, we should add another "issue" prop suggesting to run "bit compile".
+      return;
+    }
     const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
-    if (!extDisallowNonMain.includes(path.extname(nonMainFile))) return;
-    const nonMainFileSplit = nonMainFile.split(`node_modules/`);
+    if (!extDisallowNonMain.includes(path.extname(depFullPath))) {
+      // some files such as scss/json are needed to be imported as non-main
+      return;
+    }
+    const nonMainFileSplit = depFullPath.split(`node_modules/`);
     const nonMainFileShort = nonMainFileSplit[1] || nonMainFileSplit[0];
     if (!this.issues.importNonMainFiles) this.issues.importNonMainFiles = {};
     if (this.issues.importNonMainFiles[filePath]) {
