@@ -1,10 +1,11 @@
 import * as path from 'path';
+import fs from 'fs-extra';
 import R from 'ramda';
 import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
-import { COMPONENT_ORIGINS, DEPENDENCIES_FIELDS } from '../../../../constants';
+import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
 import Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import ShowDoctorError from '../../../../error/show-doctor-error';
@@ -24,6 +25,7 @@ import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { BitIdStr } from '../../../../bit-id/bit-id';
+import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -68,6 +70,7 @@ export type Issues = {
   untrackedDependencies: UntrackedDependenciesIssues;
   missingDependenciesOnFs: { [filePath: string]: string[] };
   missingLinks: { [filePath: string]: BitId[] };
+  missingDists?: boolean; // harmony only. "bit compile" wasn't running
   missingCustomModuleResolutionLinks: { [filePath: string]: string[] };
   customModuleResolutionUsed: { [importSource: string]: BitIdStr }; // invalid on Harmony, { importSource: idStr }
   relativeComponents: { [filePath: string]: BitId[] };
@@ -158,6 +161,7 @@ export default class DependencyResolver {
       untrackedDependencies: {},
       missingDependenciesOnFs: {},
       missingLinks: {},
+      missingDists: this.isDistDirMissing(),
       missingCustomModuleResolutionLinks: {},
       customModuleResolutionUsed: {},
       relativeComponents: {},
@@ -168,6 +172,13 @@ export default class DependencyResolver {
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
+  }
+
+  private isDistDirMissing() {
+    if (this.consumer.isLegacy) return false;
+    const pkgName = componentIdToPackageName(this.component);
+    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
+    return !fs.existsSync(distDir);
   }
 
   setTree(tree: Tree) {

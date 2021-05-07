@@ -16,6 +16,7 @@ export const componentIssuesLabels = {
   untrackedDependencies: 'untracked file dependencies (use "bit add <file>" to track untracked files as components)',
   missingDependenciesOnFs: 'non-existing dependency files (make sure all files exists on your workspace)',
   missingLinks: 'missing links between components(use "bit link" to build missing component links)',
+  missingDists: 'missing dists (run "bit compile")',
   missingCustomModuleResolutionLinks: 'missing links (use "bit link" to build missing component links)',
   relativeComponents: 'components with relative import statements found (use module paths for imported components)',
   relativeComponentsAuthored:
@@ -83,7 +84,7 @@ export function formatMissing(missingComponent: ConsumerComponent) {
     if (!value || R.isEmpty(value)) return '';
 
     return (
-      chalk.yellow(`\n       ${label}: \n`) +
+      formatTitle(label) +
       chalk.white(
         Object.keys(value)
           .map((k) => {
@@ -144,9 +145,17 @@ export function formatMissing(missingComponent: ConsumerComponent) {
 
         return formatMissingStr(key, missingPackagesDependenciesOnFs, componentIssuesLabels[key]);
       }
+      if (key === 'missingDists' && missingComponent.issues?.missingDists) {
+        return formatTitle(componentIssuesLabels[key], false);
+      }
       // @ts-ignore
       return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
     })
     .join('');
   return `       ${missingStr}\n`;
+}
+
+function formatTitle(issueTitle: string, hasMoreData = true): string {
+  const colon = hasMoreData ? ':' : '';
+  return chalk.yellow(`\n       ${issueTitle}${colon} \n`);
 }
