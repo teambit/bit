@@ -175,7 +175,7 @@ export default class DependencyResolver {
   }
 
   private isDistDirMissing() {
-    if (this.consumer.isLegacy) return false;
+    if (this.consumer.isLegacy) return undefined;
     const pkgName = componentIdToPackageName(this.component);
     const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
     return !fs.existsSync(distDir);
