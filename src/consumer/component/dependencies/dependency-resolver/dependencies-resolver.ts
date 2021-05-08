@@ -1129,7 +1129,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   removeEmptyIssues() {
-    const notEmpty = (item) => !R.isEmpty(item);
+    const notEmpty = (item) => item && !R.isEmpty(item);
     this.issues = R.filter(notEmpty, this.issues);
   }
 

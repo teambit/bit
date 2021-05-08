@@ -52,7 +52,7 @@ export default (async function status(): Promise<StatusResult> {
     if (consumer.isLegacy && component.issues) {
       delete component.issues.relativeComponentsAuthored;
     }
-    if (component.issues?.missingDists === false) {
+    if (!component.issues?.missingDists) {
       delete component.issues?.missingDists;
     }
     return Boolean(component.issues) && !R.isEmpty(component.issues);
