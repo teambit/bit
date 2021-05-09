@@ -3,6 +3,7 @@ import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
 import { replacePlaceHolderForPackageName } from './component-placeholders';
 import npmRegistryName from './npm-registry-name';
+import { parseScope } from './parse-scope';
 
 /**
  * convert a component name to a valid npm package name
@@ -23,7 +24,7 @@ export default function componentIdToPackageName({
   extensions: ExtensionDataList;
   isDependency?: boolean;
 }): string {
-  const fromExtensions = getNameFromExtensions(id, extensions, isDependency);
+  const fromExtensions = getNameFromExtensions(id, defaultScope, extensions, isDependency);
   if (fromExtensions) return fromExtensions;
   const allSlashes = new RegExp('/', 'g');
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
@@ -42,7 +43,12 @@ export default function componentIdToPackageName({
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }
 
-function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList, isDependency?: boolean): null | string {
+function getNameFromExtensions(
+  id: BitId,
+  defaultScope?: string | null,
+  extensions?: ExtensionDataList,
+  isDependency?: boolean
+): null | string {
   if (!extensions) return null;
   if (isDependency) {
     const dependencyResolverExt = extensions.findExtension(Extensions.dependencyResolver);
@@ -65,6 +71,8 @@ function getNameFromExtensions(id: BitId, extensions?: ExtensionDataList, isDepe
   const pkgExt = extensions.findExtension(Extensions.pkg);
   if (!pkgExt) return null;
   const name = pkgExt.config?.packageJson?.name;
+  const scopeId = id.scope || defaultScope;
+  const { scope, owner } = parseScope(scopeId);
   if (!name) return null;
-  return replacePlaceHolderForPackageName({ name: id.name, scope: id.scope }, name);
+  return replacePlaceHolderForPackageName({ name: id.name, scope, owner, scopeId }, name);
 }
