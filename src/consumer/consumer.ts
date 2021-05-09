@@ -572,15 +572,19 @@ export default class Consumer {
     if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
       throw new MissingDependencies(componentsWithRelativeAuthored);
     }
+    const issuesAllowedToTag = ['relativeComponentsAuthored', 'missingDists'];
+    const isComponentHasBlockingIssues = (component: Component) => {
+      const issues = component.issues;
+      if (!issues) return false;
+      return Object.keys(issues).some((label) => {
+        if (R.isEmpty(issues[label])) return false;
+        if (issuesAllowedToTag.includes(label)) return false;
+        return true;
+      });
+    };
     if (!tagParams.ignoreUnresolvedDependencies) {
       // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter((component) => {
-        const issues = component.issues;
-        return (
-          issues &&
-          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
-        );
-      });
+      const componentsWithOtherIssues = components.filter((component) => isComponentHasBlockingIssues(component));
       if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
     }
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
