@@ -4,15 +4,15 @@ title: Variants
 slug: /aspects/variants
 ---
 
-`teambit.workspace/variants` enables a cascading, selection of directories/components in the workspace and apply configurations on them.
-Configurations set on a specific set of components can:
+`teambit.workspace/variants` enables cascading configurations by selection of component groupings or sets in the workspace and applying configurations to these cascading groups.
+Configurations set on a certain set of components can:
 
-1. Affect only that selected set of components
-1. Inherit policies set on a more general set of components (that includes the workspace default configs)
+1. Affect only the selected set of components
+1. Inherit policies set on a more general set of components (including the workspace default configs)
 1. Override conflicting configurations inherited from more general component selections
 1. Propagate configurations downwards to more specific sub-sets of components
 
-## Variatns Examples
+## Variants Examples
 
 ### The Wildcard (\*) variant
 
@@ -26,9 +26,10 @@ To select all components in the workspace use a wildcard (`*`). This is useful w
 }
 ```
 
-### Set rule with root directory
+### Select a rule set by directory
 
-To select using a directory path, use the relative path to the components' common directory. For example:
+To select a set using a directory path, use the relative path to the components' parent directory. In the following example, all components under the `components/utility-functions` directory
+(and any sub-directories) will be included in this set:
 
 ```json
 "teambit.workspace/variants": {
@@ -38,9 +39,10 @@ To select using a directory path, use the relative path to the components' commo
 }
 ```
 
-### Set rule with root namespace
+### Select a rule set via namespace
 
-This option is recommended as it decouples your components' configurations from the workspace's file structure. It handles components using fundamental definitions that pertain to function and purpose. For example:
+This option is recommended as it decouples your components' configurations from the workspace's file structure. It handles components using fundamental definitions that pertain to function and purpose, via their namespace.  
+In the following example, any component under the `utility-functions` namespace (and it's sub-namespaces) will be included in this rule set:
 
 ```json
 "teambit.workspace/variants": {
@@ -50,13 +52,13 @@ This option is recommended as it decouples your components' configurations from 
 }
 ```
 
-### Several rules in the same variant
+### Several rule sets with the same variant configuration
 
-You can set several rules for the same variant.
+You can add several rule sets for the same variant configuration:
 
 ```json title="Multiple directory paths"
 "teambit.workspace/variants": {
-    "components/utils,components/react-ui": {
+    "components/utils, components/react-ui": {
         "teambit.harmony/node": {}
     },
 }
@@ -64,7 +66,7 @@ You can set several rules for the same variant.
 
 ```json title="Multiple namespaces"
 "teambit.workspace/variants": {
-    "{utility-functions/*},{react-ui/*}": {
+    "{utility-functions/*}, {react-ui/*}": {
         "teambit.harmony/node": {}
     },
 }
@@ -72,7 +74,7 @@ You can set several rules for the same variant.
 
 ```json title="Paths and namespaces"
 "teambit.workspace/variants": {
-    "{utility-functions/*},{react-ui/*},components/utils,components/react-ui": {
+    "{utility-functions/*}, {react-ui/*}, components/utils, components/react-ui": {
         "teambit.harmony/node": {}
     },
 }
@@ -81,11 +83,11 @@ You can set several rules for the same variant.
 ### Exclude directories/components from a rule
 
 Using the `!` you can exclude set of components from a specific rule.
-The `!` works both for directories and namespaces for example:
+The `!` works both for directories and namespaces, for example:
 
 #### Exclude directory from a rule
 
-Apply `teambit.harmony/node` env on `utility-functions` but not on `utility-functions/react-utils`
+For example, apply the `teambit.harmony/node` environment on the `utility-functions` set, but exclude on `utility-functions/react-utils` from that set:
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -97,7 +99,7 @@ Apply `teambit.harmony/node` env on `utility-functions` but not on `utility-func
 
 #### Exclude namespace from a rule
 
-Apply `teambit.harmony/node` env on every component under the utils namespace but not on utils/react components
+For exapmle, apply the `teambit.harmony/node` environment on every component under the `utils` namespace but exclude the `utils/react` namespace and its children from this set:
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -109,11 +111,10 @@ Apply `teambit.harmony/node` env on every component under the utils namespace bu
 
 ## Merging Configurations
 
-The same component may have several rules applied to it. This works very much like CSS rules where the more specific variant "wins" when a Bit merges variant rules.
+The same component may have several rules applied to it. This works very much like CSS rules where rules cascade but the more specific variant "wins" when there are rule 'conflicts'.
 
-The following example shows how Bit does not apply `aspect1-components-key` nor the `aspect1-root-key`, as this was set by a more specific variant.
-
-> Bit will merge into the final config aspects (with their configuration) which were part of the previous components' tag, unless they were explicitly removed (using the "remove" syntax below) or override by variants with new configuration.
+The following example shows how Bit does not apply `aspect1-components-key` nor the `aspect1-root-key` for components under the `components/ui` directory, as the `my-aspect1` extension
+was re-set by a more specific variant.
 
 ```json title="workspace.json
 {
@@ -200,9 +201,14 @@ Once bit see `"propagate": false` it takes the configuration for this group, and
 
 ## Removing aspects
 
-In many cases you don't want a specific aspect to be define on a subgroup but you don't want to use the propagate false, since you want to get other configuration from parent group.
-This can be achived using the `"-"` as a value for the aspect configuration.
-This can also be used to remove aspect that
+> Note: Once a component has been tagged, any aspect configured for that component **can only** be removed from the component via the following `remove` method. (if you havent exported yet then `untag` would reset the effect of the tag)
+
+There are numerous scenarios where you would not want a specific aspect to be defined on a subgroup but you don't want to exclude the sub-group from upstream rules, or use the `propagate: false` flag, since you want to receive the
+other configurations from the parent group rule/s.
+
+In that case, removing a specific aspect can be achieved using `"-"` as the value for an aspect's configuration. This will remove this aspect from the current rule set.
+
+For instance, the following will remove `my-aspect2` from components in the `components/react/ui` set, while still inheriting other configs such as the `my-aspect3` aspect.
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -218,7 +224,7 @@ This can also be used to remove aspect that
     "my-aspect1": {
       "aspect1-react-ui-key": "aspect1-react-ui-val"
     },
-    "my-aspect2": "-" // Remove my-aspect2 from my configuration
+    "my-aspect2": "-" // Remove my-aspect2 from this set's configuration
   }
 }
 ```
