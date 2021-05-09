@@ -4,7 +4,7 @@ import memoize from 'memoizee';
 import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
 import { metaFromPackageJson } from './meta-from-pkg-json';
 import { isClassComponent, isFunctionComponent } from './helpers';
-import { ComponentMeta, componentMetaField, fieldComponentId, fieldHomepageUrl } from './model';
+import { ComponentMeta, componentMetaField, fieldComponentId, fieldHomepageUrl, fieldIsExported } from './model';
 
 export type BitReactTransformerOptions = {
   componentFilesPath: string;
@@ -77,6 +77,13 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
         const homepageProperty = types.objectProperty(
           types.identifier(fieldHomepageUrl),
           types.stringLiteral(meta.homepage)
+        );
+        properties.push(homepageProperty);
+      }
+      if (typeof meta.exported === 'boolean') {
+        const homepageProperty = types.objectProperty(
+          types.identifier(fieldIsExported),
+          types.booleanLiteral(meta.exported)
         );
         properties.push(homepageProperty);
       }
