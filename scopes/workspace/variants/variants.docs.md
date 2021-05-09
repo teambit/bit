@@ -41,12 +41,23 @@ To select a set using a directory path, use the relative path to the components'
 
 ### Select a rule set via namespace
 
-This option is recommended as it decouples your components' configurations from the workspace's file structure. It handles components using fundamental definitions that pertain to function and purpose, via their namespace.  
+This option is recommended as it decouples your components' configurations from the workspace's file structure. It handles components using fundamental definitions that pertain to function and purpose, via their namespace.
+The namespace selector behave like a glob pattern where the component name used as a file path matched against the pattern. This means that namespace selector for example support `*` to one part exactly where `**` match arbitrary parts of the component name.
 In the following example, any component under the `utility-functions` namespace (and it's sub-namespaces) will be included in this rule set:
 
 ```json
 "teambit.workspace/variants": {
-    "{utility-functions/*}": {
+    "{utility-functions/**}": { // Match any component name starts with utility-functions
+        "teambit.harmony/node": {}
+    },
+}
+```
+
+In the following example, any component **directly** under the `utility-functions` namespace will be included in this rule set:
+
+```json
+"teambit.workspace/variants": {
+    "{utility-functions/*}": { // Match utility-functions/sort-array but not utility-functions/string/reverse
         "teambit.harmony/node": {}
     },
 }
@@ -66,7 +77,7 @@ You can add several rule sets for the same variant configuration:
 
 ```json title="Multiple namespaces"
 "teambit.workspace/variants": {
-    "{utility-functions/*}, {react-ui/*}": {
+    "{utility-functions/**}, {react-ui/**}": {
         "teambit.harmony/node": {}
     },
 }
@@ -74,7 +85,7 @@ You can add several rule sets for the same variant configuration:
 
 ```json title="Paths and namespaces"
 "teambit.workspace/variants": {
-    "{utility-functions/*}, {react-ui/*}, components/utils, components/react-ui": {
+    "{utility-functions/**}, {react-ui/**}, components/utils, components/react-ui": {
         "teambit.harmony/node": {}
     },
 }
@@ -103,7 +114,7 @@ For exapmle, apply the `teambit.harmony/node` environment on every component und
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
-    "{utils/*}, !{utils/react/*}": {
+    "{utils/**}, !{utils/react/**}": {
         "teambit.harmony/node": {}
     },
 }
