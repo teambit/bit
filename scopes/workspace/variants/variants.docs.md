@@ -14,7 +14,7 @@ Configurations set on a specific set of components can:
 
 ## Variatns Examples
 
-### The Wildcard (*) variant
+### The Wildcard (\*) variant
 
 To select all components in the workspace use a wildcard (`*`). This is useful when wanting to apply a very general rules on all components. For example:
 
@@ -82,21 +82,23 @@ You can set several rules for the same variant.
 
 The same component may have several rules applied to it. This works very much like CSS rules where the more specific variant "wins" when a Bit merges variant rules.
 
-The following example shows how Bit does not apply `aspect1-components-ui-key` nor the `aspect1-root-key`, as this was set by a more specific variant.
+The following example shows how Bit does not apply `aspect1-components-key` nor the `aspect1-root-key`, as this was set by a more specific variant.
+
+> Bit will merge into the final config aspects (with their configuration) which were part of the previous components' tag, unless they were explicitly removed (using the "remove" syntax below) or override by variants with new configuration.
 
 ```json title="workspace.json
 {
   "teambit.workspace/variants": {
     "*": {
-        "my-aspect1": {
-          "aspect1-root-key": "aspect1-root-val"
-        },
-       "my-aspect2": {
+      "my-aspect1": {
+        "aspect1-root-key": "aspect1-root-val"
+      },
+      "my-aspect2": {
         "aspect2-root-key": "aspect2-root-val"
       },
-        "my-aspect4": {
-          "aspect4-root-key": "aspect4-root-val"
-        }
+      "my-aspect4": {
+        "aspect4-root-key": "aspect4-root-val"
+      }
     },
     "components": {
       "my-aspect1": {
@@ -139,12 +141,66 @@ The following example shows how Bit does not apply `aspect1-components-ui-key` n
 
 ### propagate
 
-Configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`. To prevent this from happening, set the `propogate` value of the parent group of components to `false`.
+Configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`.
+To prevent this from happening, set the `propogate` value of a group of components to `false`.
+Once bit see `"propagate": false` it takes the configuration for this group, and stop propagate.
 
-```json
+```json title="workspace.json
 "teambit.workspace/variants": {
-    "components/react": {
-        "propagate": false
-        }
+  "components/react": {
+    "my-aspect2": {
+      "aspect2-react-key": "aspect2-react-val"
+    }
+  },
+  "components/react/ui": {
+    "propagate": false, // take this config, and stop propagate
+    "my-aspect1": {
+      "aspect1-react-ui-key": "aspect1-react-ui-val"
+    }
+  }
+}
+```
+
+```json title="components/react/ui/button's calculated configuration"
+{
+  "my-aspect1": {
+    "aspect1-react-ui-key": "aspect1-react-ui-val"
+  }
+}
+```
+
+## Removing aspects
+
+In many cases you don't want a specific aspect to be define on a subgroup but you don't want to use the propagate false, since you want to get other configuration from parent group.
+This can be achived using the `"-"` as a value for the aspect configuration.
+This can also be used to remove aspect that
+
+```json title="workspace.json
+"teambit.workspace/variants": {
+  "components/react": {
+    "my-aspect2": {
+      "aspect2-react-key": "aspect2-react-val"
+    },
+    "my-aspect3": {
+      "aspect3-react-key": "aspect3-react-val"
+    }
+  },
+  "components/react/ui": {
+    "my-aspect1": {
+      "aspect1-react-ui-key": "aspect1-react-ui-val"
+    },
+    "my-aspect2": "-" // Remove my-aspect2 from my configuration
+  }
+}
+```
+
+```json title="components/react/ui/button's calculated configuration"
+{
+  "my-aspect1": {
+    "aspect1-react-ui-key": "aspect1-react-ui-val"
+  },
+  "my-aspect3": {
+    "aspect3-react-key": "aspect3-react-val"
+  }
 }
 ```
