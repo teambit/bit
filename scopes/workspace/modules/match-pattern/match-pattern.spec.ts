@@ -113,6 +113,20 @@ describe('isMatchPatternItem', () => {
       expect(res.specificity).to.equal(0);
     });
   });
+  describe('excluded item', () => {
+    it('excluding by dir', () => {
+      const res = isMatchPatternItem('bar/foo', 'name', '!bar');
+      expect(res.match).to.be.true;
+      expect(res.excluded).to.be.true;
+      expect(res.specificity).to.equal(1);
+    });
+    it('excluding by namespace', () => {
+      const res = isMatchPatternItem('bar/foo', 'my-namespace/name', '!{my-namespace/*}');
+      expect(res.match).to.be.true;
+      expect(res.excluded).to.be.true;
+      expect(res.specificity).to.equal(1.1);
+    });
+  });
 });
 
 describe('isMatchPattern', () => {
@@ -120,6 +134,7 @@ describe('isMatchPattern', () => {
     it('should return match false with maxSpecificity as -1', () => {
       const res = isMatchPattern('bar', 'name', 'foo, baz');
       expect(res.match).to.be.false;
+      expect(res.excluded).to.be.false;
       expect(res.maxSpecificity).to.equal(-1);
     });
   });
@@ -127,6 +142,7 @@ describe('isMatchPattern', () => {
     it('should return match true with the correct maxSpecificity', () => {
       const res = isMatchPattern('bar/foo/baz', 'name', 'foo, bar/foo , baz');
       expect(res.match).to.be.true;
+      expect(res.excluded).to.be.false;
       expect(res.maxSpecificity).to.equal(2);
     });
   });
@@ -134,6 +150,7 @@ describe('isMatchPattern', () => {
     it('should return match true with the correct maxSpecificity', () => {
       const res = isMatchPattern('bar/foo/baz', 'name', 'bar/foo, bar/foo/baz , baz, bar');
       expect(res.match).to.be.true;
+      expect(res.excluded).to.be.false;
       expect(res.maxSpecificity).to.equal(3);
     });
   });
@@ -145,6 +162,7 @@ describe('isMatchPattern', () => {
         '{namespace1/namespace2/name}, {namespace1/namespace2/*} , baz, bar'
       );
       expect(res.match).to.be.true;
+      expect(res.excluded).to.be.false;
       expect(res.maxSpecificity).to.equal(3);
     });
   });
@@ -156,6 +174,18 @@ describe('isMatchPattern', () => {
         '{namespace1/namespace2/name}, {namespace1/namespace2/*} , bar/foo, bar/foo/baz/goo , baz, bar'
       );
       expect(res.match).to.be.true;
+      expect(res.maxSpecificity).to.equal(4);
+    });
+  });
+  describe('match different rules and exclude', () => {
+    it('should return match true with the correct maxSpecificity', () => {
+      const res = isMatchPattern(
+        'bar/foo/baz/goo',
+        'namespace1/namespace2/name',
+        '{namespace1/namespace2/name}, {namespace1/namespace2/*} , bar/foo, bar/foo/baz/goo , baz, bar, !bar/foo'
+      );
+      expect(res.match).to.be.true;
+      expect(res.excluded).to.be.true;
       expect(res.maxSpecificity).to.equal(4);
     });
   });
