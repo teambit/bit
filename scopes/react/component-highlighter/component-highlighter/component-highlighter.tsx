@@ -45,7 +45,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
     });
   }, []);
 
-  const handleElement = useDebouncedCallback(_handleElement, target ? 180 : 0);
+  const handleElement = useDebouncedCallback(_handleElement, target ? 80 : 0);
 
   useEffect(() => {
     if (disabled) {
