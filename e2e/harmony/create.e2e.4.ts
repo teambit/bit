@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
-
+import os from 'os';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -15,6 +15,11 @@ describe('create extension', function () {
   });
   after(() => {
     helper.scopeHelper.destroy();
+  });
+  describe('when running outside the workspace', () => {
+    it('should throw ConsumerNotFound error', () => {
+      expect(() => helper.command.runCmd('bit create aspect my-aspect', os.tmpdir())).to.throw('workspace not found');
+    });
   });
   describe('with --namespace flag', () => {
     before(() => {
@@ -95,6 +100,15 @@ describe('create extension', function () {
     it('should not leave the generated component in the filesystem', () => {
       const compRootDir = path.join(helper.scopes.localPath, helper.scopes.remote, 'my-aspect');
       expect(compRootDir).to.not.be.a.path();
+    });
+  });
+  describe('with an invalid scope-name', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+    });
+    it('should throw InvalidScopeName error', () => {
+      expect(() => helper.command.create('aspect', 'my-aspect', '--scope ui/')).to.throw('"ui/" is invalid');
     });
   });
 });
