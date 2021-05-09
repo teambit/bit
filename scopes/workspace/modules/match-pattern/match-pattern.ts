@@ -1,6 +1,7 @@
 import { stripTrailingChar } from '@teambit/string.strip-trailing-char';
 import { isPathInside } from '@teambit/path.is-path-inside';
 import { sortBy, prop, any } from 'ramda';
+import minimatch from 'minimatch';
 import _ from 'lodash';
 
 export const PATTERNS_DELIMITER = ',';
@@ -109,14 +110,9 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   const splittedComp = componentName.split('/');
   const splittedPattern = patternItemStriped.split('/');
 
-  if (splittedPattern.length > splittedComp.length) {
-    return {
-      match: false,
-      specificity: -1,
-    };
-  }
+  const minimatchMatch = minimatch(componentName, patternItemStriped);
 
-  if (splittedPattern.length < splittedComp.length && splittedPattern[splittedPattern.length - 1] !== '*') {
+  if (!minimatchMatch) {
     return {
       match: false,
       specificity: -1,
@@ -124,16 +120,16 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   }
 
   splittedPattern.forEach((patternElement, index) => {
-    const componentElement = splittedComp[index];
+    if (patternElement === '**') {
+      specificity += index / 20;
+      return;
+    }
     if (patternElement === '*') {
       specificity += index / 10;
       return;
     }
-    if (patternElement === componentElement) {
-      specificity += 1;
-      return;
-    }
-    match = false;
+    // Matching an exact element
+    specificity += 1;
   });
 
   return {

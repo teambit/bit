@@ -62,8 +62,13 @@ describe('isMatchNamespacePatternItem', () => {
     });
     it('pattern is part of name and ends with * and name has more parts', () => {
       const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/*}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+    it('pattern is part of name and ends with ** and name has more parts', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/**}');
       expect(res.match).to.be.true;
-      expect(res.specificity).to.equal(1.1);
+      expect(res.specificity).to.equal(1.05);
     });
     it('specificity is larger than 1', () => {
       const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/foo/*}');
@@ -74,6 +79,12 @@ describe('isMatchNamespacePatternItem', () => {
       const res = isMatchNamespacePatternItem('bar/foo/baz/goo', '{bar/*/baz/*}');
       expect(res.match).to.be.true;
       expect(res.specificity).to.equal(2.4);
+    });
+    it('using ** in the middle of the pattern', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/moo/baz/goo', '{bar/**/baz/*}');
+      expect(res.match).to.be.true;
+      const specificity = Math.round(res.specificity * 100) / 100;
+      expect(specificity).to.equal(2.35);
     });
   });
   describe('item is not matched', () => {
