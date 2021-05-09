@@ -78,6 +78,35 @@ You can set several rules for the same variant.
 }
 ```
 
+### Exclude directories/components from a rule
+
+Using the `!` you can exclude set of components from a specific rule.
+The `!` works both for directories and namespaces for example:
+
+#### Exclude directory from a rule
+
+Apply `teambit.harmony/node` env on `utility-functions` but not on `utility-functions/react-utils`
+
+```json title="workspace.json
+"teambit.workspace/variants": {
+    "components/utility-functions, !components/utility-functions/react-utils": {
+        "teambit.harmony/node": {}
+    },
+}
+```
+
+#### Exclude namespace from a rule
+
+Apply `teambit.harmony/node` env on every component under the utils namespace but not on utils/react components
+
+```json title="workspace.json
+"teambit.workspace/variants": {
+    "{utils/*}, !{utils/react/*}": {
+        "teambit.harmony/node": {}
+    },
+}
+```
+
 ## Merging Configurations
 
 The same component may have several rules applied to it. This works very much like CSS rules where the more specific variant "wins" when a Bit merges variant rules.
