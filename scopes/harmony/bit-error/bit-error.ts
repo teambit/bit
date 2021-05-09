@@ -3,6 +3,7 @@ export class BitError extends Error {
 
   constructor(msg?: string) {
     super(msg || '');
+    this.name = this.constructor.name; // otherwise, the "name" is just Error.
   }
 
   /**

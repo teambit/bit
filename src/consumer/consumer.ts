@@ -545,6 +545,7 @@ export default class Consumer {
       ids: BitIds;
       exactVersion: string | undefined;
       releaseType: semver.ReleaseType;
+      incrementBy?: number;
       ignoreUnresolvedDependencies: boolean | undefined;
     } & BasicTagParams
   ): Promise<{

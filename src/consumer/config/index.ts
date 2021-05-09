@@ -7,5 +7,5 @@ export {
   WorkspaceConfigLoadFunction,
 } from './workspace-config';
 export { ILegacyWorkspaceConfig } from './legacy-workspace-config-interface';
-export { ExtensionDataList, ExtensionDataEntry } from './extension-data';
+export { ExtensionDataList, ExtensionDataEntry, REMOVE_EXTENSION_SPECIAL_SIGN } from './extension-data';
 export default ComponentConfig;

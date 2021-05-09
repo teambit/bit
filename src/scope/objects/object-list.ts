@@ -1,6 +1,6 @@
 import tarStream from 'tar-stream';
 import pMap from 'p-map';
-import { Readable, PassThrough } from 'stream';
+import { Readable, PassThrough, pipeline } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
@@ -133,7 +133,7 @@ export class ObjectList {
         }
         if (header.name === TAR_STREAM_END_FILENAME) {
           endData = JSON.parse(allData.toString());
-          logger.debug('fromTarToObjectStream, completed', endData);
+          logger.debug('fromTarToObjectStream, finished getting data', endData);
           next();
           return;
         }
@@ -163,7 +163,14 @@ export class ObjectList {
       }
       passThrough.end();
     });
-    packStream.pipe(extract);
+    pipeline(packStream, extract, (err) => {
+      if (err) {
+        logger.error('fromTarToObjectStream, pipeline', err);
+        passThrough.emit('error', err);
+      } else {
+        logger.debug('fromTarToObjectStream, pipeline is completed');
+      }
+    });
 
     return passThrough;
   }
@@ -171,6 +178,7 @@ export class ObjectList {
   static fromObjectStreamToTar(readable: Readable, scopeName: string) {
     const pack = tarStream.pack();
     const startFile: StartFile = { schema: OBJECT_LIST_CURRENT_SCHEMA, scopeName };
+    logger.debug('fromObjectStreamToTar, start sending data', startFile);
     pack.entry({ name: TAR_STREAM_START_FILENAME }, JSON.stringify(startFile));
     let numOfFiles = 0;
     readable.on('data', (obj: ObjectItem) => {
@@ -179,6 +187,7 @@ export class ObjectList {
     });
     readable.on('end', () => {
       const endFile: EndFile = { numOfFiles, scopeName };
+      logger.debug('fromObjectStreamToTar, finished sending data', endFile);
       pack.entry({ name: TAR_STREAM_END_FILENAME }, JSON.stringify(endFile));
       pack.finalize();
     });
