@@ -105,9 +105,7 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   const withoutBrackets = patternItem.replace('{', '').replace('}', '').trim();
   const patternItemStriped = stripTrailingChar(withoutBrackets, '/').trim();
 
-  let match = true;
   let specificity = 0;
-  const splittedComp = componentName.split('/');
   const splittedPattern = patternItemStriped.split('/');
 
   const minimatchMatch = minimatch(componentName, patternItemStriped);
@@ -133,8 +131,8 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   });
 
   return {
-    match,
-    specificity: match ? specificity : -1,
+    match: minimatchMatch,
+    specificity,
   };
 }
 
