@@ -4,7 +4,7 @@ import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extensio
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import { forEachObjIndexed, omit } from 'ramda';
 import { MatchedPatternWithConfig, isMatchPattern, sortMatchesBySpecificity } from '@teambit/modules.match-pattern';
-
+import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { VariantsAspect } from './variants.aspect';
 
 export type Patterns = { [pattern: string]: Record<string, any> };
@@ -27,6 +27,15 @@ export class VariantsMain {
 
   constructor(private patterns: Patterns) {
     this._loadedLegacy = ConsumerOverrides.load(this.patterns);
+    this.validateConfig();
+  }
+
+  private validateConfig() {
+    forEachObjIndexed((patternConfig: Record<string, any>, pattern: string) => {
+      if (patternConfig.defaultScope && !isValidScopeName(patternConfig.defaultScope)) {
+        throw new InvalidScopeName(patternConfig.defaultScope, undefined, pattern);
+      }
+    }, this.patterns);
   }
 
   raw(): Patterns {
