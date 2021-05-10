@@ -28,6 +28,7 @@ export class FetchRoute implements Route {
       const pipelinePromise = promisify(pipeline);
       try {
         await pipelinePromise(pack, res);
+        this.logger.info('fetch.router, the response has been sent successfully to the client', req.headers);
       } catch (err) {
         if (req.aborted) {
           this.logger.warn('FetchRoute, the client aborted the request', err);

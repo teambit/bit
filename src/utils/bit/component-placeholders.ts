@@ -9,6 +9,7 @@ import ConsumerComponent from '../../consumer/component';
  */
 export function replacePlaceHolderWithComponentValue<T>(component: ConsumerComponent, template: T): T {
   if (typeof template !== 'string') return template;
+  // TODO: consider support scopeId, owner and scope here
   const values = {
     main: () => getMainFileWithoutExtension(component.mainFile),
     name: () => replaceSlashesWithDots(component.name),
@@ -18,14 +19,22 @@ export function replacePlaceHolderWithComponentValue<T>(component: ConsumerCompo
 }
 
 export function replacePlaceHolderForPackageName(
-  { name, scope }: { name: string; scope?: string | null },
+  {
+    name,
+    scope,
+    scopeId,
+    owner,
+  }: { name: string; scope?: string | null; scopeId?: string | null; owner?: string | null },
   template: string
 ): string {
   const values = {
     name: () => replaceSlashesWithDots(name),
     scope: () => scope,
+    scopeId: () => scopeId,
+    owner: () => owner,
   };
-  return format(template, values);
+  const res = format(template, values);
+  return res;
 }
 
 function getMainFileWithoutExtension(mainFile: string) {
