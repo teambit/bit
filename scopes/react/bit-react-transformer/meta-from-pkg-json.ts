@@ -25,6 +25,7 @@ function extractMetadata(pkgPath: string): ComponentMeta | undefined {
 
   const compId = pkg.componentId;
   const homepage = typeof pkg.homepage === 'string' ? pkg.homepage : undefined;
+  const exported = pkg.exported !== false;
   if (!compId || !ComponentID.isValidObject(compId)) return undefined;
 
   try {
@@ -32,6 +33,7 @@ function extractMetadata(pkgPath: string): ComponentMeta | undefined {
     return {
       id: parsed.toString(),
       homepage,
+      exported,
     };
   } catch {
     return undefined;
