@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { LevelIcon, Level } from '@teambit/ui.elements.level-icon';
 import { backgrounds } from '@teambit/base-ui.surfaces.background';
@@ -16,10 +16,6 @@ interface InfoCardProps extends CardProps {
    * Level of Icon, info, error, warning, success
    */
   level: Level;
-  /**
-   * children to be rendered within this component.
-   */
-  children: ReactNode;
 }
 
 export function AlertCard({ title, children, className, level, ...rest }: InfoCardProps) {
