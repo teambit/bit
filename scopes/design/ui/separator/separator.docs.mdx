@@ -1,17 +1,30 @@
 ---
-description: Presentational separator to separate content in non semantic way
+description: Separator component to separate content in either semantic or presentational way
 ---
 
-## Horizontal line separator
+## Separator for semantic or presentational usage
 
-This uses a `<div>` with a border to give a horizontal line and is therefore meant for presentational usage and not semantic usage.
+Separator component uses a `<hr>` to give a semantic separator. Whent the isPresentational flag is passed it creates a `<div>`with a border to give a horizontal line for presentational usage.
 
-### Component Usage
+"Historically, a `<hr>` has been presented as a horizontal rule or line. While it may still be displayed as a horizontal rule in visual browsers, this element is now defined in semantic terms, rather than presentational terms, so if you wish to draw a horizontal line, you should do so using appropriate CSS."
+[See mozilla docs for more info](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/hr)
+
+### Component Usage for Semantic separator
 
 ```js
 import { Separator } from '@teambit/ui.separator';
 
 ...
 <Separator />
+...
+```
+
+### Component Usage for Presentational separator
+
+```js
+import { Separator } from '@teambit/ui.separator';
+
+...
+<Separator isPresentational />
 ...
 ```

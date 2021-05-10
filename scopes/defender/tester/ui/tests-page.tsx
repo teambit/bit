@@ -1,7 +1,7 @@
 import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
-import { Separator } from '@teambit/documenter.ui.separator';
+import { Separator } from '@teambit/ui.separator';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
@@ -108,7 +108,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
     <div className={classNames(styles.testsPage, className)}>
       <div>
         <H1 className={styles.title}>Tests</H1>
-        <Separator className={styles.separator} />
+        <Separator isPresentational className={styles.separator} />
         <TestTable testResults={testResults} className={styles.testBlock} />
       </div>
     </div>
