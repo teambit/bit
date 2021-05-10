@@ -32,12 +32,10 @@ export class ReactUI {
       );
     });
 
-    if (typeof window !== 'undefined' && window.location.search.includes('highlighter')) {
-      compositionsUI.registerMenuWidget({
-        location: 'start',
-        content: <HighlighterWidget />,
-      });
-    }
+    compositionsUI.registerMenuWidget({
+      location: 'start',
+      content: <HighlighterWidget />,
+    });
 
     return reactUI;
   }
