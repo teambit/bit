@@ -1,7 +1,7 @@
 import { useQuery, useSubscription, gql } from '@apollo/client';
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
-import { Separator } from '@teambit/documenter.ui.separator';
+import { Separator } from '@teambit/ui.separator';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import { TestLoader } from '@teambit/ui.test-loader';
 import classNames from 'classnames';
