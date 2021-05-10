@@ -381,24 +381,24 @@
       },
       "teambit.harmony/aspect": {}
     },
-    "{modules/*}": {
+    "{modules/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
     },
-    "{cli/*}": {
+    "{cli/**}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       }
     },
-    "{babel/*}": {
+    "{babel/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
     },
-    "{ui/*}": {
+    "{ui/**}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
