@@ -69,3 +69,12 @@ $panelBg: #fafafa;
 .compositions {
   padding: 16px 8px 0 8px;
 }
+
+.openInNewTab {
+  text-decoration: none;
+  color: inherit;
+
+  &:active {
+    color: inherit;
+  }
+}

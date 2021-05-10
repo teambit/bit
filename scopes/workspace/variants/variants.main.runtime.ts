@@ -59,7 +59,8 @@ export class VariantsMain {
     forEachObjIndexed((patternConfig, pattern) => {
       const match = isMatchPattern(rootDir, componentName, pattern);
 
-      if (match.match) {
+      // Ignore matches with exclude matches
+      if (match.match && !match.excluded) {
         matches.push({
           config: patternConfig,
           specificity: match.maxSpecificity,

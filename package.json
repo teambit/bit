@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.75",
+  "version": "1.0.78",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -259,6 +259,7 @@
     "@types/chai-string": "1.4.2",
     "@types/fs-extra": "9.0.7",
     "@types/graphlib": "2.1.7",
+    "@types/minimatch": "3.0.4",
     "@types/mocha": "5.2.7",
     "@types/node": "12.20.4",
     "@types/node-fetch": "2.5.8",

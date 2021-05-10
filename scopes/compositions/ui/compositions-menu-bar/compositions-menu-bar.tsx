@@ -8,7 +8,7 @@ interface CompositionsMenuBarProps extends React.HTMLAttributes<HTMLDivElement> 
   menuBarWidgets?: CompositionsMenuSlot;
 }
 
-export function CompositionsMenuBar({ className, menuBarWidgets, ...rest }: CompositionsMenuBarProps) {
+export function CompositionsMenuBar({ className, menuBarWidgets, children, ...rest }: CompositionsMenuBarProps) {
   const widgetsStart = useMemo(
     () =>
       flatten(menuBarWidgets?.values())
@@ -29,7 +29,11 @@ export function CompositionsMenuBar({ className, menuBarWidgets, ...rest }: Comp
 
   return (
     <div {...rest} className={classnames(className, styles.compositionsMenuBar)}>
-      {!!widgetsStart?.length && <div>{widgetsStart}</div>}
+      {!!(widgetsStart?.length || children) && (
+        <div>
+          {widgetsStart} {children}
+        </div>
+      )}
       <div className={styles.spacer}></div>
       {!!widgetsEnd?.length && <div>{widgetsEnd}</div>}
     </div>
