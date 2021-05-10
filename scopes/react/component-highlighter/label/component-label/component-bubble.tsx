@@ -3,15 +3,17 @@ import classnames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
 import { ComponentUrl } from '@teambit/component-url';
+import urljoin from 'url-join';
 import styles from './duo-component-bubble.module.scss';
 
 export interface ComponentBubbleProps extends LinkProps {
   componentId: ComponentID;
+  local?: boolean;
 }
 
-export function ComponentBubble({ componentId, className, href, ...rest }: ComponentBubbleProps) {
+export function ComponentBubble({ componentId, className, href, local = false, ...rest }: ComponentBubbleProps) {
   const { version, fullName } = componentId;
-  const componentHref = href || ComponentUrl.toUrl(componentId);
+  const componentHref = href || (local ? urljoin('/', fullName) : ComponentUrl.toUrl(componentId));
 
   return (
     <NativeLink external href={componentHref} className={classnames(styles.componentName, className)} {...rest}>

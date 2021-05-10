@@ -715,6 +715,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/mdx/ui/snippet"
     },
+    "ui/elements/level-icon": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/elements/level-icon"
+    },
     "ui/empty-box": {
         "scope": "teambit.design",
         "version": "0.0.344",
