@@ -1,26 +1,35 @@
 import React from 'react';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { AlertCard } from './alert-card';
 
 export const InfoAlertCard = () => (
-  <AlertCard level="info" title="Info title">
-    Content to be rendered
-  </AlertCard>
+  <ThemeCompositions>
+    <AlertCard level="info" title="Info title">
+      Content to be rendered
+    </AlertCard>
+  </ThemeCompositions>
 );
 
 export const WarningAlertCard = () => (
-  <AlertCard level="warning" title="Warning title">
-    Content to be rendered
-  </AlertCard>
+  <ThemeCompositions>
+    <AlertCard level="warning" title="Warning title">
+      Content to be rendered
+    </AlertCard>
+  </ThemeCompositions>
 );
 
 export const ErrorAlertCard = () => (
-  <AlertCard level="error" title="Error title">
-    Content to be rendered
-  </AlertCard>
+  <ThemeCompositions>
+    <AlertCard level="error" title="Error title">
+      Content to be rendered
+    </AlertCard>
+  </ThemeCompositions>
 );
 
 export const SuccessAlertCard = () => (
-  <AlertCard level="success" title="Success title">
-    Content to be rendered
-  </AlertCard>
+  <ThemeCompositions>
+    <AlertCard level="success" title="Success title">
+      Content to be rendered
+    </AlertCard>
+  </ThemeCompositions>
 );
