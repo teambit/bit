@@ -16,6 +16,8 @@ type HighlightTarget = {
   link?: string;
   /** e.g. 'https://bit.dev/teambit/base-ui' */
   scopeLink?: string;
+  /** use full production url, or local workspace url */
+  local?: boolean;
 };
 
 export interface ComponentHighlightProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -26,7 +28,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
   const [target, setTarget] = useState<HighlightTarget | undefined>();
 
   const _handleElement = useCallback((element: HTMLElement | null) => {
-    if (!element) {
+    if (!element || element?.hasAttribute('data-nullify-component-highlight')) {
       setTarget(undefined);
       return;
     }
@@ -39,10 +41,11 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       id: bitComponent.id,
       scopeLink: undefined,
       link: bitComponent.homepage,
+      local: bitComponent.exported === false,
     });
   }, []);
 
-  const handleElement = useDebouncedCallback(_handleElement, target ? 300 : 0);
+  const handleElement = useDebouncedCallback(_handleElement, target ? 80 : 0);
 
   useEffect(() => {
     if (disabled) {
@@ -56,7 +59,7 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       className={classnames(styles.highlighter, !disabled && styles.active)}
       onElementChange={handleElement}
       disabled={disabled}
-      data-ignore-component-highlight
+      data-nullify-component-highlight
     >
       {children}
       {target && (
@@ -64,15 +67,16 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
           <Frame targetRef={target.element} data-ignore-component-highlight />
           {target.id && (
             <LabelContainer
+              className={styles.label}
               targetRef={target.element}
               placement="top"
               data-ignore-component-highlight
-              className={styles.label}
             >
               <Label
                 componentId={target.id}
                 link={target.link}
                 scopeLink={target.scopeLink}
+                local={target.local}
                 data-ignore-component-highlight
               />
             </LabelContainer>
@@ -98,6 +102,7 @@ function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Eleme
         component,
         id: meta.id || 'unknown',
         homepage: meta.homepage,
+        exported: meta.exported,
       };
     }
   }

@@ -37,4 +37,19 @@ describe('loadBit()', function () {
     expect(scopeB.name).to.eq(helper.scopes.remote);
     expect(scopeC.name).to.eq(helper.scopes.local);
   });
+
+  it('should throw when defaultScope is invalid', async () => {
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    const bitJsonc = helper.bitJsonc.read();
+    bitJsonc['teambit.workspace/workspace'].defaultScope = 'hi/';
+    helper.bitJsonc.write(bitJsonc);
+    let error: Error;
+    try {
+      await loadBit(helper.scopes.localPath);
+    } catch (err) {
+      error = err;
+    }
+    // @ts-ignore
+    expect(error.name).to.equal('InvalidScopeName');
+  });
 });

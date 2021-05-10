@@ -53,6 +53,9 @@ export default (async function status(): Promise<StatusResult> {
       delete component.issues.relativeComponentsAuthored;
       delete component.issues.importNonMainFiles;
     }
+    if (!component.issues?.missingDists) {
+      delete component.issues?.missingDists;
+    }
     return Boolean(component.issues) && !R.isEmpty(component.issues);
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();

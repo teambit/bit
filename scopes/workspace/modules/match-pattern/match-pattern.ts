@@ -1,16 +1,20 @@
 import { stripTrailingChar } from '@teambit/string.strip-trailing-char';
 import { isPathInside } from '@teambit/path.is-path-inside';
-import { sortBy, prop } from 'ramda';
+import { sortBy, prop, any } from 'ramda';
+import minimatch from 'minimatch';
 import _ from 'lodash';
 
 export const PATTERNS_DELIMITER = ',';
 export const MATCH_ALL_ITEM = '*';
+export const EXCLUSION_SIGN = '!';
 
 export type PathLinuxRelative = string;
 
 export type MatchedPattern = {
   // Boolean to indicate if it's matching or no
   match: boolean;
+  // Check if at least one of the items in the pattern excluding the component
+  excluded: boolean;
   // How many levels (max) it is match
   // it called max for example for this case:
   // pattern - utils, utils/string, utils/string/is-string
@@ -30,6 +34,11 @@ export type MatchedPatternItem = {
   specificity: number;
 };
 
+export type MatchedPatternItemWithExclude = MatchedPatternItem & {
+  // Check if the item is excluding the component
+  excluded: boolean;
+};
+
 export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
   const sortedMatches: MatchedPatternWithConfig[] = sortBy(prop('specificity'), matches).reverse();
   return sortedMatches;
@@ -38,15 +47,19 @@ export function sortMatchesBySpecificity(matches: MatchedPatternWithConfig[]) {
 export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string, pattern: string): MatchedPattern {
   const patternItems = pattern.split(PATTERNS_DELIMITER);
   const matches = patternItems.map((item) => isMatchPatternItem(rootDir, componentName, item));
-  const defaultVal: MatchedPatternItem = {
+  const defaultVal: MatchedPatternItemWithExclude = {
     match: false,
+    excluded: false,
     specificity: -1,
   };
 
-  const maxMatch: MatchedPatternItem = _.maxBy(matches, (match) => match.specificity) || defaultVal;
+  const maxMatch: MatchedPatternItemWithExclude = _.maxBy(matches, (match) => match.specificity) || defaultVal;
+  const excluded = any((match) => match.match && match.excluded, matches);
+
   return {
     match: maxMatch.match,
     maxSpecificity: maxMatch.specificity,
+    excluded,
   };
 }
 
@@ -54,7 +67,7 @@ export function isMatchPatternItem(
   rootDir: PathLinuxRelative,
   componentName: string,
   patternItem: string
-): MatchedPatternItem {
+): MatchedPatternItemWithExclude {
   const patternItemTrimmed = patternItem.trim();
   // Special case for * (match all)
   // We want to mark it with match true but the smallest specificity
@@ -62,12 +75,14 @@ export function isMatchPatternItem(
     return {
       match: true,
       specificity: 0,
+      excluded: false,
     };
   }
-  if (isDirItem(patternItem)) {
-    return isMatchDirPatternItem(rootDir, patternItem);
+  const { excluded, patternItemWithoutExcludeSign } = parseExclusion(patternItemTrimmed);
+  if (isDirItem(patternItemWithoutExcludeSign)) {
+    return { ...isMatchDirPatternItem(rootDir, patternItemWithoutExcludeSign), excluded };
   }
-  return isMatchNamespacePatternItem(componentName, patternItem);
+  return { ...isMatchNamespacePatternItem(componentName, patternItemWithoutExcludeSign), excluded };
 }
 
 export function isMatchDirPatternItem(rootDir: PathLinuxRelative, patternItem: string): MatchedPatternItem {
@@ -91,19 +106,12 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   const withoutBrackets = patternItem.replace('{', '').replace('}', '').trim();
   const patternItemStriped = stripTrailingChar(withoutBrackets, '/').trim();
 
-  let match = true;
   let specificity = 0;
-  const splittedComp = componentName.split('/');
   const splittedPattern = patternItemStriped.split('/');
 
-  if (splittedPattern.length > splittedComp.length) {
-    return {
-      match: false,
-      specificity: -1,
-    };
-  }
+  const minimatchMatch = minimatch(componentName, patternItemStriped);
 
-  if (splittedPattern.length < splittedComp.length && splittedPattern[splittedPattern.length - 1] !== '*') {
+  if (!minimatchMatch) {
     return {
       match: false,
       specificity: -1,
@@ -111,24 +119,37 @@ export function isMatchNamespacePatternItem(componentName: string, patternItem: 
   }
 
   splittedPattern.forEach((patternElement, index) => {
-    const componentElement = splittedComp[index];
+    if (patternElement === '**') {
+      specificity += index / 20;
+      return;
+    }
     if (patternElement === '*') {
       specificity += index / 10;
       return;
     }
-    if (patternElement === componentElement) {
-      specificity += 1;
-      return;
-    }
-    match = false;
+    // Matching an exact element
+    specificity += 1;
   });
 
   return {
-    match,
-    specificity: match ? specificity : -1,
+    match: minimatchMatch,
+    specificity,
   };
 }
 
 function isDirItem(patternItem: string) {
   return !patternItem.startsWith('{');
+}
+
+function parseExclusion(patternItem: string): { excluded: boolean; patternItemWithoutExcludeSign: string } {
+  if (patternItem.startsWith(EXCLUSION_SIGN)) {
+    return {
+      excluded: true,
+      patternItemWithoutExcludeSign: patternItem.replace('!', ''),
+    };
+  }
+  return {
+    excluded: false,
+    patternItemWithoutExcludeSign: patternItem,
+  };
 }

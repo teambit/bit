@@ -4,6 +4,7 @@ import format from 'string-format';
 import BitId from '../../bit-id/bit-id';
 import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
 import { PathOsBased } from '../path';
+import { parseScope } from './parse-scope';
 
 /**
  * the following place-holders are permitted:
@@ -30,15 +31,6 @@ export function composeComponentPath(
   }
   const result = format(defaultDir, { name: bitId.name, scope, owner, scopeId: bitId.scope });
   return result;
-}
-
-function parseScope(scopeId?: string | null): { scope?: string; owner?: string } {
-  if (!scopeId) return {};
-  if (scopeId.includes('.')) {
-    const [owner, scope] = scopeId.split('.');
-    return { scope, owner };
-  }
-  return { scope: scopeId };
 }
 
 export function composeDependencyPath(

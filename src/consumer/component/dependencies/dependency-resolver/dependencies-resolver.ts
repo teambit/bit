@@ -25,6 +25,7 @@ import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { BitIdStr } from '../../../../bit-id/bit-id';
+import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -69,6 +70,7 @@ export type Issues = {
   untrackedDependencies: UntrackedDependenciesIssues;
   missingDependenciesOnFs: { [filePath: string]: string[] };
   missingLinks: { [filePath: string]: BitId[] };
+  missingDists?: boolean; // harmony only. "bit compile" wasn't running
   missingCustomModuleResolutionLinks: { [filePath: string]: string[] };
   customModuleResolutionUsed: { [importSource: string]: BitIdStr }; // invalid on Harmony, { importSource: idStr }
   relativeComponents: { [filePath: string]: BitId[] };
@@ -160,6 +162,7 @@ export default class DependencyResolver {
       untrackedDependencies: {},
       missingDependenciesOnFs: {},
       missingLinks: {},
+      missingDists: this.isDistDirMissing(),
       missingCustomModuleResolutionLinks: {},
       customModuleResolutionUsed: {},
       relativeComponents: {},
@@ -171,6 +174,13 @@ export default class DependencyResolver {
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
+  }
+
+  private isDistDirMissing() {
+    if (this.consumer.isLegacy) return undefined;
+    const pkgName = componentIdToPackageName(this.component);
+    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
+    return !fs.existsSync(distDir);
   }
 
   setTree(tree: Tree) {
@@ -1157,7 +1167,7 @@ either, use the ignore file syntax or change the require statement to have a mod
   }
 
   removeEmptyIssues() {
-    const notEmpty = (item) => !R.isEmpty(item);
+    const notEmpty = (item) => item && !R.isEmpty(item);
     this.issues = R.filter(notEmpty, this.issues);
   }
 

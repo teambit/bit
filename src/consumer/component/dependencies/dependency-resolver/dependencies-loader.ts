@@ -71,7 +71,11 @@ export class DependenciesLoader {
   }
 
   private shouldSaveInCache(dependenciesData: DependenciesData) {
-    if (dependenciesData.issues?.missingPackagesDependenciesOnFs || dependenciesData.issues?.untrackedDependencies) {
+    if (
+      dependenciesData.issues?.missingPackagesDependenciesOnFs ||
+      dependenciesData.issues?.untrackedDependencies ||
+      dependenciesData.issues?.missingDists
+    ) {
       return false;
     }
     return true;
