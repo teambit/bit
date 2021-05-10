@@ -122,6 +122,7 @@
         "@teambit/harmony": "0.2.11",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
+        "@teambit/ui.elements.level-icon": "0.0.1",
         "@testing-library/jest-dom": "5.11.10",
         "@testing-library/react": "11.2.6",
         "@tippyjs/react": "4.2.0",

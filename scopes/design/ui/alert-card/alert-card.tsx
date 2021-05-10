@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { LevelIcon, Level } from '@teambit/ui.elements.level-icon';
 import { backgrounds } from '@teambit/base-ui.surfaces.background';
-import { H6 } from '@teambit/documenter.ui.heading';
+import { H3 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import { Separator } from '@teambit/ui.separator';
 import styles from './alert-card.module.scss';
@@ -23,9 +23,11 @@ export function AlertCard({ title, children, className, level, ...rest }: AlertC
     <Card className={classNames(backgrounds.dent, styles.card, className)} {...rest}>
       <div className={classNames(styles.heading, className)}>
         <LevelIcon level={level} className={classNames(styles.icon, className)} />
-        <H6 className={classNames(styles.title, className)}>{title}</H6>
+        <H3 size="xs" className={classNames(styles.title, className)}>
+          {title}
+        </H3>
       </div>
-      <Separator className={classNames(styles.separator, className)} />
+      <Separator isPresentational className={classNames(styles.separator, className)} />
       {children}
     </Card>
   );
