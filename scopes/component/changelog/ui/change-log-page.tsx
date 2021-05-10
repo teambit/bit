@@ -1,6 +1,6 @@
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
-import { Separator } from '@teambit/documenter.ui.separator';
+import { Separator } from '@teambit/ui.separator';
 import { VersionBlock } from '@teambit/ui.version-block';
 import { EmptyBox } from '@teambit/ui.empty-box';
 import classNames from 'classnames';
@@ -32,7 +32,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
   return (
     <div className={classNames(styles.changeLogPage, className)}>
       <H1 className={styles.title}>History</H1>
-      <Separator className={styles.separator} />
+      <Separator isPresentational className={styles.separator} />
       {snaps.map((snap, index) => {
         const isLatest = latestVersion === snap.tag || latestVersion === snap.hash;
         return <VersionBlock key={index} componentId={component.id.fullName} isLatest={isLatest} snap={snap} />;
