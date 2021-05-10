@@ -14,6 +14,7 @@ import { DuplicateCommandError } from './duplicate-command-error';
 import { KeyEvent } from './model/key-event';
 import { CommandBarContext } from './ui/command-bar-context';
 import { MousetrapStub } from './mousetrap-stub';
+import { openCommandBarKeybinding } from './keybinding';
 
 const RESULT_LIMIT = 5;
 type SearcherSlot = SlotRegistry<SearchProvider>;
@@ -34,6 +35,7 @@ export class CommandBarUI {
   /** Opens the command bar */
   open = () => {
     this.setVisibility?.(true);
+    return false; // aka prevent default
   };
 
   /** Closes the command bar */
@@ -160,11 +162,13 @@ export class CommandBarUI {
       id: commandBarCommands.open,
       handler: commandBar.open,
       displayName: 'Open command bar',
-      keybinding: 'mod+k',
+      keybinding: openCommandBarKeybinding,
     });
 
     uiUi.registerHudItem(commandBar.getCommandBar());
-    uiUi.registerContext(commandBar.renderContext);
+    uiUi.registerRenderHooks({
+      reactContext: commandBar.renderContext,
+    });
 
     return commandBar;
   }
