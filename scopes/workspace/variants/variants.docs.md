@@ -189,9 +189,9 @@ was re-set by a more specific variant.
 
 ### Propagate
 
-When using selectors, configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`.
-To prevent this from happening for specific set of inheritors, set the `propogate` value of an inheriting group of components to `false`.
-Once bit see `"propagate": false` it takes the configuration for this group and does not inherit.
+When using selectors which can propagate down to sub-sets, such as with directory selectors (where all sub-directories are included) or {namespace/\*\*} type selectors,
+you can prevent this propagation for specific set of inheritors, by setting set the `propogate` value of an inheriting group of components to `false`.
+Once bit sees `"propagate": false` it uses only the configuration for this set and does not inherit.
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -201,7 +201,7 @@ Once bit see `"propagate": false` it takes the configuration for this group and 
     }
   },
   "components/react/ui": {
-    "propagate": false, // take this config, and stop propagate
+    "propagate": false, // take this config, and don't propagate parent configs down to here
     "my-aspect1": {
       "aspect1-react-ui-key": "aspect1-react-ui-val"
     }
