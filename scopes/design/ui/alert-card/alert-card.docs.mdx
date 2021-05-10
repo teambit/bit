@@ -13,6 +13,7 @@ Card shows an alert icon and title in the heading and renders any content in the
 
 - Modify the level to show a different alert icon
 - Modify the title of the card
+- Modify the title size
 - Add any content to be rendered in the card such as text, a component or even an MDX component
 
 ### Component usage
@@ -21,7 +22,7 @@ Card shows an alert icon and title in the heading and renders any content in the
 import { AlertCard } from '@teambit/ui.alert-card';
 
 ...
-<AlertCard level="info" title="Info message">
+<AlertCard level="info" title="Info message" titleSize="xxs">
   Content to be rendered
 </AlertCard>
 ...
@@ -32,7 +33,7 @@ import { AlertCard } from '@teambit/ui.alert-card';
 Modify the level to show a different alert icon, choose from `info`, `error`, `warning` and `success`. Modify the title to show a different message
 
 ```js live
-<AlertCard level="info" title="Info message">
+<AlertCard level="info" title="Info message" titleSize="xxs">
   Content to be rendered
 </AlertCard>
 ```
