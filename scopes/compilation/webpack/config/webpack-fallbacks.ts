@@ -21,7 +21,7 @@ const sysFallbackPath = require.resolve('util/');
 const timersFallbackPath = require.resolve('timers-browserify');
 const ttyFallbackPath = require.resolve('tty-browserify');
 // Handled in separate alias
-// urlFallbackPath = require.resolve('url/'),
+const urlFallbackPath = require.resolve('url/');
 const utilFallbackPath = require.resolve('util/');
 const vmFallbackPath = require.resolve('vm-browserify');
 const zlibFallbackPath = require.resolve('browserify-zlib');
@@ -44,7 +44,7 @@ export const fallbacks = {
   sys: sysFallbackPath,
   timers: timersFallbackPath,
   tty: ttyFallbackPath,
-  // url: // urlFallbackPath,
+  url: urlFallbackPath,
   util: utilFallbackPath,
   vm: vmFallbackPath,
   zlib: zlibFallbackPath,
