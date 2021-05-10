@@ -14,8 +14,9 @@ import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
+import { NativeLink } from '@teambit/ui.routing.native-link';
+import { OptionButton } from '@teambit/ui.input.option-button';
 import { EmptyStateSlot } from './compositions.ui.runtime';
-
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
 import { ComponentComposition } from './ui';
@@ -51,6 +52,7 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
   const sidebarOpenness = isSidebarOpen ? Layout.row : Layout.left;
 
   const compositionUrl = toPreviewUrl(component, 'compositions');
+  const currentCompositionUrl = toPreviewUrl(component, 'compositions', selected?.identifier);
 
   const [compositionParams, setCompositionParams] = useState<Record<string, any>>({});
   const queryParams = useMemo(() => queryString.stringify(compositionParams), [compositionParams]);
@@ -62,7 +64,11 @@ export function Compositions({ menuBarWidgets, emptyState }: CompositionsProp) {
     <CompositionContextProvider queryParams={compositionParams} setQueryParams={setCompositionParams}>
       <SplitPane layout={sidebarOpenness} size="85%" className={styles.compositionsPage}>
         <Pane className={styles.left}>
-          <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar} />
+          <CompositionsMenuBar menuBarWidgets={menuBarWidgets} className={styles.menuBar}>
+            <NativeLink external href={currentCompositionUrl} className={styles.openInNewTab}>
+              <OptionButton icon="open-tab" />
+            </NativeLink>
+          </CompositionsMenuBar>
           <CompositionContent
             emptyState={emptyState}
             component={component}

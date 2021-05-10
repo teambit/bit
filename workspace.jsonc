@@ -156,6 +156,7 @@
         "@types/react-tooltip": "3.11.0",
         "@types/socket.io-client": "1.4.35",
         "@types/ua-parser-js": "0.7.35",
+        "@types/url-join": "4.0.0",
         "@types/url-parse": "1.4.3",
         "@types/webpack": "4.41.25",
         "@types/webpack-dev-server": "3.11.1",
@@ -289,6 +290,7 @@
         "ua-parser-js": "0.7.24",
         "unist-util-remove": "2.0.1",
         "unist-util-visit": "2.0.3",
+        "url-join": "4.0.1",
         "url-loader": "4.1.1",
         "url-parse": "1.4.7",
         "use-animation-frame": "0.1.0",
@@ -309,7 +311,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
-        "@teambit/legacy": "1.0.77",
+        "@teambit/legacy": "1.0.78",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -370,7 +372,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.77"
+            "@teambit/legacy": "1.0.78"
           }
         }
       },
@@ -379,24 +381,24 @@
       },
       "teambit.harmony/aspect": {}
     },
-    "{modules/*}": {
+    "{modules/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
     },
-    "{cli/*}": {
+    "{cli/**}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       }
     },
-    "{babel/*}": {
+    "{babel/**}": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
       },
       "teambit.harmony/node": {}
     },
-    "{ui/*}": {
+    "{ui/**}": {
       "teambit.envs/envs": {
         "env": "teambit.react/react"
       },
@@ -526,7 +528,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
-            "@teambit/legacy": "1.0.77",
+            "@teambit/legacy": "1.0.78",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
