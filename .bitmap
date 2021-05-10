@@ -565,6 +565,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/ui"
     },
+    "ui/alert-card": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/alert-card"
+    },
     "ui/aspect-box": {
         "scope": "teambit.harmony",
         "version": "0.0.360",
