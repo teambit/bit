@@ -200,6 +200,50 @@ describe('isMatchPattern', () => {
       expect(res.maxSpecificity).to.equal(4);
     });
   });
+  describe('special patterns', () => {
+    describe('only components without namespace', () => {
+      const pattern = '*,!{*/**}';
+      it('should match component without namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(0);
+      });
+      it('should exclude component with one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.true;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+      it('should exclude component with more than one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/namespace2/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.true;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+    });
+    describe('only components with at least namespace', () => {
+      const pattern = '{*/**}';
+      it('should not match component without namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'comp-name', pattern);
+        expect(res.match).to.be.false;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(-1);
+      });
+      it('should match component with one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+      it('should match component with more than one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/namespace2/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+    });
+  });
 });
 
 describe('sortMatchesBySpecificity', () => {

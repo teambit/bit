@@ -54,7 +54,8 @@ export function isMatchPattern(rootDir: PathLinuxRelative, componentName: string
   };
 
   const maxMatch: MatchedPatternItemWithExclude = _.maxBy(matches, (match) => match.specificity) || defaultVal;
-  const excluded = any((match) => match.excluded, matches);
+  const excluded = any((match) => match.match && match.excluded, matches);
+
   return {
     match: maxMatch.match,
     maxSpecificity: maxMatch.specificity,
