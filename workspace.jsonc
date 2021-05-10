@@ -333,7 +333,58 @@
     ]
   },
   "teambit.workspace/variants": {
-    "*": {
+    // Only component with no namespace (aka aspects in our workspace)
+    "*,!{*/**}": {
+      "teambit.pkg/pkg": {
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
+        "packageJson": {
+          "name": "@teambit/{name}",
+          "private": false,
+          "engines": {
+            "node": ">=12.15.0"
+          },
+          "repository": {
+            "type": "git",
+            "url": "https://github.com/teambit/bit"
+          },
+          "keywords": [
+            "bit",
+            "bit-aspect",
+            "components",
+            "collaboration",
+            "web",
+            "react",
+            "react-components",
+            "angular",
+            "angular-components",
+            "vue",
+            "vue-components"
+          ]
+        }
+      },
+      "teambit.dependencies/dependency-resolver": {
+        "policy": {
+          "dependencies": {
+            "@teambit/legacy": "-"
+          },
+          "devDependencies": {
+            "@types/mocha": "5.2.7",
+            "@teambit/legacy": "-"
+          },
+          "peerDependencies": {
+            "@teambit/legacy": "1.0.76"
+          }
+        }
+      },
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/aspect"
+      },
+      "teambit.harmony/aspect": {}
+    },
+    // Only component with at least one namespace
+    "{*/**}": {
       "teambit.pkg/pkg": {
         "packageManagerPublishArgs": [
           "--access public"
