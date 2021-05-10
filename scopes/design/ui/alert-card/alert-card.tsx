@@ -7,7 +7,7 @@ import classNames from 'classnames';
 import { Separator } from '@teambit/ui.separator';
 import styles from './alert-card.module.scss';
 
-interface InfoCardProps extends CardProps {
+export interface AlertCardProps extends CardProps {
   /**
    * title to be shown in the card
    */
@@ -18,7 +18,7 @@ interface InfoCardProps extends CardProps {
   level: Level;
 }
 
-export function AlertCard({ title, children, className, level, ...rest }: InfoCardProps) {
+export function AlertCard({ title, children, className, level, ...rest }: AlertCardProps) {
   return (
     <Card className={classNames(backgrounds.dent, styles.card, className)} {...rest}>
       <div className={classNames(styles.heading, className)}>
