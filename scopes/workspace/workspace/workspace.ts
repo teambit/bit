@@ -195,6 +195,7 @@ export class Workspace implements ComponentFactory {
 
   private validateConfig() {
     const defaultScope = this.config.defaultScope;
+    if (this.consumer.isLegacy) return;
     if (!defaultScope) throw new Error('defaultScope is missing');
     if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
