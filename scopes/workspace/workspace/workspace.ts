@@ -530,11 +530,11 @@ export class Workspace implements ComponentFactory {
    * @param pattern variants.
    * @param scope scope name.
    */
-  async byPattern(pattern: string, scope = '*'): Promise<Component[]> {
+  async byPattern(pattern: string, scope = '**'): Promise<Component[]> {
     const ids = await this.listIds();
-
+    const finalPattern = `${scope}/${pattern || '**'}`;
     const targetIds = ids.filter((id) => {
-      const spec = isMatchNamespacePatternItem(id.toStringWithoutVersion(), `${scope}/${pattern}`);
+      const spec = isMatchNamespacePatternItem(id.toStringWithoutVersion(), finalPattern);
       return spec.match;
     });
 
