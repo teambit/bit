@@ -2,9 +2,10 @@ import React from 'react';
 import { CompositionsAspect, CompositionsUI } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
 import { TesterAspect, TesterUI } from '@teambit/tester';
-import { EmptyBox } from '@teambit/ui.empty-box';
 import { ReactAspect } from './react.aspect';
 import { HighlighterWidget } from './highlighter-widget';
+import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
+import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
 
 export class ReactUI {
   static runtime = UIRuntime;
@@ -14,22 +15,10 @@ export class ReactUI {
   static async provider([compositionsUI, testerUi]: [CompositionsUI, TesterUI]) {
     const reactUI = new ReactUI();
     testerUi.registerEmptyState(() => {
-      return (
-        <EmptyBox
-          title="This component doesn’t have any tests."
-          linkText="Learn how to add tests to your react components"
-          link="https://harmony-docs.bit.dev/testing/overview/"
-        />
-      );
+      return <AddingTests />;
     });
     compositionsUI.registerEmptyState(() => {
-      return (
-        <EmptyBox
-          title="This component doesn’t have any compositions."
-          linkText="Learn how to add tests to your react components"
-          link="https://harmony-docs.bit.dev/testing/overview/"
-        />
-      );
+      return <AddingCompositions />;
     });
 
     compositionsUI.registerMenuWidget({
