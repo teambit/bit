@@ -1,5 +1,3 @@
-import { Configuration } from 'webpack';
-import { merge as webpackMerge } from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { TsConfigSourceFile } from 'typescript';
@@ -11,10 +9,10 @@ import { Aspect } from '@teambit/harmony';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
+import { UseWebpackModifiers } from '@teambit/react/react.main.runtime';
 import { ReactNativeAspect } from './react-native.aspect';
 import { reactNativeTemplate } from './templates/react-native-env';
-
-const webpackConfig = require('./webpack/webpack.config');
+import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 
 const jestConfig = require.resolve('./jest/jest.config');
 
@@ -65,20 +63,12 @@ export class ReactNativeMain {
     this.react
   );
 
-  /**
-   * override the preview config in the env.
-   */
-  overridePreviewConfig(config: Configuration) {
-    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
-    return this.react.overridePreviewConfig(mergedConfig);
-  }
-
-  /**
-   * override the dev server configuration.
-   */
-  overrideDevServerConfig(config: Configuration) {
-    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
-    return this.react.overrideDevServerConfig(mergedConfig);
+  useWebpack(modifiers?: UseWebpackModifiers) {
+    const mergedModifiers: UseWebpackModifiers = {
+      previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
+      devServerConfig: (modifiers?.devServerConfig ?? []).concat(devServerConfigTransformer),
+    };
+    return this.react.useWebpack(mergedModifiers);
   }
 
   /**
@@ -100,9 +90,12 @@ export class ReactNativeMain {
   static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect];
   static runtime = MainRuntime;
   static async provider([react, envs, generator]: [ReactMain, EnvsMain, GeneratorMain]) {
+    const webpackModifiers: UseWebpackModifiers = {
+      previewConfig: [previewConfigTransformer],
+      devServerConfig: [devServerConfigTransformer],
+    };
     const reactNativeEnv = react.compose([
-      react.overrideDevServerConfig(webpackConfig),
-      react.overridePreviewConfig(webpackConfig),
+      react.useWebpack(webpackModifiers),
       react.overrideJestConfig(jestConfig),
       react.overrideDependencies(getReactNativeDeps()),
     ]);

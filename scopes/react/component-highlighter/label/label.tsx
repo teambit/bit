@@ -52,12 +52,13 @@ export interface LabelProps extends CardProps {
   componentId: string;
   link?: string;
   scopeLink?: string;
+  local?: boolean;
 }
 
-export function Label({ componentId, link, scopeLink, ...rest }: LabelProps) {
+export function Label({ componentId, link, scopeLink, local, ...rest }: LabelProps) {
   const parsedId = useMemo(() => ComponentID.tryFromString(componentId), [componentId]);
 
   if (!parsedId) return <DefaultLabel href={link}>{componentId}</DefaultLabel>;
 
-  return <ComponentLabel {...rest} componentId={parsedId} link={link} scopeLink={scopeLink} />;
+  return <ComponentLabel {...rest} local={local} componentId={parsedId} link={link} scopeLink={scopeLink} />;
 }
