@@ -62,8 +62,13 @@ describe('isMatchNamespacePatternItem', () => {
     });
     it('pattern is part of name and ends with * and name has more parts', () => {
       const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/*}');
+      expect(res.match).to.be.false;
+      expect(res.specificity).to.equal(-1);
+    });
+    it('pattern is part of name and ends with ** and name has more parts', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/**}');
       expect(res.match).to.be.true;
-      expect(res.specificity).to.equal(1.1);
+      expect(res.specificity).to.equal(1.05);
     });
     it('specificity is larger than 1', () => {
       const res = isMatchNamespacePatternItem('bar/foo/baz', '{bar/foo/*}');
@@ -74,6 +79,12 @@ describe('isMatchNamespacePatternItem', () => {
       const res = isMatchNamespacePatternItem('bar/foo/baz/goo', '{bar/*/baz/*}');
       expect(res.match).to.be.true;
       expect(res.specificity).to.equal(2.4);
+    });
+    it('using ** in the middle of the pattern', () => {
+      const res = isMatchNamespacePatternItem('bar/foo/moo/baz/goo', '{bar/**/baz/*}');
+      expect(res.match).to.be.true;
+      const specificity = Math.round(res.specificity * 100) / 100;
+      expect(specificity).to.equal(2.35);
     });
   });
   describe('item is not matched', () => {
@@ -187,6 +198,50 @@ describe('isMatchPattern', () => {
       expect(res.match).to.be.true;
       expect(res.excluded).to.be.true;
       expect(res.maxSpecificity).to.equal(4);
+    });
+  });
+  describe('special patterns', () => {
+    describe('only components without namespace', () => {
+      const pattern = '*,!{*/**}';
+      it('should match component without namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(0);
+      });
+      it('should exclude component with one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.true;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+      it('should exclude component with more than one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/namespace2/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.true;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+    });
+    describe('only components with at least namespace', () => {
+      const pattern = '{*/**}';
+      it('should not match component without namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'comp-name', pattern);
+        expect(res.match).to.be.false;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(-1);
+      });
+      it('should match component with one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
+      it('should match component with more than one namespace', () => {
+        const res = isMatchPattern('bar/foo/baz/goo', 'namespace1/namespace2/comp-name', pattern);
+        expect(res.match).to.be.true;
+        expect(res.excluded).to.be.false;
+        expect(res.maxSpecificity).to.equal(0.05);
+      });
     });
   });
 });
