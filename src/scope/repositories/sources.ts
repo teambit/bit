@@ -25,6 +25,8 @@ import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
 import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { InMemoryCache } from '../../cache/in-memory-cache';
+import { createInMemoryCache } from '../../cache/cache-factory';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -41,11 +43,20 @@ export type ComponentDef = {
   component: ModelComponent | null | undefined;
 };
 
+const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000;
+
 export default class SourceRepository {
   scope: Scope;
-
+  /**
+   * if a component Version has build-status of "pending" or "failed", it goes to the remote to ask
+   * for the component again, in case it was re-built.
+   * to avoid too many trips to the remotes with the same components, we cache the results for a
+   * small period of time (currently, 1 min).
+   */
+  private cacheUnBuiltIds: InMemoryCache<ModelComponent>;
   constructor(scope: Scope) {
     this.scope = scope;
+    this.cacheUnBuiltIds = createInMemoryCache({ maxAge: MAX_AGE_UN_BUILT_COMPS_CACHE });
   }
 
   objects() {
@@ -91,6 +102,12 @@ export default class SourceRepository {
         !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
         (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
       ) {
+        const bitIdStr = bitId.toString();
+        const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
+        if (fromCache) {
+          return fromCache;
+        }
+        this.cacheUnBuiltIds.set(bitIdStr, component);
         return undefined;
       }
       return component;
