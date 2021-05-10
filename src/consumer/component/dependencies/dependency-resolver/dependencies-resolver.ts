@@ -176,13 +176,6 @@ export default class DependencyResolver {
     this.debugDependenciesData = { components: [] };
   }
 
-  private isDistDirMissing() {
-    if (this.consumer.isLegacy) return undefined;
-    const pkgName = componentIdToPackageName(this.component);
-    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
-    return !fs.existsSync(distDir);
-  }
-
   setTree(tree: Tree) {
     this.tree = tree;
     // console.log(JSON.stringify(tree, null, 4)); // uncomment to easily watch the tree received from bit-javascript
@@ -816,12 +809,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     });
   }
 
-  private isDistDirExistsOnHarmony(pkgName: string) {
-    if (this.consumer.isLegacy) throw new Error(`isDistDirExistsOnHarmony should gets called on Harmony only`);
-    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
-    return fs.existsSync(distDir);
-  }
-
   private addImportNonMainIssueIfNeeded(filePath: string, dependencyPkgData: ResolvedPackageData) {
     if (this.consumer.isLegacy) return; // this is relevant for Harmony only
     const depMain = dependencyPkgData.packageJsonContent?.main;
@@ -831,9 +818,8 @@ either, use the ignore file syntax or change the require statement to have a mod
       // it requires the main-file. all is good.
       return;
     }
-    if (!this.isDistDirExistsOnHarmony(dependencyPkgData.name)) {
+    if (!this.isDistDirExists(dependencyPkgData.name)) {
       // if dists is missing (bit compile was not running), then depFullPath points to the source
-      // later, we should add another "issue" prop suggesting to run "bit compile".
       return;
     }
     const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
@@ -1268,6 +1254,17 @@ either, use the ignore file syntax or change the require statement to have a mod
       return packageJson.packageJsonObject;
     }
     return undefined;
+  }
+
+  private isDistDirMissing() {
+    if (this.consumer.isLegacy) return undefined;
+    const pkgName = componentIdToPackageName(this.component);
+    return !this.isDistDirExists(pkgName);
+  }
+
+  private isDistDirExists(pkgName: string) {
+    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
+    return fs.existsSync(distDir);
   }
 
   /**
