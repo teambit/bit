@@ -30,7 +30,7 @@ To select a set using a directory path, use the relative path to the components'
 ### Select a rule set via namespace
 
 This option is recommended as it decouples your components' configurations from the workspace's file structure. It handles components using fundamental definitions that pertain to function and purpose, via their namespace.
-The namespace selector behaves like a glob pattern, with the component name (including its namespace) being the equivalent of a file path being matched against the pattern.  
+The namespace selector behaves like a glob pattern, with the component name (including its namespace) being the equivalent of a file path being matched against the pattern.
 Specifically, this means that namespace selectors support the location-specific `*` matcher, and the 'anywhere' `**` matcher for matching the component name.
 
 In the following example, any component under the `utility-functions` namespace (and it's sub-namespaces) will be included in this rule set:
@@ -115,7 +115,7 @@ The following example applies the `teambit.harmony/node` environment on every co
 #### The Wildcard (\*) variant
 
 To select all components in your workspace use the wildcard variant `*`. This is useful when you want to apply very general configurations, especially default or backup configurations,
-on all components. Using this selector can produce unexpected consequences if the rules aren't general enough, so we recommend using this selector sparingly!  
+on all components. Using this selector can produce unexpected consequences if the rules aren't general enough, so we recommend using this selector sparingly!
 For example:
 
 ```json
@@ -189,7 +189,7 @@ was re-set by a more specific variant.
 
 ### Propagate
 
-When using directory selectors, configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`.
+When using selectors, configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`.
 To prevent this from happening for specific set of inheritors, set the `propogate` value of an inheriting group of components to `false`.
 Once bit see `"propagate": false` it takes the configuration for this group and does not inherit.
 
