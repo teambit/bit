@@ -7,10 +7,12 @@ export interface InMemoryCache<T> {
   delete(key: string): void;
   has(key: string): boolean;
   deleteAll(): void;
+  keys(): string[];
 }
 
 export type CacheOptions = {
   maxSize?: number;
+  maxAge?: number; // in milliseconds
 };
 
 export function getMaxSizeForComponents(): number {

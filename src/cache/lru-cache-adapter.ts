@@ -4,7 +4,9 @@ import { InMemoryCache, CacheOptions } from './in-memory-cache';
 export class LRUCacheAdapter<T> implements InMemoryCache<T> {
   private cache: LRU;
   constructor(options: CacheOptions) {
-    this.cache = new LRU({ max: options.maxSize || Infinity });
+    const lruOptions: Record<string, any> = { max: options.maxSize || Infinity };
+    if (options.maxAge) lruOptions.maxAge = options.maxAge;
+    this.cache = new LRU(lruOptions);
   }
   set(key: string, value: T) {
     this.cache.set(key, value);
@@ -20,5 +22,8 @@ export class LRUCacheAdapter<T> implements InMemoryCache<T> {
   }
   deleteAll() {
     this.cache.reset();
+  }
+  keys() {
+    return this.cache.keys();
   }
 }
