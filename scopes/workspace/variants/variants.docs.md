@@ -12,23 +12,11 @@ Configurations set on a certain set of components can:
 1. Override conflicting configurations inherited from more general component selections
 1. Propagate configurations downwards to more specific sub-sets of components
 
-## Variants Examples
-
-### The Wildcard (\*) variant
-
-To select all components in the workspace use a wildcard (`*`). This is useful when wanting to apply a very general rules on all components. For example:
-
-```json
-"teambit.workspace/variants": {
-    "*": {
-        "teambit.harmony/node": {}
-    },
-}
-```
+## Variants Selector Examples
 
 ### Select a rule set by directory
 
-To select a set using a directory path, use the relative path to the components' parent directory. In the following example, all components under the `components/utility-functions` directory
+To select a set using a directory path, use the relative path to the components' parent directory from the workspace root. In the following example, all components under the `components/utility-functions` directory
 (and any sub-directories) will be included in this set:
 
 ```json
@@ -42,7 +30,9 @@ To select a set using a directory path, use the relative path to the components'
 ### Select a rule set via namespace
 
 This option is recommended as it decouples your components' configurations from the workspace's file structure. It handles components using fundamental definitions that pertain to function and purpose, via their namespace.
-The namespace selector behave like a glob pattern where the component name used as a file path matched against the pattern. This means that namespace selector for example support `*` to one part exactly where `**` match arbitrary parts of the component name.
+The namespace selector behaves like a glob pattern, with the component name (including its namespace) being the equivalent of a file path being matched against the pattern.  
+Specifically, this means that namespace selectors support the location-specific `*` matcher, and the 'anywhere' `**` matcher for matching the component name.
+
 In the following example, any component under the `utility-functions` namespace (and it's sub-namespaces) will be included in this rule set:
 
 ```json
@@ -53,7 +43,7 @@ In the following example, any component under the `utility-functions` namespace 
 }
 ```
 
-In the following example, any component **directly** under the `utility-functions` namespace will be included in this rule set:
+In the following example however, only components **directly** under the `utility-functions` namespace will be included in this rule set:
 
 ```json
 "teambit.workspace/variants": {
@@ -63,9 +53,9 @@ In the following example, any component **directly** under the `utility-function
 }
 ```
 
-### Several rule sets with the same variant configuration
+### Grouping selectors
 
-You can add several rule sets for the same variant configuration:
+You can add several sets for the same variant configuration by grouping selectors together:
 
 ```json title="Multiple directory paths"
 "teambit.workspace/variants": {
@@ -93,12 +83,12 @@ You can add several rule sets for the same variant configuration:
 
 ### Exclude directories/components from a rule
 
-Using the `!` you can exclude set of components from a specific rule.
-The `!` works both for directories and namespaces, for example:
+Using the `!` deselector you can exclude a set of components from a selector.
+The `!` deselector works both for directories and namespaces, for example:
 
-#### Exclude directory from a rule
+#### Exclude a sub-directory directory from a rule
 
-For example, apply the `teambit.harmony/node` environment on the `utility-functions` set, but exclude on `utility-functions/react-utils` from that set:
+For example, apply the `teambit.harmony/node` environment on the `utility-functions` set, but exclude the `utility-functions/react-utils` folder from that set:
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -108,9 +98,9 @@ For example, apply the `teambit.harmony/node` environment on the `utility-functi
 }
 ```
 
-#### Exclude namespace from a rule
+#### Exclude namespaces from a rule
 
-For exapmle, apply the `teambit.harmony/node` environment on every component under the `utils` namespace but exclude the `utils/react` namespace and its children from this set:
+The following example applies the `teambit.harmony/node` environment on every component under the `utils` namespace, but excludes the `utils/react` namespace and its children from this set:
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -120,9 +110,26 @@ For exapmle, apply the `teambit.harmony/node` environment on every component und
 }
 ```
 
+### Special Variants
+
+#### The Wildcard (\*) variant
+
+To select all components in your workspace use the wildcard variant `*`. This is useful when you want to apply very general configurations, especially default or backup configurations,
+on all components. Using this selector can produce unexpected consequences if the rules aren't general enough, so we recommend using this selector sparingly!  
+For example:
+
+```json
+"teambit.workspace/variants": {
+    "*": {
+        "teambit.harmony/node": {}
+    },
+}
+```
+
 ## Merging Configurations
 
-The same component may have several rules applied to it. This works very much like CSS rules where rules cascade but the more specific variant "wins" when there are rule 'conflicts'.
+The same component may have several rules applied to it, including several versions of the same configuration. This works very much like CSS rules where rules cascade
+but the more specific variant "wins" when there are rule 'conflicts'.
 
 The following example shows how Bit does not apply `aspect1-components-key` nor the `aspect1-root-key` for components under the `components/ui` directory, as the `my-aspect1` extension
 was re-set by a more specific variant.
@@ -178,13 +185,13 @@ was re-set by a more specific variant.
 }
 ```
 
-## Variants configurations
+## Variants Flags
 
-### propagate
+### Propagate
 
-Configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`.
-To prevent this from happening, set the `propogate` value of a group of components to `false`.
-Once bit see `"propagate": false` it takes the configuration for this group, and stop propagate.
+When using directory selectors, configurations set on one group of components are inherited by its sub-groups (in a CSS-like manner). For example, `components/react/ui` will inherit configurations from `components/react`.
+To prevent this from happening for specific set of inheritors, set the `propogate` value of an inheriting group of components to `false`.
+Once bit see `"propagate": false` it takes the configuration for this group and does not inherit.
 
 ```json title="workspace.json
 "teambit.workspace/variants": {
@@ -212,12 +219,12 @@ Once bit see `"propagate": false` it takes the configuration for this group, and
 
 ## Removing aspects
 
-> Note: Once a component has been tagged, any aspect configured for that component **can only** be removed from the component via the following `remove` method. (if you havent exported yet then `untag` would reset the effect of the tag)
+> Note: Once a component has been tagged, any aspect configured for that component **can only** be removed from the component via the following `remove` method. (if you haven't exported yet then `untag` would reset the effect of the tag)
 
 There are numerous scenarios where you would not want a specific aspect to be defined on a subgroup but you don't want to exclude the sub-group from upstream rules, or use the `propagate: false` flag, since you want to receive the
 other configurations from the parent group rule/s.
 
-In that case, removing a specific aspect can be achieved using `"-"` as the value for an aspect's configuration. This will remove this aspect from the current rule set.
+In that case, removing a specific aspect can be achieved using `"-"` as the value for an aspect's configuration. This will remove this aspect from the current component set.
 
 For instance, the following will remove `my-aspect2` from components in the `components/react/ui` set, while still inheriting other configs such as the `my-aspect3` aspect.
 
