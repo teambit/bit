@@ -10,7 +10,6 @@
     "packageManager": "teambit.dependencies/yarn",
     "policy": {
       "dependencies": {
-        "@apollo/client": "3.3.6",
         "@babel/core": "7.11.6",
         "@babel/preset-react": "7.13.13",
         "@babel/preset-typescript": "7.12.7",
@@ -311,6 +310,7 @@
         "yaml": "1.10.2"
       },
       "peerDependencies": {
+        "@apollo/client": "^3.0.0",
         "@teambit/legacy": "1.0.79",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
@@ -579,6 +579,7 @@
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           "dependencies": {
+            "@apollo/client": "3.3.6",
             "@teambit/legacy": "1.0.79",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
