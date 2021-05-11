@@ -31,6 +31,12 @@ export class ReactRouterUI {
   ) {}
 
   /**
+   * url prefix for all react router links in the page.
+   * the value is applied at AnchorLink
+   */
+  baseUrl?: string;
+
+  /**
    * render all slot routes.
    */
   renderRoutes(routes: RouteProps[], options: RenderRoutesOptions = {}): JSX.Element {
