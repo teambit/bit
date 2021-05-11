@@ -20,7 +20,7 @@ export const LinkAnchor = forwardRef<HTMLAnchorElement, LinkAnchorProps>(
   ({ href, ...rest }: LinkAnchorProps, forwardedRef) => {
     const _href = useContextUrl(href);
 
-    // @ts-ignore - BaseLinkAnchor picks up some times, probably because of forwardRef
+    // @ts-ignore - BaseLinkAnchor picks up some types (probably because of forwardRef)
     return <BaseLinkAnchor {...rest} ref={forwardedRef} href={_href} />;
   }
 );
