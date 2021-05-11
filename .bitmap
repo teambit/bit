@@ -1033,6 +1033,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/routing/link"
     },
+    "ui/routing/link-anchor": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/link-anchor"
+    },
     "ui/routing/native-link": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.360",
