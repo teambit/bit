@@ -564,25 +564,7 @@ export default class Consumer {
       await this.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this._loadComponentsForTag(ids);
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't tag anything
-    const componentsWithRelativeAuthored = components.filter(
-      (component) => component.issues && component.issues.relativeComponentsAuthored
-    );
-    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
-      throw new MissingDependencies(componentsWithRelativeAuthored);
-    }
-    if (!tagParams.ignoreUnresolvedDependencies) {
-      // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter((component) => {
-        const issues = component.issues;
-        return (
-          issues &&
-          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
-        );
-      });
-      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
-    }
+    this.throwForComponentIssues(components, tagParams.ignoreUnresolvedDependencies);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -596,6 +578,32 @@ export default class Consumer {
     });
 
     return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
+  }
+
+  private throwForComponentIssues(components: Component[], ignoreUnresolvedDependencies?: boolean) {
+    // go through the components list to check if there are missing dependencies
+    // if there is at least one we won't tag anything
+    const componentsWithRelativeAuthored = components.filter(
+      (component) => component.issues && component.issues.relativeComponentsAuthored
+    );
+    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
+      throw new MissingDependencies(componentsWithRelativeAuthored);
+    }
+    const issuesAllowedToTag = ['relativeComponentsAuthored', 'missingDists'];
+    const isComponentHasBlockingIssues = (component: Component) => {
+      const issues = component.issues;
+      if (!issues) return false;
+      return Object.keys(issues).some((label) => {
+        if (R.isEmpty(issues[label])) return false;
+        if (issuesAllowedToTag.includes(label)) return false;
+        return true;
+      });
+    };
+    if (!ignoreUnresolvedDependencies) {
+      // components that have issues other than relativeComponentsAuthored.
+      const componentsWithOtherIssues = components.filter((component) => isComponentHasBlockingIssues(component));
+      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
+    }
   }
 
   updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
@@ -643,27 +651,7 @@ export default class Consumer {
     });
     const components = await this._loadComponentsForTag(ids);
 
-    // @todo: remove all these duplication with `tag()`
-
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't tag anything
-    const componentsWithRelativeAuthored = components.filter(
-      (component) => component.issues && component.issues.relativeComponentsAuthored
-    );
-    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
-      throw new MissingDependencies(componentsWithRelativeAuthored);
-    }
-    if (!ignoreUnresolvedDependencies) {
-      // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter((component) => {
-        const issues = component.issues;
-        return (
-          issues &&
-          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
-        );
-      });
-      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
-    }
+    this.throwForComponentIssues(components, ignoreUnresolvedDependencies);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
