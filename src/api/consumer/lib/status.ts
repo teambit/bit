@@ -49,14 +49,7 @@ export default (async function status(): Promise<StatusResult> {
   const mergePendingComponents = await componentsList.listMergePendingComponents();
   const newAndModified: Component[] = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
-    if (consumer.isLegacy && component.issues) {
-      delete component.issues.relativeComponentsAuthored;
-      delete component.issues.importNonMainFiles;
-    }
-    if (!component.issues?.missingDists) {
-      delete component.issues?.missingDists;
-    }
-    return Boolean(component.issues) && !R.isEmpty(component.issues);
+    return !component.issues?.isEmpty();
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
   const softTaggedComponents = componentsList.listSoftTaggedComponents();

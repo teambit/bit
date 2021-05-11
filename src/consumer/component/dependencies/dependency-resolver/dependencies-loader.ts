@@ -8,6 +8,8 @@ import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
 import { COMPONENT_CONFIG_FILE_NAME, PACKAGE_JSON } from '../../../../constants';
+import { IssuesClasses } from '../../issues';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../../../cli/templates/component-issues-template';
 
 type Opts = {
   cacheResolvedDependencies: Record<string, any>;
@@ -71,14 +73,8 @@ export class DependenciesLoader {
   }
 
   private shouldSaveInCache(dependenciesData: DependenciesData) {
-    if (
-      dependenciesData.issues?.missingPackagesDependenciesOnFs ||
-      dependenciesData.issues?.untrackedDependencies ||
-      dependenciesData.issues?.missingDists
-    ) {
-      return false;
-    }
-    return true;
+    if (!dependenciesData.issues) return true;
+    return !dependenciesData.issues.shouldBlockSavingInCache();
   }
 
   private setDependenciesDataOnComponent(dependenciesData: DependenciesData) {
@@ -87,11 +83,13 @@ export class DependenciesLoader {
     this.component.packageDependencies = dependenciesData.allPackagesDependencies.packageDependencies;
     this.component.devPackageDependencies = dependenciesData.allPackagesDependencies.devPackageDependencies;
     this.component.peerPackageDependencies = dependenciesData.allPackagesDependencies.peerPackageDependencies;
-    if (!R.isEmpty(dependenciesData.overridesDependencies.missingPackageDependencies)) {
-      dependenciesData.issues.missingPackagesDependenciesFromOverrides =
-        dependenciesData.overridesDependencies.missingPackageDependencies;
+    const missingFromOverrides = dependenciesData.overridesDependencies.missingPackageDependencies;
+    if (!R.isEmpty(missingFromOverrides)) {
+      dependenciesData.issues.getOrCreate(IssuesClasses.MissingPackagesDependenciesOnFs).data[
+        MISSING_PACKAGES_FROM_OVERRIDES_LABEL
+      ] = missingFromOverrides;
     }
-    if (!R.isEmpty(dependenciesData.issues)) this.component.issues = dependenciesData.issues;
+    if (!dependenciesData.issues.isEmpty()) this.component.issues = dependenciesData.issues;
     this.component.manuallyRemovedDependencies = dependenciesData.overridesDependencies.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = dependenciesData.overridesDependencies.manuallyAddedDependencies;
     if (dependenciesData.coreAspects.length) {

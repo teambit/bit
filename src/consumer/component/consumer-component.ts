@@ -65,6 +65,7 @@ import FileSourceNotFound from './exceptions/file-source-not-found';
 import MainFileRemoved from './exceptions/main-file-removed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import { NoComponentDir } from './exceptions/no-component-dir';
+import { IssuesList } from './issues';
 import PackageJsonFile from './package-json-file';
 import DataToPersist from './sources/data-to-persist';
 import Dists from './sources/dists';
@@ -166,7 +167,7 @@ export default class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
-  issues?: Issues;
+  issues?: IssuesList;
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;

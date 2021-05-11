@@ -47,11 +47,9 @@ export class DependencyListFactory {
    * @param legacyComponent
    */
   private async getMissingDependenciesByComponentFromModel(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const missingPackagesFromFs: string[] = flatten(
+    const missingPackages: string[] = flatten(
       Object.values(legacyComponent.issues?.missingPackagesDependenciesOnFs || {})
     );
-    const missingPackagesFromOverrides = legacyComponent.issues?.missingPackagesDependenciesFromOverrides || [];
-    const missingPackages = missingPackagesFromFs.concat(missingPackagesFromOverrides);
     const componentFromModel = legacyComponent.componentFromModel;
     if (!missingPackages || !missingPackages.length || !componentFromModel) {
       return DependencyList.fromArray([]);

@@ -69,6 +69,7 @@ import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { BasicTagParams } from '../api/consumer/lib/tag';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
+import { IssuesClasses } from './component/issues';
 
 type ConsumerProps = {
   projectPath: string;
@@ -583,26 +584,9 @@ export default class Consumer {
   private throwForComponentIssues(components: Component[], ignoreUnresolvedDependencies?: boolean) {
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't tag anything
-    const componentsWithRelativeAuthored = components.filter(
-      (component) => component.issues && component.issues.relativeComponentsAuthored
-    );
-    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
-      throw new MissingDependencies(componentsWithRelativeAuthored);
-    }
-    const issuesAllowedToTag = ['relativeComponentsAuthored', 'missingDists'];
-    const isComponentHasBlockingIssues = (component: Component) => {
-      const issues = component.issues;
-      if (!issues) return false;
-      return Object.keys(issues).some((label) => {
-        if (R.isEmpty(issues[label])) return false;
-        if (issuesAllowedToTag.includes(label)) return false;
-        return true;
-      });
-    };
     if (!ignoreUnresolvedDependencies) {
-      // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter((component) => isComponentHasBlockingIssues(component));
-      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
+      const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
+      if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);
     }
   }
 
@@ -691,8 +675,8 @@ export default class Consumer {
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
-      const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
-      const hasCustomModuleResolutions = component.issues && component.issues.missingCustomModuleResolutionLinks;
+      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.relativeComponentsAuthored);
+      const hasCustomModuleResolutions = component.issues?.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks);
       // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
         componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);

@@ -8,6 +8,7 @@ import replacePackageName from '../../utils/string/replace-package-name';
 import Component from '../component/consumer-component';
 import { RelativeComponentsAuthoredEntry } from '../component/dependencies/dependency-resolver/dependencies-resolver';
 import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
+import { IssuesClasses } from '../component/issues';
 import { SourceFile } from '../component/sources';
 import DataToPersist from '../component/sources/data-to-persist';
 
@@ -22,7 +23,9 @@ export async function changeCodeFromRelativeToModulePaths(
   bitIds: BitId[]
 ): Promise<CodemodResult[]> {
   const components = await loadComponents(consumer, bitIds);
-  const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
+  const componentsWithRelativeIssues = components.filter(
+    (c) => c.issues && c.issues.getIssue(IssuesClasses.relativeComponentsAuthored)
+  );
   const dataToPersist = new DataToPersist();
   const codemodResults = componentsWithRelativeIssues.map((component) => {
     const { files, warnings } = codemodComponent(consumer, component);
@@ -40,7 +43,9 @@ async function reloadComponents(consumer: Consumer, bitIds: BitId[]) {
   consumer.clearCache();
   if (!bitIds.length) return;
   const components = await loadComponents(consumer, bitIds);
-  const componentsWithRelativeIssues = components.filter((c) => c.issues && c.issues.relativeComponentsAuthored);
+  const componentsWithRelativeIssues = components.filter(
+    (c) => c.issues && c.issues.getIssue(IssuesClasses.relativeComponentsAuthored)
+  );
   if (componentsWithRelativeIssues.length) {
     const failedComps = componentsWithRelativeIssues.map((c) => c.id.toString()).join(', ');
     throw new Error(`failed rewiring the following components: ${failedComps}`);
@@ -57,11 +62,12 @@ async function loadComponents(consumer: Consumer, bitIds: BitId[]): Promise<Comp
 function codemodComponent(consumer: Consumer, component: Component): { files: SourceFile[]; warnings?: string[] } {
   const issues = component.issues;
   const files: SourceFile[] = [];
-  if (!issues || !issues.relativeComponentsAuthored) return { files };
+  if (!issues || !issues.getIssue(IssuesClasses.relativeComponentsAuthored)) return { files };
   const warnings: string[] = [];
   component.files.forEach((file: SourceFile) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const relativeInstances = issues.relativeComponentsAuthored![pathNormalizeToLinux(file.relative)];
+    const relativeInstances = issues.getIssue(IssuesClasses.relativeComponentsAuthored)?.data[
+      pathNormalizeToLinux(file.relative)
+    ];
     if (!relativeInstances) return;
     // @ts-ignore
     const fileBefore = file.contents.toString() as string;

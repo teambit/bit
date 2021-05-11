@@ -1,4 +1,5 @@
 import { BitId } from '../../../../bit-id';
+import { IssuesList } from '../../issues';
 import Dependency from '../dependency';
 import { AllDependencies, AllPackagesDependencies, Issues } from './dependencies-resolver';
 import { ManuallyChangedDependencies } from './overrides-dependencies';
@@ -13,7 +14,7 @@ export class DependenciesData {
   constructor(
     public allDependencies: AllDependencies,
     public allPackagesDependencies: AllPackagesDependencies,
-    public issues: Issues,
+    public issues: IssuesList,
     public coreAspects: string[],
     public overridesDependencies: OverridesDependenciesData
   ) {}
@@ -35,7 +36,7 @@ export class DependenciesData {
     return new DependenciesData(
       allDependencies,
       dataParsed.allPackagesDependencies,
-      issues as Issues,
+      issues as IssuesList,
       dataParsed.coreAspects,
       dataParsed.overridesDependencies
     );

@@ -1,13 +1,5 @@
 import chalk from 'chalk';
-import R from 'ramda';
-
-import { Analytics } from '../../analytics/analytics';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../constants';
 import ConsumerComponent from '../../consumer/component/consumer-component';
-import {
-  RelativeComponentsAuthoredEntry,
-  UntrackedFileDependencyEntry,
-} from '../../consumer/component/dependencies/dependency-resolver/dependencies-resolver';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
@@ -55,22 +47,6 @@ export function componentIssueToString(value: string[] | string) {
   return Array.isArray(value) ? value.join(', ') : value;
 }
 
-export function untrackedFilesComponentIssueToString(value: UntrackedFileDependencyEntry) {
-  const colorizedMap = value.untrackedFiles.map((curr) => {
-    if (curr.existing) {
-      return `${chalk.yellow(curr.relativePath)}`;
-    }
-    return curr.relativePath;
-  });
-  return colorizedMap.join(', ');
-}
-
-function relativeComponentsAuthoredIssuesToString(relativeEntries: RelativeComponentsAuthoredEntry[]) {
-  const stringifyEntry = (entry: RelativeComponentsAuthoredEntry) =>
-    `"${entry.importSource}" (${entry.componentId.toString()})`;
-  return relativeEntries.map(stringifyEntry).join(', ');
-}
-
 export default function componentIssuesTemplate(components: ConsumerComponent[]) {
   function format(missingComponent) {
     return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatMissing(missingComponent)}`;
@@ -81,82 +57,5 @@ export default function componentIssuesTemplate(components: ConsumerComponent[])
 }
 
 export function formatMissing(missingComponent: ConsumerComponent) {
-  function formatMissingStr(key: string, value, label, formatIssueFunc: (any) => string = componentIssueToString) {
-    if (!value || R.isEmpty(value)) return '';
-
-    return (
-      formatTitle(label) +
-      chalk.white(
-        Object.keys(value)
-          .map((k) => {
-            let space = MISSING_DEPS_SPACE;
-            if (value[k].nested) {
-              space = MISSING_NESTED_DEPS_SPACE;
-            }
-            return `${space}${k} -> ${formatIssueFunc(value[k])}`;
-          })
-          .join('\n')
-      )
-    );
-  }
-
-  const missingStr = Object.keys(componentIssuesLabels)
-    .map((key) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
-      if (key === 'untrackedDependencies') {
-        // @ts-ignore
-        return formatMissingStr(
-          key,
-          // @ts-ignore
-          missingComponent.issues[key],
-          componentIssuesLabels[key],
-          untrackedFilesComponentIssueToString
-        );
-      }
-      if (key === 'relativeComponentsAuthored') {
-        return formatMissingStr(
-          key,
-          // @ts-ignore
-          missingComponent.issues[key],
-          componentIssuesLabels[key],
-          relativeComponentsAuthoredIssuesToString
-        );
-      }
-      if (key === 'customModuleResolutionUsed') {
-        return formatMissingStr(
-          key,
-          // @ts-ignore
-          missingComponent.issues[key],
-          componentIssuesLabels[key]
-        );
-      }
-      if (key === 'missingPackagesDependenciesOnFs') {
-        // Combine missing from files and missing from packages (for output only)
-        // @ts-ignore
-        const missingPackagesDependenciesOnFs = missingComponent.issues[key] || {};
-        const missingPackagesDependenciesFromOverrides =
-          // @ts-ignore
-          missingComponent.issues.missingPackagesDependenciesFromOverrides || [];
-        if (!R.isEmpty(missingPackagesDependenciesFromOverrides)) {
-          missingPackagesDependenciesOnFs[
-            MISSING_PACKAGES_FROM_OVERRIDES_LABEL
-          ] = missingPackagesDependenciesFromOverrides;
-        }
-
-        return formatMissingStr(key, missingPackagesDependenciesOnFs, componentIssuesLabels[key]);
-      }
-      if (key === 'missingDists' && missingComponent.issues?.missingDists) {
-        return formatTitle(componentIssuesLabels[key], false);
-      }
-      // @ts-ignore
-      return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
-    })
-    .join('');
-  return `       ${missingStr}\n`;
-}
-
-function formatTitle(issueTitle: string, hasMoreData = true): string {
-  const colon = hasMoreData ? ':' : '';
-  return chalk.yellow(`\n       ${issueTitle}${colon} \n`);
+  return `       ${missingComponent.issues?.toString()}\n`;
 }

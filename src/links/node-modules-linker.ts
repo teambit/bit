@@ -17,6 +17,7 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import ComponentsList from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import { Dependency } from '../consumer/component/dependencies';
+import { IssuesClasses } from '../consumer/component/issues';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import { PackageJsonTransformer } from '../consumer/component/package-json-transformer';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
@@ -341,14 +342,12 @@ export default class NodeModuleLinker {
    * for IMPORTED and NESTED components
    */
   async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
-    // $FlowFixMe loaded from FS, componentMap must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore loaded from FS, componentMap must be set
     const componentMap: ComponentMap = component.componentMap;
     if (
       component.issues &&
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      (component.issues.missingLinks || component.issues.missingCustomModuleResolutionLinks) &&
+      (component.issues.getIssue(IssuesClasses.MissingLinks) ||
+        component.issues.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks)) &&
       this.consumer &&
       component.componentFromModel
     ) {
