@@ -1261,6 +1261,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants"
     },
+    "variants-docs": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/variants-docs"
+    },
     "webpack": {
         "scope": "teambit.compilation",
         "version": "0.0.387",
