@@ -2,13 +2,13 @@ import React, { forwardRef } from 'react';
 import urlJoin from 'url-join';
 import { useLinkContext } from './link-context';
 // @ts-ignore - original file copied from another project
-import { LinkAnchor as BaseLinkAnchor } from './base-link-anchor';
+import { LinkAnchor as BaseLinkAnchor } from './link-anchor.base';
 
 const fullUrlRegex = /^(\w*:)?\/\//;
 
 type ReactRouterLinkProps = {
   /** @deprecated */
-  innerRef: any;
+  innerRef?: any;
   navigate: () => void;
 };
 type LinkAnchorProps = ReactRouterLinkProps & React.AnchorHTMLAttributes<HTMLAnchorElement>;
