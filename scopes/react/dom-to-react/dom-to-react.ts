@@ -17,7 +17,8 @@ export function toRootElement(element: HTMLElement | null) {
     if (!fiberNode) return null;
 
     const parent = rootFiber.return;
-    if (fiberNode === rootFiber || parent === rootFiber) return current;
+    const isRoot = fiberNode === rootFiber || parent === rootFiber;
+    if (isRoot) return current;
   }
 
   return null;
