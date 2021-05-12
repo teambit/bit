@@ -5,13 +5,13 @@ labels: ['docs', 'aspect', 'extensions']
 
 import { React } from './index';
 
-## Static Content Page in React
+## Static Content Page in MDX
 
 Docs for React aspect
 
 ### Component usage
 
-Use your component in any React file:
+Use your component in any MDX file:
 
 ```js
 import { React } from '@teambit/aspect-docs.React';
@@ -23,12 +23,12 @@ import { React } from '@teambit/aspect-docs.React';
 
 ```js
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { ReactLayout } from '@teambit/ui.React-layout';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { React } from '@teambit/aspect-docs.React';
 
 <ThemeContext>
-  <ReactLayout>
+  <MDXLayout>
     <React />
-  </ReactLayout>
+  </MDXLayout>
 </ThemeContext>;
 ```

@@ -13,7 +13,7 @@ Docs for Preview aspect
 
 Use your component in any Preview file:
 
-```js
+```jsx
 import { Preview } from '@teambit/aspect-docs.preview';
 
 <Preview />;
@@ -21,14 +21,14 @@ import { Preview } from '@teambit/aspect-docs.preview';
 
 ### Render with theme and Preview providers
 
-```js
+```jsx
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { PreviewLayout } from '@teambit/ui.Preview-layout';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { Preview } from '@teambit/aspect-docs.preview';
 
 <ThemeContext>
-  <PreviewLayout>
+  <MDXLayout>
     <Preview />
-  </PreviewLayout>
+  </MDXLayout>
 </ThemeContext>;
 ```

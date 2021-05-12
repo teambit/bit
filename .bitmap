@@ -109,6 +109,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/react/aspect-docs/react"
     },
+    "aspect-docs/react-native": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/aspect-docs/react-native"
+    },
+    "aspect-docs/typescript": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/typescript/aspect-docs/typescript"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
