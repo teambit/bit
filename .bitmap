@@ -31,6 +31,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/aspect-docs/compiler"
     },
+    "aspect-docs/component": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/aspect-docs/component"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
