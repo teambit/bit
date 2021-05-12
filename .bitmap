@@ -13,6 +13,126 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect"
     },
+    "aspect-docs/babel": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compilation/aspect-docs/babel"
+    },
+    "aspect-docs/builder": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/pipelines/aspect-docs/builder"
+    },
+    "aspect-docs/compiler": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compilation/aspect-docs/compiler"
+    },
+    "aspect-docs/component": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/aspect-docs/component"
+    },
+    "aspect-docs/compositions": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compositions/aspect-docs/compositions"
+    },
+    "aspect-docs/dependency-resolver": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/aspect-docs/dependency-resolver"
+    },
+    "aspect-docs/envs": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/envs/aspect-docs/envs"
+    },
+    "aspect-docs/generator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/generator/aspect-docs/generator"
+    },
+    "aspect-docs/logger": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/aspect-docs/logger"
+    },
+    "aspect-docs/mdx": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/aspect-docs/mdx"
+    },
+    "aspect-docs/multi-compiler": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compilation/aspect-docs/multi-compiler"
+    },
+    "aspect-docs/node": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/aspect-docs/node"
+    },
+    "aspect-docs/pkg": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/pkg/aspect-docs/pkg"
+    },
+    "aspect-docs/pnpm": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/aspect-docs/pnpm"
+    },
+    "aspect-docs/preview": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/preview/aspect-docs/preview"
+    },
+    "aspect-docs/react": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/aspect-docs/react"
+    },
+    "aspect-docs/react-native": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/aspect-docs/react-native"
+    },
+    "aspect-docs/typescript": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/typescript/aspect-docs/typescript"
+    },
+    "aspect-docs/variants": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/aspect-docs/variants"
+    },
+    "aspect-docs/yarn": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/aspect-docs/yarn"
+    },
     "aspect-loader": {
         "scope": "teambit.harmony",
         "version": "0.0.388",
