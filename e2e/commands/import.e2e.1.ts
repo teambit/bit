@@ -5,7 +5,6 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import { IssuesClasses } from '../../src/consumer/component/issues';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';

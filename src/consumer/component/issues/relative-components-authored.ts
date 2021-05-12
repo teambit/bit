@@ -1,6 +1,14 @@
 import { BitId } from '@teambit/legacy-bit-id';
-import { RelativeComponentsAuthoredEntry } from '../dependencies/dependency-resolver/dependencies-resolver';
 import { ComponentIssue } from './component-issue';
+
+export type RelativeComponentsAuthoredEntry = {
+  importSource: string;
+  componentId: BitId;
+  relativePath: {
+    sourceRelativePath: string;
+    importSpecifiers?: any[];
+  };
+};
 
 export class relativeComponentsAuthored extends ComponentIssue {
   description =

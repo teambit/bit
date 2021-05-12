@@ -1,6 +1,5 @@
 import chalk from 'chalk';
-import R from 'ramda';
-import { ComponentIssue, formatTitle, MISSING_DEPS_SPACE_COUNT } from './component-issue';
+import { ComponentIssue, formatTitle, MISSING_DEPS_SPACE, MISSING_DEPS_SPACE_COUNT } from './component-issue';
 
 export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
 
@@ -18,8 +17,6 @@ export class UntrackedDependencies extends ComponentIssue {
   description = 'untracked file dependencies (use "bit add <file>" to track untracked files as components)';
   data: { [filePath: string]: UntrackedFileDependencyEntry } = {};
   format(): string {
-    if (!this.data || R.isEmpty(this.data)) return '';
-
     return (
       formatTitle(this.description) +
       chalk.white(

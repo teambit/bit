@@ -1,6 +1,5 @@
-import { BitId } from '@teambit/legacy-bit-id';
 import chalk from 'chalk';
-import R from 'ramda';
+import { BitId } from '@teambit/legacy-bit-id';
 
 export type StringsPerFilePath = { [filePath: string]: string[] };
 
@@ -13,8 +12,6 @@ export class ComponentIssue {
   isTagBlocker = true; // if true, it stops the tag process and shows the issue
   isCacheBlocker = true; // if true, it doesn't cache the component in the filesystem
   format(formatIssueFunc: FormatIssueFunc = componentIssueToString): string {
-    if (!this.data || R.isEmpty(this.data)) return '';
-
     return (
       formatTitle(this.description) +
       chalk.white(

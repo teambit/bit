@@ -6,9 +6,8 @@ import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../ut
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import replacePackageName from '../../utils/string/replace-package-name';
 import Component from '../component/consumer-component';
-import { RelativeComponentsAuthoredEntry } from '../component/dependencies/dependency-resolver/dependencies-resolver';
 import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
-import { IssuesClasses } from '../component/issues';
+import { IssuesClasses, RelativeComponentsAuthoredEntry } from '../component/issues';
 import { SourceFile } from '../component/sources';
 import DataToPersist from '../component/sources/data-to-persist';
 

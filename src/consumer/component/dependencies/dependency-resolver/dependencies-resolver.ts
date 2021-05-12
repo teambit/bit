@@ -27,6 +27,7 @@ import { DependenciesData } from './dependencies-data';
 import { BitIdStr } from '../../../../bit-id/bit-id';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 import { IssuesList, IssuesClasses, UntrackedFileDependencyEntry } from '../../issues';
+import { RelativeComponentsAuthoredEntry } from '../../issues/relative-components-authored';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -43,12 +44,6 @@ export type AllPackagesDependencies = {
 
 export type FileType = {
   isTestFile: boolean;
-};
-
-export type RelativeComponentsAuthoredEntry = {
-  importSource: string;
-  componentId: BitId;
-  relativePath: RelativePath;
 };
 
 type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
@@ -68,7 +63,6 @@ export type Issues = {
   relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
   parseErrors: { [filePath: string]: string };
   resolveErrors: { [filePath: string]: string };
-  missingBits: { [filePath: string]: BitId[] }; // temporarily. it's combined later with missingComponents. see combineIssues
   importNonMainFiles?: { [filePath: string]: string[] }; // warning on Harmony
 };
 
