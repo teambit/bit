@@ -49,6 +49,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/aspect-docs/dependency-resolver"
     },
+    "aspect-docs/pnpm": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/aspect-docs/pnpm"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
