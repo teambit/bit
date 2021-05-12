@@ -103,6 +103,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/preview/aspect-docs/preview"
     },
+    "aspect-docs/react": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/aspect-docs/react"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
