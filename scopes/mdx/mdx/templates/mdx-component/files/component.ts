@@ -6,7 +6,7 @@ export const componentFile = (context: ComponentContext) => {
     relativePath: `${name}.mdx`,
     content: `# Title - ${Name}
 
-This is markdown
+This is markdown.
 
 <p>This is HTML</p>
 
