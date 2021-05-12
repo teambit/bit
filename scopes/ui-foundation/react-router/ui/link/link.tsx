@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link as ReactRouterLink } from 'react-router-dom';
 import { NativeLink, LinkProps } from '@teambit/ui.routing.native-link';
+import { LinkAnchor } from '@teambit/ui.routing.link-anchor';
 
 export { LinkProps };
 
@@ -9,6 +10,6 @@ export function Link({ href = '', ...rest }: LinkProps) {
   if (rest.external) {
     return <NativeLink {...rest} href={href} />;
   }
-  // @ts-ignore todo: it's not clear what's the issue.
-  return <ReactRouterLink {...rest} to={href} />;
+
+  return <ReactRouterLink {...rest} to={href} component={LinkAnchor} />;
 }
