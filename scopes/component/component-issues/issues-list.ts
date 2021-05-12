@@ -53,8 +53,12 @@ export class IssuesList {
     this.issues.push(issue);
   }
 
-  getIssue<T extends ComponentIssue>(issueType: { new (): T }): T | undefined {
-    return this.issues.find((issue) => issue instanceof issueType) as T | undefined;
+  delete(IssueClass: typeof ComponentIssue) {
+    this.issues = this.issues.filter((issue) => !(issue instanceof IssueClass));
+  }
+
+  getIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T | undefined {
+    return this.issues.find((issue) => issue instanceof IssueClass) as T | undefined;
   }
 
   getIssueByName<T extends ComponentIssue>(issueType: IssuesNames): T | undefined {

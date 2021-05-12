@@ -1,3 +1,4 @@
+import { IssuesClasses } from '@teambit/component-issues';
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import loader from '../../../cli/loader';
@@ -47,6 +48,9 @@ export default async function status(): Promise<StatusResult> {
   const mergePendingComponents = await componentsList.listMergePendingComponents();
   const newAndModified: Component[] = newComponents.concat(modifiedComponent);
   const componentsWithIssues = newAndModified.filter((component: Component) => {
+    if (consumer.isLegacy && component.issues) {
+      component.issues.delete(IssuesClasses.relativeComponentsAuthored);
+    }
     return component.issues && !component.issues.isEmpty();
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();

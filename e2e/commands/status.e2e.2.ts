@@ -609,7 +609,7 @@ describe('bit status command', function () {
     });
     it('should show the bit package as missing', () => {
       const status = helper.command.statusJson();
-      expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
+      expect(status.componentsWithIssues).to.have.lengthOf(1);
     });
   });
   /**

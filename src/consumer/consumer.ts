@@ -581,8 +581,11 @@ export default class Consumer {
   }
 
   private throwForComponentIssues(components: Component[], ignoreUnresolvedDependencies?: boolean) {
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't tag anything
+    components.forEach((component) => {
+      if (this.isLegacy && component.issues) {
+        component.issues.delete(IssuesClasses.relativeComponentsAuthored);
+      }
+    });
     if (!ignoreUnresolvedDependencies) {
       const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
       if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);

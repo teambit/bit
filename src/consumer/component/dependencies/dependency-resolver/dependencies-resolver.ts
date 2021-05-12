@@ -3,12 +3,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
-import {
-  IssuesList,
-  IssuesClasses,
-  UntrackedFileDependencyEntry,
-  RelativeComponentsAuthoredEntry,
-} from '@teambit/component-issues';
+import { IssuesList, IssuesClasses } from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
 import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
@@ -30,7 +25,6 @@ import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/t
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
-import { BitIdStr } from '../../../../bit-id/bit-id';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 
 export type AllDependencies = {
@@ -48,26 +42,6 @@ export type AllPackagesDependencies = {
 
 export type FileType = {
   isTestFile: boolean;
-};
-
-type UntrackedDependenciesIssues = Record<string, UntrackedFileDependencyEntry>;
-type RelativeComponentsAuthoredIssues = { [fileName: string]: RelativeComponentsAuthoredEntry[] };
-
-export type Issues = {
-  missingPackagesDependenciesOnFs: { [filePath: string]: string[] };
-  missingPackagesDependenciesFromOverrides: string[];
-  missingComponents: { [filePath: string]: BitId[] };
-  untrackedDependencies: UntrackedDependenciesIssues;
-  missingDependenciesOnFs: { [filePath: string]: string[] };
-  missingLinks: { [filePath: string]: BitId[] };
-  missingDists?: boolean; // harmony only. "bit compile" wasn't running
-  missingCustomModuleResolutionLinks: { [filePath: string]: string[] };
-  customModuleResolutionUsed: { [importSource: string]: BitIdStr }; // invalid on Harmony, { importSource: idStr }
-  relativeComponents: { [filePath: string]: BitId[] };
-  relativeComponentsAuthored?: RelativeComponentsAuthoredIssues; // invalid on Harmony
-  parseErrors: { [filePath: string]: string };
-  resolveErrors: { [filePath: string]: string };
-  importNonMainFiles?: { [filePath: string]: string[] }; // warning on Harmony
 };
 
 export type DebugDependencies = {
@@ -1296,8 +1270,6 @@ either, use the ignore file syntax or change the require statement to have a mod
     (this.issues.getOrCreate(IssuesClasses.relativeComponents).data[originFile] ||= []).push(componentId);
   }
   _pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource: string, relativePath: RelativePath) {
-    // @todo: we might need this in legacy to allow a smoother migration
-    if (this.consumer.isLegacy) return;
     (this.issues.getOrCreate(IssuesClasses.relativeComponentsAuthored).data[originFile] ||= []).push({
       importSource,
       componentId,
