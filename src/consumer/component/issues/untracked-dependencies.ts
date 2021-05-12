@@ -1,8 +1,18 @@
 import chalk from 'chalk';
 import R from 'ramda';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../../constants';
-import { UntrackedFileDependencyEntry } from '../dependencies/dependency-resolver/dependencies-resolver';
-import { ComponentIssue, formatTitle } from './component-issue';
+import { ComponentIssue, formatTitle, MISSING_DEPS_SPACE_COUNT } from './component-issue';
+
+export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
+
+interface UntrackedFileEntry {
+  relativePath: string;
+  existing: boolean;
+}
+
+export interface UntrackedFileDependencyEntry {
+  nested: boolean;
+  untrackedFiles: Array<UntrackedFileEntry>;
+}
 
 export class UntrackedDependencies extends ComponentIssue {
   description = 'untracked file dependencies (use "bit add <file>" to track untracked files as components)';

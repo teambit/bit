@@ -6,6 +6,7 @@ import * as path from 'path';
 
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '../../src/consumer/component/issues';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
@@ -909,8 +910,7 @@ describe('bit import', function () {
           expect(output).to.have.string('found 3 components in local scope');
         });
         it('bit status should show missing links because the symlinks from the component node_modules to the dependencies are missing', () => {
-          const status = helper.command.status();
-          expect(status).to.have.string(componentIssuesLabels.missingLinks);
+          helper.command.expectStatusToHaveIssue(IssuesClasses.MissingLinks.name);
         });
         describe('after running bit link', () => {
           before(() => {

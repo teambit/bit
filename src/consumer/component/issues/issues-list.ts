@@ -28,7 +28,7 @@ export const IssuesClasses = {
   ImportNonMainFiles,
   CustomModuleResolutionUsed,
 };
-type IssuesNames = keyof typeof IssuesClasses;
+export type IssuesNames = keyof typeof IssuesClasses;
 
 export class IssuesList {
   constructor(private issues: ComponentIssue[] = []) {}

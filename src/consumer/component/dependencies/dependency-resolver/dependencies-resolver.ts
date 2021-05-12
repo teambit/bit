@@ -26,7 +26,7 @@ import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { BitIdStr } from '../../../../bit-id/bit-id';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
-import { IssuesList, IssuesClasses } from '../../issues';
+import { IssuesList, IssuesClasses, UntrackedFileDependencyEntry } from '../../issues';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -44,16 +44,6 @@ export type AllPackagesDependencies = {
 export type FileType = {
   isTestFile: boolean;
 };
-
-interface UntrackedFileEntry {
-  relativePath: string;
-  existing: boolean;
-}
-
-export interface UntrackedFileDependencyEntry {
-  nested: boolean;
-  untrackedFiles: Array<UntrackedFileEntry>;
-}
 
 export type RelativeComponentsAuthoredEntry = {
   importSource: string;

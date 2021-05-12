@@ -7,9 +7,10 @@ import {
   componentIssuesLabels,
   MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
 } from '../../src/cli/templates/component-issues-template';
-import { IMPORT_PENDING_MSG, MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/constants';
+import { IMPORT_PENDING_MSG } from '../../src/constants';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/consumer/component/issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 

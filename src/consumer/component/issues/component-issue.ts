@@ -1,9 +1,11 @@
 import { BitId } from '@teambit/legacy-bit-id';
 import chalk from 'chalk';
 import R from 'ramda';
-import { MISSING_DEPS_SPACE } from '../../../constants';
 
 export type StringsPerFilePath = { [filePath: string]: string[] };
+
+export const MISSING_DEPS_SPACE_COUNT = 10;
+export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
 
 export class ComponentIssue {
   description: string;

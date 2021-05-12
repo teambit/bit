@@ -400,6 +400,12 @@ export default class CommandHelper {
     });
   }
 
+  expectStatusToHaveIssue(issueName: string) {
+    const statusJson = this.statusJson();
+    const allIssues = statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
+    expect(allIssues).to.include(issueName);
+  }
+
   expectStatusToNotHaveIssues() {
     const statusJson = this.statusJson();
     ['componentsWithIssues', 'invalidComponents'].forEach((key) => {
