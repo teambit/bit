@@ -43,6 +43,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/aspect-docs/compositions"
     },
+    "aspect-docs/dependency-resolver": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/aspect-docs/dependency-resolver"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
