@@ -97,6 +97,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/aspect-docs/pnpm"
     },
+    "aspect-docs/preview": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/preview/aspect-docs/preview"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
