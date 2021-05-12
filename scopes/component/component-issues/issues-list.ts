@@ -33,6 +33,10 @@ export type IssuesNames = keyof typeof IssuesClasses;
 export class IssuesList {
   constructor(private issues: ComponentIssue[] = []) {}
 
+  get count() {
+    return this.issues.length;
+  }
+
   isEmpty() {
     return this.issues.length === 0;
   }
