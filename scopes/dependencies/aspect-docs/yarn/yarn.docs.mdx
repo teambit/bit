@@ -1,22 +1,22 @@
 ---
-description: 'Docs for Pnpm aspect'
+description: 'Docs for Yarn aspect'
 labels: ['docs', 'aspect', 'extensions']
 ---
 
-import { Pnpm } from './index';
+import { Yarn } from './index';
 
 ## Static Content Page in MDX
 
-Docs for Pnpm aspect
+Docs for Yarn aspect
 
 ### Component usage
 
 Use your component in any mdx file:
 
 ```js
-import { Pnpm } from '@teambit/aspect-docs.pnpm';
+import { Yarn } from '@teambit/aspect-docs.yarn';
 
-<Pnpm />;
+<Yarn />;
 ```
 
 ### Render with theme and MDX providers
@@ -24,11 +24,11 @@ import { Pnpm } from '@teambit/aspect-docs.pnpm';
 ```js
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { Pnpm } from '@teambit/aspect-docs.pnpm';
+import { Yarn } from '@teambit/aspect-docs.yarn';
 
 <ThemeContext>
   <MDXLayout>
-    <Pnpm />
+    <Yarn />
   </MDXLayout>
 </ThemeContext>;
 ```

@@ -61,6 +61,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/aspect-docs/variants"
     },
+    "aspect-docs/yarn": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/dependencies/aspect-docs/yarn"
+    },
     "aspect-loader": {
         "scope": "teambit.harmony",
         "version": "0.0.387",
