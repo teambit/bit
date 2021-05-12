@@ -1,11 +1,3 @@
----
-id: envs
-title: Envs
-slug: /aspect/envs
-description: Manages Environments and Environment Services
-labels: ['environments', 'core aspect']
----
-
 The Envs aspect runs Bit environments and environment services, and defines their structure.
 
 A Bit environment is a development environment encapsulated in a Bit component. Just like other components, Bit environments can be instantly added to your workspace to start developing, testing, and building components with zero configurations.
@@ -68,7 +60,6 @@ Runs the build pipeline (without tagging components with a new release version).
 bit build
 ```
 
-
 #### test
 
 Runs all tests.
@@ -111,8 +102,10 @@ For example:
 }
 ```
 
-> <p style={{color: '#c31313'}}>Never use the '*' wildcard in a workspace that uses multiple environments!</p>
-Instead, use exclusive namespaces or directories to select and configure each group of components to use its own environment (see an example in the next section).
+> <p style={{ color: '#c31313' }}>Never use the '*' wildcard in a workspace that uses multiple environments!</p>
+> Instead, use exclusive namespaces or directories to select and configure each group of components to use its own environment
+> (see an example in the next section).
+
 <br />
 <br />
 
@@ -142,7 +135,7 @@ For example, to set the Node and React environments on two sets of components (s
 ### Extending an environment
 
 > This section goes through the steps of extending the 'main runtime'.
-See the 'Runtime Environment' section to learn how to extend multiple runtime environments.
+> See the 'Runtime Environment' section to learn how to extend multiple runtime environments.
 
 An environment extension is a component that extends an existing environment. An extension file will have the `.extension.ts` suffix as a convention.
 
@@ -317,11 +310,7 @@ export class CustomReactExtension {
   // Set the necessary dependencies to be injected (by Bit) into the following 'provider' function
   static dependencies: any = [EnvsAspect, ReactAspect, BabelAspect];
 
-  static async provider([envs, react, babel]: [
-    EnvsMain,
-    ReactMain,
-    BabelMain
-  ]) {
+  static async provider([envs, react, babel]: [EnvsMain, ReactMain, BabelMain]) {
     // Create a new Babel compiler with the 'babelConfig' configurations
     const babelCompiler = babel.createCompiler({
       babelTransformOptions: babelConfig,
@@ -361,9 +350,10 @@ To become a "one-stop-shop" for components, an environment "bundles" together di
 For example, the 'Tester' service (`@teambit.defender/tester`) enables the React environment (`@teambit.react/react`) to set 'Jest' (`teambit.defender/jest`) as the default test runner for its components. This will enable Jest to be executed on the `bbit test` command, to be run as a pre-tag check, to output results using Bit's logger, and even to display the generated logs in the Workspace and Scope UIs (to name just a few examples).
 
 <img
-src="https://storage.googleapis.com/docs-images/react_env_ex.png"
-alt="React env using Jest with the tester service"
-style={{width: '50%', minWidth: 500}}></img>
+  src="https://storage.googleapis.com/docs-images/react_env_ex.png"
+  alt="React env using Jest with the tester service"
+  style={{ width: '50%', minWidth: 500 }}
+></img>
 
 > ##### Services VS Build Tasks
 >
@@ -648,10 +638,7 @@ export class ReactEnv implements Environment {
   ) {}
 
   getBuildPipe(): BuildTask[] {
-    return [
-      this.compiler.createTask('StencilCompiler', this.getCompiler()),
-      this.tester.task,
-    ];
+    return [this.compiler.createTask('StencilCompiler', this.getCompiler()), this.tester.task];
   }
 }
 ```
@@ -676,6 +663,7 @@ An environment extension that runs on multiple runtimes is called "Aspect" an wi
 Create a `*.aspect.ts` file:
 
 For example:
+
 ```shell
 touch path/to/extension/env-extension.aspect.ts
 ```
@@ -692,10 +680,10 @@ export const ReactWithProvidersAspect = Aspect.create({
   // Make sure to track your extension component before registering it as an Aspect
   id: 'my-scope.react-with-providers',
 });
-
 ```
 
 ### Registering a runtime extension
+
 An aspect is a collection of multiple extensions, each extending a specific runtime.
 
 Register each runtime extension to its corresponding runtime, using the `addRuntime` method.
@@ -709,7 +697,6 @@ import { PreviewRuntime } from '@teambit/preview';
 import { ReactAspect, ReactPreview } from '@teambit/react';
 import { ReactExtensionAspect } from './react-with-providers.aspect';
 
-
 export class ReactExtensionPreview {
   static runtime = PreviewRuntime;
 
@@ -722,8 +709,6 @@ export class ReactExtensionPreview {
 
 ReactExtensionAspect.addRuntime(ReactExtensionPreview);
 ```
-
-
 
 ### Runtime environments
 
@@ -758,16 +743,13 @@ export class ReactExtensionMain {
   static dependencies = [ReactAspect, EnvsAspect];
 
   static async provider([react, envs]: [ReactMain, EnvsMain]) {
-    const reactExtension= envs.compose(react, [
-      react.overrideTsConfig(tsconfig)
-    ]);
+    const reactExtension = envs.compose(react, [react.overrideTsConfig(tsconfig)]);
     envs.registerEnv(reactExtension);
     return new ReactWithProvidersMain(react, envs);
   }
 }
 
 ReactExtensionAspect.addRuntime(ReactExtensionMain);
-
 ```
 
 #### UI
@@ -845,6 +827,7 @@ Remove the `*` general selection and use only specific and exclusive selectors t
 (that means your workspace directories/ namespaces need to be structured in a way that enables complete selection of all components using selectors that are exclusive).
 
 For example:
+
 ```json
 {
   "teambit.workspace/variants": {
@@ -872,12 +855,13 @@ Example:
     "components/utils": {
       "teambit.harmony/node": {},
       "teambit.envs/envs": {
-         "env": "teambit.harmony/node"
-       }
+        "env": "teambit.harmony/node"
+      }
     }
   }
 }
 ```
+
 > Notice how the Node environment was added also as a standalone aspect, to ensure that it is registered as a dependency of the selected components.
 
 ---

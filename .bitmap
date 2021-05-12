@@ -49,6 +49,36 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/dependencies/aspect-docs/dependency-resolver"
     },
+    "aspect-docs/envs": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/envs/aspect-docs/envs"
+    },
+    "aspect-docs/generator": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/generator/aspect-docs/generator"
+    },
+    "aspect-docs/logger": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/aspect-docs/logger"
+    },
+    "aspect-docs/mdx": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/mdx/aspect-docs/mdx"
+    },
+    "aspect-docs/multi-compiler": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compilation/aspect-docs/multi-compiler"
+    },
     "aspect-docs/pnpm": {
         "scope": "",
         "version": "",

@@ -1,11 +1,3 @@
----
-id: mdx
-title: MDX
-slug: /aspects/mdx
-description: A Bit-MDX integration for simple & powerful component documentation and independent content composition
-labels: ['mdx', 'bit', 'docs', 'md', 'markdown', 'ui']
----
-
 import _ from 'lodash';
 import { Button } from '@teambit/evangelist.elements.button';
 
@@ -14,6 +6,7 @@ The MDX format joins together the ease-of-use and readability of the Markdown sy
 The modularity that's offered by both technologies (MDX and Bit) enables MDX files to be exported to a remote scope and imported to other web projects, just like any other Bit component.
 
 #### Example
+
 ````md
 ---
 displayName: Login form
@@ -45,14 +38,14 @@ A simple example of live example:
 
 #### Features
 
-* __Powerful component composition__: Author clear and engaging documentation that integrates readable Markdown syntax, Bit's live playground and your own customized components.
-* __Docs that look and feel like Bit__: Component docs written with MDX (like the one you're reading right now) are themed using Bit's [Documenter design system to provide a look-and-feel that is consistent with the Workspace/Scope UI.
-* __Bit component frontmatter__: Use Bit's YAML frontmatter to add or override metadata to the component being documented.
-* __A simple-to-use live playground__: Use MDX's user-friendly syntax to add live examples of code. No need to worry about dependencies - any module used by the doc file will also be available to code running in the live playground.
-* __Independent MDX components__: Author consumable independent content components that can be shared across web projects. Use it to maintain a consistent "voice & tone" and to keep your content always up-to-date.
-
+- **Powerful component composition**: Author clear and engaging documentation that integrates readable Markdown syntax, Bit's live playground and your own customized components.
+- **Docs that look and feel like Bit**: Component docs written with MDX (like the one you're reading right now) are themed using Bit's [Documenter design system to provide a look-and-feel that is consistent with the Workspace/Scope UI.
+- **Bit component frontmatter**: Use Bit's YAML frontmatter to add or override metadata to the component being documented.
+- **A simple-to-use live playground**: Use MDX's user-friendly syntax to add live examples of code. No need to worry about dependencies - any module used by the doc file will also be available to code running in the live playground.
+- **Independent MDX components**: Author consumable independent content components that can be shared across web projects. Use it to maintain a consistent "voice & tone" and to keep your content always up-to-date.
 
 ## Quick start
+
 The MDX aspect is used by various Bit environments. To use it, set your workspace configuration to use an MDX supported environment.
 
 As a default, MDX will only be used for component documentation. To enable the compilation of MDX components, set the `mdx` property to `true`.
@@ -72,6 +65,7 @@ As a default, MDX will only be used for component documentation. To enable the c
 ## Usage
 
 #### Using the frontmatter API
+
 Bit parses your code to generate metadata for your components. This metadata is presented in the component's documentation and is used by Bit.dev's search engine.
 To override it, use Bit's frontmatter properties, at the top of your MDX file.
 
@@ -88,6 +82,7 @@ labels: ['react', 'typescript', 'ui', 'form']
 - `labels` _string[]_ overrides the component labels/tags.
 
 #### Using the live playground
+
 To use Bit's live playground add `live=true` to your codeblock.
 
 ````jsx
@@ -95,18 +90,19 @@ To use Bit's live playground add `live=true` to your codeblock.
     () => {
         return <p> Hello World! </p>
     }
-```
+```;
 ````
+
 The above MDX snippet will be rendered like so:
 
 ```jsx live=true
 () => {
-
-  return <p> Hello World! </p>
+  return <p> Hello World! </p>;
 };
 ```
 
 #### Using the live playground with external modules
+
 The live playground can access the docs file dependencies. To use an external module, first import it to the docs file.
 
 For example:
@@ -129,13 +125,11 @@ The above MDX snippet will be rendered like so:
 
 ```jsx live=true
 () => {
-
-  return <p> { _.camelCase('Hello world') } </p>;
+  return <p> {_.camelCase('Hello world')} </p>;
 };
 ```
 
 ## Use-cases and best practices
-
 
 ### Documenting components
 
@@ -146,14 +140,14 @@ segments of content from the documentation of other components, into a single do
 This can be done to document your components in a way that reflects the way they are built - through a composition of components.
 That will help in keeping your docs always up-to-date as changes made to a sub-component will propagate to the component's docs.
 
-> Linking to external pages is, in  many cases,  the  result of technological limitations and not the preferred solution.
-If most people reading your docs need to visit an external page in order for them to get the full explanation,
-then it makes more sense to have that external text integrated into your docs (by importing it).
-<br/>
+> Linking to external pages is, in many cases, the result of technological limitations and not the preferred solution.
+> If most people reading your docs need to visit an external page in order for them to get the full explanation,
+> then it makes more sense to have that external text integrated into your docs (by importing it).
+
+<br />
 Now that we have MDX and Bit, that can be done quite easily.
 
 To start writing your docs with MDX, add a `*.docs.mdx` or `*.docs.md` file to the component's directory and Bit will render it in the component's 'Overview' tab, in the Workspace UI (and later on, after it is exported, in the Scope UI). Bit's development server will hot-reload your documentation to reflect any changes made to it, in real time.
-
 
 ```
 // An example documented component file-structure
@@ -165,6 +159,7 @@ To start writing your docs with MDX, add a `*.docs.mdx` or `*.docs.md` file to t
     ├── login-form.spec.tsx
     └── login-form.tsx
 ```
+
 <br />
 
 > Make sure the Bit environment used by your component supports MDX!
@@ -199,16 +194,25 @@ The verbal descriptions, live examples, images and links to other related artifa
 
 The below example shows easily detectable discrepancies between design and implementation, seen in a demo documentation for a "button" component.
 
-<iframe style={{borderRadius: 6, border: "1px solid #ededed", marginBottom: 25}} width="100%" height="450" src="https://www.figma.com/embed?embed_host=share&url=https%3A%2F%2Fwww.figma.com%2Ffile%2FjuFzg6Qsc3UKhJ5HZKQZE2%2FBase-UI-Buttons%3Fnode-id%3D465%253A941" allowfullscreen></iframe>
-
+<iframe
+  style={{ borderRadius: 6, border: '1px solid #ededed', marginBottom: 25 }}
+  width="100%"
+  height="450"
+  src="https://www.figma.com/embed?embed_host=share&url=https%3A%2F%2Fwww.figma.com%2Ffile%2FjuFzg6Qsc3UKhJ5HZKQZE2%2FBase-UI-Buttons%3Fnode-id%3D465%253A941"
+  allowfullscreen
+></iframe>
 
 ```jsx live=true
-    // Buttons do not follow the design when 'disabled'
-    <>
-      <Button disabled importance="cta" style={{ width: 120 }}>Primary</Button>
+// Buttons do not follow the design when 'disabled'
+<>
+  <Button disabled importance="cta" style={{ width: 120 }}>
+    Primary
+  </Button>
 
-      <Button importance="ghost" style={{ width: 120 }}>Secondary</Button>
+  <Button importance="ghost" style={{ width: 120 }}>
+    Secondary
+  </Button>
 
-      <Button style={{ width: 120 }}>Normal</Button>
-    </>
+  <Button style={{ width: 120 }}>Normal</Button>
+</>
 ```
