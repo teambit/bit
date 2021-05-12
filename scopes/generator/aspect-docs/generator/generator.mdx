@@ -107,14 +107,14 @@ This registers the component aspect so that your templates will appear in the CL
 
 ### Modifying your Generator
 
-The `my-components.main.runtime.ts` file contains an array of templates that you can modify and add to to create different templates and numerous files to be generated.
+The `*.main.runtime.ts` file contains an array of templates that you can modify and add to to create different templates and numerous files to be generated.
 
 ### Using your Generator
 
 Use your generator to create the component files
 
 ```bash
-bit create my-components component1
+bit create component1 button
 ```
 
 ### Exporting your Generator
@@ -129,4 +129,4 @@ Tag and export your generator component so you can use it in any other workspace
 }
 ```
 
-Run `bit templates` to see your generator and then use it to generate you components.
+Run `bit templates` to see your templates and then use `bit create` to create your components.
