@@ -54,7 +54,7 @@ export function transpileFileContent(
   return outputFiles;
 }
 
-export async function transpileFilePath(
+export async function transpileFilePathAsync(
   filePath: string,
   options: TransformOptions,
   babelModule = babel
