@@ -62,7 +62,10 @@ export default class Status implements LegacyCommand {
           newComponents,
           modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
           stagedComponents: stagedComponents.map((c) => c.id()),
-          componentsWithIssues: componentsWithIssues.map((c) => c.id.toString()),
+          componentsWithIssues: componentsWithIssues.map((c) => ({
+            id: c.id.toString(),
+            issues: c.issues?.toObject(),
+          })),
           importPendingComponents: importPendingComponents.map((id) => id.toString()),
           autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
           invalidComponents,

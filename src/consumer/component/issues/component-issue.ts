@@ -24,6 +24,13 @@ export class ComponentIssue {
       )
     );
   }
+  toObject() {
+    return {
+      type: this.constructor.name,
+      description: this.description,
+      data: this.data,
+    };
+  }
   serialize(): string {
     return JSON.stringify(this.data);
   }

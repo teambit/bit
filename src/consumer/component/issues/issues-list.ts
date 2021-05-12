@@ -41,6 +41,10 @@ export class IssuesList {
     return this.issues.map((issue) => issue.format()).join('');
   }
 
+  toObject() {
+    return this.issues.map((issue) => issue.toObject());
+  }
+
   add(issue: ComponentIssue) {
     this.issues.push(issue);
   }
