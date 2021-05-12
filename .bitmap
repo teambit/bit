@@ -79,6 +79,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/aspect-docs/multi-compiler"
     },
+    "aspect-docs/node": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/harmony/aspect-docs/node"
+    },
     "aspect-docs/pnpm": {
         "scope": "",
         "version": "",
