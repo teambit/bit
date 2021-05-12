@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -29,7 +28,8 @@ describe('relative paths flow (components requiring each other by relative paths
     });
     it('should block bit tag', () => {
       const output = helper.general.runWithTryCatch('bit tag -a');
-      expect(output).to.have.string(componentIssuesLabels.relativeComponentsAuthored);
+      const RelativeComponentAuthoredClass = IssuesClasses.relativeComponentsAuthored;
+      expect(output).to.have.string(new RelativeComponentAuthoredClass().description);
       expect(output).to.have.string('index.js -> "../comp2" (comp2)');
     });
     describe('replacing relative paths by module paths', () => {

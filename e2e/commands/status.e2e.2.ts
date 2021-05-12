@@ -1,12 +1,9 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '@teambit/component-issues';
+import { IssuesClasses, MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '@teambit/component-issues';
 import { statusFailureMsg, statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import {
-  componentIssuesLabels,
-  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
-} from '../../src/cli/templates/component-issues-template';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 import { IMPORT_PENDING_MSG } from '../../src/constants';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
@@ -126,7 +123,7 @@ describe('bit status command', function () {
       });
       it('Should show missing package dependencies', () => {
         output = helper.command.runCmd('bit status').replace(/\n/g, '');
-        expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
+        helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
         expect(output).to.have.string('bar/foo.js -> react');
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
@@ -147,7 +144,7 @@ describe('bit status command', function () {
       });
       it('Should show missing package dependencies', () => {
         output = helper.command.runCmd('bit status').replace(/\n/g, '');
-        expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
+        helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
         expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
       });
     });

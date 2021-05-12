@@ -1,11 +1,8 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import {
-  componentIssuesLabels,
-  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
-} from '../../src/cli/templates/component-issues-template';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -1019,7 +1016,7 @@ describe('workspace config', function () {
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
           const output = helper.command.status().replace(/\n/g, '');
-          expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
+          helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });

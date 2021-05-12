@@ -4,8 +4,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import glob from 'glob';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -338,9 +337,10 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
+      const RelativeCompClass = IssuesClasses.relativeComponents;
       expect(output).to.have.string('error: issues found with the following component dependencies');
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-string@0.0.1`);
-      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
+      expect(output).to.have.string(new RelativeCompClass().description);
       expect(output).to.have.string('is-string.js -> utils/is-type');
     });
   });
@@ -371,7 +371,8 @@ console.log(barFoo.default());`;
       }
     });
     it('should not allow tagging the component', () => {
-      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
+      const RelativeCompClass = IssuesClasses.relativeComponents;
+      expect(output).to.have.string(new RelativeCompClass().description);
     });
   });
 

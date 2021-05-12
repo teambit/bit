@@ -401,9 +401,13 @@ export default class CommandHelper {
   }
 
   expectStatusToHaveIssue(issueName: string) {
-    const statusJson = this.statusJson();
-    const allIssues = statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
+    const allIssues = this.getAllIssuesFromStatus();
     expect(allIssues).to.include(issueName);
+  }
+
+  getAllIssuesFromStatus(): string[] {
+    const statusJson = this.statusJson();
+    return statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
   }
 
   expectStatusToNotHaveIssues() {

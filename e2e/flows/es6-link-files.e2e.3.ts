@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -46,8 +45,8 @@ describe('es6 components with link files', function () {
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider that index file as a dependency', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
   });
 
@@ -81,8 +80,8 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
     it('bit link --rewire should not change the source code', () => {
       // that's because this link file and the main file don't have the same "import default" settings
@@ -168,8 +167,8 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
     describe('when importing the component', () => {
       before(() => {
