@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -69,7 +69,6 @@ import migrate, { ConsumerMigrationResult } from './migrations/consumer-migrator
 import migratonManifest from './migrations/consumer-migrator-manifest';
 import { BasicTagParams } from '../api/consumer/lib/tag';
 import { UnexpectedPackageName } from './exceptions/unexpected-package-name';
-import { IssuesClasses } from './component/issues';
 
 type ConsumerProps = {
   projectPath: string;

@@ -3,6 +3,12 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import { isNilOrEmpty } from 'ramda-adjunct';
 import semver from 'semver';
+import {
+  IssuesList,
+  IssuesClasses,
+  UntrackedFileDependencyEntry,
+  RelativeComponentsAuthoredEntry,
+} from '@teambit/component-issues';
 import { Dependency } from '..';
 import { BitId, BitIds } from '../../../../bit-id';
 import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, DEPENDENCIES_FIELDS } from '../../../../constants';
@@ -26,8 +32,6 @@ import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import { BitIdStr } from '../../../../bit-id/bit-id';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
-import { IssuesList, IssuesClasses, UntrackedFileDependencyEntry } from '../../issues';
-import { RelativeComponentsAuthoredEntry } from '../../issues/relative-components-authored';
 
 export type AllDependencies = {
   dependencies: Dependency[];

@@ -1,5 +1,6 @@
 import R from 'ramda';
 import path from 'path';
+import { IssuesClasses } from '@teambit/component-issues';
 import { Consumer } from '../../..';
 import logger from '../../../../logger/logger';
 import { getLastModifiedComponentTimestampMs } from '../../../../utils/fs/last-modified';
@@ -8,7 +9,6 @@ import Component from '../../consumer-component';
 import { DependenciesData } from './dependencies-data';
 import DependencyResolver from './dependencies-resolver';
 import { COMPONENT_CONFIG_FILE_NAME, PACKAGE_JSON } from '../../../../constants';
-import { IssuesClasses } from '../../issues';
 import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../../../cli/templates/component-issues-template';
 
 type Opts = {

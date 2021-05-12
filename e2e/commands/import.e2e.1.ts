@@ -3,9 +3,9 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
+import { IssuesClasses } from '@teambit/component-issues';
 
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import { IssuesClasses } from '../../src/consumer/component/issues';
 import Helper, { VERSION_DELIMITER } from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 

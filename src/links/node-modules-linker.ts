@@ -3,7 +3,7 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { BitId } from '../bit-id';
 import {
   COMPONENT_ORIGINS,
@@ -17,7 +17,6 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import ComponentsList from '../consumer/component/components-list';
 import Component from '../consumer/component/consumer-component';
 import { Dependency } from '../consumer/component/dependencies';
-import { IssuesClasses } from '../consumer/component/issues';
 import PackageJsonFile from '../consumer/component/package-json-file';
 import { PackageJsonTransformer } from '../consumer/component/package-json-transformer';
 import DataToPersist from '../consumer/component/sources/data-to-persist';

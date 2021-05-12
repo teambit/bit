@@ -1,5 +1,5 @@
 import path from 'path';
-
+import { IssuesClasses, RelativeComponentsAuthoredEntry } from '@teambit/component-issues';
 import { Consumer } from '..';
 import { BitId, BitIds } from '../../bit-id';
 import { pathJoinLinux, pathNormalizeToLinux, pathRelativeLinux } from '../../utils';
@@ -7,7 +7,6 @@ import componentIdToPackageName from '../../utils/bit/component-id-to-package-na
 import replacePackageName from '../../utils/string/replace-package-name';
 import Component from '../component/consumer-component';
 import { ImportSpecifier } from '../component/dependencies/files-dependency-builder/types/dependency-tree-type';
-import { IssuesClasses, RelativeComponentsAuthoredEntry } from '../component/issues';
 import { SourceFile } from '../component/sources';
 import DataToPersist from '../component/sources/data-to-persist';
 

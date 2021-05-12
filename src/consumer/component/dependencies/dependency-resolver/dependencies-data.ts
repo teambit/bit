@@ -1,5 +1,5 @@
+import { IssuesList } from '@teambit/component-issues';
 import { BitId } from '../../../../bit-id';
-import { IssuesList } from '../../issues';
 import Dependency from '../dependency';
 import { AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
 import { ManuallyChangedDependencies } from './overrides-dependencies';

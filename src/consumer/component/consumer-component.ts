@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
+import { IssuesList } from '@teambit/component-issues';
 import Capsule from '../../../legacy-capsule/core/capsule';
 import { Analytics } from '../../analytics/analytics';
 import BitId from '../../bit-id/bit-id';
@@ -63,7 +64,6 @@ import FileSourceNotFound from './exceptions/file-source-not-found';
 import MainFileRemoved from './exceptions/main-file-removed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import { NoComponentDir } from './exceptions/no-component-dir';
-import { IssuesList } from './issues';
 import PackageJsonFile from './package-json-file';
 import DataToPersist from './sources/data-to-persist';
 import Dists from './sources/dists';
