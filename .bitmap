@@ -19,6 +19,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compilation/aspect-docs/babel"
     },
+    "aspect-docs/builder": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/pipelines/aspect-docs/builder"
+    },
     "aspect-docs/variants": {
         "scope": "",
         "version": "",
