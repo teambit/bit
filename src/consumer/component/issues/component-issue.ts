@@ -1,3 +1,4 @@
+import { BitId } from '@teambit/legacy-bit-id';
 import chalk from 'chalk';
 import R from 'ramda';
 import { MISSING_DEPS_SPACE } from '../../../constants';
@@ -26,7 +27,7 @@ export class ComponentIssue {
   serialize(): string {
     return JSON.stringify(this.data);
   }
-  static deserialize(data: string) {
+  deserialize(data: string) {
     return JSON.parse(data);
   }
 }
@@ -40,4 +41,12 @@ type FormatIssueFunc = (value: any) => string;
 
 export function componentIssueToString(value: string[] | string) {
   return Array.isArray(value) ? value.join(', ') : value;
+}
+
+export function deserializeWithBitId(dataStr: string) {
+  const data = JSON.parse(dataStr);
+  Object.keys(data).forEach((filePath) => {
+    data[filePath] = data[filePath].map((id) => new BitId(id));
+  });
+  return data;
 }

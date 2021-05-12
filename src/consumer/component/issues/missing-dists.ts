@@ -1,7 +1,7 @@
 import { ComponentIssue, formatTitle } from './component-issue';
 
 export class MissingDists extends ComponentIssue {
-  description = 'missing components (use "bit import" or `bit install` to make sure all components exist)';
+  description = 'missing dists (run "bit compile")';
   data: boolean;
   isTagBlocker = false;
   format() {

@@ -49,7 +49,7 @@ export default (async function status(): Promise<StatusResult> {
   const mergePendingComponents = await componentsList.listMergePendingComponents();
   const newAndModified: Component[] = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
-    return !component.issues?.isEmpty();
+    return component.issues && !component.issues.isEmpty();
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
   const softTaggedComponents = componentsList.listSoftTaggedComponents();

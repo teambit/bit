@@ -53,8 +53,14 @@ export class IssuesList {
     return this.issues.find((issue) => issue.constructor.name === issueType) as T | undefined;
   }
 
+  createIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T {
+    const newIssue = new IssueClass();
+    this.add(newIssue);
+    return newIssue;
+  }
+
   getOrCreate<T extends ComponentIssue>(IssueClass: { new (): T }): T {
-    return this.getIssue(IssueClass) || new IssueClass();
+    return this.getIssue(IssueClass) || this.createIssue(IssueClass);
   }
 
   shouldBlockSavingInCache(): boolean {
@@ -65,7 +71,25 @@ export class IssuesList {
     return this.issues.some((issue) => issue.isTagBlocker);
   }
 
-  serialize() {}
+  serialize() {
+    return this.issues.map((issue) => ({ type: issue.constructor.name, data: issue.serialize() }));
+  }
 
-  static deserialize(data: string) {}
+  static deserialize(data: Record<string, any>) {
+    if (!Array.isArray(data)) {
+      // probably old format, ignore it and return an empty IssuesList
+      return new IssuesList();
+    }
+    const issues = data.map((issue) => {
+      const ClassName = issue.type;
+      if (!Object.keys(IssuesClasses).includes(ClassName)) {
+        throw new Error(`issue type "${ClassName}" is not recognized.
+the following are permitted ${Object.keys(IssuesClasses).join(', ')}`);
+      }
+      const issueInstance: ComponentIssue = new IssuesClasses[ClassName]();
+      issueInstance.data = issueInstance.deserialize(issue.data);
+      return issueInstance;
+    });
+    return new IssuesList(issues);
+  }
 }
