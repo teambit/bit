@@ -13,6 +13,18 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect"
     },
+    "aspect-docs/babel": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compilation/aspect-docs/babel"
+    },
+    "aspect-docs/variants": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/workspace/aspect-docs/variants"
+    },
     "aspect-loader": {
         "scope": "teambit.harmony",
         "version": "0.0.387",
@@ -1260,12 +1272,6 @@
         "version": "0.0.362",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/variants"
-    },
-    "variants-docs": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/variants-docs"
     },
     "webpack": {
         "scope": "teambit.compilation",

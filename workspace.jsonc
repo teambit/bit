@@ -456,12 +456,6 @@
     "scopes/workspace": {
       "defaultScope": "teambit.workspace"
     },
-    "scopes/workspace/variants-docs": {
-      "teambit.envs/envs": {
-        "env": "teambit.mdx/mdx"
-      },
-      "teambit.mdx/mdx": {}
-    },
     "scopes/webpack": {
       "defaultScope": "teambit.webpack"
     },
@@ -555,6 +549,12 @@
     },
     "scopes/typescript": {
       "defaultScope": "teambit.typescript"
+    },
+    "{aspect-docs/**}": {
+      "teambit.envs/envs": {
+        "env": "teambit.mdx/mdx"
+      },
+      "teambit.mdx/mdx": {}
     },
     "scopes/semantics": {
       "defaultScope": "teambit.semantics"
