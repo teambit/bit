@@ -331,6 +331,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/compositions/model/composition-type"
     },
+    "modules/babel-compiler": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/compilation/modules/babel-compiler"
+    },
     "modules/config-mutator": {
         "scope": "teambit.webpack",
         "version": "0.0.10",

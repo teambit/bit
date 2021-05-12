@@ -12,8 +12,7 @@ import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
 import { componentTemplates } from './mdx.templates';
-
-const babelConfig = require('./babel/babel.config');
+import { babelConfig } from './babel/babel.config';
 
 export type MDXConfig = {
   /**
@@ -67,8 +66,8 @@ export class MDXMain {
     const mdx = new MDXMain();
     const mdxCompiler = multiCompiler.createCompiler(
       [
-        mdx.createCompiler({ ignoredPatterns: docs.getPatterns() }),
-        babel.createCompiler(babelConfig),
+        babel.createCompiler({ babelTransformOptions: babelConfig }),
+        mdx.createCompiler({ ignoredPatterns: docs.getPatterns(), babelTransformOptions: babelConfig }),
         react.reactEnv.getCompiler(undefined, { compileJs: false, compileJsx: false }),
       ],
       {}
