@@ -27,7 +27,6 @@ describe('es6 components with link files', function () {
    * raise a warning about missing-dependencies
    */
   describe('when a component uses index file to import single members from a module', () => {
-    let output;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
@@ -58,7 +57,6 @@ describe('es6 components with link files', function () {
   // and the destinationRelativePath: "utils/is-string/is-string.js", all the rest index files are irrelevant.
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
   describe('multiple link files', () => {
-    let output;
     let npmCiRegistry: NpmCiRegistry;
     before(() => {
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -153,7 +151,6 @@ export { isString };`
   // the recent babel compiler includes the 'add-module-exports' plugin which previously
   // broke the link-files.
   describe('multiple link files, different "default" import situation and recent babel compiler', () => {
-    let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isStringFixture = "export default function isString() { return 'got is-string'; };";

@@ -1,7 +1,7 @@
 import mapSeries from 'p-map-series';
 import { get, flatten } from 'lodash';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
-import { IssuesClasses } from '@teambit/legacy/dist/consumer/component/issues';
+import { IssuesClasses } from '@teambit/component-issues';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';

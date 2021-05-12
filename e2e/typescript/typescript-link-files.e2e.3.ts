@@ -27,7 +27,6 @@ describe('typescript components with link files', function () {
    * raise a warning about missing-dependencies
    */
   describe('when a component uses index file to import single members from a module', () => {
-    let output;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
