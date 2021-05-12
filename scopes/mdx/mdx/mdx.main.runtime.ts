@@ -41,7 +41,6 @@ export class MDXMain {
     ReactAspect,
     EnvsAspect,
     MultiCompilerAspect,
-    BabelAspect,
     CompilerAspect,
     GeneratorAspect,
   ];
