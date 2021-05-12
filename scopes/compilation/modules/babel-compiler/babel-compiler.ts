@@ -23,9 +23,7 @@ export function transpileFileContent(
   options: TransformOptions,
   babelModule = babel
 ): TranspileOutput {
-  const supportedExtensions = ['.ts', '.tsx', '.js', '.jsx'];
-  const fileExtension = path.extname(context.filePath);
-  if (!supportedExtensions.includes(fileExtension) || context.filePath.endsWith('.d.ts')) {
+  if (!isFileSupported(context.filePath)) {
     return null; // file is not supported
   }
   let transformOptions = options || {};
@@ -62,7 +60,9 @@ export async function transpileFilePathAsync(
   if (!isFileSupported(filePath)) {
     return null;
   }
-  const result = await babelModule.transformFileAsync(filePath, options);
+  const transformOptions = setConfigFileFalse({ ...options });
+
+  const result = await babelModule.transformFileAsync(filePath, transformOptions);
   if (!result || !result.code) {
     return null;
   }
