@@ -106,9 +106,13 @@ export class BabelCompiler implements Compiler {
             );
             return;
           }
-          await fs.outputFile(path.join(capsule.path, this.distDir, result[0].outputPath), result[0].outputText);
+          // Make sure to get only the relative path of the dist because we want to add the dist dir.
+          // If we use the result outputPath we will get an absolute path here
+          const distPath = this.replaceFileExtToJs(filePath);
+          const distPathMap = `${distPath}.map`;
+          await fs.outputFile(path.join(capsule.path, this.distDir, distPath), result[0].outputText);
           if (result.length > 1) {
-            await fs.outputFile(path.join(capsule.path, this.distDir, result[1].outputPath), result[1].outputText);
+            await fs.outputFile(path.join(capsule.path, this.distDir, distPathMap), result[1].outputText);
           }
         } catch (err) {
           componentResult.errors?.push(err);
