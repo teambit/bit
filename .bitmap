@@ -85,6 +85,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/aspect-docs/node"
     },
+    "aspect-docs/pkg": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/pkg/aspect-docs/pkg"
+    },
     "aspect-docs/pnpm": {
         "scope": "",
         "version": "",
