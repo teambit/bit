@@ -14,7 +14,7 @@ import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
-import { NativeLink } from '@teambit/ui.routing.native-link';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { OptionButton } from '@teambit/ui.input.option-button';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';

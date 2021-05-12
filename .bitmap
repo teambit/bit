@@ -1033,48 +1033,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/round-loader"
     },
-    "ui/routing/compare-url": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.361",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/compare-url"
-    },
-    "ui/routing/link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.362",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/link"
-    },
-    "ui/routing/link-anchor": {
-        "scope": "",
-        "version": "",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/ui/link-anchor"
-    },
-    "ui/routing/native-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.362",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/native-link"
-    },
-    "ui/routing/native-nav-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.362",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/native-nav-link"
-    },
-    "ui/routing/nav-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.362",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/nav-link"
-    },
-    "ui/routing/provider": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.362",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/routing-provider"
-    },
     "ui/scope-details": {
         "scope": "teambit.scope",
         "version": "0.0.367",

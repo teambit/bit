@@ -3,7 +3,7 @@ import classnames from 'classnames';
 
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { pillClass } from '@teambit/base-ui.css-components.pill';
-import { NativeLink } from '@teambit/ui.routing.native-link';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 
 import { bubble } from '../../bubble';
 
