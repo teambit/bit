@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
+import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '@teambit/component-issues';
 import { statusFailureMsg, statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import {
   componentIssuesLabels,
@@ -10,7 +10,6 @@ import {
 import { IMPORT_PENDING_MSG } from '../../src/constants';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
-import { MISSING_DEPS_SPACE, MISSING_NESTED_DEPS_SPACE } from '../../src/consumer/component/issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 
