@@ -1,5 +1,5 @@
 import chai, { expect } from 'chai';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -24,13 +24,13 @@ describe('importing internal files flow (component imports from a non-index file
     });
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
-      expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
-      expect(status.componentsWithMissingDeps[0]).to.equal('comp1');
+      expect(status.componentsWithIssues).to.have.lengthOf(1);
+      expect(status.componentsWithIssues[0].id).to.equal('comp1');
     });
     it('bit status should print the path for the non-main file', () => {
       const status = helper.command.status();
       expect(status).to.have.string(`index.js -> @${helper.scopes.remote}/comp2/non-main.js`);
-      expect(status).to.have.string(componentIssuesLabels.importNonMainFiles);
+      helper.command.expectStatusToHaveIssue(IssuesClasses.ImportNonMainFiles.name);
     });
   });
 });

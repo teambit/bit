@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
+import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
@@ -81,7 +82,6 @@ import {
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
 } from './workspace.provider';
-import { Issues } from './workspace-component/issues';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 
@@ -263,10 +263,8 @@ export class Workspace implements ComponentFactory {
   /**
    * get Component issues
    */
-  async getComponentIssues(component: Component): Promise<Issues | null> {
-    const issues = component.state._consumer.issues;
-    if (!issues) return null;
-    return Issues.fromLegacy(issues);
+  async getComponentIssues(component: Component): Promise<IssuesList | null> {
+    return component.state._consumer.issues || null;
   }
 
   /**

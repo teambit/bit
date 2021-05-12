@@ -253,6 +253,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-id"
     },
+    "component-issues": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/component/component-issues"
+    },
     "component-package-version": {
         "scope": "teambit.component",
         "version": "0.0.361",
