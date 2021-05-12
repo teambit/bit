@@ -49,13 +49,13 @@ export function componentIssueToString(value: string[] | string) {
 
 export default function componentIssuesTemplate(components: ConsumerComponent[]) {
   function format(missingComponent) {
-    return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatMissing(missingComponent)}`;
+    return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatIssues(missingComponent)}`;
   }
 
   const result = `\n${components.map(format).join('\n')}`;
   return result;
 }
 
-export function formatMissing(missingComponent: ConsumerComponent) {
-  return `       ${missingComponent.issues?.toString()}\n`;
+export function formatIssues(compWithIssues: ConsumerComponent) {
+  return `       ${compWithIssues.issues?.toString()}\n`;
 }

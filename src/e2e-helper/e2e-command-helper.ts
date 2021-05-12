@@ -402,7 +402,7 @@ export default class CommandHelper {
 
   expectStatusToNotHaveIssues() {
     const statusJson = this.statusJson();
-    ['componentsWithMissingDeps', 'invalidComponents'].forEach((key) => {
+    ['componentsWithIssues', 'invalidComponents'].forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }

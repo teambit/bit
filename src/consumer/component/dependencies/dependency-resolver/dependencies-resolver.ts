@@ -1276,7 +1276,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
   }
 
-  _pushToUntrackDependenciesIssues(originFile, depFileRelative, nested = false) {
+  _pushToUntrackDependenciesIssues(originFile: PathLinuxRelative, depFileRelative, nested = false) {
     const findExisting = () => {
       let result;
       R.forEachObjIndexed((currentUntracked) => {
@@ -1296,13 +1296,12 @@ either, use the ignore file syntax or change the require statement to have a mod
       newUntrackedFile.existing = true;
       existing.existing = true;
     }
-    const untracked = this.issues.getIssue(IssuesClasses.UntrackedDependencies)?.data[originFile];
-    if (untracked) {
-      untracked.untrackedFiles.push(newUntrackedFile);
+    const untrackIssue = this.issues.getOrCreate(IssuesClasses.UntrackedDependencies);
+    const untrackedCurrentFile = untrackIssue?.data[originFile];
+    if (untrackedCurrentFile) {
+      untrackedCurrentFile.untrackedFiles.push(newUntrackedFile);
     } else {
-      this.issues.getOrCreate(IssuesClasses.UntrackedDependencies).data = {
-        [originFile]: { nested, untrackedFiles: [newUntrackedFile] },
-      };
+      untrackIssue.data[originFile] = { nested, untrackedFiles: [newUntrackedFile] };
     }
   }
   _pushToRelativeComponentsIssues(originFile, componentId: BitId) {

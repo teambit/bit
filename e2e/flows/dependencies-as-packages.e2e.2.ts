@@ -277,7 +277,7 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show the dependency as missing', () => {
             const status = helper.command.statusJson();
-            expect(status.componentsWithMissingDeps).to.have.lengthOf(0);
+            expect(status.componentsWithIssues).to.have.lengthOf(0);
           });
           it('bit show should show the correct dependency', () => {
             const show = helper.command.showComponentParsed('comp');
@@ -380,7 +380,7 @@ chai.use(require('chai-fs'));
           it('bit status should show it as missing deps not as untracked', () => {
             const statusJson = helper.command.statusJson();
             expect(statusJson.invalidComponents).to.have.lengthOf(0);
-            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(1);
+            expect(statusJson.componentsWithIssues).to.have.lengthOf(1);
             const status = helper.command.status();
             const statusWithoutLinebreaks = status.replace(/\n/g, '');
             expect(statusWithoutLinebreaks).not.to.have.string(componentIssuesLabels.untrackedDependencies);

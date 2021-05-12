@@ -24,8 +24,8 @@ describe('importing internal files flow (component imports from a non-index file
     });
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
-      expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
-      expect(status.componentsWithMissingDeps[0]).to.equal('comp1');
+      expect(status.componentsWithIssues).to.have.lengthOf(1);
+      expect(status.componentsWithIssues[0]).to.equal('comp1');
     });
     it('bit status should print the path for the non-main file', () => {
       const status = helper.command.status();
