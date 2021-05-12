@@ -23,14 +23,16 @@ When using templates Bit will use CamelCasing for passing the component-name to 
 Bit should automatically register the new component to the `.bitmap` file with a symmetrical name to the component-location in the workspace.
 
 ## Register a template
+
 Any aspect (include envs) can register templates. Each template should have a name and a list of files. Each file has a relative-path to the component-dir and template content. See the `component-template.ts` file for more info about the exact API.
 
-* Component name should be available as a param for the file-content-template.
-* TBD: An environment must have a default template (if not set, use first template in array?).
+- Component name should be available as a param for the file-content-template.
+- TBD: An environment must have a default template (if not set, use first template in array?).
 
 To register a template, use the Generator API: `registerComponentTemplate(templates: ComponentTemplate[])`.
 
 To make the templates of an aspect available on a workspace, they need to be added to the workspace.jsonc. For example:
+
 ```json
 "teambit.generator/generator": {
     "aspects": [
@@ -38,6 +40,7 @@ To make the templates of an aspect available on a workspace, they need to be add
     ]
   },
 ```
+
 In the example above, the aspect `teambit.harmony/aspect` is configured to be available for the generator.
 
 ## Show all available templates
@@ -74,48 +77,62 @@ Sets the component's namespace and nested dirs inside the scope. If not define, 
 
 Aspect ID that registered this template, required only if there are two templates with the same name from several aspects in the workspace.
 
-## Tutorial of creating a new template
-1. create a new aspect "foo"
+## Creating a custom template generator
+
+create a custom template generator using the generator command and add a name.
+
 ```bash
-bit create aspect foo
+bit create generator <my-components>
 ```
-2. edit the foo.main.runtime.ts file and paste the following:
-```js
-import { MainRuntime } from '@teambit/cli';
-import { GeneratorMain, GeneratorAspect, GeneratorContext } from '@teambit/generator';
-import { FooAspect } from './foo.aspect';
 
-export class FooMain {
-  static slots = [];
-  static dependencies = [GeneratorAspect];
-  static runtime = MainRuntime;
-  static async provider([generator]: [GeneratorMain]) {
-    generator.registerComponentTemplate([{
-      name: 'foo',
-      generateFiles: (context: GeneratorContext) => {
-        return [
-          {
-            relativePath: 'index.ts',
-            content: `export * from './${context.componentName}';`,
-            isMain: true
-          },
-          {
-            relativePath: `${context.componentName}.ts`,
-            content: `export const foo = "hello template!";`
-          },
-        ]
-      }
-    }])
-    return new FooMain();
-  }
-}
+### Configuring your Generator
 
-FooAspect.addRuntime(FooMain);
-```
-3. edit your `workspace.jsonc` file and set this foo component to use the `teambit.harmony/aspect` env.
-4. edit your `workspace.jsonc` file and add the following to the root:
-```
-"teambit.generator/generator": {
-    "aspects": ["your-scope-name/foo"]
+Edit your `workspace.jsonc` file and set this component to use the `teambit.harmony/aspect` env under the variants object.
+
+```json
+"teambit.workspace/variants": {
+  "{my-components}": {
+    "teambit.harmony/aspect": {}
   },
+}
 ```
+
+To check if your component is using the correct env you can run `bit envs` or `bit show my-components`
+
+Edit your `workspace.jsonc` file and add the component id, (scope name / component name) to teambit generator. This should go at root level. The component id can be found in the `aspect.ts` file:
+
+```bash
+{
+  "teambit.generator/generator": {
+      "aspects": ["my-scope-name/my-components"]
+    },
+}
+```
+
+This registers the component aspect so that your templates will appear in the CLI when you run `bit templates`.
+
+### Modifying your Generator
+
+The `my-components.main.runtime.ts` file contains an array of templates that you can modify and add to to create different templates and numerous files to be generated.
+
+### Using your Generator
+
+Use your generator to create the component files
+
+```bash
+bit create my-components component1
+```
+
+### Exporting your Generator
+
+Tag and export your generator component so you can use it in any other workspace. Make sure the scope name is set correctly in the `aspect.ts` file before tagging and exporting. Once you have tagged and exported the component you can add it to the `workspace.jsonc` file in the workspace where you want to use this generator.
+
+```bash
+{
+  "teambit.generator/generator": {
+      "aspects": ["my-scope-name/my-components"]
+    },
+}
+```
+
+Run `bit templates` to see your generator and then use it to generate you components.
