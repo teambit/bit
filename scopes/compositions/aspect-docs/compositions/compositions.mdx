@@ -1,14 +1,3 @@
----
-id: compositions
-title: Compositions
-slug: /aspects/compositions
-description: Renders component instances as part of different compositions.
-labels: ['ui', 'tests']
----
-
-import { UserHeroExample } from './docs/user-hero';
-import { UserProfileExample } from './docs/user-profile'
-
 The Compositions aspect renders component 'compositions' in isolation and displays them in the Workspace UI and Scope UI.
 'Compositions' are, essentially, small apps that exhibit and test a component in different contexts and variations.
 
@@ -16,12 +5,6 @@ The Compositions aspect is an essential tool to authoring independent components
 This sterile environment provides an accurate understanding of their look and behavior, for manual and automated testings.
 
 Moreover, a component's composition is a way to demonstrate the component for other developers looking to use it, and non-developers, such as designers and product managers, looking to inspect it.
-
-#### Example
-
-<UserHeroExample />
-
-<UserProfileExample />
 
 #### Features
 
@@ -67,14 +50,13 @@ Both compositions will be in themed (i.e, displayed in a specific context).
 
 First, we'll create a new composition file in the component's directory:
 
-```sh
+```bash
 touch path/to/component/directory/<component-name>.compositions.tsx
 ```
 
 Then, we'll import the component and use it to create the compositions:
 
-```javascript
-// button.compositions.jsx
+```jsx{}[button.compositions.jsx]
 import React from 'react';
 import { IrisTheme } from '@my-organization/design-system/iris-theme';
 import { Button } from './button';
@@ -100,9 +82,23 @@ export const SecondaryButton = () => {
 };
 ```
 
-<div style={{width: 450, display: 'flex', justifyContent: 'space-between'}}>
-    <CompositionCard Composition={() => (<Button importance="cta" style={{ width: 120 }} >Primary</Button>)} name="Primary" />
-    <CompositionCard Composition={() => (<Button importance="ghost" style={{ width: 120 }} >Secondary</Button>)} name="Secondary" />
+<div style={{ width: 450, display: 'flex', justifyContent: 'space-between' }}>
+  <CompositionCard
+    Composition={() => (
+      <Button importance="cta" style={{ width: 120 }}>
+        Primary
+      </Button>
+    )}
+    name="Primary"
+  />
+  <CompositionCard
+    Composition={() => (
+      <Button importance="ghost" style={{ width: 120 }}>
+        Secondary
+      </Button>
+    )}
+    name="Secondary"
+  />
 </div>
 
 ## Loading compositions
@@ -129,9 +125,7 @@ import { PrimaryButton } from './button.compositions.tsx';
 
 describe('Button', () => {
   it('renders correctly as "primary"', () => {
-    const component = testRenderer.create(
-      <PrimaryButton>test primary variant</PrimaryButton>
-    );
+    const component = testRenderer.create(<PrimaryButton>test primary variant</PrimaryButton>);
     const tree = component.toJSON();
     expect(tree).toMatchSnapshot();
   });
