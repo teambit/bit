@@ -226,7 +226,6 @@
         "https-proxy-agent": "5.0.0",
         "humanize-duration": "3.23.1",
         "humanize-string": "2.1.0",
-        "install": "0.13.0",
         "is-primitive": "3.0.1",
         "jest": "26.6.3",
         "jest-message-util": "26.6.2",
