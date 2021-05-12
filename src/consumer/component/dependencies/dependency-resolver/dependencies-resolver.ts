@@ -78,6 +78,7 @@ export type Issues = {
   parseErrors: { [filePath: string]: string };
   resolveErrors: { [filePath: string]: string };
   missingBits: { [filePath: string]: BitId[] }; // temporarily. it's combined later with missingComponents. see combineIssues
+  importNonMainFiles?: { [filePath: string]: string[] }; // warning on Harmony
 };
 
 export type DebugDependencies = {
@@ -169,16 +170,10 @@ export default class DependencyResolver {
       parseErrors: {},
       resolveErrors: {},
       missingBits: {},
+      importNonMainFiles: {},
     };
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
-  }
-
-  private isDistDirMissing() {
-    if (this.consumer.isLegacy) return undefined;
-    const pkgName = componentIdToPackageName(this.component);
-    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
-    return !fs.existsSync(distDir);
   }
 
   setTree(tree: Tree) {
@@ -805,12 +800,41 @@ either, use the ignore file syntax or change the require statement to have a mod
           // no need to enter anything to the dependencies
           return;
         }
+        this.addImportNonMainIssueIfNeeded(originFile, bitDep);
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
         this._pushToMissingBitsIssues(originFile, componentId);
       }
     });
+  }
+
+  private addImportNonMainIssueIfNeeded(filePath: string, dependencyPkgData: ResolvedPackageData) {
+    if (this.consumer.isLegacy) return; // this is relevant for Harmony only
+    const depMain = dependencyPkgData.packageJsonContent?.main;
+    if (!depMain) return;
+    const depFullPath = dependencyPkgData.fullPath;
+    if (depFullPath.endsWith(depMain)) {
+      // it requires the main-file. all is good.
+      return;
+    }
+    if (!this.isDistDirExists(dependencyPkgData.name)) {
+      // if dists is missing (bit compile was not running), then depFullPath points to the source
+      return;
+    }
+    const extDisallowNonMain = ['.ts', '.tsx', '.js', '.jsx'];
+    if (!extDisallowNonMain.includes(path.extname(depFullPath))) {
+      // some files such as scss/json are needed to be imported as non-main
+      return;
+    }
+    const nonMainFileSplit = depFullPath.split(`node_modules/`);
+    const nonMainFileShort = nonMainFileSplit[1] || nonMainFileSplit[0];
+    if (!this.issues.importNonMainFiles) this.issues.importNonMainFiles = {};
+    if (this.issues.importNonMainFiles[filePath]) {
+      this.issues.importNonMainFiles[filePath].push(nonMainFileShort);
+    } else {
+      this.issues.importNonMainFiles[filePath] = [nonMainFileShort];
+    }
   }
 
   private getValidVersion(version: string | undefined) {
@@ -1230,6 +1254,17 @@ either, use the ignore file syntax or change the require statement to have a mod
       return packageJson.packageJsonObject;
     }
     return undefined;
+  }
+
+  private isDistDirMissing() {
+    if (this.consumer.isLegacy) return undefined;
+    const pkgName = componentIdToPackageName(this.component);
+    return !this.isDistDirExists(pkgName);
+  }
+
+  private isDistDirExists(pkgName: string) {
+    const distDir = path.join(this.consumerPath, 'node_modules', pkgName, DEFAULT_DIST_DIRNAME);
+    return fs.existsSync(distDir);
   }
 
   /**
