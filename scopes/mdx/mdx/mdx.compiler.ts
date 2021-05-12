@@ -62,7 +62,7 @@ export class MDXCompiler implements Compiler {
             afterMdxCompile.contents,
             {
               rootDir: capsule.path,
-              filePath: srcFile.relative,
+              filePath: this.replaceFileExtToJs(srcFile.relative),
             },
             this.config.babelTransformOptions || {}
           );

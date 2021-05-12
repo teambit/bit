@@ -41,6 +41,7 @@ export class MDXMain {
     ReactAspect,
     EnvsAspect,
     MultiCompilerAspect,
+    BabelAspect,
     CompilerAspect,
     GeneratorAspect,
   ];
@@ -50,12 +51,13 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, compiler, generator]: [
+    [docs, depResolver, react, envs, multiCompiler, babel, compiler, generator]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
       EnvsMain,
       MultiCompilerMain,
+      BabelMain,
       CompilerMain,
       GeneratorMain
     ],
@@ -64,6 +66,7 @@ export class MDXMain {
     const mdx = new MDXMain();
     const mdxCompiler = multiCompiler.createCompiler(
       [
+        babel.createCompiler({ babelTransformOptions: babelConfig }),
         mdx.createCompiler({ ignoredPatterns: docs.getPatterns(), babelTransformOptions: babelConfig }),
         react.reactEnv.getCompiler(undefined, { compileJs: false, compileJsx: false }),
       ],
