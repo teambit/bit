@@ -3,7 +3,7 @@ description: 'Docs for React aspect'
 labels: ['docs', 'aspect', 'extensions']
 ---
 
-import { React } from './index';
+import { ReactAspect } from './index';
 
 ## Static Content Page in MDX
 
@@ -14,9 +14,9 @@ Docs for React aspect
 Use your component in any MDX file:
 
 ```js
-import { React } from '@teambit/aspect-docs.React';
+import { ReactAspect } from '@teambit/aspect-docs.react';
 
-<React />;
+<ReactAspect />;
 ```
 
 ### Render with theme and React providers
@@ -24,11 +24,11 @@ import { React } from '@teambit/aspect-docs.React';
 ```js
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
-import { React } from '@teambit/aspect-docs.React';
+import { ReactAspect } from '@teambit/aspect-docs.react';
 
 <ThemeContext>
   <MDXLayout>
-    <React />
+    <ReactAspect />
   </MDXLayout>
 </ThemeContext>;
 ```
