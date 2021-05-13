@@ -1,7 +1,7 @@
 import BitId from '../../bit-id/bit-id';
 import { Extensions, NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
 import { ExtensionDataList } from '../../consumer/config/extension-data';
-import { replacePlaceHolderForPackageName } from './component-placeholders';
+import { replacePlaceHolderForPackageValue } from './component-placeholders';
 import npmRegistryName from './npm-registry-name';
 import { parseScope } from './parse-scope';
 
@@ -74,5 +74,5 @@ function getNameFromExtensions(
   const scopeId = id.scope || defaultScope;
   const { scope, owner } = parseScope(scopeId);
   if (!name) return null;
-  return replacePlaceHolderForPackageName({ name: id.name, scope, owner, scopeId }, name);
+  return replacePlaceHolderForPackageValue({ name: id.name, scope, owner, scopeId }, name);
 }

@@ -1,6 +1,6 @@
 import { H3 } from '@teambit/documenter.ui.heading';
 import { Contributors } from '@teambit/ui.contributors';
-import { NavLink } from '@teambit/ui.routing.nav-link';
+import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Labels } from '@teambit/ui.version-label';
 import classNames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
