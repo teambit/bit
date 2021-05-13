@@ -3,7 +3,6 @@ import chai, { expect } from 'chai';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
-import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
