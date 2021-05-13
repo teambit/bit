@@ -2,10 +2,10 @@ import React from 'react';
 import { CompositionsAspect, CompositionsUI } from '@teambit/compositions';
 import { UIRuntime } from '@teambit/ui';
 import { TesterAspect, TesterUI } from '@teambit/tester';
-import { ReactAspect } from './react.aspect';
-import { HighlighterWidget } from './highlighter-widget';
 import { AddingTests } from '@teambit/react.instructions.react.adding-tests';
 import { AddingCompositions } from '@teambit/react.instructions.react.adding-compositions';
+import { ReactAspect } from './react.aspect';
+import { HighlighterWidget } from './highlighter-widget';
 
 export class ReactUI {
   static runtime = UIRuntime;
