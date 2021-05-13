@@ -18,7 +18,7 @@ import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { Separator } from '@teambit/ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/ui.alert-card';
-import { NativeLink } from '@teambit/ui.routing.native-link';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { OptionButton } from '@teambit/ui.input.option-button';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';

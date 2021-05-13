@@ -1141,6 +1141,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/react-router/ui/link"
     },
+    "ui/react-router/link-anchor": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/ui-foundation/react-router/ui/link-anchor"
+    },
     "ui/react-router/nav-link": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.364",
@@ -1164,48 +1170,6 @@
         "version": "0.0.341",
         "mainFile": "index.ts",
         "rootDir": "scopes/design/ui/round-loader"
-    },
-    "ui/routing/compare-url": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.363",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/compare-url"
-    },
-    "ui/routing/link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.364",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/link"
-    },
-    "ui/routing/link-anchor": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.2",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/react-router/ui/link-anchor"
-    },
-    "ui/routing/native-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.364",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/native-link"
-    },
-    "ui/routing/native-nav-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.364",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/native-nav-link"
-    },
-    "ui/routing/nav-link": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.364",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/nav-link"
-    },
-    "ui/routing/provider": {
-        "scope": "teambit.ui-foundation",
-        "version": "0.0.364",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/ui-foundation/routing/routing-provider"
     },
     "ui/scope-details": {
         "scope": "teambit.scope",
