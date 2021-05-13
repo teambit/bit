@@ -3,7 +3,7 @@ import glob from 'glob';
 import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { BitId } from '../bit-id';
 import {
   COMPONENT_ORIGINS,
@@ -341,14 +341,12 @@ export default class NodeModuleLinker {
    * for IMPORTED and NESTED components
    */
   async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
-    // $FlowFixMe loaded from FS, componentMap must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore loaded from FS, componentMap must be set
     const componentMap: ComponentMap = component.componentMap;
     if (
       component.issues &&
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      (component.issues.missingLinks || component.issues.missingCustomModuleResolutionLinks) &&
+      (component.issues.getIssue(IssuesClasses.MissingLinks) ||
+        component.issues.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks)) &&
       this.consumer &&
       component.componentFromModel
     ) {

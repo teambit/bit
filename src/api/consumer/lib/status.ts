@@ -1,5 +1,4 @@
-import R from 'ramda';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { Analytics } from '../../../analytics/analytics';
 import { BitId, BitIds } from '../../../bit-id';
 import loader from '../../../cli/loader';
@@ -15,7 +14,7 @@ export type StatusResult = {
   newComponents: Component[];
   modifiedComponent: Component[];
   stagedComponents: ModelComponent[];
-  componentsWithMissingDeps: Component[];
+  componentsWithIssues: Component[];
   importPendingComponents: BitId[];
   autoTagPendingComponents: BitId[];
   invalidComponents: InvalidComponent[];
@@ -27,7 +26,7 @@ export type StatusResult = {
   softTaggedComponents: BitId[];
 };
 
-export default (async function status(): Promise<StatusResult> {
+export default async function status(): Promise<StatusResult> {
   loader.start(BEFORE_STATUS);
   const consumer = await loadConsumer();
   const laneObj = await consumer.getCurrentLaneObject();
@@ -48,20 +47,17 @@ export default (async function status(): Promise<StatusResult> {
   const outdatedComponents = await componentsList.listOutdatedComponents();
   const mergePendingComponents = await componentsList.listMergePendingComponents();
   const newAndModified: Component[] = newComponents.concat(modifiedComponent);
-  const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
+  const componentsWithIssues = newAndModified.filter((component: Component) => {
     if (consumer.isLegacy && component.issues) {
-      delete component.issues.relativeComponentsAuthored;
+      component.issues.delete(IssuesClasses.relativeComponentsAuthored);
     }
-    if (!component.issues?.missingDists) {
-      delete component.issues?.missingDists;
-    }
-    return Boolean(component.issues) && !R.isEmpty(component.issues);
+    return component.issues && !component.issues.isEmpty();
   });
   const componentsDuringMergeState = componentsList.listDuringMergeStateComponents();
   const softTaggedComponents = componentsList.listSoftTaggedComponents();
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);
-  Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
+  Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithIssues.length);
   Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
   Analytics.setExtraData('deleted', invalidComponents.length);
   await consumer.onDestroy();
@@ -70,7 +66,7 @@ export default (async function status(): Promise<StatusResult> {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent),
     stagedComponents: ComponentsList.sortComponentsByName(stagedComponents),
-    componentsWithMissingDeps, // no need to sort, we don't print it as is
+    componentsWithIssues, // no need to sort, we don't print it as is
     importPendingComponents, // no need to sort, we use only its length
     autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsIds),
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -82,4 +78,4 @@ export default (async function status(): Promise<StatusResult> {
     componentsWithTrackDirs: await componentsList.listComponentsWithTrackDir(),
     softTaggedComponents,
   };
-});
+}

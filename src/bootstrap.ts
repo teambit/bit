@@ -90,6 +90,7 @@ function printBitVersionIfAsked() {
 function enableLoaderIfPossible() {
   const safeCommandsForLoader = [
     'status',
+    's', // status alias
     'compile',
     'start',
     'add',

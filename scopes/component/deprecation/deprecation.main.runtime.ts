@@ -25,11 +25,15 @@ export class DeprecationMain {
   }
 
   async deprecate(ids: string[]) {
-    return deprecate({ path: this.scope.path, ids }, null);
+    const results = await deprecate({ path: this.scope.path, ids }, null);
+    this.scope.clearCache();
+    return results;
   }
 
   async unDeprecate(ids: string[]) {
-    return undeprecate({ path: this.scope.path, ids }, null);
+    const results = undeprecate({ path: this.scope.path, ids }, null);
+    this.scope.clearCache();
+    return results;
   }
 
   static async provider([graphql, scope, componentAspect]: [GraphqlMain, ScopeMain, ComponentMain]) {

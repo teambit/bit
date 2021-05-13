@@ -442,9 +442,6 @@ export const HASH_SIZE = 40;
 export const LANE_REMOTE_DELIMITER = '/';
 
 export const DEFAULT_LANE = 'master';
-const MISSING_DEPS_SPACE_COUNT = 10;
-export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
-export const MISSING_NESTED_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT + 2);
 
 // todo: move the following two lines to the watch extension once its e2e moved to the extension dir
 export const STARTED_WATCHING_MSG = 'started watching for component changes to rebuild';
