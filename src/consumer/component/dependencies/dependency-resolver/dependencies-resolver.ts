@@ -754,11 +754,11 @@ either, use the ignore file syntax or change the require statement to have a mod
     });
   }
 
-  private addImportNonMainIssueIfNeeded(filePath: string, dependencyPkgData: ResolvedPackageData) {
+  private addImportNonMainIssueIfNeeded(filePath: PathLinuxRelative, dependencyPkgData: ResolvedPackageData) {
     if (this.consumer.isLegacy) return; // this is relevant for Harmony only
     const depMain = dependencyPkgData.packageJsonContent?.main;
     if (!depMain) return;
-    const depFullPath = dependencyPkgData.fullPath;
+    const depFullPath = pathNormalizeToLinux(dependencyPkgData.fullPath);
     if (depFullPath.endsWith(depMain)) {
       // it requires the main-file. all is good.
       return;
