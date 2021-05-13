@@ -318,7 +318,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.81",
+        "@teambit/legacy": "1.0.82",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -328,18 +328,24 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": ["**/*.spec.ts"],
+    "devFilePatterns": [
+      "**/*.spec.ts"
+    ],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.generator/generator": {
-    "aspects": ["teambit.harmony/aspect"]
+    "aspects": [
+      "teambit.harmony/aspect"
+    ]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
     "*,!{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -387,7 +393,9 @@
     // Only component with at least one namespace
     "{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": ["--access public"],
+        "packageManagerPublishArgs": [
+          "--access public"
+        ],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -422,7 +430,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.81"
+            "@teambit/legacy": "1.0.82"
           }
         }
       },
@@ -570,7 +578,9 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": ["--access public"],
+          "packageManagerPublishArgs": [
+            "--access public"
+          ],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
@@ -583,7 +593,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.81",
+            "@teambit/legacy": "1.0.82",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
