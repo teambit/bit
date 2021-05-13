@@ -1,6 +1,7 @@
 import mapSeries from 'p-map-series';
 import { get, flatten } from 'lodash';
 import LegacyComponent from '@teambit/legacy/dist/consumer/component';
+import { IssuesClasses } from '@teambit/component-issues';
 import { DependencyFactory } from './dependency-factory';
 import { SerializedDependency } from './dependency';
 import { DependencyList } from './dependency-list';
@@ -47,11 +48,9 @@ export class DependencyListFactory {
    * @param legacyComponent
    */
   private async getMissingDependenciesByComponentFromModel(legacyComponent: LegacyComponent): Promise<DependencyList> {
-    const missingPackagesFromFs: string[] = flatten(
-      Object.values(legacyComponent.issues?.missingPackagesDependenciesOnFs || {})
+    const missingPackages: string[] = flatten(
+      Object.values(legacyComponent.issues?.getIssue(IssuesClasses.MissingPackagesDependenciesOnFs)?.data || {})
     );
-    const missingPackagesFromOverrides = legacyComponent.issues?.missingPackagesDependenciesFromOverrides || [];
-    const missingPackages = missingPackagesFromFs.concat(missingPackagesFromOverrides);
     const componentFromModel = legacyComponent.componentFromModel;
     if (!missingPackages || !missingPackages.length || !componentFromModel) {
       return DependencyList.fromArray([]);

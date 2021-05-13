@@ -1,0 +1,34 @@
+---
+description: 'Docs for Typescript aspect'
+labels: ['docs', 'aspect', 'extensions']
+---
+
+import { Typescript } from './index';
+
+## Static Content Page in Typescript
+
+Docs for Typescript aspect
+
+### Component usage
+
+Use your component in any Typescript file:
+
+```jsx
+import { Typescript } from '@teambit/aspect-docs.typescript';
+
+<Typescript />;
+```
+
+### Render with theme and Typescript providers
+
+```jsx
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { Typescript } from '@teambit/aspect-docs.typescript';
+
+<ThemeContext>
+  <MDXLayout>
+    <Typescript />
+  </MDXLayout>
+</ThemeContext>;
+```

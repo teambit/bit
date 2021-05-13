@@ -1,0 +1,34 @@
+---
+description: 'Docs for Compositions aspect'
+labels: ['docs', 'aspect', 'extensions']
+---
+
+import { Compositions } from './index';
+
+## Static Content Page in MDX
+
+Docs for Compositions aspect
+
+### Component usage
+
+Use your component in any mdx file:
+
+```js
+import { Compositions } from '@teambit/aspect-docs.compositions';
+
+<Compositions />;
+```
+
+### Render with theme and MDX providers
+
+```js
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { Compositions } from '@teambit/aspect-docs.compositions';
+
+<ThemeContext>
+  <MDXLayout>
+    <Compositions />
+  </MDXLayout>
+</ThemeContext>;
+```
