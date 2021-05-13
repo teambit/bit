@@ -2,12 +2,15 @@ import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
-import { compileSync } from '@teambit/modules.mdx-compiler';
+import { compileSync as mdxCompileSync } from '@teambit/modules.mdx-compiler';
 import minimatch from 'minimatch';
+import { transpileFileContent as babelTranspileFileContent } from '@teambit/modules.babel-compiler';
+import type { TransformOptions } from '@babel/core';
 
 export type MDXCompilerOpts = {
   ignoredExtensions?: string[];
   ignoredPatterns?: string[];
+  babelTransformOptions?: TransformOptions;
 };
 export class MDXCompiler implements Compiler {
   displayName = 'MDX';
@@ -23,18 +26,22 @@ export class MDXCompiler implements Compiler {
   }
 
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const output = compileSync(fileContent, {
+    const afterMdxCompile = mdxCompileSync(fileContent, {
       filepath: options.filePath,
       // this compiler is not indented to compile according to the bit flavour.
       bitFlavour: false,
     });
-
-    return [
+    const filePathAfterMdxCompile = this.replaceFileExtToJs(options.filePath);
+    const afterBabelCompile = babelTranspileFileContent(
+      afterMdxCompile.contents,
       {
-        outputText: output.contents,
-        outputPath: this.replaceFileExtToJs(options.filePath),
+        rootDir: options.componentDir,
+        filePath: filePathAfterMdxCompile,
       },
-    ];
+      this.config.babelTransformOptions || {}
+    );
+
+    return afterBabelCompile;
   }
 
   /**
@@ -50,8 +57,28 @@ export class MDXCompiler implements Compiler {
 
       const errors = srcFiles.map((srcFile) => {
         try {
-          const output = compileSync(srcFile.contents.toString('utf-8'));
-          outputFileSync(join(capsule.path, this.getDistPathBySrcPath(srcFile.path)), output.contents);
+          const afterMdxCompile = mdxCompileSync(srcFile.contents.toString('utf-8'));
+          const afterBabelCompile = babelTranspileFileContent(
+            afterMdxCompile.contents,
+            {
+              rootDir: capsule.path,
+              filePath: this.replaceFileExtToJs(srcFile.relative),
+            },
+            this.config.babelTransformOptions || {}
+          );
+          if (!afterBabelCompile) {
+            return undefined;
+          }
+          outputFileSync(
+            join(capsule.path, this.getDistPathBySrcPath(afterBabelCompile[0].outputPath)),
+            afterBabelCompile[0].outputText
+          );
+          if (afterBabelCompile.length > 1) {
+            outputFileSync(
+              join(capsule.path, this.distDir, afterBabelCompile[1].outputPath),
+              afterBabelCompile[1].outputText
+            );
+          }
           return undefined;
         } catch (err) {
           return err;

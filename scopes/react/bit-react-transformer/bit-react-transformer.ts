@@ -69,32 +69,10 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
         return;
       }
 
-      // id property, e.g. "id": "teambit.base-ui/input/button@0.6.10"
-      const idProperty = types.objectProperty(types.identifier(fieldComponentId), types.stringLiteral(meta.id));
-      const properties = [idProperty];
-      if (meta.homepage) {
-        // homepage property, e.g. "homepage": "https://bit.dev/teambit/base-ui/input/button"
-        const homepageProperty = types.objectProperty(
-          types.identifier(fieldHomepageUrl),
-          types.stringLiteral(meta.homepage)
-        );
-        properties.push(homepageProperty);
-      }
-      if (typeof meta.exported === 'boolean') {
-        const homepageProperty = types.objectProperty(
-          types.identifier(fieldIsExported),
-          types.booleanLiteral(meta.exported)
-        );
-        properties.push(homepageProperty);
-      }
-
-      // variable deceleration, e.g. `var __bit_component = { ... };`
-      const metadataDeceleration = types.variableDeclaration('var', [
-        types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
-      ]);
+      const deceleration = metaToDeceleration(meta, types);
 
       // inserts to the top of file
-      path.unshiftContainer('body', metadataDeceleration);
+      path.unshiftContainer('body', deceleration);
     },
 
     FunctionDeclaration(path, state) {
@@ -155,4 +133,24 @@ export function createBitReactTransformer(api: Api, opts: BitReactTransformerOpt
   };
 
   return Plugin;
+}
+
+function metaToDeceleration(meta: ComponentMeta, types: typeof Types) {
+  const properties = [
+    // e.g. "id": "teambit.base-ui/input/button@0.6.10"
+    types.objectProperty(types.identifier(fieldComponentId), types.stringLiteral(meta.id)),
+
+    // e.g. "homepage": "https://bit.dev/teambit/base-ui/input/button"
+    meta.homepage && types.objectProperty(types.identifier(fieldHomepageUrl), types.stringLiteral(meta.homepage)),
+
+    // "exported": true / false
+    meta.exported && types.objectProperty(types.identifier(fieldIsExported), types.booleanLiteral(meta.exported)),
+  ].filter((x) => x) as Types.ObjectProperty[];
+
+  // variable deceleration, e.g. `var __bit_component = { ... };`
+  const deceleration = types.variableDeclaration('var', [
+    types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
+  ]);
+
+  return deceleration;
 }

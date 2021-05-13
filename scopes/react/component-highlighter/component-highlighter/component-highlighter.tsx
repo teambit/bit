@@ -33,15 +33,15 @@ export function ComponentHighlighter({ children, disabled, ...rest }: ComponentH
       return;
     }
 
-    const bitComponent = bubbleToBitComponent(element, (elem) => !elem.hasAttribute('data-ignore-component-highlight'));
-    if (!bitComponent) return;
+    const result = bubbleToBitComponent(element, (elem) => !elem.hasAttribute('data-ignore-component-highlight'));
+    if (!result) return;
 
     setTarget({
-      element: bitComponent.element,
-      id: bitComponent.id,
+      element: result.element,
+      id: result.meta.id,
       scopeLink: undefined,
-      link: bitComponent.homepage,
-      local: bitComponent.exported === false,
+      link: result.meta.homepage,
+      local: result.meta.exported === false,
     });
   }, []);
 
@@ -100,9 +100,7 @@ function bubbleToBitComponent(element: HTMLElement | null, filter?: (elem: Eleme
       return {
         element: current,
         component,
-        id: meta.id || 'unknown',
-        homepage: meta.homepage,
-        exported: meta.exported,
+        meta,
       };
     }
   }
