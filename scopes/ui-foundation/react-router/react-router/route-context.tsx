@@ -25,20 +25,16 @@ type RootRouteProps = {
  * Setup context needed for routing.
  */
 export function RouteContext({ reactRouterUi, routing = Routing.url, children, location }: RouterContextProps) {
-  const { baseUrl } = reactRouterUi;
-
   return (
     // {/* set up the virtual router (browser, inMemory, etc) */}
     <Router type={routing} location={location}>
-      <LinkContextProvider baseUrl={baseUrl}>
-        {/* injects History object back to reactRouterUi */}
-        <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
-        {/* injects react-router Link into context  */}
-        <RoutingProvider value={reactRouterRouting}>
-          {/* route tree root: */}
-          {children}
-        </RoutingProvider>
-      </LinkContextProvider>
+      {/* injects History object back to reactRouterUi */}
+      <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
+      {/* injects react-router Link into context  */}
+      <RoutingProvider value={reactRouterRouting}>
+        {/* route tree root: */}
+        {children}
+      </RoutingProvider>
     </Router>
   );
 }
