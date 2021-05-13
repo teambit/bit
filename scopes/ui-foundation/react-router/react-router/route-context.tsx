@@ -1,8 +1,8 @@
 import React, { useEffect, ReactNode } from 'react';
 import { BrowserRouter, StaticRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
-import { RoutingProvider } from '@teambit/ui.routing.provider';
+import { RoutingProvider } from '@teambit/base-ui.routing.routing-provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
-import { LinkContextProvider } from '@teambit/ui.routing.link-anchor';
+import { LinkContextProvider } from '@teambit/ui.react-router.link-anchor';
 import { ReactRouterUI } from './react-router.ui.runtime';
 import { reactRouterRouting } from './react-router-routing';
 import { Routing } from './routing-method';
