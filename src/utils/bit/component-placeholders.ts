@@ -15,6 +15,8 @@ export function replacePlaceHolderForPackageValue(
   }: { mainFile?: string | null; name: string; scope?: string | null; scopeId?: string | null; owner?: string | null },
   template: string
 ): string {
+  if (typeof template !== 'string') return template;
+
   const values = {
     main: () => (mainFile ? getMainFileWithoutExtension(mainFile) : mainFile),
     name: () => replaceSlashesWithDots(name),
