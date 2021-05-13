@@ -80,7 +80,7 @@
         "@teambit/base-ui.utils.sub-paths": "0.6.3",
         "@teambit/base-ui.utils.time-ago": "0.5.9",
         "@teambit/capsule": "0.0.12",
-        "@teambit/component.instructions.exporting-components": "0.0.1",
+        "@teambit/component.instructions.exporting-components": "0.0.3",
         "@teambit/documenter.code.react-playground": "1.0.4",
         "@teambit/documenter.routing.external-link": "1.0.3",
         "@teambit/documenter.theme.theme-compositions": "3.0.8",
@@ -120,8 +120,8 @@
         "@teambit/evangelist.surfaces.tooltip": "0.5.4",
         "@teambit/evangelist.theme.icon-font": "0.5.5",
         "@teambit/harmony": "0.2.11",
-        "@teambit/react.instructions.react.adding-compositions": "0.0.1",
-        "@teambit/react.instructions.react.adding-tests": "0.0.1",
+        "@teambit/react.instructions.react.adding-compositions": "0.0.3",
+        "@teambit/react.instructions.react.adding-tests": "0.0.3",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "5.11.10",
@@ -324,24 +324,18 @@
       }
     },
     "packageManagerArgs": [],
-    "devFilePatterns": [
-      "**/*.spec.ts"
-    ],
+    "devFilePatterns": ["**/*.spec.ts"],
     "strictPeerDependencies": true,
     "extraArgs": []
   },
   "teambit.generator/generator": {
-    "aspects": [
-      "teambit.harmony/aspect"
-    ]
+    "aspects": ["teambit.harmony/aspect"]
   },
   "teambit.workspace/variants": {
     // Only component with no namespace (aka aspects in our workspace)
     "*,!{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -389,9 +383,7 @@
     // Only component with at least one namespace
     "{*/**}": {
       "teambit.pkg/pkg": {
-        "packageManagerPublishArgs": [
-          "--access public"
-        ],
+        "packageManagerPublishArgs": ["--access public"],
         "packageJson": {
           "name": "@teambit/{name}",
           "private": false,
@@ -574,9 +566,7 @@
     "scopes/harmony/bit": {
       "teambit.pkg/pkg": {
         "packageJson": {
-          "packageManagerPublishArgs": [
-            "--access public"
-          ],
+          "packageManagerPublishArgs": ["--access public"],
           "name": "@teambit/{name}", // @teambit/discovery.ui.sidebar
           "private": false,
           // Change back to "bin": "bin/bit" once released to prod
