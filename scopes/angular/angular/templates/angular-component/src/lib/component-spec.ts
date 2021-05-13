@@ -1,10 +1,10 @@
 import { ComponentContext } from '@teambit/generator';
 
-export const testFile = (context: ComponentContext) => {
+export const componentSpecFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
 
   return {
-    relativePath: `${name}.spec.ts`,
+    relativePath: `src/${name}.spec.ts`,
     content: `import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ${Name}Component } from './${name}.component';

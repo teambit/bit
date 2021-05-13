@@ -3,7 +3,7 @@ import { ComponentContext } from '@teambit/generator';
 export const componentFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
-    relativePath: `${name}.component.ts`,
+    relativePath: `src/${name}.component.ts`,
     content: `import { Component, OnInit } from '@angular/core';
 
 @Component({

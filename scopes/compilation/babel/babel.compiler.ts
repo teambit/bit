@@ -2,7 +2,7 @@ import * as babel from '@babel/core';
 import mapSeries from 'p-map-series';
 import fs from 'fs-extra';
 import { BuildContext, BuiltTaskResult, ComponentResult } from '@teambit/builder';
-import { Compiler, CompilerMain, TranspileOpts, TranspileOutput } from '@teambit/compiler';
+import { Compiler, CompilerMain, TranspileFileParams, TranspileFileOutput } from '@teambit/compiler';
 import { Capsule } from '@teambit/isolator';
 import { Logger } from '@teambit/logger';
 import path from 'path';
@@ -43,7 +43,7 @@ export class BabelCompiler implements Compiler {
   /**
    * compile one file on the workspace
    */
-  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
+  transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const supportedExtensions = ['.ts', '.tsx', '.js', '.jsx'];
     const fileExtension = path.extname(options.filePath);
     if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
@@ -72,7 +72,7 @@ export class BabelCompiler implements Compiler {
       };
       longProcessLogger.logProgress(capsule.component.id.toString());
       await this.buildOneCapsule(capsule, currentComponentResult);
-      componentsResults.push({ ...currentComponentResult } as ComponentResult);
+      componentsResults.push({ ...currentComponentResult });
     });
 
     return {

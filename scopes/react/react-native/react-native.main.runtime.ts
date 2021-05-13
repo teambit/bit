@@ -75,7 +75,7 @@ export class ReactNativeMain {
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies()),
+      getDependencies: () => merge(dependencyPolicy, this.reactNativeEnv.getDependencies?.()),
     });
   }
 

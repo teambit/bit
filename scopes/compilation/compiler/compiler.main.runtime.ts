@@ -45,7 +45,7 @@ export class CompilerMain {
    */
   getDistPathBySrcPath(component: Component, srcPath: string): string | null {
     const environment = this.envs.getEnv(component).env;
-    const compilerInstance: Compiler = environment.getCompiler?.();
+    const compilerInstance = environment.getCompiler?.();
     if (!compilerInstance) return null;
     return compilerInstance.getDistPathBySrcPath(srcPath);
   }

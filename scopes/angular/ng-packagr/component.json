@@ -1,0 +1,27 @@
+{
+  "componentId": {
+    "name": "ng-packagr",
+    "version": "0.0.1"
+  },
+  "propagate": true,
+  "extensions": {
+    "teambit.pkg/pkg": {
+      "packageJson": {
+        "name": "@teambit/{name}",
+        "private": false
+      },
+      "packageManagerPublishArgs": [
+        "--access public"
+      ]
+    },
+    "teambit.dependencies/dependency-resolver": {
+      "policy": {
+        "devDependencies": {
+          "@angular/compiler": "^11.0.0",
+          "@angular/compiler-cli": "^11.0.0",
+          "ng-packagr": "^11.0.0"
+        }
+      }
+    }
+  }
+}

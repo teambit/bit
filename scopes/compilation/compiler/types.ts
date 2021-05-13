@@ -1,11 +1,16 @@
 import { BuildContext, BuildTask, BuiltTaskResult, TaskResultsList } from '@teambit/builder';
 
-export type TranspileOpts = {
+export type TranspileFileParams = {
   componentDir: string; // absolute path of the component's root directory
   filePath: string; // relative path of the file inside the component directory
 };
 
-export type TranspileOutput =
+export type TranspileComponentParams = {
+  componentDir: string; // absolute path of the component's root directory
+  distDir: string; // absolute path of the component's dist directory
+};
+
+export type TranspileFileOutput =
   | {
       outputText: string;
       outputPath: string;
@@ -50,15 +55,23 @@ export interface Compiler extends CompilerOptions {
    */
   id: string;
 
+  icon?: string;
+
   /**
    * serialized config of the compiler.
    */
   displayConfig?(): string;
 
   /**
-   * transpile a single file. this being used during development and get saved into the workspace
+   * transpile a single file that gets saved into the workspace, used by `bit compile` and during
+   * development
    */
-  transpileFile: (fileContent: string, options: TranspileOpts) => TranspileOutput;
+  transpileFile?: (fileContent: string, params: TranspileFileParams) => TranspileFileOutput;
+
+  /**
+   * transpile all the files of a component, use this when you can't use `transpileFile`
+   */
+  transpileComponent?: (params: TranspileComponentParams) => Promise<void>;
 
   /**
    * compile components inside isolated capsules. this being used during tag for the release.

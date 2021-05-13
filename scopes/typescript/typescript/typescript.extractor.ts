@@ -1,14 +1,13 @@
 // import { tmpdir } from 'os';
 import { TsConfigSourceFile } from 'typescript';
 // import { resolve, join } from 'path';
-import { SchemaExtractor } from '@teambit/schema';
+import { Module, SchemaExtractor } from '@teambit/schema';
 import { Component } from '@teambit/component';
 import { Application } from 'typedoc';
 
 export class TypeScriptExtractor implements SchemaExtractor {
   constructor(private tsconfig: TsConfigSourceFile) {}
 
-  // @ts-ignore
   async extract(component: Component) {
     // const tsconfig = this.tsconfig;
     const paths = component.state.filesystem.files.map((file) => file.path).filter((path) => path.endsWith('index.ts'));
@@ -25,7 +24,6 @@ export class TypeScriptExtractor implements SchemaExtractor {
     });
     const docs = typedocApp.convert(paths);
     if (!docs) throw new Error();
-    const object = typedocApp.serializer.projectToObject(docs);
-    return object;
+    return (typedocApp.serializer.projectToObject(docs) as any) as Module;
   }
 }
