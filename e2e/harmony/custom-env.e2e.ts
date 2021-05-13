@@ -3,6 +3,8 @@ import chai, { expect } from 'chai';
 import { HARMONY_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
+import { DEFAULT_OWNER } from '../../src/e2e-helper/e2e-scopes';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -62,6 +64,47 @@ describe('custom env', function () {
       it('should untag successfully', () => {
         expect(() => helper.command.untag('--all')).to.not.throw();
       });
+    });
+  });
+  (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
+    let envId;
+    let envName;
+    let npmCiRegistry: NpmCiRegistry;
+    before(async () => {
+      helper = new Helper({ scopesOptions: { remoteScopeWithDot: true } });
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      await npmCiRegistry.init();
+      npmCiRegistry.configureCiInPackageJsonHarmony();
+      envName = helper.env.setCustomEnv();
+      envId = `${helper.scopes.remote}/${envName}`;
+      helper.command.compile();
+      helper.command.tagAllComponents();
+      helper.command.export();
+
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.scopeHelper.addRemoteScope();
+      helper.bitJsonc.setupDefault();
+    });
+    describe('setting up the external env without a version', () => {
+      before(() => {
+        helper.fixtures.populateComponents(1);
+        helper.extensions.addExtensionToVariant('*', envId);
+      });
+      it('should show a descriptive error when tagging the component', () => {
+        expect(() => helper.command.tagAllComponents()).to.throw(
+          `if this is an external env/extension/aspect configured in workspace.jsonc, make sure it is set with a version`
+        );
+      });
+      describe('running any other command', () => {
+        // @Gilad TODO
+        it.skip('should warn or error about the misconfigured env and suggest to enter the version', () => {});
+      });
+    });
+    after(() => {
+      npmCiRegistry.destroy();
     });
   });
 });

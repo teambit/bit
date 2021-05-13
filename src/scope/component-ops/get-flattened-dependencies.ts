@@ -68,7 +68,7 @@ export class FlattenedDependenciesGetter {
   private async getFlattened(bitId: BitId): Promise<BitIds> {
     const dependencies = this.getFlattenedFromCurrentComponents(bitId);
     dependencies.forEach((dep) => throwWhenDepNotIncluded(bitId, dep));
-    const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep));
+    const dependenciesDeps = await mapSeries(dependencies, (dep) => this.getFlattenedFromVersion(dep, bitId));
     const dependenciesDepsFlattened = flatten(dependenciesDeps);
     dependencies.push(...dependenciesDepsFlattened);
     return BitIds.uniqFromArray(dependencies);
@@ -80,7 +80,7 @@ export class FlattenedDependenciesGetter {
     return dependencies;
   }
 
-  private async getFlattenedFromVersion(id: BitId): Promise<BitIds> {
+  private async getFlattenedFromVersion(id: BitId, dependentId: BitId): Promise<BitIds> {
     if (!this.cache[id.toString()]) {
       const versionDeps = this.versionDependencies.find(({ component }) => component.toId().isEqual(id));
       if (versionDeps) {
@@ -91,6 +91,10 @@ export class FlattenedDependenciesGetter {
         if (existing) {
           this.cache[id.toString()] = new BitIds();
         } else {
+          if (!id.hasVersion()) {
+            throw new Error(`error found while getting the dependencies of "${dependentId.toString()}". A dependency "${id.toString()}" doesn't have a version
+if this is an external env/extension/aspect configured in workspace.jsonc, make sure it is set with a version`);
+          }
           const fromModel = await this.scope.getVersionInstance(id);
           this.cache[id.toString()] = fromModel.flattenedDependencies;
         }
