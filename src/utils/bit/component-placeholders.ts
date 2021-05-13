@@ -12,7 +12,7 @@ export function replacePlaceHolderForPackageValue(
     scope,
     scopeId,
     owner,
-  }: { mainFile: string | null; name: string; scope?: string | null; scopeId?: string | null; owner?: string | null },
+  }: { mainFile?: string | null; name: string; scope?: string | null; scopeId?: string | null; owner?: string | null },
   template: string
 ): string {
   const values = {
