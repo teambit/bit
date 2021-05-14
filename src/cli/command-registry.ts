@@ -92,8 +92,8 @@ function createOptStr(alias, name) {
 export function register(command: Command, commanderCmd, packageManagerArgs?: string[]) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
-    .description(command.description)
-    .description(chalk.yellow(command.description as string));
+    .description(chalk.yellow(command.description as string))
+    .alias(command.alias);
 
   if (command.remoteOp) {
     command.options.push(['', TOKEN_FLAG, 'authentication token']);
