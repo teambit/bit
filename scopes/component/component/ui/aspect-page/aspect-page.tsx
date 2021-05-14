@@ -35,7 +35,7 @@ export function AspectPage() {
       <EmptyBox
         title="This component is new and doesn’t have any aspects."
         linkText="Learn more about component aspects"
-        link="https://docs.bit.dev/docs/tag-component-version"
+        link="https://harmony-docs.bit.dev/aspects/aspects-overview"
       />
     );
   }

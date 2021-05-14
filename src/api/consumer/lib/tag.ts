@@ -37,6 +37,7 @@ export type BasicTagParams = {
   soft: boolean;
   persist: boolean;
   disableDeployPipeline: boolean;
+  forceDeploy: boolean;
 };
 
 type TagParams = {
@@ -48,6 +49,7 @@ type TagParams = {
   all: boolean;
   scope?: string | boolean;
   includeImported: boolean;
+  incrementBy: number;
 } & BasicTagParams;
 
 export async function tagAction(tagParams: TagParams) {

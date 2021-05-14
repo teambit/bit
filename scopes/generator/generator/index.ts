@@ -1,3 +1,4 @@
-export { Create } from './create';
-export type { CreateMain } from './create.main.runtime';
-export { CreateAspect } from './create.aspect';
+export type { GeneratorMain } from './generator.main.runtime';
+export { ComponentContext, ComponentTemplate, ComponentFile } from './component-template';
+export { WorkspaceContext, WorkspaceTemplate, WorkspaceFile } from './workspace-template';
+export { GeneratorAspect } from './generator.aspect';

@@ -15,4 +15,7 @@ describe('isValidIdChunk', () => {
     expect(isValidIdChunk('Abc')).to.be.false;
     expect(isValidIdChunk('Abc', true)).to.be.false;
   });
+  it('should disallow a string that has two slashes one after another', () => {
+    expect(isValidIdChunk('abc//', true)).to.be.false;
+  });
 });

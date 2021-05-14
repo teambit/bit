@@ -23,10 +23,10 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.scopeHelper.reInitLocalScopeHarmony();
       helper.scopeHelper.addRemoteScope();
-      helper.command.importComponent('comp1');
+      helper.command.importComponent('*');
     });
     it('should import successfully with the schema prop', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
@@ -58,7 +58,7 @@ describe('tag components on Harmony', function () {
       helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents();
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.command.tagScope('0.0.2');
     });
     it('should not show the component as modified', () => {
@@ -209,6 +209,113 @@ describe('tag components on Harmony', function () {
         expect(output).to.have.string('comp1@0.1.0');
         expect(output).to.have.string('comp2@0.1.0');
         expect(output).to.have.string('comp3@0.1.0');
+      });
+    });
+  });
+  describe('with failing tests', () => {
+    let beforeTagScope: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fs.outputFile('bar/index.js');
+      helper.fs.outputFile('bar/foo.spec.js'); // it will fail as it doesn't have any test
+      helper.command.addComponent('bar');
+      beforeTagScope = helper.scopeHelper.cloneLocalScope();
+    });
+    it('should fail without --skip-tests', () => {
+      expect(() => helper.command.tagAllComponents()).to.throw(
+        'Failed task 1: "teambit.defender/tester:TestComponents" of env "teambit.harmony/node"'
+      );
+    });
+    it('should succeed with --skip-tests', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+      expect(() => helper.command.tagAllComponents('--skip-tests')).to.not.throw();
+    });
+    it('should succeed with --force-deploy', () => {
+      helper.scopeHelper.getClonedLocalScope(beforeTagScope);
+      expect(() => helper.command.tagAllComponents('--force-deploy')).to.not.throw();
+    });
+  });
+  describe('modified one component, the rest are auto-tag pending', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents();
+      helper.command.tagAllWithoutBuild();
+      // modify only comp3. so then comp1 and comp2 are auto-tag pending
+      helper.fs.appendFile('comp3/index.js');
+    });
+    describe('tag with specific version', () => {
+      before(() => {
+        helper.command.tagAllWithoutBuild('1.0.0');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('1.0.0');
+        expect(bitMap.comp1.version).to.equal('0.0.2');
+        expect(bitMap.comp2.version).to.equal('0.0.2');
+      });
+    });
+    describe('tag with --scope flag', () => {
+      before(() => {
+        helper.fs.appendFile('comp3/index.js');
+        helper.command.tagScopeWithoutBuild('2.0.0');
+      });
+      it('should set all components versions to the scope flag', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp3.version).to.equal('2.0.0');
+        expect(bitMap.comp1.version).to.equal('2.0.0');
+        expect(bitMap.comp2.version).to.equal('2.0.0');
+      });
+    });
+  });
+  describe('using --incremented-by flag', () => {
+    let afterFirstTag: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.bitJsonc.setPackageManager();
+      helper.fixtures.populateComponents(3);
+      helper.command.tagAllWithoutBuild();
+      afterFirstTag = helper.scopeHelper.cloneLocalScope();
+    });
+    describe('increment the default (patch)', () => {
+      before(() => {
+        helper.fixtures.populateComponents(3, undefined, 'v2-patch');
+        helper.command.tagAllWithoutBuild('--increment-by 4');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('0.0.5');
+        expect(bitMap.comp2.version).to.equal('0.0.5');
+        expect(bitMap.comp3.version).to.equal('0.0.5');
+      });
+    });
+    describe('increment the default (minor)', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        helper.fixtures.populateComponents(3, undefined, 'v2-minor');
+        helper.command.tagAllWithoutBuild('--minor --increment-by 2');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('0.2.0');
+        expect(bitMap.comp2.version).to.equal('0.2.0');
+        expect(bitMap.comp3.version).to.equal('0.2.0');
+      });
+    });
+    describe('auto-tag', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(afterFirstTag);
+        // modify only comp3. so then comp1 and comp2 are auto-tag pending
+        helper.fs.appendFile('comp3/index.js');
+        helper.command.tagAllWithoutBuild('--increment-by 3');
+      });
+      it('should set the specified version to the modified component and bumped by patch the auto-tagged', () => {
+        const bitMap = helper.bitMap.read();
+        expect(bitMap.comp1.version).to.equal('0.0.4');
+        expect(bitMap.comp2.version).to.equal('0.0.4');
+        expect(bitMap.comp3.version).to.equal('0.0.4');
       });
     });
   });

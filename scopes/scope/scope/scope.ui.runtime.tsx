@@ -16,7 +16,7 @@ import { ScopeMenu } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';
 import { Scope } from './ui/scope';
 import { ScopeModel } from './ui/scope-model';
-import { ComponentsDrawer } from './components.drawer';
+import { ComponentsDrawer } from './ui/components-drawer';
 
 export type ScopeBadge = ComponentType;
 
@@ -313,7 +313,7 @@ export class ScopeUI {
     ui.registerRoot(scopeUi.uiRoot.bind(scopeUi));
     scopeUi.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
-        Overview
+        Gallery
       </MenuLinkItem>
     ));
 

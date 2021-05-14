@@ -1,0 +1,22 @@
+.highlighter {
+  border: solid var(--border-color, #ededed);
+  border-width: 0px;
+  box-sizing: border-box;
+
+  transition: border 300ms;
+
+  --bit-highlighter-color: #eebcc9;
+  --bit-highlighter-color-light: #f6dae2;
+  --bit-highlighter-color-active: #e79db1;
+
+  &.active {
+    border-width: 8px;
+    height: 100vh;
+    overflow: auto;
+  }
+}
+
+.label {
+  font-family: sans-serif;
+  padding: 8px;
+}

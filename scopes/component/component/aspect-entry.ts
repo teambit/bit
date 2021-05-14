@@ -21,7 +21,7 @@ export class AspectEntry {
   }
 
   get isLegacy(): boolean {
-    if (this.legacy.config?.__legacy) return true;
+    if (this.config?.__legacy) return true;
     return false;
   }
 
@@ -29,11 +29,20 @@ export class AspectEntry {
     return this.legacy.config;
   }
 
-  get data() {
+  set config(config) {
+    this.legacy.config = config;
+  }
+
+  get data(): { [key: string]: any } {
     return this.legacy.data;
   }
 
-  set data(val: Record<string, any>) {
+  get isRemoved(): boolean {
+    return this.legacy.isRemoved;
+  }
+
+  // eslint-disable-next-line @typescript-eslint/adjacent-overload-signatures
+  set data(val: { [key: string]: any }) {
     this.legacy.data = val;
   }
 

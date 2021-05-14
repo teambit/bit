@@ -2,7 +2,7 @@ import R from 'ramda';
 import pMap from 'p-map';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
+import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -24,6 +24,9 @@ import Repository from '../objects/repository';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { InMemoryCache } from '../../cache/in-memory-cache';
+import { createInMemoryCache } from '../../cache/cache-factory';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -40,71 +43,110 @@ export type ComponentDef = {
   component: ModelComponent | null | undefined;
 };
 
+const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000;
+
 export default class SourceRepository {
   scope: Scope;
-
+  /**
+   * if a component Version has build-status of "pending" or "failed", it goes to the remote to ask
+   * for the component again, in case it was re-built.
+   * to avoid too many trips to the remotes with the same components, we cache the results for a
+   * small period of time (currently, 1 min).
+   */
+  private cacheUnBuiltIds: InMemoryCache<ModelComponent>;
   constructor(scope: Scope) {
     this.scope = scope;
+    this.cacheUnBuiltIds = createInMemoryCache({ maxAge: MAX_AGE_UN_BUILT_COMPS_CACHE });
   }
 
   objects() {
     return this.scope.objects;
   }
 
-  async getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+  async getMany(ids: BitId[] | BitIds, versionShouldBeBuilt = false): Promise<ComponentDef[]> {
     if (!ids.length) return [];
+    const concurrency = concurrentComponentsLimit();
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return pMap(
       ids,
       async (id) => {
-        const component = await this.get(id);
+        const component = await this.get(id, versionShouldBeBuilt);
         return {
           id,
           component,
         };
       },
-      { concurrency: CONCURRENT_COMPONENTS_LIMIT }
+      { concurrency }
     );
   }
 
-  async get(bitId: BitId): Promise<ModelComponent | undefined> {
-    const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
-    if (foundComponent && bitId.hasVersion()) {
-      // @ts-ignore
-      const isSnap = isHash(bitId.version);
-      const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (isSnap) {
-        // @ts-ignore
-        const snap = await this.objects().load(new Ref(bitId.version));
-        if (!snap) {
-          logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-          return undefined;
+  /**
+   * get component (local or external) from the scope.
+   * if the id has a version but the Version object doesn't exist, it returns undefined.
+   *
+   * if versionShouldBeBuilt is true, it also verified that not only the version exists but it also
+   * built successfully. otherwise, if the build failed or pending, the server may have a newer
+   * version of this Version object, so we return undefined, to signal the importer that it needs
+   * to be fetched from the remote again.
+   */
+  async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
+    const emptyComponent = ModelComponent.fromBitId(bitId);
+    const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
+    if (!component) return undefined;
+    if (!bitId.hasVersion()) return component;
+
+    const returnComponent = (version: Version): ModelComponent | undefined => {
+      if (
+        versionShouldBeBuilt &&
+        !bitId.isLocal(this.scope.name) &&
+        !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
+        (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
+      ) {
+        const bitIdStr = bitId.toString();
+        const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
+        if (fromCache) {
+          return fromCache;
         }
-        return foundComponent;
-      }
-      // @ts-ignore
-      if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
-        logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
+        this.cacheUnBuiltIds.set(bitIdStr, component);
         return undefined;
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const versionHash = foundComponent.versionsIncludeOrphaned[bitId.version];
-      const version = await this.objects().load(versionHash);
-      if (!version) {
+      return component;
+    };
+
+    // @ts-ignore
+    const isSnap = isHash(bitId.version);
+    const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    if (isSnap) {
+      // @ts-ignore
+      const snap = await this.objects().load(new Ref(bitId.version));
+      if (!snap) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return undefined;
       }
+      return returnComponent(snap as Version);
+    }
+    // @ts-ignore
+    if (!component.hasTagIncludeOrphaned(bitId.version)) {
+      logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
+      return undefined;
+    }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const versionHash = component.versionsIncludeOrphaned[bitId.version];
+    const version = await this.objects().load(versionHash);
+    if (!version) {
+      logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+      return undefined;
     }
 
-    return foundComponent;
+    return returnComponent(version as Version);
   }
 
   async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
+        // eslint-disable-next-line @typescript-eslint/return-await
         return this._findComponentBySymlink(foundComponent);
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!

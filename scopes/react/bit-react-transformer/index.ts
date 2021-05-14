@@ -1,5 +1,3 @@
-import { createBitReactTransformer, BitReactTransformer } from './bit-react-transformer';
-
-export type { BitReactTransformer };
-export { createBitReactTransformer };
-export default createBitReactTransformer;
+export { createBitReactTransformer as default } from './bit-react-transformer';
+export type { BitReactTransformerOptions } from './bit-react-transformer';
+export type { ComponentMetaHolder, ComponentMeta } from './model';

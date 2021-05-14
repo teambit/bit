@@ -1,0 +1,21 @@
+---
+name: Collapser Button
+description: Collapse panel button
+labels: ['react', 'button', 'collapser']
+---
+import {Collapser} from './collapser-button'
+
+By default it sticks to the right. 
+
+```js live 
+<div style={{position: 'relative', height: '120px'}}> 
+  <Collapser isOpen={false} tooltipContent="hover"/>
+</div>
+```
+We can change it to the left by adding the placement of left.
+
+```js live 
+<div style={{position: 'relative', height: '120px', width: '100%', display: 'flex', justifyContent: 'flex-end'}}> 
+  <Collapser isOpen={false} tooltipContent="hover" placement="left" />
+</div>
+```

@@ -33,6 +33,7 @@ import {
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../utils/path';
 import ComponentMap, { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
+import ComponentNotFoundInPath from '../../component/exceptions/component-not-found-in-path';
 import determineMainFile from './determine-main-file';
 import {
   DuplicateIds,
@@ -46,12 +47,13 @@ import {
   TestIsDirectory,
 } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
+import { IgnoredDirectory } from './exceptions/ignored-directory';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
-type Warnings = {
+export type Warnings = {
   alreadyUsed: Record<string, any>;
   emptyDirectory: string[];
   existInScope: BitId[];
@@ -925,8 +927,9 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     cwd: consumerPath,
     nodir: true,
   });
+  if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches = gitIgnore.filter(matches);
-  if (!filteredMatches.length) throw new EmptyDirectory(dir);
+  if (!filteredMatches.length) throw new IgnoredDirectory(dir);
   return filteredMatches.map((match: PathOsBased) => {
     const normalizedPath = pathNormalizeToLinux(match);
     // the path is relative to consumer. remove the rootDir.

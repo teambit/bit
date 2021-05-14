@@ -12,7 +12,7 @@ import { Tmp } from '../../scope/repositories';
 import WorkspaceLane from '../bit-map/workspace-lane';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { applyVersion, CheckoutProps, ComponentStatus } from '../versions-ops/checkout-version';
-import { getMergeStrategyInteractive } from '../versions-ops/merge-version';
+import { FailedComponents, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import threeWayMerge, { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import createNewLane from './create-lane';
 
@@ -44,10 +44,9 @@ export default async function switchLanes(consumer: Consumer, switchProps: Switc
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter((componentStatus) => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
-    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+    .filter((componentStatus) => componentStatus.failureMessage)
+    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage as string }));
 
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,

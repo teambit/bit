@@ -88,7 +88,7 @@ export default async function loadExtensions(): Promise<Extension[]> {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
     const extensions = R.values(R.mapObjIndexed(_loadExtension(consumerPath, scopePath), rawExtensions));
-    return Promise.all(extensions);
+    return await Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed', err);
     return [];

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from '@teambit/ui.routing.link';
+import { Link } from '@teambit/base-ui.routing.link';
 import {
   BaseComponentCardProps,
   PreviewContainer,

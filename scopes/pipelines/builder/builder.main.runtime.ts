@@ -85,13 +85,18 @@ export class BuilderMain {
     isolateOptions: IsolateComponentsOptions = {}
   ): Promise<OnTagResults> {
     const pipeResults: TaskResultsList[] = [];
-    const envsExecutionResults = await this.build(components, { emptyRootDir: true, ...isolateOptions });
-    if (options.throwOnError) envsExecutionResults.throwErrorsIfExist();
+    const { throwOnError, forceDeploy, disableDeployPipeline } = options;
+    const envsExecutionResults = await this.build(
+      components,
+      { emptyRootDir: true, ...isolateOptions },
+      { skipTests: options.skipTests }
+    );
+    if (throwOnError && !forceDeploy) envsExecutionResults.throwErrorsIfExist();
     const allTasksResults = [...envsExecutionResults.tasksResults];
     pipeResults.push(envsExecutionResults);
-    if (!options.disableDeployPipeline && !envsExecutionResults.hasErrors()) {
+    if (forceDeploy || (!disableDeployPipeline && !envsExecutionResults.hasErrors())) {
       const deployEnvsExecutionResults = await this.deploy(components, isolateOptions);
-      if (options.throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
+      if (throwOnError) deployEnvsExecutionResults.throwErrorsIfExist();
       allTasksResults.push(...deployEnvsExecutionResults.tasksResults);
       pipeResults.push(deployEnvsExecutionResults);
     }

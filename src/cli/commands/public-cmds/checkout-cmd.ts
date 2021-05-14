@@ -85,17 +85,41 @@ export default class Checkout implements LegacyCommand {
     return checkout(values, checkoutProps);
   }
 
-  report({ components, version, failedComponents }: ApplyVersionResults): string {
+  report(
+    { components, version, failedComponents }: ApplyVersionResults,
+    _,
+    { verbose, all }: { verbose: boolean; all: boolean }
+  ): string {
     const isLatest = Boolean(version && version === LATEST);
     const isReset = !version;
     const getFailureOutput = () => {
-      if (!failedComponents || !failedComponents.length) return '';
+      // components that failed for no legitimate reason. e.g. merge-conflict.
+      const realFailedComponents = failedComponents?.filter((f) => !f.unchangedLegitimately);
+      if (!realFailedComponents || !realFailedComponents.length) return '';
       const title = 'the checkout has been canceled on the following component(s)';
-      const body = failedComponents
+      const body = realFailedComponents
         .map(
           (failedComponent) =>
             `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
         )
+        .join('\n');
+      return `${title}\n${body}\n\n`;
+    };
+    const getNeutralOutput = () => {
+      // components that weren't checked out for legitimate reasons, e.g. up-to-date.
+      const neutralComponents = (failedComponents || []).filter((f) => f.unchangedLegitimately);
+      if (!neutralComponents.length) return '';
+      if (!verbose && all) {
+        return chalk.green(
+          `checkout was not needed for ${chalk.bold(
+            neutralComponents.length.toString()
+          )} components (use --verbose to get more details)`
+        );
+      }
+
+      const title = 'the checkout was not needed on the following component(s)';
+      const body = neutralComponents
+        .map((failedComponent) => `${chalk.bold(failedComponent.id.toString())} - ${failedComponent.failureMessage}`)
         .join('\n');
       return `${title}\n${body}\n\n`;
     };
@@ -125,8 +149,7 @@ export default class Checkout implements LegacyCommand {
       const componentsStr = applyVersionReport(components, true, showVersion);
       return title + componentsStr;
     };
-    const failedOutput = getFailureOutput();
-    const successOutput = getSuccessfulOutput();
-    return failedOutput + successOutput;
+
+    return getFailureOutput() + getNeutralOutput() + getSuccessfulOutput();
   }
 }

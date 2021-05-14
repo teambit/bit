@@ -80,10 +80,10 @@ describe('compile extension', function () {
       });
       describe('export and import to another scope', () => {
         before(() => {
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
-          helper.command.importComponent('comp1');
+          helper.command.importComponent('*');
         });
         it('should not show the component as modified', () => {
           helper.command.expectStatusToBeClean();
@@ -181,6 +181,21 @@ describe('compile extension', function () {
         expect(path.join(capsule, 'dist')).to.be.a.directory();
         expect(path.join(capsule, 'dist/style.css')).to.be.a.file();
       });
+    });
+  });
+  describe('component with nested directories', () => {
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.fixtures.populateComponentsTS(1);
+      helper.fs.outputFile('comp1/nested/foo.ts');
+      helper.command.compile();
+    });
+    it('the sourceMap should include the path to the nested dir properly', () => {
+      // before, the "sources" was just ["foo.ts"] without the "nested" dir
+      // it has been fixed once the typescript compiler programmatically added "rootDir": "."
+      const sourceMapPath = 'node_modules/@my-scope/comp1/dist/nested/foo.js.map';
+      const sourceMapPathContent = helper.fs.readJsonFile(sourceMapPath);
+      expect(sourceMapPathContent.sources).to.deep.equal(['nested/foo.ts']);
     });
   });
 });

@@ -1,5 +1,5 @@
 import R from 'ramda';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 import { join } from 'path';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import ComponentAspect, { Component, ComponentMain, Snap } from '@teambit/component';
@@ -166,8 +166,8 @@ export class PkgMain {
    * returns the package path in the /node_modules/ folder
    */
   getModulePath(component: Component) {
-    const pgkName = this.getPackageName(component);
-    const path = join('node_modules', pgkName);
+    const pkgName = this.getPackageName(component);
+    const path = join('node_modules', pkgName);
     return path;
   }
 

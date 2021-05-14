@@ -1,10 +1,10 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { EmptyBox } from './empty-box';
 
 export const EmptyBoxExample = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <EmptyBox
         title="title-test"
         link="https://link-target/"
@@ -12,6 +12,20 @@ export const EmptyBoxExample = () => {
         className="test-class"
         data-testid="target"
       />
-    </ThemeContext>
+    </ThemeCompositions>
+  );
+};
+
+export const EmptyBoxExampleWithLongText = () => {
+  return (
+    <ThemeCompositions>
+      <EmptyBox
+        title="There are no compositions for this component."
+        link="https://link-target/"
+        linkText="Learn how to create compositions"
+        className="test-class"
+        data-testid="target"
+      />
+    </ThemeCompositions>
   );
 };

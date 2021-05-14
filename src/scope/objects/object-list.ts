@@ -1,17 +1,32 @@
 import tarStream from 'tar-stream';
 import pMap from 'p-map';
-import { Readable, PassThrough } from 'stream';
+import { Readable, PassThrough, pipeline } from 'stream';
 import { BitObject } from '.';
 import { BitObjectList } from './bit-object-list';
 import Ref from './ref';
-import { CONCURRENT_IO_LIMIT } from '../../constants';
 import logger from '../../logger/logger';
+import { concurrentIOLimit } from '../../utils/concurrency';
 
 /**
  * when error occurred during streaming between HTTP server and client, there is no good way to
  * indicate this other than sending a new file with a special name and the error message.
  */
 const TAR_STREAM_ERROR_FILENAME = '.BIT.ERROR';
+/**
+ * schema 1.0.0 - added the start and end file with basic info
+ */
+const OBJECT_LIST_CURRENT_SCHEMA = '1.0.0';
+const TAR_STREAM_START_FILENAME = '.BIT.START';
+const TAR_STREAM_END_FILENAME = '.BIT.END';
+
+type StartFile = {
+  schema: string;
+  scopeName: string;
+};
+type EndFile = {
+  numOfFiles: number;
+  scopeName: string;
+};
 
 export type ObjectItem = {
   ref: Ref;
@@ -97,6 +112,8 @@ export class ObjectList {
   static fromTarToObjectStream(packStream: NodeJS.ReadableStream): ObjectItemsStream {
     const passThrough = new PassThrough({ objectMode: true });
     const extract = tarStream.extract();
+    let startData: StartFile | undefined;
+    let endData: EndFile | undefined;
     extract.on('entry', (header, stream, next) => {
       const data: Buffer[] = [];
       stream.on('data', (chunk) => {
@@ -106,6 +123,18 @@ export class ObjectList {
         const allData = Buffer.concat(data);
         if (header.name === TAR_STREAM_ERROR_FILENAME) {
           passThrough.emit('error', new Error(allData.toString()));
+          return;
+        }
+        if (header.name === TAR_STREAM_START_FILENAME) {
+          startData = JSON.parse(allData.toString());
+          logger.debug('fromTarToObjectStream, start getting data', startData);
+          next();
+          return;
+        }
+        if (header.name === TAR_STREAM_END_FILENAME) {
+          endData = JSON.parse(allData.toString());
+          logger.debug('fromTarToObjectStream, finished getting data', endData);
+          next();
           return;
         }
         passThrough.write({ ...ObjectList.extractScopeAndHash(header.name), buffer: allData });
@@ -118,21 +147,48 @@ export class ObjectList {
       stream.resume(); // just auto drain the stream
     });
 
-    extract.on('finish', () => {
-      passThrough.end();
+    // not sure if needed
+    extract.on('error', (err) => {
+      passThrough.emit('error', err);
     });
 
-    packStream.pipe(extract);
+    extract.on('finish', () => {
+      if (startData?.schema === OBJECT_LIST_CURRENT_SCHEMA && !endData) {
+        // wasn't able to find a better way to indicate whether the server aborted the request
+        // see https://github.com/node-fetch/node-fetch/issues/1117
+        passThrough.emit(
+          'error',
+          new Error(`server terminated the stream unexpectedly (metadata: ${JSON.stringify(startData)})`)
+        );
+      }
+      passThrough.end();
+    });
+    pipeline(packStream, extract, (err) => {
+      if (err) {
+        logger.error('fromTarToObjectStream, pipeline', err);
+        passThrough.emit('error', err);
+      } else {
+        logger.debug('fromTarToObjectStream, pipeline is completed');
+      }
+    });
 
     return passThrough;
   }
 
-  static fromObjectStreamToTar(readable: Readable) {
+  static fromObjectStreamToTar(readable: Readable, scopeName: string) {
     const pack = tarStream.pack();
+    const startFile: StartFile = { schema: OBJECT_LIST_CURRENT_SCHEMA, scopeName };
+    logger.debug('fromObjectStreamToTar, start sending data', startFile);
+    pack.entry({ name: TAR_STREAM_START_FILENAME }, JSON.stringify(startFile));
+    let numOfFiles = 0;
     readable.on('data', (obj: ObjectItem) => {
+      numOfFiles += 1;
       pack.entry({ name: ObjectList.combineScopeAndHash(obj) }, obj.buffer);
     });
     readable.on('end', () => {
+      const endFile: EndFile = { numOfFiles, scopeName };
+      logger.debug('fromObjectStreamToTar, finished sending data', endFile);
+      pack.entry({ name: TAR_STREAM_END_FILENAME }, JSON.stringify(endFile));
       pack.finalize();
     });
     readable.on('error', (err) => {
@@ -183,13 +239,15 @@ export class ObjectList {
   }
 
   async toBitObjects(): Promise<BitObjectList> {
+    const concurrency = concurrentIOLimit();
     const bitObjects = await pMap(this.objects, (object) => BitObject.parseObject(object.buffer), {
-      concurrency: CONCURRENT_IO_LIMIT,
+      concurrency,
     });
     return new BitObjectList(bitObjects);
   }
 
   static async fromBitObjects(bitObjects: BitObject[]): Promise<ObjectList> {
+    const concurrency = concurrentIOLimit();
     const objectItems = await pMap(
       bitObjects,
       async (obj) => ({
@@ -197,7 +255,7 @@ export class ObjectList {
         buffer: await obj.compress(),
         type: obj.getType(),
       }),
-      { concurrency: CONCURRENT_IO_LIMIT }
+      { concurrency }
     );
     return new ObjectList(objectItems);
   }

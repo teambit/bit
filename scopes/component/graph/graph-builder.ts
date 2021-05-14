@@ -1,26 +1,36 @@
-import { ComponentID, ComponentMain } from '@teambit/component';
-import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
+import { ComponentFactory, ComponentID, ComponentMain } from '@teambit/component';
+import type LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ComponentGraph } from './component-graph';
 import { Dependency } from './model/dependency';
 
+type GetGraphOpts = {
+  host?: ComponentFactory;
+};
+
+type BuildFromLegacyGraphOpts = {
+  host?: ComponentFactory;
+};
 export class GraphBuilder {
   _graph?: ComponentGraph;
   _initialized = false;
   constructor(private componentAspect: ComponentMain) {}
 
-  async getGraph(ids?: ComponentID[]): Promise<ComponentGraph> {
-    const componentHost = this.componentAspect.getHost();
-    const legacyGraph = await componentHost.getLegacyGraph(ids);
-    const graph = await this.buildFromLegacy(legacyGraph);
+  async getGraph(ids?: ComponentID[], opts: GetGraphOpts = {}): Promise<ComponentGraph> {
+    const componentHost = opts.host || this.componentAspect.getHost();
 
+    const legacyGraph = await componentHost.getLegacyGraph(ids);
+    const graph = await this.buildFromLegacy(legacyGraph, { host: opts.host });
     this._graph = graph;
     this._initialized = true;
     return this._graph;
   }
 
-  private async buildFromLegacy(legacyGraph: LegacyGraph): Promise<ComponentGraph> {
+  private async buildFromLegacy(
+    legacyGraph: LegacyGraph,
+    opts: BuildFromLegacyGraphOpts = {}
+  ): Promise<ComponentGraph> {
     const newGraph = new ComponentGraph();
-    const componentHost = this.componentAspect.getHost();
+    const componentHost = opts.host || this.componentAspect.getHost();
 
     const setNodeP = legacyGraph.nodes().map(async (nodeId) => {
       const componentId = await componentHost.resolveComponentId(nodeId);

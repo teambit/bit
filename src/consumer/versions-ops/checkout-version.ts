@@ -1,3 +1,4 @@
+import { compact } from 'lodash';
 import mapSeries from 'p-map-series';
 import * as path from 'path';
 
@@ -12,6 +13,8 @@ import { pathNormalizeToLinux, PathOsBased } from '../../utils/path';
 import ConsumerComponent from '../component';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
 import { SourceFile } from '../component/sources';
+import DataToPersist from '../component/sources/data-to-persist';
+import RemovePath from '../component/sources/remove-path';
 import {
   ApplyVersionResult,
   ApplyVersionResults,
@@ -44,8 +47,11 @@ export type ComponentStatus = {
   componentFromModel?: Version;
   id: BitId;
   failureMessage?: string;
+  unchangedLegitimately?: boolean; // failed to checkout but for a legitimate reason, such as, up-to-date
   mergeResults?: MergeResultsThreeWay | null | undefined;
 };
+
+type ApplyVersionWithComps = { applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies };
 
 export default async function checkoutVersion(
   consumer: Consumer,
@@ -66,10 +72,13 @@ export default async function checkoutVersion(
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const failedComponents: FailedComponents[] = allComponentsStatus
-    .filter((componentStatus) => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
-    .map((componentStatus) => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+    .filter((componentStatus) => componentStatus.failureMessage)
+    .map((componentStatus) => ({
+      id: componentStatus.id,
+      failureMessage: componentStatus.failureMessage as string,
+      unchangedLegitimately: componentStatus.unchangedLegitimately,
+    }));
 
   const succeededComponents = allComponentsStatus.filter((componentStatus) => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
@@ -94,6 +103,7 @@ export default async function checkoutVersion(
       writePackageJson: !checkoutProps.ignorePackageJson,
     });
     await manyComponentsWriter.writeAll();
+    await deleteFilesIfNeeded(componentsResults, consumer);
   }
 
   const appliedVersionComponents = componentsResults.map((c) => c.applyVersionResult);
@@ -106,7 +116,6 @@ export default async function checkoutVersion(
       const componentsStatusP = components.map((component) => getComponentStatus(consumer, component, checkoutProps));
       const componentsStatus = await Promise.all(componentsStatusP);
       await tmp.clear();
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       return componentsStatus;
     } catch (err) {
       await tmp.clear();
@@ -123,8 +132,9 @@ async function getComponentStatus(
   const { version, latestVersion, reset } = checkoutProps;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   const componentStatus: ComponentStatus = { id: component.id };
-  const returnFailure = (msg: string) => {
+  const returnFailure = (msg: string, unchangedLegitimately = false) => {
     componentStatus.failureMessage = msg;
+    componentStatus.unchangedLegitimately = unchangedLegitimately;
     return componentStatus;
   };
   if (!componentModel) {
@@ -157,7 +167,8 @@ async function getComponentStatus(
   }
   if (latestVersion && currentlyUsedVersion === newVersion) {
     return returnFailure(
-      `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`
+      `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`,
+      true
     );
   }
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -167,7 +178,7 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
   let mergeResults: MergeResultsThreeWay | null | undefined;
-  if (isModified && version) {
+  if (version) {
     const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
     mergeResults = await threeWayMerge({
       consumer,
@@ -209,7 +220,7 @@ export async function applyVersion(
   componentFromFS: ConsumerComponent | null | undefined, // it can be null only when isLanes is true
   mergeResults: MergeResultsThreeWay | null | undefined,
   checkoutProps: CheckoutProps
-): Promise<{ applyVersionResult: ApplyVersionResult; component?: ComponentWithDependencies }> {
+): Promise<ApplyVersionWithComps> {
   if (!checkoutProps.isLane && !componentFromFS)
     throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
   const { mergeStrategy } = checkoutProps;
@@ -219,7 +230,6 @@ export async function applyVersion(
     // otherwise it's impossible to have conflicts
     if (!componentFromFS) throw new Error(`applyVersion expect to get componentFromFS for ${id.toString()}`);
     componentFromFS.files.forEach((file) => {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
@@ -234,7 +244,6 @@ export async function applyVersion(
   }
   const files = componentWithDependencies.component.files;
   files.forEach((file) => {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
   let modifiedStatus = {};
@@ -244,7 +253,6 @@ export async function applyVersion(
       files,
       mergeResults,
       mergeStrategy,
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       componentWithDependencies.component.originallySharedDir
     );
   }
@@ -279,30 +287,48 @@ export function applyModifiedVersion(
     const foundFile = componentFiles.find((componentFile) => pathWithSharedDir(componentFile.relative) === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = Buffer.from(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
     } else if (file.output) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
-      throw new GeneralError('file does not have output nor conflict');
+      throw new GeneralError(`file ${filePath} does not have output nor conflict`);
     }
   });
   mergeResults.addFiles.forEach((file) => {
     componentFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
+  mergeResults.removeFiles.forEach((file) => {
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    filesStatus[file.filePath] = FileStatus.removed;
+    componentFiles = componentFiles.filter((f) => f.relative !== filePath);
+  });
   mergeResults.overrideFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const foundFile = componentFiles.find((componentFile) => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
 
   return filesStatus;
+}
+
+async function deleteFilesIfNeeded(componentsResults: ApplyVersionWithComps[], consumer: Consumer): Promise<void> {
+  const pathsToRemoveIncludeNull = componentsResults.map((compResult) => {
+    return Object.keys(compResult.applyVersionResult.filesStatus).map((filePath) => {
+      if (compResult.applyVersionResult.filesStatus[filePath] === FileStatus.removed) {
+        if (!compResult.component?.component.writtenPath) return null;
+        return path.join(compResult.component?.component.writtenPath, filePath);
+      }
+      return null;
+    });
+  });
+  const pathsToRemove = compact(pathsToRemoveIncludeNull.flat());
+  const dataToPersist = new DataToPersist();
+  dataToPersist.removeManyPaths(pathsToRemove.map((p) => new RemovePath(p, true)));
+  dataToPersist.addBasePath(consumer.getPath());
+  await dataToPersist.persistAllToFS();
 }

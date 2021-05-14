@@ -20,7 +20,11 @@
     "icon": "https://static.bit.dev/bit-logo.svg",
 
     /**
-     * default directory for all components in workspace.
+     * default directory for all components in workspace, the following placeholders are available:
+     * name - component name includes namespace, e.g. 'ui/button'.
+     * scopeId - full scope-id includes the owner, e.g. 'teambit.compilation'.
+     * scope - scope name only, e.g. 'compilation'.
+     * owner - owner name in bit.dev, e.g. 'teambit'.
      **/
     "defaultDirectory": "{scope}/{name}",
 
@@ -39,11 +43,8 @@
      */
     "packageManager": "teambit.dependencies/pnpm",
     "policy": {
-      "dependencies": { },
-      "peerDependencies": {
-        "react": "16.13.1",
-        "react-dom": "16.13.1"
-      }
+      "dependencies": {},
+      "peerDependencies": {}
     }
   },
 

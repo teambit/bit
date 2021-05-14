@@ -136,7 +136,7 @@ export default class CommandHelper {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
   removeComponent(id: string, flags = '') {
-    return this.runCmd(`bit remove ${id} ${flags}`);
+    return this.runCmd(`bit remove ${id} --silent ${flags}`);
   }
   deprecateComponent(id: string, flags = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
@@ -268,13 +268,15 @@ export default class CommandHelper {
   exportAllComponentsAndRewire(scope: string = this.scopes.remote) {
     return this.runCmd(`bit export ${scope} --rewire --force`);
   }
+  exportToDefaultAndRewire() {
+    return this.runCmd(`bit export --rewire --force`);
+  }
   exportToCurrentScope(ids?: string) {
     return this.runCmd(`bit export ${CURRENT_UPSTREAM} ${ids || ''}`);
   }
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  export(options? = '') {
+  export(options = '') {
     // --force just silents the prompt, which obviously needed for CIs
-    return this.runCmd(`bit export --force ${options}`);
+    return this.runCmd(`bit export ${options} --force`);
   }
   resumeExport(exportId: string, remotes: string[]) {
     return this.runCmd(`bit resume-export ${exportId} ${remotes.join(' ')}`);
@@ -398,9 +400,19 @@ export default class CommandHelper {
     });
   }
 
+  expectStatusToHaveIssue(issueName: string) {
+    const allIssues = this.getAllIssuesFromStatus();
+    expect(allIssues).to.include(issueName);
+  }
+
+  getAllIssuesFromStatus(): string[] {
+    const statusJson = this.statusJson();
+    return statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
+  }
+
   expectStatusToNotHaveIssues() {
     const statusJson = this.statusJson();
-    ['componentsWithMissingDeps', 'invalidComponents'].forEach((key) => {
+    ['componentsWithIssues', 'invalidComponents'].forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }
@@ -477,8 +489,8 @@ export default class CommandHelper {
   runTask(taskName: string) {
     return this.runCmd(`bit run ${taskName}`);
   }
-  create(name: string) {
-    return this.runCmd(`bit create ${name}`);
+  create(templateName: string, componentName: string, flags = '') {
+    return this.runCmd(`bit create ${templateName} ${componentName} ${flags}`);
   }
   moveComponent(id: string, to: string) {
     return this.runCmd(`bit move ${id} ${path.normalize(to)} --component`);

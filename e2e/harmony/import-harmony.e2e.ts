@@ -32,7 +32,7 @@ describe('import functionality on Harmony', function () {
       before(async () => {
         await npmCiRegistry.init();
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
       });
       after(() => {
         npmCiRegistry.destroy();
@@ -98,10 +98,10 @@ describe('import functionality on Harmony', function () {
   describe('tag, export, clean scope objects, tag and export', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
-      helper.bitJsonc.disablePreview();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponents(1);
       helper.command.tagAllComponents();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
       helper.command.importAllComponents();
@@ -109,7 +109,7 @@ describe('import functionality on Harmony', function () {
       helper.command.tagAllComponents();
     });
     it('should export with no errors about missing artifacts (pkg file) from the first tag', () => {
-      expect(() => helper.command.exportAllComponents()).to.not.throw();
+      expect(() => helper.command.export()).to.not.throw();
     });
   });
   describe('import delta (bit import without ids) when local is behind', () => {
@@ -121,12 +121,12 @@ describe('import functionality on Harmony', function () {
       helper.command.tagAllWithoutBuild();
       helper.fixtures.populateComponents(1, undefined, ' v2');
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       helper.command.importAllComponents(); // to save all refs.
       afterFirstExport = helper.scopeHelper.cloneLocalScope();
       helper.fixtures.populateComponents(1, undefined, ' v3');
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       const bitMap = helper.bitMap.read();
       helper.scopeHelper.getClonedLocalScope(afterFirstExport);
       helper.bitMap.write(bitMap);

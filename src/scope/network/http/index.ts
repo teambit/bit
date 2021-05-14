@@ -1,1 +1,1 @@
-export { Http } from './http';
+export { Http, ProxyConfig } from './http';

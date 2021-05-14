@@ -80,7 +80,6 @@ import {
   HashNotFound,
   HeadNotFound,
   InvalidIndexJson,
-  MergeConflict,
   OutdatedIndexJson,
   ParentNotFound,
   ResolutionException,
@@ -219,18 +218,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [HashNotFound, (err) => `hash ${chalk.bold(err.hash)} not found`],
   [HeadNotFound, (err) => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
-  [
-    MergeConflict,
-    (err) =>
-      `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
-        ', '
-      )}
-to resolve it and merge your local and remote changes, please do the following:
-1) bit untag ${err.id} ${err.versions.join(' ')}
-2) bit import
-3) bit checkout ${err.versions.join(' ')} ${err.id}
-once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`,
-  ],
   [
     OutdatedIndexJson,
     (err) => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.

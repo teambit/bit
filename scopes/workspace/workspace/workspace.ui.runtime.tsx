@@ -12,7 +12,7 @@ import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
-import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
+import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
@@ -186,7 +186,7 @@ export class WorkspaceUI {
 
     workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
-        Overview
+        Gallery
       </MenuLinkItem>
     ));
 

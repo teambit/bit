@@ -4,12 +4,13 @@ import readPkgUp from 'read-pkg-up';
 import { BitId } from '../../bit-id';
 import { PACKAGE_JSON } from '../../constants';
 import PackageJson from '../../consumer/component/package-json';
-import { PathLinuxAbsolute, PathOsBased } from '../path';
+import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '../path';
 import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 
 export interface ResolvedPackageData {
-  fullPath: PathLinuxAbsolute; // package path
+  fullPath: PathOsBasedAbsolute; // package path
   packageJsonPath?: PathOsBased;
+  packageJsonContent?: Record<string, any>;
   dependentPackageJsonPath?: PathOsBased;
   name: string; // package name
   concreteVersion?: string; // version from the package.json of the package itself
@@ -93,9 +94,14 @@ function enrichDataFromDependency(packageData: ResolvedPackageData) {
     return;
   }
   packageData.packageJsonPath = path.join(packageDir, PACKAGE_JSON);
+  packageData.packageJsonContent = packageInfo;
   packageData.name = packageInfo.name;
   packageData.concreteVersion = packageInfo.version;
   if (packageInfo.componentId) {
+    if (packageInfo.exported === false) {
+      // @ts-ignore
+      delete packageInfo.componentId.scope;
+    }
     packageData.componentId = new BitId(packageInfo.componentId);
   }
 }

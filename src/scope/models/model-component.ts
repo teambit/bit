@@ -9,6 +9,7 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
   DEFAULT_BIT_VERSION,
+  DEFAULT_LANE,
   DEFAULT_LANGUAGE,
   TESTER_ENV_TYPE,
 } from '../../constants';
@@ -243,6 +244,8 @@ export default class Component extends BitObject {
         RemoteLaneId.from(remoteLaneId.name, remoteScopeName),
         this.toBitId()
       );
+      // we need also the remote head of master, otherwise, the diverge-data assumes all versions are local
+      this.remoteHead = await repo.remoteLanes.getRef(RemoteLaneId.from(DEFAULT_LANE, remoteScopeName), this.toBitId());
     }
   }
 
@@ -410,12 +413,13 @@ export default class Component extends BitObject {
    */
   getVersionToAdd(
     releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE,
-    exactVersion: string | null | undefined
+    exactVersion?: string | null,
+    incrementBy?: number
   ): string {
     if (exactVersion && this.versions[exactVersion]) {
       throw new VersionAlreadyExists(exactVersion, this.id());
     }
-    return exactVersion || this.version(releaseType);
+    return exactVersion || this.version(releaseType, incrementBy);
   }
 
   isEqual(component: Component, considerOrphanedVersions = true): boolean {
@@ -492,11 +496,17 @@ export default class Component extends BitObject {
     return versionToAdd;
   }
 
-  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE): string {
+  version(releaseType: semver.ReleaseType = DEFAULT_BIT_RELEASE_TYPE, incrementBy = 1): string {
     const latest = this.latestVersion();
+    if (!latest) return DEFAULT_BIT_VERSION;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    if (latest) return semver.inc(latest, releaseType)!;
-    return DEFAULT_BIT_VERSION;
+    let result = semver.inc(latest, releaseType)!;
+    if (incrementBy === 1) return result;
+    for (let i = 1; i < incrementBy; i += 1) {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      result = semver.inc(result, releaseType)!;
+    }
+    return result;
   }
 
   id(): string {
@@ -798,15 +808,17 @@ make sure to call "getAllIdsAvailableOnLane" and not "getAllBitIdsFromAllLanes"`
     return localVersions.includes(tag);
   }
 
+  hasLocalVersion(version: string): boolean {
+    const localVersions = this.getLocalTagsOrHashes();
+    return localVersions.includes(version);
+  }
+
   getLocalTagsOrHashes(): string[] {
     const localVersions = this.getLocalVersions();
     if (!this.divergeData) return localVersions;
     const divergeData = this.getDivergeData();
     const localHashes = divergeData.snapsOnLocalOnly;
     if (!localHashes.length) return localVersions;
-    // @todo: this doesn't make sense when creating a new lane locally.
-    // the laneHeadRemote is not set. it needs to be compare to the head
-    if (!this.laneHeadRemote && this.scope) return localVersions; // backward compatibility of components tagged before v15
     return this.switchHashesWithTagsIfExist(localHashes).reverse(); // reverse to get the older first
   }
 
