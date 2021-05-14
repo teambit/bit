@@ -13,7 +13,7 @@ export const AUTO_SNAPPED_MSG = 'auto-snapped dependents';
 export default class Snap implements LegacyCommand {
   name = 'snap [id]';
   description = `record component changes.
-  https://${BASE_DOCS_DOMAIN}/docs/snap-component-version
+  https://${BASE_DOCS_DOMAIN}/bit-dot-dev/bit-dev#ripple-ci-coming
   ${WILDCARD_HELP('snap')}`;
   alias = '';
   opts = [

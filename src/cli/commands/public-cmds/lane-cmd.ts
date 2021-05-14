@@ -9,7 +9,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Lane implements LegacyCommand {
   name = 'lane [name]';
   description = `show lanes details
-  https://${BASE_DOCS_DOMAIN}/docs/lanes`;
+  https://${BASE_DOCS_DOMAIN}/bit-dot-dev/bit-dev#ripple-ci-coming`;
   alias = '';
   opts = [
     ['d', 'details', 'show more details on the state of each component in each lane'],

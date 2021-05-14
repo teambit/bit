@@ -11,7 +11,7 @@ import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
-  https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components
   ${WILDCARD_HELP('tag')}`;
   alias = 't';
   loader = true;

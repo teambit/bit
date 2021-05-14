@@ -8,7 +8,7 @@ import linkTemplate from '../../templates/link-template';
 
 export default class Link implements LegacyCommand {
   name = 'link [ids...]';
-  description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
+  description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/reference/commands/#relink-components-to-the-workspace`;
   alias = 'b';
   opts = [
     ['j', 'json', 'return the output as JSON'],

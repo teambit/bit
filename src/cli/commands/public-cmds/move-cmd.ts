@@ -7,7 +7,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Move implements LegacyCommand {
   name = 'move <from> <to>';
-  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#moving-and-renaming-files`;
+  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/building-with-bit/removing-components`;
   alias = 'mv';
   opts = [
     [

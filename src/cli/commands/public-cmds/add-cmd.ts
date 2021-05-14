@@ -14,7 +14,7 @@ export default class Add implements LegacyCommand {
   name = 'add [path...]';
   description = `add any subset of files to be tracked as a component(s)
   all flags support glob patterns and {PARENT} {FILE_NAME} annotations
-  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components`;
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components`;
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'manually set component id'],

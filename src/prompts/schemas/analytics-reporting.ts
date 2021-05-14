@@ -9,7 +9,7 @@ export default {
       required: true,
       default: 'yes',
       description: `help us prioritize new features and bug fixes by enabling us to collect anonymous statistics about your usage. sharing anonymous usage information is completely voluntary and helps us improve Bit and build a better product.
-for more information see analytics documentation - https://${BASE_DOCS_DOMAIN}/docs/conf-analytics
+for more information see analytics documentation - https://${BASE_DOCS_DOMAIN}/reference/usage-analytics
 would you like to help Bit with anonymous usage analytics? [yes(y)/no(n)]`,
       message: 'please choose yes or no.',
       type: 'string',

@@ -240,7 +240,7 @@ ${err.message ? `server responded with: "${err.message}"` : ''}`,
     ) => `error: unable to export components to ${err.destinationScope} because they have dependencies on components in ${err.sourceScope}.
 bit does not allow setting dependencies between components in private collections managed by different owners.
 
-see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bit-dev#permissions-for-collections`,
+see troubleshooting at https://${BASE_DOCS_DOMAIN}/bit-dot-dev/my-account`,
   ],
   [
     SSHInvalidResponse,
@@ -306,7 +306,7 @@ please make sure it's not absolute and doesn't contain invalid characters`,
     (err) =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-points`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components`,
   ],
   [
     NoComponentDir,
@@ -318,7 +318,7 @@ please run "bit status" to get more info`,
     (err) =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#component-entry-point`,
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components`,
   ],
   [
     InvalidBitMap,
@@ -493,7 +493,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     AuthenticationFailed,
     (err) =>
-      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#autentication-issues.html\n\n${err.debugInfo}`,
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/bit-dot-dev/authentication\n\n${err.debugInfo}`,
   ],
   [
     ObjectsWithoutConsumer,

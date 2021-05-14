@@ -18,7 +18,7 @@ export class ExportCmd implements Command {
   bit export [id...] => export (optionally given ids) to their current scope
   bit export <remote> <lane...> => export the specified lanes to the specified remote
 
-  https://${BASE_DOCS_DOMAIN}/docs/export
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/exporting-components
   ${WILDCARD_HELP('export remote-scope')}`;
   alias = 'e';
   options = [

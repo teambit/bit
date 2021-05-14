@@ -6,7 +6,9 @@ import Config from '../../../global-config/config';
 
 export function set(key: string, val: string): Promise<Config> {
   if (!key || !val) {
-    throw new GeneralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config`);
+    throw new GeneralError(
+      `missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/bit-dot-dev/authentication#configure-local-bit-client`
+    );
   }
   return Config.load().then((config) => {
     config.set(key, val);

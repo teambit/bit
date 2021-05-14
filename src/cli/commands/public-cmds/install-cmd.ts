@@ -6,7 +6,7 @@ import linkTemplate from '../../templates/link-template';
 
 export default class Install implements LegacyCommand {
   name = 'install [ids...]';
-  description = `Installs all dependencies for all the imported components (or for a specific one), whether they were defined in your package.json or in each of the imported components, and links them. \n  https://${BASE_DOCS_DOMAIN}/docs/installing-components`;
+  description = `Installs all dependencies for all the imported components (or for a specific one), whether they were defined in your package.json or in each of the imported components, and links them. \n  https://${BASE_DOCS_DOMAIN}/building-with-bit/installing-components`;
   alias = 'i';
   opts = [['v', 'verbose', 'show a more verbose output when possible']] as CommandOptions;
   loader = true;

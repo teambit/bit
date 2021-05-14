@@ -13,7 +13,7 @@ import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 import { BitId } from '../../../bit-id';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
-  `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
+  `see troubleshooting at https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components`
 )}`;
 
 export const statusFailureMsg = 'issues found';
@@ -27,7 +27,7 @@ please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export default class Status implements LegacyCommand {
   name = 'status';
-  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
+  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/building-with-bit/inspecting-components`;
   alias = 's';
   opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;
   loader = true;
