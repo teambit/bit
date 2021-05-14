@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Box, render, Text } from 'ink';
+import { Box, render, Text, Newline } from 'ink';
 import React from 'react';
 import { CommandList } from '../cli.main.runtime';
 import { getCommandId } from '../get-command-id';
@@ -32,10 +32,11 @@ function DefaultHelpRender(props: HelpProps) {
   const element = (
     <Box key="help" flexDirection="column">
       <HelpHeader />
+      <Newline />
       {Object.entries(props).map(([groupName, group]) => {
         return (
           <Box key={groupName} flexDirection="column" marginBottom={1}>
-            <Text bold underline key={`group_${groupName}`}>
+            <Text bold underline color="blue" key={`group_${groupName}`}>
               {group.description}
             </Text>
             <Box flexDirection="column">
@@ -43,7 +44,7 @@ function DefaultHelpRender(props: HelpProps) {
                 return (
                   <Text key={commandName}>
                     {'  '}
-                    <Text bold>{alignCommandName(commandName)}</Text>
+                    <Text color="green">{alignCommandName(commandName)}</Text>
                     {description}
                   </Text>
                 );
@@ -62,7 +63,8 @@ function HelpHeader() {
   return (
     <Box key="HelpHeader" flexDirection="column">
       <Text bold>{`usage: bit [--version] [--help] <command> [<args>]`} </Text>
-      <Text color="grey"> bit documentation: https://docs.bit.dev</Text>
+      <Newline />
+      <Text color="yellow"> bit documentation: https://harmony-docs.bit.dev</Text>
     </Box>
   );
 }
@@ -72,7 +74,7 @@ function HelpFooter() {
 `;
   return (
     <Box>
-      <Text color="grey">{footer}</Text>
+      <Text color="yellow">{footer}</Text>
     </Box>
   );
 }
