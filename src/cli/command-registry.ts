@@ -1,5 +1,5 @@
+import chalk from 'chalk';
 import commander from 'commander';
-
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import { Commands } from '../legacy-extensions/extension';
@@ -93,7 +93,7 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
     .description(command.description)
-    .alias(command.alias);
+    .description(chalk.yellow(command.description as string));
 
   if (command.remoteOp) {
     command.options.push(['', TOKEN_FLAG, 'authentication token']);
@@ -118,7 +118,7 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   }
 
   command.options.forEach(([alias, name, description]) => {
-    concrete.option(createOptStr(alias, name), description);
+    concrete.option(chalk.green(createOptStr(alias, name)), `${chalk.white(description)}\n`);
   });
 
   // attach skip-update to all commands
