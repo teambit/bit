@@ -95,11 +95,12 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
     .description(chalk.yellow(command.description as string))
     .alias(command.alias);
 
+  const globalOptions: CommandOptions = [];
   if (command.remoteOp) {
-    command.options.push(['', TOKEN_FLAG, 'authentication token']);
+    globalOptions.push(['', TOKEN_FLAG, 'authentication token']);
   }
   if (!command.internal) {
-    command.options.push(
+    globalOptions.push(
       [
         '',
         'log [level]',
@@ -118,7 +119,14 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   }
 
   command.options.forEach(([alias, name, description]) => {
-    concrete.option(chalk.green(createOptStr(alias, name)), `${chalk.white(description)}\n`);
+    concrete.option(createOptStr(alias, name), description);
+  });
+
+  styleOptions(concrete);
+  addGlobalOptionsDelimiter(concrete);
+
+  globalOptions.forEach(([alias, name, description]) => {
+    concrete.option(createOptStr(alias, name), description);
   });
 
   // attach skip-update to all commands
@@ -131,6 +139,18 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   }
 
   return registerAction(command, concrete);
+}
+
+function styleOptions(concrete) {
+  concrete.options.forEach((option) => {
+    option.flags = chalk.green(option.flags);
+  });
+}
+
+function addGlobalOptionsDelimiter(concrete) {
+  if (!concrete.options.length) return;
+  const lastOption = concrete.options[concrete.options.length - 1];
+  lastOption.description = `${lastOption.description}\n\nGlobalOptions:`;
 }
 
 export default class CommandRegistry {
