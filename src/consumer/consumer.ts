@@ -3,7 +3,7 @@ import mapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { Analytics } from '../analytics/analytics';
 import { BitId, BitIds } from '../bit-id';
 import { BitIdStr } from '../bit-id/bit-id';
@@ -564,25 +564,7 @@ export default class Consumer {
       await this.componentFsCache.deleteAllDependenciesDataCache();
     }
     const components = await this._loadComponentsForTag(ids);
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't tag anything
-    const componentsWithRelativeAuthored = components.filter(
-      (component) => component.issues && component.issues.relativeComponentsAuthored
-    );
-    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
-      throw new MissingDependencies(componentsWithRelativeAuthored);
-    }
-    if (!tagParams.ignoreUnresolvedDependencies) {
-      // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter((component) => {
-        const issues = component.issues;
-        return (
-          issues &&
-          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
-        );
-      });
-      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
-    }
+    this.throwForComponentIssues(components, tagParams.ignoreUnresolvedDependencies);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -596,6 +578,18 @@ export default class Consumer {
     });
 
     return { taggedComponents, autoTaggedResults, isSoftTag: tagParams.soft, publishedPackages };
+  }
+
+  private throwForComponentIssues(components: Component[], ignoreUnresolvedDependencies?: boolean) {
+    components.forEach((component) => {
+      if (this.isLegacy && component.issues) {
+        component.issues.delete(IssuesClasses.relativeComponentsAuthored);
+      }
+    });
+    if (!ignoreUnresolvedDependencies) {
+      const componentsWithBlockingIssues = components.filter((component) => component.issues?.shouldBlockTagging());
+      if (!R.isEmpty(componentsWithBlockingIssues)) throw new MissingDependencies(componentsWithBlockingIssues);
+    }
   }
 
   updateNextVersionOnBitmap(taggedComponents: Component[], exactVersion, releaseType) {
@@ -643,27 +637,7 @@ export default class Consumer {
     });
     const components = await this._loadComponentsForTag(ids);
 
-    // @todo: remove all these duplication with `tag()`
-
-    // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't tag anything
-    const componentsWithRelativeAuthored = components.filter(
-      (component) => component.issues && component.issues.relativeComponentsAuthored
-    );
-    if (!this.isLegacy && !R.isEmpty(componentsWithRelativeAuthored)) {
-      throw new MissingDependencies(componentsWithRelativeAuthored);
-    }
-    if (!ignoreUnresolvedDependencies) {
-      // components that have issues other than relativeComponentsAuthored.
-      const componentsWithOtherIssues = components.filter((component) => {
-        const issues = component.issues;
-        return (
-          issues &&
-          Object.keys(issues).some((label) => label !== 'relativeComponentsAuthored' && !R.isEmpty(issues[label]))
-        );
-      });
-      if (!R.isEmpty(componentsWithOtherIssues)) throw new MissingDependencies(componentsWithOtherIssues);
-    }
+    this.throwForComponentIssues(components, ignoreUnresolvedDependencies);
     const areComponentsMissingFromScope = components.some((c) => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
       throw new ComponentsPendingImport();
@@ -703,8 +677,8 @@ export default class Consumer {
     components.forEach((component) => {
       const componentMap = component.componentMap as ComponentMap;
       if (componentMap.rootDir) return;
-      const hasRelativePaths = component.issues && component.issues.relativeComponentsAuthored;
-      const hasCustomModuleResolutions = component.issues && component.issues.missingCustomModuleResolutionLinks;
+      const hasRelativePaths = component.issues?.getIssue(IssuesClasses.relativeComponentsAuthored);
+      const hasCustomModuleResolutions = component.issues?.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks);
       // leaving this because it can be helpful for users upgrade from legacy
       if (componentMap.trackDir && !hasRelativePaths) {
         componentMap.changeRootDirAndUpdateFilesAccordingly(componentMap.trackDir);

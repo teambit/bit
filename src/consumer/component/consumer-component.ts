@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import * as path from 'path';
 import R from 'ramda';
-
+import { IssuesList } from '@teambit/component-issues';
 import Capsule from '../../../legacy-capsule/core/capsule';
 import { Analytics } from '../../analytics/analytics';
 import BitId from '../../bit-id/bit-id';
@@ -57,7 +57,6 @@ import { RawTestsResults } from '../specs-results/specs-results';
 import { ComponentFsCache } from './component-fs-cache';
 import { CURRENT_SCHEMA, isSchemaSupport, SchemaFeature, SchemaName } from './component-schema';
 import { Dependencies, Dependency } from './dependencies';
-import { Issues } from './dependencies/dependency-resolver/dependencies-resolver';
 import { ManuallyChangedDependencies } from './dependencies/dependency-resolver/overrides-dependencies';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import ExternalTestErrors from './exceptions/external-test-errors';
@@ -166,7 +165,7 @@ export default class Component {
   componentFromModel: Component | undefined; // populated when loadedFromFileSystem is true and it exists in the model
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   isolatedEnvironment: IsolatedEnvironment;
-  issues?: Issues;
+  issues?: IssuesList;
   deprecated: boolean;
   defaultScope: string | null;
   origin: ComponentOrigin;

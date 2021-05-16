@@ -160,7 +160,7 @@ export default class FixtureHelper {
    *
    * @returns the expected output in case "node app.js" is running
    */
-  populateComponents(numOfComponents = 3, rewire = true, additionalStr = ''): string {
+  populateComponents(numOfComponents = 3, rewire = true, additionalStr = '', compile = true): string {
     const getImp = (index) => {
       if (index === numOfComponents) return `module.exports = () => 'comp${index}${additionalStr}';`;
       const nextComp = `comp${index + 1}`;
@@ -174,8 +174,8 @@ module.exports = () => 'comp${index}${additionalStr} and ' + ${nextComp}();`;
     this.fs.outputFile('app.js', "const comp1 = require('./comp1');\nconsole.log(comp1())");
     if (rewire) {
       this.command.linkAndRewire();
-      this.command.compile();
     }
+    if (compile) this.command.compile();
     return Array(numOfComponents)
       .fill(null)
       .map((val, key) => `comp${key + 1}${additionalStr}`)

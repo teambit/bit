@@ -400,9 +400,19 @@ export default class CommandHelper {
     });
   }
 
+  expectStatusToHaveIssue(issueName: string) {
+    const allIssues = this.getAllIssuesFromStatus();
+    expect(allIssues).to.include(issueName);
+  }
+
+  getAllIssuesFromStatus(): string[] {
+    const statusJson = this.statusJson();
+    return statusJson.componentsWithIssues.map((comp) => comp.issues.map((issue) => issue.type)).flat();
+  }
+
   expectStatusToNotHaveIssues() {
     const statusJson = this.statusJson();
-    ['componentsWithMissingDeps', 'invalidComponents'].forEach((key) => {
+    ['componentsWithIssues', 'invalidComponents'].forEach((key) => {
       expect(statusJson[key], `status.${key} should be empty`).to.have.lengthOf(0);
     });
   }

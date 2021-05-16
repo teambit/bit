@@ -6,12 +6,13 @@ import DocsAspect, { DocsMain } from '@teambit/docs';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import MultiCompilerAspect, { MultiCompilerMain } from '@teambit/multi-compiler';
 import ReactAspect, { ReactMain } from '@teambit/react';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { MDXAspect } from './mdx.aspect';
 import { MDXCompiler, MDXCompilerOpts } from './mdx.compiler';
 import { MDXDependencyDetector } from './mdx.detector';
 import { MDXDocReader } from './mdx.doc-reader';
-
-const babelConfig = require('./babel/babel.config');
+import { componentTemplates } from './mdx.templates';
+import { babelConfig } from './babel/babel.config';
 
 export type MDXConfig = {
   /**
@@ -42,6 +43,7 @@ export class MDXMain {
     MultiCompilerAspect,
     BabelAspect,
     CompilerAspect,
+    GeneratorAspect,
   ];
 
   static defaultConfig = {
@@ -49,23 +51,30 @@ export class MDXMain {
   };
 
   static async provider(
-    [docs, depResolver, react, envs, multiCompiler, babel, compiler]: [
+    [docs, depResolver, react, envs, multiCompiler, babel, compiler, generator]: [
       DocsMain,
       DependencyResolverMain,
       ReactMain,
       EnvsMain,
       MultiCompilerMain,
       BabelMain,
-      CompilerMain
+      CompilerMain,
+      GeneratorMain
     ],
     config: MDXConfig
   ) {
     const mdx = new MDXMain();
     const mdxCompiler = multiCompiler.createCompiler(
       [
-        mdx.createCompiler({ ignoredPatterns: docs.getPatterns() }),
-        babel.createCompiler(babelConfig),
-        react.reactEnv.getCompiler(undefined, { compileJs: false, compileJsx: false }),
+        // set the shouldCopyNonSupportedFiles to false since we don't want babel to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
+        babel.createCompiler({ babelTransformOptions: babelConfig, shouldCopyNonSupportedFiles: false }),
+        mdx.createCompiler({ ignoredPatterns: docs.getPatterns(), babelTransformOptions: babelConfig }),
+        // set the shouldCopyNonSupportedFiles to false since we don't want ts to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
+        react.reactEnv.getCompiler(undefined, {
+          compileJs: false,
+          compileJsx: false,
+          shouldCopyNonSupportedFiles: false,
+        }),
       ],
       {}
     );
@@ -76,6 +85,8 @@ export class MDXMain {
     envs.registerEnv(mdxEnv);
     depResolver.registerDetector(new MDXDependencyDetector(config.extensions));
     docs.registerDocReader(new MDXDocReader(config.extensions));
+    generator.registerComponentTemplate(componentTemplates);
+
     return mdx;
   }
 }

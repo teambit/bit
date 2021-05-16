@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
@@ -28,7 +27,6 @@ describe('es6 components with link files', function () {
    * raise a warning about missing-dependencies
    */
   describe('when a component uses index file to import single members from a module', () => {
-    let output;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
@@ -46,8 +44,8 @@ describe('es6 components with link files', function () {
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider that index file as a dependency', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
   });
 
@@ -59,7 +57,6 @@ describe('es6 components with link files', function () {
   // and the destinationRelativePath: "utils/is-string/is-string.js", all the rest index files are irrelevant.
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
   describe('multiple link files', () => {
-    let output;
     let npmCiRegistry: NpmCiRegistry;
     before(() => {
       npmCiRegistry = new NpmCiRegistry(helper);
@@ -81,8 +78,8 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
     it('bit link --rewire should not change the source code', () => {
       // that's because this link file and the main file don't have the same "import default" settings
@@ -154,7 +151,6 @@ export { isString };`
   // the recent babel compiler includes the 'add-module-exports' plugin which previously
   // broke the link-files.
   describe('multiple link files, different "default" import situation and recent babel compiler', () => {
-    let output;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopes();
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
@@ -168,8 +164,8 @@ export { isString };`
       helper.fixtures.addComponentBarFoo();
     });
     it('should not consider both index files as a dependencies', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
     describe('when importing the component', () => {
       before(() => {

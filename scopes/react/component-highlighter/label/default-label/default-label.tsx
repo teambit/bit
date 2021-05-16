@@ -3,9 +3,10 @@ import classnames from 'classnames';
 
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { pillClass } from '@teambit/base-ui.css-components.pill';
-import { NativeLink } from '@teambit/ui.routing.native-link';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 
 import { bubble } from '../../bubble';
+import styles from './default-label.module.scss';
 
 export interface DefaultLabelProps extends CardProps {
   href?: string;
@@ -13,8 +14,8 @@ export interface DefaultLabelProps extends CardProps {
 
 export function DefaultLabel({ className, href, children, ...rest }: DefaultLabelProps) {
   return (
-    <Card {...rest}>
-      <NativeLink external href={href} className={classnames(pillClass, bubble, className)}>
+    <Card {...rest} className={classnames(styles.container, className)}>
+      <NativeLink external href={href} className={classnames(pillClass, bubble)}>
         {children}
       </NativeLink>
     </Card>

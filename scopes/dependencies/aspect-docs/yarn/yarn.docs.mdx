@@ -1,0 +1,34 @@
+---
+description: 'Docs for Yarn aspect'
+labels: ['docs', 'aspect', 'extensions']
+---
+
+import { Yarn } from './index';
+
+## Static Content Page in MDX
+
+Docs for Yarn aspect
+
+### Component usage
+
+Use your component in any mdx file:
+
+```js
+import { Yarn } from '@teambit/aspect-docs.yarn';
+
+<Yarn />;
+```
+
+### Render with theme and MDX providers
+
+```js
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { Yarn } from '@teambit/aspect-docs.yarn';
+
+<ThemeContext>
+  <MDXLayout>
+    <Yarn />
+  </MDXLayout>
+</ThemeContext>;
+```

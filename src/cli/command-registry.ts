@@ -1,5 +1,5 @@
+import chalk from 'chalk';
 import commander from 'commander';
-
 import { Analytics } from '../analytics/analytics';
 import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import { Commands } from '../legacy-extensions/extension';
@@ -92,14 +92,15 @@ function createOptStr(alias, name) {
 export function register(command: Command, commanderCmd, packageManagerArgs?: string[]) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
-    .description(command.description)
+    .description(chalk.yellow(command.description as string))
     .alias(command.alias);
 
+  const globalOptions: CommandOptions = [];
   if (command.remoteOp) {
-    command.options.push(['', TOKEN_FLAG, 'authentication token']);
+    globalOptions.push(['', TOKEN_FLAG, 'authentication token']);
   }
   if (!command.internal) {
-    command.options.push(
+    globalOptions.push(
       [
         '',
         'log [level]',
@@ -121,6 +122,13 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
     concrete.option(createOptStr(alias, name), description);
   });
 
+  styleOptions(concrete);
+  addGlobalOptionsDelimiter(concrete);
+
+  globalOptions.forEach(([alias, name, description]) => {
+    concrete.option(createOptStr(alias, name), description);
+  });
+
   // attach skip-update to all commands
   concrete.option(SKIP_UPDATE_FLAG, 'Skips auto updates');
 
@@ -131,6 +139,18 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   }
 
   return registerAction(command, concrete);
+}
+
+function styleOptions(concrete) {
+  concrete.options.forEach((option) => {
+    option.flags = chalk.green(option.flags);
+  });
+}
+
+function addGlobalOptionsDelimiter(concrete) {
+  if (!concrete.options.length) return;
+  const lastOption = concrete.options[concrete.options.length - 1];
+  lastOption.description = `${lastOption.description}\n\nGlobalOptions:`;
 }
 
 export default class CommandRegistry {

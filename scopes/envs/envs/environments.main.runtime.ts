@@ -243,10 +243,8 @@ export class EnvsMain {
         );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      this.printWarningIfFirstTime(
-        envIdFromEnvsConfig,
-        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component ${component.id.toString()}`
-      );
+      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString()).message;
+      this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -313,10 +311,8 @@ export class EnvsMain {
         );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      this.printWarningIfFirstTime(
-        envIdFromEnvsConfig,
-        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component`
-      );
+      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig).message;
+      this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env

@@ -14,7 +14,11 @@ import { toPreviewUrl } from '@teambit/ui.component-preview';
 import { useIsMobile } from '@teambit/ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/ui.compositions-menu-bar';
 import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
-import { NativeLink } from '@teambit/ui.routing.native-link';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { Separator } from '@teambit/ui.separator';
+import { H1 } from '@teambit/documenter.ui.heading';
+import { AlertCard } from '@teambit/ui.alert-card';
+import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { OptionButton } from '@teambit/ui.input.option-button';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';
@@ -125,7 +129,23 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
   const EmptyStateTemplate = emptyState?.get(env || ''); // || defaultTemplate;
 
   if (component.compositions.length === 0 && component.host === 'teambit.workspace/workspace' && EmptyStateTemplate) {
-    return <EmptyStateTemplate />;
+    return (
+      <div className={styles.noCompositionsPage}>
+        <div>
+          <H1 className={styles.title}>Compositions</H1>
+          <Separator className={styles.separator} />
+          <AlertCard
+            level="info"
+            title="There are no
+              compositions for this Component. Learn how to add compositions:"
+          >
+            <MDXLayout>
+              <EmptyStateTemplate />
+            </MDXLayout>
+          </AlertCard>
+        </div>
+      </div>
+    );
   }
 
   if (component.compositions.length === 0) {

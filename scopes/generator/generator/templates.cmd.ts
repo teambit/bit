@@ -29,7 +29,8 @@ export class TemplatesCmd implements Command {
     }
 
     const grouped = groupBy(results, 'aspectId');
-    const title = chalk.green(`the following template(s) are available\n`);
+    const title = chalk.green(`\nThe following template(s) are available with the command bit create: \nbit create react-component ui/button
+    \n`);
     const templateOutput = (template: TemplateDescriptor) => {
       const desc = template.description ? ` (${template.description})` : '';
       return `    ${template.name}${chalk.dim(desc)}`;
@@ -37,7 +38,7 @@ export class TemplatesCmd implements Command {
     const output = Object.keys(grouped)
       .map((aspectId) => {
         const names = grouped[aspectId].map(templateOutput).join('\n');
-        return `${chalk.bold(aspectId)}\n${names}`;
+        return `${chalk.blue.bold(aspectId)}\n${names}\n`;
       })
       .join('\n');
     return title + output;

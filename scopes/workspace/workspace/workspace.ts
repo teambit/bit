@@ -1,6 +1,7 @@
 import chalk from 'chalk';
 import mapSeries from 'p-map-series';
 import type { PubsubMain } from '@teambit/pubsub';
+import { IssuesList } from '@teambit/component-issues';
 import type { AspectLoaderMain, AspectDefinition } from '@teambit/aspect-loader';
 import { getAspectDef } from '@teambit/aspect-loader';
 import { MainRuntime } from '@teambit/cli';
@@ -40,7 +41,7 @@ import LegacyGraph from '@teambit/legacy/dist/scope/graph/graph';
 import { ImportOptions } from '@teambit/legacy/dist/consumer/component-ops/import-components';
 import { NothingToImport } from '@teambit/legacy/dist/consumer/exceptions';
 import { BitIds } from '@teambit/legacy/dist/bit-id';
-import { BitId } from '@teambit/legacy-bit-id';
+import { BitId, InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { Consumer, loadConsumer } from '@teambit/legacy/dist/consumer';
 import { GetBitMapComponentOptions } from '@teambit/legacy/dist/consumer/bit-map/bit-map';
 import AddComponents from '@teambit/legacy/dist/consumer/component-ops/add-components';
@@ -81,7 +82,6 @@ import {
   OnComponentLoadSlot,
   OnComponentRemoveSlot,
 } from './workspace.provider';
-import { Issues } from './workspace-component/issues';
 import { WorkspaceComponentLoader } from './workspace-component/workspace-component-loader';
 import { IncorrectEnvAspect } from './exceptions/incorrect-env-aspect';
 
@@ -190,6 +190,14 @@ export class Workspace implements ComponentFactory {
     // TODO: refactor - prefer to avoid code inside the constructor.
     this.owner = this.config?.defaultOwner;
     this.componentLoader = new WorkspaceComponentLoader(this, logger, dependencyResolver);
+    this.validateConfig();
+  }
+
+  private validateConfig() {
+    const defaultScope = this.config.defaultScope;
+    if (this.consumer.isLegacy) return;
+    if (!defaultScope) throw new Error('defaultScope is missing');
+    if (!isValidScopeName(defaultScope)) throw new InvalidScopeName(defaultScope);
   }
 
   /**
@@ -255,10 +263,8 @@ export class Workspace implements ComponentFactory {
   /**
    * get Component issues
    */
-  async getComponentIssues(component: Component): Promise<Issues | null> {
-    const issues = component.state._consumer.issues;
-    if (!issues) return null;
-    return Issues.fromLegacy(issues);
+  async getComponentIssues(component: Component): Promise<IssuesList | null> {
+    return component.state._consumer.issues || null;
   }
 
   /**
@@ -522,11 +528,11 @@ export class Workspace implements ComponentFactory {
    * @param pattern variants.
    * @param scope scope name.
    */
-  async byPattern(pattern: string, scope = '*'): Promise<Component[]> {
+  async byPattern(pattern: string, scope = '**'): Promise<Component[]> {
     const ids = await this.listIds();
-
+    const finalPattern = `${scope}/${pattern || '**'}`;
     const targetIds = ids.filter((id) => {
-      const spec = isMatchNamespacePatternItem(id.toStringWithoutVersion(), `${scope}/${pattern}`);
+      const spec = isMatchNamespacePatternItem(id.toStringWithoutVersion(), finalPattern);
       return spec.match;
     });
 

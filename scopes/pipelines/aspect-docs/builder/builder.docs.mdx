@@ -1,0 +1,34 @@
+---
+description: 'Docs for Builder Aspect'
+labels: ['docs', 'aspect', 'extensions']
+---
+
+import { Builder } from './index';
+
+## Static Content Page in MDX
+
+Docs for Builder aspect
+
+### Component usage
+
+Use your component in any mdx file:
+
+```jsx
+import { Builder } from '@teambit/aspect-docs.builder';
+
+<Builder />;
+```
+
+### Render with theme and MDX providers
+
+```jsx
+import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { Builder } from '@teambit/aspect-docs.builder';
+
+<ThemeContext>
+  <MDXLayout>
+    <Builder />
+  </MDXLayout>
+</ThemeContext>;
+```

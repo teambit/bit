@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { NOTHING_TO_TAG_MSG } from '../../src/api/consumer/lib/tag';
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
@@ -588,8 +587,9 @@ describe('bit tag command', function () {
       }
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
+      const RelativeCompClass = IssuesClasses.relativeComponents;
       expect(output).to.have.string('error: issues found with the following component dependencies');
-      expect(output).to.have.string(componentIssuesLabels.relativeComponents);
+      expect(output).to.have.string(new RelativeCompClass().description);
       expect(output).to.have.string(`${helper.scopes.remote}/utils/is-type@0.0.1`);
     });
   });
