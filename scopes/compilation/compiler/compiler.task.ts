@@ -23,10 +23,10 @@ export class CompilerTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const buildResults = await this.compilerInstance.build(context);
+    const compiledIds = buildResults.componentsResults.map((result) => result.component.id);
+    const compiledCapsules = context.capsuleNetwork.getCapsulesByIds(compiledIds);
 
-    await Promise.all(
-      context.capsuleNetwork.graphCapsules.map((capsule) => this.copyNonSupportedFiles(capsule, this.compilerInstance))
-    );
+    await Promise.all(compiledCapsules.map((capsule) => this.copyNonSupportedFiles(capsule, this.compilerInstance)));
 
     return buildResults;
   }

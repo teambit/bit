@@ -1,5 +1,6 @@
 import { ComponentID } from '@teambit/component';
 import { PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
+import { Capsule } from './capsule';
 import CapsuleList from './capsule-list';
 
 export class Network {
@@ -31,5 +32,9 @@ export class Network {
 
   get capsulesRootDir(): PathOsBasedAbsolute {
     return this._capsulesRootDir;
+  }
+
+  getCapsulesByIds(ids: ComponentID[]): Capsule[] {
+    return this.graphCapsules.filter((capsule) => ids.find((id) => id.isEqual(capsule.component.id)));
   }
 }
