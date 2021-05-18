@@ -1,5 +1,5 @@
-import type { DrawerType } from '@teambit/ui.tree.drawer';
-import { FullLoader } from '@teambit/ui.full-loader';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import {
   ComponentTree,
   PayloadType,
@@ -7,7 +7,7 @@ import {
   ScopeTreeNode,
   NamespaceTreeNode,
   ScopePayload,
-} from '@teambit/ui.side-bar';
+} from '@teambit/ui-foundation.ui.side-bar';
 
 import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 

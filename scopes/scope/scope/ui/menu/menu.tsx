@@ -1,4 +1,4 @@
-import { Menu, MenuProps } from '@teambit/ui.menu';
+import { Menu, MenuProps } from '@teambit/ui-foundation.ui.menu';
 import React from 'react';
 import styles from './menu.module.scss';
 

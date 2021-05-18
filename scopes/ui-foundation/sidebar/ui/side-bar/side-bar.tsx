@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { flatten } from 'lodash';
 import { MenuSection } from '@teambit/design.ui.surfaces.menu.section';
-import { DrawerUI } from '@teambit/ui.tree.drawer';
+import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
 import { DrawerSlot, SidebarItemSlot } from '../../sidebar.ui.runtime';
 import styles from './side-bar.module.scss';
 

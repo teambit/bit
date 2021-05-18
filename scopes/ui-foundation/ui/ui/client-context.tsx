@@ -5,7 +5,7 @@ import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 import { Roboto } from '@teambit/base-ui.theme.fonts.roboto';
 import { TooltipMountPoint } from '@teambit/design.ui.tooltip';
 
-import { LoaderContext, useLoaderApi } from '@teambit/ui.global-loader';
+import { LoaderContext, useLoaderApi } from '@teambit/ui-foundation.ui.global-loader';
 import styles from './client-context.module.scss';
 
 export function ClientContext({ children }: { children: ReactNode }) {

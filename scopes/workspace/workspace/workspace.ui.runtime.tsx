@@ -2,10 +2,10 @@ import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
-import { RouteSlot } from '@teambit/ui.react-router.slot-router';
-import { Menu } from '@teambit/ui.menu';
+import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { Menu } from '@teambit/ui-foundation.ui.menu';
 import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
-import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
+import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';

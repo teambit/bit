@@ -1,5 +1,5 @@
 import React from 'react';
-import { EmptyComponentGallery, EmptyComponentGalleryProps } from '@teambit/ui.empty-component-gallery';
+import { EmptyComponentGallery, EmptyComponentGalleryProps } from '@teambit/ui-foundation.ui.empty-component-gallery';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 import styles from './empty-scope.module.scss';
 

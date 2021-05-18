@@ -2,9 +2,12 @@ import { UIAspect, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ReactNode, useReducer } from 'react';
 import { v1 } from 'uuid';
 
-import { NotificationContext } from '@teambit/ui.notifications.notification-context';
-import { NotificationCenter, NotificationCenterProps } from '@teambit/ui.notifications.notification-center';
-import { MessageLevel, NotificationsStore } from '@teambit/ui.notifications.store';
+import { NotificationContext } from '@teambit/ui-foundation.ui.notifications.notification-context';
+import {
+  NotificationCenter,
+  NotificationCenterProps,
+} from '@teambit/ui-foundation.ui.notifications.notification-center';
+import { MessageLevel, NotificationsStore } from '@teambit/ui-foundation.ui.notifications.store';
 import { NotificationAction, notificationReducer } from './notification-reducer';
 import { NotificationsAspect } from './notifications.aspect';
 

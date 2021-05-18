@@ -3,7 +3,7 @@ import { getDataFromTree } from '@apollo/client/react/ssr';
 import type { NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import type { BrowserData, RenderLifecycle } from '@teambit/ui';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';

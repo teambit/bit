@@ -1,4 +1,4 @@
-import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 
 import { ScopeModel } from './scope-model';

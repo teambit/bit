@@ -1,5 +1,5 @@
 import React from 'react';
-import { EmptyComponentGallery, EmptyComponentGalleryProps } from '@teambit/ui.empty-component-gallery';
+import { EmptyComponentGallery, EmptyComponentGalleryProps } from '@teambit/ui-foundation.ui.empty-component-gallery';
 import styles from './empty-workspace.module.scss';
 
 export type EmptyWorkspaceProps = { name: string } & EmptyComponentGalleryProps;

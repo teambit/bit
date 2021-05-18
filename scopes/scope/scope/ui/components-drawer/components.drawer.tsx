@@ -1,11 +1,17 @@
 import React, { useCallback } from 'react';
 import classNames from 'classnames';
-import { ComponentTree, ComponentView, NamespaceTreeNode, PayloadType, ScopePayload } from '@teambit/ui.side-bar';
+import {
+  ComponentTree,
+  ComponentView,
+  NamespaceTreeNode,
+  PayloadType,
+  ScopePayload,
+} from '@teambit/ui-foundation.ui.side-bar';
 import { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 
-import { FullLoader } from '@teambit/ui.full-loader';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import { ComponentTreeSlot } from '@teambit/component-tree';
-import type { DrawerType } from '@teambit/ui.tree.drawer';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { Text } from '@teambit/base-ui.text.text';
 import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
 import { ellipsis } from '@teambit/design.ui.styles.ellipsis';

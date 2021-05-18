@@ -3,7 +3,7 @@
  */
 
 import { PreviewRuntime } from '@teambit/preview';
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 
 import { EventEmitter2 } from 'eventemitter2';
 import { connectToParent, ErrorCode } from 'penpal';
