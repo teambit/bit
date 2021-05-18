@@ -104,8 +104,8 @@ export class ApplicationMain {
     this.computeOptions(options);
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
-    await app.run(context);
-    return app;
+    const port = await app.run(context);
+    return { app, port };
   }
 
   /**
