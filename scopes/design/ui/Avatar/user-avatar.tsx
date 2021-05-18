@@ -5,8 +5,8 @@ import { v1 } from 'uuid';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { addAvatarQueryParams } from '@teambit/url.add-avatar-query-params';
 import { getInitials } from '@teambit/string.get-initials';
-import { letterBgColors } from '@teambit/ui.styles.colors-by-letter';
-import { ellipsis } from '@teambit/ui.styles.ellipsis';
+import { letterBgColors } from '@teambit/design.ui.styles.colors-by-letter';
+import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 

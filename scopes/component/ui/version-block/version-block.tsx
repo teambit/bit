@@ -1,5 +1,5 @@
 import { H3 } from '@teambit/documenter.ui.heading';
-import { Contributors } from '@teambit/ui.contributors';
+import { Contributors } from '@teambit/design.ui.contributors';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
 import { Labels } from '@teambit/ui.version-label';
 import classNames from 'classnames';

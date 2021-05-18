@@ -5,7 +5,7 @@ import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { clickable } from '@teambit/legacy/dist/to-eject/css-components/clickable';
 import classNames from 'classnames';
 import React, { useCallback, useContext } from 'react';
-import { Tooltip } from '@teambit/ui.tooltip';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentModel } from '@teambit/component';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { indentClass } from '@teambit/base-ui.graph.tree.indent';

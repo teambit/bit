@@ -4,7 +4,7 @@ import { Icon, IconProps } from '@teambit/evangelist.elements.icon';
 import { ComponentModel } from '@teambit/component';
 import { colorPalette } from '@teambit/base-ui.theme.color-palette';
 import { themedText } from '@teambit/base-ui.text.themed-text';
-import { Tooltip } from '@teambit/ui.tooltip';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import styles from './deprecation-icon.module.scss';
 
 export type DeprecationIconProps = { component: ComponentModel } & Omit<IconProps, 'of'>;

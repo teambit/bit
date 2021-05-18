@@ -11,7 +11,7 @@ import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
-import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';

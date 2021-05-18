@@ -10,7 +10,7 @@ import React, { ComponentType, ReactNode } from 'react';
 import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
 import { RouteProps } from 'react-router-dom';
 import { MenuWidget, MenuWidgetSlot } from '@teambit/ui.menu';
-import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
 import { ScopeMenu } from './ui/menu';
 import { ScopeAspect } from './scope.aspect';

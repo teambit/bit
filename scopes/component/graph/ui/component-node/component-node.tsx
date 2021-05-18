@@ -4,7 +4,7 @@ import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { ComponentID } from '@teambit/component';
 import { DeprecationIcon } from '@teambit/ui.deprecation-icon';
 import { EnvIcon } from '@teambit/ui.env-icon';
-import { ellipsis } from '@teambit/ui.styles.ellipsis';
+import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
 import { NodeModel } from '../query/node-model';
 import { ComponentGraphContext } from '../dependencies-graph/';

@@ -15,8 +15,8 @@ import React, { useCallback, useContext } from 'react';
 import classNames from 'classnames';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Text } from '@teambit/base-ui.text.text';
-import { mutedItalic } from '@teambit/ui.styles.muted-italic';
-import { ellipsis } from '@teambit/ui.styles.ellipsis';
+import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
+import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
 import styles from './workspace-components-drawer.module.scss';
 

@@ -1,4 +1,4 @@
-import { AccountObj, UserAvatar } from '@teambit/ui.avatar';
+import { AccountObj, UserAvatar } from '@teambit/design.ui.avatar';
 import React from 'react';
 import styles from './contributors.module.scss';
 
