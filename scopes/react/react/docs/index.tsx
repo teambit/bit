@@ -1,28 +1,4 @@
-import { RenderingContext } from '@teambit/preview';
-import React from 'react';
-import ReactDOM from 'react-dom';
-
-import { DocsApp } from './docs-app';
-import type { DocsFile } from './examples-overview/example';
-
-export default function DocsRoot(
-  Provider: React.ComponentType | undefined,
-  componentId: string,
-  docs: DocsFile | undefined,
-  compositions: any,
-  context: RenderingContext
-) {
-  ReactDOM.render(
-    <DocsApp
-      Provider={Provider}
-      compositions={compositions}
-      docs={docs}
-      componentId={componentId}
-      renderingContext={context}
-    />,
-    document.getElementById('root')
-  );
+export default function bootstrap(arg1, arg2, arg3, arg4, arg5) {
+  // eslint-disable-next-line
+  import('./bootstrap').then((module) => module.default(arg1, arg2, arg3, arg4, arg5));
 }
-
-// hot reloading works when components are in a different file.
-// do not declare react components here.

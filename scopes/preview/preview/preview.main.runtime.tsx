@@ -83,6 +83,7 @@ export class PreviewMain {
     const contents = generateLink(prefix, moduleMap, defaultModule);
     const hash = objectHash(contents);
     const targetPath = join(dirName, `__${prefix}-${this.timestamp}.js`);
+    console.log('targetPath', targetPath);
 
     // write only if link has changed (prevents triggering fs watches)
     if (this.writeHash.get(targetPath) !== hash) {
@@ -121,6 +122,7 @@ export class PreviewMain {
       });
 
       const dirPath = join(this.tempFolder, context.id);
+      console.log('dirPath', dirPath);
       if (!existsSync(dirPath)) mkdirSync(dirPath, { recursive: true });
 
       const link = this.writeLink(previewDef.prefix, withPaths, templatePath, dirPath);
@@ -140,6 +142,7 @@ export class PreviewMain {
       'preview',
       PreviewAspect.id
     );
+    console.log('filePath', filePath);
     return filePath;
   }
 

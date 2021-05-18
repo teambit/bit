@@ -1,5 +1,5 @@
 import '@teambit/ui.mdx-scope-context';
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+// import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -45,6 +45,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
         path: `_hmr/${envId}`,
       },
     },
+    cache: false,
     module: {
       rules: [
         {
@@ -104,7 +105,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
               require.resolve('babel-preset-react-app'),
             ],
             plugins: [
-              require.resolve('react-refresh/babel'),
+              // require.resolve('react-refresh/babel'),
               // for component highlighting in preview.
               [
                 require.resolve('@teambit/babel.bit-react-transformer'),
@@ -127,7 +128,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
                 babelrc: false,
                 configFile: false,
                 presets: [require.resolve('@babel/preset-react'), require.resolve('@babel/preset-env')],
-                plugins: [require.resolve('react-refresh/babel')],
+                // plugins: [require.resolve('react-refresh/babel')],
               },
             },
             {
@@ -245,17 +246,35 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
     },
 
     plugins: [
-      new ReactRefreshWebpackPlugin({
-        overlay: {
-          sockPath: `_hmr/${envId}`,
-          // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
-          // errors
-          entry: require.resolve('./react-hot-dev-client'),
-          module: require.resolve('./refresh'),
+      // new ReactRefreshWebpackPlugin({
+      //   overlay: {
+      //     sockPath: `_hmr/${envId}`,
+      //     // TODO: check why webpackHotDevClient and react-error-overlay are not responding for runtime
+      //     // errors
+      //     entry: require.resolve('./react-hot-dev-client'),
+      //     module: require.resolve('./refresh'),
+      //   },
+      //   include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
+      //   // TODO: use a more specific exclude for our selfs
+      //   exclude: [/dist/, /node_modules/],
+      // }),
+      new webpack.container.ModuleFederationPlugin({
+        // remoteType: 'commonjs',
+        shared: {
+          react: {
+            eager: true,
+            singleton: true,
+            requiredVersion: '^16.14.0',
+          },
+          'react-dom': {
+            eager: true,
+            singleton: true,
+            requiredVersion: '^16.14.0',
+          },
         },
-        include: [/\.(js|jsx|tsx|ts|mdx|md)$/],
-        // TODO: use a more specific exclude for our selfs
-        exclude: [/dist/, /node_modules/],
+        remotes: {
+          // 'versioned-federated-module': 'versioned-federated-module',
+        },
       }),
     ],
   };
