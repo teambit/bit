@@ -28,7 +28,6 @@ export class WebpackBundler implements Bundler {
       return new Promise((resolve) => {
         // TODO: split to multiple processes to reduce time and configure concurrent builds.
         // @see https://github.com/trivago/parallel-webpack
-        compiler.context = this.targets[0].outputPath;
         return compiler.run((err, stats) => {
           if (err) {
             return resolve({
