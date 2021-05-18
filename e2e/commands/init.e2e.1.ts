@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import * as path from 'path';
 
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_JSON, BIT_MAP, CURRENT_UPSTREAM } from '../../src/constants';
-import { SCHEMA_FIELD } from '../../src/consumer/bit-map/bit-map';
+import { CURRENT_BITMAP_SCHEMA, SCHEMA_FIELD } from '../../src/consumer/bit-map/bit-map';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
 import { InvalidBitJson } from '../../src/consumer/config/exceptions';
@@ -53,7 +53,7 @@ describe('run bit init', function () {
     it('bitmap should contain version"', () => {
       const bitMap = helper.bitMap.read();
       expect(bitMap).to.have.property(SCHEMA_FIELD);
-      expect(bitMap[SCHEMA_FIELD]).to.equal(helper.general.getBitVersion());
+      expect(bitMap[SCHEMA_FIELD]).to.equal(CURRENT_BITMAP_SCHEMA);
     });
   });
   describe('default consumer bit.json', () => {
