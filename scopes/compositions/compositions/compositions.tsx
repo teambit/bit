@@ -133,7 +133,7 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
       <div className={styles.noCompositionsPage}>
         <div>
           <H1 className={styles.title}>Compositions</H1>
-          <Separator className={styles.separator} />
+          <Separator isPresentational className={styles.separator} />
           <AlertCard
             level="info"
             title="There are no

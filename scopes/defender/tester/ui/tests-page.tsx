@@ -97,7 +97,7 @@ export function TestsPage({ className, emptyState }: TestsPageProps) {
       <div className={classNames(styles.testsPage, className)}>
         <div>
           <H1 className={styles.title}>Tests</H1>
-          <Separator className={styles.separator} />
+          <Separator isPresentational className={styles.separator} />
           <AlertCard
             level="info"
             title="There are no
