@@ -295,6 +295,6 @@
     "tar": "^4.4.13",
     "type-coverage": "^2.4.2",
     "typescript": "4.1.2",
-    "verdaccio": "^4.5.1"
+    "verdaccio": "^4.9.0"
   }
 }
