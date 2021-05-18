@@ -30,7 +30,7 @@ export class RunCmd implements Command {
   ): Promise<string> {
     this.logger.off();
 
-    const { app, port } = await this.application.runApp(appName, {
+    const { port } = await this.application.runApp(appName, {
       dev,
     });
 
@@ -42,7 +42,7 @@ export class RunCmd implements Command {
     { dev }: { dev: boolean; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    const { app, port } = await this.application.runApp(appName, {
+    const { port } = await this.application.runApp(appName, {
       dev,
     });
 
