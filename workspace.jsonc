@@ -85,6 +85,7 @@
         "@teambit/base-ui.utils.sub-paths": "0.6.10",
         "@teambit/base-ui.utils.time-ago": "0.6.10",
         "@teambit/capsule": "0.0.12",
+        "@teambit/component.instructions.exporting-components": "0.0.3",
         "@teambit/documenter.code.react-playground": "3.0.11",
         "@teambit/documenter.routing.external-link": "3.0.11",
         "@teambit/documenter.theme.theme-compositions": "3.0.11",
@@ -123,6 +124,8 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.41",
         "@teambit/evangelist.surfaces.tooltip": "0.5.41",
         "@teambit/harmony": "0.2.11",
+        "@teambit/react.instructions.react.adding-compositions": "0.0.3",
+        "@teambit/react.instructions.react.adding-tests": "0.0.3",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "5.11.10",
@@ -315,7 +318,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.81",
+        "@teambit/legacy": "1.0.84",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -427,7 +430,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.81"
+            "@teambit/legacy": "1.0.84"
           }
         }
       },
@@ -590,7 +593,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.81",
+            "@teambit/legacy": "1.0.84",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",

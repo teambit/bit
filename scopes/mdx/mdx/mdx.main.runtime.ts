@@ -66,9 +66,15 @@ export class MDXMain {
     const mdx = new MDXMain();
     const mdxCompiler = multiCompiler.createCompiler(
       [
-        babel.createCompiler({ babelTransformOptions: babelConfig }),
+        // set the shouldCopyNonSupportedFiles to false since we don't want babel to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
+        babel.createCompiler({ babelTransformOptions: babelConfig, shouldCopyNonSupportedFiles: false }),
         mdx.createCompiler({ ignoredPatterns: docs.getPatterns(), babelTransformOptions: babelConfig }),
-        react.reactEnv.getCompiler(undefined, { compileJs: false, compileJsx: false }),
+        // set the shouldCopyNonSupportedFiles to false since we don't want ts to copy the .mdx file to the dist folder (it will conflict with the .mdx.js file created by the mdx compiler)
+        react.reactEnv.getCompiler(undefined, {
+          compileJs: false,
+          compileJsx: false,
+          shouldCopyNonSupportedFiles: false,
+        }),
       ],
       {}
     );

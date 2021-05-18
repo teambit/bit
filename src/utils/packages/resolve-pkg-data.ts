@@ -4,11 +4,11 @@ import readPkgUp from 'read-pkg-up';
 import { BitId } from '../../bit-id';
 import { PACKAGE_JSON } from '../../constants';
 import PackageJson from '../../consumer/component/package-json';
-import { PathLinuxAbsolute, PathOsBased } from '../path';
+import { PathLinuxAbsolute, PathOsBased, PathOsBasedAbsolute } from '../path';
 import { resolvePackageNameByPath } from './resolve-pkg-name-by-path';
 
 export interface ResolvedPackageData {
-  fullPath: PathLinuxAbsolute; // package path
+  fullPath: PathOsBasedAbsolute; // package path
   packageJsonPath?: PathOsBased;
   packageJsonContent?: Record<string, any>;
   dependentPackageJsonPath?: PathOsBased;
