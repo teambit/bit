@@ -63,6 +63,7 @@ import { UserAgentAspect } from '@teambit/user-agent';
 import { HtmlAspect } from '@teambit/html';
 import LanesAspect from '@teambit/lanes';
 import { AngularAspect } from '@teambit/angular';
+import { NgPackagrAspect } from '@teambit/ng-packagr';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -130,6 +131,7 @@ export const manifestsMap = {
   [HtmlAspect.id]: HtmlAspect,
   [LanesAspect.id]: LanesAspect,
   [AngularAspect.id]: AngularAspect,
+  [NgPackagrAspect.id]: NgPackagrAspect,
 };
 
 export function isCoreAspect(id: string) {

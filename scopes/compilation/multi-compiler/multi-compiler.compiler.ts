@@ -1,6 +1,6 @@
 import { join } from 'path';
 import pMapSeries from 'p-map-series';
-import { Compiler, CompilerOptions, TranspileOutput, TranspileOpts } from '@teambit/compiler';
+import { Compiler, CompilerOptions, TranspileFileOutput, TranspileFileParams } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
 import { mergeComponentResults } from '@teambit/pipelines.modules.merge-component-results';
 
@@ -56,15 +56,15 @@ export class MultiCompiler implements Compiler {
   /**
    * the multi-compiler applies all applicable defined compilers on given content.
    */
-  transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
+  transpileFile(fileContent: string, options: TranspileFileParams): TranspileFileOutput {
     const outputs = this.compilers.reduce<any>(
       (files, compiler) => {
         return files?.flatMap((file) => {
           if (!compiler.isFileSupported(file?.outputPath)) return [file];
-          const opts = Object.assign({}, options, {
+          const params = Object.assign({}, options, {
             filePath: file.outputPath,
           });
-          const compiledContent = compiler.transpileFile(file.outputText, opts);
+          const compiledContent = compiler.transpileFile?.(file.outputText, params);
           if (!compiledContent) return null;
 
           return compiledContent;

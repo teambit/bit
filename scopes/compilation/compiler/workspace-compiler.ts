@@ -48,16 +48,29 @@ export class ComponentCompiler {
   ) {}
 
   async compile(noThrow = true, options: CompileOptions): Promise<BuildResult> {
-    if (!this.compilerInstance.transpileFile) {
-      throw new Error(`compiler ${this.compilerId.toString()} doesn't implement "transpileFile" interface`);
+    let dataToPersist;
+    // clean dist folder before transpilation (because some compilers (like ngPackagr) can generate files there during the compilation process)
+    if (options.deleteDistDir) {
+      dataToPersist = new DataToPersist();
+      dataToPersist.removePath(new RemovePath(this.distDir));
+      dataToPersist.addBasePath(this.workspace.path);
+      await dataToPersist.persistAllToFS();
     }
-    await Promise.all(this.component.files.map((file) => this.compileOneFileWithNewCompiler(file)));
+
+    if (this.compilerInstance.transpileFile) {
+      await Promise.all(this.component.files.map((file: SourceFile) => this.compileOneFileWithNewCompiler(file)));
+    } else if (this.compilerInstance.transpileComponent) {
+      await this.compileAllFilesWithNewCompiler(this.component);
+    } else {
+      throw new Error(
+        `compiler ${this.compilerId.toString()} doesn't implement either "transpileFile" or "transpileComponent" methods`
+      );
+    }
     this.throwOnCompileErrors(noThrow);
 
     // writing the dists with `component.setDists(dists); component.dists.writeDists` is tricky
     // as it uses other base-paths and doesn't respect the new node-modules base path.
-    const dataToPersist = new DataToPersist();
-    if (options.deleteDistDir) dataToPersist.removePath(new RemovePath(this.distDir));
+    dataToPersist = new DataToPersist();
     dataToPersist.addManyFiles(this.dists);
     dataToPersist.addBasePath(this.workspace.path);
     await dataToPersist.persistAllToFS();
@@ -100,13 +113,13 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     return this.workspace.componentDir(new ComponentID(this.component.id));
   }
 
-  private async compileOneFileWithNewCompiler(file: SourceFile) {
+  private async compileOneFileWithNewCompiler(file: SourceFile): Promise<void> {
     const options = { componentDir: this.componentDir, filePath: file.relative };
     const isFileSupported = this.compilerInstance.isFileSupported(file.path);
     let compileResults;
     if (isFileSupported) {
       try {
-        compileResults = this.compilerInstance.transpileFile(file.contents.toString(), options);
+        compileResults = this.compilerInstance.transpileFile?.(file.contents.toString(), options);
       } catch (error) {
         this.compileErrors.push({ path: file.path, error });
         return;
@@ -127,6 +140,35 @@ ${this.compileErrors.map(formatError).join('\n')}`);
     } else {
       // compiler doesn't support this file type. copy the file as is to the dist dir.
       this.dists.push(new Dist({ base, path: path.join(base, file.relative), contents: file.contents }));
+    }
+  }
+
+  private async compileAllFilesWithNewCompiler(component: ConsumerComponent): Promise<void> {
+    const base = this.distDir;
+    const filesToCompile: SourceFile[] = [];
+    const params = { componentDir: this.componentDir, distDir: this.workspace.getComponentPackagePath(component) };
+    component.files.forEach((file: SourceFile) => {
+      const isFileSupported = this.compilerInstance.isFileSupported(file.path);
+      if (isFileSupported) {
+        filesToCompile.push(file);
+      } else {
+        // compiler doesn't support this file type. copy the file as is to the dist dir.
+        this.dists.push(
+          new Dist({
+            base,
+            path: path.join(base, file.relative),
+            contents: file.contents,
+          })
+        );
+      }
+    });
+
+    if (filesToCompile.length) {
+      try {
+        await this.compilerInstance.transpileComponent?.(params);
+      } catch (error) {
+        this.compileErrors.push({ path: this.componentDir, error });
+      }
     }
   }
 }

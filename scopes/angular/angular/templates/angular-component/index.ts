@@ -1,23 +1,22 @@
 import { ComponentTemplate, ComponentContext } from '@teambit/generator';
-import { componentFile } from './files/component';
-import { moduleFile } from './files/module';
-import { docsFile } from './files/docs';
-import { testFile } from './files/test';
+import { componentFile } from './src/lib/component';
+import { moduleFile } from './src/lib/module';
+import { docsFile } from './src/lib/docs';
+import { componentSpecFile } from './src/lib/component-spec';
+import { publicApiFile } from './src/public-api';
 
 export const angularModule: ComponentTemplate = {
-  name: 'ng-module',
-  description: 'a generic Angular module with a component',
+  name: 'ng-lib',
+  description: 'a generic Angular library',
   hidden: true, // TODO(ocombe): remove this before release
 
-  generateFiles: (context: ComponentContext) => {
-    const { name } = context;
-    const indexFile = {
-      relativePath: 'public_api.ts',
-      content: `export * from './${name}.component';
-export * from './${name}.module';
-`,
-    };
-
-    return [indexFile, componentFile(context), moduleFile(context), docsFile(context), testFile(context)];
+  generateFiles(context: ComponentContext) {
+    return [
+      publicApiFile(context),
+      componentFile(context),
+      moduleFile(context),
+      docsFile(context),
+      componentSpecFile(context),
+    ];
   },
 };

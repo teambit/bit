@@ -2,7 +2,8 @@ import { BuildTask } from '@teambit/builder';
 import { DevServer, DevServerContext } from '@teambit/bundler';
 import type { CompilerMain } from '@teambit/compiler';
 import { Compiler } from '@teambit/compiler';
-import { Environment } from '@teambit/envs';
+import { BuilderEnv, DependenciesEnv, DevEnv, TesterEnv } from '@teambit/envs';
+import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { Tester } from '@teambit/tester';
 import type { WebpackMain } from '@teambit/webpack';
 
@@ -12,7 +13,7 @@ import webpackConfig from './webpack/webpack.config';
 /**
  * a component environment built for [React](https://reactjs.org) .
  */
-export class StencilEnv implements Environment {
+export class StencilEnv implements TesterEnv, BuilderEnv, TesterEnv, DevEnv, DependenciesEnv {
   constructor(
     /**
      * stencil extension.
@@ -59,14 +60,14 @@ export class StencilEnv implements Environment {
    * return a path to a docs template.
    */
   getDocsTemplate() {
-    // return require.resolve('./docs');
+    return ''; // return require.resolve('./docs');
   }
 
   /**
    * adds dependencies to all configured components.
    */
   async getDependencies() {
-    return {};
+    return {} as VariantPolicyConfigObject;
   }
 
   /**

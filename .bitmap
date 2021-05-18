@@ -589,6 +589,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/proxy-agent"
     },
+    "ng-packagr": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/angular/ng-packagr"
+    },
     "node": {
         "scope": "teambit.harmony",
         "version": "0.0.433",
