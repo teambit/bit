@@ -236,7 +236,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
-        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
+        '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),

@@ -170,7 +170,7 @@ export default function (fileMapPath: string): Configuration {
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
         react: require.resolve('react'),
-        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
+        '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
