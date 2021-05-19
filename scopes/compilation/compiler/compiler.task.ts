@@ -1,5 +1,7 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
+import { EnvsMain } from '@teambit/envs';
 import { Capsule } from '@teambit/isolator';
+import { CompilerAspect } from './compiler.aspect';
 import fs from 'fs-extra';
 import path from 'path';
 
@@ -10,7 +12,12 @@ import { Compiler } from './types';
  */
 export class CompilerTask implements BuildTask {
   readonly description = 'compile components';
-  constructor(readonly aspectId: string, readonly name: string, private compilerInstance: Compiler) {
+  constructor(
+    readonly aspectId: string,
+    readonly name: string,
+    private compilerInstance: Compiler,
+    private envs: EnvsMain
+  ) {
     if (compilerInstance.artifactName) {
       this.description += ` for artifact ${compilerInstance.artifactName}`;
     }
@@ -23,10 +30,15 @@ export class CompilerTask implements BuildTask {
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const buildResults = await this.compilerInstance.build(context);
-    const compiledIds = buildResults.componentsResults.map((result) => result.component.id);
-    const compiledCapsules = context.capsuleNetwork.getCapsulesByIds(compiledIds);
 
-    await Promise.all(compiledCapsules.map((capsule) => this.copyNonSupportedFiles(capsule, this.compilerInstance)));
+    await Promise.all(
+      context.capsuleNetwork.graphCapsules.map((capsule) => {
+        const component = capsule.component;
+        const env = this.envs.getEnv(component);
+        const compilerTask = env.env.getBuildPipe().find((task) => task.aspectId === CompilerAspect.id);
+        return this.copyNonSupportedFiles(capsule, compilerTask.compilerInstance);
+      })
+    );
 
     return buildResults;
   }

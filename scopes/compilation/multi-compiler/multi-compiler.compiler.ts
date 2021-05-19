@@ -6,23 +6,24 @@ import { mergeComponentResults } from '@teambit/modules.merge-component-results'
 
 export type MultiCompilerOptions = {
   targetExtension?: string;
-};
+} & Partial<CompilerOptions>;
 
 export class MultiCompiler implements Compiler {
   displayName = 'Multi compiler';
 
-  shouldCopyNonSupportedFiles =
-    typeof this.compilerOptions.shouldCopyNonSupportedFiles === 'boolean'
-      ? this.compilerOptions.shouldCopyNonSupportedFiles
-      : true;
-  distDir = 'dist';
+  shouldCopyNonSupportedFiles: boolean;
+  distDir: string;
 
   constructor(
     readonly id: string,
     readonly compilers: Compiler[],
     readonly compilerOptions: Partial<CompilerOptions> = {},
     readonly options: MultiCompilerOptions = {}
-  ) {}
+  ) {
+    this.distDir = options.distDir || 'dist';
+    this.shouldCopyNonSupportedFiles =
+      typeof options.shouldCopyNonSupportedFiles === 'boolean' ? options.shouldCopyNonSupportedFiles : true;
+  }
 
   getArtifactDefinition() {
     return [

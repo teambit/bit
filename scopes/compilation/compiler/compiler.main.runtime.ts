@@ -37,7 +37,7 @@ export class CompilerMain {
    * with this method you can create any number of compilers and add them to the buildPipeline.
    */
   createTask(name: string, compiler: Compiler): CompilerTask {
-    return new CompilerTask(CompilerAspect.id, name, compiler);
+    return new CompilerTask(CompilerAspect.id, name, compiler, this.envs);
   }
 
   /**
