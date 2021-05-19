@@ -1,4 +1,4 @@
-import { AspectBox } from '@teambit/ui.aspect-box';
+import { AspectBox } from '@teambit/harmony.ui.aspect-box';
 import { ComponentContext } from '@teambit/component';
 import React, { useContext } from 'react';
 import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';

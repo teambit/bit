@@ -1,5 +1,5 @@
-import { stripTrailingChar } from '@teambit/string.strip-trailing-char';
-import { isPathInside } from '@teambit/path.is-path-inside';
+import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
+import { isPathInside } from '@teambit/toolbox.path.is-path-inside';
 import { sortBy, prop, any } from 'ramda';
 import minimatch from 'minimatch';
 import _ from 'lodash';

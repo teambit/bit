@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import classNames from 'classnames';
-import { addAvatarQueryParams } from '@teambit/url.add-avatar-query-params';
+import { addAvatarQueryParams } from '@teambit/toolbox.url.add-avatar-query-params';
 import { AccountObj } from './avatar';
 import styles from './styles.module.scss';
 

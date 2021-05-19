@@ -9,7 +9,7 @@ import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
 import { useCodeParams } from '@teambit/ui.hooks.use-code-params';
 import { Label } from '@teambit/documenter.ui.label';
 import type { DependencyType } from '@teambit/ui.queries.get-component-code';
-import { DependencyTree } from '@teambit/ui.dependency-tree';
+import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 
 import styles from './code-tab-tree.module.scss';
 

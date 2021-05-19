@@ -4,7 +4,7 @@ import React from 'react';
 import { SlotRegistry, Slot } from '@teambit/harmony';
 import type { FileIconMatch } from '@teambit/ui.utils.get-file-icon';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';
-import { CodePage } from '@teambit/ui.code-tab-page';
+import { CodePage } from '@teambit/code.ui.code-tab-page';
 import { CodeAspect } from './code.aspect';
 import { CodeSection } from './code.section';
 

@@ -4,7 +4,7 @@ import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import getCSSModuleLocalIdent from 'react-dev-utils/getCSSModuleLocalIdent';
 import path from 'path';
-import * as stylesRegexps from '@teambit/modules.style-regexps';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 const moduleFileExtensions = [
   'web.mjs',

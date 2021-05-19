@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { ComponentModel } from '@teambit/component';
-import { ComponentPreview } from '@teambit/ui.component-preview';
+import { ComponentPreview } from '@teambit/preview.ui.component-preview';
 
 import { Composition } from '../composition';
 

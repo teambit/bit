@@ -1,4 +1,4 @@
-import { toWindowsCompatiblePath } from '@teambit/path.to-windows-compatible-path';
+import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import type { ComponentMap } from '@teambit/component';
 
 // :TODO refactor to building an AST and generate source code based on it.

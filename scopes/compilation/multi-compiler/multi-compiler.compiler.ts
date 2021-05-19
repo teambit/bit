@@ -2,7 +2,7 @@ import { join } from 'path';
 import pMapSeries from 'p-map-series';
 import { Compiler, CompilerOptions, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
-import { mergeComponentResults } from '@teambit/modules.merge-component-results';
+import { mergeComponentResults } from '@teambit/pipelines.modules.merge-component-results';
 
 export type MultiCompilerOptions = {
   targetExtension?: string;

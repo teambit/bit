@@ -4,12 +4,12 @@ import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import webpack from 'webpack';
-import * as stylesRegexps from '@teambit/modules.style-regexps';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as mdxLoader from '@teambit/modules.mdx-loader';
+import * as mdxLoader from '@teambit/mdx.modules.mdx-loader';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
 import '@teambit/react.babel.bit-react-transformer';

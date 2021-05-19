@@ -5,7 +5,7 @@ import TerserPlugin from 'terser-webpack-plugin';
 import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import * as stylesRegexps from '@teambit/modules.style-regexps';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
