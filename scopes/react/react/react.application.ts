@@ -58,7 +58,7 @@ export class ReactApp implements Application {
     const reactEnv: ReactEnv = context.env;
     const bundler: Bundler = await reactEnv.getBundler(bundlerContext, [
       (configMutator) => {
-        configMutator.addTopLevel('output', { publicPath: `/` });
+        configMutator.addTopLevel('output', { path: join(outputPath, 'public'), publicPath: `/` });
         return configMutator;
       },
     ]);
