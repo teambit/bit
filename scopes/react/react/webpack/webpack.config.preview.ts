@@ -9,7 +9,7 @@ import * as stylesRegexps from '@teambit/modules.style-regexps';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
-import '@teambit/babel.bit-react-transformer';
+import '@teambit/react.babel.bit-react-transformer';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -227,7 +227,7 @@ export default function (fileMapPath: string): Configuration {
                 presets: [require.resolve('@babel/preset-react')],
                 plugins: [
                   [
-                    require.resolve('@teambit/babel.bit-react-transformer'),
+                    require.resolve('@teambit/react.babel.bit-react-transformer'),
                     {
                       componentFilesPath: fileMapPath,
                     },

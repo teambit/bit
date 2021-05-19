@@ -12,7 +12,7 @@ import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 import * as mdxLoader from '@teambit/modules.mdx-loader';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
-import '@teambit/babel.bit-react-transformer';
+import '@teambit/react.babel.bit-react-transformer';
 
 /*
  * Webpack config for Preview Dev mode,
@@ -78,7 +78,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
                 configFile: false,
                 plugins: [
                   // for component highlighting in preview.
-                  [require.resolve('@teambit/babel.bit-react-transformer')],
+                  [require.resolve('@teambit/react.babel.bit-react-transformer')],
                 ],
                 // turn off all optimizations (only slow down for node_modules)
                 compact: false,
@@ -107,7 +107,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
               require.resolve('react-refresh/babel'),
               // for component highlighting in preview.
               [
-                require.resolve('@teambit/babel.bit-react-transformer'),
+                require.resolve('@teambit/react.babel.bit-react-transformer'),
                 {
                   componentFilesPath: fileMapPath,
                 },

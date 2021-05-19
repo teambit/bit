@@ -22,7 +22,7 @@ All methods may return `null` when result is unavailable.
 #### How to use?
 
 ```ts
-import { domToReact } from '@teambit/modules.dom-to-react';
+import { domToReact } from '@teambit/react.modules.dom-to-react';
 
 const anElement = document.getElementById('anElement');
 
