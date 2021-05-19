@@ -1,4 +1,4 @@
-import '@teambit/ui.mdx-scope-context';
+import '@teambit/mdx.ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { ComponentID } from '@teambit/component-id';
 import path from 'path';

@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
-import { ComponentCard } from '@teambit/ui.gallery.component-card';
-import { ComponentGrid } from '@teambit/ui.gallery.component-grid';
+import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
+import { ComponentGrid } from '@teambit/explorer.ui.gallery.component-grid';
 import { ScopeDetails } from '@teambit/scope.ui.scope-details';
 import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
 import { EmptyScope } from '@teambit/scope.ui.empty-scope';

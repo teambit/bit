@@ -7,13 +7,13 @@ import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitt
 import { ComponentContext, ComponentModel } from '@teambit/component';
 import { PropTable } from '@teambit/documenter.ui.property-table';
 import { Tab, TabContainer, TabList, TabPanel } from '@teambit/panels';
-import { useDocs } from '@teambit/ui.queries.get-docs';
+import { useDocs } from '@teambit/docs.ui.queries.get-docs';
 import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { EmptyBox } from '@teambit/design.ui.empty-box';
 import { toPreviewUrl } from '@teambit/preview.ui.component-preview';
 import { useIsMobile } from '@teambit/ui-foundation.ui.hooks.use-is-mobile';
 import { CompositionsMenuBar } from '@teambit/compositions.ui.compositions-menu-bar';
-import { CompositionContextProvider } from '@teambit/ui.hooks.use-composition';
+import { CompositionContextProvider } from '@teambit/compositions.ui.hooks.use-composition';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Separator } from '@teambit/design.ui.separator';
 import { H1 } from '@teambit/documenter.ui.heading';
