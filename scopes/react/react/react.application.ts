@@ -19,7 +19,7 @@ export class ReactApp implements Application {
 
   applicationType = 'react';
 
-  async run(context: AppContext): Promise<void> {
+  async run(context: AppContext): Promise<number> {
     const devServerContext = this.getDevServerContext(context);
     const devServer = this.reactEnv.getDevServer(devServerContext, [
       (configMutator) => {
@@ -29,6 +29,7 @@ export class ReactApp implements Application {
     ]);
     const port = await getPort({ port: this.portRange });
     devServer.listen(port);
+    return port;
   }
 
   async build(context: BuildContext, aspectId: string): Promise<DeployContext> {
@@ -54,8 +55,13 @@ export class ReactApp implements Application {
       entry: [],
       rootPath: '/',
     });
-
-    const bundler: Bundler = await context.env.getBundler(bundlerContext, { output: { publicPath: '/' } });
+    const reactEnv: ReactEnv = context.env;
+    const bundler: Bundler = await reactEnv.getBundler(bundlerContext, [
+      (configMutator) => {
+        configMutator.addTopLevel('output', { path: join(outputPath, 'public'), publicPath: `/` });
+        return configMutator;
+      },
+    ]);
     await bundler.run();
     const deployContext = Object.assign(context, {
       applicationType: this.applicationType,

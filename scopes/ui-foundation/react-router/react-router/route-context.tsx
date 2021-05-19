@@ -2,7 +2,6 @@ import React, { useEffect, ReactNode } from 'react';
 import { BrowserRouter, StaticRouter, MemoryRouter, HashRouter, RouteProps, useHistory } from 'react-router-dom';
 import { RoutingProvider } from '@teambit/base-ui.routing.routing-provider';
 import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
-import { LinkContextProvider } from '@teambit/ui-foundation.ui.react-router.link-anchor';
 import { ReactRouterUI } from './react-router.ui.runtime';
 import { reactRouterRouting } from './react-router-routing';
 import { Routing } from './routing-method';
@@ -25,20 +24,16 @@ type RootRouteProps = {
  * Setup context needed for routing.
  */
 export function RouteContext({ reactRouterUi, routing = Routing.url, children, location }: RouterContextProps) {
-  const { baseUrl } = reactRouterUi;
-
   return (
     // {/* set up the virtual router (browser, inMemory, etc) */}
     <Router type={routing} location={location}>
-      <LinkContextProvider baseUrl={baseUrl}>
-        {/* injects History object back to reactRouterUi */}
-        <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
-        {/* injects react-router Link into context  */}
-        <RoutingProvider value={reactRouterRouting}>
-          {/* route tree root: */}
-          {children}
-        </RoutingProvider>
-      </LinkContextProvider>
+      {/* injects History object back to reactRouterUi */}
+      <HistoryGetter onRouterChange={reactRouterUi.setRouter} />
+      {/* injects react-router Link into context  */}
+      <RoutingProvider value={reactRouterRouting}>
+        {/* route tree root: */}
+        {children}
+      </RoutingProvider>
     </Router>
   );
 }
