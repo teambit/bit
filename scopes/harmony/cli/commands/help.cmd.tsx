@@ -1,83 +1,78 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
-import { Box, render, Text, Newline } from 'ink';
-import React from 'react';
+import chalk from 'chalk';
+import rightpad from 'pad-right';
 import { CommandList } from '../cli.main.runtime';
 import { getCommandId } from '../get-command-id';
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function Help(Renderer = DefaultHelpRender) {
-  return function getHelpProps(commands: CommandList, groups: { [k: string]: string }) {
-    const help: HelpProps = commands
-      .filter((command) => !command.private && (command.shortDescription || command.description))
-      .reduce(function (partialHelp, command) {
-        partialHelp[command.group!] = partialHelp[command.group!] || {
-          commands: {},
-          description: groups[command.group!] || command.group,
-        };
-        const cmdId = getCommandId(command.name);
-        partialHelp[command.group!].commands[cmdId] = command.shortDescription || command.description;
-        return partialHelp;
-      }, {});
-    return render(<Renderer {...help} />);
-  };
-}
 
-export type HelpProps = {
-  [groupName: string]: {
-    commands: { [cmdName: string]: string };
-    description: string;
-  };
+const SPACE = ' ';
+const TITLE_LEFT_SPACES_NUMBER = 2;
+const COMMAND_LEFT_SPACES_NUMBER = 4;
+const NAME_WITH_SPACES_LENGTH = 15;
+
+type HelpProps = {
+  [groupName: string]: GroupContent;
 };
 
-function DefaultHelpRender(props: HelpProps) {
-  const element = (
-    <Box key="help" flexDirection="column">
-      <HelpHeader />
-      <Newline />
-      {Object.entries(props).map(([groupName, group]) => {
-        return (
-          <Box key={groupName} flexDirection="column" marginBottom={1}>
-            <Text bold underline color="blue" key={`group_${groupName}`}>
-              {group.description}
-            </Text>
-            <Box flexDirection="column">
-              {Object.entries(group.commands).map(([commandName, description]) => {
-                return (
-                  <Text key={commandName}>
-                    {'  '}
-                    <Text color="green">{alignCommandName(commandName)}</Text>
-                    {description}
-                  </Text>
-                );
-              })}
-            </Box>
-          </Box>
-        );
-      })}
-      <HelpFooter />
-    </Box>
-  );
-  return element;
+type GroupContent = {
+  commands: { [cmdName: string]: string };
+  description: string;
+};
+
+export function formatHelp(commands: CommandList, groups: { [k: string]: string }) {
+  const helpProps = groupCommands(commands, groups);
+  const commandsStr = formatCommandsHelp(helpProps);
+
+  return `${getHeader()}
+
+${commandsStr}
+
+${getFooter()}`;
 }
 
-function HelpHeader() {
-  return (
-    <Box key="HelpHeader" flexDirection="column">
-      <Text bold>{`usage: bit [--version] [--help] <command> [<args>]`} </Text>
-      <Newline />
-      <Text color="yellow"> bit documentation: https://harmony-docs.bit.dev</Text>
-    </Box>
-  );
+function groupCommands(commands: CommandList, groups: { [k: string]: string }): HelpProps {
+  const help: HelpProps = commands
+    .filter((command) => !command.private && (command.shortDescription || command.description))
+    .reduce(function (partialHelp, command) {
+      partialHelp[command.group!] = partialHelp[command.group!] || {
+        commands: {},
+        description: groups[command.group!] || command.group,
+      };
+      const cmdId = getCommandId(command.name);
+      partialHelp[command.group!].commands[cmdId] = command.shortDescription || command.description;
+      return partialHelp;
+    }, {});
+  return help;
 }
 
-function HelpFooter() {
-  const footer = `please use 'bit <command> --help' for more information and guides on specific commands.
-`;
-  return (
-    <Box>
-      <Text color="yellow">{footer}</Text>
-    </Box>
-  );
+function formatCommandsHelp(helpProps: HelpProps): string {
+  return Object.keys(helpProps)
+    .map((groupName) => commandsSectionTemplate(helpProps[groupName]))
+    .join('\n\n');
 }
-function alignCommandName(name: string, sizeToAlign = 20) {
-  return `${name}${new Array(sizeToAlign - name.length).join(' ')}`;
+
+function commandsSectionTemplate(section: GroupContent): string {
+  const titleSpace = SPACE.repeat(TITLE_LEFT_SPACES_NUMBER);
+  const title = `${titleSpace}${chalk.underline.bold.blue(section.description)}`;
+  const commands = Object.keys(section.commands)
+    .map((cmdName) => commandTemplate(cmdName, section.commands[cmdName]))
+    .join('\n');
+  const res = `${title}\n${commands}`;
+  return res;
+}
+
+function commandTemplate(name: string, description: string): string {
+  const nameSpace = SPACE.repeat(COMMAND_LEFT_SPACES_NUMBER);
+  const nameWithRightSpace = rightpad(name, NAME_WITH_SPACES_LENGTH, SPACE);
+  const res = `${nameSpace}${chalk.green(nameWithRightSpace)}${description}`;
+  return res;
+}
+
+function getHeader(): string {
+  return `${chalk.bold('usage: bit [--version] [--help] <command> [<args>]')}
+
+${chalk.yellow('bit documentation: https://harmony-docs.bit.dev')}`;
+}
+
+function getFooter(): string {
+  return `${chalk.yellow("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
 }
