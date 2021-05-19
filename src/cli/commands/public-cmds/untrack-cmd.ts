@@ -9,7 +9,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Untrack implements LegacyCommand {
   name = 'untrack [ids...]';
   description = `DEPRECATED (use "bit remove" instead). untrack a new component(s)
-  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#untracking-components
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components#untracking-components
   ${WILDCARD_HELP('untrack')}`;
   alias = 'u';
   opts = [['a', 'all', 'revert add for all tracked components']] as CommandOptions;

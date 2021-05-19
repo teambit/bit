@@ -7,7 +7,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Build implements LegacyCommand {
   name = 'build [id]';
-  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components`;
+  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/building-with-bit/compiling-components`;
   alias = '';
   opts = [
     ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
@@ -42,7 +42,7 @@ export default class Build implements LegacyCommand {
       // $FlowFixMe - res is an object
       if (empty(res)) {
         return chalk.yellow(`nothing to build
-learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/docs/building-components`);
+learn how to set a build step for components - https://${BASE_DOCS_DOMAIN}/building-with-bit/compiling-components`);
       }
       return Object.keys(res)
         .map((component) => {

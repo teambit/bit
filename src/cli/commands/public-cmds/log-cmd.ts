@@ -6,7 +6,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Log implements LegacyCommand {
   name = 'log <id>';
-  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/docs/view#log`;
+  description = `show components(s) tag history.\n  https://${BASE_DOCS_DOMAIN}/building-with-bit/inspecting-components`;
   alias = '';
   opts = [['r', 'remote', 'show log of a remote component']] as CommandOptions;
   migration = true;

@@ -5,7 +5,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class ClearCache implements LegacyCommand {
   name = 'clear-cache';
-  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
+  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/troubleshooting/doctor-logs-cache/#cache`;
   alias = 'cc';
   opts = [];
   loader = false;

@@ -82,9 +82,9 @@ export default function checkVersionCompatibility(remoteVersion: string) {
 export function checkVersionCompatibilityOnTheServer(clientVersion: string) {
   const clientMajor = semver.major(clientVersion);
   const localMajor = semver.major(BIT_VERSION);
-  const oldClientVersionMessageUntilV14 = `Please update your Bit client.\nFor additional information: https://${BASE_DOCS_DOMAIN}/docs/installation#latest-version`;
+  const oldClientVersionMessageUntilV14 = `Please update your Bit client.\nFor additional information: https://${BASE_DOCS_DOMAIN}/reference/using-bvm`;
   const oldClientVersionMessageAfterV14 = () => `Fatal: Bit client - server version mismatch. Using "${clientVersion}" Local version to communicate with "${BIT_VERSION}" on the Remove Server. Please update your Bit client.
-For additional information: https://${BASE_DOCS_DOMAIN}/docs/installation#latest-version`;
+For additional information: https://${BASE_DOCS_DOMAIN}/reference/using-bvm`;
 
   if (localMajor > clientMajor) {
     if (clientMajor >= throwErrorFromServerSinceVersion) {

@@ -16,7 +16,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Import implements LegacyCommand {
   name = 'import [ids...]';
   description = `import components into your current workspace.
-  https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/importing-components
   ${WILDCARD_HELP('import')}`;
   alias = '';
   opts = [

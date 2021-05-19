@@ -8,7 +8,7 @@ import paintComponent from '../../templates/component-template';
 
 export default class Show implements LegacyCommand {
   name = 'show <id>';
-  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/view#show`;
+  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/building-with-bit/inspecting-components`;
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],

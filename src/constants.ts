@@ -139,7 +139,7 @@ export const SYMPHONY_URL = `symphony.${BASE_WEB_DOMAIN}`;
 
 export const SYMPHONY_GRAPHQL = `http://${SYMPHONY_URL}/graphql`;
 
-export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
+export const BASE_DOCS_DOMAIN = `harmony-docs.bit.dev`;
 
 export const REPO_NAME = 'teambit/bit';
 

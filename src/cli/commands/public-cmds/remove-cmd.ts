@@ -12,7 +12,7 @@ import paintRemoved from '../../templates/remove-template';
 export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
   description = `remove a component (local/remote)
-  https://${BASE_DOCS_DOMAIN}/docs/removing-components
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/removing-components
   ${WILDCARD_HELP('remove')}`;
   skipWorkspace = true;
   alias = 'rm';

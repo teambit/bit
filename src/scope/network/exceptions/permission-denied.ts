@@ -6,7 +6,7 @@ export default class PermissionDenied extends BitError {
 
   constructor(scope: string) {
     super(
-      `error: permission to scope ${scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/setup-authentication#authentication-issues`
+      `error: permission to scope ${scope} was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/bit-dot-dev/authentication`
     );
   }
 }

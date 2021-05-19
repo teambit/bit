@@ -9,7 +9,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
   description = `revert version(s) tagged for component(s)
-  https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components
+  https://${BASE_DOCS_DOMAIN}/building-with-bit/tracking-components
   ${WILDCARD_HELP('untag')}`;
   alias = '';
   opts = [

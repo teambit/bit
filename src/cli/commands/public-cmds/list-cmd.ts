@@ -11,7 +11,7 @@ import listTemplate from '../../templates/list-template';
 
 export default class List implements LegacyCommand {
   name = 'list [scope]';
-  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
+  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/building-with-bit/inspecting-components`;
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'show only component ids unformatted'],
