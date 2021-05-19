@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import chalk from 'chalk';
 import rightpad from 'pad-right';
-import { CommandList } from '../cli.main.runtime';
-import { getCommandId } from '../get-command-id';
+import { CommandList } from './cli.main.runtime';
+import { getCommandId } from './get-command-id';
 
 const SPACE = ' ';
 const TITLE_LEFT_SPACES_NUMBER = 2;

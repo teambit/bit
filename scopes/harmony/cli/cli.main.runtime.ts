@@ -7,7 +7,7 @@ import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
 import { CLIAspect, MainRuntime } from './cli.aspect';
-import { formatHelp } from './commands/help.cmd';
+import { formatHelp } from './help';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { getCommandId } from './get-command-id';
