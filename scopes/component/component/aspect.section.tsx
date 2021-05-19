@@ -1,5 +1,5 @@
 import React from 'react';
-import { MenuWidgetIcon } from '@teambit/ui.menu-widget-icon';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import { Section } from './section';
 import { AspectPage } from './ui/aspect-page';
 

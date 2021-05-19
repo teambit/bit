@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { MDXScopeContext } from '@teambit/ui.mdx-scope-context';
+import { MDXScopeContext } from '@teambit/mdx.ui.mdx-scope-context';
 import { mdx } from '@mdx-js/react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
 import { Playground } from '@teambit/documenter.code.react-playground';

@@ -1,18 +1,18 @@
-import '@teambit/ui.mdx-scope-context';
+import '@teambit/mdx.ui.mdx-scope-context';
 import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
 import { ComponentID } from '@teambit/component-id';
 import path from 'path';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import webpack from 'webpack';
-import * as stylesRegexps from '@teambit/modules.style-regexps';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 import type { WebpackConfigWithDevServer } from '@teambit/webpack';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import * as mdxLoader from '@teambit/modules.mdx-loader';
+import * as mdxLoader from '@teambit/mdx.modules.mdx-loader';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
-import '@teambit/babel.bit-react-transformer';
+import '@teambit/react.babel.bit-react-transformer';
 
 /*
  * Webpack config for Preview Dev mode,
@@ -78,7 +78,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
                 configFile: false,
                 plugins: [
                   // for component highlighting in preview.
-                  [require.resolve('@teambit/babel.bit-react-transformer')],
+                  [require.resolve('@teambit/react.babel.bit-react-transformer')],
                 ],
                 // turn off all optimizations (only slow down for node_modules)
                 compact: false,
@@ -107,7 +107,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
               require.resolve('react-refresh/babel'),
               // for component highlighting in preview.
               [
-                require.resolve('@teambit/babel.bit-react-transformer'),
+                require.resolve('@teambit/react.babel.bit-react-transformer'),
                 {
                   componentFilesPath: fileMapPath,
                 },
@@ -131,7 +131,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
               },
             },
             {
-              loader: require.resolve('@teambit/modules.mdx-loader'),
+              loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
             },
           ],
         },
@@ -236,7 +236,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
       // this is for resolving react from env and not from consuming project
       alias: {
         react: require.resolve('react'),
-        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
+        '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         '@mdx-js/react': require.resolve('@mdx-js/react'),

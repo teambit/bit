@@ -1,4 +1,4 @@
-import type { DependencyType } from '@teambit/ui.queries.get-component-code';
+import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 
 export function buildDependencyTree(deps?: DependencyType[]) {
   const devDependencies: DependencyType[] = [];

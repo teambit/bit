@@ -1,7 +1,7 @@
 import React, { ReactNode, HTMLAttributes } from 'react';
 import classnames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { Tooltip } from '@teambit/ui.tooltip';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import styles from './menu-widget-icon.module.scss';
 
 export type MenuWidgetIconProps = {

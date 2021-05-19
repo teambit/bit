@@ -1,6 +1,6 @@
 import { useRouteMatch } from 'react-router-dom';
 import { ComponentID } from '@teambit/component-id';
-import { useQuery } from '@teambit/ui.react-router.use-query';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 import { ComponentModel } from './component-model';
 import { ComponentError } from './component-error';
 import { useComponentQuery } from './use-component-query';

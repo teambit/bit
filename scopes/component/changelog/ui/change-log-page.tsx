@@ -1,12 +1,12 @@
 import { ComponentContext } from '@teambit/component';
 import { H1 } from '@teambit/documenter.ui.heading';
-import { Separator } from '@teambit/ui.separator';
-import { VersionBlock } from '@teambit/ui.version-block';
+import { Separator } from '@teambit/design.ui.separator';
+import { VersionBlock } from '@teambit/component.ui.version-block';
 import classNames from 'classnames';
-import { useSnaps } from '@teambit/ui.hooks.use-snaps';
-import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { useSnaps } from '@teambit/component.ui.hooks.use-snaps';
+import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ExportingComponents } from '@teambit/component.instructions.exporting-components';
-import { AlertCard } from '@teambit/ui.alert-card';
+import { AlertCard } from '@teambit/design.ui.alert-card';
 import React, { HTMLAttributes, useContext } from 'react';
 
 import styles from './change-log-page.module.scss';

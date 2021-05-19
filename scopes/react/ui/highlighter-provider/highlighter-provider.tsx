@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, ReactNode, FC } from 'react';
-import { ComponentHighlighter } from '@teambit/ui.component-highlighter';
+import { ComponentHighlighter } from '@teambit/react.ui.component-highlighter';
 import queryString from 'query-string';
 
 export const PARAM_NAME = 'highlighter';

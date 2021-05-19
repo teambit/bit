@@ -12,7 +12,7 @@ export { UIAspect, UIRuntime };
 export type { BrowserData } from './ssr/request-browser';
 export default UIAspect;
 
-// using `useDataQuery` from this package is deprecated, use `@teambit/ui.hooks.use-data-query` directly
-export { DataQueryResult, useDataQuery } from '@teambit/ui.hooks.use-data-query';
+// using `useDataQuery` from this package is deprecated, use `@teambit/ui-foundation.ui.hooks.use-data-query` directly
+export { DataQueryResult, useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 // temporary. TODO: fix this
 export { useMutation } from '@apollo/client';

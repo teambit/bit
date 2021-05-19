@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import classnames from 'classnames';
-import { domToReact, toRootElement } from '@teambit/modules.dom-to-react';
-import { HoverSelector } from '@teambit/ui.hover-selector';
+import { domToReact, toRootElement } from '@teambit/react.modules.dom-to-react';
+import { HoverSelector } from '@teambit/react.ui.hover-selector';
 import { useDebouncedCallback } from 'use-debounce';
 import { Frame } from '../frame';
 import { Label, LabelContainer } from '../label';

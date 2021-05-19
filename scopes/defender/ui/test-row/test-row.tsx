@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import React from 'react';
-import { CliSnippet } from '@teambit/ui.cli-snippet';
+import { CliSnippet } from '@teambit/design.ui.cli-snippet';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
 import styles from './test-row.module.scss';
 

@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useQuery } from '@teambit/ui.react-router.use-query';
+import { useQuery } from '@teambit/ui-foundation.ui.react-router.use-query';
 
 export type CodeRouteParams = {
   componentId: string;

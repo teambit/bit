@@ -319,12 +319,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/docs/docs"
     },
-    "e2e/workspace": {
-        "scope": "teambit.workspace",
-        "version": "0.0.368",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/workspace/e2e/workspace"
-    },
     "eject": {
         "scope": "teambit.workspace",
         "version": "0.0.42",

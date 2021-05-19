@@ -4,7 +4,7 @@ import Mousetrap from 'mousetrap';
 
 import UIAspect, { UIRuntime, UiUI } from '@teambit/ui';
 import { PubsubAspect, PubsubUI } from '@teambit/pubsub';
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import { CommandBar } from './ui/command-bar';
 import { CommandSearcher } from './ui/command-searcher';
 import { CommandBarAspect } from './command-bar.aspect';
