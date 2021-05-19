@@ -6,9 +6,8 @@ import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensi
 import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
-
 import { CLIAspect, MainRuntime } from './cli.aspect';
-import { Help } from './commands/help.cmd';
+import { formatHelp } from './help';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { getCommandId } from './get-command-id';
@@ -91,7 +90,7 @@ export class CLIMain {
     await this.invokeOnStart(hasWorkspace);
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {
-      Help()(this.commands, this.groups);
+      this.printHelp();
       return;
     }
 
@@ -106,6 +105,13 @@ export class CLIMain {
     // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
   }
+
+  private printHelp() {
+    const help = formatHelp(this.commands, this.groups);
+    // eslint-disable-next-line no-console
+    console.log(help);
+  }
+
   private throwForNonExistsCommand(commandName: string) {
     const commandsNames = this.commands.map((c) => getCommandId(c.name));
     const aliases = this.commands.map((c) => c.alias).filter((a) => a);
