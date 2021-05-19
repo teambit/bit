@@ -1,10 +1,10 @@
 import { BuildContext, BuiltTaskResult, BuildTask, TaskResultsList } from '@teambit/builder';
 import { EnvsMain } from '@teambit/envs';
 import { Capsule } from '@teambit/isolator';
-import { CompilerAspect } from './compiler.aspect';
 import fs from 'fs-extra';
 import path from 'path';
 
+import { CompilerAspect } from './compiler.aspect';
 import { Compiler } from './types';
 
 /**
