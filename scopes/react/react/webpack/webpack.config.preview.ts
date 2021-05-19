@@ -300,7 +300,7 @@ export default function (fileMapPath: string): Configuration {
                   },
                 },
                 {
-                  loader: require.resolve('@teambit/modules.mdx-loader'),
+                  loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
                 },
               ],
             },

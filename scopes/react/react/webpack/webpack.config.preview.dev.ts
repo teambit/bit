@@ -131,7 +131,7 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
               },
             },
             {
-              loader: require.resolve('@teambit/modules.mdx-loader'),
+              loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
             },
           ],
         },
