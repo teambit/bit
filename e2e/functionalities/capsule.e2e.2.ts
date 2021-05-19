@@ -4,6 +4,7 @@ import * as path from 'path';
 
 import { LEGACY_SHARED_DIR_FEATURE } from '../../src/api/consumer/lib/feature-toggle';
 import { AUTO_GENERATED_STAMP } from '../../src/constants';
+import { SCHEMA_FIELD } from '../../src/consumer/bit-map/bit-map';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
@@ -248,7 +249,7 @@ describe('capsule', function () {
             'utils/is-string': bitMap['utils/is-string'],
             'utils/is-type': bitMap['utils/is-type'],
             'bar/foo': bitMap['bar/foo'],
-            version: bitMap.version,
+            [SCHEMA_FIELD]: bitMap[SCHEMA_FIELD],
           };
           helper.bitMap.write(newBitMap);
           const buildOutput = helper.command.build();

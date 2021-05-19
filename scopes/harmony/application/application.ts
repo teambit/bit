@@ -11,7 +11,7 @@ export interface Application {
   /**
    * run the application.
    */
-  run(context: AppContext): Promise<void>;
+  run(context: AppContext): Promise<number>;
 
   /**
    * build the application.

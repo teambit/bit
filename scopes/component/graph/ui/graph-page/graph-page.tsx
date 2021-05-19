@@ -35,7 +35,7 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
 
   return (
     <div className={styles.page}>
-      <H2 size="xs">Dependencies</H2>
+      <H2 size="xs">Component Dependencies</H2>
       <DependenciesGraph
         componentWidgets={componentWidgets}
         graph={graph}
