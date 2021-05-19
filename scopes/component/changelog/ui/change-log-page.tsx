@@ -23,7 +23,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
     return (
       <div className={classNames(styles.changeLogPage, className)}>
         <H1 className={styles.title}>History</H1>
-        <Separator className={styles.separatorNoChangeLog} />
+        <Separator isPresentational className={styles.separatorNoChangeLog} />
         <AlertCard
           level="info"
           title="There is no change log as this component has not been exported yet.
