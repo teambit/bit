@@ -11,11 +11,11 @@ import { Ul } from '@teambit/documenter.ui.ul';
 import { Ol } from '@teambit/documenter.ui.ol';
 import { Image } from '@teambit/documenter.ui.image';
 import { BlockQuote } from '@teambit/documenter.ui.block-quote';
-import { createHeading } from '@teambit/ui.docs.create-heading';
-import { HighlightedTextSpan } from '@teambit/ui.docs.highlighted-text-span';
-import { Snippet } from '@teambit/ui.docs.snippet';
-import { Link } from '@teambit/ui.docs.link';
-import { P } from '@teambit/ui.docs.paragraph';
+import { createHeading } from '@teambit/mdx.ui.docs.create-heading';
+import { HighlightedTextSpan } from '@teambit/mdx.ui.docs.highlighted-text-span';
+import { Snippet } from '@teambit/mdx.ui.docs.snippet';
+import { Link } from '@teambit/mdx.ui.docs.link';
+import { P } from '@teambit/mdx.ui.docs.paragraph';
 
 const defaultMdxComponents = {
   h1: createHeading('lg'),

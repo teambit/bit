@@ -4,7 +4,7 @@ import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { LabelList } from '@teambit/documenter.ui.label-list';
 import { Section } from '@teambit/documenter.ui.section';
-import { Separator } from '@teambit/ui.separator';
+import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import styles from './component-overview.module.scss';
 

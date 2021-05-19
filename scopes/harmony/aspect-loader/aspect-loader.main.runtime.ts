@@ -4,7 +4,7 @@ import { Component, ComponentID } from '@teambit/component';
 import { ExtensionManifest, Harmony, Aspect, SlotRegistry, Slot } from '@teambit/harmony';
 import type { LoggerMain } from '@teambit/logger';
 import { Logger, LoggerAspect } from '@teambit/logger';
-import { RequireableComponent } from '@teambit/modules.requireable-component';
+import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import mapSeries from 'p-map-series';
 import { difference } from 'ramda';

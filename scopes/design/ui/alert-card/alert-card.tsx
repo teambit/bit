@@ -1,10 +1,10 @@
 import React from 'react';
 import { Card, CardProps } from '@teambit/base-ui.surfaces.card';
-import { LevelIcon, Level } from '@teambit/ui.elements.level-icon';
+import { LevelIcon, Level } from '@teambit/design.ui.elements.level-icon';
 import { backgrounds } from '@teambit/base-ui.surfaces.background';
 import { H3, Sizes } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
-import { Separator } from '@teambit/ui.separator';
+import { Separator } from '@teambit/design.ui.separator';
 import styles from './alert-card.module.scss';
 
 export type { Sizes, Level };

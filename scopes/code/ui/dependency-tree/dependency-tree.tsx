@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { DependencyType } from '@teambit/ui.queries.get-component-code';
+import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import { buildDependencyTree } from './build-depndency-tree';
 import { DependencyDrawer } from './dependency-drawer/dependency-drawer'; // TODO - find out why this explodes when I direct to index.ts
 

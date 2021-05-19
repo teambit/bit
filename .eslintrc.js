@@ -73,11 +73,11 @@ module.exports = {
     'no-restricted-imports': [
       'error',
       {
-        name: '@teambit/ui.react-router.link',
+        name: '@teambit/ui-foundation.ui.react-router.link',
         message: 'use @teambit/base-ui.routing.link',
       },
       {
-        name: '@teambit/ui.react-router.nav-link',
+        name: '@teambit/ui-foundation.ui.react-router.nav-link',
         message: 'use @teambit/base-ui.routing.nav-link',
       },
     ],

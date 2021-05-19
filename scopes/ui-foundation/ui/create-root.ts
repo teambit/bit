@@ -1,5 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
-import { toWindowsCompatiblePath } from '@teambit/path.to-windows-compatible-path';
+import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 

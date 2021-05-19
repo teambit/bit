@@ -1,5 +1,5 @@
 import { Configuration } from 'webpack';
-import * as stylesRegexps from '@teambit/modules.style-regexps';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
 
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');

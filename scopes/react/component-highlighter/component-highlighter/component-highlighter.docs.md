@@ -15,7 +15,7 @@ Highlights React components in web pages and add links to their Bit scope and co
 Invoke the `ComponentHighlighter()` to start highlighting components.
 
 ```ts
-import { ComponentHighlighter } from '@teambit/ui.component-highlighter';
+import { ComponentHighlighter } from '@teambit/react.ui.component-highlighter';
 
 // 'options' are optional.
 ComponentHighlighter({ borderColor: 'red' });

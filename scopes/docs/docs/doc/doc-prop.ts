@@ -1,4 +1,4 @@
-import type { Serializable } from '@teambit/types.serializable';
+import type { Serializable } from '@teambit/toolbox.types.serializable';
 
 export class DocProp {
   constructor(

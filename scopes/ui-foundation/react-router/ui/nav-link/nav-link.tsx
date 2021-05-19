@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink as ReactRouterNavLink } from 'react-router-dom';
 import { NativeNavLink, NavLinkProps } from '@teambit/base-ui.routing.native-nav-link';
-import { LinkAnchor } from '@teambit/ui.react-router.link-anchor';
+import { LinkAnchor } from '@teambit/ui-foundation.ui.react-router.link-anchor';
 
 export { NavLinkProps };
 

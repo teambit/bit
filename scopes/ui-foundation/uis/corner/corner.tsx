@@ -1,4 +1,4 @@
-import { UserAvatar } from '@teambit/ui.avatar';
+import { UserAvatar } from '@teambit/design.ui.avatar';
 import React from 'react';
 import classNames from 'classnames';
 import { NavLink } from 'react-router-dom';

@@ -1,7 +1,7 @@
 import React from 'react';
-import { ExternalLink } from '@teambit/ui.external-link';
+import { ExternalLink } from '@teambit/design.ui.external-link';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { ErrorPage } from '@teambit/ui.error-page';
+import { ErrorPage } from '@teambit/design.ui.error-page';
 import styles from './server-error-page.module.scss';
 
 type ServerErrorPageProps = {} & React.HTMLAttributes<HTMLDivElement>;

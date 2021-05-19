@@ -1,5 +1,5 @@
-import { UserAvatar, AccountObj } from '@teambit/ui.avatar';
-import { TimeAgo } from '@teambit/ui.time-ago';
+import { UserAvatar, AccountObj } from '@teambit/design.ui.avatar';
+import { TimeAgo } from '@teambit/design.ui.time-ago';
 import classNames from 'classnames';
 import React from 'react';
 

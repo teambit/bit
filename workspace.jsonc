@@ -85,7 +85,7 @@
         "@teambit/base-ui.utils.sub-paths": "0.6.10",
         "@teambit/base-ui.utils.time-ago": "0.6.10",
         "@teambit/capsule": "0.0.12",
-        "@teambit/component.instructions.exporting-components": "0.0.3",
+        "@teambit/component.instructions.exporting-components": "0.0.5",
         "@teambit/documenter.code.react-playground": "3.0.11",
         "@teambit/documenter.routing.external-link": "3.0.11",
         "@teambit/documenter.theme.theme-compositions": "3.0.11",
@@ -124,8 +124,8 @@
         "@teambit/evangelist.surfaces.dropdown": "0.5.41",
         "@teambit/evangelist.surfaces.tooltip": "0.5.41",
         "@teambit/harmony": "0.2.11",
-        "@teambit/react.instructions.react.adding-compositions": "0.0.3",
-        "@teambit/react.instructions.react.adding-tests": "0.0.3",
+        "@teambit/react.instructions.react.adding-compositions": "0.0.5",
+        "@teambit/react.instructions.react.adding-tests": "0.0.5",
         "@teambit/string.ellipsis": "0.0.7",
         "@teambit/ui.composition-card": "0.0.259",
         "@testing-library/jest-dom": "5.11.10",
@@ -397,7 +397,7 @@
           "--access public"
         ],
         "packageJson": {
-          "name": "@teambit/{name}",
+          "name": "@teambit/{scope}.{name}",
           "private": false,
           "engines": {
             "node": ">=12.15.0"
