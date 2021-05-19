@@ -1,7 +1,7 @@
 import React, { PropsWithChildren } from 'react';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';
-import { IconFont } from '@teambit/theme.icons-font';
+import { IconFont } from '@teambit/design.theme.icons-font';
 import { RenderingContext } from '@teambit/preview';
 import { Base } from './base';
 
