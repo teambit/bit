@@ -58,7 +58,6 @@ import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
 import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
-import { E2eWorkspaceAspect } from '@teambit/workspace.e2e.workspace';
 import { ExportAspect } from '@teambit/export';
 import { EjectAspect } from '@teambit/eject';
 import { UserAgentAspect } from '@teambit/user-agent';
@@ -123,7 +122,6 @@ export const manifestsMap = {
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
   [ExportAspect.id]: ExportAspect,
-  [E2eWorkspaceAspect.id]: E2eWorkspaceAspect,
   [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
   [UserAgentAspect.id]: UserAgentAspect,
   [ApplicationAspect.id]: ApplicationAspect,
