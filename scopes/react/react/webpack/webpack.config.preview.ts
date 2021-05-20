@@ -408,10 +408,10 @@ export default function (fileMapPath: string): Configuration {
       new webpack.container.ModuleFederationPlugin({
         filename: 'remote-entry.js',
         name: 'module_federation_namespace',
-        library: {
-          type: 'var',
-          name: 'module_federation_namespace',
-        },
+        // library: {
+        //   type: 'var',
+        //   name: 'module_federation_namespace',
+        // },
         // TODO: add the version of button to the name
         // remoteType: 'commonjs',
         shared: {
