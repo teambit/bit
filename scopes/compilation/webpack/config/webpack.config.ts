@@ -28,7 +28,7 @@ export function configFactory(entries, rootPath): Configuration {
       // module chunks which are built will work in web workers as well.
       // Commented out to use the default (self) as according to tobias with webpack5 self is working with workers as well
       // globalObject: 'this',
-      library: 'module_federation_namespace',
+      uniqueName: 'react_env_namespace',
     },
 
     resolve: {
