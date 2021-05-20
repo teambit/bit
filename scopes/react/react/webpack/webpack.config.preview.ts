@@ -6,6 +6,7 @@ import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
 import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { ComponentID } from '@teambit/component-id';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
@@ -215,10 +216,35 @@ export default function (fileMapPath: string): Configuration {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
+
+            {
+              test: /\.js$/,
+              include: [/node_modules/, /\/dist\//],
+              exclude: /@teambit\/legacy/,
+              descriptionData: { componentId: ComponentID.isValidObject },
+              use: [
+                {
+                  loader: require.resolve('babel-loader'),
+                  options: {
+                    babelrc: false,
+                    configFile: false,
+                    plugins: [
+                      // for component highlighting in preview.
+                      [require.resolve('@teambit/react.babel.bit-react-transformer')],
+                    ],
+                    // turn off all optimizations (only slow down for node_modules)
+                    compact: false,
+                    minified: false,
+                  },
+                },
+              ],
+            },
+
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
+              exclude: [/node_modules/, /\/dist\//],
               loader: require.resolve('babel-loader'),
               options: {
                 babelrc: false,
