@@ -17,7 +17,7 @@ export default class InstallCmd implements Command {
   name = 'install [packages...]';
   description = 'Install dependencies';
   alias = 'in';
-  group = 'component';
+  group = 'development';
   shortDescription = '';
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],

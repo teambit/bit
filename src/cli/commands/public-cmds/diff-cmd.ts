@@ -3,10 +3,13 @@ import chalk from 'chalk';
 import { diff } from '../../../api/consumer';
 import { WILDCARD_HELP } from '../../../constants';
 import { DiffResults } from '../../../consumer/component-ops/components-diff';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Diff implements LegacyCommand {
   name = 'diff [values...]';
+  shortDescription = 'show diff between components files';
+  group: Group = 'development';
   description = `show diff between components files
   bit diff => compare all modified components to their model version
   bit diff [ids...] => compare the specified components against their modified states

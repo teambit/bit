@@ -1,3 +1,4 @@
+import { Group } from './command-groups';
 import { CommandOptions } from './legacy-command';
 
 export interface Command {
@@ -31,10 +32,10 @@ export interface Command {
    * allow grouping of commands to hint summery renderer
    * Places in default automatic help
    */
-  group?: string;
+  group?: Group | string;
 
   /**
-   * should a command be exposed to the user.
+   * should a command be exposed to the user (by bit --help).
    * e.g. experimental commands or commands created for the ssh communication should not be exposed
    */
   private?: boolean;

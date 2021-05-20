@@ -1,11 +1,13 @@
 import chalk from 'chalk';
 import { dependents, DependentsResults } from '../../../api/consumer/lib/dependents';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { generateDependentsInfoTable } from '../../templates/component-template';
 
 export default class Dependents implements LegacyCommand {
   name = 'dependents <id>';
   description = 'EXPERIMENTAL. show dependents of the given component';
+  group: Group = 'info';
   alias = '';
   opts = [] as CommandOptions;
 

@@ -5,12 +5,15 @@ import { listScope } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { ListScopeResult } from '../../../consumer/component/components-list';
 import hasWildcard from '../../../utils/string/has-wildcard';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import bareListTemplate from '../../templates/bare-list-template';
 import listTemplate from '../../templates/list-template';
 
 export default class List implements LegacyCommand {
   name = 'list [scope]';
+  shortDescription = 'list components on a local or a remote scope.';
+  group: Group = 'discover';
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/view#list`;
   alias = 'ls';
   opts = [
