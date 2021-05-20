@@ -14,7 +14,7 @@ describe('sign command', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('simple case with one scope', () => {
+  describe('simple case with one scope with --push flag', () => {
     let signOutput: string;
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
@@ -28,7 +28,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
       const ids = [`${helper.scopes.remote}/comp1`, `${helper.scopes.remote}/comp2`];
       // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-      signOutput = helper.command.sign(ids, '', helper.scopes.remotePath);
+      signOutput = helper.command.sign(ids, '--push', helper.scopes.remotePath);
     });
     it('on the workspace, the build status should be pending', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
@@ -49,6 +49,26 @@ describe('sign command', function () {
         const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
         expect(comp1.buildStatus).to.equal('succeed');
       });
+    });
+  });
+  describe('simple case with one scope without --push flag', () => {
+    let signOutput: string;
+    before(() => {
+      helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
+      helper.fixtures.populateComponents(2);
+      helper.command.tagAllWithoutBuild();
+      helper.command.export();
+      const ids = [`${helper.scopes.remote}/comp1`, `${helper.scopes.remote}/comp2`];
+      // console.log('sign-command', `bit sign ${ids.join(' ')}`);
+      signOutput = helper.command.sign(ids, '', helper.scopes.remotePath);
+    });
+    it('on the workspace, the build status should be pending', () => {
+      const comp1 = helper.command.catComponent(`${helper.scopes.remote}/comp1@latest`);
+      expect(comp1.buildStatus).to.equal('pending');
+    });
+    it('should sign successfully', () => {
+      expect(signOutput).to.include('the following 2 component(s) were signed with build-status "succeed"');
     });
   });
   describe('failure case', () => {

@@ -6,6 +6,7 @@ import { BuildStatus } from '@teambit/legacy/dist/constants';
 import { Logger } from '@teambit/logger';
 import { SignMain } from './sign.main.runtime';
 
+type SignOptions = { multiple: boolean; alwaysSucceed: boolean; push: boolean };
 export class SignCmd implements Command {
   name = 'sign <component...>';
   private = true;
@@ -15,13 +16,14 @@ export class SignCmd implements Command {
   options = [
     ['', 'multiple', 'sign components from multiple scopes'],
     ['', 'always-succeed', 'exit with code 0 even though the build failed'],
+    ['', 'push', 'export the updated objects to the original scopes once done'],
   ] as CommandOptions;
 
   constructor(private signMain: SignMain, private scope: ScopeMain, private logger: Logger) {}
 
-  async report([components]: [string[]], { multiple, alwaysSucceed }: { multiple: boolean; alwaysSucceed: boolean }) {
+  async report([components]: [string[]], { multiple, alwaysSucceed, push }: SignOptions) {
     const componentIds = components.map((c) => ComponentID.fromString(c));
-    const results = await this.signMain.sign(componentIds, multiple);
+    const results = await this.signMain.sign(componentIds, multiple, push);
     if (!results) {
       return chalk.bold('no more components left to sign');
     }
