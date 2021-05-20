@@ -10,7 +10,7 @@ export class ShowCmd implements Command {
   name = 'show <id>';
   description = 'show a component';
   alias = '';
-  group = 'component';
+  group = 'info';
   options = [
     ['j', 'json', 'return the component data in json format'],
     ['l', 'legacy', 'use the legacy bit show.'],

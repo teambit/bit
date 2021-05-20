@@ -53,7 +53,7 @@ export class WatchCommand implements Command {
   name = 'watch';
   description = 'watch a set of components';
   alias = '';
-  group = 'env';
+  group = 'development';
   shortDescription = '';
   options = [['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace']] as CommandOptions;
 

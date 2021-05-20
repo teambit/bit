@@ -4,11 +4,13 @@ import * as path from 'path';
 
 import { paintGraph } from '../../../api/consumer';
 import { generateRandomStr } from '../../../utils';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Graph implements LegacyCommand {
   name = 'graph [id]';
   description = 'EXPERIMENTAL. generate an image file with the dependencies graph';
+  group: Group = 'discover';
   alias = '';
   opts = [
     ['i', 'image <image>', 'image path. use one of the following extensions: [gif, png, svg, pdf]'],

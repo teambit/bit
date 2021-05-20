@@ -3,10 +3,13 @@ import chalk from 'chalk';
 import { move } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { PathChangeResult } from '../../../consumer/bit-map/bit-map';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Move implements LegacyCommand {
   name = 'move <from> <to>';
+  shortDescription = 'move a component to a different filesystem path';
+  group: Group = 'development';
   description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#moving-and-renaming-files`;
   alias = 'mv';
   opts = [

@@ -2,9 +2,12 @@ import chalk from 'chalk';
 import { clearCache } from '../../../api/consumer';
 import { LegacyCommand } from '../../legacy-command';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { Group } from '../../command-groups';
 
 export default class ClearCache implements LegacyCommand {
   name = 'clear-cache';
+  shortDescription = "clears Bit's cache from current working machine";
+  group: Group = 'general';
   description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/workspace#cache`;
   alias = 'cc';
   opts = [];

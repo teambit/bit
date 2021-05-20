@@ -145,6 +145,7 @@ export class ApplicationMain {
     const appService = new AppService();
     const application = new ApplicationMain(appSlot, appTypeSlot, envs, component, appService);
     builder.registerDeployTasks([new DeployTask(application)]);
+    cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmd(application));
 
     return application;

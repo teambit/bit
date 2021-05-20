@@ -14,10 +14,8 @@ type CreateOpts = {
 
 export class CapsuleCreateCmd implements Command {
   name = 'capsule-create [componentIds...]';
-  description = `create capsule`;
-  shortDescription = 'create capsule';
+  description = `create capsules`;
   group = 'capsules';
-  private = true;
   alias = '';
   options = [
     ['b', 'base-dir <name>', 'set base dir of all capsules'],

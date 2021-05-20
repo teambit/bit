@@ -12,7 +12,7 @@ export class EnvsCmd implements Command {
   shortDescription = 'show all component envs';
   description = 'show all components envs';
   options = [];
-  group = 'component';
+  group = 'development';
 
   constructor(private envs: EnvsMain, private componentAspect: ComponentMain) {}
 

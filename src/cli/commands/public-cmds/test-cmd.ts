@@ -5,6 +5,7 @@ import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
 import { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
 import GeneralError from '../../../error/general-error';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 const validForkLevels = R.values(TESTS_FORK_LEVEL);
@@ -14,6 +15,8 @@ let verboseReport = false;
 export default class Test implements LegacyCommand {
   // TODO: call old tester from harmony in case legacy
   name = 'test [id]';
+  shortDescription = 'test any set of components with configured tester (component tester or as defined in bit.json)';
+  group: Group = 'development';
   description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components)`;
   alias = '';
   opts = [

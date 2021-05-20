@@ -11,7 +11,7 @@ export class TemplatesCmd implements Command {
   name = 'templates';
   description =
     'list components templates when inside bit-workspace (for bit-create), otherwise, list workspace templates (for bit-new)';
-  shortDescription = 'list templates';
+  shortDescription = 'list templates for "bit create" and "bit new"';
   alias = '';
   loader = true;
   group = 'development';
