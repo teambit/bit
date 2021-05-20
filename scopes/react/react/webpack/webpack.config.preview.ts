@@ -245,6 +245,10 @@ export default function (fileMapPath: string): Configuration {
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
               exclude: [/node_modules/, /\/dist\//],
+              // consider: limit loader to files only in a capsule that has bitid in package.json
+              // descriptionData: { componentId: ComponentID.isValidObject },
+              // // or
+              // include: capsulePaths
               loader: require.resolve('babel-loader'),
               options: {
                 babelrc: false,
