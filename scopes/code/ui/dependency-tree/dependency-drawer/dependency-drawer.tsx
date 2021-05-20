@@ -1,9 +1,9 @@
 import React from 'react';
-import { DrawerUI, DrawerProps } from '@teambit/ui.tree.drawer';
+import { DrawerUI, DrawerProps } from '@teambit/ui-foundation.ui.tree.drawer';
 import { Link } from '@teambit/base-ui.routing.link';
 import { ComponentUrl } from '@teambit/component-url';
 import { ComponentID } from '@teambit/component-id';
-import type { DependencyType } from '@teambit/ui.queries.get-component-code';
+import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
 import styles from './dependency-drawer.module.scss';
 
 export type DependencyDrawerProps = {

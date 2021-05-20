@@ -1,8 +1,8 @@
 // Using object
-import '@teambit/eslint-config-bit-react';
+import '@teambit/react.eslint-config-bit-react';
 
 export const eslintConfig = {
-  extends: [require.resolve('@teambit/eslint-config-bit-react')],
+  extends: [require.resolve('@teambit/react.eslint-config-bit-react')],
   parserOptions: {
     createDefaultProgram: true,
     // resolve the env tsconfig.
@@ -13,6 +13,6 @@ export const eslintConfig = {
 module.exports = eslintConfig;
 
 // Using function
-// import generateEslint from '@teambit/eslint-config-bit-react';
+// import generateEslint from '@teambit/react.eslint-config-bit-react';
 // const config = generateEslint(require.resolve('../typescript/tsconfig.json'));
 // module.exports = config;

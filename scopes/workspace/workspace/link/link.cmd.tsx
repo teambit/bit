@@ -4,7 +4,7 @@ import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { Text, Box } from 'ink';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
-import { timeFormat } from '@teambit/time.time-format';
+import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
 import { ComponentListLinks } from './component-list-links';

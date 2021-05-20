@@ -2,6 +2,7 @@
 
 import chai, { expect } from 'chai';
 import * as path from 'path';
+import { SCHEMA_FIELD } from '../../src/consumer/bit-map/bit-map';
 
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -32,14 +33,14 @@ describe('bit untrack command', function () {
       helper.scopeHelper.reInitLocalScope();
     });
     // this is the only test in 'untrack.e2e.js' that uses readBitMap() to test the creation of the 'version' property.
-    // the rest use readBitMapWithoutVersion() which removes it from the .bit.mpa.json file.
+    // the rest use readBitMapWithoutVersion() which removes it from the .bitmap.json file.
     it('Should remove new component that was added from bitmap', () => {
       helper.fs.createFile('bar', 'foo2.js');
       helper.command.addComponent('bar/foo2.js', { i: 'bar/foo' });
       helper.command.untrackComponent('bar/foo');
       const bitMap = helper.bitMap.read();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
-      expect(bitMap).to.have.property('version');
+      expect(bitMap).to.have.property(SCHEMA_FIELD);
     });
     it('Should return an error message if you try to untrack a non-existing component', () => {
       const output = helper.command.untrackComponent('bar/foo');

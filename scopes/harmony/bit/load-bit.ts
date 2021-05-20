@@ -208,12 +208,13 @@ export async function loadBit(path = process.cwd()) {
 export async function runCLI() {
   const harmony = await loadBit();
   const cli = harmony.get<CLIMain>('teambit.harmony/cli');
+  let hasWorkspace = true;
   try {
     harmony.get('teambit.workspace/workspace');
-    await cli.run(true);
   } catch (err) {
-    await cli.run(false);
+    hasWorkspace = false;
   }
+  await cli.run(hasWorkspace);
 }
 
 function registerCoreAspectsToLegacyDepResolver(aspectLoader: AspectLoaderMain) {

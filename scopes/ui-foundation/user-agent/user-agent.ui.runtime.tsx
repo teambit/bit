@@ -1,7 +1,7 @@
 import { UIAspect, UIRuntime, UiUI } from '@teambit/ui';
 import React, { ReactNode } from 'react';
 import UAParser from 'ua-parser-js';
-import { UserAgentProvider } from '@teambit/ui.hooks.use-user-agent';
+import { UserAgentProvider } from '@teambit/ui-foundation.ui.hooks.use-user-agent';
 import { UserAgentAspect } from './user-agent.aspect';
 
 type UserAgentRenderCtx = {

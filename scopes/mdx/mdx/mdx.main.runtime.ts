@@ -80,6 +80,11 @@ export class MDXMain {
     );
     const mdxEnv = envs.compose(react.reactEnv, [
       react.overrideCompiler(mdxCompiler),
+      react.overrideDependencies({
+        dependencies: {
+          '@teambit/mdx.ui.mdx-scope-context': '0.0.368',
+        },
+      }),
       react.overrideCompilerTasks([compiler.createTask('MDXCompiler', mdxCompiler)]),
     ]);
     envs.registerEnv(mdxEnv);

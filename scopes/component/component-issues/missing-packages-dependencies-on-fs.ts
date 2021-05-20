@@ -1,7 +1,7 @@
 import { ComponentIssue, StringsPerFilePath } from './component-issue';
 
 export class MissingPackagesDependenciesOnFs extends ComponentIssue {
-  description =
-    "missing packages dependencies (make sure you've added it to the package dependencies, and use `bit install` to make sure all package dependencies are installed. On Harmony, run also `bit compile`)";
+  description = `missing packages or links from node_modules to the source (run "bit install" to fix both issues. if it's an external package, make sure it's added as a package dependency)`;
+
   data: StringsPerFilePath = {};
 }

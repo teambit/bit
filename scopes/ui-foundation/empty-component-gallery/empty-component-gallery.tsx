@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { ExternalLink } from '@teambit/ui.external-link';
+import { ExternalLink } from '@teambit/design.ui.external-link';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { textSize } from '@teambit/base-ui.text.text-sizes';
 import styles from './empty-component-gallery.module.scss';

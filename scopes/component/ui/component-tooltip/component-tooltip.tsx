@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tooltip } from '@teambit/ui.tooltip';
+import { Tooltip } from '@teambit/design.ui.tooltip';
 import { ComponentStatus } from '@teambit/workspace';
 import styles from './component-tooltip.module.scss';
 

@@ -1,5 +1,5 @@
 import { getOptions } from 'loader-utils';
-import { compile } from '@teambit/modules.mdx-compiler';
+import { compile } from '@teambit/mdx.modules.mdx-compiler';
 
 /**
  * bit-mdx webpack loader.

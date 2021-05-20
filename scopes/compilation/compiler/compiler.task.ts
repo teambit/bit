@@ -17,17 +17,17 @@ export class CompilerTask implements BuildTask {
   }
 
   async preBuild(context: BuildContext) {
+    await Promise.all(
+      context.capsuleNetwork.seedersCapsules.map((capsule) =>
+        this.copyNonSupportedFiles(capsule, this.compilerInstance)
+      )
+    );
     if (!this.compilerInstance.preBuild) return;
     await this.compilerInstance.preBuild(context);
   }
 
   async execute(context: BuildContext): Promise<BuiltTaskResult> {
     const buildResults = await this.compilerInstance.build(context);
-
-    await Promise.all(
-      context.capsuleNetwork.graphCapsules.map((capsule) => this.copyNonSupportedFiles(capsule, this.compilerInstance))
-    );
-
     return buildResults;
   }
 

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { ComponentCard } from '@teambit/ui.gallery.component-card';
+import { ComponentCard } from '@teambit/explorer.ui.gallery.component-card';
 import { ComponentModel } from '@teambit/component';
-import { PreviewPlaceholder } from '@teambit/ui.preview-placeholder';
-import { LoadPreview } from '@teambit/ui.load-preview';
+import { PreviewPlaceholder } from '@teambit/preview.ui.preview-placeholder';
+import { LoadPreview } from '@teambit/workspace.ui.load-preview';
 import styles from './workspace-component-card.module.scss';
 
 export type WorkspaceComponentCardProps = {

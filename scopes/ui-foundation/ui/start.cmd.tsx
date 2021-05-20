@@ -1,7 +1,7 @@
 import React from 'react';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
-import { UIServerConsole } from '@teambit/cli.ui-server-console';
+import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {

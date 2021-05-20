@@ -1,6 +1,6 @@
-import { MainDropdown, MenuItemSlot } from '@teambit/ui.main-dropdown';
+import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import { ImportAction } from '@teambit/documenter.ui.import-action';
-import { VersionDropdown } from '@teambit/ui.version-dropdown';
+import { VersionDropdown } from '@teambit/component.ui.version-dropdown';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 import { Link } from '@teambit/base-ui.routing.link';
 import { flatten, groupBy } from 'lodash';

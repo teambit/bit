@@ -1,4 +1,4 @@
-import type { SerializableMap } from '@teambit/types.serializable';
+import type { SerializableMap } from '@teambit/toolbox.types.serializable';
 import { DocPropList } from './doc-prop-list';
 
 export class Doc {

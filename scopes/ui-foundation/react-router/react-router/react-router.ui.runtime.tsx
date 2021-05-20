@@ -3,8 +3,8 @@ import { RouteProps } from 'react-router-dom';
 import { History, UnregisterCallback, LocationListener, LocationDescriptor, Action } from 'history';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
-import { RouteSlot } from '@teambit/ui.react-router.slot-router';
-import { isBrowser } from '@teambit/ui.is-browser';
+import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 
 import { ReactRouterAspect } from './react-router.aspect';
 import { RouteContext, RootRoute } from './route-context';
@@ -29,12 +29,6 @@ export class ReactRouterUI {
      */
     private routeChangeListener: RouteChangeSlot
   ) {}
-
-  /**
-   * url prefix for all react router links in the page.
-   * the value is applied at AnchorLink
-   */
-  baseUrl?: string;
 
   /**
    * render all slot routes.

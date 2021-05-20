@@ -1,4 +1,4 @@
-import { useUserAgent } from '@teambit/ui.hooks.use-user-agent';
+import { useUserAgent } from '@teambit/ui-foundation.ui.hooks.use-user-agent';
 
 /**
  * react hook that returns the device type.

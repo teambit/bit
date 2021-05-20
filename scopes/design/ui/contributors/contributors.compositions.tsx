@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
-import { AccountTypes } from '@teambit/ui.avatar';
+import { AccountTypes } from '@teambit/design.ui.avatar';
 
 import { Contributors } from './index';
 

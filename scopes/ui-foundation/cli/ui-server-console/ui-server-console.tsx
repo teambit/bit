@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Text, Newline } from 'ink';
 import type { UIServer } from '@teambit/ui';
-import { UIServerLoader } from '@teambit/cli.ui-server-loader';
+import { UIServerLoader } from '@teambit/ui-foundation.cli.ui-server-loader';
 
 export type UIServerConsoleProps = {
   /**

@@ -1,6 +1,6 @@
 import React from 'react';
-import { NotFoundPage } from '@teambit/ui.pages.not-found';
-import { ServerErrorPage } from '@teambit/ui.pages.server-error';
+import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
+import { ServerErrorPage } from '@teambit/design.ui.pages.server-error';
 
 export class ComponentError {
   constructor(
