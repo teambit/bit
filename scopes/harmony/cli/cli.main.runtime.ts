@@ -7,6 +7,7 @@ import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
 import { formatHelp } from './help';
 import { AlreadyExistsError } from './exceptions/already-exists';
@@ -21,7 +22,7 @@ export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
 
 export class CLIMain {
-  private groups: GroupsType = groups;
+  private groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
 
   constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot) {}
 

@@ -11,10 +11,10 @@ describe('loadBit()', function () {
   before(() => {
     helper = new Helper();
     helper.command.setFeatures(HARMONY_FEATURE);
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
   });
 
   it('should return a valid workspace instance', async () => {
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
     const harmony = await loadBit(helper.scopes.localPath);
     const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
     expect(workspace.path).to.eq(helper.scopes.localPath);
