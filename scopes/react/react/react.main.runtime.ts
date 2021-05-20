@@ -213,7 +213,7 @@ export class ReactMain {
   }
 
   /**
-   * override the build pipeline of the component environment.
+   * override the compiler tasks inside the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
     const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);

@@ -1,6 +1,6 @@
 import React from 'react';
-import { CompositionCard } from '@teambit/ui.composition-card';
-import { CompositionsModule } from '@teambit/model.composition-type';
+import { CompositionCard } from '@teambit/compositions.ui.composition-card';
+import { CompositionsModule } from '@teambit/compositions.model.composition-type';
 
 import styles from './compositions-overview.module.scss';
 
