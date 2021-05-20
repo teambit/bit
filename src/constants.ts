@@ -387,8 +387,6 @@ export const BIT_VERSION = packageFile.version;
 
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
-export const SKIP_UPDATE_FLAG = '--skip-update';
-
 export const TOKEN_FLAG_NAME = 'token';
 
 export const TOKEN_FLAG = `${TOKEN_FLAG_NAME} <${TOKEN_FLAG_NAME}>`;
