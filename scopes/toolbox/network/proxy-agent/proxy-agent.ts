@@ -4,7 +4,7 @@ import { URL } from 'url';
 import createHttpProxyAgent from 'http-proxy-agent';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { SocksProxyAgent } from 'socks-proxy-agent';
-import { AgentOptions } from '@teambit/network.agent';
+import { AgentOptions } from '@teambit/toolbox.network.agent';
 
 export function getProxyAgent(uri: string, opts: Omit<AgentOptions, 'noProxy'>) {
   const parsedUri = new URL(uri);

@@ -2,7 +2,7 @@
 
 import { URL } from 'url';
 import HttpAgent from 'agentkeepalive';
-import { getProxyAgent } from '@teambit/network.proxy-agent';
+import { getProxyAgent } from '@teambit/toolbox.network.proxy-agent';
 
 const HttpsAgent = HttpAgent.HttpsAgent;
 
