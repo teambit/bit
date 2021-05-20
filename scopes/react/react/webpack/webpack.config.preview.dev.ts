@@ -259,14 +259,18 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
       //   exclude: [/dist/, /node_modules/],
       // }),
       new webpack.container.ModuleFederationPlugin({
+        filename: 'remote-entry.js',
+        name: 'module_federation_namespace',
         // remoteType: 'commonjs',
         shared: {
           react: {
+            // TODO: make sure we can remove the eager here by adding bootstrap for everything
             eager: true,
             singleton: true,
             requiredVersion: '^16.14.0',
           },
           'react-dom': {
+            // TODO: make sure we can remove the eager here by adding bootstrap for everything
             eager: true,
             singleton: true,
             requiredVersion: '^16.14.0',
