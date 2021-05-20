@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { ellipsis as truncate } from '@teambit/string.ellipsis';
+import { ellipsis as truncate } from '@teambit/toolbox.string.ellipsis';
 import { Ellipsis } from '@teambit/design.ui.styles.ellipsis';
 
 import styles from './details.module.scss';
