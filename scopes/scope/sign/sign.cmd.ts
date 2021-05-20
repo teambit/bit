@@ -11,7 +11,7 @@ export class SignCmd implements Command {
   private = true;
   description = 'complete the build process for components';
   alias = '';
-  group = 'component';
+  group = 'development';
   options = [
     ['', 'multiple', 'sign components from multiple scopes'],
     ['', 'always-succeed', 'exit with code 0 even though the build failed'],

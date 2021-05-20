@@ -12,6 +12,7 @@ import GeneralError from '../../../error/general-error';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { AUTO_SNAPPED_MSG } from './snap-cmd';
 import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
+import { Group } from '../../command-groups';
 
 export const applyVersionReport = (components: ApplyVersionResult[], addName = true, showVersion = false): string => {
   const tab = addName ? '\t' : '';
@@ -34,6 +35,8 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName = t
 
 export default class Merge implements LegacyCommand {
   name = 'merge [values...]';
+  shortDescription = 'merge changes of different component versions';
+  group: Group = 'development';
   description = `merge changes of different component versions
   bit merge <version> [ids...] => merge changes of the given version into the checked out version
   bit merge [ids...] => EXPERIMENTAL. merge changes of the remote head into local, optionally use '--abort' or '--resolve'

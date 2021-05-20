@@ -9,6 +9,7 @@ import R from 'ramda';
 
 export class ExportCmd implements Command {
   name = 'export [remote] [id...]';
+
   description = `export components to a remote scope.
   bit export => export all staged components to their current scope
   Legacy:

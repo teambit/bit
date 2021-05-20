@@ -1,17 +1,14 @@
 import { LegacyCommand } from '@teambit/legacy/dist/cli/legacy-command';
-import allHelp from '@teambit/legacy/dist/cli/templates/all-help';
-
 import { Command, CommandOptions, GenericObject } from '.';
 import { CLIMain } from './cli.main.runtime';
-import { getCommandId } from './get-command-id';
 
 export class LegacyCommandAdapter implements Command {
   alias: string;
   name: string;
   description: string;
   options: CommandOptions;
-  shortDescription: string;
-  group: string;
+  shortDescription?: string;
+  group?: string;
   loader?: boolean;
   commands: Command[];
   private?: boolean;
@@ -23,10 +20,8 @@ export class LegacyCommandAdapter implements Command {
     this.description = cmd.description;
     this.options = cmd.opts || [];
     this.alias = cmd.alias;
-    const commandID = getCommandId(cmd.name);
-    const { summery, group } = findLegacyDetails(commandID, cliExtension);
-    this.shortDescription = summery;
-    this.group = group;
+    this.shortDescription = cmd.shortDescription;
+    this.group = cmd.group;
     this.loader = cmd.loader;
     this.private = cmd.private;
     this.migration = cmd.migration;
@@ -61,22 +56,6 @@ export class LegacyCommandAdapter implements Command {
       code: actionResult.code,
     };
   }
-}
-
-// TODO: remove all help and move information to commands
-export function findLegacyDetails(name: string, p: CLIMain) {
-  let group = '';
-  let summery = '';
-  for (let i = 0; i < allHelp.length; i += 1) {
-    const index = allHelp[i].commands.findIndex((command) => command.name === name);
-    // eslint-disable-next-line no-bitwise
-    if (~index) {
-      group = allHelp[i].group;
-      summery = allHelp[i].commands[index].description;
-      !p.groups[group] && p.registerGroup(group, allHelp[i].title);
-    }
-  }
-  return { group, summery };
 }
 
 type ActionResult = {

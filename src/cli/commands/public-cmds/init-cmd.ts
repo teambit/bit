@@ -11,11 +11,14 @@ import GeneralError from '../../../error/general-error';
 import { initInteractive } from '../../../interactive';
 import shouldShowInteractive from '../../../interactive/utils/should-show-interactive';
 import clean from '../../../utils/object-clean';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Init implements LegacyCommand {
   name = 'init [path]';
   skipWorkspace = true;
+  shortDescription = 'create or reinitialize an empty Bit scope or reinitialize an existing one';
+  group: Group = 'start';
   description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/workspace`;
   alias = '';
   opts = [

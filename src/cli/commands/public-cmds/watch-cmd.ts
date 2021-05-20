@@ -1,9 +1,11 @@
 import watchAll from '../../../api/consumer/lib/watch';
+import { Group } from '../../command-groups';
 import { LegacyCommand } from '../../legacy-command';
 
 export default class Watch implements LegacyCommand {
   name = 'watch';
   description = 'watch components and perform `build` on changes';
+  group: Group = 'development';
   alias = 'w';
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   opts = [['v', 'verbose', 'showing npm verbose output for inspection']];

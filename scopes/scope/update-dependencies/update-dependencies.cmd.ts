@@ -24,7 +24,7 @@ the input data is a stringified JSON of an array of the following object.
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies":["ci.remote/comp1@0.0.2"]}]'
 `;
   alias = '';
-  group = 'component';
+  group = 'development';
   options = [
     ['', 'tag', 'tag once the build is completed and export to the remote scopes'],
     ['', 'snap', 'snap once the build is completed and export to the remote scopes'],

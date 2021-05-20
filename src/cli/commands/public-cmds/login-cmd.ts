@@ -2,11 +2,13 @@ import chalk from 'chalk';
 
 import { login } from '../../../api/consumer';
 import { BASE_WEB_DOMAIN } from '../../../constants';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Login implements LegacyCommand {
   name = 'login';
   description = 'log the CLI into Bit';
+  group: Group = 'general';
   alias = '';
   skipWorkspace = true;
   opts = [
