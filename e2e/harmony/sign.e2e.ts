@@ -87,7 +87,7 @@ describe('sign command', function () {
       helper.scopeHelper.addRemoteScope(undefined, helper.scopes.remotePath);
       const ids = [`${helper.scopes.remote}/bar`];
       // console.log('sign-command', `bit sign ${ids.join(' ')}`);
-      signOutput = helper.command.sign(ids, '--always-succeed', helper.scopes.remotePath);
+      signOutput = helper.command.sign(ids, '--always-succeed --push', helper.scopes.remotePath);
     });
     it('on the workspace, the build status should be pending', () => {
       const comp1 = helper.command.catComponent(`${helper.scopes.remote}/bar@latest`);
