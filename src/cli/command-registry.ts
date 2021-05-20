@@ -127,6 +127,7 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
 
   globalOptions.forEach(([alias, name, description]) => {
     concrete.option(createOptStr(alias, name), description);
+    command.options.push([alias, name, description]);
   });
 
   // attach skip-update to all commands
