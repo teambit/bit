@@ -165,10 +165,10 @@ class BitLogger implements IBitLogger {
     let msg;
     if (code === 0) {
       level = 'info';
-      msg = `[*] the command ${commandName} has been completed successfully`;
+      msg = `[*] the command "${commandName}" has been completed successfully`;
     } else {
       level = 'error';
-      msg = `[*] the command ${commandName} has been terminated with an error code ${code}`;
+      msg = `[*] the command "${commandName}" has been terminated with an error code ${code}`;
     }
     // this should have been helpful to not miss any log message when using `sync: false` in the
     // Pino opts, but sadly, it doesn't help.

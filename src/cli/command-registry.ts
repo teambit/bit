@@ -15,7 +15,7 @@ function parseSubcommandFromArgs(args: [any]) {
   return null;
 }
 
-function parseCommandName(commandName: string): string {
+export function parseCommandName(commandName: string): string {
   if (!commandName) return '';
   return first(commandName.split(' '));
 }
@@ -48,7 +48,7 @@ export async function execAction(command: Command, concrete, args): Promise<any>
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
   Analytics.init(concrete.name(), flags, relevantArgs);
-  logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
+  logger.info(`[*] started a new command: "${parseCommandName(command.name)}" with the following data:`, {
     args: relevantArgs,
     flags,
   });
