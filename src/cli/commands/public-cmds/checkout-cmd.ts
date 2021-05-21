@@ -116,7 +116,7 @@ export default class Checkout implements LegacyCommand {
         return chalk.green(
           `checkout was not needed for ${chalk.bold(
             neutralComponents.length.toString()
-          )} components (use --verbose to get more details)`
+          )} components (use --verbose to get more details)\n`
         );
       }
 
