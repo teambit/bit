@@ -37,6 +37,8 @@ const moduleFileExtensions = [
 
 type Options = { envId: string; fileMapPath: string; workDir: string };
 
+const imageInlineSizeLimit = parseInt(process.env.IMAGE_INLINE_SIZE_LIMIT || '10000');
+
 export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfigWithDevServer {
   return {
     devServer: {
@@ -113,6 +115,18 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
                 },
               ],
             ],
+          },
+        },
+
+        // "url" loader works like "file" loader except that it embeds assets
+        // smaller than specified limit in bytes as data URLs to avoid requests.
+        // A missing `test` is equivalent to a match.
+        {
+          test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+          loader: require.resolve('url-loader'),
+          options: {
+            limit: imageInlineSizeLimit,
+            name: 'static/media/[name].[hash:8].[ext]',
           },
         },
 
