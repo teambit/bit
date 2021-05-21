@@ -7,9 +7,12 @@ import { isString } from '../../../utils';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { isFeatureEnabled, BUILD_ON_CI } from '../../../api/consumer/lib/feature-toggle';
+import { Group } from '../../command-groups';
 
 export default class Tag implements LegacyCommand {
   name = 'tag [id] [version]';
+  group: Group = 'development';
+  shortDescription = 'record component changes and lock versions';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version
   ${WILDCARD_HELP('tag')}`;

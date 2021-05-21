@@ -4,10 +4,13 @@ import { unTagAction } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN, WILDCARD_HELP } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import { untagResult } from '../../../scope/component-ops/untag-component';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Untag implements LegacyCommand {
   name = 'untag [id] [version]';
+  shortDescription = 'revert versions tagged for component(s)';
+  group: Group = 'development';
   description = `revert version(s) tagged for component(s)
   https://${BASE_DOCS_DOMAIN}/docs/tag-component-version#untagging-components
   ${WILDCARD_HELP('untag')}`;

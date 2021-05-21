@@ -4,11 +4,14 @@ import { checkout } from '../../../api/consumer';
 import { LATEST, WILDCARD_HELP } from '../../../constants';
 import { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import { ApplyVersionResults, getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { applyVersionReport } from './merge-cmd';
 
 export default class Checkout implements LegacyCommand {
   name = 'checkout [values...]';
+  shortDescription = 'switch between component versions';
+  group: Group = 'development';
   description = `switch between component versions or remove local changes
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
   bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
@@ -113,7 +116,7 @@ export default class Checkout implements LegacyCommand {
         return chalk.green(
           `checkout was not needed for ${chalk.bold(
             neutralComponents.length.toString()
-          )} components (use --verbose to get more details)`
+          )} components (use --verbose to get more details)\n`
         );
       }
 

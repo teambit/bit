@@ -36,7 +36,7 @@ export class SignMain {
     private onPostSignSlot: OnPostSignSlot
   ) {}
 
-  async sign(ids: ComponentID[], isMultiple?: boolean): Promise<SignResult | null> {
+  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean): Promise<SignResult | null> {
     if (isMultiple) await this.scope.import(ids);
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
     if (componentsToSkip.length) {
@@ -60,12 +60,14 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const publishedPackages = getPublishedPackages(legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
-    if (isMultiple) {
-      await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
-    } else {
-      await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+    if (push) {
+      if (isMultiple) {
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
+      } else {
+        await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+      }
+      await this.clearScopesCaches(legacyComponents);
     }
-    await this.clearScopesCaches(legacyComponents);
     await this.triggerOnPostSign(components);
 
     return {

@@ -13,7 +13,7 @@ export class UpdateDependenciesCmd implements Command {
   name = 'update-dependencies <data>';
   private = true;
   shortDescription = 'update dependencies for components and tag/snap the results';
-  description = `update versions dependencies for components and optionally tag/snap the results.
+  description = `update versions dependencies for components and tag/snap the results.
 this command should be running from a new bare scope, it first imports the components it needs and then processes the update.
 the input data is a stringified JSON of an array of the following object.
 {
@@ -24,10 +24,10 @@ the input data is a stringified JSON of an array of the following object.
 an example of the final data: '[{"componentId":"ci.remote2/comp-b","dependencies":["ci.remote/comp1@0.0.2"]}]'
 `;
   alias = '';
-  group = 'component';
+  group = 'development';
   options = [
-    ['', 'tag', 'tag once the build is completed and export to the remote scopes'],
-    ['', 'snap', 'snap once the build is completed and export to the remote scopes'],
+    ['', 'tag', 'tag once the build is completed (by default it snaps)'],
+    ['', 'push', 'export the updated objects to the original scopes once tagged/snapped'],
     ['', 'message <string>', 'message to be saved as part of the version log'],
     ['', 'username <string>', 'username to be saved as part of the version log'],
     ['', 'email <string>', 'email to be saved as part of the version log'],

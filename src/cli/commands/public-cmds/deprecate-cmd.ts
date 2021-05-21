@@ -3,11 +3,13 @@ import R from 'ramda';
 
 import { deprecate } from '../../../api/consumer';
 import { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Deprecate implements LegacyCommand {
   name = 'deprecate <ids...>';
   description = 'deprecate a component (local/remote)';
+  group: Group = 'collaborate';
   skipWorkspace = true;
   alias = 'd';
 

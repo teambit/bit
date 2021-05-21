@@ -1,11 +1,13 @@
 import { ejectAction } from '../../../api/consumer';
 import { EjectResults } from '../../../consumer/component-ops/eject-components';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import ejectTemplate from '../../templates/eject-template';
 
 export default class Eject implements LegacyCommand {
   name = 'eject <id...>';
   description = 'replaces the components from the local scope with the corresponding packages';
+  group: Group = 'collaborate';
   alias = 'E';
   opts = [
     ['f', 'force', 'ignore local version. remove the components even when they are staged or modified'],

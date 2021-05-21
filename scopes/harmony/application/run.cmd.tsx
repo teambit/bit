@@ -9,7 +9,6 @@ export class RunCmd implements Command {
   description = 'run an application';
   alias = 'c';
   group = 'apps';
-  shortDescription = '';
   options = [
     ['d', 'dev', 'start the application in dev mode.'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],

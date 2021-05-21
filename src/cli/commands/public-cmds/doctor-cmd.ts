@@ -5,6 +5,7 @@ import runAll, {
   runOne,
 } from '../../../api/consumer/lib/doctor';
 import Diagnosis from '../../../doctor/diagnosis';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
@@ -12,6 +13,7 @@ import formatDiagnosesResult from '../../templates/doctor-results-template';
 export default class Doctor implements LegacyCommand {
   name = 'doctor [diagnosis-name]';
   description = 'diagnose a bit workspace';
+  group: Group = 'general';
   alias = '';
   opts = [
     ['j', 'json', 'return diagnoses in json format'],
