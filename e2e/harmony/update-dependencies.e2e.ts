@@ -53,7 +53,7 @@ describe('update-dependencies command', function () {
     after(() => {
       npmCiRegistry.destroy();
     });
-    describe('running from a new bare scope', () => {
+    describe('running from a new bare scope without flags', () => {
       let updateDepsOutput: string;
       let headBefore: string;
       let updateRemotePath: string;
@@ -83,7 +83,7 @@ describe('update-dependencies command', function () {
         expect(headBefore).to.equal(currentHeadOnRemote);
       });
     });
-    describe('running from a new bare scope using --tag flag', () => {
+    describe('running from a new bare scope using --tag and --push flags', () => {
       let updateDepsOutput: string;
       before(() => {
         helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
@@ -96,7 +96,7 @@ describe('update-dependencies command', function () {
             versionToTag: '3.0.0',
           },
         ];
-        updateDepsOutput = helper.command.updateDependencies(data, '--tag', updateRemote.scopePath);
+        updateDepsOutput = helper.command.updateDependencies(data, '--tag --push', updateRemote.scopePath);
       });
       it('should succeed', () => {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
@@ -106,7 +106,7 @@ describe('update-dependencies command', function () {
         expect(compB.dependencies[0].id.version).to.equal('1.1.0');
       });
     });
-    describe('running from a new bare scope using --snap flag', () => {
+    describe('running from a new bare scope using --push flag', () => {
       let updateDepsOutput: string;
       before(() => {
         helper.scopeHelper.getClonedScope(secondScopeBeforeUpdate, secondRemotePath);
@@ -118,7 +118,7 @@ describe('update-dependencies command', function () {
             dependencies: [`${DEFAULT_OWNER}.${scopeWithoutOwner}/comp1@^1.0.0`],
           },
         ];
-        updateDepsOutput = helper.command.updateDependencies(data, '--snap', updateRemote.scopePath);
+        updateDepsOutput = helper.command.updateDependencies(data, '--push', updateRemote.scopePath);
       });
       it('should succeed', () => {
         expect(updateDepsOutput).to.have.string('the following 1 component(s) were updated');
