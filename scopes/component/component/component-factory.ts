@@ -50,6 +50,11 @@ export interface ComponentFactory {
    */
   getManyByLegacy(components: ConsumerComponent[]): Promise<Component[]>;
 
+  /**
+   * get a component from a remote without importing it
+   */
+  getRemoteComponent?: (id: ComponentID) => Promise<Component>;
+
   getLegacyGraph(ids?: ComponentID[]): Promise<LegacyGraph>;
 
   getLogs(id: ComponentID): Promise<ComponentLog[]>;

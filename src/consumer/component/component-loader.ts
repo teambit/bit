@@ -269,7 +269,11 @@ export default class ComponentLoader {
 
   private async _getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
     const scopeComponentsImporter = new ScopeComponentsImporter(this.consumer.scope);
-    return scopeComponentsImporter.getRemoteComponent(id);
+    const objectList = await scopeComponentsImporter.getRemoteComponent(id);
+    if (!objectList) return null;
+    const components = objectList.getComponents();
+    if (!components.length) return null; // probably doesn't exist
+    return components[0];
   }
 
   private _isAngularProject(): boolean {
