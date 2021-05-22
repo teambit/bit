@@ -17,11 +17,11 @@ export default async function getScopeComponent({
   loadScopeFromCache,
 }: {
   id: string;
-  allVersions: boolean | null | undefined;
-  scopePath: string | null | undefined; // used by the api (see /src/api.js)
-  showDependents: boolean;
-  showDependencies: boolean;
-  loadScopeFromCache: boolean;
+  allVersions?: boolean | null;
+  scopePath?: string | null; // used by the api (see /src/api.js)
+  showDependents?: boolean;
+  showDependencies?: boolean;
+  loadScopeFromCache?: boolean;
 }): Promise<{ component: Component[] | Component }> {
   const bitId: BitId = BitId.parse(id, true); // user used --remote so we know it has a scope
 
