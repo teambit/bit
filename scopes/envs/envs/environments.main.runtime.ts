@@ -237,11 +237,11 @@ export class EnvsMain {
     const envIdFromEnvsConfig = envsAspect?.config.env;
     let envIdFromEnvsConfigWithoutVersion;
     if (envIdFromEnvsConfig) {
-      // const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
-      // if (envDef) {
-      //   return envDef;
-      // }
       envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
+      if (envDef) {
+        return envDef;
+      }
     }
 
     // in some cases we have the id configured in the teambit.envs/envs but without the version
@@ -298,11 +298,11 @@ export class EnvsMain {
     let envIdFromEnvsConfigWithoutVersion;
 
     if (envIdFromEnvsConfig) {
-      // const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
-      // if (envDef) {
-      //   return envDef;
-      // }
       envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
+      if (envDef) {
+        return envDef;
+      }
     }
 
     const getEnvDefinitionByLegacyExtension = (extension: ExtensionDataEntry): EnvDefinition | undefined => {
