@@ -180,12 +180,14 @@ export class EnvsMain {
     const withVersionMatchId = withVersionMatch?.[0];
     if (withVersionMatchId) return withVersionMatchId;
 
-    // const exactMatch = this.envSlot.toArray().find(([envId]) => {
-    //   return envsData.id === envId;
-    // });
+    // Handle core envs
+    const exactMatch = this.envSlot.toArray().find(([envId]) => {
+      return envIdFromEnvData === envId;
+    });
 
-    // const exactMatchId = exactMatch?.[0];
-    // if (exactMatchId) return exactMatchId;
+    const exactMatchId = exactMatch?.[0];
+    if (exactMatchId) return exactMatchId;
+
     if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
     return withVersion.toString();
   }
