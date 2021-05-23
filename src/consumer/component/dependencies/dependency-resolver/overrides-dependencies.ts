@@ -120,20 +120,20 @@ export default class OverridesDependencies {
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
-        const componentId = this._getComponentIdToAdd(
+        const componentData = this._getComponentIdToAdd(
           depField,
           dependency,
           dependencyValue,
           idsFromBitmap,
           idsFromModel
         );
-        if (componentId) {
+        if (componentData && componentData.componentId) {
           const dependencyExist = existingDependencies[depField].find((d) =>
-            d.id.isEqualWithoutScopeAndVersion(componentId)
+            d.id.isEqualWithoutScopeAndVersion(componentData.componentId)
           );
           if (!dependencyExist) {
-            this._addManuallyAddedDep(depField, componentId.toString());
-            components[depField] ? components[depField].push(componentId) : (components[depField] = [componentId]);
+            this._addManuallyAddedDep(depField, componentData.componentId.toString());
+            components[depField] ? components[depField].push(componentData) : (components[depField] = [componentData]);
           }
           return;
         }
@@ -165,13 +165,26 @@ export default class OverridesDependencies {
     dependencyValue: string,
     idsFromBitmap: BitIds,
     idsFromModel: BitIds
-  ): BitId | undefined {
+  ): { componentId?: BitId; packageName?: string } | undefined {
     if (field === 'peerDependencies') return undefined;
     if (this.consumer.isLegacy && dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
-      return this._getComponentIdToAddForLegacyWs(field, dependency, dependencyValue, idsFromBitmap, idsFromModel);
+      const componentId = this._getComponentIdToAddForLegacyWs(
+        field,
+
+        dependency,
+
+        dependencyValue,
+
+        idsFromBitmap,
+
+        idsFromModel
+      );
+      return {
+        componentId,
+      };
     }
     const packageData = this._resolvePackageData(dependency);
-    return packageData?.componentId;
+    return { componentId: packageData?.componentId, packageName: packageData?.name };
   }
 
   _getComponentIdFromPackage(packageName: string, idsFromBitmap: BitIds, idsFromModel: BitIds): BitId | undefined {
