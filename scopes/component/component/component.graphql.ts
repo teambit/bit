@@ -22,7 +22,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         version: String!
 
         # tag hash.
-        hash: string!
+        hash: String!
       }
 
       type Snap {
