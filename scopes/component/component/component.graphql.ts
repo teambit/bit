@@ -21,8 +21,8 @@ export function componentSchema(componentExtension: ComponentMain) {
         # semver assigned to the tag.
         version: String!
 
-        # tag snapshot.
-        snap: Snap!
+        # tag hash.
+        hash: string!
       }
 
       type Snap {
