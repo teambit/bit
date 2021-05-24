@@ -271,9 +271,9 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-tree"
     },
-    "component-url": {
-        "scope": "teambit.component",
-        "version": "0.0.9",
+    "modules/component-url": {
+        "scope": "",
+        "version": "",
         "mainFile": "index.ts",
         "rootDir": "scopes/component/component-url"
     },
