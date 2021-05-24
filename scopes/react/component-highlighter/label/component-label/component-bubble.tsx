@@ -2,7 +2,7 @@ import React from 'react';
 import classnames from 'classnames';
 import { ComponentID } from '@teambit/component-id';
 import { NativeLink, LinkProps } from '@teambit/base-ui.routing.native-link';
-import { ComponentUrl } from '@teambit/component-url';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import urljoin from 'url-join';
 import styles from './duo-component-bubble.module.scss';
 
