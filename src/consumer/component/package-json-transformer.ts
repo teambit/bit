@@ -25,7 +25,7 @@ export class PackageJsonTransformer {
       newPackageJsonObject = await transformer(component, newPackageJsonObject);
     });
 
-    const scopeId = component.scope;
+    const scopeId = component.scope || component.defaultScope;
     const { scope, owner } = parseScope(scopeId);
     const name = component.id.name;
 

@@ -15,7 +15,7 @@ type PackCmdOptions = {
 
 export class PackCmd implements Command {
   name = 'pack <componentId> [scopePath]';
-  description = 'Create tar for npm publish';
+  description = 'create tar for npm publish';
   options = [
     ['d', 'out-dir <out-dir>', 'directory to put the result tar file'],
     ['o', 'override [boolean]', 'override existing pack file'],
