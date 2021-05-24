@@ -187,7 +187,7 @@ export class UiMain {
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootName?: string): Promise<any> {
+  async build(uiRootName?: string): Promise<webpack.MultiStats | undefined> {
     // TODO: change to MultiStats from webpack once they export it in their types
     this.logger.debug(`build, uiRootName: "${uiRootName}"`);
     const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
@@ -208,6 +208,12 @@ export class UiMain {
     const compilerRun = promisify(compiler.run.bind(compiler));
     const results = await compilerRun();
     this.logger.debug(`build, uiRootName: "${uiRootName}" completed webpack`);
+    if (!results) throw new UnknownBuildError();
+    if (results?.hasErrors()) {
+      this.clearConsole();
+      throw new Error(results?.toString());
+    }
+
     return results;
   }
 
@@ -424,12 +430,7 @@ export class UiMain {
       );
     }
 
-    const res = await this.build(name);
-    if (!res) throw new UnknownBuildError();
-    this.clearConsole();
-    // TODO: replace this with logger and learn why it is not working here.
-    // eslint-disable-next-line no-console
-    if (res.hasErrors()) res.stats.forEach((stats) => stats.compilation.errors.forEach((err) => console.error(err)));
+    await this.build(name);
     await this.cache.set(uiRoot.path, hash);
     return hash;
   }
