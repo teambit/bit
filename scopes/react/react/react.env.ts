@@ -1,7 +1,7 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
-import { ComponentUrl } from '@teambit/component-url';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
