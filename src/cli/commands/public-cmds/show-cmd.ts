@@ -3,12 +3,15 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 import ConsumerComponent from '../../../consumer/component/consumer-component';
 import GeneralError from '../../../error/general-error';
 import { DependenciesInfo } from '../../../scope/graph/scope-graph';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import paintComponent from '../../templates/component-template';
 
 export default class Show implements LegacyCommand {
   name = 'show <id>';
   description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/view#show`;
+  shortDescription = 'show component overview';
+  group: Group = 'info';
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],

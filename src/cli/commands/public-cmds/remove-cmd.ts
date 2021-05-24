@@ -6,11 +6,14 @@ import GeneralError from '../../../error/general-error';
 import { removePrompt } from '../../../prompts';
 import RemovedObjects from '../../../scope/removed-components';
 import RemovedLocalObjects from '../../../scope/removed-local-objects';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import paintRemoved from '../../templates/remove-template';
 
 export default class Remove implements LegacyCommand {
   name = 'remove <ids...>';
+  shortDescription = 'remove component(s) from your working area, or a remote scope';
+  group: Group = 'collaborate';
   description = `remove a component (local/remote)
   https://${BASE_DOCS_DOMAIN}/docs/removing-components
   ${WILDCARD_HELP('remove')}`;

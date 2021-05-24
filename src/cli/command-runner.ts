@@ -1,15 +1,18 @@
 import { render } from 'ink';
 import { serializeError } from 'serialize-error';
-
 import { migrate } from '../api/consumer';
 import logger, { LoggerLevel } from '../logger/logger';
 import { buildCommandMessage, isNumeric, packCommand } from '../utils';
 import { CLIArgs, Command, Flags } from './command';
+import { parseCommandName } from './command-registry';
 import defaultHandleError from './default-error-handler';
 import loader from './loader';
 
 export class CommandRunner {
-  constructor(private command: Command, private args: CLIArgs, private flags: Flags) {}
+  private commandName: string;
+  constructor(private command: Command, private args: CLIArgs, private flags: Flags) {
+    this.commandName = parseCommandName(this.command.name);
+  }
 
   /**
    * run command using one of the handler, "json"/"report"/"render". once done, exit the process.
@@ -28,10 +31,10 @@ export class CommandRunner {
         return await this.runReportHandler();
       }
     } catch (err) {
-      return handleErrorAndExit(err, this.command.name, this.command.internal);
+      return handleErrorAndExit(err, this.commandName, this.command.internal);
     }
 
-    throw new Error(`command "${this.command.name}" doesn't implement "render" nor "report" methods`);
+    throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" methods`);
   }
 
   /**
@@ -52,7 +55,7 @@ export class CommandRunner {
    */
   private async runJsonHandler() {
     if (!this.flags.json) return null;
-    if (!this.command.json) throw new Error(`command "${this.command.name}" doesn't implement "json" method`);
+    if (!this.command.json) throw new Error(`command "${this.commandName}" doesn't implement "json" method`);
     const result = await this.command.json(this.args, this.flags);
     const code = result.code || 0;
     const data = result.data || result;
@@ -71,7 +74,7 @@ export class CommandRunner {
     const code = result.data && result.hasOwnProperty('code') ? result.code : 0;
     const { waitUntilExit } = render(data);
     await waitUntilExit();
-    return logger.exitAfterFlush(code, this.command.name);
+    return logger.exitAfterFlush(code, this.commandName);
   }
 
   private async runReportHandler() {
@@ -90,7 +93,7 @@ export class CommandRunner {
   private determineConsoleWritingDuringCommand() {
     if (this.command.loader && !this.flags.json) {
       loader.on();
-      loader.start(`running command ${this.command.name}...`);
+      loader.start(`running command "${this.commandName}"...`);
       logger.shouldWriteToConsole = true;
     } else {
       loader.off();
@@ -104,7 +107,7 @@ export class CommandRunner {
 
   private async writeAndExit(data: string, exitCode: number) {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.command.name));
+    return process.stdout.write(data, async () => logger.exitAfterFlush(exitCode, this.commandName));
   }
 
   private async runMigrateIfNeeded(): Promise<any> {

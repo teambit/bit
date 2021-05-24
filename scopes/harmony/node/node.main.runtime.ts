@@ -5,6 +5,7 @@ import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
 import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
+import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
@@ -43,6 +44,16 @@ export class NodeMain {
    * override the env build pipeline.
    */
   overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
+
+  /**
+   * override the env compilers list.
+   */
+  overrideCompiler: (compiler: Compiler) => EnvTransformer = this.react.overrideCompiler.bind(this.react);
+
+  /**
+   * override the env compilers tasks in the build pipe.
+   */
+  overrideCompilerTasks: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideCompilerTasks.bind(this.react);
 
   /**
    * override the build ts config.

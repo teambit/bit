@@ -16,7 +16,7 @@ export default class EjectConfCmd implements Command {
   name = 'eject-conf [id]';
   description = 'ejecting components configuration';
   alias = '';
-  group = 'component';
+  group = 'development';
   shortDescription = 'Ejecting components configuration';
   options = [
     ['p', 'propagate [boolean]', 'mark propagate true in the config file'],

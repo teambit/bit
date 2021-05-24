@@ -18,8 +18,7 @@ export class BuilderCmd implements Command {
   name = 'build [pattern]';
   description = 'run set of tasks for build';
   alias = '';
-  group = '';
-  shortDescription = '';
+  group = 'development';
   options = [
     ['', 'install', 'install core aspects in capsules'],
     ['', 'reuse-capsules', 'avoid deleting the capsules root-dir before starting the build'],

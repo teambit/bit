@@ -6,6 +6,7 @@ import Table from 'tty-table';
 import { remoteAdd, remoteList, remoteRm } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { empty, forEach } from '../../../utils';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import RemoteUndefined from '../exceptions/remote-undefined';
 
@@ -46,6 +47,8 @@ class RemoteRm implements LegacyCommand {
 
 export default class Remote implements LegacyCommand {
   name = 'remote';
+  shortDescription = 'manage set of tracked bit scope(s)';
+  group: Group = 'collaborate';
   description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/bit-server#working-with-remote-scopes`;
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']] as CommandOptions;

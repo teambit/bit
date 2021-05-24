@@ -1,6 +1,7 @@
-/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import chalk from 'chalk';
 import rightpad from 'pad-right';
+import { capitalize } from 'lodash';
+import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { CommandList } from './cli.main.runtime';
 import { getCommandId } from './get-command-id';
 
@@ -18,7 +19,7 @@ type GroupContent = {
   description: string;
 };
 
-export function formatHelp(commands: CommandList, groups: { [k: string]: string }) {
+export function formatHelp(commands: CommandList, groups: GroupsType) {
   const helpProps = groupCommands(commands, groups);
   const commandsStr = formatCommandsHelp(helpProps);
 
@@ -29,16 +30,17 @@ ${commandsStr}
 ${getFooter()}`;
 }
 
-function groupCommands(commands: CommandList, groups: { [k: string]: string }): HelpProps {
+function groupCommands(commands: CommandList, groups: GroupsType): HelpProps {
   const help: HelpProps = commands
     .filter((command) => !command.private && (command.shortDescription || command.description))
     .reduce(function (partialHelp, command) {
-      partialHelp[command.group!] = partialHelp[command.group!] || {
+      const groupName = command.group as string; // at this stage, it must be set
+      partialHelp[groupName] = partialHelp[groupName] || {
         commands: {},
-        description: groups[command.group!] || command.group,
+        description: groups[groupName] || capitalize(command.group),
       };
       const cmdId = getCommandId(command.name);
-      partialHelp[command.group!].commands[cmdId] = command.shortDescription || command.description;
+      partialHelp[groupName].commands[cmdId] = command.shortDescription || command.description;
       return partialHelp;
     }, {});
   return help;

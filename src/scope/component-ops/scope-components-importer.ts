@@ -371,7 +371,7 @@ export default class ScopeComponentsImporter {
   /**
    * get a single component from a remote without saving it locally
    */
-  async getRemoteComponent(id: BitId): Promise<ModelComponent | null | undefined> {
+  async getRemoteComponent(id: BitId): Promise<BitObjectList | null | undefined> {
     const remotes = await getScopeRemotes(this.scope);
     let bitObjectsList: BitObjectList;
     try {
@@ -380,9 +380,8 @@ export default class ScopeComponentsImporter {
     } catch (err) {
       return null; // probably doesn't exist
     }
-    const components = bitObjectsList.getComponents();
-    if (!components.length) return null; // probably doesn't exist
-    return components[0];
+
+    return bitObjectsList;
   }
 
   private async multipleStreamsToBitObjects(streams: ObjectItemsStream[]): Promise<BitObjectList> {
