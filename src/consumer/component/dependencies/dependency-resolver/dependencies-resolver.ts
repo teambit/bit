@@ -285,7 +285,13 @@ export default class DependencyResolver {
     const { components, packages } = dependencies;
     DEPENDENCIES_FIELDS.forEach((depField) => {
       if (components[depField] && components[depField].length) {
-        components[depField].forEach((id) => this.allDependencies[depField].push({ id, relativePaths: [] }));
+        components[depField].forEach((depData) =>
+          this.allDependencies[depField].push({
+            id: depData.componentId,
+            relativePaths: [],
+            packageName: depData.packageName,
+          })
+        );
       }
       if (packages[depField] && !R.isEmpty(packages[depField])) {
         Object.assign(this.allPackagesDependencies[this._pkgFieldMapping(depField)], packages[depField]);
