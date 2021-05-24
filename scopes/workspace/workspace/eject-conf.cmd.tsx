@@ -17,7 +17,7 @@ export default class EjectConfCmd implements Command {
   description = 'ejecting components configuration';
   alias = '';
   group = 'development';
-  shortDescription = 'Ejecting components configuration';
+  shortDescription = 'eject the target component configuration file (e.g. create a `component.json` file)';
   options = [
     ['p', 'propagate [boolean]', 'mark propagate true in the config file'],
     ['o', 'override [boolean]', 'override file if exist'],

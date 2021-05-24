@@ -20,7 +20,7 @@ type ComponentsStatus = {
 export class CompileCmd implements Command {
   componentsStatus: Array<ComponentsStatus> = [];
   name = 'compile [component...]';
-  description = 'Compile components';
+  description = 'compile components in the development workspace';
   alias = '';
   group = 'development';
   options = [
