@@ -22,7 +22,7 @@ export type LinkFile = {
 };
 
 /**
- * Gets a list of dependencies and group them by types (files, bits, packages)
+ * Gets a list of dependencies and group them by types (files, components, packages)
  * It's also transform the node package dependencies from array of paths to object in this format:
  * {dependencyName: version} (like in package.json)
  *
@@ -51,7 +51,7 @@ function groupDependencyList(
       return;
     }
 
-    // If the package is a component add it to the components (bits) list
+    // If the package is a component add it to the components list
     // @todo: currently, for author, the package.json doesn't have any version.
     // we might change this decision later. see https://github.com/teambit/bit/pull/2924
     if (resolvedPackage.componentId) {
@@ -164,7 +164,7 @@ function mergeManuallyFoundPackagesToTree(
   missingGroups: MissingGroupItem[],
   tree: DependenciesTree
 ) {
-  if (R.isEmpty(foundPackages.bits) && R.isEmpty(foundPackages.packages)) return;
+  if (R.isEmpty(foundPackages.components) && R.isEmpty(foundPackages.packages)) return;
   // Merge manually found packages (by groupMissing()) with the packages found by Madge (generate-tree-madge)
   Object.keys(foundPackages.packages).forEach((pkg) => {
     // locate package in groups(contains missing)
@@ -175,13 +175,14 @@ function mergeManuallyFoundPackagesToTree(
       }
     });
   });
-  foundPackages.bits.forEach((component) => {
+  foundPackages.components.forEach((component) => {
     missingGroups.forEach((fileDep: MissingGroupItem) => {
       if (
-        fileDep.bits &&
-        ((component.fullPath && fileDep.bits.includes(component.fullPath)) || fileDep.bits.includes(component.name))
+        fileDep.components &&
+        ((component.fullPath && fileDep.components.includes(component.fullPath)) ||
+          fileDep.components.includes(component.name))
       ) {
-        fileDep.bits = fileDep.bits.filter((existComponent) => {
+        fileDep.components = fileDep.components.filter((existComponent) => {
           return existComponent !== component.fullPath && existComponent !== component.name;
         });
         (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);

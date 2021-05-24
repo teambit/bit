@@ -36,7 +36,7 @@ export type LinkFile = {
   importSpecifiers: ImportSpecifier[];
 };
 
-type MissingType = 'files' | 'packages' | 'bits';
+type MissingType = 'files' | 'packages' | 'components';
 
 export class DependenciesTreeItem {
   files: FileObject[] = [];
