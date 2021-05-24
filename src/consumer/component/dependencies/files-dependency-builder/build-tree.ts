@@ -246,7 +246,6 @@ export async function getDependencyTree({
     }
     return path.resolve(componentDir, filePath);
   });
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
   const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, bindingPrefix, isLegacyProject);
   const { missingGroups, foundPackages } = new MissingHandler(
