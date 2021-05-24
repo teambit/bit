@@ -105,39 +105,33 @@ function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapI
   const pathMap = getPathMapWithLinkFilesData(pathMapRelative);
   Object.keys(tree).forEach((filePath: string) => {
     const treeFiles = tree[filePath].files;
-    if (!treeFiles || !treeFiles.length) return; // file has no dependency
+    if (!treeFiles.length) return; // file has no dependency
     const mainFilePathMap = pathMap.find((file) => file.file === filePath);
     if (!mainFilePathMap) throw new Error(`updateTreeWithPathMap: PathMap is missing for ${filePath}`);
     // a file might have a cycle dependency with itself, remove it from the dependencies.
-    const files: FileObject[] = treeFiles
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .filter((dependency) => dependency !== filePath)
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      .map((dependency: string) => {
-        const dependencyPathMap = mainFilePathMap.dependencies.find((file) => file.resolvedDep === dependency);
-        if (!dependencyPathMap)
-          throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${dependency}`);
-        const fileObject: FileObject = {
-          file: dependency,
-          importSource: dependencyPathMap.importSource,
-          isCustomResolveUsed: dependencyPathMap.isCustomResolveUsed,
-        };
-        if (dependencyPathMap.linkFile) {
-          fileObject.isLink = true;
-          fileObject.linkDependencies = dependencyPathMap.realDependencies;
-          return fileObject;
-        }
-        if (dependencyPathMap.importSpecifiers && dependencyPathMap.importSpecifiers.length) {
-          const depImportSpecifiers = dependencyPathMap.importSpecifiers.map((importSpecifier) => {
-            return {
-              mainFile: importSpecifier,
-            };
-          });
-          fileObject.importSpecifiers = depImportSpecifiers;
-        }
+    tree[filePath].files = treeFiles.filter((dependency) => dependency.file !== filePath);
+    tree[filePath].files.forEach((fileObject: FileObject) => {
+      const dependencyPathMap = mainFilePathMap.dependencies.find((file) => file.resolvedDep === fileObject.file);
+      if (!dependencyPathMap) {
+        throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${fileObject.file}`);
+      }
+      fileObject.importSource = dependencyPathMap.importSource;
+      fileObject.isCustomResolveUsed = dependencyPathMap.isCustomResolveUsed;
+      if (dependencyPathMap.linkFile) {
+        fileObject.isLink = true;
+        fileObject.linkDependencies = dependencyPathMap.realDependencies;
         return fileObject;
-      });
-    tree[filePath].files = files; // eslint-disable-line no-param-reassign
+      }
+      if (dependencyPathMap.importSpecifiers && dependencyPathMap.importSpecifiers.length) {
+        const depImportSpecifiers = dependencyPathMap.importSpecifiers.map((importSpecifier) => {
+          return {
+            mainFile: importSpecifier,
+          };
+        });
+        fileObject.importSpecifiers = depImportSpecifiers;
+      }
+      return fileObject;
+    });
   });
 }
 
@@ -194,7 +188,6 @@ function mergeManuallyFoundPackagesToTree(
       }
       if (fileDep.packages && fileDep.packages.includes(component.name)) {
         fileDep.packages = fileDep.packages.filter((packageName) => packageName !== component.name);
-        console.log('what is is it', tree);
         (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
       }
     });
@@ -206,16 +199,14 @@ function mergeMissingToTree(missingGroups, tree: DependenciesTree) {
   missingGroups.forEach((missing) => {
     const missingCloned = R.clone(missing);
     delete missingCloned.originFile;
-    if (!tree[missing.originFile]) tree[missing.originFile] = new DependenciesTreeItem();
-    tree[missing.originFile].missing = missingCloned;
+    (tree[missing.originFile] ||= new DependenciesTreeItem()).missing = missingCloned;
   });
 }
 
 function mergeErrorsToTree(errors, tree: DependenciesTree) {
   if (R.isEmpty(errors)) return;
   Object.keys(errors).forEach((file) => {
-    if (!tree[file]) tree[file] = new DependenciesTreeItem();
-    tree[file].error = errors[file];
+    (tree[file] ||= new DependenciesTreeItem()).error = errors[file];
   });
 }
 

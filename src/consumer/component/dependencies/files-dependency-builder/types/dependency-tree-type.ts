@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { ResolvedPackageData } from '../../../../../utils/packages';
 
 /**
@@ -44,6 +45,17 @@ export class DependenciesTreeItem {
   components: ResolvedPackageData[] = [];
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
   missing?: { [key in MissingType]: string[] };
+
+  isEmpty() {
+    return (
+      !this.files.length &&
+      R.isEmpty(this.packages) &&
+      !this.unidentifiedPackages.length &&
+      !this.components.length &&
+      !this.error &&
+      !this.missing
+    );
+  }
 }
 
 export type DependenciesTree = {
