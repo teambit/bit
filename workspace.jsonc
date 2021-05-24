@@ -527,6 +527,11 @@
         "env": "teambit.harmony/node"
       }
     },
+    "scopes/component/component-url": {
+      "teambit.envs/envs": {
+        "env": "teambit.harmony/node"
+      }
+    },
     "scopes/component/component-version": {
       "teambit.envs/envs": {
         "env": "teambit.harmony/node"
