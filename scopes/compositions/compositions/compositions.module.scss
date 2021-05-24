@@ -1,4 +1,4 @@
-@import '~@teambit/ui.constants.z-indexes/z-indexes.module.scss';
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 $panelBg: #fafafa;
 
 .compositionsPage {
@@ -70,9 +70,18 @@ $panelBg: #fafafa;
   padding: 16px 8px 0 8px;
 }
 
+.openInNewTab {
+  text-decoration: none;
+  color: inherit;
+
+  &:active {
+    color: inherit;
+  }
+}
+
 .noCompositionsPage {
   padding: 50px 40px 100px 40px;
-  width: 100%;
+  width: auto;
   max-width: 1440px;
   margin: 0 auto;
 

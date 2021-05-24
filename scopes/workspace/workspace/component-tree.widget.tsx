@@ -1,5 +1,5 @@
 import { ComponentTreeNode, ComponentTreeNodeProps } from '@teambit/component-tree';
-import { ComponentStatusResolver } from '@teambit/ui.component-status-resolver';
+import { ComponentStatusResolver } from '@teambit/component.ui.component-status-resolver';
 import React, { useContext } from 'react';
 
 import { WorkspaceContext } from './ui/workspace/workspace-context';

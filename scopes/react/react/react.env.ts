@@ -1,7 +1,7 @@
 import ts, { TsConfigSourceFile } from 'typescript';
 import { tmpdir } from 'os';
 import { Component } from '@teambit/component';
-import { ComponentUrl } from '@teambit/component-url';
+import { ComponentUrl } from '@teambit/component.modules.component-url';
 import { BuildTask } from '@teambit/builder';
 import { merge, omit } from 'lodash';
 import { Bundler, BundlerContext, DevServer, DevServerContext } from '@teambit/bundler';
@@ -16,7 +16,7 @@ import { WebpackConfigTransformer, WebpackMain } from '@teambit/webpack';
 import { Workspace } from '@teambit/workspace';
 import { ESLintMain } from '@teambit/eslint';
 import { pathNormalizeToLinux } from '@teambit/legacy/dist/utils';
-import type { ComponentMeta } from '@teambit/babel.bit-react-transformer';
+import type { ComponentMeta } from '@teambit/react.babel.bit-react-transformer';
 import { join, resolve } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';

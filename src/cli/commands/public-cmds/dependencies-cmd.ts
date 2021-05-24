@@ -1,10 +1,12 @@
 import chalk from 'chalk';
 import { dependencies, DependenciesResultsDebug, DependenciesResults } from '../../../api/consumer/lib/dependencies';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { generateDependenciesInfoTable } from '../../templates/component-template';
 
 export default class Dependencies implements LegacyCommand {
   name = 'dependencies <id>';
+  group: Group = 'info';
   description = 'EXPERIMENTAL. show dependencies (direct and indirect) of the given component';
   alias = '';
   opts = [['d', 'debug', 'show the immediate dependencies and how their version was determined']] as CommandOptions;

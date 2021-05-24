@@ -22,7 +22,7 @@ export class CompileCmd implements Command {
   name = 'compile [component...]';
   description = 'Compile components';
   alias = '';
-  group = 'component';
+  group = 'development';
   options = [
     ['c', 'changed', 'compile only new and modified components'],
     ['v', 'verbose', 'show more data, such as, dist paths'],

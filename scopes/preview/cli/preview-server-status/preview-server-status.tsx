@@ -2,10 +2,10 @@ import React, { useMemo } from 'react';
 import { Text, Box } from 'ink';
 import flatten from 'lodash.flatten';
 import head from 'lodash.head';
-import { Error, ErrorLevel } from '@teambit/cli.webpack.error';
+import { Error, ErrorLevel } from '@teambit/compilation.cli.webpack.error';
 // TODO: refactor ComponentServer from bundler to Preview.
 import { ComponentServer } from '@teambit/bundler';
-import type { CompilationResult } from '@teambit/cli.webpack-events-listener';
+import type { CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
 import { PreviewServerHeader } from './preview-server-header';
 import { PreviewServerRow } from './preview-server-row';
 

@@ -1,11 +1,11 @@
 import React, { ReactNode } from 'react';
 import { Theme } from '@teambit/base-ui.theme.theme-provider';
-import { IconFont } from '@teambit/theme.icons-font';
+import { IconFont } from '@teambit/design.theme.icons-font';
 import { LoaderRibbon } from '@teambit/base-ui.loaders.loader-ribbon';
 import { Roboto } from '@teambit/base-ui.theme.fonts.roboto';
-import { TooltipMountPoint } from '@teambit/ui.tooltip';
+import { TooltipMountPoint } from '@teambit/design.ui.tooltip';
 
-import { LoaderContext, useLoaderApi } from '@teambit/ui.global-loader';
+import { LoaderContext, useLoaderApi } from '@teambit/ui-foundation.ui.global-loader';
 import styles from './client-context.module.scss';
 
 export function ClientContext({ children }: { children: ReactNode }) {

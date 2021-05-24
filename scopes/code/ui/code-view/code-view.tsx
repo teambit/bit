@@ -2,7 +2,7 @@ import { H1 } from '@teambit/documenter.ui.heading';
 import classNames from 'classnames';
 import React, { HTMLAttributes, useMemo } from 'react';
 import { CodeSnippet } from '@teambit/documenter.ui.code-snippet';
-import { useFileContent } from '@teambit/ui.queries.get-file-content';
+import { useFileContent } from '@teambit/code.ui.queries.get-file-content';
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import markDownSyntax from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
 import { staticStorageUrl } from '@teambit/base-ui.constants.storage';

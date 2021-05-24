@@ -5,12 +5,13 @@ import TerserPlugin from 'terser-webpack-plugin';
 import webpack, { Configuration } from 'webpack';
 import { WebpackManifestPlugin } from 'webpack-manifest-plugin';
 import WorkboxWebpackPlugin from 'workbox-webpack-plugin';
-import * as stylesRegexps from '@teambit/modules.style-regexps';
+import * as stylesRegexps from '@teambit/webpack.modules.style-regexps';
+import { ComponentID } from '@teambit/component-id';
 import fs from 'fs-extra';
 import { postCssConfig } from './postcss.config';
 // Make sure the bit-react-transformer is a dependency
 // TODO: remove it once we can set policy from component to component then set it via the component.json
-import '@teambit/babel.bit-react-transformer';
+import '@teambit/react.babel.bit-react-transformer';
 
 const moduleFileExtensions = [
   'web.mjs',
@@ -152,7 +153,7 @@ export default function (fileMapPath: string): Configuration {
       // https://medium.com/webpack/webpack-4-code-splitting-chunk-graph-and-the-splitchunks-optimization-be739a861366
       // splitChunks: {
       //   chunks: 'all',
-      //   name: false,
+      //   // name: false,
       // },
       // Keep the runtime chunk separated to enable long term caching
       // https://twitter.com/wSokra/status/969679223278505985
@@ -175,7 +176,7 @@ export default function (fileMapPath: string): Configuration {
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
         react: require.resolve('react'),
-        '@teambit/ui.mdx-scope-context': require.resolve('@teambit/ui.mdx-scope-context'),
+        '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
@@ -220,10 +221,39 @@ export default function (fileMapPath: string): Configuration {
               // See https://github.com/webpack/webpack/issues/6571
               sideEffects: true,
             },
+
+            {
+              test: /\.js$/,
+              include: [/node_modules/, /\/dist\//],
+              exclude: /@teambit\/legacy/,
+              descriptionData: { componentId: ComponentID.isValidObject },
+              use: [
+                {
+                  loader: require.resolve('babel-loader'),
+                  options: {
+                    babelrc: false,
+                    configFile: false,
+                    plugins: [
+                      // for component highlighting in preview.
+                      [require.resolve('@teambit/react.babel.bit-react-transformer')],
+                    ],
+                    // turn off all optimizations (only slow down for node_modules)
+                    compact: false,
+                    minified: false,
+                  },
+                },
+              ],
+            },
+
             // Process application JS with Babel.
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
+              exclude: [/node_modules/, /\/dist\//],
+              // consider: limit loader to files only in a capsule that has bitid in package.json
+              // descriptionData: { componentId: ComponentID.isValidObject },
+              // // or
+              // include: capsulePaths
               loader: require.resolve('babel-loader'),
               options: {
                 babelrc: false,
@@ -232,7 +262,7 @@ export default function (fileMapPath: string): Configuration {
                 presets: [require.resolve('@babel/preset-react')],
                 plugins: [
                   [
-                    require.resolve('@teambit/babel.bit-react-transformer'),
+                    require.resolve('@teambit/react.babel.bit-react-transformer'),
                     {
                       componentFilesPath: fileMapPath,
                     },
@@ -305,7 +335,7 @@ export default function (fileMapPath: string): Configuration {
                   },
                 },
                 {
-                  loader: require.resolve('@teambit/modules.mdx-loader'),
+                  loader: require.resolve('@teambit/mdx.modules.mdx-loader'),
                 },
               ],
             },

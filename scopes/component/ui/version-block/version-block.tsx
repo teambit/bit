@@ -1,7 +1,7 @@
 import { H3 } from '@teambit/documenter.ui.heading';
-import { Contributors } from '@teambit/ui.contributors';
+import { Contributors } from '@teambit/design.ui.contributors';
 import { NavLink } from '@teambit/base-ui.routing.nav-link';
-import { Labels } from '@teambit/ui.version-label';
+import { Labels } from '@teambit/component.ui.version-label';
 import classNames from 'classnames';
 import { LegacyComponentLog } from '@teambit/legacy-component-log';
 import React, { HTMLAttributes, useMemo } from 'react';

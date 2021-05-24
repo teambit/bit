@@ -1,11 +1,11 @@
 import PubsubAspect, { PubsubUI, BitBaseEvent } from '@teambit/pubsub';
 import PreviewAspect, { ClickInsideAnIframeEvent } from '@teambit/preview';
-import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
+import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { Slot } from '@teambit/harmony';
-import { NavigationSlot, RouteSlot } from '@teambit/ui.react-router.slot-router';
+import { NavigationSlot, RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
 import { NavLinkProps } from '@teambit/base-ui.routing.nav-link';
 import { UIRuntime } from '@teambit/ui';
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';

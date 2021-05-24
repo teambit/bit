@@ -3,7 +3,11 @@ import ConsumerOverrides from '@teambit/legacy/dist/consumer/config/consumer-ove
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import { PathLinuxRelative } from '@teambit/legacy/dist/utils/path';
 import { forEachObjIndexed, omit } from 'ramda';
-import { MatchedPatternWithConfig, isMatchPattern, sortMatchesBySpecificity } from '@teambit/modules.match-pattern';
+import {
+  MatchedPatternWithConfig,
+  isMatchPattern,
+  sortMatchesBySpecificity,
+} from '@teambit/workspace.modules.match-pattern';
 import { InvalidScopeName, isValidScopeName } from '@teambit/legacy-bit-id';
 import { VariantsAspect } from './variants.aspect';
 

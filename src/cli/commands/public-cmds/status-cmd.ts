@@ -11,6 +11,7 @@ import { getInvalidComponentLabel, formatIssues } from '../../templates/componen
 import { ModelComponent } from '../../../scope/models';
 import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 import { BitId } from '../../../bit-id';
+import { Group } from '../../command-groups';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -27,6 +28,8 @@ please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export default class Status implements LegacyCommand {
   name = 'status';
+  shortDescription = 'show the working area component(s) status';
+  group: Group = 'development';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';
   opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;

@@ -12,7 +12,7 @@ export type LinterOptions = {
 export class LintCmd implements Command {
   name = 'lint [component...]';
   description = 'lint components in your workspace.';
-  group = 'component';
+  group = 'development';
   options = [['c', 'changed', 'lint only new and modified components']] as CommandOptions;
 
   constructor(

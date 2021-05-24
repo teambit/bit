@@ -104,8 +104,8 @@ export class ApplicationMain {
     this.computeOptions(options);
     const context = await this.createAppContext(appName);
     if (!context) throw new AppNotFound(appName);
-    await app.run(context);
-    return app;
+    const port = await app.run(context);
+    return { app, port };
   }
 
   /**
@@ -145,6 +145,7 @@ export class ApplicationMain {
     const appService = new AppService();
     const application = new ApplicationMain(appSlot, appTypeSlot, envs, component, appService);
     builder.registerDeployTasks([new DeployTask(application)]);
+    cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmd(application));
 
     return application;

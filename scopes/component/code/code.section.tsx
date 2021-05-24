@@ -1,6 +1,6 @@
 import { Section } from '@teambit/component';
 import React from 'react';
-import { MenuWidgetIcon } from '@teambit/ui.menu-widget-icon';
+import { MenuWidgetIcon } from '@teambit/ui-foundation.ui.menu-widget-icon';
 import type { CodeUI } from './code.ui.runtime';
 
 export class CodeSection implements Section {

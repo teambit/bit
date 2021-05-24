@@ -15,6 +15,7 @@ export default class Untrack implements LegacyCommand {
   opts = [['a', 'all', 'revert add for all tracked components']] as CommandOptions;
   loader = true;
   migration = true;
+  private = true; // it's deprecated
 
   action([components]: [string[]], { all }: { all: boolean | null | undefined }): Promise<any> {
     if ((!R.isEmpty(components) && all) || (R.isEmpty(components) && !all)) {

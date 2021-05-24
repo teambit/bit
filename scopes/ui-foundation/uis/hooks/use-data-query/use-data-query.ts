@@ -2,9 +2,9 @@ import { useContext } from 'react';
 import { useQuery } from '@apollo/client';
 import type { OperationVariables, QueryResult, QueryHookOptions, DocumentNode, ApolloError } from '@apollo/client';
 
-import { NotificationContext } from '@teambit/ui.notifications.notification-context';
+import { NotificationContext } from '@teambit/ui-foundation.ui.notifications.notification-context';
 
-import { useLoader } from '@teambit/ui.global-loader';
+import { useLoader } from '@teambit/ui-foundation.ui.global-loader';
 
 // @TODO derive props from useQuery
 // (couldn't figure out how to use Parameters<typeof useQuery<..>>)

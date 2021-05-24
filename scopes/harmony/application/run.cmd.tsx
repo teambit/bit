@@ -9,7 +9,6 @@ export class RunCmd implements Command {
   description = 'run an application';
   alias = 'c';
   group = 'apps';
-  shortDescription = '';
   options = [
     ['d', 'dev', 'start the application in dev mode.'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
@@ -30,23 +29,27 @@ export class RunCmd implements Command {
   ): Promise<string> {
     this.logger.off();
 
-    await this.application.runApp(appName, {
+    const { port } = await this.application.runApp(appName, {
       dev,
     });
 
-    return `${appName} has started`;
+    return `${appName} has started on port ${port}`;
   }
 
   async render(
     [appName]: [string],
-    { dev }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
+    { dev }: { dev: boolean; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    await this.application.runApp(appName, {
+    const { port } = await this.application.runApp(appName, {
       dev,
     });
 
-    return <Text>{appName} has started</Text>;
+    return (
+      <Text>
+        {appName} has started on port {port}
+      </Text>
+    );
     // return <UIServerConsole appName={appName} futureUiServer={uiServer} />;
   }
 }

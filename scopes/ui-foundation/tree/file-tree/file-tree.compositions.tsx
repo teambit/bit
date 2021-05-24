@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
-import { FolderTreeNode } from '@teambit/ui.tree.folder-tree-node';
-import { getFileIcon } from '@teambit/ui.utils.get-file-icon';
-import { TreeNode as Node } from '@teambit/ui.tree.tree-node';
+import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { getFileIcon } from '@teambit/code.ui.utils.get-file-icon';
+import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
 import { FileTree } from './file-tree';
 
 const currentFile = 'index.ts';

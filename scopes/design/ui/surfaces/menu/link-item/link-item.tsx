@@ -1,6 +1,6 @@
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { NavLink, NavLinkProps } from '@teambit/base-ui.routing.nav-link';
-import { classes } from '@teambit/ui.surfaces.menu.item';
+import { classes } from '@teambit/design.ui.surfaces.menu.item';
 import classNames from 'classnames';
 import React from 'react';
 

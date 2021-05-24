@@ -12,7 +12,7 @@ import { MainRuntime } from '@teambit/cli';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
 import { merge } from 'webpack-merge';
-import { WebpackConfigMutator } from '@teambit/modules.config-mutator';
+import { WebpackConfigMutator } from '@teambit/webpack.modules.config-mutator';
 
 import { configFactory as devServerConfigFactory } from './config/webpack.dev.config';
 import { configFactory as previewConfigFactory } from './config/webpack.config';

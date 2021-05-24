@@ -17,7 +17,7 @@ import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ExpressAspect, ExpressMain } from '@teambit/express';
 import type { UiMain } from '@teambit/ui';
 import { UIAspect } from '@teambit/ui';
-import { RequireableComponent } from '@teambit/modules.requireable-component';
+import { RequireableComponent } from '@teambit/harmony.modules.requireable-component';
 import { BitId } from '@teambit/legacy-bit-id';
 import { BitIds as ComponentsIds } from '@teambit/legacy/dist/bit-id';
 import { ModelComponent, Lane } from '@teambit/legacy/dist/scope/models';
@@ -458,6 +458,13 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * get a component from a remote without importing it
+   */
+  async getRemoteComponent(id: ComponentID): Promise<Component> {
+    return this.componentLoader.getRemoteComponent(id);
+  }
+
+  /**
    * list all components in the scope.
    */
   async list(filter?: { offset: number; limit: number }, includeCache = false): Promise<Component[]> {
@@ -571,7 +578,7 @@ export class ScopeMain implements ComponentFactory {
       return idStr;
     };
     const IdToCheck = getIdToCheck();
-    const legacyId = await this.legacyScope.getParsedId(IdToCheck);
+    const legacyId = id instanceof BitId ? id : await this.legacyScope.getParsedId(IdToCheck);
     if (!legacyId.scope) return ComponentID.fromLegacy(legacyId, this.name);
     return ComponentID.fromLegacy(legacyId);
   }

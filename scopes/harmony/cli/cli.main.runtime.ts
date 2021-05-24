@@ -6,9 +6,10 @@ import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensi
 import commander from 'commander';
 import didYouMean from 'didyoumean';
 import { equals, splitWhen, flatten } from 'ramda';
-
+import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
-import { Help } from './commands/help.cmd';
+import { formatHelp } from './help';
 import { AlreadyExistsError } from './exceptions/already-exists';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { getCommandId } from './get-command-id';
@@ -21,31 +22,9 @@ export type OnStartSlot = SlotRegistry<OnStart>;
 export type CommandsSlot = SlotRegistry<CommandList>;
 
 export class CLIMain {
-  readonly groups: { [k: string]: string } = {};
+  private groups: GroupsType = clone(groups); // if it's not cloned, it is cached across loadBit() instances
 
   constructor(private commandsSlot: CommandsSlot, private onStartSlot: OnStartSlot) {}
-
-  private setDefaults(command: Command) {
-    command.alias = command.alias || '';
-    command.description = command.description || '';
-    command.shortDescription = command.shortDescription || '';
-    command.group = command.group || 'ungrouped';
-    command.options = command.options || [];
-    command.private = command.private || false;
-    command.commands = command.commands || [];
-    if (command.loader === undefined) {
-      if (command.internal) {
-        command.loader = false;
-      } else {
-        command.loader = true;
-      }
-    }
-  }
-
-  registerOnStart(onStartFn: OnStart) {
-    this.onStartSlot.register(onStartFn);
-    return this;
-  }
 
   /**
    * registers a new command in to the CLI.
@@ -78,20 +57,32 @@ export class CLIMain {
     return flatten(this.commandsSlot.values());
   }
 
-  private async invokeOnStart(hasWorkspace: boolean) {
-    const onStartFns = this.onStartSlot.values();
-    const promises = onStartFns.map(async (onStart) => onStart(hasWorkspace));
-    return Promise.all(promises);
+  /**
+   * when running `bit --help`, commands are grouped by categories.
+   * this method helps registering a new group by providing its name and a description.
+   * the name is what needs to be assigned to the `group` property of the Command interface.
+   * the description is what shown in the `bit --help` output.
+   */
+  registerGroup(name: string, description: string) {
+    if (this.groups[name]) {
+      throw new AlreadyExistsError('group', name);
+    }
+    this.groups[name] = description;
+  }
+
+  registerOnStart(onStartFn: OnStart) {
+    this.onStartSlot.register(onStartFn);
+    return this;
   }
 
   /**
-   * execute commands registered to `Paper` and the legacy bit cli.
+   * execute commands registered to this aspect.
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
     const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
     if (!args[0] || ['-h', '--help'].includes(args[0])) {
-      Help()(this.commands, this.groups);
+      this.printHelp();
       return;
     }
 
@@ -106,6 +97,36 @@ export class CLIMain {
     // this is what runs the `execAction` of the specific command and eventually exits the process
     commander.parse(params);
   }
+
+  private async invokeOnStart(hasWorkspace: boolean) {
+    const onStartFns = this.onStartSlot.values();
+    const promises = onStartFns.map(async (onStart) => onStart(hasWorkspace));
+    return Promise.all(promises);
+  }
+
+  private setDefaults(command: Command) {
+    command.alias = command.alias || '';
+    command.description = command.description || '';
+    command.shortDescription = command.shortDescription || '';
+    command.group = command.group || 'ungrouped';
+    command.options = command.options || [];
+    command.private = command.private || false;
+    command.commands = command.commands || [];
+    if (command.loader === undefined) {
+      if (command.internal) {
+        command.loader = false;
+      } else {
+        command.loader = true;
+      }
+    }
+  }
+
+  private printHelp() {
+    const help = formatHelp(this.commands, this.groups);
+    // eslint-disable-next-line no-console
+    console.log(help);
+  }
+
   private throwForNonExistsCommand(commandName: string) {
     const commandsNames = this.commands.map((c) => getCommandId(c.name));
     const aliases = this.commands.map((c) => c.alias).filter((a) => a);
@@ -123,12 +144,6 @@ export class CLIMain {
       // @ts-ignore
       throw new CommandNotFound(commandName, suggestion);
     }
-  }
-  registerGroup(name: string, description: string) {
-    if (this.groups[name]) {
-      throw new AlreadyExistsError('group', name);
-    }
-    this.groups[name] = description;
   }
 
   static dependencies = [];

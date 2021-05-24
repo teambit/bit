@@ -1,6 +1,6 @@
 import React from 'react';
 import classNames from 'classnames';
-import { RoundLoader } from '@teambit/ui.round-loader';
+import { RoundLoader } from '@teambit/design.ui.round-loader';
 import styles from './test-loader.module.scss';
 
 export type TestLoaderProps = {} & React.HTMLAttributes<HTMLDivElement>;

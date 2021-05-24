@@ -3,6 +3,7 @@ import { Command, CommandOptions } from '@teambit/cli';
 // import chalk from 'chalk';
 import Table from 'tty-table';
 import { MissingBitMapComponent } from '@teambit/legacy/dist/consumer/bit-map/exceptions';
+import { BitId } from '@teambit/legacy-bit-id';
 import LegacyShow from '@teambit/legacy/dist/cli/commands/public-cmds/show-cmd';
 import { ComponentMain } from '../component.main.runtime';
 
@@ -10,7 +11,7 @@ export class ShowCmd implements Command {
   name = 'show <id>';
   description = 'show a component';
   alias = '';
-  group = 'component';
+  group = 'info';
   options = [
     ['j', 'json', 'return the component data in json format'],
     ['l', 'legacy', 'use the legacy bit show.'],
@@ -24,7 +25,17 @@ export class ShowCmd implements Command {
 
   constructor(private component: ComponentMain) {}
 
-  private async getComponent(idStr: string) {
+  private async getComponent(idStr: string, remote: boolean) {
+    if (remote) {
+      const bitId: BitId = BitId.parse(idStr, true); // user used --remote so we know it has a scope
+      const host = this.component.getHost('teambit.scope/scope');
+      const id = await host.resolveComponentId(bitId);
+      if (!host.getRemoteComponent) {
+        throw new Error('Component Host does not implement getRemoteComponent()');
+      }
+      const component = await host.getRemoteComponent(id);
+      return component;
+    }
     const host = this.component.getHost();
     const id = await host.resolveComponentId(idStr);
     const component = await host.get(id);
@@ -46,7 +57,7 @@ export class ShowCmd implements Command {
 
   async report([idStr]: [string], { legacy, remote, compare }: { legacy: boolean; remote: boolean; compare: boolean }) {
     if (legacy) return this.useLegacy(idStr, false, remote, compare);
-    const component = await this.getComponent(idStr);
+    const component = await this.getComponent(idStr, remote);
     const fragments = this.component.getShowFragments();
     const rows = await Promise.all(
       fragments.map(async (fragment) => {
@@ -80,7 +91,7 @@ export class ShowCmd implements Command {
 
   async json([idStr]: [string], { remote, legacy }: { remote: boolean; legacy: boolean }) {
     if (legacy) return JSON.parse(await this.useLegacy(idStr, true, remote));
-    const component = await this.getComponent(idStr);
+    const component = await this.getComponent(idStr, remote);
     const fragments = this.component.getShowFragments();
     const rows = await Promise.all(
       fragments.map(async (fragment) => {

@@ -405,7 +405,7 @@ export function updateComponentsByTagResult(components: Component[], tagResult: 
 export function getPublishedPackages(components: Component[]): string[] {
   const publishedPackages = components.map((comp) => {
     const builderExt = comp.extensions.findCoreExtension(Extensions.builder);
-    const pkgData = builderExt?.data?.aspectsData.find((a) => a.aspectId === Extensions.pkg);
+    const pkgData = builderExt?.data?.aspectsData?.find((a) => a.aspectId === Extensions.pkg);
     return pkgData?.data?.publishedPackage;
   });
   return compact(publishedPackages);

@@ -3,7 +3,7 @@ import React, { HTMLAttributes } from 'react';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import classNames from 'classnames';
 import { isFunction } from 'ramda-adjunct';
-import { MDXLayout } from '@teambit/ui.mdx-layout';
+import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { RenderingContext } from '@teambit/preview';
 import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';

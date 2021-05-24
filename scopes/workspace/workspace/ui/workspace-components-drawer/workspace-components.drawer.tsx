@@ -1,5 +1,5 @@
-import type { DrawerType } from '@teambit/ui.tree.drawer';
-import { FullLoader } from '@teambit/ui.full-loader';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
+import { FullLoader } from '@teambit/ui-foundation.ui.full-loader';
 import {
   ComponentTree,
   PayloadType,
@@ -7,7 +7,7 @@ import {
   ScopeTreeNode,
   NamespaceTreeNode,
   ScopePayload,
-} from '@teambit/ui.side-bar';
+} from '@teambit/ui-foundation.ui.side-bar';
 
 import type { TreeNodeProps } from '@teambit/base-ui.graph.tree.recursive-tree';
 
@@ -15,8 +15,8 @@ import React, { useCallback, useContext } from 'react';
 import classNames from 'classnames';
 import { ComponentTreeSlot } from '@teambit/component-tree';
 import { Text } from '@teambit/base-ui.text.text';
-import { mutedItalic } from '@teambit/ui.styles.muted-italic';
-import { ellipsis } from '@teambit/ui.styles.ellipsis';
+import { mutedItalic } from '@teambit/design.ui.styles.muted-italic';
+import { ellipsis } from '@teambit/design.ui.styles.ellipsis';
 import { WorkspaceContext } from '../workspace/workspace-context';
 import styles from './workspace-components-drawer.module.scss';
 

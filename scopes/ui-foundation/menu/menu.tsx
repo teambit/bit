@@ -1,4 +1,4 @@
-import { MainDropdown, MenuItemSlot } from '@teambit/ui.main-dropdown';
+import { MainDropdown, MenuItemSlot } from '@teambit/ui-foundation.ui.main-dropdown';
 import classNames from 'classnames';
 import React, { useMemo, ComponentType } from 'react';
 import { SlotRegistry } from '@teambit/harmony';

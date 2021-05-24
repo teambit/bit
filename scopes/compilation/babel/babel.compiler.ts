@@ -12,7 +12,7 @@ import {
   transpileFilePathAsync,
   replaceFileExtToJs,
   TranspileContext,
-} from '@teambit/modules.babel-compiler';
+} from '@teambit/compilation.modules.babel-compiler';
 import { BabelCompilerOptions } from './compiler-options';
 
 export class BabelCompiler implements Compiler {

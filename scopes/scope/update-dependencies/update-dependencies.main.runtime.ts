@@ -24,11 +24,11 @@ import { UpdateDependenciesAspect } from './update-dependencies.aspect';
 
 export type UpdateDepsOptions = {
   tag?: boolean;
-  snap?: boolean;
   output?: string;
   message?: string;
   username?: string;
   email?: string;
+  push?: boolean;
 };
 
 export type DepUpdateItemRaw = {
@@ -208,7 +208,7 @@ export class UpdateDependenciesMain {
         const { releaseType, exactVersion } = getValidVersionOrReleaseType(depUpdateItem.versionToTag || 'patch');
         legacyComp.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       } else {
-        // snap is the default. When the "--snap" flag wasn't used it still should snap but not export.
+        // snap is the default
         legacyComp.version = modelComponent.getSnapToAdd();
       }
     });
@@ -275,7 +275,7 @@ export class UpdateDependenciesMain {
   }
 
   private async export() {
-    const shouldExport = this.updateDepsOptions.tag || this.updateDepsOptions.snap;
+    const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
     const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
     await exportMany({

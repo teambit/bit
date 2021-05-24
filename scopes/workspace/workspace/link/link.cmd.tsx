@@ -4,7 +4,7 @@ import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
 import { Text, Box } from 'ink';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
-import { timeFormat } from '@teambit/time.time-format';
+import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
 import { Workspace, WorkspaceLinkOptions } from '../workspace';
 import { ComponentListLinks } from './component-list-links';
@@ -21,7 +21,7 @@ export class LinkCommand implements Command {
   alias = '';
   description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   shortDescription = 'link components and core aspects';
-  group = 'component';
+  group = 'development';
   private = false;
   options = [
     ['j', 'json', 'return the output as JSON'],

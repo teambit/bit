@@ -2,7 +2,7 @@ import React from 'react';
 
 import { ComponentID } from '@teambit/component-id';
 import { NativeLink, LinkProps } from '@teambit/base-ui.routing.native-link';
-import { ScopeUrl } from '@teambit/component-url';
+import { ScopeUrl } from '@teambit/component.modules.component-url';
 
 export interface ScopeBubbleProps extends LinkProps {
   componentId: ComponentID;

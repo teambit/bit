@@ -14,7 +14,7 @@ export class NewCmd implements Command {
   shortDescription = '';
   alias = '';
   loader = true;
-  group = 'development';
+  group = 'start';
   options = [
     ['a', 'aspect <string>', 'aspect-id of the template. helpful when multiple aspects use the same template name'],
     ['o', 'owner <string>', `Append the owner to any of the defaultScope in the workspace.jsonc template`],

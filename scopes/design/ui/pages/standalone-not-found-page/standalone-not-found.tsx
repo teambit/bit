@@ -1,7 +1,7 @@
 import React from 'react';
 import { Theme } from '@teambit/base-ui.theme.theme-provider';
-import { IconFont } from '@teambit/theme.icons-font';
-import { NotFoundPage, NotFoundPageProps } from '@teambit/ui.pages.not-found';
+import { IconFont } from '@teambit/design.theme.icons-font';
+import { NotFoundPage, NotFoundPageProps } from '@teambit/design.ui.pages.not-found';
 
 export type StandaloneNotFoundProps = NotFoundPageProps;
 

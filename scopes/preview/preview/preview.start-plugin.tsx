@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { flatten } from 'lodash';
-import { PreviewServerStatus } from '@teambit/cli.preview-server-status';
+import { PreviewServerStatus } from '@teambit/preview.cli.preview-server-status';
 import { BundlerMain, ComponentServer } from '@teambit/bundler';
 import { PubsubMain } from '@teambit/pubsub';
 import { StartPlugin, StartPluginOptions, UiMain } from '@teambit/ui';
 import { Workspace } from '@teambit/workspace';
-import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/cli.webpack-events-listener';
+import { SubscribeToWebpackEvents, CompilationResult } from '@teambit/preview.cli.webpack-events-listener';
 
 type CompilationServers = Record<string, CompilationResult>;
 

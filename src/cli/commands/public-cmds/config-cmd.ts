@@ -6,6 +6,7 @@ import rightpad from 'pad-right';
 // const config = require('../../../api/consumer/lib/global-config');
 import * as config from '../../../api/consumer/lib/global-config';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { Group } from '../../command-groups';
 import { LegacyCommand } from '../../legacy-command';
 
 class ConfigSet implements LegacyCommand {
@@ -76,6 +77,8 @@ class ConfigDel implements LegacyCommand {
 export default class Config implements LegacyCommand {
   name = 'config';
   description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config`;
+  shortDescription = 'global config management';
+  group: Group = 'general';
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];
