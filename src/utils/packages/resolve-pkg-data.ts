@@ -15,7 +15,7 @@ export interface ResolvedPackageData {
   name: string; // package name
   concreteVersion?: string; // version from the package.json of the package itself
   versionUsedByDependent?: string; // version from the dependent package.json
-  componentId?: BitId; // add the component id in case it's a bit component
+  componentId?: BitId; // component id in case it's a bit component
 }
 
 /**

@@ -3,8 +3,7 @@ import path from 'path';
 import R from 'ramda';
 
 import { DEFAULT_BINDINGS_PREFIX } from '../../../../constants';
-import { ResolvedPackageData, resolvePackageData } from '../../../../utils/packages';
-import { PathOsBased } from '../../../../utils/path';
+import { resolvePackageData } from '../../../../utils/packages';
 import generateTree, { MadgeTree } from './generate-tree-madge';
 import { FoundPackages, MissingGroupItem, MissingHandler } from './missing-handler';
 import { convertPathMapToRelativePaths, getPathMapWithLinkFilesData, PathMapItem } from './path-map';
@@ -13,20 +12,14 @@ import {
   FileObject,
   ImportSpecifier,
   ResolveModulesConfig,
-  Tree,
+  DependenciesTree,
+  DependenciesTreeItem,
 } from './types/dependency-tree-type';
 
 export type LinkFile = {
   file: string;
   importSpecifiers: ImportSpecifier[];
 };
-
-interface GroupedDependenciesResolved {
-  bits: Array<ResolvedPackageData>;
-  packages: PackageDependency;
-  files: string[];
-  unidentifiedPackages: PathOsBased[];
-}
 
 /**
  * Gets a list of dependencies and group them by types (files, bits, packages)
@@ -40,20 +33,15 @@ function groupDependencyList(
   componentDir: string,
   bindingPrefix: string,
   isLegacyProject: boolean
-): GroupedDependenciesResolved {
-  const resultGroups: GroupedDependenciesResolved = {
-    bits: [],
-    packages: {},
-    files: [],
-    unidentifiedPackages: [],
-  };
+): DependenciesTreeItem {
+  const resultGroups = new DependenciesTreeItem();
   const isPackage = (str: string) => str.includes('node_modules/');
   const isBitLegacyComponent = (str: string) =>
     isLegacyProject &&
     (str.includes(`node_modules/${bindingPrefix}`) || str.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`));
   dependenciesPaths.forEach((dependencyPath) => {
     if (!isPackage(dependencyPath)) {
-      resultGroups.files.push(dependencyPath);
+      resultGroups.files.push({ file: dependencyPath });
       return;
     }
     const resolvedPackage = resolvePackageData(componentDir, path.join(componentDir, dependencyPath));
@@ -67,11 +55,11 @@ function groupDependencyList(
     // @todo: currently, for author, the package.json doesn't have any version.
     // we might change this decision later. see https://github.com/teambit/bit/pull/2924
     if (resolvedPackage.componentId) {
-      resultGroups.bits.push(resolvedPackage);
+      resultGroups.components.push(resolvedPackage);
       return;
     }
     if (isBitLegacyComponent(dependencyPath)) {
-      resultGroups.bits.push(resolvedPackage);
+      resultGroups.components.push(resolvedPackage);
       return;
     }
     const version = resolvedPackage.versionUsedByDependent || resolvedPackage.concreteVersion;
@@ -84,42 +72,34 @@ function groupDependencyList(
   return resultGroups;
 }
 
-interface GroupedDependenciesTree {
-  [filePath: string]: GroupedDependenciesResolved;
-}
-
 /**
  * Run over each entry in the tree and transform the dependencies from list of paths
  * to object with dependencies types
  *
  * @returns new tree with grouped dependencies
  */
-function groupDependencyTree(
+function MadgeTreeToDependenciesTree(
   tree: MadgeTree,
   componentDir: string,
   bindingPrefix: string,
   isLegacyProject: boolean
-): GroupedDependenciesTree {
-  const result = {};
+): DependenciesTree {
+  const result: DependenciesTree = {};
   Object.keys(tree).forEach((filePath) => {
     if (tree[filePath] && !R.isEmpty(tree[filePath])) {
       result[filePath] = groupDependencyList(tree[filePath], componentDir, bindingPrefix, isLegacyProject);
     } else {
-      result[filePath] = {};
+      result[filePath] = new DependenciesTreeItem();
     }
   });
 
   return result;
 }
 
-interface PackageDependency {
-  [dependencyId: string]: string;
-}
-
 /**
  * add extra data such as custom-resolve and link-files from pathMap
  */
-function updateTreeWithPathMap(tree: Tree, pathMapAbsolute: PathMapItem[], baseDir: string): void {
+function updateTreeWithPathMap(tree: DependenciesTree, pathMapAbsolute: PathMapItem[], baseDir: string): void {
   if (!pathMapAbsolute.length) return;
   const pathMapRelative = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
   const pathMap = getPathMapWithLinkFilesData(pathMapRelative);
@@ -185,7 +165,11 @@ function getResolveConfigAbsolute(
   return resolveConfigAbsolute;
 }
 
-function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingGroups: MissingGroupItem[], tree: Tree) {
+function mergeManuallyFoundPackagesToTree(
+  foundPackages: FoundPackages,
+  missingGroups: MissingGroupItem[],
+  tree: DependenciesTree
+) {
   if (R.isEmpty(foundPackages.bits) && R.isEmpty(foundPackages.packages)) return;
   // Merge manually found packages (by groupMissing()) with the packages found by Madge (generate-tree-madge)
   Object.keys(foundPackages.packages).forEach((pkg) => {
@@ -194,13 +178,6 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
       if (fileDep.packages && fileDep.packages.includes(pkg)) {
         fileDep.packages = fileDep.packages.filter((packageName) => packageName !== pkg);
         set(tree[fileDep.originFile], ['packages', pkg], foundPackages.packages[pkg]);
-      }
-      if (fileDep.bits && fileDep.bits.includes(pkg)) {
-        fileDep.bits = fileDep.bits.filter((packageName) => packageName !== pkg);
-        if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
-        if (!tree[fileDep.originFile].bits) tree[fileDep.originFile].bits = [];
-        // @ts-ignore
-        tree[fileDep.originFile].bits.push(pkg);
       }
     });
   });
@@ -213,30 +190,32 @@ function mergeManuallyFoundPackagesToTree(foundPackages: FoundPackages, missingG
         fileDep.bits = fileDep.bits.filter((existComponent) => {
           return existComponent !== component.fullPath && existComponent !== component.name;
         });
-        if (!tree[fileDep.originFile]) tree[fileDep.originFile] = {};
-        if (!tree[fileDep.originFile].bits) tree[fileDep.originFile].bits = [];
-        // @ts-ignore
-        tree[fileDep.originFile].bits.push(component);
+        (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
+      }
+      if (fileDep.packages && fileDep.packages.includes(component.name)) {
+        fileDep.packages = fileDep.packages.filter((packageName) => packageName !== component.name);
+        console.log('what is is it', tree);
+        (tree[fileDep.originFile] ||= new DependenciesTreeItem()).components.push(component);
       }
     });
   });
 }
 
-function mergeMissingToTree(missingGroups, tree: Tree) {
+function mergeMissingToTree(missingGroups, tree: DependenciesTree) {
   if (R.isEmpty(missingGroups)) return;
   missingGroups.forEach((missing) => {
     const missingCloned = R.clone(missing);
     delete missingCloned.originFile;
-    if (tree[missing.originFile]) tree[missing.originFile].missing = missingCloned;
-    else tree[missing.originFile] = { missing: missingCloned };
+    if (!tree[missing.originFile]) tree[missing.originFile] = new DependenciesTreeItem();
+    tree[missing.originFile].missing = missingCloned;
   });
 }
 
-function mergeErrorsToTree(baseDir, errors, tree: Tree) {
+function mergeErrorsToTree(errors, tree: DependenciesTree) {
   if (R.isEmpty(errors)) return;
   Object.keys(errors).forEach((file) => {
-    if (tree[file]) tree[file].error = errors[file];
-    else tree[file] = { error: errors[file] };
+    if (!tree[file]) tree[file] = new DependenciesTreeItem();
+    tree[file].error = errors[file];
   });
 }
 
@@ -256,7 +235,7 @@ export async function getDependencyTree({
   resolveModulesConfig,
   visited = {},
   cacheProjectAst,
-}: DependencyTreeParams): Promise<{ tree: Tree }> {
+}: DependencyTreeParams): Promise<{ tree: DependenciesTree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(workspacePath, resolveModulesConfig);
   const config = {
     baseDir: componentDir,
@@ -278,8 +257,7 @@ export async function getDependencyTree({
   });
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const { madgeTree, skipped, pathMap, errors } = generateTree(fullPaths, config);
-  // @ts-ignore
-  const tree: Tree = groupDependencyTree(madgeTree, componentDir, bindingPrefix, isLegacyProject);
+  const tree: DependenciesTree = MadgeTreeToDependenciesTree(madgeTree, componentDir, bindingPrefix, isLegacyProject);
   const { missingGroups, foundPackages } = new MissingHandler(
     skipped,
     componentDir,
@@ -289,7 +267,7 @@ export async function getDependencyTree({
   ).groupAndFindMissing();
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
-  if (errors) mergeErrorsToTree(componentDir, errors, tree);
+  if (errors) mergeErrorsToTree(errors, tree);
   if (missingGroups) mergeMissingToTree(missingGroups, tree);
   if (pathMap) updateTreeWithPathMap(tree, pathMap, componentDir);
 
