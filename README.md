@@ -1,6 +1,8 @@
 # Bit
+Nikita Dhamdhere 
+Creating new README.md file
 
-Bit is a tool for composing modern applications of independent components.  
+Bit is a tool for composing modern applications of independent components.  
 
 It extends the benefits of micro-services to everything you build, front and back. With Bit teams can autonomously develop, build, and release components, while continuously collaborating and integrating to compose larger applications together.  
 
