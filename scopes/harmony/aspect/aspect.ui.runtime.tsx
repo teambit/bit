@@ -28,7 +28,7 @@ export class AspectEnvUI {
         <EmptyBox
           title="This component doesn’t have any compositions."
           linkText="Learn how to add compositions to your aspect components"
-          link="https://harmony-docs.bit.dev/testing/overview/"
+          link="https://harmony-docs.bit.dev/compositions/overview/"
         />
       );
     });
