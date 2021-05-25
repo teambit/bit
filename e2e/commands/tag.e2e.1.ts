@@ -717,17 +717,6 @@ describe('bit tag command', function () {
         expect(output).to.have.string('2 component(s) tagged');
       });
     });
-    // We throw this error because we don't know the packege version in this case
-    it.skip('should throw error if there is missing package dependency', () => {});
-
-    it.skip('should index all components', () => {});
-
-    it.skip('should tag the components in the correct order', () => {});
-
-    it.skip('should add the correct dependencies to each component', () => {
-      // Make sure the use case contain dependenceis from all types -
-      // Packages, files and bits
-    });
 
     it('should add dependencies for files which are not the main files', () => {
       helper.scopeHelper.reInitLocalScope();

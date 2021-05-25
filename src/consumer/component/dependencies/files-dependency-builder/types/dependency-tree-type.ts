@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { ResolvedPackageData } from '../../../../../utils/packages';
 
 /**
@@ -24,7 +25,7 @@ export type ImportSpecifier = {
 export type FileObject = {
   file: string;
   importSpecifiers?: ImportSpecifier[];
-  importSource: string;
+  importSource?: string;
   isCustomResolveUsed?: boolean;
   isLink?: boolean;
   linkDependencies?: Record<string, any>[];
@@ -35,19 +36,30 @@ export type LinkFile = {
   importSpecifiers: ImportSpecifier[];
 };
 
-type MissingType = 'files' | 'packages' | 'bits';
+type MissingType = 'files' | 'packages' | 'components';
 
-export type DependenciesResults = {
-  files?: FileObject[];
-  packages?: { [packageName: string]: string }; // pkgName: pkgVersion
-  unidentifiedPackages?: string[];
-  bits?: ResolvedPackageData[];
+export class DependenciesTreeItem {
+  files: FileObject[] = [];
+  packages: { [packageName: string]: string } = {}; // pkgName: pkgVersion
+  unidentifiedPackages: string[] = [];
+  components: ResolvedPackageData[] = [];
   error?: Error; // error.code is either PARSING_ERROR or RESOLVE_ERROR
   missing?: { [key in MissingType]: string[] };
-};
 
-export type Tree = {
-  [filePath: string]: DependenciesResults;
+  isEmpty() {
+    return (
+      !this.files.length &&
+      R.isEmpty(this.packages) &&
+      !this.unidentifiedPackages.length &&
+      !this.components.length &&
+      !this.error &&
+      !this.missing
+    );
+  }
+}
+
+export type DependenciesTree = {
+  [filePath: string]: DependenciesTreeItem;
 };
 
 export type ResolveModulesConfig = {
