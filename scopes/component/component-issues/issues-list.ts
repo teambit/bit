@@ -41,12 +41,19 @@ export class IssuesList {
     return this.issues.length === 0;
   }
 
-  toString() {
-    return this.issues.map((issue) => issue.format()).join('');
+  outputForCLI() {
+    return this.issues.map((issue) => issue.outputForCLI()).join('');
   }
 
-  toObject() {
+  toObject(): { type: string; description: string; data: any }[] {
     return this.issues.map((issue) => issue.toObject());
+  }
+
+  toObjectWithDataAsString(): { type: string; description: string; data: string }[] {
+    return this.issues.map((issue) => ({
+      ...issue.toObject(),
+      data: issue.dataToString().trim(),
+    }));
   }
 
   add(issue: ComponentIssue) {
@@ -63,6 +70,10 @@ export class IssuesList {
 
   getIssueByName<T extends ComponentIssue>(issueType: IssuesNames): T | undefined {
     return this.issues.find((issue) => issue.constructor.name === issueType) as T | undefined;
+  }
+
+  getAllIssues(): ComponentIssue[] {
+    return this.issues;
   }
 
   createIssue<T extends ComponentIssue>(IssueClass: { new (): T }): T {

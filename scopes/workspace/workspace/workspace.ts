@@ -264,7 +264,7 @@ export class Workspace implements ComponentFactory {
   /**
    * get Component issues
    */
-  async getComponentIssues(component: Component): Promise<IssuesList | null> {
+  getComponentIssues(component: Component): IssuesList | null {
     return component.state._consumer.issues || null;
   }
 
