@@ -38,5 +38,5 @@ export default function componentIssuesTemplate(components: ConsumerComponent[])
 }
 
 export function formatIssues(compWithIssues: ConsumerComponent) {
-  return `       ${compWithIssues.issues?.toString()}\n`;
+  return `       ${compWithIssues.issues?.outputForCLI()}\n`;
 }
