@@ -34,9 +34,16 @@ If applicable, add screenshots, exceptions, and logs to help explain your proble
 ### Specifications
 
 - Bit version:
+- Workspace type: (harmony/legacy)
 - Node version:
 - npm / yarn version:
 - Platform:
+
+*for harmony workspace*
+- relevant env
+- relevant aspects
+
+*for leagacy*
 - Bit compiler (include version):
 - Bit tester (include version):
 
