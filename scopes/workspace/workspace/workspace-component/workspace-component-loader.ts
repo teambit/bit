@@ -1,4 +1,4 @@
-import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
+import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
@@ -57,6 +57,28 @@ export class WorkspaceComponentLoader {
     const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
     return filteredComponents;
+  }
+
+  async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
+    const idsWithoutEmpty = compact(ids);
+    const errors: InvalidComponent[] = [];
+    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
+    await mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+      longProcessLogger.logProgress(id.toString());
+      try {
+        await this.workspace.consumer.loadComponent(id._legacy);
+      } catch (err) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+          errors.push({
+            id,
+            err,
+          });
+          return;
+        }
+        throw err;
+      }
+    });
+    return errors;
   }
 
   async get(

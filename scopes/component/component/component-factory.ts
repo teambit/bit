@@ -4,7 +4,7 @@ import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import type { AspectDefinition } from '@teambit/aspect-loader';
 import { ComponentID } from '@teambit/component-id';
-import { Component } from './component';
+import { Component, InvalidComponent } from './component';
 import { State } from './state';
 import { Snap } from './snap';
 
@@ -83,6 +83,11 @@ export interface ComponentFactory {
    * list all components in the host.
    */
   list(filter?: { offset: number; limit: number }): Promise<Component[]>;
+
+  /**
+   * list invalid components, such as components with missing files on the fs.
+   */
+  listInvalid(): Promise<InvalidComponent[]>;
 
   listIds(): Promise<ComponentID[]>;
 
