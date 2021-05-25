@@ -13,7 +13,7 @@ import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildca
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 import { BASE_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
-import { InvalidBitMap, MissingBitMapComponent, MissingMainFile } from '../consumer/bit-map/exceptions';
+import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
   DuplicateIds,
@@ -355,13 +355,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     (err) => {
       return `component ${err.id} is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue`;
     },
-  ],
-  [
-    MissingBitMapComponent,
-    (err) =>
-      `error: component "${chalk.bold(
-        err.id
-      )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`,
   ],
   [PathsNotExist, (err) => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
   [
