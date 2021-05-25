@@ -14,6 +14,7 @@ import {
   ComponentMap,
   AspectList,
   AspectData,
+  InvalidComponent,
 } from '@teambit/component';
 import { ComponentScopeDirMap } from '@teambit/config';
 import {
@@ -283,6 +284,16 @@ export class Workspace implements ComponentFactory {
     const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
     const ids = await this.resolveMultipleComponentIds(legacyIds);
     return this.getMany(filter && filter.limit ? slice(ids, filter.offset, filter.offset + filter.limit) : ids);
+  }
+
+  /**
+   * list all invalid components.
+   * (see the invalid criteria in ConsumerComponent.isComponentInvalidByErrorType())
+   */
+  async listInvalid(): Promise<InvalidComponent[]> {
+    const legacyIds = this.consumer.bitMap.getAllIdsAvailableOnLane();
+    const ids = await this.resolveMultipleComponentIds(legacyIds);
+    return this.componentLoader.getInvalid(ids);
   }
 
   /**

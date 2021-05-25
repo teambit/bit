@@ -1,3 +1,4 @@
+import stripAnsi from 'strip-ansi';
 import gql from 'graphql-tag';
 import { GraphQLJSONObject } from 'graphql-type-json';
 
@@ -98,6 +99,12 @@ export function componentSchema(componentExtension: ComponentMain) {
         data: JSONObject
       }
 
+      type InvalidComponent {
+        id: ComponentID!
+        errorName: String!
+        errorMessage: String!
+      }
+
       type ComponentHost {
         id: ID!
         name: String!
@@ -107,6 +114,9 @@ export function componentSchema(componentExtension: ComponentMain) {
 
         # list components
         list(offset: Int, limit: Int): [Component]!
+
+        # list invalid components and their errors
+        listInvalid: [InvalidComponent]!
 
         # get component logs(snaps) by component id
         snaps(id: String!): [LogEntry]!
@@ -160,6 +170,14 @@ export function componentSchema(componentExtension: ComponentMain) {
         },
         list: async (host: ComponentFactory, filter?: { offset: number; limit: number }) => {
           return host.list(filter);
+        },
+        listInvalid: async (host: ComponentFactory) => {
+          const invalidComps = await host.listInvalid();
+          return invalidComps.map(({ id, err }) => ({
+            id,
+            errorName: err.name,
+            errorMessage: err.message ? stripAnsi(err.message) : err.name,
+          }));
         },
         id: async (host: ComponentFactory) => {
           return host.name;
