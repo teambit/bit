@@ -17,7 +17,6 @@ export default class CatObject implements LegacyCommand {
     [hash]: [string],
     { pretty, stringify, headers }: { pretty: boolean; stringify: boolean; headers: boolean }
   ): Promise<any> {
-    // @TODO - import should support multiple bits
     return catObject(hash, pretty, stringify, headers);
   }
 

@@ -9,10 +9,10 @@ import {
 } from '../../../../utils/packages';
 import { processPath, Missing } from './generate-tree-madge';
 
-export type MissingGroupItem = { originFile: string; packages?: string[]; bits?: string[]; files?: string[] };
+export type MissingGroupItem = { originFile: string; packages?: string[]; components?: string[]; files?: string[] };
 export type FoundPackages = {
   packages: { [packageName: string]: string };
-  bits: ResolvedPackageData[];
+  components: ResolvedPackageData[];
 };
 
 export class MissingHandler {
@@ -32,13 +32,13 @@ export class MissingHandler {
     const missingGroups: MissingGroupItem[] = this.groupMissingByType();
     missingGroups.forEach((group: MissingGroupItem) => {
       if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
-      if (group.bits) group.bits = group.bits.map(resolvePackageNameByPath);
+      if (group.components) group.components = group.components.map(resolvePackageNameByPath);
     });
     // This is a hack to solve problems that madge has with packages for type script files
     // It see them as missing even if they are exists
     const foundPackages: FoundPackages = {
       packages: {},
-      bits: [],
+      components: [],
     };
     missingGroups.forEach((group) => this.processMissingGroup(group, foundPackages));
 
@@ -61,9 +61,9 @@ export class MissingHandler {
         missingPackages.push(packageName);
         return;
       }
-      // if the package is actually a component add it to the components (bits) list
+      // if the package is actually a component add it to the components list
       if (resolvedPackageData.componentId) {
-        foundPackages.bits.push(resolvedPackageData);
+        foundPackages.components.push(resolvedPackageData);
       } else {
         const version = resolvedPackageData.versionUsedByDependent || resolvedPackageData.concreteVersion;
         if (!version) throw new Error(`unable to find the version for a package ${packageName}`);
@@ -76,7 +76,7 @@ export class MissingHandler {
   }
 
   /**
-   * Group missing dependencies by types (files, bits, packages)
+   * Group missing dependencies by types (files, components, packages)
    * @param {Array} missing list of missing paths to group
    * @returns {Function} function which group the dependencies
    */
@@ -86,7 +86,7 @@ export class MissingHandler {
         this.isLegacyProject &&
         (item.startsWith(`${this.bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`))
       ) {
-        return 'bits';
+        return 'components';
       }
       return item.startsWith('.') ? 'files' : 'packages';
     });

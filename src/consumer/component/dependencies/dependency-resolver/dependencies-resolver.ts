@@ -21,7 +21,7 @@ import PackageJsonFile from '../../package-json-file';
 import Dependencies from '../dependencies';
 import { RelativePath } from '../dependency';
 import { getDependencyTree } from '../files-dependency-builder';
-import { FileObject, ImportSpecifier, Tree } from '../files-dependency-builder/types/dependency-tree-type';
+import { FileObject, ImportSpecifier, DependenciesTree } from '../files-dependency-builder/types/dependency-tree-type';
 import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
@@ -74,7 +74,7 @@ export default class DependencyResolver {
   componentFromModel: Component;
   consumerPath: PathOsBased;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  tree: Tree;
+  tree: DependenciesTree;
   allDependencies: AllDependencies;
   allPackagesDependencies: AllPackagesDependencies;
   issues: IssuesList;
@@ -123,7 +123,7 @@ export default class DependencyResolver {
     this.debugDependenciesData = { components: [] };
   }
 
-  setTree(tree: Tree) {
+  setTree(tree: DependenciesTree) {
     this.tree = tree;
     // console.log(JSON.stringify(tree, null, 4)); // uncomment to easily watch the tree received from bit-javascript
   }
@@ -211,7 +211,7 @@ export default class DependencyResolver {
       this.processMissing(file, fileType);
       this.processErrors(file);
       this.processPackages(file, fileType);
-      this.processBits(file, fileType);
+      this.processComponents(file, fileType);
       this.processDepFiles(file, fileType);
       this.processUnidentifiedPackages(file, fileType);
     });
@@ -312,7 +312,7 @@ export default class DependencyResolver {
   }
 
   traverseTreeForComponentId(depFile: PathLinux): BitId | undefined {
-    if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return undefined;
+    if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].components)) return undefined;
     if (!this.componentMap.rootDir) {
       throw Error('traverseTreeForComponentId should get called only when rootDir is set');
     }
@@ -327,10 +327,10 @@ export default class DependencyResolver {
         if (componentId) return componentId;
       }
     }
-    if (this.tree[depFile].bits && !R.isEmpty(this.tree[depFile].bits)) {
-      const bits = this.tree[depFile].bits || [];
-      for (const bit of bits) {
-        return this.getComponentIdByResolvedPackageData(bit);
+    if (this.tree[depFile].components && !R.isEmpty(this.tree[depFile].components)) {
+      const components = this.tree[depFile].components || [];
+      for (const comp of components) {
+        return this.getComponentIdByResolvedPackageData(comp);
       }
     }
 
@@ -431,7 +431,7 @@ export default class DependencyResolver {
    * 1) point the alias to the package name.
    * 2) point the alias to the relative directory of the imported component
    * the ideal solution is #1, however, it requires changes in the Tree structure, which should
-   * allow "bits" to have more data, such as importSource.
+   * allow "components" to have more data, such as importSource.
    * here, we go option #2, the alias is a relative path to the component. however, when there is
    * dist directory, the resolved path contains the "dist", which doesn't exist in the ComponentMap,
    * the solution we take is to identify such cases, strip the dist, then try to find them again.
@@ -526,14 +526,14 @@ export default class DependencyResolver {
     nested = false
   ): boolean {
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
+    const importSource: string = depFileObject.importSource as string;
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (this.tree[depFile] && this.tree[depFile].missing && this.tree[depFile].missing.bits) {
+      const missingComponents = this.tree[depFile]?.missing?.components;
+      if (missingComponents) {
         // this depFile is a dependency link and this dependency is missing.
         // it can't happen on Harmony, as Harmony doesn't have the generated dependencies files.
-        // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-        this._addToMissingComponentsIfNeeded(this.tree[depFile].missing.bits, originFile, fileType);
+        this._addToMissingComponentsIfNeeded(missingComponents, originFile, fileType);
         return false;
       }
       this._pushToUntrackDependenciesIssues(originFile, depFileRelative, nested);
@@ -551,7 +551,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (depFileObject.isCustomResolveUsed) {
         this.component.customResolvedPaths.push({
           destinationPath: depFileObject.file,
-          importSource: depFileObject.importSource,
+          importSource,
         });
       }
       return false;
@@ -589,7 +589,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     }
     if (depFileObject.isCustomResolveUsed) {
       depsPaths.isCustomResolveUsed = depFileObject.isCustomResolveUsed;
-      depsPaths.importSource = depFileObject.importSource;
+      depsPaths.importSource = importSource;
     }
     const currentComponentsDeps: Dependency = { id: componentId, relativePaths: [depsPaths] };
 
@@ -608,7 +608,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       this._pushToRelativeComponentsIssues(originFile, componentId);
       return false;
     }
-    this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, depFileObject.importSource, depsPaths);
+    this._pushToRelativeComponentsAuthoredIssues(originFile, componentId, importSource, depsPaths);
 
     const allDependencies: Dependency[] = [
       ...this.allDependencies.dependencies,
@@ -646,7 +646,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     } else {
       const depDebug: DebugComponentsDependency = {
         id: currentComponentsDeps.id,
-        importSource: depFileObject.importSource,
+        importSource,
       };
       this.pushToDependenciesArray(currentComponentsDeps, fileType, depDebug);
     }
@@ -697,25 +697,25 @@ either, use the ignore file syntax or change the require statement to have a mod
    * process require/import of Bit components where the require statement is not a relative path
    * but a module path, such as `require('@bit/bit.envs/compiler/babel');`
    */
-  processBits(originFile: PathLinuxRelative, fileType: FileType) {
-    const bits = this.tree[originFile].bits;
-    if (!bits || R.isEmpty(bits)) return;
-    bits.forEach((bitDep) => {
-      let componentId = this.getComponentIdByResolvedPackageData(bitDep);
+  processComponents(originFile: PathLinuxRelative, fileType: FileType) {
+    const components = this.tree[originFile].components;
+    if (!components || R.isEmpty(components)) return;
+    components.forEach((compDep) => {
+      let componentId = this.getComponentIdByResolvedPackageData(compDep);
       const depDebug: DebugComponentsDependency = {
         id: componentId,
-        dependencyPackageJsonPath: bitDep.packageJsonPath,
-        dependentPackageJsonPath: bitDep.dependentPackageJsonPath,
+        dependencyPackageJsonPath: compDep.packageJsonPath,
+        dependentPackageJsonPath: compDep.dependentPackageJsonPath,
         componentIdResolvedFrom: this.consumer.isLegacy ? 'LegacyUnknown' : 'DependencyPkgJson',
-        packageName: bitDep.name,
+        packageName: compDep.name,
       };
       const getVersionFromPkgJson = (): string | null => {
-        const versionFromDependencyPkgJson = this.getValidVersion(bitDep.concreteVersion);
+        const versionFromDependencyPkgJson = this.getValidVersion(compDep.concreteVersion);
         if (versionFromDependencyPkgJson) {
           depDebug.versionResolvedFrom = 'DependencyPkgJson';
           return versionFromDependencyPkgJson;
         }
-        const versionFromDependentPkgJson = this.getValidVersion(bitDep.versionUsedByDependent);
+        const versionFromDependentPkgJson = this.getValidVersion(compDep.versionUsedByDependent);
         if (versionFromDependentPkgJson) {
           depDebug.versionResolvedFrom = 'DependentPkgJson';
           return versionFromDependentPkgJson;
@@ -751,8 +751,8 @@ either, use the ignore file syntax or change the require statement to have a mod
           // no need to enter anything to the dependencies
           return;
         }
-        this.addImportNonMainIssueIfNeeded(originFile, bitDep);
-        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: bitDep.name };
+        this.addImportNonMainIssueIfNeeded(originFile, compDep);
+        const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [], packageName: compDep.name };
         this._pushToDependenciesIfNotExist(currentComponentsDeps, fileType, depDebug);
       } else {
         this._pushToMissingComponentsIssues(originFile, componentId);
@@ -839,8 +839,8 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
     };
     const processMissingComponents = () => {
-      if (isNilOrEmpty(missing.bits)) return;
-      this._addToMissingComponentsIfNeeded(missing.bits, originFile, fileType);
+      if (isNilOrEmpty(missing.components)) return;
+      this._addToMissingComponentsIfNeeded(missing.components, originFile, fileType);
     };
     processMissingFiles();
     processMissingPackages();
@@ -852,7 +852,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       // on Harmony we don't guess whether a path is a component or a package based on the path only,
       // see missing-handler.groupMissingByType() for more info.
       throw new Error(
-        `Harmony should not have "missing.bits" (only "missing.packages"). got ${missingComponents.join(',')}`
+        `Harmony should not have "missing.components" (only "missing.packages"). got ${missingComponents.join(',')}`
       );
     }
     missingComponents.forEach((missingBit) => {
@@ -919,9 +919,9 @@ either, use the ignore file syntax or change the require statement to have a mod
 
     const coreAspectsPackages = Object.keys(coreAspects);
 
-    const bits = this.tree[originFile].bits;
+    const components = this.tree[originFile].components;
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
-    const missingBits = this.tree[originFile]?.missing?.bits;
+    const missingComponents = this.tree[originFile]?.missing?.components;
     const usedCoreAspects: string[] = [];
 
     const findMatchingCoreAspect = (packageName: string) => {
@@ -934,14 +934,14 @@ either, use the ignore file syntax or change the require statement to have a mod
       }
       return !matchingCoreAspectPackageName;
     });
-    const bitsFiltered = bits?.filter((packageInfo) => {
+    const bitsFiltered = components?.filter((packageInfo) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageInfo.name);
       if (matchingCoreAspectPackageName) {
         usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
       }
       return !matchingCoreAspectPackageName;
     });
-    const missingBitsFiltered = missingBits?.filter((packageName) => {
+    const missingBitsFiltered = missingComponents?.filter((packageName) => {
       const matchingCoreAspectPackageName = findMatchingCoreAspect(packageName);
       if (matchingCoreAspectPackageName) {
         usedCoreAspects.push(coreAspects[matchingCoreAspectPackageName]);
@@ -949,13 +949,13 @@ either, use the ignore file syntax or change the require statement to have a mod
       return !matchingCoreAspectPackageName;
     });
 
-    if (missingBits) {
-      // @ts-ignore not clear why this error happens, it is verified that missing.bits exist
-      this.tree[originFile].missing.bits = missingBitsFiltered;
+    if (missingComponents) {
+      // @ts-ignore not clear why this error happens, it is verified that missing.components exist
+      this.tree[originFile].missing.components = missingBitsFiltered;
     }
 
     this.tree[originFile].unidentifiedPackages = unidentifiedPackagesFiltered;
-    this.tree[originFile].bits = bitsFiltered;
+    this.tree[originFile].components = bitsFiltered;
     this.coreAspects.push(...R.uniq(usedCoreAspects));
   }
 
