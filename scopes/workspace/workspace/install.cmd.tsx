@@ -15,7 +15,7 @@ type InstallCmdOptions = {
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'Install dependencies';
+  description = 'install development workspace dependencies';
   alias = 'in';
   group = 'development';
   shortDescription = '';
