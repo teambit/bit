@@ -21,6 +21,8 @@ type SnapsIterableOpts = {
   stopFn?: (snap: Snap) => Promise<boolean>;
 };
 
+export type InvalidComponent = { id: ComponentID; err: Error };
+
 /**
  * in-memory representation of a component.
  */
