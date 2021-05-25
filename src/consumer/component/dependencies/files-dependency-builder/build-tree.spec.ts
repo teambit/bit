@@ -27,7 +27,7 @@ describe('buildTree', () => {
     it('when unsupported files are passed should return them with no dependencies', async () => {
       dependencyTreeParams.filePaths = [`${fixtures}/unsupported-file.pdf`];
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
-      expect(results.tree).to.deep.equal({ 'fixtures/unsupported-file.pdf': {} });
+      expect(results.tree['fixtures/unsupported-file.pdf'].isEmpty()).to.be.true;
     });
     it('when supported and unsupported files are passed should return them all', async () => {
       dependencyTreeParams.filePaths = [`${fixtures}/unsupported-file.pdf`, `${precinctFixtures}/es6.js`];
@@ -78,8 +78,8 @@ describe('buildTree', () => {
         expect(results.tree).to.have.property('fixtures/build-tree/unparsed.js');
       });
       it('should not add the error to the files without parsing error', () => {
-        expect(results.tree['fixtures/build-tree/a.js']).to.not.have.property('error');
-        expect(results.tree['fixtures/build-tree/b.js']).to.not.have.property('error');
+        expect(results.tree['fixtures/build-tree/a.js'].error).to.be.undefined;
+        expect(results.tree['fixtures/build-tree/b.js'].error).to.be.undefined;
       });
       it('should add the parsing error to the un-parsed file', () => {
         expect(results.tree['fixtures/build-tree/unparsed.js']).to.have.property('error');
