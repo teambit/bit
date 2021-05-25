@@ -97,6 +97,7 @@ export class PreviewMain {
   private execContexts = new Map<string, ExecutionContext>();
   private componentsByAspect = new Map<string, RuntimeComponents>();
 
+  // TODO: consolidate code duplication with the env-strategy computePaths logic
   private async getPreviewTarget(
     /** execution context (of the specific env) */
     context: ExecutionContext

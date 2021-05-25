@@ -22,7 +22,9 @@ import { outputFileSync } from 'fs-extra';
 import { Configuration } from 'webpack';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
-import previewConfigFactory from './webpack/webpack.config.preview';
+import basePreviewConfigFactory from './webpack/webpack.config.base.preview';
+import envPreviewConfigFactory from './webpack/webpack.config.env.preview';
+import componentPreviewConfigFactory from './webpack/webpack.config.component.preview';
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
@@ -185,14 +187,32 @@ export class ReactEnv implements Environment {
     return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
   }
 
-  async getBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    const path = this.writeFileMap(context.components);
-    const defaultConfig = previewConfigFactory(path);
+  async getEnvBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    const defaultConfig = envPreviewConfigFactory();
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       return configMutator.merge([defaultConfig]);
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
+  }
+
+  async getComponentBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
+    const fileMapPath = this.writeFileMap(context.components);
+    const baseConfig = basePreviewConfigFactory();
+    const defaultTransformer: WebpackConfigTransformer = (configMutator, mutatorContext) => {
+      if (!mutatorContext.target?.mfName) {
+        throw new Error(`missing module federation name for ${mutatorContext.target?.components[0].id.toString()}`);
+      }
+      const componentConfig = componentPreviewConfigFactory(
+        mutatorContext.target?.mfName,
+        mutatorContext.target?.mfExposes,
+        fileMapPath
+      );
+
+      return configMutator.merge([baseConfig, componentConfig]);
+    };
+
+    return this.webpack.createComponentsBundler(context, [defaultTransformer, ...transformers]);
   }
 
   private getEntriesFromWebpackConfig(config?: Configuration): string[] {

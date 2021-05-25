@@ -23,6 +23,7 @@ import { WebpackDevServer } from './webpack.dev-server';
 
 export type WebpackConfigTransformContext = {
   mode: BundlerMode;
+  target?: Target;
 };
 export type WebpackConfigTransformer = (
   config: WebpackConfigMutator,
@@ -87,6 +88,20 @@ export class WebpackMain {
     };
     const mutatedConfigs = configs.map((config) => {
       const configMutator = new WebpackConfigMutator(config);
+      const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+      return afterMutation.raw;
+    });
+    return new WebpackBundler(context.targets, mutatedConfigs, this.logger);
+  }
+
+  createComponentsBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []) {
+    const mutatedConfigs = context.targets.map((target) => {
+      const baseConfig = previewConfigFactory(target.entries, target.outputPath);
+      const transformerContext: WebpackConfigTransformContext = {
+        mode: 'prod',
+        target,
+      };
+      const configMutator = new WebpackConfigMutator(baseConfig);
       const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
       return afterMutation.raw;
     });

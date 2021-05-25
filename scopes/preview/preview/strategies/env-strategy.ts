@@ -21,12 +21,14 @@ export class EnvBundlingStrategy implements BundlingStrategy {
 
   async computeTargets(context: BuildContext, previewDefs: PreviewDefinition[]) {
     const outputPath = this.getOutputPath(context);
-    console.log(outputPath);
+    console.log('computeTargets');
+    console.log('outputPath', outputPath);
     if (!existsSync(outputPath)) mkdirpSync(outputPath);
+    const entries = await this.computePaths(outputPath, previewDefs, context);
 
     return [
       {
-        entries: await this.computePaths(outputPath, previewDefs, context),
+        entries,
         components: context.components,
         outputPath,
       },
