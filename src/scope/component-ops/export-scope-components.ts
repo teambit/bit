@@ -24,6 +24,7 @@ import loader from '../../cli/loader';
 import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
+import { MergeResult } from '../repositories/sources';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -36,7 +37,7 @@ export function registerUpdateDependenciesOnExport(func: UpdateDependenciesOnExp
 }
 
 /**
- * ** Legacy Only **
+ * ** Legacy and "bit sign" Only **
  *
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
  * saves a component into the objects directory of the remote scope, then, resolves its
@@ -45,13 +46,12 @@ export function registerUpdateDependenciesOnExport(func: UpdateDependenciesOnExp
  */
 export async function exportManyBareScope(scope: Scope, objectList: ObjectList): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('exportManyBareScope', `started with ${objectList.objects.length} objects`);
-  const mergedIds: BitIds = await mergeObjects(scope, objectList);
+  const mergedIds: BitIds = await saveObjects(scope, objectList);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importManyFromOriginalScopes(mergedIds); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
-  await scope.objects.persist();
-  logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
+
   return mergedIds;
 }
 
@@ -472,13 +472,37 @@ export async function exportMany({
 }
 
 /**
+ * save objects into the scope.
+ */
+export async function saveObjects(scope: Scope, objectList: ObjectList): Promise<BitIds> {
+  const bitObjectList = await objectList.toBitObjects();
+  const objectsNotRequireMerge = bitObjectList.getObjectsNotRequireMerge();
+  // components and lanes can't be just added, they need to be carefully merged.
+  const { mergedIds, mergedComponentsResults, mergedLanes } = await mergeObjects(scope, objectList);
+
+  const mergedComponents = mergedComponentsResults.map((_) => _.mergedComponent);
+  const allObjects = [...mergedComponents, ...mergedLanes, ...objectsNotRequireMerge];
+  scope.objects.validateObjects(true, allObjects);
+  await scope.objects.writeObjectsToTheFS(allObjects);
+  logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
+
+  return mergedIds;
+}
+
+type MergeObjectsResult = { mergedIds: BitIds; mergedComponentsResults: MergeResult[]; mergedLanes: Lane[] };
+
+/**
  * merge components into the scope.
  *
  * a component might have multiple versions that some where merged and some were not.
  * the BitIds returned here includes the versions that were merged. so it could contain multiple
  * ids of the same component with different versions
  */
-export async function mergeObjects(scope: Scope, objectList: ObjectList, throwForMissingDeps = false): Promise<BitIds> {
+export async function mergeObjects(
+  scope: Scope,
+  objectList: ObjectList,
+  throwForMissingDeps = false
+): Promise<MergeObjectsResult> {
   const bitObjectList = await objectList.toBitObjects();
   const components = bitObjectList.getComponents();
   const lanesObjects = bitObjectList.getLanes();
@@ -487,35 +511,24 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
     'export-scope-components.mergeObjects',
     `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
   );
-  const mergeResults = await Promise.all(
-    components.map(async (component) => {
-      try {
-        const result = await scope.sources.merge(component, versions);
-        return result;
-      } catch (err) {
-        if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
-          return err; // don't throw. instead, get all components with merge-conflicts
-        }
-        throw err;
-      }
-    })
-  );
-  // components and lanes can't be just added, they need to be carefully merged.
-  const objectsToAdd = bitObjectList.getAllExceptComponentsAndLanes();
-  scope.sources.putObjects(objectsToAdd);
+  const { mergeResults, errors } = await scope.sources.mergeComponents(components, versions);
 
-  const mergeLaneResultsP = lanesObjects.map((laneObject) => scope.sources.mergeLane(laneObject, false));
-  const mergeLaneResults = R.flatten(await Promise.all(mergeLaneResultsP));
-  const componentsWithConflicts = mergeResults.filter((result) => result instanceof MergeConflict);
+  // add all objects to the cache, it is needed for lanes later on. also it might be
+  // good regardless to update the cache with the new data.
+  [...components, ...versions].forEach((bitObject) => scope.objects.setCache(bitObject));
+
+  const mergeAllLanesResults = await mapSeries(lanesObjects, (laneObject) =>
+    scope.sources.mergeLane(laneObject, false)
+  );
+  const lanesErrors = mergeAllLanesResults.map((r) => r.mergeErrors).flat();
   const componentsNeedUpdate = [
-    ...mergeResults.filter((result) => result instanceof ComponentNeedsUpdate),
-    ...mergeLaneResults.filter((result) => result instanceof ComponentNeedsUpdate),
-  ];
+    ...errors.filter((result) => result instanceof ComponentNeedsUpdate),
+    ...lanesErrors,
+  ] as ComponentNeedsUpdate[];
+  const componentsWithConflicts = errors.filter((result) => result instanceof MergeConflict) as MergeConflict[];
   if (componentsWithConflicts.length || componentsNeedUpdate.length) {
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const idsAndVersions = componentsWithConflicts.map((c) => ({ id: c.id, versions: c.versions }));
     const idsAndVersionsWithConflicts = R.sortBy(R.prop('id'), idsAndVersions);
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const idsOfNeedUpdateComps = R.sortBy(
       R.prop('id'),
       componentsNeedUpdate.map((c) => ({ id: c.id, lane: c.lane }))
@@ -524,12 +537,18 @@ export async function mergeObjects(scope: Scope, objectList: ObjectList, throwFo
     throw new MergeConflictOnRemote(idsAndVersionsWithConflicts, idsOfNeedUpdateComps);
   }
   if (throwForMissingDeps) await throwForMissingLocalDependencies(scope, versions);
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
-  const mergedLanesComponents = mergeLaneResults.filter(({ mergedVersions }) => mergedVersions.length);
+  const mergedLanesComponents = mergeAllLanesResults
+    .map((r) => r.mergeResults)
+    .flat()
+    .filter(({ mergedVersions }) => mergedVersions.length);
+  const mergedComponentsResults = [...mergedComponents, ...mergedLanesComponents];
   const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
     mergedVersions.map((version) => mergedComponent.toBitId().changeVersion(version));
-  return BitIds.uniqFromArray(R.flatten([...mergedComponents, ...mergedLanesComponents].map(getMergedIds)));
+  const mergedIds = BitIds.uniqFromArray(mergedComponentsResults.map(getMergedIds).flat());
+  const mergedLanes = mergeAllLanesResults.map((r) => r.mergeLane);
+
+  return { mergedIds, mergedComponentsResults, mergedLanes };
 }
 
 /**
