@@ -13,7 +13,7 @@ import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
-import { ComponentNotFound } from '../exceptions';
+import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
 import { ModelComponent, Source, Symlink, Version } from '../models';
@@ -41,6 +41,11 @@ export type LaneTree = {
 export type ComponentDef = {
   id: BitId;
   component: ModelComponent | null | undefined;
+};
+
+export type MergeResult = {
+  mergedComponent: ModelComponent;
+  mergedVersions: string[];
 };
 
 const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000;
@@ -438,11 +443,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return component;
   }
 
-  putModelComponent(component: ModelComponent) {
-    const repo: Repository = this.objects();
-    repo.add(component);
-  }
-
   put({ component, objects }: ComponentTree): ModelComponent {
     logger.debug(`sources.put, id: ${component.id()}, versions: ${component.listVersions().join(', ')}`);
     const repo: Repository = this.objects();
@@ -532,7 +532,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
+   * It doesn't save anything to the file-system.
+   * Only if the returned mergedVersions is not empty, the mergedComponent has changed.
    *
    * If the 'isImport' is true and the existing component wasn't changed locally, it doesn't check for
    * discrepancies, but simply override the existing component.
@@ -549,10 +550,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * changes where done on a lane, this function will not do anything because modelComponent
    * hasn't changed.
    */
-  async merge(
-    incomingComp: ModelComponent,
-    versionObjects: Version[]
-  ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
+  async merge(incomingComp: ModelComponent, versionObjects: Version[]): Promise<MergeResult> {
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -563,7 +561,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
     if (!existingComp) {
       this.throwForMissingVersions(allVersionsInfo, incomingComp);
-      this.putModelComponent(incomingComp);
       return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
     const hashesOfHistoryGraph = allVersionsInfo
@@ -591,7 +588,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
       mergedVersions.push(...mergedSnaps);
     }
 
-    this.putModelComponent(mergedComponent);
     return { mergedComponent, mergedVersions };
   }
 
@@ -620,6 +616,30 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     }
   }
 
+  async mergeComponents(
+    components: ModelComponent[],
+    versions: Version[]
+  ): Promise<{ mergeResults: MergeResult[]; errors: Error[] }> {
+    const mergeResults: MergeResult[] = [];
+    const errors: Array<MergeConflict | ComponentNeedsUpdate> = [];
+    await Promise.all(
+      components.map(async (component) => {
+        try {
+          const result = await this.merge(component, versions);
+          mergeResults.push(result);
+        } catch (err) {
+          if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
+            // don't throw. instead, get all components with merge-conflicts
+            errors.push(err);
+          } else {
+            throw err;
+          }
+        }
+      })
+    );
+    return { mergeResults, errors };
+  }
+
   /**
    * the merge is needed only when both, local lane and remote lane have the same component with
    * a different head.
@@ -645,13 +665,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   async mergeLane(
     lane: Lane,
     local: boolean
-  ): Promise<Array<{ mergedComponent: ModelComponent; mergedVersions: string[] } | ComponentNeedsUpdate>> {
+  ): Promise<{ mergeResults: MergeResult[]; mergeErrors: ComponentNeedsUpdate[]; mergeLane: Lane }> {
     const repo = this.objects();
     const existingLane = await this.scope.loadLane(lane.toLaneId());
-    if (!existingLane) {
-      repo.add(lane);
-    }
-    const mergeResults = await Promise.all(
+    const mergeResults: MergeResult[] = [];
+    const mergeErrors: ComponentNeedsUpdate[] = [];
+    await Promise.all(
       lane.components.map(async (component) => {
         const modelComponent = await this.get(component.id);
         if (!modelComponent) {
@@ -662,10 +681,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
           modelComponent.laneHeadLocal = component.head;
           const allVersions = await getAllVersionHashes(modelComponent, repo);
           if (existingLane) existingLane.addComponent(component);
-          return { mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) };
+          mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
+          return;
         }
         if (existingComponent.head.isEqual(component.head)) {
-          return { mergedComponent: modelComponent, mergedVersions: [] };
+          mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
+          return;
         }
         modelComponent.laneHeadRemote = component.head;
         modelComponent.laneHeadLocal = existingComponent.head;
@@ -674,23 +695,25 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (divergeResults.isDiverged()) {
           if (local) {
             // do not update the local lane. later, suggest to snap-merge.
-            return { mergedComponent: modelComponent, mergedVersions: [] };
+            mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
+            return;
           }
-          return new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString());
+          mergeErrors.push(new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString()));
+          return;
         }
         if (divergeResults.isRemoteAhead()) {
           existingComponent.head = component.head;
-          return {
+          mergeResults.push({
             mergedComponent: modelComponent,
             mergedVersions: divergeResults.snapsOnRemoteOnly.map((h) => h.toString()),
-          };
+          });
+          return;
         }
         // local is ahead, nothing to merge.
-        return { mergedComponent: modelComponent, mergedVersions: [] };
+        mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
       })
     );
-    repo.add(existingLane);
-    // objects.forEach((obj) => repo.add(obj));
-    return mergeResults;
+
+    return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
   }
 }
