@@ -89,6 +89,7 @@ export class BuilderService implements EnvService<BuildServiceResults, BuilderDe
         );
         const buildContext = Object.assign(executionContext, {
           capsuleNetwork,
+          previousTasksResults: [],
         });
         envsBuildContext[executionContext.id] = buildContext;
       })
