@@ -25,7 +25,6 @@ import { getAllVersionHashes } from './traverse-versions';
 import { PersistFailed } from '../exceptions/persist-failed';
 import { Http } from '../network/http';
 import { MergeResult } from '../repositories/sources';
-import { mergeLanes } from '../../consumer/lanes/merge-lanes';
 
 type ModelComponentAndObjects = { component: ModelComponent; objects: BitObject[] };
 
@@ -513,6 +512,11 @@ export async function mergeObjects(
     `Going to merge ${components.length} components, ${lanesObjects.length} lanes`
   );
   const { mergeResults, errors } = await scope.sources.mergeComponents(components, versions);
+
+  // add all objects to the cache, it is needed for lanes later on. also it might be
+  // good regardless to update the cache with the new data.
+  [...components, ...versions].forEach((bitObject) => scope.objects.setCache(bitObject));
+
   const mergeAllLanesResults = await mapSeries(lanesObjects, (laneObject) =>
     scope.sources.mergeLane(laneObject, false)
   );
@@ -543,6 +547,7 @@ export async function mergeObjects(
     mergedVersions.map((version) => mergedComponent.toBitId().changeVersion(version));
   const mergedIds = BitIds.uniqFromArray(mergedComponentsResults.map(getMergedIds).flat());
   const mergedLanes = mergeAllLanesResults.map((r) => r.mergeLane);
+
   return { mergedIds, mergedComponentsResults, mergedLanes };
 }
 
