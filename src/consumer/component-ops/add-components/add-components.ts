@@ -49,6 +49,7 @@ import {
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
+import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
@@ -595,6 +596,7 @@ you can add the directory these files are located at and it'll change the root d
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
         this._throwForOutsideConsumer(relativeComponentPath);
+        this.throwForExistingParentDir(relativeComponentPath);
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
           nodir: true,
@@ -888,6 +890,26 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
     if (relativeToConsumerPath.startsWith('..')) {
       throw new PathOutsideConsumer(relativeToConsumerPath);
     }
+  }
+
+  private throwForExistingParentDir(relativeToConsumerPath: PathOsBased) {
+    if (this.isLegacy) {
+      return; // with legacy, you can add files inside dir to track them.
+    }
+    const isParentDir = (parent: string) => {
+      const relative = path.relative(parent, relativeToConsumerPath);
+      return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+    };
+    this.bitMap.components.forEach((componentMap) => {
+      if (!componentMap.rootDir) return;
+      if (isParentDir(componentMap.rootDir)) {
+        throw new ParentDirTracked(
+          componentMap.rootDir,
+          componentMap.id.toStringWithoutVersion(),
+          relativeToConsumerPath
+        );
+      }
+    });
   }
 }
 
