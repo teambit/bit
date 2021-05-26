@@ -4,12 +4,14 @@ import { PubsubAspect, PubsubMain } from '@teambit/pubsub';
 import { MainRuntime } from '@teambit/cli';
 import { Component, ComponentAspect, ComponentMain, ComponentMap, ComponentID } from '@teambit/component';
 import { EnvsAspect, EnvsMain, ExecutionContext } from '@teambit/envs';
-import { Slot, SlotRegistry } from '@teambit/harmony';
+import { Slot, SlotRegistry, Harmony } from '@teambit/harmony';
 import { UIAspect, UiMain } from '@teambit/ui';
 import { CACHE_ROOT } from '@teambit/legacy/dist/constants';
 import objectHash from 'object-hash';
+import { uniq } from 'lodash';
 import { writeFileSync, existsSync, mkdirSync } from 'fs-extra';
 import { join } from 'path';
+import { AspectDefinition, AspectLoaderMain, AspectLoaderAspect } from '@teambit/aspect-loader';
 import WorkspaceAspect, { Workspace } from '@teambit/workspace';
 import { PreviewArtifactNotFound, BundlingStrategyNotFound } from './exceptions';
 import { generateLink } from './generate-link';
@@ -42,6 +44,11 @@ export type BundlingStrategySlot = SlotRegistry<BundlingStrategy>;
 export class PreviewMain {
   constructor(
     /**
+     * harmony context.
+     */
+    private harmony: Harmony,
+
+    /**
      * slot for preview definitions.
      */
     private previewSlot: PreviewDefinitionRegistry,
@@ -49,6 +56,8 @@ export class PreviewMain {
     private ui: UiMain,
 
     private envs: EnvsMain,
+
+    private aspectLoader: AspectLoaderMain,
 
     readonly config: PreviewConfig,
 
@@ -104,7 +113,7 @@ export class PreviewMain {
     this.execContexts.set(context.id, context);
     this.componentsByAspect.set(context.id, new RuntimeComponents(context.components));
 
-    const previewRuntime = await this.writePreviewRuntime();
+    const previewRuntime = await this.writePreviewRuntime(context);
     const linkFiles = await this.updateLinkFiles(context.components, context);
 
     return [...linkFiles, previewRuntime];
@@ -130,17 +139,38 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
-  async writePreviewRuntime() {
+  async writePreviewRuntime(context: { components: Component[] }) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
-    const filePath = await this.ui.generateRoot(
-      await uiRoot.resolveAspects(PreviewRuntime.name),
-      name,
-      'preview',
-      PreviewAspect.id
-    );
+    const resolvedAspects = await uiRoot.resolveAspects(PreviewRuntime.name);
+    const filteredAspects = this.filterAspectsByExecutionContext(resolvedAspects, context);
+    const filePath = await this.ui.generateRoot(filteredAspects, name, 'preview', PreviewAspect.id);
     return filePath;
+  }
+
+  /**
+   * Filter the aspects to have only aspects that are:
+   * 1. core aspects
+   * 2. configured on the host (workspace/scope)
+   * 3. used by at least one component from the context
+   * @param aspects
+   * @param context
+   */
+  private filterAspectsByExecutionContext(aspects: AspectDefinition[], context: { components: Component[] }) {
+    let allComponentContextAspects: string[] = [];
+    allComponentContextAspects = context.components.reduce((acc, curr) => {
+      return acc.concat(curr.state.aspects.ids);
+    }, allComponentContextAspects);
+    const hostAspects = Object.keys(this.harmony.config.toObject());
+    const allAspectsToInclude = uniq(hostAspects.concat(allComponentContextAspects));
+    const filtered = aspects.filter((aspect) => {
+      if (!aspect.getId) {
+        return false;
+      }
+      return this.aspectLoader.isCoreAspect(aspect.getId) || allAspectsToInclude.includes(aspect.getId);
+    });
+    return filtered;
   }
 
   private getDefaultStrategies() {
@@ -218,6 +248,7 @@ export class PreviewMain {
     EnvsAspect,
     WorkspaceAspect,
     PubsubAspect,
+    AspectLoaderAspect,
   ];
 
   static defaultConfig = {
@@ -226,22 +257,26 @@ export class PreviewMain {
   };
 
   static async provider(
-    [bundler, builder, componentExtension, uiMain, envs, workspace, pubsub]: [
+    [bundler, builder, componentExtension, uiMain, envs, workspace, pubsub, aspectLoader]: [
       BundlerMain,
       BuilderMain,
       ComponentMain,
       UiMain,
       EnvsMain,
       Workspace | undefined,
-      PubsubMain
+      PubsubMain,
+      AspectLoaderMain
     ],
     config: PreviewConfig,
-    [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot]
+    [previewSlot, bundlingStrategySlot]: [PreviewDefinitionRegistry, BundlingStrategySlot],
+    harmony: Harmony
   ) {
     const preview = new PreviewMain(
+      harmony,
       previewSlot,
       uiMain,
       envs,
+      aspectLoader,
       config,
       bundlingStrategySlot,
       builder,
