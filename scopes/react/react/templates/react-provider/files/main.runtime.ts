@@ -3,7 +3,7 @@ import { ComponentContext } from '@teambit/generator';
 export const mainRuntimeFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
-    relativePath: `${name}-main.runtime.tsx`,
+    relativePath: `${name}.main.runtime.tsx`,
     content: `import { MainRuntime } from '@teambit/cli';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
