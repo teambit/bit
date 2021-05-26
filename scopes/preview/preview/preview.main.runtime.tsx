@@ -139,7 +139,7 @@ export class PreviewMain {
     return Promise.all(paths);
   }
 
-  async writePreviewRuntime(context: ExecutionContext) {
+  async writePreviewRuntime(context: { components: Component[] }) {
     const ui = this.ui.getUi();
     if (!ui) throw new Error('ui not found');
     const [name, uiRoot] = ui;
@@ -157,7 +157,7 @@ export class PreviewMain {
    * @param aspects
    * @param context
    */
-  private filterAspectsByExecutionContext(aspects: AspectDefinition[], context: ExecutionContext) {
+  private filterAspectsByExecutionContext(aspects: AspectDefinition[], context: { components: Component[] }) {
     let allComponentContextAspects: string[] = [];
     allComponentContextAspects = context.components.reduce((acc, curr) => {
       return acc.concat(curr.state.aspects.ids);
