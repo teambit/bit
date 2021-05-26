@@ -130,6 +130,15 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           },
         },
 
+        {
+          test: [/\.svg$/],
+          loader: require.resolve('svg-url-loader'),
+          options: {
+            limit: imageInlineSizeLimit,
+            name: 'static/media/[name].[hash:8].[ext]',
+          },
+        },
+
         // MDX support (move to the mdx aspect and extend from there)
         {
           test: /\.mdx?$/,
