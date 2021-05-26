@@ -8,7 +8,7 @@ export const previewRuntimeFile = (context: ComponentContext) => {
     content: `import React from 'react';
 import { PreviewRuntime } from '@teambit/preview';
 import { ${Name}, ${Name}Config } from './${name}.aspect';
-import { ReactAspect, ReactPreview } from '@teambit/react';
+import { ReactAspect, ${Name} } from '@teambit/react';
 import { Theme } from '@teambit/base-ui.theme.theme-provider';
 
 export class ${Name}Preview {
@@ -19,8 +19,8 @@ export class ${Name}Preview {
   static slots = [];
   static dependencies = [ReactAspect];
   static runtime = PreviewRuntime;
-  static async provider([react]: [ReactPreview], config: ${Name}Config) {
-      const ${name}ProviderPreview = new ${Name}ProviderPreview(config);
+  static async provider([react]: [${Name}], config: ${Name}Config) {
+      const ${name}Preview = new ${Name}Preview(config);
 
     // register a new provider to wrap all compositions in the ${name} environment.
     // You can register any number of providers, all of which will be wrapped around your

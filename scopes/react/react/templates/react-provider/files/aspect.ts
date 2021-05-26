@@ -3,7 +3,7 @@ import { ComponentContext } from '@teambit/generator';
 export const aspectFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
   return {
-    relativePath: `${name}-aspect.ts`,
+    relativePath: `${name}.aspect.ts`,
     content: `import { Aspect } from '@teambit/harmony';
 
 export type ${Name}Config = {
