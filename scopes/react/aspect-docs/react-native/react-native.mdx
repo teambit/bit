@@ -813,17 +813,17 @@ export class ReactNativeEnv implements Environment {
 You may need an appropriate loader to handle this file type...
 ```
 
-This error can show up for multiple reason, and one of the most popular it's because we use a library in a React Native component that use Native API's.  
-And the local Bit Dev Server run on Web, so it can't work properly with API's that suppose to be on a mobile device.  
+This error can show up for multiple reason, and one of the most popular is because we use a library in a React Native component that uses Native API's.  
+As the local Bit Dev Server runs on the Web it can't work properly with API's that are meant to be run on a mobile device.  
 So components that are using a library that use Native API's cannot be rendered on the web, because the Native API's are unavailable.
 
-One way to solve it is to see if the library have a support for Web and update your code to be also Web compatible.  
+One way to solve it is to see if the library has support for Web and update your code to also be Web compatible.  
 If not, the second way to solve this is to search for a parallel library with Web support and make a Webpack aliases in a Bit React Native extension inside your project, and then configure the extension to make a Webpack alises.
 
-If for some reason a library don't have it's parallel library for the web and don't have a built in Websupport, you can't make the composition working on the local Bit dev server.
+If for some reason a library doesn't have a parallel library for the web and doesn't have built in Websupport, you can't make the composition work on the local Bit dev server.
 
-For example, [`react-native-svg`](https://github.com/react-native-svg/react-native-svg) library have a parallel library called [`react-native-svg-web`](https://github.com/bakerface/react-native-svg-web).  
-Let's create a React Native extension and add a `webpack-transformers.ts` file in the extension under `webpack` folder, the file look like this:
+For example, [`react-native-svg`](https://github.com/react-native-svg/react-native-svg) library has a parallel library called [`react-native-svg-web`](https://github.com/bakerface/react-native-svg-web).  
+Let's create a React Native extension and add a `webpack-transformers.ts` file in the extension under `webpack` folder, the file looks like this:
 
 ```ts
 import { WebpackConfigTransformer, WebpackConfigMutator, WebpackConfigTransformContext } from '@teambit/webpack';
@@ -930,7 +930,7 @@ One last thing we need to do, is to add the peer dependencies of the parallel li
 }
 ```
 
-In this case `react-native-svg-web` have these dependencies in the peer dependencies:
+In this case `react-native-svg-web` has these dependencies in the peer dependencies:
 
 ```json
 "peerDependencies": {
@@ -941,4 +941,4 @@ In this case `react-native-svg-web` have these dependencies in the peer dependen
 ```
 
 So we need to add them as the dependencies of the extension so it will work properly.  
-Now every components that will use the `react-native-svg` library will work fine with the compositions, and this solution can be used to every other library that use Native API's.
+Now every component that will use the `react-native-svg` library will work fine with the compositions, and this solution can be used for every other library that use Native API's.
