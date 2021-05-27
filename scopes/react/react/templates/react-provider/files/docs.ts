@@ -29,7 +29,7 @@ Set this extension as the variant's environment, for instance for the variant "a
    "teambit.workspace/variants": {
      "{ui/**}": { // applies this environment for all components with ui namespace and sub-namespaces
        "org-name.scope-name/namespace/s/${name}": {
-         "configVar1": "value1",
+         "configVar1": "value1",  // values here will override the environment's default config values
          "configVar2": "value2"
        }
      }
