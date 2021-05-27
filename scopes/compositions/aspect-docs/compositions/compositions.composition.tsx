@@ -1,12 +1,12 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Compositions } from './index';
 
 export const CompositionsDocs = () => (
-  <ThemeContext>
+  <ThemeCompositions>
     <MDXLayout>
       <Compositions />
     </MDXLayout>
-  </ThemeContext>
+  </ThemeCompositions>
 );

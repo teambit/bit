@@ -1,17 +1,17 @@
 import React from 'react';
 import { Section } from '@teambit/documenter.ui.section';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { ServerErrorPage } from './server-error-page';
 
 export default function Overview() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <>
         <Section>A page component that displays a 500 error message.</Section>
         <Separator />
       </>
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 
