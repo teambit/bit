@@ -238,6 +238,7 @@
     "vinyl-file": "3.0.0",
     "vue-template-compiler": "2.6.12",
     "winston": "3.3.3",
+    "yargs": "17.0.1",
     "yn": "2.0.0"
   },
   "devDependencies": {
@@ -268,6 +269,7 @@
     "@types/sass": "1.16.0",
     "@types/semver": "7.3.4",
     "@types/uuid": "3.4.9",
+    "@types/yargs": "17.0.0",
     "@typescript-eslint/eslint-plugin": "4.15.1",
     "@typescript-eslint/parser": "4.15.1",
     "@typescript-eslint/typescript-estree": "4.15.1",
