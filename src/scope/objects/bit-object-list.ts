@@ -20,7 +20,24 @@ export class BitObjectList {
     return this.objects;
   }
 
-  getAllExceptComponentsAndLanes(): BitObject[] {
-    return this.objects.filter((object) => !(object instanceof ModelComponent) && !(object instanceof Lane));
+  /**
+   * object that needs merge operation before saving them into the scope, such as ModelComponent
+   */
+  getObjectsRequireMerge() {
+    const typeRequireMerge = this.objectTypesRequireMerge();
+    return this.objects.filter((object) => typeRequireMerge.some((ObjClass) => object instanceof ObjClass));
+  }
+
+  /**
+   * object that don't need merge operation and can be saved immediately into the scope.
+   * such as Source or Version
+   */
+  getObjectsNotRequireMerge() {
+    const typeRequireMerge = this.objectTypesRequireMerge();
+    return this.objects.filter((object) => typeRequireMerge.every((ObjClass) => !(object instanceof ObjClass)));
+  }
+
+  private objectTypesRequireMerge() {
+    return [ModelComponent, Lane];
   }
 }

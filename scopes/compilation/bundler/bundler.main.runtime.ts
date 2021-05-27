@@ -13,11 +13,16 @@ import { DevServerService } from './dev-server.service';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
+export type BundlerConfig = {
+  dedicatedEnvDevServers: string[];
+};
+
 /**
  * bundler extension.
  */
 export class BundlerMain {
   constructor(
+    readonly config: BundlerConfig,
     /**
      * Pubsub extension.
      */
@@ -46,7 +51,9 @@ export class BundlerMain {
   async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     // TODO: this must be refactored away from here. this logic should be in the Preview.
-    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService, {
+      dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
+    });
     this._componentServers = servers;
 
     this.indexByComponent();
@@ -109,12 +116,16 @@ export class BundlerMain {
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, ComponentAspect];
 
+  static defaultConfig = {
+    dedicatedEnvDevServers: [],
+  };
+
   static async provider(
     [pubsub, envs, graphql]: [PubsubMain, EnvsMain, GraphqlMain],
     config,
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
-    const bundler = new BundlerMain(pubsub, envs, new DevServerService(pubsub, runtimeSlot), runtimeSlot);
+    const bundler = new BundlerMain(config, pubsub, envs, new DevServerService(pubsub, runtimeSlot), runtimeSlot);
 
     graphql.register(devServerSchema(bundler));
 

@@ -13,7 +13,7 @@ export function PreviewServerRow({ previewServer, verbose }: PreviewServerRowPro
       <Box width="40%">
         <Text color="cyan">
           {previewServer.context.envRuntime.id}
-          {previewServer.context.relatedContexts.length ? (
+          {previewServer.context.relatedContexts.length && previewServer.context.relatedContexts.length > 1 ? (
             <Text>
               {' '}
               on behalf of
