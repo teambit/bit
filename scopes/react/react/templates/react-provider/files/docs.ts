@@ -6,16 +6,17 @@ export const docsFile = (context: ComponentContext) => {
   return {
     relativePath: `${name}.docs.mdx`,
     content: `---
-description: A standard React component development environment with configurable providers
+description: A customised React component development environment with configurable providers
 labels: ['env', 'extension', 'example', 'providers', 'context']
 ---
 
 ## Overview
 
-A standard React development environment for building and rendering modular and reusable MFEs.
+A customised React development environment for building and rendering modular and reusable MFEs. Using this customised environment you can override 
+environment configs such as tsconfig or even build tasks, as well as add wrapping contexts for the compositions of components which use this environment.
 
 ### Environment config
-To configure the config variables (which can be used, for instance, to configure your providers including api contexts and more) add them to the value object
+To configure the config variables (which can be used, for instance, to configure your providers including api contexts and more) add your configuration to the value object
 of the environment when applying it for your components. See the usage instructions below for an example.
 
 ### Usage instructions

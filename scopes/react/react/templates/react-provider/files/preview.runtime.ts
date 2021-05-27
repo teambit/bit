@@ -22,8 +22,8 @@ export class ${Name}Preview {
   static async provider([react]: [${Name}], config: ${Name}Config) {
       const ${name}Preview = new ${Name}Preview(config);
 
-    // register a new provider to wrap all compositions in the ${name} environment.
-    // You can register any number of providers, all of which will be wrapped around your
+    // register a new provider to wrap all compositions of components using the ${name} environment.
+    // You can register any number of providers, all of which will be wrapped around each composition
     react.registerProvider([
         ({ children }) => {
           return <div  style={{backgroundColor: "red"}}>{children}</ div> // will set bg color for all compositions to red
