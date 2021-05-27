@@ -12,8 +12,7 @@ export class ${Name}Main {
   static async provider([react]: [ReactMain]) {
     react.registerReactApp({
       name: '${name}',
-      runEntry: [require.resolve('./${name}.app-root')],
-      buildEntry: [require.resolve('dist/${name}.app-root')]
+      entry: ['dist/${name}.app-root']
     });
     return new ${Name}Main();
   }

@@ -7,7 +7,7 @@ import { aspectFile } from './files/aspect';
 import { appFile } from './files/app';
 import { appRootFile } from './files/app-root';
 
-export const reactEnvTemplate: ComponentTemplate = {
+export const reactAppTemplate: ComponentTemplate = {
   name: 'react-app',
   hidden: true,
   description: 'Creates a React app',
@@ -39,7 +39,7 @@ export const reactEnvTemplate: ComponentTemplate = {
         content: aspectFile(context),
       },
       {
-        relativePath: `${context.name}.app.tsx`,
+        relativePath: `app.tsx`,
         content: appFile(context),
       },
       {

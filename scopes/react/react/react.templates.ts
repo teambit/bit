@@ -5,7 +5,7 @@ import { reactEnvTemplate } from './templates/react-env';
 import { reactWorkspaceTemplate } from './templates/react-workspace';
 import { reactHook } from './templates/react-hook';
 import { reactContext } from './templates/react-context';
-import { reactApp } from './templates/react-app';
+import { reactAppTemplate } from './templates/react-app';
 
 export const componentTemplates: ComponentTemplate[] = [
   reactComponent,
@@ -13,7 +13,7 @@ export const componentTemplates: ComponentTemplate[] = [
   reactHook,
   reactComponentJS,
   reactEnvTemplate,
-  reactApp,
+  reactAppTemplate,
 ];
 
 export const workspaceTemplates: WorkspaceTemplate[] = [reactWorkspaceTemplate];

@@ -8,20 +8,20 @@ export function ${Name}App() {
   return (
     <BrowserRouter>
 
-      // header component
+       {/* header component */}
 
         <Switch>
           <Route path="/">
-            // home page component
+             {/* home page component */}
           </Route>
 
           <Route path="/about">
-            // about page component
+             {/* about page component */}
           </Route>
 
         </Switch>
 
-        // footer component
+        {/* footer component */}
 
     </BrowserRouter>
   );
