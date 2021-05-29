@@ -3,8 +3,10 @@ import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { register } from '@teambit/legacy/dist/cli/command-registry';
 import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
+import { CommandRunner } from '@teambit/legacy/dist/cli/command-runner';
 import commander from 'commander';
 import didYouMean from 'didyoumean';
+import yargs, { CommandModule } from 'yargs';
 import { equals, splitWhen, flatten } from 'ramda';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { clone } from 'lodash';
@@ -14,6 +16,7 @@ import { AlreadyExistsError } from './exceptions/already-exists';
 import { CommandNotFound } from './exceptions/command-not-found';
 import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
+import { YargsAdapter } from './yargs-adapter';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean) => Promise<void>;
@@ -91,11 +94,41 @@ export class CLIMain {
       packageManagerArgs.shift(); // remove the -- delimiter
     }
 
-    this.commands.forEach((command) => register(command as any, commander, packageManagerArgs));
+    // this.commands.forEach((command) => register(command as any, commander, packageManagerArgs));
     this.throwForNonExistsCommand(args[0]);
-
     // this is what runs the `execAction` of the specific command and eventually exits the process
-    commander.parse(params);
+    // commander.parse(params);
+
+    yargs(args);
+    this.commands.forEach((command: Command) => {
+      const yarnCommand = new YargsAdapter(command);
+      const handler = async function (argv) {
+        const args: string[] = [];
+        this.demanded.forEach((requireArg) => args.push(requireArg.cmd[0]));
+        this.optional.forEach((requireArg) => args.push(requireArg.cmd[0]));
+        const relevantArgs = args.map((a) => argv[a]);
+        const commandRunner = new CommandRunner(command, relevantArgs, argv);
+        return commandRunner.runCommand();
+      };
+      yarnCommand.handler = handler;
+      yargs.command(yarnCommand);
+    });
+    await yargs
+      .option('help', {
+        alias: 'h',
+        describe: 'show help',
+        group: 'Global',
+      })
+      .option('version', {
+        global: false,
+        alias: 'v',
+        describe: 'show version',
+        group: 'Global',
+      })
+      .completion()
+      .recommendCommands()
+      .wrap(null)
+      .parse();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
