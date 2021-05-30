@@ -126,8 +126,7 @@ export class ReactMain {
     this.application.registerApp(
       new ReactApp(
         options.name,
-        options.buildEntry,
-        options.runEntry,
+        options.entry,
         options.portRange || [3000, 4000],
         this.reactEnv,
         this.workspace.path,

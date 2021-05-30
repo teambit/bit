@@ -7,6 +7,7 @@ import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import ComponentAspect, { ComponentMain, ComponentID } from '@teambit/component';
 import { ApplicationType } from './application-type';
 import { Application } from './application';
+import { DeploymentProvider } from './deployment-provider';
 import { AppNotFound } from './exceptions';
 import { ApplicationAspect } from './application.aspect';
 import { AppListCmd } from './app-list.cmd';
@@ -16,6 +17,7 @@ import { AppService } from './application.service';
 
 export type ApplicationTypeSlot = SlotRegistry<ApplicationType[]>;
 export type ApplicationSlot = SlotRegistry<Application[]>;
+export type DeploymentProviderSlot = SlotRegistry<DeploymentProvider[]>;
 
 export type ApplicationAspectConfig = {};
 
@@ -35,6 +37,7 @@ export class ApplicationMain {
   constructor(
     private appSlot: ApplicationSlot,
     private appTypeSlot: ApplicationTypeSlot,
+    private deploymentProviderSlot: DeploymentProviderSlot,
     private envs: EnvsMain,
     private componentAspect: ComponentMain,
     private appService: AppService
@@ -61,6 +64,21 @@ export class ApplicationMain {
    */
   listApps(): Application[] {
     return flatten(this.appSlot.values());
+  }
+
+  /**
+   * register new deployment provider like netlify, cloudflare pages or custom deployment.
+   */
+  registerDeploymentProvider(provider: DeploymentProvider) {
+    this.deploymentProviderSlot.register([provider]);
+    return this;
+  }
+
+  /**
+   * list all deployment providers
+   */
+  listProviders() {
+    return flatten(this.deploymentProviderSlot.values());
   }
 
   /**
@@ -134,16 +152,20 @@ export class ApplicationMain {
   static runtime = MainRuntime;
   static dependencies = [CLIAspect, LoggerAspect, BuilderAspect, EnvsAspect, ComponentAspect];
 
-  static slots = [Slot.withType<ApplicationType[]>(), Slot.withType<Application[]>()];
+  static slots = [
+    Slot.withType<ApplicationType[]>(),
+    Slot.withType<Application[]>(),
+    Slot.withType<DeploymentProvider[]>(),
+  ];
 
   static async provider(
     [cli, loggerAspect, builder, envs, component]: [CLIMain, LoggerMain, BuilderMain, EnvsMain, ComponentMain],
     config: ApplicationAspectConfig,
-    [appTypeSlot, appSlot]: [ApplicationTypeSlot, ApplicationSlot]
+    [appTypeSlot, appSlot, deploymentProviderSlot]: [ApplicationTypeSlot, ApplicationSlot, DeploymentProviderSlot]
   ) {
     const logger = loggerAspect.createLogger(ApplicationAspect.id);
     const appService = new AppService();
-    const application = new ApplicationMain(appSlot, appTypeSlot, envs, component, appService);
+    const application = new ApplicationMain(appSlot, appTypeSlot, deploymentProviderSlot, envs, component, appService);
     builder.registerDeployTasks([new DeployTask(application)]);
     cli.registerGroup('apps', 'Applications');
     cli.register(new RunCmd(application, logger), new AppListCmd(application));
