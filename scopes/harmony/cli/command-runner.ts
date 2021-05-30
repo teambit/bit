@@ -1,12 +1,12 @@
 import { render } from 'ink';
 import { serializeError } from 'serialize-error';
-import { migrate } from '../api/consumer';
-import logger, { LoggerLevel } from '../logger/logger';
-import { buildCommandMessage, isNumeric, packCommand } from '../utils';
-import { CLIArgs, Command, Flags } from './command';
-import { parseCommandName } from './command-registry';
-import defaultHandleError from './default-error-handler';
-import loader from './loader';
+import { migrate } from '@teambit/legacy/dist/api/consumer';
+import logger, { LoggerLevel } from '@teambit/legacy/dist/logger/logger';
+import { buildCommandMessage, isNumeric, packCommand } from '@teambit/legacy/dist/utils';
+import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
+import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
+import defaultHandleError from '@teambit/legacy/dist/cli/default-error-handler';
+import loader from '@teambit/legacy/dist/cli/loader';
 
 export class CommandRunner {
   private commandName: string;
