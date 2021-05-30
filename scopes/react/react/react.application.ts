@@ -26,7 +26,8 @@ export class ReactApp implements Application {
         return configMutator;
       },
     ]);
-    const port = await getPort({ port: this.portRange });
+    const [from, to] = this.portRange;
+    const port = await getPort({ port: getPort.makeRange(from, to) });
     devServer.listen(port);
     return port;
   }
