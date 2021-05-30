@@ -1,10 +1,10 @@
 import { join, basename } from 'path';
+import { Capsule } from '@teambit/isolator';
 import { Application, AppContext, DeployContext } from '@teambit/application';
 import { BuildContext } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import getPort from 'get-port';
 import { ReactEnv } from './react.env';
-import { Capsule } from '@teambit/isolator';
 
 export class ReactApp implements Application {
   constructor(

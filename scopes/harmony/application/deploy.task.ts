@@ -1,10 +1,10 @@
 import mapSeries from 'p-map-series';
+import { Capsule } from '@teambit/isolator';
 import { BuildTask, BuiltTaskResult, BuildContext, ComponentResult } from '@teambit/builder';
 import { ComponentID } from '@teambit/component';
 import { ApplicationAspect } from './application.aspect';
 import { ApplicationMain } from './application.main.runtime';
 import { DeployContext } from './deploy-context';
-import { Capsule } from '@teambit/isolator';
 
 export const BUILD_UI_TASK = 'build_ui_application';
 
@@ -20,12 +20,12 @@ export class DeployTask implements BuildTask {
       apps,
       async (app): Promise<ComponentResult | undefined> => {
         const aspectId = this.application.getAppAspect(app.name);
-        if (!aspectId) return;
+        if (!aspectId) return undefined;
         const capsules = context.capsuleNetwork.seedersCapsules;
         const capsule = this.getCapsule(capsules, aspectId);
-        if (!capsule) return;
+        if (!capsule) return undefined;
         const deployContext = await app.build(context, aspectId, capsule);
-        if (!deployContext.publicDir) return;
+        if (!deployContext.publicDir) return undefined;
         if (app.deploy) await app.deploy(deployContext);
         await this.deployToProviders(deployContext);
         return { component: capsule.component, metadata: { publicDir: deployContext.publicDir } };
