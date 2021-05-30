@@ -21,7 +21,7 @@ export class WebpackBundler implements Bundler {
 
   async run(): Promise<BundlerResult[]> {
     const compilers = this.configs.map((config) => webpack(config as any));
-    const longProcessLogger = this.logger.createLongProcessLogger('bundling component preview', compilers.length);
+    const longProcessLogger = this.logger.createLongProcessLogger('running Webpack bundler', compilers.length);
     const componentOutput = await mapSeries(compilers, (compiler: Compiler) => {
       const components = this.getComponents(compiler.outputPath);
       longProcessLogger.logProgress(components.map((component) => component.id.toString()).join(', '));
