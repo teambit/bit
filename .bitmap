@@ -1358,8 +1358,8 @@
         "rootDir": "scopes/workspace/variants"
     },
     "webpack": {
-        "scope": "",
-        "version": "",
+        "scope": "teambit.webpack",
+        "version": "0.0.405",
         "mainFile": "index.ts",
         "rootDir": "scopes/webpack/webpack"
     },
