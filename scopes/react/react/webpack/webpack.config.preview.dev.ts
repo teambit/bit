@@ -258,6 +258,8 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
 
       // this is for resolving react from env and not from consuming project
       alias: {
+        'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
         react: require.resolve('react'),
         '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
