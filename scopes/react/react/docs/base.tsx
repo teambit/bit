@@ -1,4 +1,3 @@
-import 'reset-css';
 import React, { HTMLAttributes } from 'react';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import classNames from 'classnames';
