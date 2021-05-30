@@ -3,7 +3,6 @@ import { Application, AppContext, DeployContext } from '@teambit/application';
 import { BuildContext } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import getPort from 'get-port';
-import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';
 import { Capsule } from '@teambit/isolator';
 
