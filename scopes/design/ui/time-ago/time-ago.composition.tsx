@@ -1,63 +1,63 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { TimeAgo } from './time-ago';
 
 export const YearsAgoWithTimestamp = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={1607550179} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const MonthTimeAgo = () => {
   const date = new Date();
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={new Date(date.setMonth(date.getMonth() - 1)).toString()} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const MonthsTimeAgo = () => {
   const date = new Date();
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={new Date(date.setMonth(date.getMonth() - 10)).toString()} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const HourTimeAgo = () => {
   const date = new Date();
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={new Date(date.setHours(date.getHours() - 1)).toString()} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const HoursTimeAgo = () => {
   const date = new Date();
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={new Date(date.setHours(date.getHours() - 10)).toString()} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const CurrentTime = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={new Date().toString()} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
 
 export const CurrentTimeWithIsoDate = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <TimeAgo date={new Date().toISOString()} />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };
