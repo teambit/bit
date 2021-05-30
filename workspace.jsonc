@@ -638,7 +638,7 @@
         }
       }
     },
-    "scopes/compilation/webpack": {
+    "scopes/webpack/webpack": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           // Used for webpack5 native modules fallbacks
