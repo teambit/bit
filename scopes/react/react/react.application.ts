@@ -5,6 +5,7 @@ import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
 import getPort from 'get-port';
 import { ComponentID } from '@teambit/component';
 import { ReactEnv } from './react.env';
+import { Capsule } from '@teambit/isolator';
 
 export class ReactApp implements Application {
   constructor(
@@ -31,16 +32,8 @@ export class ReactApp implements Application {
     return port;
   }
 
-  async build(context: BuildContext, aspectId: string): Promise<DeployContext> {
+  async build(context: BuildContext, aspectId: string, appCapsule: Capsule): Promise<DeployContext> {
     const reactEnv: ReactEnv = context.env;
-    const capsules = context.capsuleNetwork.seedersCapsules;
-    const appCapsule = capsules.find(
-      (capsule) =>
-        capsule.component.id.toStringWithoutVersion() === ComponentID.fromString(aspectId).toStringWithoutVersion()
-    );
-
-    if (!appCapsule)
-      return Object.assign(context, { applicationType: this.applicationType, aspectId, publicDir: null });
     const publicDir = join('applications', this.name, 'build');
     const outputPath = join(appCapsule.path, publicDir);
     const { distDir } = reactEnv.getCompiler();
@@ -66,7 +59,7 @@ export class ReactApp implements Application {
     const deployContext = Object.assign(context, {
       applicationType: this.applicationType,
       aspectId,
-      publicDir: join(publicDir, 'public'),
+      publicDir: join(appCapsule.path, publicDir, 'public'),
     });
     return deployContext;
   }
