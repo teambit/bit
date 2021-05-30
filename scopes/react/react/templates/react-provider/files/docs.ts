@@ -32,8 +32,9 @@ Set this extension as the variant's environment, for instance for the variant "a
 
 
 ### Environment config
-To configure the config variables (which can be used, for instance, to configure your providers including api contexts and more) add your configuration to the value object
-of the environment when applying it for your components. Note - these configuration settings apply at the workspace level, so any component using this 
+To configure the config variables (which can be used, for instance, to configure your providers including api contexts and more) add your new environment at the ***workspace level*** and
+add the configuration as below.  
+Note - these configuration settings apply at the workspace level, so any component using this 
 environment **in this workspace** will have this config applied to the environment. This config will not persist outside of the local workspace, e.g. on bit.dev.  
 To use a non-default config on bit.dev please supply a config in your \`scope.jsonc\` file (coming soon) per scope that you wish to configure. 
 
