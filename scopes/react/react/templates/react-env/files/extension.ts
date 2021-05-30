@@ -1,6 +1,12 @@
 import { ComponentContext } from '@teambit/generator';
-import { MainFileContents } from '../../common/common-env-main';
+import { MainFileClass } from '../../common/common-env-main';
 
 export function extensionFile(context: ComponentContext) {
-  return MainFileContents(context);
+  const { namePascalCase: Name } = context;
+  return `
+  import { EnvsMain, EnvsAspect } from '@teambit/envs'
+  import { ReactAspect, ReactMain } from '@teambit/react'
+
+  ${MainFileClass({ ...context, moduleName: `${Name}Extension` })}
+  `;
 }

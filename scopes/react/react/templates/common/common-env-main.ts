@@ -1,12 +1,8 @@
-export const MainFileContents = ({ name, namePascalCase: Name }) => {
-  return `import { MainRuntime } from '@teambit/cli';
-    import { EnvsAspect, EnvsMain } from '@teambit/envs';
-    import { ReactAspect, ReactMain } from '@teambit/react';
-    import { ${Name} } from './${name}.aspect';
-
+export const MainFileClass = ({ name, namePascalCase: Name, moduleName }) => {
+  return `
     // e.g. const tsconfig = require.resolve(./ts/ts.config);
 
-    export class ${Name}Main {
+    export class ${moduleName} {
       static slots = [];
       static dependencies = [ReactAspect, EnvsAspect];
       static runtime = MainRuntime;
@@ -17,9 +13,9 @@ export const MainFileContents = ({ name, namePascalCase: Name }) => {
         // Add overrides here via envs API functions as in the above example
       ]);
       envs.registerEnv(${Name}Env);
-      return new ${Name}Main();
+      return new ${moduleName}();
     }
   }
-  ${Name}.addRuntime(${Name}Main);
+  ${Name}.addRuntime(${moduleName});
 `;
 };

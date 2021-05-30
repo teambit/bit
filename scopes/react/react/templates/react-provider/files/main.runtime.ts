@@ -1,9 +1,17 @@
 import { ComponentContext } from '@teambit/generator';
-import { MainFileContents } from '../../common/common-env-main';
+import { MainFileClass } from '../../common/common-env-main';
 
 export const mainRuntimeFile = (context: ComponentContext) => {
+  const { name, namePascalCase: Name } = context;
   return {
     relativePath: `${context.name}.main.runtime.tsx`,
-    content: MainFileContents(context),
+    content: `
+    import { MainRuntime } from '@teambit/cli';
+    import { EnvsAspect, EnvsMain } from '@teambit/envs';
+    import { ReactAspect, ReactMain } from '@teambit/react';
+    import { ${Name} } from './${name}.aspect';
+
+    ${MainFileClass({ ...context, moduleName: `${Name}Main ` })}
+  `,
   };
 };
