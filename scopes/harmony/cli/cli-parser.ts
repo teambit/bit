@@ -80,10 +80,7 @@ export class CLIParser {
         acc[flagName] = argv[current];
         return acc;
       }, {});
-      const packageManagerArgs = argv['--'];
-      if (packageManagerArgs) {
-        command._packageManagerArgs = packageManagerArgs;
-      }
+      command._packageManagerArgs = argv['--'] || [];
       const commandName = argv._[0];
 
       Analytics.init(commandName, flags, argsValues);
