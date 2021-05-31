@@ -21,8 +21,6 @@ export class CLIParser {
       return;
     }
 
-    // TODO IMPLEMENT SUB-COMMANDS
-
     this.throwForNonExistsCommand(args[0]);
 
     yargs(args);

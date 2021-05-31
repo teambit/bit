@@ -24,7 +24,7 @@ export default class Diff implements LegacyCommand {
   loader = true;
 
   action(
-    [values]: [string[]],
+    [values = []]: [string[]],
     { verbose = false, table = false }: { verbose?: boolean; table: boolean }
   ): Promise<DiffResults[]> {
     return diff(values, verbose, table);

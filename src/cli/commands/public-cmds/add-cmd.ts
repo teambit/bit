@@ -12,7 +12,7 @@ import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 
 export default class Add implements LegacyCommand {
-  name = 'add [path...]';
+  name = 'add <path...>';
   shortDescription = 'Add any subset of files to be tracked as a component(s).';
   group: Group = 'development';
   description = `add any subset of files to be tracked as a component(s)
