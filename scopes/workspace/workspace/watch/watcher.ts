@@ -57,21 +57,24 @@ export class Watcher {
       watcher.on('ready', () => {
         opts?.msgs?.onReady(this.workspace, this.trackDirs, _verbose);
       });
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('change', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
+        const buildResults = (await this.handleChange(filePath)) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onChange(filePath, buildResults, _verbose, duration);
       });
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       watcher.on('add', async (filePath) => {
         const startTime = new Date().getTime();
-        const buildResults = (await this.handleChange(filePath).catch((err) => reject(err))) || [];
+        const buildResults = (await this.handleChange(filePath)) || [];
         const duration = new Date().getTime() - startTime;
         opts?.msgs?.onAdd(filePath, buildResults, _verbose, duration);
       });
-      watcher.on('unlink', (p) => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      watcher.on('unlink', async (p) => {
         opts?.msgs?.onUnlink(p);
-        this.handleChange(p).catch((err) => reject(err));
+        await this.handleChange(p);
       });
       watcher.on('error', (err) => {
         opts?.msgs?.onError(err);
@@ -81,20 +84,27 @@ export class Watcher {
   }
 
   private async handleChange(filePath: string): Promise<OnComponentEventResult[]> {
-    if (filePath.endsWith(BIT_MAP)) {
-      const buildResults = await this.handleBitmapChanges();
+    try {
+      if (filePath.endsWith(BIT_MAP)) {
+        const buildResults = await this.handleBitmapChanges();
+        this.completeWatch();
+        return buildResults;
+      }
+      const componentId = await this.getComponentIdAndClearItsCache(filePath);
+      if (!componentId) {
+        logger.debug(`file ${filePath} is not part of any component, ignoring it`);
+        return this.completeWatch();
+      }
+
+      const buildResults = await this.executeWatchOperationsOnComponent(componentId);
       this.completeWatch();
       return buildResults;
+    } catch (err) {
+      const msg = `watcher found an error while handling ${filePath}`;
+      logger.error(msg, err);
+      logger.console(`${msg}, ${err.message}`);
+      return [];
     }
-    const componentId = await this.getComponentIdAndClearItsCache(filePath);
-    if (!componentId) {
-      logger.debug(`file ${filePath} is not part of any component, ignoring it`);
-      return this.completeWatch();
-    }
-
-    const buildResults = await this.executeWatchOperationsOnComponent(componentId);
-    this.completeWatch();
-    return buildResults;
   }
 
   /**

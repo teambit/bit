@@ -22,13 +22,14 @@ export const FileStatus = {
   manual: chalk.red('CONFLICT'),
   updated: chalk.green('updated'),
   added: chalk.green('added'),
+  removed: chalk.green('removed'),
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged'),
 };
 // fileName is PathLinux. TS doesn't let anything else in the keys other than string and number
 export type FilesStatus = { [fileName: string]: keyof typeof FileStatus };
 export type ApplyVersionResult = { id: BitId; filesStatus: FilesStatus };
-export type FailedComponents = { id: BitId; failureMessage: string };
+export type FailedComponents = { id: BitId; failureMessage: string; unchangedLegitimately?: boolean };
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[];
   version?: string;

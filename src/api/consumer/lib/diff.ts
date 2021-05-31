@@ -5,16 +5,16 @@ import ComponentsList from '../../../consumer/component/components-list';
 import GeneralError from '../../../error/general-error';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
-export default (async function diff(values: string[], verbose: boolean): Promise<any> {
+export default async function diff(values: string[], verbose: boolean, table: boolean): Promise<any> {
   const consumer: Consumer = await loadConsumer();
   const { bitIds, version, toVersion } = await parseValues(consumer, values);
   if (!bitIds || !bitIds.length) {
     throw new GeneralError('there are no modified components to diff');
   }
-  const diffResults = await componentsDiff(consumer, bitIds, version, toVersion, verbose);
+  const diffResults = await componentsDiff(consumer, bitIds, version, toVersion, verbose, table);
   await consumer.onDestroy();
   return diffResults;
-});
+}
 
 async function parseValues(
   consumer: Consumer,

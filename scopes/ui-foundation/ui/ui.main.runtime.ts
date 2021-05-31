@@ -20,7 +20,7 @@ import { promisify } from 'util';
 import webpack from 'webpack';
 import { UiServerStartedEvent } from './events';
 import { createRoot } from './create-root';
-import { UnknownUI } from './exceptions';
+import { UnknownUI, UnknownBuildError } from './exceptions';
 import { StartCmd } from './start.cmd';
 import { UIBuildCmd } from './ui-build.cmd';
 import { UIRoot } from './ui-root';
@@ -177,11 +177,24 @@ export class UiMain {
     return this.config.publicDir;
   }
 
+  getUiByName(name = '') {
+    const roots = this.uiRootSlot.toArray();
+    return roots.find(([, uiRoot]) => {
+      return uiRoot.name === name;
+    });
+  }
+
   /**
    * create a build of the given UI root.
    */
-  async build(uiRootName?: string) {
-    const [name, uiRoot] = this.getUi(uiRootName);
+  async build(uiRootName?: string): Promise<webpack.MultiStats | undefined> {
+    // TODO: change to MultiStats from webpack once they export it in their types
+    this.logger.debug(`build, uiRootName: "${uiRootName}"`);
+    const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
+
+    if (!maybeUiRoot) throw new UnknownUI(uiRootName || '');
+    const [name, uiRoot] = maybeUiRoot;
+
     // TODO: @uri refactor all dev server related code to use the bundler extension instead.
     const ssr = uiRoot.buildOptions?.ssr || false;
     const mainEntry = await this.generateRoot(await uiRoot.resolveAspects(UIRuntime.name), name);
@@ -190,10 +203,18 @@ export class UiMain {
     const ssrConfig = ssr && createSsrWebpackConfig(uiRoot.path, [mainEntry], await this.publicDir(uiRoot));
 
     const config = [browserConfig, ssrConfig].filter((x) => !!x) as webpack.Configuration[];
-
     const compiler = webpack(config);
+    this.logger.debug(`build, uiRootName: "${uiRootName}" running webpack`);
     const compilerRun = promisify(compiler.run.bind(compiler));
-    return compilerRun();
+    const results = await compilerRun();
+    this.logger.debug(`build, uiRootName: "${uiRootName}" completed webpack`);
+    if (!results) throw new UnknownBuildError();
+    if (results?.hasErrors()) {
+      this.clearConsole();
+      throw new Error(results?.toString());
+    }
+
+    return results;
   }
 
   registerStartPlugin(startPlugin: StartPlugin) {
@@ -211,14 +232,17 @@ export class UiMain {
    * create a Bit UI runtime.
    */
   async createRuntime({ uiRootName, pattern, dev, port, rebuild, verbose }: RuntimeOptions) {
-    const [name, uiRoot] = this.getUi(uiRootName);
+    const maybeUiRoot = this.getUi(uiRootName) || this.getUiByName(uiRootName);
+
+    if (!maybeUiRoot) throw new UnknownUI(uiRootName || '');
+    const [name, uiRoot] = maybeUiRoot;
 
     const plugins = await this.initiatePlugins({
       verbose,
       pattern,
     });
 
-    this.componentExtension.setHostPriority(name);
+    if (this.componentExtension.isHost(name)) this.componentExtension.setHostPriority(name);
     const uiServer = UIServer.create({
       express: this.express,
       graphql: this.graphql,
@@ -314,25 +338,20 @@ export class UiMain {
   /**
    * get a UI runtime instance.
    */
-  getUi(uiRootName?: string): [string, UIRoot] {
+  getUi(uiRootName?: string): [string, UIRoot] | undefined {
     if (uiRootName) {
-      const root = this.getUiRootOrThrow(uiRootName);
+      const root = this.getUiRootOrThrow(uiRootName, false);
+      if (!root) return undefined;
       return [uiRootName, root];
     }
     const uis = this.uiRootSlot.toArray();
     if (uis.length === 1) return uis[0];
-    const uiRoot = uis.find(([, root]) => root.priority);
-    if (!uiRoot)
-      throw new UnknownUI(
-        'default',
-        this.uiRootSlot.toArray().map(([id]) => id)
-      );
-    return uiRoot;
+    return uis.find(([, root]) => root.priority);
   }
 
-  getUiRootOrThrow(uiRootName: string): UIRoot {
+  getUiRootOrThrow(uiRootName: string, shouldThrow: boolean): UIRoot | undefined {
     const uiSlot = this.uiRootSlot.get(uiRootName);
-    if (!uiSlot)
+    if (!uiSlot && shouldThrow)
       throw new UnknownUI(
         uiRootName,
         this.uiRootSlot.toArray().map(([id]) => id)
@@ -372,6 +391,7 @@ export class UiMain {
   }
 
   private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {
+    this.logger.debug(`buildUI, name ${name}`);
     const overwrite = this.getOverwriteBuildFn();
     if (overwrite) return overwrite(name, uiRoot, rebuild);
     const hash = await this.buildIfChanged(name, uiRoot, rebuild);
@@ -389,9 +409,13 @@ export class UiMain {
   }
 
   async buildIfChanged(name: string, uiRoot: UIRoot, force: boolean | undefined): Promise<string> {
+    this.logger.debug(`buildIfChanged, name ${name}`);
     const hash = await this.buildUiHash(uiRoot);
     const hashed = await this.cache.get(uiRoot.path);
-    if (hash === hashed && !force) return hash;
+    if (hash === hashed && !force) {
+      this.logger.debug(`buildIfChanged, name ${name}, returned from cache`);
+      return hash;
+    }
     if (hash !== hashed) {
       this.logger.console(
         `${uiRoot.configFile} has been changed. Rebuilding UI assets for '${chalk.cyan(
@@ -406,11 +430,7 @@ export class UiMain {
       );
     }
 
-    const res = await this.build(name);
-    this.clearConsole();
-    // TODO: replace this with logger and learn why it is not working here.
-    // eslint-disable-next-line no-console
-    if (res.hasErrors()) res.stats.forEach((stats) => stats.compilation.errors.forEach((err) => console.error(err)));
+    await this.build(name);
     await this.cache.set(uiRoot.path, hash);
     return hash;
   }

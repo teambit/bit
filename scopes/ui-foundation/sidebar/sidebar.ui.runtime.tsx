@@ -3,7 +3,7 @@ import { Slot, SlotRegistry } from '@teambit/harmony';
 import { UIRuntime } from '@teambit/ui';
 import React, { ComponentType } from 'react';
 
-import type { DrawerType } from '@teambit/ui.tree.drawer';
+import type { DrawerType } from '@teambit/ui-foundation.ui.tree.drawer';
 import { SidebarAspect } from './sidebar.aspect';
 import { SideBar, SideBarProps } from './ui';
 

@@ -18,6 +18,7 @@ export type MDXCompileOptions = {
 };
 
 export const DEFAULT_RENDERER = `
+// @ts-nocheck
 import React from 'react'
 import { mdx } from '@mdx-js/react'
 
@@ -86,7 +87,7 @@ export function wrapWithScopeContext() {
 
     tree.children.unshift({
       type: 'import',
-      value: `import { MDXScopeProvider } from '@teambit/ui.mdx-scope-context';`,
+      value: `import { MDXScopeProvider } from '@teambit/mdx.ui.mdx-scope-context';`,
     });
 
     tree.children.unshift(preNode);

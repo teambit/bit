@@ -1,12 +1,12 @@
 import 'reset-css';
 import React, { useReducer } from 'react';
 import { Route } from 'react-router-dom';
-import { RouteSlot, SlotRouter } from '@teambit/ui.react-router.slot-router';
-import { Corner } from '@teambit/ui.corner';
-import { Collapser } from '@teambit/ui.side-bar';
+import { RouteSlot, SlotRouter } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { Corner } from '@teambit/ui-foundation.ui.corner';
+import { Collapser } from '@teambit/ui-foundation.ui.buttons.collapser';
 import { SplitPane, Pane, Layout } from '@teambit/base-ui.surfaces.split-pane.split-pane';
 import { HoverSplitter } from '@teambit/base-ui.surfaces.split-pane.hover-splitter';
-import { TopBar } from '@teambit/ui.top-bar';
+import { TopBar } from '@teambit/ui-foundation.ui.top-bar';
 
 import { useWorkspace } from './use-workspace';
 import { WorkspaceOverview } from './workspace-overview';

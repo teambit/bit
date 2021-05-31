@@ -1,5 +1,5 @@
 import { AspectDefinition } from '@teambit/aspect-loader';
-import { toWindowsCompatiblePath } from '@teambit/path.to-windows-compatible-path';
+import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import { camelCase } from 'lodash';
 import { parse } from 'path';
 
@@ -13,10 +13,7 @@ export async function createRoot(
   config = {}
 ) {
   const rootId = rootExtensionName ? `'${rootExtensionName}'` : '';
-  const identifiers = getIdentifiers(
-    aspectDefs.map((def) => def.aspectPath),
-    'Aspect'
-  );
+  const identifiers = getIdentifiers(aspectDefs, 'Aspect');
 
   const idSetters = getIdSetters(aspectDefs, 'Aspect');
 
@@ -55,36 +52,43 @@ function createImports(aspectDefs: AspectDefinition[]) {
   const defs = aspectDefs.filter((def) => def.runtimePath);
 
   return `import { Harmony } from '@teambit/harmony';
-${getImportStatements(
-  aspectDefs.map((def) => def.aspectPath),
-  'Aspect'
-)}
-${getImportStatements(
-  // @ts-ignore no nulls can be found here - see above.
-  defs.map((def) => def.runtimePath),
-  'Runtime'
-)}`;
+${getImportStatements(aspectDefs, 'aspectPath', 'Aspect')}
+${getImportStatements(defs, 'runtimePath', 'Runtime')}`;
 }
 
-function getImportStatements(extensionPaths: string[], suffix: string): string {
-  return extensionPaths
-    .map((path) => `import ${getIdentifier(path, suffix)} from '${toWindowsCompatiblePath(path)}';`)
+function getImportStatements(aspectDefs: AspectDefinition[], pathProp: string, suffix: string): string {
+  return aspectDefs
+    .map(
+      (aspectDef) =>
+        `import ${getIdentifier(aspectDef, suffix)} from '${toWindowsCompatiblePath(aspectDef[pathProp])}';`
+    )
     .join('\n');
 }
 
-function getIdentifiers(extensionsPaths: string[], suffix: string): string[] {
-  return extensionsPaths.map((path) => `${getIdentifier(path, suffix)}`);
+function getIdentifiers(aspectDefs: AspectDefinition[], suffix: string): string[] {
+  return aspectDefs.map((aspectDef) => `${getIdentifier(aspectDef, suffix)}`);
 }
 
 function getIdSetters(defs: AspectDefinition[], suffix: string) {
   return defs
     .map((def) => {
       if (!def.getId) return undefined;
-      return `${getIdentifier(def.aspectPath, suffix)}.id = '${def.getId}';`;
+      return `${getIdentifier(def, suffix)}.id = '${def.getId}';`;
     })
     .filter((val) => !!val);
 }
 
-function getIdentifier(path: string, suffix: string): string {
+function getIdentifier(aspectDef: AspectDefinition, suffix: string): string {
+  if (!aspectDef.component && !aspectDef.local) {
+    return getCoreIdentifier(aspectDef.aspectPath, suffix);
+  }
+  return getRegularAspectIdentifier(aspectDef, suffix);
+}
+
+function getRegularAspectIdentifier(aspectDef: AspectDefinition, suffix: string): string {
+  return camelCase(`${parse(aspectDef.aspectPath).base.replace(/\./, '__').replace('@', '__')}${suffix}`);
+}
+
+function getCoreIdentifier(path: string, suffix: string): string {
   return camelCase(`${parse(path).name.split('.')[0]}${suffix}`);
 }

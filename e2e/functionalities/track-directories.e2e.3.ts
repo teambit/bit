@@ -147,7 +147,7 @@ describe('track directories functionality', function () {
       });
       it('should change the files according to the new rootDir', () => {
         const files = helper.command.getComponentFiles('utils/bar');
-        expect(files).to.include('bar/foo.js');
+        expect(files).to.include(path.join('bar', 'foo.js'));
         expect(files).to.not.include('foo.js');
       });
     });
@@ -155,14 +155,15 @@ describe('track directories functionality', function () {
       before(() => {
         helper.scopeHelper.getClonedLocalScope(localScope);
         helper.scopeHelper.addRemoteScope();
+        helper.bitJsonc.setupDefault();
         helper.command.tagAllComponents();
-        helper.command.exportAllComponents();
+        helper.command.export();
         helper.command.importComponent('utils/bar');
       });
       it('should not change the rootDir', () => {
         const bitMap = helper.bitMap.read();
-        expect(bitMap).to.have.property(`${helper.scopes.remote}/utils/bar@0.0.1`);
-        expect(bitMap[`${helper.scopes.remote}/utils/bar@0.0.1`].rootDir).to.equal('utils/bar');
+        helper.bitMap.expectToHaveIdHarmony('utils/bar', '0.0.1', helper.scopes.remote);
+        expect(bitMap['utils/bar'].rootDir).to.equal('utils/bar');
       });
     });
   });
@@ -294,7 +295,7 @@ describe('track directories functionality', function () {
     });
     it('the files on the sub-dir should be auto-tracked', () => {
       const files = helper.command.getComponentFiles('bar');
-      expect(files).to.include('baz/baz.ts');
+      expect(files).to.include(path.join('baz', 'baz.ts'));
     });
   });
 });

@@ -4,12 +4,11 @@ about: Report a bug in Bit
 title: ''
 labels: type/bug
 assignees: ''
-
 ---
 
 <!--
 
-Before submitting a new issue, please search past issues (open or closed).  
+Before submitting a new issue, please search past issues (open or closed).
 
 -->
 
@@ -34,9 +33,18 @@ If applicable, add screenshots, exceptions, and logs to help explain your proble
 ### Specifications
 
 - Bit version:
+- Workspace type: (harmony/legacy)
 - Node version:
 - npm / yarn version:
 - Platform:
+
+_for harmony workspace_
+
+- relevant env
+- relevant aspects
+
+_for leagacy_
+
 - Bit compiler (include version):
 - Bit tester (include version):
 

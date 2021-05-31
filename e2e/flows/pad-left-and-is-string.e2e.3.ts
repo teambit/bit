@@ -418,8 +418,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       });
       it('bit diff should show the dependencies difference', () => {
         const diff = helper.command.diff();
-        expect(diff).to.have.string(`- [ ${helper.scopes.remote}/string/is-string@0.0.2 ]`);
-        expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/string/is-string@0.0.1 ]`);
+        expect(diff).to.have.string(`- ${helper.scopes.remote}/string/is-string@0.0.2`);
+        expect(diff).to.have.string(`+ ${helper.scopes.remote}/string/is-string@0.0.1`);
       });
       it('should be able to tag the component with no error thrown', () => {
         const output = helper.command.tagAllComponents();

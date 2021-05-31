@@ -39,7 +39,7 @@ export default async function createNewLane(
   const dataToPopulate = await getDataToPopulateLaneObjectIfNeeded();
   newLane.setLaneComponents(dataToPopulate);
 
-  await consumer.scope.lanes.saveLane(newLane, true);
+  await consumer.scope.lanes.saveLane(newLane);
 
   const workspaceConfig = WorkspaceLane.load(laneName, consumer.scope.getPath());
   workspaceConfig.ids = getDataToPopulateWorkspaceLaneIfNeeded();

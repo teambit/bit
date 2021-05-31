@@ -9,7 +9,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('harmony extension config', function () {
   this.timeout(0);
   let helper: Helper;
@@ -75,10 +74,32 @@ describe('harmony extension config', function () {
           expect(output).to.have.string('has a dependency "dummy-extension"');
           expect(output).to.have.string('this dependency was not included in the tag command');
         });
+
+        describe('removing the extension with "-"', () => {
+          let dummyExtensionBefore;
+          let dummyExtensionAfter;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
+            dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
+            helper.extensions.addExtensionToVariant('bar', `${helper.scopes.remote}/dummy-extension`, '-');
+            const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
+            dummyExtensionAfter = findDummyExtension(componentShowAfterRemove.extensions);
+          });
+          // Make sure the extension is indeed there before we removed it
+          it('should have the extension defined on the component', () => {
+            expect(dummyExtensionBefore).to.not.be.undefined;
+          });
+          it('should not have the extension defined on the component', () => {
+            expect(dummyExtensionAfter).to.be.undefined;
+          });
+        });
+
         describe('tagging extension and component together', () => {
           let componentModel;
           before(() => {
             helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            helper.bitJsonc.disablePreview();
             helper.command.tagAllComponents();
             const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
             const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
@@ -133,12 +154,12 @@ describe('harmony extension config', function () {
             remoteBeforeExport = helper.scopeHelper.cloneRemoteScope();
           });
           it('should block exporting component without exporting the extension', () => {
-            output = helper.general.runWithTryCatch(`bit export ${helper.scopes.remote} bar/foo`);
+            output = helper.general.runWithTryCatch(`bit export bar/foo`);
             expect(output).to.have.string(`"${helper.scopes.remote}/dummy-extension@0.0.1" was not found`);
           });
           describe('exporting extension and component together', () => {
             before(() => {
-              helper.command.exportAllComponents();
+              helper.command.export();
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -151,8 +172,8 @@ describe('harmony extension config', function () {
             before(() => {
               helper.scopeHelper.getClonedLocalScope(localBeforeExport);
               helper.scopeHelper.getClonedRemoteScope(remoteBeforeExport);
-              helper.command.exportComponent('dummy-extension');
-              helper.command.exportComponent('bar/foo');
+              helper.command.export('dummy-extension');
+              helper.command.export('bar/foo');
               const componentModelStr = helper.command.catComponent('bar/foo@0.0.1', undefined, false);
               const componentModelStrWithoutExtString = componentModelStr.substring(componentModelStr.indexOf('{'));
               componentModel = JSON.parse(componentModelStrWithoutExtString);
@@ -171,10 +192,11 @@ describe('harmony extension config', function () {
           helper.scopeHelper.reInitRemoteScope();
           helper.scopeHelper.addRemoteScope();
           helper.command.tagComponent('dummy-extension');
-          helper.command.exportComponent('dummy-extension');
+          helper.command.export('dummy-extension');
           helper.extensions.addExtensionToVariant('*', `${helper.scopes.remote}/dummy-extension`, config);
+          helper.bitJsonc.disablePreview();
           helper.command.tagAllComponents();
-          helper.command.exportAllComponents();
+          helper.command.export();
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
           helper.command.importComponent('bar/foo');
@@ -184,7 +206,52 @@ describe('harmony extension config', function () {
           const ids = scopeList.map((entry) => entry.id);
           expect(ids).to.include(`${helper.scopes.remote}/dummy-extension`);
         });
+        describe('removing the extension with "-"', () => {
+          let dummyExtensionBefore;
+          let dummyExtensionAfter;
+          before(() => {
+            helper.scopeHelper.getClonedLocalScope(localBeforeTag);
+            const componentShowBeforeRemove = helper.command.showComponentParsed('bar/foo');
+            dummyExtensionBefore = findDummyExtension(componentShowBeforeRemove.extensions);
+            helper.extensions.addExtensionToVariant('{bar/foo}', `${helper.scopes.remote}/dummy-extension`, '-');
+            const componentShowAfterRemove = helper.command.showComponentParsed('bar/foo');
+            dummyExtensionAfter = findDummyExtension(componentShowAfterRemove.extensions);
+          });
+          // Make sure the extension is indeed there before we removed it
+          it('should have the extension defined on the component', () => {
+            expect(dummyExtensionBefore).to.not.be.undefined;
+          });
+          it('should not have the extension defined on the component', () => {
+            expect(dummyExtensionAfter).to.be.undefined;
+          });
+        });
       });
     });
   });
+  describe('changing config after the component had been cached', () => {
+    before(() => {
+      helper.scopeHelper.reInitLocalScopeHarmony();
+      helper.fixtures.createComponentBarFoo();
+      helper.fixtures.addComponentBarFooAsDir();
+      const depResolverConfig = {
+        policy: {
+          dependencies: {
+            'lodash.get': '4.0.0',
+          },
+        },
+      };
+      helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
+      helper.command.status(); // to cache the component.
+      depResolverConfig.policy.dependencies['lodash.get'] = '5.0.0';
+      helper.extensions.addExtensionToVariant('bar', 'teambit.dependencies/dependency-resolver', depResolverConfig);
+    });
+    it('should show the updated dependency data and not the old data from the cache', () => {
+      const bar = helper.command.showComponentParsed('bar/foo');
+      expect(bar.packageDependencies['lodash.get']).to.equal('5.0.0');
+    });
+  });
 });
+
+function findDummyExtension(extensions) {
+  return extensions.find((ext) => ext.extensionId && ext.extensionId.includes('dummy-extension'));
+}

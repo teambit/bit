@@ -78,6 +78,11 @@ async function createStoreController(
     verifyStoreIntegrity: true,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
+    ca: proxyConfig?.ca,
+    cert: proxyConfig?.cert,
+    key: proxyConfig?.key,
+    noProxy: proxyConfig?.noProxy,
+    strictSsl: proxyConfig.strictSSL,
   };
   const { ctrl } = await createNewStoreController(opts);
   return ctrl;
@@ -95,6 +100,11 @@ async function generateResolverAndFetcher(
     storeDir,
     httpProxy: proxyConfig?.httpProxy,
     httpsProxy: proxyConfig?.httpsProxy,
+    ca: proxyConfig?.ca,
+    cert: proxyConfig?.cert,
+    key: proxyConfig?.key,
+    noProxy: proxyConfig?.noProxy,
+    strictSSL: proxyConfig.strictSSL,
   };
   const result = createResolverAndFetcher(opts);
   return result;
@@ -187,7 +197,7 @@ export async function resolveRemoteVersion(
   try {
     const parsedPackage = parsePackageName(packageName);
     const registriesMap = getRegistriesMap(registries);
-    const registry = pickRegistryForPackage(registriesMap, parsedPackage);
+    const registry = pickRegistryForPackage(registriesMap, parsedPackage.name);
     const wantedDep: WantedDependency = {
       alias: parsedPackage.name,
       pref: parsedPackage.version,

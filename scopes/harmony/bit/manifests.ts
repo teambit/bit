@@ -15,7 +15,8 @@ import { EnvsAspect } from '@teambit/envs';
 import { ExpressAspect } from '@teambit/express';
 import { FlowsAspect } from '@teambit/flows';
 import { YarnAspect } from '@teambit/yarn';
-import { CreateAspect } from '@teambit/generator';
+import { GeneratorAspect } from '@teambit/generator';
+import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
 import { GraphAspect } from '@teambit/graph';
 import { GraphqlAspect } from '@teambit/graphql';
 import { InsightsAspect } from '@teambit/insights';
@@ -52,12 +53,14 @@ import { DevFilesAspect } from '@teambit/dev-files';
 import { ESLintAspect } from '@teambit/eslint';
 import { SignAspect } from '@teambit/sign';
 import WorkerAspect from '@teambit/worker';
-import { BitDevAspect } from '@teambit/bit-dev';
 import { GlobalConfigAspect } from '@teambit/global-config';
 import MultiCompilerAspect from '@teambit/multi-compiler';
 import MDXAspect from '@teambit/mdx';
+import { ApplicationAspect } from '@teambit/application';
 import { UpdateDependenciesAspect } from '@teambit/update-dependencies';
 import { ExportAspect } from '@teambit/export';
+import { EjectAspect } from '@teambit/eject';
+import { UserAgentAspect } from '@teambit/user-agent';
 import { BitAspect } from './bit.aspect';
 
 export const manifestsMap = {
@@ -79,7 +82,7 @@ export const manifestsMap = {
   [PnpmAspect.id]: PnpmAspect,
   [MultiCompilerAspect.id]: MultiCompilerAspect,
   [UIAspect.id]: UIAspect,
-  [CreateAspect.id]: CreateAspect,
+  [GeneratorAspect.id]: GeneratorAspect,
   [EnvsAspect.id]: EnvsAspect,
   [FlowsAspect.id]: FlowsAspect,
   [GraphAspect.id]: GraphAspect,
@@ -118,8 +121,11 @@ export const manifestsMap = {
   [ComponentTreeAspect.id]: ComponentTreeAspect,
   [SignAspect.id]: SignAspect,
   [UpdateDependenciesAspect.id]: UpdateDependenciesAspect,
-  [BitDevAspect.id]: BitDevAspect,
   [ExportAspect.id]: ExportAspect,
+  [HarmonyUiAppAspect.id]: HarmonyUiAppAspect,
+  [UserAgentAspect.id]: UserAgentAspect,
+  [ApplicationAspect.id]: ApplicationAspect,
+  [EjectAspect.id]: EjectAspect,
 };
 
 export function isCoreAspect(id: string) {

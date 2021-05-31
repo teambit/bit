@@ -1,8 +1,8 @@
 import React, { useContext, useState } from 'react';
 
 import { H2 } from '@teambit/documenter.ui.heading';
-import { NotFoundPage } from '@teambit/ui.pages.not-found';
-import { ServerErrorPage } from '@teambit/ui.pages.server-error';
+import { NotFoundPage } from '@teambit/design.ui.pages.not-found';
+import { ServerErrorPage } from '@teambit/design.ui.pages.server-error';
 import { ComponentContext } from '@teambit/component';
 import { FullLoader } from '@teambit/legacy/dist/to-eject/full-loader';
 
@@ -35,7 +35,7 @@ export function GraphPage({ componentWidgets }: GraphPageProps) {
 
   return (
     <div className={styles.page}>
-      <H2 size="xs">Dependencies</H2>
+      <H2 size="xs">Component Dependencies</H2>
       <DependenciesGraph
         componentWidgets={componentWidgets}
         graph={graph}

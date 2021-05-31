@@ -1,5 +1,4 @@
 import { EnvService, ExecutionContext } from '@teambit/envs';
-import { UIRoot } from '@teambit/ui';
 import { PubsubMain } from '@teambit/pubsub';
 import { flatten } from 'lodash';
 import { BrowserRuntimeSlot } from './bundler.main.runtime';
@@ -9,7 +8,11 @@ import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
 import { selectPort } from './select-port';
 
+export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
+
 export class DevServerService implements EnvService<ComponentServer> {
+  name = 'dev server';
+
   constructor(
     /**
      * browser runtime slot
@@ -19,17 +22,8 @@ export class DevServerService implements EnvService<ComponentServer> {
     /**
      * browser runtime slot
      */
-    private runtimeSlot: BrowserRuntimeSlot,
-
-    /**
-     * main path of the dev server to execute on.
-     */
-    private _uiRoot?: UIRoot
+    private runtimeSlot: BrowserRuntimeSlot
   ) {}
-
-  set uiRoot(value: UIRoot) {
-    this._uiRoot = value;
-  }
 
   // async run(context: ExecutionContext): Promise<ComponentServer[]> {
   //   const devServerContext = await this.buildContext(context);
@@ -39,10 +33,22 @@ export class DevServerService implements EnvService<ComponentServer> {
   //   return new ComponentServer(this.pubsub, context, port, devServer);
   // }
 
-  async runOnce(contexts: ExecutionContext[]): Promise<ComponentServer[]> {
+  async runOnce(
+    contexts: ExecutionContext[],
+    { dedicatedEnvDevServers }: DevServerServiceOptions
+  ): Promise<ComponentServer[]> {
+    const getEnvId = (context, dedicatedServers): string => {
+      const contextEnvId = context.id;
+      const contextEnvIdWithoutVersion = contextEnvId.split('@')[0];
+      if (dedicatedServers.includes(contextEnvIdWithoutVersion)) {
+        return contextEnvId;
+      }
+      return context.env?.getDevEnvId(context);
+    };
+
     // de-duping dev servers by the amount of type the dev server configuration was overridden by envs.
     const byOriginalEnv = contexts.reduce<{ [key: string]: ExecutionContext[] }>((acc, context) => {
-      const envId = context.env?.getDevEnvId(context);
+      const envId = getEnvId(context, dedicatedEnvDevServers);
       if (acc[envId]) {
         acc[envId].push(context);
         return acc;
@@ -85,14 +91,11 @@ export class DevServerService implements EnvService<ComponentServer> {
     context: ExecutionContext,
     additionalContexts: ExecutionContext[] = []
   ): Promise<DevServerContext> {
-    const uiRoot = this._uiRoot;
-    if (!uiRoot) throw new Error('a root must be provided by UI root');
-
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
 
     return Object.assign(context, {
-      entry: await getEntry(context, uiRoot, this.runtimeSlot),
+      entry: await getEntry(context, this.runtimeSlot),
       rootPath: `/preview/${context.envRuntime.id}`,
       publicPath: `/public`,
     });

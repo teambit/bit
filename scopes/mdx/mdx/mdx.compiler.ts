@@ -2,8 +2,16 @@ import { join } from 'path';
 import { outputFileSync } from 'fs-extra';
 import { Compiler, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext } from '@teambit/builder';
-import { compileSync } from '@teambit/modules.mdx-compiler';
+import { compileSync as mdxCompileSync } from '@teambit/mdx.modules.mdx-compiler';
+import minimatch from 'minimatch';
+import { transpileFileContent as babelTranspileFileContent } from '@teambit/compilation.modules.babel-compiler';
+import type { TransformOptions } from '@babel/core';
 
+export type MDXCompilerOpts = {
+  ignoredExtensions?: string[];
+  ignoredPatterns?: string[];
+  babelTransformOptions?: TransformOptions;
+};
 export class MDXCompiler implements Compiler {
   displayName = 'MDX';
 
@@ -11,25 +19,29 @@ export class MDXCompiler implements Compiler {
 
   distDir = 'dist';
 
-  constructor(readonly id: string, readonly config: any) {}
+  constructor(readonly id: string, readonly config: MDXCompilerOpts) {}
 
   displayConfig() {
     return JSON.stringify(this.config, null, 2);
   }
 
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const output = compileSync(fileContent, {
+    const afterMdxCompile = mdxCompileSync(fileContent, {
       filepath: options.filePath,
       // this compiler is not indented to compile according to the bit flavour.
       bitFlavour: false,
     });
-
-    return [
+    const filePathAfterMdxCompile = this.replaceFileExtToJs(options.filePath);
+    const afterBabelCompile = babelTranspileFileContent(
+      afterMdxCompile.contents,
       {
-        outputText: output.contents,
-        outputPath: this.getDistPathBySrcPath(options.filePath),
+        rootDir: options.componentDir,
+        filePath: filePathAfterMdxCompile,
       },
-    ];
+      this.config.babelTransformOptions || {}
+    );
+
+    return afterBabelCompile;
   }
 
   /**
@@ -45,8 +57,28 @@ export class MDXCompiler implements Compiler {
 
       const errors = srcFiles.map((srcFile) => {
         try {
-          const output = compileSync(srcFile.contents.toString('utf-8'));
-          outputFileSync(join(capsule.path, 'dist', this.getDistPathBySrcPath(srcFile.path)), output.contents);
+          const afterMdxCompile = mdxCompileSync(srcFile.contents.toString('utf-8'));
+          const afterBabelCompile = babelTranspileFileContent(
+            afterMdxCompile.contents,
+            {
+              rootDir: capsule.path,
+              filePath: this.replaceFileExtToJs(srcFile.relative),
+            },
+            this.config.babelTransformOptions || {}
+          );
+          if (!afterBabelCompile) {
+            return undefined;
+          }
+          outputFileSync(
+            join(capsule.path, this.getDistPathBySrcPath(afterBabelCompile[0].outputPath)),
+            afterBabelCompile[0].outputText
+          );
+          if (afterBabelCompile.length > 1) {
+            outputFileSync(
+              join(capsule.path, this.distDir, afterBabelCompile[1].outputPath),
+              afterBabelCompile[1].outputText
+            );
+          }
           return undefined;
         } catch (err) {
           return err;
@@ -75,14 +107,27 @@ export class MDXCompiler implements Compiler {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string {
-    return join(srcPath.replace('.mdx', '.js'));
+    const fileWithNewExt = this.replaceFileExtToJs(srcPath);
+    return join(this.distDir, fileWithNewExt);
+  }
+
+  private replaceFileExtToJs(srcPath: string): string {
+    let fileWithNewExt = srcPath;
+    if (this.isFileSupported(srcPath)) {
+      fileWithNewExt = srcPath.replace('.mdx', '.mdx.js');
+    }
+    return fileWithNewExt;
   }
 
   /**
    * only supported files matching get compiled. others, are copied to the dist dir.
    */
   isFileSupported(filePath: string): boolean {
-    return filePath.endsWith('.mdx') || filePath.endsWith('.md');
+    const ignoredExtensions = this.config.ignoredExtensions ?? [];
+    const ignoredExt = ignoredExtensions.find((ext) => filePath.endsWith(ext));
+    const ignoredPatterns = this.config.ignoredPatterns ?? [];
+    const ignoredPattern = ignoredPatterns.find((pattern) => minimatch(filePath, pattern));
+    return !ignoredExt && !ignoredPattern && (filePath.endsWith('.mdx') || filePath.endsWith('.md'));
   }
 
   /**

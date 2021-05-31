@@ -1,9 +1,10 @@
 import json from 'comment-json';
+import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
 
 import { BIT_MAP } from '../constants';
-import { LANE_KEY } from '../consumer/bit-map/bit-map';
+import { LANE_KEY, SCHEMA_FIELD } from '../consumer/bit-map/bit-map';
 import FsHelper from './e2e-fs-helper';
 import ScopesData from './e2e-scopes';
 
@@ -22,7 +23,7 @@ export default class BitMapHelper {
 
   readComponentsMapOnly() {
     const bitMap = this.read();
-    delete bitMap.version;
+    bitMap[SCHEMA_FIELD] ? delete bitMap[SCHEMA_FIELD] : delete bitMap.version;
     delete bitMap[LANE_KEY];
     return bitMap;
   }
@@ -64,5 +65,12 @@ export default class BitMapHelper {
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
     const filesStr = files.map((f) => f.name).join(', ');
     return `Files in bitmap file: ${filesStr}`;
+  }
+
+  expectToHaveIdHarmony(name: string, version?: string, scope?: string) {
+    const bitMap = this.read();
+    expect(bitMap).to.have.property(name);
+    if (scope) expect(bitMap[name].scope).to.equal(scope);
+    if (version) expect(bitMap[name].version).to.equal(version);
   }
 }

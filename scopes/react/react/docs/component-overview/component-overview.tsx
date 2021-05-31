@@ -4,7 +4,7 @@ import { ConsumableLink } from '@teambit/documenter.ui.consumable-link';
 import { H1 } from '@teambit/documenter.ui.heading';
 import { LabelList } from '@teambit/documenter.ui.label-list';
 import { Section } from '@teambit/documenter.ui.section';
-import { Separator } from '@teambit/documenter.ui.separator';
+import { Separator } from '@teambit/design.ui.separator';
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import styles from './component-overview.module.scss';
 
@@ -25,7 +25,7 @@ export function ComponentOverview({ displayName, abstract, labels, packageName, 
         <LabelList>{labels}</LabelList>
         <ConsumableLink title="Package name" link={packageName}></ConsumableLink>
       </div>
-      <Separator />
+      <Separator isPresentational />
     </Section>
   );
 }

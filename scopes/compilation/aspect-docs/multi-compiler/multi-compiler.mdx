@@ -1,0 +1,12 @@
+The multi-compiler aspect allows the configuration of multiple compilers on a component. This determines which compiler to apply on a component file using the `isFileSupported()` compiler API.
+
+- `createCompiler(compilers: Compiler[], options: CompilerOptions)` API to support the creation a Multi-compiler instance which can be used in the Env API (the `overrideCompiler` and `getCompiler` APIs).
+- Supports the creation of a multi-compiler build tasks.
+
+```ts
+// create a multi compiler instance.
+const compiler = multiCompiler.createCompiler([createBabelCompiler(), createTsCompiler()]);
+
+// create a multi-compiler build task.
+compiler.createTask('MultiCompiler', compiler);
+```

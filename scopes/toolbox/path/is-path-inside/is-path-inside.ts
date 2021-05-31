@@ -1,5 +1,5 @@
 import * as path from 'path';
-import { stripTrailingChar } from '@teambit/string.strip-trailing-char';
+import { stripTrailingChar } from '@teambit/toolbox.string.strip-trailing-char';
 
 const DEFAULT_SEPARATOR = '/';
 

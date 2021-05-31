@@ -1,12 +1,12 @@
 import React from 'react';
-import { Link } from '@teambit/ui.routing.link';
+import { Link } from '@teambit/base-ui.routing.link';
 import {
   BaseComponentCardProps,
   PreviewContainer,
   DeprecationSticker,
   ComponentDetails,
   Card,
-} from '@teambit/ui.gallery.base-component-card';
+} from '@teambit/explorer.ui.gallery.base-component-card';
 
 import styles from './component-card.module.scss';
 

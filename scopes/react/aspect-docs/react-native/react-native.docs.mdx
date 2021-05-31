@@ -1,0 +1,34 @@
+---
+description: 'Docs for ReactNative aspect'
+labels: ['docs', 'aspect', 'extensions']
+---
+
+import { ReactNative } from './index';
+
+## Static Content Page in MDX
+
+Docs for ReactNative aspect
+
+### Component usage
+
+Use your component in any MDX file:
+
+```js
+import { ReactNative } from '@teambit/react.aspect-docs.react-native';
+
+<ReactNative />;
+```
+
+### Render with theme and ReactNative providers
+
+```js
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { MDXNativeLayout } from '@teambit/ui.mdx-layout';
+import { ReactNative } from '@teambit/react.aspect-docs.react-native';
+
+<ThemeCompositions>
+  <MDXNativeLayout>
+    <ReactNative />
+  </MDXNativeLayout>
+</ThemeCompositions>;
+```

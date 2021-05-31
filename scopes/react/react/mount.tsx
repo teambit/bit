@@ -1,7 +1,7 @@
 import React, { ComponentType, ReactNode } from 'react';
 import ReactDOM from 'react-dom';
 import { RenderingContext } from '@teambit/preview';
-import { StandaloneNotFoundPage } from '@teambit/ui.pages.standalone-not-found-page';
+import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { ReactAspect } from './react.aspect';
 
 function wrap(Component: ComponentType, WrapperComponent?: ComponentType): ComponentType {
@@ -45,5 +45,4 @@ export default (Composition: React.ComponentType = StandaloneNotFoundPage, previ
     </Provider>,
     document.getElementById('root')
   );
-  // ReactDOM.render(<Composition />, document.getElementById('root'));
 };

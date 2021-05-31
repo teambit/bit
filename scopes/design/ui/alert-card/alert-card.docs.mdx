@@ -1,0 +1,39 @@
+---
+description: 'A Card which shows an alert icon, title and a message.'
+labels: ['info', 'warn', 'success', 'error']
+---
+
+import { AlertCard } from './alert-card';
+
+## A card component which shows an alert icon, title and a message
+
+Card shows an alert icon and title in the heading and renders any content in the cards body.
+
+### Features:
+
+- Modify the level to show a different alert icon
+- Modify the title of the card
+- Modify the title size
+- Add any content to be rendered in the card such as text, a component or even an MDX component
+
+### Component usage
+
+```js
+import { AlertCard } from '@teambit/design.ui.alert-card';
+
+...
+<AlertCard level="info" title="Info message" titleSize="xxs">
+  Content to be rendered
+</AlertCard>
+...
+```
+
+### Using props to change the icon level and title
+
+Modify the level to show a different alert icon, choose from `info`, `error`, `warning` and `success`. Modify the title to show a different message
+
+```js live
+<AlertCard level="info" title="Info message" titleSize="xxs">
+  Content to be rendered
+</AlertCard>
+```

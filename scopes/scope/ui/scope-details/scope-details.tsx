@@ -1,8 +1,8 @@
 import { Subtitle } from '@teambit/documenter.ui.sub-title';
 import { flatten } from 'lodash';
 import type { ScopeBadgeSlot, OverviewLineSlot } from '@teambit/scope';
-import { ScopeLabels } from '@teambit/ui.scope-labels';
-import { ScopeTitle } from '@teambit/ui.scope-title';
+import { ScopeLabels } from '@teambit/scope.ui.scope-labels';
+import { ScopeTitle } from '@teambit/scope.ui.scope-title';
 import classNames from 'classnames';
 import React, { useMemo } from 'react';
 

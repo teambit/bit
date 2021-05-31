@@ -2,7 +2,7 @@ import R from 'ramda';
 import pMap from 'p-map';
 import { isHash } from '@teambit/component-version';
 import { BitId, BitIds } from '../../bit-id';
-import { COMPONENT_ORIGINS, CONCURRENT_COMPONENTS_LIMIT, Extensions } from '../../constants';
+import { BuildStatus, COMPONENT_ORIGINS, Extensions } from '../../constants';
 import ConsumerComponent from '../../consumer/component';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -13,7 +13,7 @@ import logger from '../../logger/logger';
 import { PathLinux, PathOsBased } from '../../utils/path';
 import ComponentObjects from '../component-objects';
 import { getAllVersionHashes, getAllVersionsInfo, VersionInfo } from '../component-ops/traverse-versions';
-import { ComponentNotFound } from '../exceptions';
+import { ComponentNotFound, MergeConflict } from '../exceptions';
 import ComponentNeedsUpdate from '../exceptions/component-needs-update';
 import UnmergedComponents from '../lanes/unmerged-components';
 import { ModelComponent, Source, Symlink, Version } from '../models';
@@ -24,6 +24,9 @@ import Repository from '../objects/repository';
 import Scope from '../scope';
 import { ExportMissingVersions } from '../exceptions/export-missing-versions';
 import { ModelComponentMerger } from '../component-ops/model-components-merger';
+import { concurrentComponentsLimit } from '../../utils/concurrency';
+import { InMemoryCache } from '../../cache/in-memory-cache';
+import { createInMemoryCache } from '../../cache/cache-factory';
 
 export type ComponentTree = {
   component: ModelComponent;
@@ -40,71 +43,115 @@ export type ComponentDef = {
   component: ModelComponent | null | undefined;
 };
 
+export type MergeResult = {
+  mergedComponent: ModelComponent;
+  mergedVersions: string[];
+};
+
+const MAX_AGE_UN_BUILT_COMPS_CACHE = 60 * 1000;
+
 export default class SourceRepository {
   scope: Scope;
-
+  /**
+   * if a component Version has build-status of "pending" or "failed", it goes to the remote to ask
+   * for the component again, in case it was re-built.
+   * to avoid too many trips to the remotes with the same components, we cache the results for a
+   * small period of time (currently, 1 min).
+   */
+  private cacheUnBuiltIds: InMemoryCache<ModelComponent>;
   constructor(scope: Scope) {
     this.scope = scope;
+    this.cacheUnBuiltIds = createInMemoryCache({ maxAge: MAX_AGE_UN_BUILT_COMPS_CACHE });
   }
 
   objects() {
     return this.scope.objects;
   }
 
-  async getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
+  async getMany(ids: BitId[] | BitIds, versionShouldBeBuilt = false): Promise<ComponentDef[]> {
     if (!ids.length) return [];
+    const concurrency = concurrentComponentsLimit();
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return pMap(
       ids,
       async (id) => {
-        const component = await this.get(id);
+        const component = await this.get(id, versionShouldBeBuilt);
         return {
           id,
           component,
         };
       },
-      { concurrency: CONCURRENT_COMPONENTS_LIMIT }
+      { concurrency }
     );
   }
 
-  async get(bitId: BitId): Promise<ModelComponent | undefined> {
-    const component = ModelComponent.fromBitId(bitId);
-    const foundComponent: ModelComponent | undefined = await this._findComponent(component);
-    if (foundComponent && bitId.hasVersion()) {
-      // @ts-ignore
-      const isSnap = isHash(bitId.version);
-      const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      if (isSnap) {
-        // @ts-ignore
-        const snap = await this.objects().load(new Ref(bitId.version));
-        if (!snap) {
-          logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
-          return undefined;
+  /**
+   * get component (local or external) from the scope.
+   * if the id has a version but the Version object doesn't exist, it returns undefined.
+   *
+   * if versionShouldBeBuilt is true, it also verified that not only the version exists but it also
+   * built successfully. otherwise, if the build failed or pending, the server may have a newer
+   * version of this Version object, so we return undefined, to signal the importer that it needs
+   * to be fetched from the remote again.
+   */
+  async get(bitId: BitId, versionShouldBeBuilt = false): Promise<ModelComponent | undefined> {
+    const emptyComponent = ModelComponent.fromBitId(bitId);
+    const component: ModelComponent | undefined = await this._findComponent(emptyComponent);
+    if (!component) return undefined;
+    if (!bitId.hasVersion()) return component;
+
+    const returnComponent = (version: Version): ModelComponent | undefined => {
+      if (
+        versionShouldBeBuilt &&
+        !bitId.isLocal(this.scope.name) &&
+        !component.hasLocalVersion(bitId.version as string) && // e.g. during tag
+        (version.buildStatus === BuildStatus.Pending || version.buildStatus === BuildStatus.Failed)
+      ) {
+        const bitIdStr = bitId.toString();
+        const fromCache = this.cacheUnBuiltIds.get(bitIdStr);
+        if (fromCache) {
+          return fromCache;
         }
-        return foundComponent;
-      }
-      // @ts-ignore
-      if (!foundComponent.hasTagIncludeOrphaned(bitId.version)) {
-        logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
+        this.cacheUnBuiltIds.set(bitIdStr, component);
         return undefined;
       }
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      const versionHash = foundComponent.versionsIncludeOrphaned[bitId.version];
-      const version = await this.objects().load(versionHash);
-      if (!version) {
+      return component;
+    };
+
+    // @ts-ignore
+    const isSnap = isHash(bitId.version);
+    const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    if (isSnap) {
+      // @ts-ignore
+      const snap = await this.objects().load(new Ref(bitId.version));
+      if (!snap) {
         logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return undefined;
       }
+      return returnComponent(snap as Version);
+    }
+    // @ts-ignore
+    if (!component.hasTagIncludeOrphaned(bitId.version)) {
+      logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
+      return undefined;
+    }
+    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    const versionHash = component.versionsIncludeOrphaned[bitId.version];
+    const version = await this.objects().load(versionHash);
+    if (!version) {
+      logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
+      return undefined;
     }
 
-    return foundComponent;
+    return returnComponent(version as Version);
   }
 
   async _findComponent(component: ModelComponent): Promise<ModelComponent | undefined> {
     try {
       const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
+        // eslint-disable-next-line @typescript-eslint/return-await
         return this._findComponentBySymlink(foundComponent);
       }
       // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -396,11 +443,6 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     return component;
   }
 
-  putModelComponent(component: ModelComponent) {
-    const repo: Repository = this.objects();
-    repo.add(component);
-  }
-
   put({ component, objects }: ComponentTree): ModelComponent {
     logger.debug(`sources.put, id: ${component.id()}, versions: ${component.listVersions().join(', ')}`);
     const repo: Repository = this.objects();
@@ -478,37 +520,20 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   }
 
   /**
-   * @see this.removeComponent()
-   *
+   * get hashes needed for removing a component from a local scope.
    */
-  async removeComponentById(bitId: BitId): Promise<void> {
-    logger.debug(`sources.removeComponentById: ${bitId.toString()}`);
+  async getRefsForComponentRemoval(bitId: BitId, includeVersions = true): Promise<Ref[]> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}, includeVersions: ${includeVersions}`);
     const component = await this.get(bitId);
-    if (!component) return;
-    this.removeComponent(component);
+    if (!component) return [];
+    const objectRefs = [component.hash()];
+    if (includeVersions) objectRefs.push(...component.versionArray);
+    return objectRefs;
   }
 
   /**
-   * remove all versions objects of the component from local scope.
-   * if deepRemove is true, it removes also the refs associated with the removed versions.
-   * finally, it removes the component object itself
-   * it doesn't physically delete from the filesystem.
-   * the actual delete is done at a later phase, once Repository.persist() is called.
-   *
-   * @param {ModelComponent} component
-   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
-   */
-  removeComponent(component: ModelComponent): void {
-    const repo = this.objects();
-    logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
-    const objectRefs = component.versionArray;
-    objectRefs.push(component.hash());
-    repo.removeManyObjects(objectRefs);
-    repo.unmergedComponents.removeComponent(component.name);
-  }
-
-  /**
-   * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
+   * It doesn't save anything to the file-system.
+   * Only if the returned mergedVersions is not empty, the mergedComponent has changed.
    *
    * If the 'isImport' is true and the existing component wasn't changed locally, it doesn't check for
    * discrepancies, but simply override the existing component.
@@ -525,13 +550,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * changes where done on a lane, this function will not do anything because modelComponent
    * hasn't changed.
    */
-  async merge(
-    incomingComp: ModelComponent,
-    versionObjects: Version[],
-    remoteName: string | undefined, // not available on export (isImport = false)
-    isImport = true
-  ): Promise<{ mergedComponent: ModelComponent; mergedVersions: string[] }> {
-    const isExport = !isImport;
+  async merge(incomingComp: ModelComponent, versionObjects: Version[]): Promise<MergeResult> {
     const existingComp = await this._findComponent(incomingComp);
     if (existingComp && incomingComp.isEqual(existingComp)) {
       return { mergedComponent: incomingComp, mergedVersions: [] };
@@ -541,36 +560,53 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     const allHashes = allVersionsInfo.map((v) => v.ref).filter((ref) => ref) as Ref[];
     const incomingTagsAndSnaps = incomingComp.switchHashesWithTagsIfExist(allHashes);
     if (!existingComp) {
-      if (isExport) this.throwForMissingVersions(allVersionsInfo, incomingComp);
-      this.putModelComponent(incomingComp);
+      this.throwForMissingVersions(allVersionsInfo, incomingComp);
       return { mergedComponent: incomingComp, mergedVersions: incomingTagsAndSnaps };
     }
     const hashesOfHistoryGraph = allVersionsInfo
       .map((v) => (v.isPartOfHistory ? v.ref : null))
       .filter((ref) => ref) as Ref[];
-    const existingComponentHead = existingComp.getHead();
+    const existingComponentHead = existingComp.getHead()?.clone();
     const existingHeadIsMissingInIncomingComponent = Boolean(
       incomingComp.hasHead() &&
         existingComponentHead &&
         !hashesOfHistoryGraph.find((ref) => ref.isEqual(existingComponentHead))
     );
-    const existingComponentHashes = await getAllVersionHashes(existingComp, this.objects(), false);
-    const existingTagsAndSnaps = existingComp.switchHashesWithTagsIfExist(existingComponentHashes);
-    // for export, currently it'll always be true. later, we might want to support exporting
+    // currently it'll always be true. later, we might want to support exporting
     // dependencies from other scopes and then isIncomingFromOrigin could be false
-    const isIncomingFromOrigin = isImport ? remoteName === incomingComp.scope : incomingComp.scope === this.scope.name;
+    const isIncomingFromOrigin = incomingComp.scope === this.scope.name;
     const modelComponentMerger = new ModelComponentMerger(
       existingComp,
       incomingComp,
-      existingTagsAndSnaps,
-      incomingTagsAndSnaps,
-      isImport,
+      false,
       isIncomingFromOrigin,
       existingHeadIsMissingInIncomingComponent
     );
     const { mergedComponent, mergedVersions } = await modelComponentMerger.merge();
-    this.putModelComponent(mergedComponent);
+    if (existingComponentHead) {
+      const mergedSnaps = await this.getMergedSnaps(existingComponentHead, incomingComp, versionObjects);
+      mergedVersions.push(...mergedSnaps);
+    }
+
     return { mergedComponent, mergedVersions };
+  }
+
+  private async getMergedSnaps(
+    existingHead: Ref,
+    incomingComp: ModelComponent,
+    versionObjects: Version[]
+  ): Promise<string[]> {
+    const allIncomingVersionsInfoUntilExistingHead = await getAllVersionsInfo({
+      modelComponent: incomingComp,
+      throws: false,
+      versionObjects,
+      stopAt: existingHead,
+    });
+    const hashesOnly = allIncomingVersionsInfoUntilExistingHead
+      .filter((v) => !v.tag) // only non-tag, the tagged are already part of the mergedVersion
+      .map((v) => v.ref)
+      .filter((ref) => ref) as Ref[];
+    return hashesOnly.map((hash) => hash.toString());
   }
 
   private throwForMissingVersions(allVersionsInfo: VersionInfo[], component: ModelComponent) {
@@ -578,6 +614,30 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
     if (missingVersions.length) {
       throw new ExportMissingVersions(component.id(), missingVersions);
     }
+  }
+
+  async mergeComponents(
+    components: ModelComponent[],
+    versions: Version[]
+  ): Promise<{ mergeResults: MergeResult[]; errors: Error[] }> {
+    const mergeResults: MergeResult[] = [];
+    const errors: Array<MergeConflict | ComponentNeedsUpdate> = [];
+    await Promise.all(
+      components.map(async (component) => {
+        try {
+          const result = await this.merge(component, versions);
+          mergeResults.push(result);
+        } catch (err) {
+          if (err instanceof MergeConflict || err instanceof ComponentNeedsUpdate) {
+            // don't throw. instead, get all components with merge-conflicts
+            errors.push(err);
+          } else {
+            throw err;
+          }
+        }
+      })
+    );
+    return { mergeResults, errors };
   }
 
   /**
@@ -605,13 +665,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
   async mergeLane(
     lane: Lane,
     local: boolean
-  ): Promise<Array<{ mergedComponent: ModelComponent; mergedVersions: string[] } | ComponentNeedsUpdate>> {
+  ): Promise<{ mergeResults: MergeResult[]; mergeErrors: ComponentNeedsUpdate[]; mergeLane: Lane }> {
     const repo = this.objects();
     const existingLane = await this.scope.loadLane(lane.toLaneId());
-    if (!existingLane) {
-      repo.add(lane);
-    }
-    const mergeResults = await Promise.all(
+    const mergeResults: MergeResult[] = [];
+    const mergeErrors: ComponentNeedsUpdate[] = [];
+    await Promise.all(
       lane.components.map(async (component) => {
         const modelComponent = await this.get(component.id);
         if (!modelComponent) {
@@ -622,10 +681,12 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
           modelComponent.laneHeadLocal = component.head;
           const allVersions = await getAllVersionHashes(modelComponent, repo);
           if (existingLane) existingLane.addComponent(component);
-          return { mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) };
+          mergeResults.push({ mergedComponent: modelComponent, mergedVersions: allVersions.map((h) => h.toString()) });
+          return;
         }
         if (existingComponent.head.isEqual(component.head)) {
-          return { mergedComponent: modelComponent, mergedVersions: [] };
+          mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
+          return;
         }
         modelComponent.laneHeadRemote = component.head;
         modelComponent.laneHeadLocal = existingComponent.head;
@@ -634,23 +695,25 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (divergeResults.isDiverged()) {
           if (local) {
             // do not update the local lane. later, suggest to snap-merge.
-            return { mergedComponent: modelComponent, mergedVersions: [] };
+            mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
+            return;
           }
-          return new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString());
+          mergeErrors.push(new ComponentNeedsUpdate(component.id.toString(), existingComponent.head.toString()));
+          return;
         }
         if (divergeResults.isRemoteAhead()) {
           existingComponent.head = component.head;
-          return {
+          mergeResults.push({
             mergedComponent: modelComponent,
             mergedVersions: divergeResults.snapsOnRemoteOnly.map((h) => h.toString()),
-          };
+          });
+          return;
         }
         // local is ahead, nothing to merge.
-        return { mergedComponent: modelComponent, mergedVersions: [] };
+        mergeResults.push({ mergedComponent: modelComponent, mergedVersions: [] });
       })
     );
-    repo.add(existingLane);
-    // objects.forEach((obj) => repo.add(obj));
-    return mergeResults;
+
+    return { mergeResults, mergeErrors, mergeLane: existingLane || lane };
   }
 }

@@ -118,7 +118,7 @@ type GenerateTreeResults = {
  * @param config
  * @return {Object}
  */
-export default function generateTree(files = [], config): GenerateTreeResults {
+export default function generateTree(files: string[] = [], config): GenerateTreeResults {
   const depTree = {};
   const nonExistent = {};
   const npmPaths = {};
@@ -162,7 +162,6 @@ export default function generateTree(files = [], config): GenerateTreeResults {
       });
       Object.assign(depTree, dependencyTreeResult);
     } catch (err) {
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
       errors[file] = err;
     }
   });

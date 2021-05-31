@@ -1,8 +1,7 @@
 import { Component, ComponentID, Snap, State, TagMap } from '@teambit/component';
-
+import { IssuesList } from '@teambit/component-issues';
 import { Workspace } from '../workspace';
 import { ComponentStatus } from './component-status';
-import { Issues } from './issues';
 
 // TODO: refactor this to a composition rather than to use inheritance
 export class WorkspaceComponent extends Component {
@@ -42,7 +41,7 @@ export class WorkspaceComponent extends Component {
   /**
    * get all issues reported on the component.
    */
-  async getIssues(): Promise<Issues | null> {
+  getIssues(): IssuesList | null {
     return this.workspace.getComponentIssues(this);
   }
 

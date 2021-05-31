@@ -1,9 +1,9 @@
 import React, { ReactNode } from 'react';
 import { getDataFromTree } from '@apollo/client/react/ssr';
-import { NormalizedCacheObject } from '@apollo/client';
+import type { NormalizedCacheObject } from '@apollo/client';
 import pick from 'lodash.pick';
 
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 import type { BrowserData, RenderLifecycle } from '@teambit/ui';
 
 import type { GraphqlUI, GraphQLClient } from './graphql.ui.runtime';
@@ -64,14 +64,18 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
   };
 
   browserInit = ({ state }: { state?: NormalizedCacheObject } = {}) => {
-    const client = this.graphqlUI.createClient(window.location.host, { state });
+    const { location } = window;
+    const isInsecure = location.protocol === 'http:';
+    const wsUrl = `${isInsecure ? 'ws:' : 'wss:'}//${location.host}/subscriptions`;
 
-    this.graphqlUI._setClient(client);
+    const client = this.graphqlUI.createClient('/graphql', { state, subscriptionUri: wsUrl });
 
     return { client };
   };
 
   private BrowserGqlProvider = ({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) => {
+    if (!renderCtx?.client) throw new TypeError('GQL client is not initialized, make sure `.browserInit()` executes');
+
     return <this.graphqlUI.getProvider client={renderCtx?.client}>{children}</this.graphqlUI.getProvider>;
   };
 
@@ -79,7 +83,8 @@ export class GraphqlRenderLifecycle implements RenderLifecycle<RenderContext, { 
 }
 
 function ServerGqlProvider({ renderCtx, children }: { renderCtx?: RenderContext; children: ReactNode }) {
-  if (!renderCtx?.client) throw new TypeError('Gql client is has not been initialized during SSR');
+  if (!renderCtx?.client)
+    throw new TypeError('GQL client has not been initialized during SSR, make sure `.serverInit()` executes');
 
   const { client } = renderCtx;
   return <GraphQLProvider client={client}>{children}</GraphQLProvider>;

@@ -13,7 +13,7 @@ import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildca
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 import { BASE_DOCS_DOMAIN, DEBUG_LOG, IMPORT_PENDING_MSG } from '../constants';
-import { InvalidBitMap, MissingBitMapComponent, MissingMainFile } from '../consumer/bit-map/exceptions';
+import { InvalidBitMap, MissingMainFile } from '../consumer/bit-map/exceptions';
 import OutsideRootDir from '../consumer/bit-map/exceptions/outside-root-dir';
 import {
   DuplicateIds,
@@ -80,8 +80,6 @@ import {
   HashNotFound,
   HeadNotFound,
   InvalidIndexJson,
-  MergeConflict,
-  MergeConflictOnRemote,
   OutdatedIndexJson,
   ParentNotFound,
   ResolutionException,
@@ -221,42 +219,6 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [HashNotFound, (err) => `hash ${chalk.bold(err.hash)} not found`],
   [HeadNotFound, (err) => `head snap ${chalk.bold(err.headHash)} was not found for a component ${chalk.bold(err.id)}`],
   [
-    MergeConflict,
-    (err) =>
-      `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
-        ', '
-      )}
-to resolve it and merge your local and remote changes, please do the following:
-1) bit untag ${err.id} ${err.versions.join(' ')}
-2) bit import
-3) bit checkout ${err.versions.join(' ')} ${err.id}
-once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`,
-  ],
-  [
-    MergeConflictOnRemote,
-    (err) => {
-      let output = '';
-      if (err.idsAndVersions.length) {
-        output += `error: merge conflict occurred when exporting the component(s) ${err.idsAndVersions
-          .map((i) => `${chalk.bold(i.id)} (version(s): ${i.versions.join(', ')})`)
-          .join(', ')} to the remote scope.
-  to resolve this conflict and merge your remote and local changes, please do the following:
-  1) bit untag [id] [version]
-  2) bit import
-  3) bit checkout [version] [id]
-  once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`;
-      }
-      if (err.idsNeedUpdate) {
-        output += `error: merge error occurred when exporting the component(s) ${err.idsNeedUpdate
-          .map((i) => `${chalk.bold(i.id)}${i.lane ? ` (lane: ${i.lane})` : ''}`)
-          .join(', ')} to the remote scope.
-to resolve this error, please re-import the above components.
-if the component is up to date, run "bit status" to make sure it's not merge-pending`;
-      }
-      return output;
-    },
-  ],
-  [
     OutdatedIndexJson,
     (err) => `error: ${chalk.bold(err.id)} found in the index.json file, however, is missing from the scope.
 the cache is deleted and will be rebuilt on the next command. please re-run the command.`,
@@ -393,13 +355,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     (err) => {
       return `component ${err.id} is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue`;
     },
-  ],
-  [
-    MissingBitMapComponent,
-    (err) =>
-      `error: component "${chalk.bold(
-        err.id
-      )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`,
   ],
   [PathsNotExist, (err) => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
   [

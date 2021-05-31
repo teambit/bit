@@ -33,6 +33,7 @@ import {
 import { PathLinux, PathLinuxRelative, PathOsBased } from '../../../utils/path';
 import ComponentMap, { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
+import ComponentNotFoundInPath from '../../component/exceptions/component-not-found-in-path';
 import determineMainFile from './determine-main-file';
 import {
   DuplicateIds,
@@ -46,12 +47,14 @@ import {
   TestIsDirectory,
 } from './exceptions';
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
+import { IgnoredDirectory } from './exceptions/ignored-directory';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
+import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
 export type AddResult = { id: BitId; files: ComponentMapFile[] };
-type Warnings = {
+export type Warnings = {
   alreadyUsed: Record<string, any>;
   emptyDirectory: string[];
   existInScope: BitId[];
@@ -593,6 +596,7 @@ you can add the directory these files are located at and it'll change the root d
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
         this._throwForOutsideConsumer(relativeComponentPath);
+        this.throwForExistingParentDir(relativeComponentPath);
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
           nodir: true,
@@ -887,6 +891,26 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
       throw new PathOutsideConsumer(relativeToConsumerPath);
     }
   }
+
+  private throwForExistingParentDir(relativeToConsumerPath: PathOsBased) {
+    if (this.isLegacy) {
+      return; // with legacy, you can add files inside dir to track them.
+    }
+    const isParentDir = (parent: string) => {
+      const relative = path.relative(parent, relativeToConsumerPath);
+      return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+    };
+    this.bitMap.components.forEach((componentMap) => {
+      if (!componentMap.rootDir) return;
+      if (isParentDir(componentMap.rootDir)) {
+        throw new ParentDirTracked(
+          componentMap.rootDir,
+          componentMap.id.toStringWithoutVersion(),
+          relativeToConsumerPath
+        );
+      }
+    });
+  }
 }
 
 /**
@@ -925,8 +949,9 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
     cwd: consumerPath,
     nodir: true,
   });
+  if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches = gitIgnore.filter(matches);
-  if (!filteredMatches.length) throw new EmptyDirectory(dir);
+  if (!filteredMatches.length) throw new IgnoredDirectory(dir);
   return filteredMatches.map((match: PathOsBased) => {
     const normalizedPath = pathNormalizeToLinux(match);
     // the path is relative to consumer. remove the rootDir.

@@ -18,7 +18,12 @@ An avatar component, consisting of 3 different types of Avatar:
   const accounts = {
     defAccount: { name: 'defaultAccount', type: 'default', profileImage: 'https://static.bit.dev/harmony/support.svg' },
     orgAccount: { name: 'defaultAccount', type: 'organization', profileImage: 'https://static.bit.dev/bit-logo.svg' },
-    userAccount: { name: 'defaultAccount', type: 'user', profileImage: 'https://static.bit.dev/harmony/github.svg' },
+    userAccount: {
+      displayName: 'display name',
+      name: 'defaultAccount',
+      type: 'user',
+      profileImage: 'https://static.bit.dev/harmony/github.svg',
+    },
   };
 
   return (
@@ -35,6 +40,52 @@ An avatar component, consisting of 3 different types of Avatar:
         User avatar
         <UserAvatar size={32} account={accounts.userAccount} />
       </div>
+      <div>
+        User avatar with tooltip
+        <UserAvatar size={32} account={accounts.userAccount} showTooltip />
+      </div>
+    </div>
+  );
+};
+```
+
+An Avatar with no picture, will show the initials of the user name, and use the first letter to determine the background-color.
+
+```js live
+() => {
+  const letters = [
+    'a',
+    'b',
+    'c',
+    'd',
+    'e',
+    'f',
+    'g',
+    'h',
+    'i',
+    'j',
+    'k',
+    'l',
+    'm',
+    'n',
+    'o',
+    'p',
+    'q',
+    'r',
+    's',
+    't',
+    'u',
+    'v',
+    'w',
+    'x',
+    'y',
+    'z',
+  ];
+  return (
+    <div>
+      {letters.map((value, index) => (
+        <UserAvatar size={32} account={{ name: `${value}k` }} showTooltip key={index} />
+      ))}
     </div>
   );
 };

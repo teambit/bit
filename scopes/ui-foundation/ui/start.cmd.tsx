@@ -1,14 +1,14 @@
 import React from 'react';
 import { Command, CommandOptions } from '@teambit/cli';
 import { Logger } from '@teambit/logger';
-import { UIServerConsole } from '@teambit/cli.ui-server-console';
+import { UIServerConsole } from '@teambit/ui-foundation.cli.ui-server-console';
 import type { UiMain } from './ui.main.runtime';
 
 export class StartCmd implements Command {
   name = 'start [type] [pattern]';
   description = 'Start a dev environment for a workspace or a specific component';
   alias = 'c';
-  group = 'component';
+  group = 'development';
   shortDescription = '';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
@@ -61,18 +61,17 @@ export class StartCmd implements Command {
     }: { dev: boolean; port: string; rebuild: boolean; verbose: boolean; suppressBrowserLaunch: boolean }
   ): Promise<React.ReactElement> {
     // remove wds logs until refactoring webpack to a worker through the Worker aspect.
-    const processWrite = process.stdout.write.bind(process.stdout);
-    process.stdout.write = (data, cb) => {
-      if (data.includes('｢wds｣') && !verbose) return processWrite('', cb);
-      return processWrite(data, cb);
-    };
-
-    // const startTime = Date.now();
+    // const processWrite = process.stdout.write.bind(process.stdout);
+    // process.stdout.write = (data, cb) => {
+    //   if (data.includes('｢wds｣') && !verbose) return processWrite('', cb);
+    //   return processWrite(data, cb);
+    // };
 
     const pattern = userPattern && userPattern.toString();
     this.logger.off();
-
-    const [, uiRoot] = this.ui.getUi();
+    const ui = this.ui.getUi();
+    if (!ui) throw new Error('ui not found');
+    const [, uiRoot] = ui;
     const appName = uiRoot.name;
     const uiServer = this.ui.createRuntime({
       uiRootName,

@@ -1,7 +1,7 @@
 import { Scope } from '..';
 import { BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
-import { mergeObjects } from '../component-ops/export-scope-components';
+import { saveObjects } from '../component-ops/export-scope-components';
 import { Lane } from '../models';
 import { AuthData } from '../network/http/http';
 import { Action } from './action';
@@ -17,9 +17,7 @@ export class ExportPersist implements Action<Options, string[]> {
     const objectList = await scope.readObjectsFromPendingDir(options.clientId);
 
     logger.debugAndAddBreadCrumb('ExportPersist', `going to merge ${objectList.objects.length} objects`);
-    const bitIds: BitIds = await mergeObjects(scope, objectList);
-    await scope.objects.persist();
-    logger.debugAndAddBreadCrumb('ExportPersist', 'objects were written successfully to the filesystem');
+    const bitIds: BitIds = await saveObjects(scope, objectList);
 
     const componentsIds: string[] = bitIds.map((id) => id.toString());
     await scope.removePendingDir(options.clientId);

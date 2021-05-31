@@ -4,8 +4,6 @@ import { Component, ComponentAspect } from '@teambit/component';
 import { EnvsAspect, EnvsMain } from '@teambit/envs';
 import { GraphqlAspect, GraphqlMain } from '@teambit/graphql';
 import { Slot, SlotRegistry } from '@teambit/harmony';
-import { UIRoot } from '@teambit/ui';
-
 import { BrowserRuntime } from './browser-runtime';
 import { BundlerAspect } from './bundler.aspect';
 import { ComponentServer } from './component-server';
@@ -15,11 +13,16 @@ import { DevServerService } from './dev-server.service';
 
 export type BrowserRuntimeSlot = SlotRegistry<BrowserRuntime>;
 
+export type BundlerConfig = {
+  dedicatedEnvDevServers: string[];
+};
+
 /**
  * bundler extension.
  */
 export class BundlerMain {
   constructor(
+    readonly config: BundlerConfig,
     /**
      * Pubsub extension.
      */
@@ -45,15 +48,16 @@ export class BundlerMain {
    * load all given components in corresponding dev servers.
    * @param components defaults to all components in the workspace.
    */
-  async devServer(components: Component[], root: UIRoot): Promise<ComponentServer[]> {
+  async devServer(components: Component[]): Promise<ComponentServer[]> {
     const envRuntime = await this.envs.createEnvironment(components);
     // TODO: this must be refactored away from here. this logic should be in the Preview.
-    this.devService.uiRoot = root;
-    const servers = await envRuntime.runOnce<ComponentServer[]>(this.devService);
+    const servers: ComponentServer[] = await envRuntime.runOnce<ComponentServer[]>(this.devService, {
+      dedicatedEnvDevServers: this.config.dedicatedEnvDevServers,
+    });
     this._componentServers = servers;
 
     this.indexByComponent();
-    // @ts-ignore
+
     return this._componentServers;
   }
 
@@ -64,8 +68,9 @@ export class BundlerMain {
   getComponentServer(component: Component): undefined | ComponentServer {
     if (!this._componentServers) return undefined;
     const envId = this.envs.getEnvId(component);
-    const server = this._componentServers.find((componentServer) =>
-      componentServer.context.relatedContexts.includes(envId)
+    const server = this._componentServers.find(
+      (componentServer) =>
+        componentServer.context.relatedContexts.includes(envId) || componentServer.context.id === envId
     );
 
     return server;
@@ -111,12 +116,16 @@ export class BundlerMain {
   static runtime = MainRuntime;
   static dependencies = [PubsubAspect, EnvsAspect, GraphqlAspect, ComponentAspect];
 
+  static defaultConfig = {
+    dedicatedEnvDevServers: [],
+  };
+
   static async provider(
     [pubsub, envs, graphql]: [PubsubMain, EnvsMain, GraphqlMain],
     config,
     [runtimeSlot]: [BrowserRuntimeSlot]
   ) {
-    const bundler = new BundlerMain(pubsub, envs, new DevServerService(pubsub, runtimeSlot), runtimeSlot);
+    const bundler = new BundlerMain(config, pubsub, envs, new DevServerService(pubsub, runtimeSlot), runtimeSlot);
 
     graphql.register(devServerSchema(bundler));
 

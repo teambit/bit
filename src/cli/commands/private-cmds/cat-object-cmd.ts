@@ -5,6 +5,7 @@ export default class CatObject implements LegacyCommand {
   name = 'cat-object <hash>';
   description = 'cat a bit object by hash';
   private = true;
+  loader = false;
   alias = '';
   opts = [
     ['p', 'pretty', 'pretty print for the objects'],
@@ -16,7 +17,6 @@ export default class CatObject implements LegacyCommand {
     [hash]: [string],
     { pretty, stringify, headers }: { pretty: boolean; stringify: boolean; headers: boolean }
   ): Promise<any> {
-    // @TODO - import should support multiple bits
     return catObject(hash, pretty, stringify, headers);
   }
 

@@ -9,7 +9,6 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-// @TODO: REMOVE THE SKIP ASAP
 describe('extensions config diff', function () {
   this.timeout(0);
   let helper: Helper;

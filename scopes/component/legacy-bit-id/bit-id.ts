@@ -1,7 +1,7 @@
 import decamelize from 'decamelize';
 import * as path from 'path';
-import R from 'ramda';
 import * as semver from 'semver';
+import { is, head, tail } from 'ramda';
 import { versionParser, isHash, LATEST_VERSION } from '@teambit/component-version';
 import isValidIdChunk from './utils/is-valid-id-chunk';
 import isValidScopeName from './utils/is-valid-scope-name';
@@ -153,7 +153,7 @@ export default class BitId {
   }
 
   static parse(id: BitIdStr, hasScope = true, version: string = LATEST_VERSION): BitId {
-    if (!R.is(String, id)) {
+    if (!is(String, id)) {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
 
@@ -267,7 +267,7 @@ export default class BitId {
     // allow only one dot
     const nameSplitByDot = cleanName.split('.');
     if (nameSplitByDot.length > 1) {
-      cleanName = `${R.head(nameSplitByDot)}.${R.tail(nameSplitByDot).join('')}`;
+      cleanName = `${head(nameSplitByDot)}.${tail(nameSplitByDot).join('')}`;
     }
 
     if (!cleanName) {

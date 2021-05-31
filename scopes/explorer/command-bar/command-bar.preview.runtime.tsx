@@ -1,5 +1,6 @@
 import { PreviewRuntime } from '@teambit/preview';
 import { PubsubAspect, PubsubPreview } from '@teambit/pubsub';
+import { isOpenCommandBarKeybinding } from './keybinding';
 import { CommandBarAspect } from './command-bar.aspect';
 import { KeyEvent } from './model/key-event';
 
@@ -13,8 +14,9 @@ export class CommandBarPreview {
   handleKeyEvent = (e: KeyboardEvent) => {
     const { target } = e;
     if (!target || isEditable(target as HTMLElement)) return;
+    if (isDenyListed(e)) e.preventDefault();
 
-    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e))?.catch(() => {});
+    this.pubSub.pub(CommandBarAspect.id, new KeyEvent(e));
   };
 
   static dependencies = [PubsubAspect];
@@ -31,3 +33,8 @@ function isEditable(element: HTMLElement) {
 }
 
 CommandBarAspect.addRuntime(CommandBarPreview);
+
+// block default browser behavior that would override our keybinding.
+function isDenyListed(e: KeyboardEvent) {
+  return isOpenCommandBarKeybinding(e);
+}

@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { SlotRegistry, Slot } from '@teambit/harmony';
 import { flatten } from 'lodash';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
@@ -23,11 +24,11 @@ import { UpdateDependenciesAspect } from './update-dependencies.aspect';
 
 export type UpdateDepsOptions = {
   tag?: boolean;
-  snap?: boolean;
   output?: string;
   message?: string;
   username?: string;
   email?: string;
+  push?: boolean;
 };
 
 export type DepUpdateItemRaw = {
@@ -48,6 +49,9 @@ export type UpdateDepsResult = {
   error: string | null;
 };
 
+type OnPostUpdateDependencies = (components: Component[]) => Promise<void>;
+type OnPostUpdateDependenciesSlot = SlotRegistry<OnPostUpdateDependencies>;
+
 export class UpdateDependenciesMain {
   private depsUpdateItems: DepUpdateItem[];
   private updateDepsOptions: UpdateDepsOptions;
@@ -55,7 +59,8 @@ export class UpdateDependenciesMain {
     private scope: ScopeMain,
     private logger: Logger,
     private builder: BuilderMain,
-    private dependencyResolver: DependencyResolverMain
+    private dependencyResolver: DependencyResolverMain,
+    private onPostUpdateDependenciesSlot: OnPostUpdateDependenciesSlot
   ) {}
 
   /**
@@ -79,6 +84,8 @@ export class UpdateDependenciesMain {
     this.addBuildStatus();
     await this.addComponentsToScope();
     await this.updateComponents();
+    // await this.scope.reloadAspectsWithNewVersion(this.legacyComponents);
+    await mapSeries(this.components, (component) => this.scope.loadComponentsAspect(component));
     const { builderDataMap, pipeResults } = await this.builder.tagListener(
       this.components,
       { throwOnError: true }, // we might change it later to not throw.
@@ -91,6 +98,7 @@ export class UpdateDependenciesMain {
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
     await this.saveDataIntoLocalScope(buildStatus);
     await this.export();
+    await this.triggerOnPostUpdateDependencies();
 
     return {
       depsUpdateItems: this.depsUpdateItems,
@@ -104,6 +112,16 @@ export class UpdateDependenciesMain {
   }
   get components(): Component[] {
     return this.depsUpdateItems.map((d) => d.component);
+  }
+
+  registerOnPostUpdateDependencies(fn: OnPostUpdateDependencies) {
+    this.onPostUpdateDependenciesSlot.register(fn);
+  }
+
+  private async triggerOnPostUpdateDependencies() {
+    await Promise.all(this.onPostUpdateDependenciesSlot.values().map((fn) => fn(this.components))).catch((err) =>
+      this.logger.error('got an error during on-post-updates hook', err)
+    );
   }
 
   private async importAllMissing(depsUpdateItemsRaw: DepUpdateItemRaw[]) {
@@ -158,9 +176,10 @@ export class UpdateDependenciesMain {
   }
 
   private async parseDevUpdatesItems(depsUpdateItemsRaw: DepUpdateItemRaw[]): Promise<DepUpdateItem[]> {
+    this.logger.setStatusLine(`loading ${depsUpdateItemsRaw.length} components and their aspects...`);
     return mapSeries(depsUpdateItemsRaw, async (depUpdateItemRaw) => {
       const componentId = ComponentID.fromString(depUpdateItemRaw.componentId);
-      const component = await this.scope.get(componentId);
+      const component = await this.scope.load(componentId);
       if (!component) throw new ComponentNotFound(componentId);
       const dependencies = await Promise.all(
         depUpdateItemRaw.dependencies.map((dep) => this.getDependencyWithExactVersion(dep))
@@ -181,6 +200,7 @@ export class UpdateDependenciesMain {
   }
 
   private async updateFutureVersion() {
+    this.logger.setStatusLine(`updateFutureVersion...`);
     await mapSeries(this.depsUpdateItems, async (depUpdateItem) => {
       const legacyComp: ConsumerComponent = depUpdateItem.component.state._consumer;
       const modelComponent = await this.scope.legacyScope.getModelComponent(legacyComp.id);
@@ -188,7 +208,7 @@ export class UpdateDependenciesMain {
         const { releaseType, exactVersion } = getValidVersionOrReleaseType(depUpdateItem.versionToTag || 'patch');
         legacyComp.version = modelComponent.getVersionToAdd(releaseType, exactVersion);
       } else {
-        // snap is the default. When the "--snap" flag wasn't used it still should snap but not export.
+        // snap is the default
         legacyComp.version = modelComponent.getSnapToAdd();
       }
     });
@@ -255,7 +275,7 @@ export class UpdateDependenciesMain {
   }
 
   private async export() {
-    const shouldExport = this.updateDepsOptions.tag || this.updateDepsOptions.snap;
+    const shouldExport = this.updateDepsOptions.push;
     if (!shouldExport) return;
     const ids = BitIds.fromArray(this.legacyComponents.map((c) => c.id));
     await exportMany({
@@ -275,15 +295,27 @@ export class UpdateDependenciesMain {
 
   static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect, DependencyResolverAspect];
 
-  static async provider([cli, scope, loggerMain, builder, dependencyResolver]: [
-    CLIMain,
-    ScopeMain,
-    LoggerMain,
-    BuilderMain,
-    DependencyResolverMain
-  ]) {
+  static slots = [Slot.withType<OnPostUpdateDependenciesSlot>()];
+
+  static async provider(
+    [cli, scope, loggerMain, builder, dependencyResolver]: [
+      CLIMain,
+      ScopeMain,
+      LoggerMain,
+      BuilderMain,
+      DependencyResolverMain
+    ],
+    _,
+    [onPostUpdateDependenciesSlot]: [OnPostUpdateDependenciesSlot]
+  ) {
     const logger = loggerMain.createLogger(UpdateDependenciesAspect.id);
-    const updateDependenciesMain = new UpdateDependenciesMain(scope, logger, builder, dependencyResolver);
+    const updateDependenciesMain = new UpdateDependenciesMain(
+      scope,
+      logger,
+      builder,
+      dependencyResolver,
+      onPostUpdateDependenciesSlot
+    );
     cli.register(new UpdateDependenciesCmd(updateDependenciesMain, scope, logger));
     return updateDependenciesMain;
   }

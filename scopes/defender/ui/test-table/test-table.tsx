@@ -1,9 +1,9 @@
 import classNames from 'classnames';
-import { TestRow } from '@teambit/ui.test-row';
-import { timeFormat } from '@teambit/time.time-format';
+import { TestRow } from '@teambit/defender.ui.test-row';
+import { timeFormat } from '@teambit/toolbox.time.time-format';
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { TestsFiles, TestResult } from '@teambit/tester';
+import { TestsFiles, TestResult } from '@teambit/tests-results';
 import { TestFileTitle } from './test-file-title';
 import { getStatusIcon } from './utils';
 import styles from './test-table.module.scss';

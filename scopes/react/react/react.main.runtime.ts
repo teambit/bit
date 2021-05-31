@@ -1,5 +1,4 @@
-import { Configuration } from 'webpack';
-import { merge } from 'lodash';
+import { mergeDeepLeft } from 'ramda';
 import { MainRuntime } from '@teambit/cli';
 import type { CompilerMain } from '@teambit/compiler';
 import { CompilerAspect, Compiler } from '@teambit/compiler';
@@ -14,21 +13,24 @@ import type { PkgMain, PackageJsonProps } from '@teambit/pkg';
 import { PkgAspect } from '@teambit/pkg';
 import type { TesterMain } from '@teambit/tester';
 import { TesterAspect } from '@teambit/tester';
-import type { TypescriptMain } from '@teambit/typescript';
+import type { TypescriptMain, TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { TypescriptAspect } from '@teambit/typescript';
-import type { WebpackMain } from '@teambit/webpack';
+import type { WebpackMain, Configuration, WebpackConfigTransformer } from '@teambit/webpack';
 import { WebpackAspect } from '@teambit/webpack';
-import { MDXAspect, MDXMain } from '@teambit/mdx';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { Workspace, WorkspaceAspect } from '@teambit/workspace';
-import { MultiCompilerAspect, MultiCompilerMain } from '@teambit/multi-compiler';
 import { DevServerContext, BundlerContext } from '@teambit/bundler';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import ts, { TsConfigSourceFile } from 'typescript';
+import { ApplicationAspect, ApplicationMain } from '@teambit/application';
 import { ESLintMain, ESLintAspect } from '@teambit/eslint';
 import jest from 'jest';
 import { ReactAspect } from './react.aspect';
 import { ReactEnv } from './react.env';
 import { reactSchema } from './react.graphql';
+import { ReactAppOptions } from './react-app-options';
+import { ReactApp } from './react.application';
+import { componentTemplates, workspaceTemplates } from './react.templates';
 
 type ReactDeps = [
   EnvsMain,
@@ -41,8 +43,8 @@ type ReactDeps = [
   PkgMain,
   TesterMain,
   ESLintMain,
-  MultiCompilerMain,
-  MDXMain
+  ApplicationMain,
+  GeneratorMain
 ];
 
 export type ReactMainConfig = {
@@ -59,16 +61,14 @@ export type ReactMainConfig = {
   tester: 'jest' | 'mocha';
 
   /**
-   * determine whether to compile MDX files or not.
-   * please note this does not apply to component documentation which will work anyway.
-   * configure this to `true` when sharing MDX components and MDX file compilation is required.
-   */
-  mdx: boolean;
-
-  /**
    * version of React to configure.
    */
   reactVersion: string;
+};
+
+export type UseWebpackModifiers = {
+  previewConfig?: WebpackConfigTransformer[];
+  devServerConfig?: WebpackConfigTransformer[];
 };
 
 export class ReactMain {
@@ -78,7 +78,11 @@ export class ReactMain {
      */
     readonly reactEnv: ReactEnv,
 
-    private envs: EnvsMain
+    private envs: EnvsMain,
+
+    private application: ApplicationMain,
+
+    private workspace: Workspace
   ) {}
 
   readonly env = this.reactEnv;
@@ -89,12 +93,16 @@ export class ReactMain {
    * override the TS config of the React environment.
    * @param tsModule typeof `ts` module instance.
    */
-  overrideTsConfig(tsconfig: TsConfigSourceFile, tsModule: any = ts) {
+  overrideTsConfig(
+    tsconfig: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule: any = ts
+  ) {
     this.tsConfigOverride = tsconfig;
 
     return this.envs.override({
       getCompiler: () => {
-        return this.reactEnv.getCompiler(tsconfig, {}, tsModule);
+        return this.reactEnv.getCompiler(tsconfig, compilerOptions, tsModule);
       },
     });
   }
@@ -102,21 +110,71 @@ export class ReactMain {
   /**
    * override the build tsconfig.
    */
-  overrideBuildTsConfig(tsconfig) {
+  overrideBuildTsConfig(tsconfig, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig);
+        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions);
       },
     });
   }
 
   /**
+   * register a new React application.
+   */
+  registerReactApp(options: ReactAppOptions) {
+    if (!this.workspace) return;
+    this.application.registerApp(
+      new ReactApp(
+        options.name,
+        options.entry,
+        options.portRange || [3000, 4000],
+        this.reactEnv,
+        this.workspace.path,
+        options.deploy
+      )
+    );
+  }
+
+  useWebpack(modifiers?: UseWebpackModifiers): EnvTransformer {
+    const overrides: any = {};
+    const devServerTransformers = modifiers?.devServerConfig;
+    if (devServerTransformers) {
+      overrides.getDevServer = (context: DevServerContext) =>
+        this.reactEnv.getDevServer(context, devServerTransformers);
+      overrides.getDevEnvId = (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id);
+    }
+    const previewTransformers = modifiers?.previewConfig;
+    if (previewTransformers) {
+      overrides.getBundler = (context: BundlerContext) => this.reactEnv.getBundler(context, previewTransformers);
+    }
+    return this.envs.override(overrides);
+  }
+
+  /**
+   * @deprecated use useWebpack()
    * override the dev server webpack config.
    */
   overrideDevServerConfig(config: Configuration) {
+    const transformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([config]);
+    };
+
     return this.envs.override({
-      getDevServer: (context: DevServerContext) => this.reactEnv.getDevServer(context, config),
+      getDevServer: (context: DevServerContext) => this.reactEnv.getDevServer(context, [transformer]),
       getDevEnvId: (context: DevServerContext) => this.reactEnv.getDevEnvId(context.envDefinition.id),
+    });
+  }
+
+  /**
+   * @deprecated use useWebpack()
+   * override the preview webpack config.
+   */
+  overridePreviewConfig(config: Configuration) {
+    const transformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([config]);
+    };
+    return this.envs.override({
+      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, [transformer]),
     });
   }
 
@@ -125,15 +183,6 @@ export class ReactMain {
    */
   compose(transformers: EnvTransformer[], targetEnv: Environment = {}) {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactEnv), transformers);
-  }
-
-  /**
-   * override the preview webpack config.
-   */
-  overridePreviewConfig(config: Configuration) {
-    return this.envs.override({
-      getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, config),
-    });
   }
 
   /**
@@ -163,7 +212,7 @@ export class ReactMain {
   }
 
   /**
-   * override the build pipeline of the component environment.
+   * override the compiler tasks inside the build pipeline of the component environment.
    */
   overrideCompilerTasks(tasks: BuildTask[]) {
     const pipeWithoutCompiler = this.reactEnv.getBuildPipe().filter((task) => task.aspectId !== CompilerAspect.id);
@@ -178,7 +227,10 @@ export class ReactMain {
    */
   overrideDependencies(dependencyPolicy: VariantPolicyConfigObject) {
     return this.envs.override({
-      getDependencies: () => merge(dependencyPolicy, this.reactEnv.getDependencies()),
+      getDependencies: async () => {
+        const reactDeps = await this.reactEnv.getDependencies();
+        return mergeDeepLeft(dependencyPolicy, reactDeps);
+      },
     });
   }
 
@@ -193,6 +245,9 @@ export class ReactMain {
     });
   }
 
+  /**
+   * TODO: @gilad we need to implement this.
+   */
   overrideEslintConfig() {}
 
   /**
@@ -208,18 +263,6 @@ export class ReactMain {
       },
     });
   }
-
-  /**
-   * overrides the preview compositions mounter.
-   * this allows to create a custom DOM mounter for compositions of components.
-   */
-  // overrideCompositionsMounter(mounterPath: string) {
-  //   return this.envs.override({
-  //     getMounter: () => {
-  //       return mounterPath;
-  //     }
-  //   });
-  // }
 
   /**
    * returns doc adjusted specifically for react components.
@@ -251,8 +294,8 @@ export class ReactMain {
     PkgAspect,
     TesterAspect,
     ESLintAspect,
-    MultiCompilerAspect,
-    MDXAspect,
+    ApplicationAspect,
+    GeneratorAspect,
   ];
 
   static async provider(
@@ -267,27 +310,17 @@ export class ReactMain {
       pkg,
       tester,
       eslint,
-      multiCompiler,
-      mdx,
+      application,
+      generator,
     ]: ReactDeps,
     config: ReactMainConfig
   ) {
-    const reactEnv = new ReactEnv(
-      jestAspect,
-      tsAspect,
-      compiler,
-      webpack,
-      workspace,
-      pkg,
-      tester,
-      config,
-      eslint,
-      multiCompiler,
-      mdx
-    );
-    const react = new ReactMain(reactEnv, envs);
+    const reactEnv = new ReactEnv(jestAspect, tsAspect, compiler, webpack, workspace, pkg, tester, config, eslint);
+    const react = new ReactMain(reactEnv, envs, application, workspace);
     graphql.register(reactSchema(react));
     envs.registerEnv(reactEnv);
+    generator.registerComponentTemplate(componentTemplates);
+    generator.registerWorkspaceTemplate(workspaceTemplates);
     return react;
   }
 }

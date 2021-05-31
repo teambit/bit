@@ -1,7 +1,8 @@
-import { join, extname } from 'path';
+import { join } from 'path';
+import pMapSeries from 'p-map-series';
 import { Compiler, CompilerOptions, TranspileOutput, TranspileOpts } from '@teambit/compiler';
 import { BuiltTaskResult, BuildContext, TaskResultsList } from '@teambit/builder';
-import { mergeComponentResults } from '@teambit/modules.merge-component-results';
+import { mergeComponentResults } from '@teambit/pipelines.modules.merge-component-results';
 
 export type MultiCompilerOptions = {
   targetExtension?: string;
@@ -10,8 +11,10 @@ export type MultiCompilerOptions = {
 export class MultiCompiler implements Compiler {
   displayName = 'Multi compiler';
 
-  shouldCopyNonSupportedFiles = this.compilerOptions.shouldCopyNonSupportedFiles || true;
-
+  shouldCopyNonSupportedFiles =
+    typeof this.compilerOptions.shouldCopyNonSupportedFiles === 'boolean'
+      ? this.compilerOptions.shouldCopyNonSupportedFiles
+      : true;
   distDir = 'dist';
 
   constructor(
@@ -54,27 +57,30 @@ export class MultiCompiler implements Compiler {
    * the multi-compiler applies all applicable defined compilers on given content.
    */
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const output: TranspileOutput = [];
+    const outputs = this.compilers.reduce<any>(
+      (files, compiler) => {
+        return files?.flatMap((file) => {
+          if (!compiler.isFileSupported(file?.outputPath)) return [file];
+          const opts = Object.assign({}, options, {
+            filePath: file.outputPath,
+          });
+          const compiledContent = compiler.transpileFile(file.outputText, opts);
+          if (!compiledContent) return null;
 
-    this.compilers.forEach((compiler) => {
-      if (!compiler.isFileSupported(options.filePath)) return fileContent;
-      const compiledContent = compiler.transpileFile(fileContent, options);
-      if (!compiledContent) return null;
-      compiledContent[0].outputPath;
-      output.push(...compiledContent);
-      return compiledContent;
-    }, fileContent);
+          return compiledContent;
+        });
+      },
+      [{ outputText: fileContent, outputPath: options.filePath }]
+    );
 
-    return output;
+    return outputs;
   }
 
   async build(context: BuildContext): Promise<BuiltTaskResult> {
-    const builds = await Promise.all(
-      this.compilers.map(async (compiler) => {
-        const buildResult = await compiler.build(context);
-        return buildResult.componentsResults;
-      })
-    );
+    const builds = await pMapSeries(this.compilers, async (compiler) => {
+      const buildResult = await compiler.build(context);
+      return buildResult.componentsResults;
+    });
 
     return {
       componentsResults: mergeComponentResults(builds),
@@ -100,11 +106,8 @@ export class MultiCompiler implements Compiler {
     );
   }
 
-  private replaceFileExtToTarget(filePath: string): string {
-    const { targetExtension } = this.getOptions();
-    if (!this.isFileSupported(filePath)) return filePath;
-    const fileExtension = extname(filePath);
-    return filePath.replace(new RegExp(`${fileExtension}$`), targetExtension); // makes sure it's the last occurrence
+  private firstMatchedCompiler(filePath: string): Compiler | undefined {
+    return this.compilers.find((compiler) => compiler.isFileSupported(filePath));
   }
 
   /**
@@ -112,14 +115,19 @@ export class MultiCompiler implements Compiler {
    * both, the return path and the given path are relative paths.
    */
   getDistPathBySrcPath(srcPath: string): string {
-    return join(this.distDir, this.replaceFileExtToTarget(srcPath));
+    const matchedCompiler = this.firstMatchedCompiler(srcPath);
+    if (!matchedCompiler) {
+      return join(this.distDir, srcPath);
+    }
+
+    return matchedCompiler.getDistPathBySrcPath(srcPath);
   }
 
   /**
    * only supported files matching get compiled. others, are copied to the dist dir.
    */
   isFileSupported(filePath: string): boolean {
-    return !!this.compilers.find((compiler) => compiler.isFileSupported(filePath));
+    return !!this.firstMatchedCompiler(filePath);
   }
 
   /**

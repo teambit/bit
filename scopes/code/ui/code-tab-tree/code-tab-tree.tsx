@@ -1,15 +1,15 @@
 import React, { useState, useCallback, HTMLAttributes, useContext } from 'react';
 import classNames from 'classnames';
-import { FileTree } from '@teambit/ui.tree.file-tree';
-import { DrawerUI } from '@teambit/ui.tree.drawer';
-import { TreeNode as Node } from '@teambit/ui.tree.tree-node';
-import { FolderTreeNode } from '@teambit/ui.tree.folder-tree-node';
-import { getFileIcon, FileIconMatch } from '@teambit/ui.utils.get-file-icon';
+import { FileTree } from '@teambit/ui-foundation.ui.tree.file-tree';
+import { DrawerUI } from '@teambit/ui-foundation.ui.tree.drawer';
+import { TreeNode as Node } from '@teambit/ui-foundation.ui.tree.tree-node';
+import { FolderTreeNode } from '@teambit/ui-foundation.ui.tree.folder-tree-node';
+import { getFileIcon, FileIconMatch } from '@teambit/code.ui.utils.get-file-icon';
 import { TreeContext } from '@teambit/base-ui.graph.tree.tree-context';
-import { useCodeParams } from '@teambit/ui.hooks.use-code-params';
+import { useCodeParams } from '@teambit/code.ui.hooks.use-code-params';
 import { Label } from '@teambit/documenter.ui.label';
-import type { DependencyType } from '@teambit/ui.queries.get-component-code';
-import { DependencyTree } from '@teambit/ui.dependency-tree';
+import type { DependencyType } from '@teambit/code.ui.queries.get-component-code';
+import { DependencyTree } from '@teambit/code.ui.dependency-tree';
 
 import styles from './code-tab-tree.module.scss';
 

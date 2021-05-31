@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import React, { ReactNode } from 'react';
 import { isEmpty } from 'lodash';
 import { SlotRegistry } from '@teambit/harmony';
-import { KeySequence } from '@teambit/ui.keycap';
+import { KeySequence } from '@teambit/ui-foundation.ui.keycap';
 import styles from './main-dropdown.module.scss';
 
 export type MenuItem = {

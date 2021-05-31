@@ -1,9 +1,9 @@
 import fs from 'fs-extra';
+import { Mutex } from 'async-mutex';
 import { uniqBy } from 'lodash';
 import * as path from 'path';
-import R from 'ramda';
 import pMap from 'p-map';
-import { CONCURRENT_IO_LIMIT, OBJECTS_DIR } from '../../constants';
+import { OBJECTS_DIR } from '../../constants';
 import logger from '../../logger/logger';
 import { glob, resolveGroupId, writeFile } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
@@ -20,6 +20,9 @@ import { ObjectItem, ObjectList } from './object-list';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { ContentTransformer, onPersist, onRead } from './repository-hooks';
+import { concurrentIOLimit } from '../../utils/concurrency';
+import { createInMemoryCache } from '../../cache/cache-factory';
+import { getMaxSizeForObjects, InMemoryCache } from '../../cache/in-memory-cache';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -33,15 +36,16 @@ export default class Repository {
   scopePath: string;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   scopeIndex: ScopeIndex;
-  // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-  _cache: { [key: string]: BitObject } = {};
+  private cache: InMemoryCache<BitObject>;
   remoteLanes!: RemoteLanes;
   unmergedComponents!: UnmergedComponents;
+  persistMutex = new Mutex();
   constructor(scopePath: string, scopeJson: ScopeJson) {
     this.scopePath = scopePath;
     this.scopeJson = scopeJson;
     this.onRead = onRead(scopePath, scopeJson);
     this.onPersist = onPersist(scopePath, scopeJson);
+    this.cache = createInMemoryCache({ maxSize: getMaxSizeForObjects() });
   }
 
   static async load({ scopePath, scopeJson }: { scopePath: string; scopeJson: ScopeJson }): Promise<Repository> {
@@ -108,33 +112,34 @@ export default class Repository {
     if (cached) {
       return cached;
     }
-    // @ts-ignore @todo: fix! it should return BitObject | null.
-    return fs
-      .readFile(this.objectPath(ref))
-      .then((fileContents) => {
-        return this.onRead(fileContents);
-      })
-      .then((fileContents) => {
-        return BitObject.parseObject(fileContents);
-      })
-      .then((parsedObject: BitObject) => {
-        this.setCache(parsedObject);
-        return parsedObject;
-      })
-      .catch((err) => {
-        if (err.code !== 'ENOENT') {
-          logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
-          throw err;
-        }
-        logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
-        if (throws) throw err;
-        return null;
-      });
+    let fileContentsRaw: Buffer;
+    try {
+      fileContentsRaw = await fs.readFile(this.objectPath(ref));
+    } catch (err) {
+      if (err.code !== 'ENOENT') {
+        logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
+        throw err;
+      }
+      logger.trace(`Failed finding a ref file ${this.objectPath(ref)}.`);
+      if (throws) throw err;
+      // @ts-ignore @todo: fix! it should return BitObject | null.
+      return null;
+    }
+    const size = fileContentsRaw.byteLength;
+    const fileContents = await this.onRead(fileContentsRaw);
+    const parsedObject = await BitObject.parseObject(fileContents);
+    const maxSizeToCache = 100 * 1024; // 100KB
+    if (size < maxSizeToCache) {
+      // don't cache big files (mainly artifacts) to prevent out-of-memory
+      this.setCache(parsedObject);
+    }
+    return parsedObject;
   }
 
   async list(): Promise<BitObject[]> {
     const refs = await this.listRefs();
-    return pMap(refs, (ref) => this.load(ref), { concurrency: CONCURRENT_IO_LIMIT });
+    const concurrency = concurrentIOLimit();
+    return pMap(refs, (ref) => this.load(ref), { concurrency });
   }
   async listRefs(cwd = this.getPath()): Promise<Array<Ref>> {
     const matches = await glob(path.join('*', '*'), { cwd });
@@ -147,6 +152,7 @@ export default class Repository {
 
   async listRawObjects(): Promise<any> {
     const refs = await this.listRefs();
+    const concurrency = concurrentIOLimit();
     return pMap(
       refs,
       async (ref) => {
@@ -159,7 +165,7 @@ export default class Repository {
           return null;
         }
       },
-      { concurrency: CONCURRENT_IO_LIMIT }
+      { concurrency }
     );
   }
 
@@ -223,7 +229,8 @@ export default class Repository {
   }
 
   async loadManyRaw(refs: Ref[]): Promise<ObjectItem[]> {
-    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency: CONCURRENT_IO_LIMIT });
+    const concurrency = concurrentIOLimit();
+    return pMap(refs, async (ref) => ({ ref, buffer: await this.loadRaw(ref) }), { concurrency });
   }
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
@@ -251,21 +258,21 @@ export default class Repository {
   }
 
   setCache(object: BitObject) {
-    this._cache[object.hash().toString()] = object;
+    this.cache.set(object.hash().toString(), object);
     return this;
   }
 
-  getCache(ref: Ref): BitObject {
-    return this._cache[ref.toString()];
+  getCache(ref: Ref): BitObject | undefined {
+    return this.cache.get(ref.toString());
   }
 
   removeFromCache(ref: Ref) {
-    delete this._cache[ref.toString()];
+    this.cache.delete(ref.toString());
   }
 
   clearCache() {
     logger.debug('repository.clearCache');
-    this._cache = {};
+    this.cache.deleteAll();
   }
 
   backup(dirName?: string) {
@@ -305,23 +312,38 @@ export default class Repository {
   }
 
   /**
+   * important! use this method only for commands that are non running on an http server.
+   *
+   * it's better to remove/delete objects directly and not using the `objects` member.
+   * it helps to avoid multiple processes running concurrently on an http server.
+   *
    * persist objects changes (added and removed) into the filesystem
    * do not call this function multiple times in parallel, otherwise, it'll damage the index.json file.
    * call this function only once after you added and removed all applicable objects.
    */
   async persist(validate = true): Promise<void> {
-    logger.debug(`Repository.persist, validate = ${validate.toString()}`);
-    await this._deleteMany();
-    this._validateObjects(validate);
-    await this._writeMany();
-    await this.remoteLanes.write();
-    await this.unmergedComponents.write();
+    // do not let two requests enter this critical area, otherwise, refs/index.json/objects could
+    // be corrupted
+    logger.debug(`Repository.persist, going to acquire a lock`);
+    await this.persistMutex.runExclusive(async () => {
+      logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
+      await this.deleteObjectsFromFS(this.objectsToRemove);
+      this.validateObjects(validate, Object.values(this.objects));
+      await this.writeObjectsToTheFS(Object.values(this.objects));
+      await this.writeRemoteLanes();
+      await this.unmergedComponents.write();
+    });
+    logger.debug(`Repository.persist, completed. the lock has been released`);
     this.clearObjects();
     if (Repository.onPostObjectsPersist) {
       Repository.onPostObjectsPersist().catch((err) => {
         logger.error('fatal: onPostObjectsPersist encountered an error (this error does not stop the process)', err);
       });
     }
+  }
+
+  async writeRemoteLanes() {
+    await this.remoteLanes.write();
   }
 
   /**
@@ -346,9 +368,8 @@ export default class Repository {
    * can easily revert it by changing `bitObject.validateBeforePersist = false` line run regardless
    * the `validate` argument.
    */
-  _validateObjects(validate: boolean) {
-    Object.keys(this.objects).forEach((hash) => {
-      const bitObject = this.objects[hash];
+  validateObjects(validate: boolean, objects: BitObject[]) {
+    objects.forEach((bitObject) => {
       // @ts-ignore some BitObject classes have validate() method
       if (validate && bitObject.validate) {
         // @ts-ignore
@@ -360,24 +381,35 @@ export default class Repository {
     });
   }
 
-  async _deleteMany(): Promise<void> {
-    if (!this.objectsToRemove.length) return;
-    const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
+  async deleteObjectsFromFS(refs: Ref[]): Promise<void> {
+    if (!refs.length) return;
+    const uniqRefs = uniqBy(refs, 'hash');
     logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
-    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency: CONCURRENT_IO_LIMIT });
+    const concurrency = concurrentIOLimit();
+    await pMap(uniqRefs, (ref) => this._deleteOne(ref), { concurrency });
     const removed = this.scopeIndex.removeMany(uniqRefs);
     if (removed) await this.scopeIndex.write();
   }
 
-  async _writeMany(): Promise<void> {
-    if (R.isEmpty(this.objects)) return;
-    logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
-    // @TODO handle failures
-    await pMap(Object.keys(this.objects), (hash) => this._writeOne(this.objects[hash]), {
-      concurrency: CONCURRENT_IO_LIMIT,
+  async deleteRecordsFromUnmergedComponents(componentNames: string[]) {
+    this.unmergedComponents.removeMultipleComponents(componentNames);
+    await this.unmergedComponents.write();
+  }
+
+  /**
+   * write all objects to the FS and index the components/lanes/symlink objects
+   */
+  async writeObjectsToTheFS(objects: BitObject[]): Promise<void> {
+    const count = objects.length;
+    if (!count) return;
+    logger.trace(`Repository.writeObjectsToTheFS: started writing ${count} objects`);
+    const concurrency = concurrentIOLimit();
+    await pMap(objects, (obj) => this._writeOne(obj), {
+      concurrency,
     });
-    logger.debug(`Repository._writeMany: completed writing ${Object.keys(this.objects).length} objects successfully`);
-    const added = this.scopeIndex.addMany(R.values(this.objects));
+    logger.trace(`Repository.writeObjectsToTheFS: completed writing ${count} objects`);
+
+    const added = this.scopeIndex.addMany(objects);
     if (added) await this.scopeIndex.write();
   }
 
@@ -393,7 +425,7 @@ export default class Repository {
   }
 
   /**
-   * always prefer this.persist().
+   * always prefer this.persist() or this.writeObjectsToTheFS()
    * this method doesn't write to scopeIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
@@ -401,7 +433,9 @@ export default class Repository {
     const contents = await object.compress();
     const options: ChownOptions = {};
     if (this.scopeJson.groupName) options.gid = await resolveGroupId(this.scopeJson.groupName);
-    const objectPath = this.objectPath(object.hash());
+    const hash = object.hash();
+    if (this.cache.has(hash.toString())) this.cache.set(hash.toString(), object); // update the cache
+    const objectPath = this.objectPath(hash);
     logger.trace(`repository._writeOne: ${objectPath}`);
     // Run hook to transform content pre persisting
     const transformedContent = this.onPersist(contents);

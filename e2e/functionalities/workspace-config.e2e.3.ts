@@ -1,11 +1,8 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
-import {
-  componentIssuesLabels,
-  MISSING_PACKAGES_FROM_OVERRIDES_LABEL,
-} from '../../src/cli/templates/component-issues-template';
+import { MISSING_PACKAGES_FROM_OVERRIDES_LABEL } from '../../src/cli/templates/component-issues-template';
 import { OVERRIDE_COMPONENT_PREFIX, OVERRIDE_FILE_PREFIX } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -98,9 +95,9 @@ describe('workspace config', function () {
           helper.bitJson.addOverrides(overrides);
         });
         it('bit diff should show the tagged dependency version vs the version from overrides', () => {
-          const diff = helper.command.diff('bar');
-          expect(diff).to.have.string('- [ foo@2.0.0 ]');
-          expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+          const diff = helper.command.diff('bar --verbose');
+          expect(diff).to.have.string('- foo@2.0.0');
+          expect(diff).to.have.string('+ foo@0.0.1');
         });
         it('should not duplicate the dependencies or add anything to the package dependencies', () => {
           const bar = helper.command.showComponentParsed('bar');
@@ -145,8 +142,8 @@ describe('workspace config', function () {
         });
         it('bit diff should show the tagged dependency version vs the version from overrides', () => {
           const diff = helper.command.diff('bar');
-          expect(diff).to.have.string('- [ foo@2.0.0 ]');
-          expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+          expect(diff).to.have.string('- foo@2.0.0');
+          expect(diff).to.have.string('+ foo@0.0.1');
         });
         describe('tagging the component', () => {
           before(() => {
@@ -735,7 +732,7 @@ describe('workspace config', function () {
               expect(status).to.have.string('missing components');
             });
             it('bit diff should show the overrides differences', () => {
-              const diff = helper.command.diff('bar');
+              const diff = helper.command.diff('bar --verbose');
               expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
               expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
               expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo2@- ]`);
@@ -773,7 +770,7 @@ describe('workspace config', function () {
         packageJson.bit.overrides.dependencies = {};
         helper.packageJson.write(packageJson, componentDir);
         // an intermediate step to make sure we're good so far
-        const diff = helper.command.diff();
+        const diff = helper.command.diff('--verbose');
         expect(diff).to.have.string('- [ chai@- ]');
         helper.command.tagAllComponents();
         helper.command.exportAllComponents();
@@ -1019,7 +1016,7 @@ describe('workspace config', function () {
         // See similar test in status.e2e - when a component is created and added without its package dependencies
         it('should show a missing package in status', () => {
           const output = helper.command.status().replace(/\n/g, '');
-          expect(output).to.have.string(componentIssuesLabels.missingPackagesDependenciesOnFs);
+          helper.command.expectStatusToHaveIssue(IssuesClasses.MissingPackagesDependenciesOnFs.name);
           expect(output).to.have.string('bar/foo.js -> chai');
           expect(output).to.have.string(`${MISSING_PACKAGES_FROM_OVERRIDES_LABEL} -> chai`);
         });
@@ -1119,10 +1116,10 @@ describe('workspace config', function () {
                 helper.packageJson.write(packageJson, barPath);
               });
               it('bit diff should show the removed dependency', () => {
-                const diff = helper.command.diff();
-                expect(diff).to.have.string('--- Dependencies (0.0.2 original)');
-                expect(diff).to.have.string('+++ Dependencies (0.0.2 modified)');
-                expect(diff).to.have.string(`- [ ${helper.scopes.remote}/foo@0.0.1 ]`);
+                const diff = helper.command.diff('--verbose');
+                expect(diff).to.have.string('--- dependencies 0.0.2 original');
+                expect(diff).to.have.string('+++ dependencies 0.0.2 modified');
+                expect(diff).to.have.string(`- ${helper.scopes.remote}/foo@0.0.1`);
                 expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
                 expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
                 expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo@0.0.1 ]`);
@@ -1389,7 +1386,7 @@ describe('workspace config', function () {
       it('bit diff should show the diff', () => {
         const diff = helper.command.diff('bar/foo');
         expect(diff).to.have.string('+ bit.env/my-special-compiler@0.0.1');
-        expect(diff).to.have.string('+ [ chai@2.2.0 ]');
+        expect(diff).to.have.string('+ chai@2.2.0');
       });
       it('bit show should show the settings from the workspace config', () => {
         const showBar = helper.command.showComponentParsed('bar/foo');
@@ -1471,7 +1468,7 @@ describe('workspace config', function () {
             expect(status).to.have.string('modified components');
           });
           it('bit diff should show the field diff', () => {
-            const diff = helper.command.diff('bar/foo');
+            const diff = helper.command.diff('bar/foo --verbose');
             expect(diff).to.have.string('my-bin-file.js');
             expect(diff).to.have.string('my-new-file.js');
           });

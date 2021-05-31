@@ -1,6 +1,6 @@
 import glob from 'glob';
 import fs, { Stats } from 'fs-extra';
-import { compact } from 'ramda-adjunct';
+import { compact } from 'lodash';
 
 /**
  * check recursively all the sub-directories as well

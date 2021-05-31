@@ -1,12 +1,17 @@
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
 import { merge } from 'lodash';
+import { TsConfigSourceFile } from 'typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { MainRuntime } from '@teambit/cli';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
 import { BuildTask } from '@teambit/builder';
+import { Compiler } from '@teambit/compiler';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
 import { ReactAspect, ReactMain } from '@teambit/react';
 import { NodeAspect } from './node.aspect';
 import { NodeEnv } from './node.env';
+import { nodeEnvTemplate } from './templates/node-env';
 
 export class NodeMain {
   constructor(
@@ -24,7 +29,11 @@ export class NodeMain {
   /**
    * override the TS config of the environment.
    */
-  overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
+  overrideTsConfig: (
+    tsconfig: TsConfigSourceFile,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
+    tsModule?: any
+  ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
 
   /**
    * override the jest config of the environment.
@@ -37,9 +46,22 @@ export class NodeMain {
   overrideBuildPipe: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideBuildPipe.bind(this.react);
 
   /**
+   * override the env compilers list.
+   */
+  overrideCompiler: (compiler: Compiler) => EnvTransformer = this.react.overrideCompiler.bind(this.react);
+
+  /**
+   * override the env compilers tasks in the build pipe.
+   */
+  overrideCompilerTasks: (tasks: BuildTask[]) => EnvTransformer = this.react.overrideCompilerTasks.bind(this.react);
+
+  /**
    * override the build ts config.
    */
-  overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
+  overrideBuildTsConfig: (
+    tsconfig: any,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
+  ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
   /**
    * override package json properties.
@@ -49,14 +71,22 @@ export class NodeMain {
   );
 
   /**
+   * @deprecated - use useWebpack
    * override the preview config in the env.
    */
   overridePreviewConfig = this.react.overridePreviewConfig.bind(this.react);
 
   /**
+   * @deprecated - use useWebpack
    * override the dev server configuration.
    */
   overrideDevServerConfig = this.react.overrideDevServerConfig.bind(this.react);
+
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
+  useWebpack = this.react.useWebpack.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.
@@ -75,11 +105,12 @@ export class NodeMain {
   }
 
   static runtime = MainRuntime;
-  static dependencies = [EnvsAspect, ReactAspect];
+  static dependencies = [EnvsAspect, ReactAspect, GeneratorAspect];
 
-  static async provider([envs, react]: [EnvsMain, ReactMain]) {
+  static async provider([envs, react, generator]: [EnvsMain, ReactMain, GeneratorMain]) {
     const nodeEnv: NodeEnv = envs.merge(new NodeEnv(), react.reactEnv);
     envs.registerEnv(nodeEnv);
+    generator.registerComponentTemplate([nodeEnvTemplate]);
     return new NodeMain(react, nodeEnv, envs);
   }
 }

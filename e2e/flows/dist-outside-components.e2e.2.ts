@@ -186,7 +186,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       describe('removing the component', () => {
         before(() => {
           helper.scopeHelper.getClonedLocalScope(scopeAfterImport);
-          helper.command.removeComponent('bar/foo', '-s');
+          helper.command.removeComponent('bar/foo');
         });
         it('should remove the dist directory as well', () => {
           expect(path.join(helper.scopes.localPath, 'dist/components/bar')).to.not.be.a.path();

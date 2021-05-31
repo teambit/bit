@@ -9,7 +9,8 @@ import WatchRunner from '../watch-runner';
 
 chai.use(require('chai-fs'));
 
-describe('bit watch command', function () {
+// @TODO: fix for Windows
+(IS_WINDOWS ? describe.skip : describe)('bit watch command', function () {
   this.timeout(0);
   let helper: Helper;
   before(() => {
@@ -110,6 +111,7 @@ describe('bit watch command', function () {
       helper.command.resetFeatures();
       helper.command.setFeatures(HARMONY_FEATURE);
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+      helper.bitJsonc.setupDefault();
       helper.fixtures.populateComponentsTS();
       helper.fixtures.createComponentBarFoo();
       helper.fixtures.addComponentBarFooAsDir();
@@ -130,7 +132,7 @@ describe('bit watch command', function () {
           await watchRunner.waitForWatchToRebuildComponent();
         });
         it('should write the dists on node_modules correctly', () => {
-          const distContent = helper.fs.readFile('node_modules/@my-scope/comp1/dist/index.js');
+          const distContent = helper.fs.readFile(`node_modules/@${helper.scopes.remote}/comp1/dist/index.js`);
           expect(distContent).to.have.string('hello');
         });
       });
@@ -140,7 +142,7 @@ describe('bit watch command', function () {
           await watchRunner.waitForWatchToRebuildComponent();
         });
         it('should write the dists on node_modules correctly', () => {
-          const distContent = helper.fs.readFile('node_modules/@my-scope/comp1/dist/index2.js');
+          const distContent = helper.fs.readFile(`node_modules/@${helper.scopes.remote}/comp1/dist/index2.js`);
           expect(distContent).to.have.string('hello');
         });
         it('should update the .bitmap file with the newly added file', () => {
@@ -156,7 +158,7 @@ describe('bit watch command', function () {
           await watchRunner.waitForWatchToRebuildComponent();
         });
         it('should recognize the .bitmap changes and compile the newly added component', () => {
-          const distContent = helper.fs.readFile('node_modules/@my-scope/comp4/dist/index.js');
+          const distContent = helper.fs.readFile(`node_modules/@${helper.scopes.remote}/comp4/dist/index.js`);
           expect(distContent).to.have.string('hello');
         });
         describe('changing this new component', () => {
@@ -166,9 +168,30 @@ describe('bit watch command', function () {
             await watchRunner.waitForWatchToRebuildComponent();
           });
           it('should watch this newly added component for changes', () => {
-            const distContent = helper.fs.readFile('node_modules/@my-scope/comp4/dist/index.js');
+            const distContent = helper.fs.readFile(`node_modules/@${helper.scopes.remote}/comp4/dist/index.js`);
             expect(distContent).to.have.string('hello!');
           });
+        });
+      });
+      describe('tagging the component', () => {
+        before(async () => {
+          helper.command.tagScopeWithoutBuild();
+          helper.fs.appendFile('comp1/index.ts', '   ');
+          await watchRunner.waitForWatchToRebuildComponent();
+          helper.command.tagWithoutBuild('comp1', '--force');
+
+          // as an intermediate step, make sure it's 0.0.2
+          const bitMap = helper.bitMap.read();
+          expect(bitMap.comp1.version).to.equal('0.0.2');
+
+          helper.fs.appendFile('comp1/index.ts', '   ');
+          await watchRunner.waitForWatchToRebuildComponent();
+        });
+        // it used to load the previous component from the scope-cache and assume that comp1 has
+        // only 0.0.1 and therefore change the .bitmap to 0.0.1
+        it('editing the file, should not change the version to an older version', () => {
+          const bitMap = helper.bitMap.read();
+          expect(bitMap.comp1.version).to.equal('0.0.2');
         });
       });
     });

@@ -37,9 +37,7 @@ export class TypescriptCompiler implements Compiler {
    * compile one file on the workspace
    */
   transpileFile(fileContent: string, options: TranspileOpts): TranspileOutput {
-    const supportedExtensions = ['.ts', '.tsx'];
-    const fileExtension = path.extname(options.filePath);
-    if (!supportedExtensions.includes(fileExtension) || options.filePath.endsWith('.d.ts')) {
+    if (!this.isFileSupported(options.filePath)) {
       return null; // file is not supported
     }
     const compilerOptionsFromTsconfig = this.tsModule.convertCompilerOptionsFromJson(
@@ -57,6 +55,7 @@ export class TypescriptCompiler implements Compiler {
 
     const compilerOptions = compilerOptionsFromTsconfig.options;
     compilerOptions.sourceRoot = options.componentDir;
+    compilerOptions.rootDir = '.';
     const result = this.tsModule.transpileModule(fileContent, {
       compilerOptions,
       fileName: options.filePath,
@@ -138,7 +137,12 @@ export class TypescriptCompiler implements Compiler {
    * whether typescript is able to compile the given path
    */
   isFileSupported(filePath: string): boolean {
-    return (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) && !filePath.endsWith('.d.ts');
+    const isJsAndCompile = !!this.options.compileJs && filePath.endsWith('.js');
+    const isJsxAndCompile = !!this.options.compileJsx && filePath.endsWith('.jsx');
+    return (
+      (filePath.endsWith('.ts') || filePath.endsWith('.tsx') || isJsAndCompile || isJsxAndCompile) &&
+      !filePath.endsWith('.d.ts')
+    );
   }
 
   /**

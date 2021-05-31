@@ -1,8 +1,7 @@
 import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 import * as fixtures from '../../src/fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
@@ -203,8 +202,8 @@ chai.use(require('chai-fs'));
             });
             it('bit diff should show the dependencies ', () => {
               const diff = helper.command.diff('bar/foo');
-              expect(diff).to.have.string(`- [ ${helper.scopes.remote}/utils/is-string@0.0.2 ]`);
-              expect(diff).to.have.string(`+ [ ${helper.scopes.remote}/utils/is-string@0.0.1 ]`);
+              expect(diff).to.have.string(`- ${helper.scopes.remote}/utils/is-string@0.0.2`);
+              expect(diff).to.have.string(`+ ${helper.scopes.remote}/utils/is-string@0.0.1`);
             });
             describe('tagging the component', () => {
               before(() => {
@@ -277,7 +276,7 @@ chai.use(require('chai-fs'));
           });
           it('bit status should not show the dependency as missing', () => {
             const status = helper.command.statusJson();
-            expect(status.componentsWithMissingDeps).to.have.lengthOf(0);
+            expect(status.componentsWithIssues).to.have.lengthOf(0);
           });
           it('bit show should show the correct dependency', () => {
             const show = helper.command.showComponentParsed('comp');
@@ -379,11 +378,10 @@ chai.use(require('chai-fs'));
           });
           it('bit status should show it as missing deps not as untracked', () => {
             const statusJson = helper.command.statusJson();
+            const allIssues = helper.command.getAllIssuesFromStatus();
+            expect(allIssues).to.include(IssuesClasses.MissingComponents.name);
+            expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
             expect(statusJson.invalidComponents).to.have.lengthOf(0);
-            expect(statusJson.componentsWithMissingDeps).to.have.lengthOf(1);
-            const status = helper.command.status();
-            const statusWithoutLinebreaks = status.replace(/\n/g, '');
-            expect(statusWithoutLinebreaks).not.to.have.string(componentIssuesLabels.untrackedDependencies);
           });
         });
         describe('import with dist outside the component directory', () => {

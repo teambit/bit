@@ -1,5 +1,5 @@
 import { createContext } from 'react';
-import { NotificationsStore } from '@teambit/ui.notifications.store';
+import { NotificationsStore } from '@teambit/ui-foundation.ui.notifications.store';
 
 const DefaultNotificationApi: NotificationsStore = {
   add: () => '',

@@ -1,126 +1,156 @@
-import * as t from '@babel/types';
+import type { Visitor, PluginObj, PluginPass, NodePath } from '@babel/core';
 import { readFileSync } from 'fs-extra';
+import memoize from 'memoizee';
+import type * as Types from '@babel/types'; // @babel/types, not @types/babel!
+import { metaFromPackageJson } from './meta-from-pkg-json';
+import { isClassComponent, isFunctionComponent } from './helpers';
+import { ComponentMeta, componentMetaField, fieldComponentId, fieldHomepageUrl, fieldIsExported } from './model';
 
-export type BitReactTransformer = {};
+export type BitReactTransformerOptions = {
+  componentFilesPath: string;
+};
 
-const COMPONENT_IDENTIFIER = 'componentId';
+const PLUGIN_NAME = 'bit-react-transformer';
+
+type Api = { types: typeof Types };
 
 /**
  * the bit babel transformer adds a `componentId` property on React components
  * for showcase and debugging purposes.
  */
-export function createBitReactTransformer({ types: c }) {
-  let componentMap;
-  function setMap(mapPath?: string) {
-    if (!mapPath || componentMap) return;
-    const json = readFileSync(mapPath, 'utf-8');
-    componentMap = JSON.parse(json);
+export function createBitReactTransformer(api: Api, opts: BitReactTransformerOptions) {
+  let componentMap: Record<string, ComponentMeta>;
+  const types = api.types as typeof Types;
+
+  function setMap(mapPath: string) {
+    try {
+      const json = readFileSync(mapPath, 'utf-8');
+      componentMap = JSON.parse(json);
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('bit-react-transformer: error reading map file ', e);
+    }
   }
 
-  function addComponentId(path: any, filePath: string, identifier: string) {
-    const componentId = componentMap[filePath];
-    if (!componentId) return;
-    const componentIdStaticProp = c.expressionStatement(
-      c.assignmentExpression(
+  const extractMeta = memoize(
+    (filePath: string) => {
+      return componentMap?.[filePath] || metaFromPackageJson(filePath);
+    },
+    {
+      primitive: true, // optimize for strings
+    }
+  );
+
+  function addComponentId(path: NodePath<any>, filePath: string, identifier: string) {
+    // add meta property, e.g. `Button.__bit_component = __bit_component;`
+    const componentIdStaticProp = types.expressionStatement(
+      types.assignmentExpression(
         '=',
-        c.memberExpression(c.identifier(identifier), c.identifier(COMPONENT_IDENTIFIER)),
-        t.identifier(`'${componentId}'`)
+        types.memberExpression(types.identifier(identifier), types.identifier(componentMetaField)),
+        types.identifier(componentMetaField)
       )
     );
 
     path.insertAfter(componentIdStaticProp);
   }
 
-  return {
-    visitor: {
-      FunctionDeclaration(path, state) {
-        setMap(state.opts.componentFilesPath);
-        if (!isFunctionComponent(path.node.body)) {
-          return;
-        }
-        const name = path.node.id.name;
-        addComponentId(path, state.file.opts.filename, name);
-      },
+  const visitor: Visitor<PluginPass> = {
+    // visits the start of the file, right after `"use strict"`
+    Program(path, state) {
+      const filename = state.file.opts.filename;
+      if (!filename) {
+        path.stop(); // stop traversal
+        return;
+      }
 
-      VariableDeclarator(path, state) {
-        setMap(state.opts.componentFilesPath);
-        const node = path.node as t.VariableDeclarator;
-        if (!node.init) return;
-        if (node.id.type !== 'Identifier') return;
-        const id = node.id as t.Identifier;
-        switch (node.init.type) {
-          case 'FunctionExpression':
-            path.init as t.FunctionExpression;
-            if (isFunctionComponent(node.init.body)) {
-              addComponentId(path.parentPath, state.file.opts.filename, id.name);
-            }
-            break;
+      const meta = extractMeta(filename);
+      if (!meta) {
+        path.stop(); // stop traversal
+        return;
+      }
 
-          case 'ArrowFunctionExpression':
-            node.init as t.ArrowFunctionExpression;
-            if (isJsxReturnValid(node.init.body)) {
-              addComponentId(path.parentPath, state.file.opts.filename, id.name);
-            }
+      const deceleration = metaToDeceleration(meta, types);
 
-            node.init.body as t.BlockStatement;
-            if (isFunctionComponent(node.init.body as any)) {
-              addComponentId(path.parentPath, state.file.opts.filename, id.name);
-            }
-            break;
+      // inserts to the top of file
+      path.unshiftContainer('body', deceleration);
+    },
 
-          default:
-            break;
-        }
-      },
+    FunctionDeclaration(path, state) {
+      // if (!isFunctionComponent(path.node.body)) return;
+      const name = path.node.id?.name;
+      const filename = state.file.opts.filename;
+      if (!name || !filename) return;
 
-      ClassDeclaration(path, state) {
-        setMap(state.opts.componentFilesPath);
-        if (!isClassComponent(path.node)) {
-          return;
-        }
-        const name = path.node.id.name;
-        addComponentId(path, state.file.opts.filename, name);
-      },
+      addComponentId(path, filename, name);
+    },
+
+    VariableDeclarator(path, state) {
+      const filename = state.file.opts.filename;
+      if (!filename) return;
+
+      const node = path.node;
+      if (!node.init) return;
+      if (node.id.type !== 'Identifier') return;
+
+      const id = node.id;
+      switch (node.init.type) {
+        case 'FunctionExpression':
+          if (isFunctionComponent(node.init.body)) {
+            addComponentId(path.parentPath, filename, id.name);
+          }
+          break;
+
+        case 'ArrowFunctionExpression':
+          addComponentId(path.parentPath, filename, id.name);
+          break;
+
+        default:
+          break;
+      }
+    },
+
+    ClassDeclaration(path, state) {
+      const filename = state.file.opts.filename;
+      if (!filename) return;
+      if (!isClassComponent(path.node)) return;
+
+      const name = path.node.id.name;
+      addComponentId(path, filename, name);
     },
   };
+
+  const Plugin: PluginObj = {
+    name: PLUGIN_NAME,
+    visitor,
+    pre() {
+      const filepath = opts.componentFilesPath;
+      if (filepath && !componentMap) setMap(filepath);
+    },
+    post() {
+      // reset memoization, in case any file change between runs
+      extractMeta.clear();
+    },
+  };
+
+  return Plugin;
 }
 
-function isJsxReturnValid(node?: t.Node) {
-  if (!node) return false;
-  if (node.type === 'JSXElement') return true;
-  if (node.type === 'ArrayExpression') {
-    const arrayExp = node as t.ArrayExpression;
-    return arrayExp.elements.every((elm) => {
-      return elm?.type === 'JSXElement';
-    });
-  }
+function metaToDeceleration(meta: ComponentMeta, types: typeof Types) {
+  const properties = [
+    // e.g. "id": "teambit.base-ui/input/button@0.6.10"
+    types.objectProperty(types.identifier(fieldComponentId), types.stringLiteral(meta.id)),
 
-  return false;
-}
+    // e.g. "homepage": "https://bit.dev/teambit/base-ui/input/button"
+    meta.homepage && types.objectProperty(types.identifier(fieldHomepageUrl), types.stringLiteral(meta.homepage)),
 
-function isClassComponent(classDec: t.ClassDeclaration) {
-  const renderMethod = classDec.body.body.find((classMember) => {
-    if (classMember.type === 'ClassMethod') {
-      classMember as t.ClassMethod;
-      if (classMember.key.type !== 'Identifier') return false;
-      const key = classMember.key as t.Identifier;
-      return key.name === 'render';
-    }
+    // "exported": true / false
+    meta.exported && types.objectProperty(types.identifier(fieldIsExported), types.booleanLiteral(meta.exported)),
+  ].filter((x) => x) as Types.ObjectProperty[];
 
-    return false;
-  }) as t.ClassMethod;
+  // variable deceleration, e.g. `var __bit_component = { ... };`
+  const deceleration = types.variableDeclaration('var', [
+    types.variableDeclarator(types.identifier(componentMetaField), types.objectExpression(properties)),
+  ]);
 
-  return doesReturnJsx(renderMethod?.body);
-}
-
-function isFunctionComponent(block: t.BlockStatement): boolean {
-  if (block.type !== 'BlockStatement') return false;
-  return doesReturnJsx(block);
-}
-
-function doesReturnJsx(block: t.BlockStatement): boolean {
-  if (!block) return false;
-  return !!block.body.find((statement) => {
-    return statement.type === 'ReturnStatement' && isJsxReturnValid(statement.argument || undefined);
-  });
+  return deceleration;
 }

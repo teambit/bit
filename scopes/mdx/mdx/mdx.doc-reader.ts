@@ -1,5 +1,5 @@
 import { DocReader, Doc } from '@teambit/docs';
-import { compile } from '@teambit/modules.mdx-compiler';
+import { compile } from '@teambit/mdx.modules.mdx-compiler';
 
 export class MDXDocReader implements DocReader {
   constructor(private extensions: string[]) {}

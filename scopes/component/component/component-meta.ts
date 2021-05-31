@@ -1,4 +1,4 @@
-import { capitalize } from '@teambit/string.capitalize';
+import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { ComponentID } from '@teambit/component-id';
 
 export class ComponentMeta {

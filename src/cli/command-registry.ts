@@ -1,7 +1,6 @@
-import commander from 'commander';
-
+import chalk from 'chalk';
 import { Analytics } from '../analytics/analytics';
-import { SKIP_UPDATE_FLAG, TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
+import { TOKEN_FLAG, TOKEN_FLAG_NAME } from '../constants';
 import { Commands } from '../legacy-extensions/extension';
 import logger from '../logger/logger';
 import { camelCase, first } from '../utils';
@@ -15,7 +14,7 @@ function parseSubcommandFromArgs(args: [any]) {
   return null;
 }
 
-function parseCommandName(commandName: string): string {
+export function parseCommandName(commandName: string): string {
   if (!commandName) return '';
   return first(commandName.split(' '));
 }
@@ -48,7 +47,7 @@ export async function execAction(command: Command, concrete, args): Promise<any>
   const flags = getOpts(concrete, command.options);
   const relevantArgs = args.slice(0, args.length - 1);
   Analytics.init(concrete.name(), flags, relevantArgs);
-  logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
+  logger.info(`[*] started a new command: "${parseCommandName(command.name)}" with the following data:`, {
     args: relevantArgs,
     flags,
   });
@@ -92,18 +91,26 @@ function createOptStr(alias, name) {
 export function register(command: Command, commanderCmd, packageManagerArgs?: string[]) {
   const concrete = commanderCmd
     .command(command.name, null, { noHelp: command.private })
-    .description(command.description)
+    .description(chalk.yellow(command.description as string))
     .alias(command.alias);
 
+  const globalOptions: CommandOptions = [];
   if (command.remoteOp) {
-    command.options.push(['', TOKEN_FLAG, 'authentication token']);
+    globalOptions.push(['', TOKEN_FLAG, 'authentication token']);
   }
   if (!command.internal) {
-    command.options.push([
-      '',
-      'log [level]',
-      'print log messages to the screen, options are: [trace, debug, info, warn, error], the default is info',
-    ]);
+    globalOptions.push(
+      [
+        '',
+        'log [level]',
+        'print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info',
+      ],
+      [
+        '',
+        'safe-mode',
+        'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
+      ]
+    );
   }
 
   if (packageManagerArgs) {
@@ -114,8 +121,13 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
     concrete.option(createOptStr(alias, name), description);
   });
 
-  // attach skip-update to all commands
-  concrete.option(SKIP_UPDATE_FLAG, 'Skips auto updates');
+  styleOptions(concrete);
+  addGlobalOptionsDelimiter(concrete);
+
+  globalOptions.forEach(([alias, name, description]) => {
+    concrete.option(createOptStr(alias, name), description);
+    command.options.push([alias, name, description]);
+  });
 
   if (command.commands) {
     command.commands.forEach((nestedCmd) => {
@@ -126,20 +138,24 @@ export function register(command: Command, commanderCmd, packageManagerArgs?: st
   return registerAction(command, concrete);
 }
 
+function styleOptions(concrete) {
+  concrete.options.forEach((option) => {
+    option.flags = chalk.green(option.flags);
+  });
+}
+
+function addGlobalOptionsDelimiter(concrete) {
+  if (!concrete.options.length) return;
+  const lastOption = concrete.options[concrete.options.length - 1];
+  lastOption.description = `${lastOption.description}\n\nGlobal Options:`;
+}
+
 export default class CommandRegistry {
   version: string;
   usage: string;
   description: string;
   commands: LegacyCommand[];
   extensionsCommands: LegacyCommand[] | null | undefined;
-
-  registerBaseCommand() {
-    commander
-      .version(this.version)
-      .usage(this.usage)
-      .option(SKIP_UPDATE_FLAG, 'Skips auto updates for a command')
-      .description(this.description);
-  }
 
   constructor(
     usage: string,

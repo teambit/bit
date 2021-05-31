@@ -3,6 +3,7 @@ import chalk from 'chalk';
 
 import { scopeConfig } from '../../../api/scope';
 import { objectToStringifiedTupleArray } from '../../../utils';
+import { Group } from '../../command-groups';
 import { LegacyCommand } from '../../legacy-command';
 
 class ScopeConfigGet implements LegacyCommand {
@@ -74,6 +75,7 @@ class ScopeConfigSet implements LegacyCommand {
 export default class ScopeConfig implements LegacyCommand {
   name = 'scope-config';
   description = 'scope config management';
+  group: Group = 'general';
   alias = '';
   commands = [new ScopeConfigSet(), new ScopeConfigDel(), new ScopeConfigGet(), new ScopeConfigList()];
   opts = [];

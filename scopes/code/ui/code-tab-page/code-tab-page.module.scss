@@ -1,3 +1,4 @@
+@import '~@teambit/ui-foundation.ui.constants.z-indexes/z-indexes.module.scss';
 $panelBg: #fafafa;
 
 .codePage {
@@ -25,11 +26,15 @@ $panelBg: #fafafa;
 
 .splitter {
   position: relative;
-  border-right: 1px solid var(--border-color, #ededed);
+
+  > :first-child {
+    z-index: $nav-z-index + 1;
+    position: absolute;
+  }
 }
 
 .collapser {
-  right: 0;
+  right: 1px;
 }
 
 .depNode {

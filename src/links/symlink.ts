@@ -11,7 +11,13 @@ export default class Symlink {
   componentId: BitId | null | undefined;
   // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
   forDistOutsideComponentsDir: boolean;
-  constructor(src: string, dest: string, componentId?: BitId, forDistOutsideComponentsDir = false) {
+  constructor(
+    src: string,
+    dest: string,
+    componentId?: BitId,
+    forDistOutsideComponentsDir = false,
+    private avoidHardLink = false
+  ) {
     this.src = src;
     this.dest = dest;
     this.componentId = componentId;
@@ -19,14 +25,22 @@ export default class Symlink {
   }
   write() {
     this._throwForMissingDistOutsideComponent();
-    return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
+    return createSymlinkOrCopy(
+      this.src,
+      this.dest,
+      this.componentId ? this.componentId.toString() : null,
+      this.avoidHardLink
+    );
   }
 
+  /**
+   * @deprecated use write() instead, it was fixed to use the native fs.symlinkSync for non-windows
+   */
   writeWithNativeFS() {
     const dest = this.dest;
     this._throwForMissingDistOutsideComponent();
     // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
-    // TODO: this requires to upgrade fs-extra to have the throwIfNoEntry property
+    // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
     // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
     // const exists = fs.pathExistsSync(dest);
     let exists;
@@ -42,8 +56,8 @@ export default class Symlink {
     return fs.symlinkSync(this.src, dest);
   }
 
-  static makeInstance(src: string, dest: string, componentId?: BitId) {
-    return new Symlink(src, dest, componentId);
+  static makeInstance(src: string, dest: string, componentId?: BitId, avoidHardLink?: boolean) {
+    return new Symlink(src, dest, componentId, undefined, avoidHardLink);
   }
   _throwForMissingDistOutsideComponent() {
     if (!this.forDistOutsideComponentsDir) return;

@@ -7,10 +7,11 @@ import Component from '../../../consumer/component';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { immutableUnshift } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
-import { getInvalidComponentLabel, formatMissing } from '../../templates/component-issues-template';
+import { getInvalidComponentLabel, formatIssues } from '../../templates/component-issues-template';
 import { ModelComponent } from '../../../scope/models';
 import { BASE_DOCS_DOMAIN, IMPORT_PENDING_MSG } from '../../../constants';
 import { BitId } from '../../../bit-id';
+import { Group } from '../../command-groups';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components#common-isolation-errors`
@@ -27,6 +28,8 @@ please run "bit migrate --harmony" to convert these records to "rootDir".`;
 
 export default class Status implements LegacyCommand {
   name = 'status';
+  shortDescription = 'show the working area component(s) status';
+  group: Group = 'development';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/view#status`;
   alias = 's';
   opts = [['j', 'json', 'return a json version of the component']] as CommandOptions;
@@ -45,7 +48,7 @@ export default class Status implements LegacyCommand {
     newComponents,
     modifiedComponent,
     stagedComponents,
-    componentsWithMissingDeps,
+    componentsWithIssues,
     importPendingComponents,
     autoTagPendingComponents,
     invalidComponents,
@@ -62,7 +65,10 @@ export default class Status implements LegacyCommand {
           newComponents,
           modifiedComponent: modifiedComponent.map((c) => c.id.toString()),
           stagedComponents: stagedComponents.map((c) => c.id()),
-          componentsWithMissingDeps: componentsWithMissingDeps.map((c) => c.id.toString()),
+          componentsWithIssues: componentsWithIssues.map((c) => ({
+            id: c.id.toString(),
+            issues: c.issues?.toObject(),
+          })),
           importPendingComponents: importPendingComponents.map((id) => id.toString()),
           autoTagPendingComponents: autoTagPendingComponents.map((s) => s.toString()),
           invalidComponents,
@@ -89,7 +95,7 @@ export default class Status implements LegacyCommand {
         throw new Error(`type of component ${component} is not supported`);
       };
       const bitId = getBitId();
-      const missing = componentsWithMissingDeps.find((missingComp: Component) => missingComp.id.isEqual(bitId));
+      const issues = componentsWithIssues.find((compWithIssue: Component) => compWithIssue.id.isEqual(bitId));
       const softTagged = softTaggedComponents.find((softTaggedId) => softTaggedId.isEqual(bitId));
 
       const messageStatusText = message || 'ok';
@@ -106,9 +112,9 @@ export default class Status implements LegacyCommand {
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
       bitFormatted += ' ... ';
-      if (!missing) return `${bitFormatted}${messageStatus}`;
+      if (!issues) return `${bitFormatted}${messageStatus}`;
       showTroubleshootingLink = true;
-      return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatMissing(missing)}`;
+      return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatIssues(issues)}`;
     }
 
     const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${IMPORT_PENDING_MSG}.\n`) : '';

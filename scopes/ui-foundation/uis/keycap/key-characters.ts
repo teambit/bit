@@ -1,4 +1,4 @@
-import { isBrowser } from '@teambit/ui.is-browser';
+import { isBrowser } from '@teambit/ui-foundation.ui.is-browser';
 
 const macKeySymbols = {
   // modifiers

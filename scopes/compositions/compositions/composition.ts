@@ -1,4 +1,4 @@
-import { humanizeCompositionId } from '@teambit/model.composition-id';
+import { humanizeCompositionId } from '@teambit/compositions.model.composition-id';
 
 export type CompositionProps = {
   identifier: string;

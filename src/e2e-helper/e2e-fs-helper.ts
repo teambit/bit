@@ -34,7 +34,7 @@ export default class FsHelper {
     fs.outputFileSync(filePath, impl);
   }
 
-  createJsonFile(filePathRelativeToLocalScope: string, jsonContent: string) {
+  createJsonFile(filePathRelativeToLocalScope: string, jsonContent: Record<string, any>) {
     const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
     ensureAndWriteJson(filePath, jsonContent);
   }
@@ -49,7 +49,7 @@ export default class FsHelper {
     return fs.readFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope)).toString();
   }
 
-  readJsonFile(filePathRelativeToLocalScope: string): string {
+  readJsonFile(filePathRelativeToLocalScope: string): Record<string, any> {
     return fs.readJsonSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope));
   }
 
@@ -59,6 +59,12 @@ export default class FsHelper {
 
   appendFile(filePathRelativeToLocalScope: string, data = '\n'): void {
     return fs.appendFileSync(path.join(this.scopes.localPath, filePathRelativeToLocalScope), data);
+  }
+
+  prependFile(filePathRelativeToLocalScope: string, data = '\n'): void {
+    const filePath = path.join(this.scopes.localPath, filePathRelativeToLocalScope);
+    const content = fs.readFileSync(filePath).toString();
+    return fs.writeFileSync(filePath, `${data}${content}`);
   }
 
   moveSync(srcPathRelativeToLocalScope: string, destPathRelativeToLocalScope: string) {

@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import fs from 'fs-extra';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import { IS_WINDOWS } from '../../src/constants';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
@@ -28,7 +27,6 @@ describe('typescript components with link files', function () {
    * raise a warning about missing-dependencies
    */
   describe('when a component uses index file to import single members from a module', () => {
-    let output;
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
@@ -46,8 +44,8 @@ describe('typescript components with link files', function () {
       helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
     });
     it('should not consider that index file as a dependency', () => {
-      output = helper.command.status();
-      expect(output).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+      const allIssues = helper.command.getAllIssuesFromStatus();
+      expect(allIssues).to.not.include(IssuesClasses.UntrackedDependencies.name);
     });
   });
 

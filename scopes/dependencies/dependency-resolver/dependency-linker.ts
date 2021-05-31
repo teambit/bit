@@ -1,5 +1,6 @@
 import path from 'path';
 import { uniq, compact, flatten, head } from 'lodash';
+import { Stats } from 'fs';
 import fs from 'fs-extra';
 import resolveFrom from 'resolve-from';
 import { link as legacyLink } from '@teambit/legacy/dist/api/consumer';
@@ -225,14 +226,13 @@ export class DependencyLinker {
           from: `${linkSrc} ${origPath}`,
           to: linkTarget,
         };
-        const resolvedTarget = path.resolve(linkTarget, '..');
-        const relativeSrc = path.relative(resolvedTarget, linkSrc);
+        const linkTargetParent = path.resolve(linkTarget, '..');
+        const relativeSrc = path.relative(linkTargetParent, linkSrc);
         const symlink = new Symlink(relativeSrc, linkTarget, component.id._legacy, false);
         this.logger.info(
           `linking nested dependency ${folderEntry.moduleName} for component ${component}. link src: ${linkSrc} link target: ${linkTarget}`
         );
-
-        symlink.writeWithNativeFS();
+        symlink.write();
         return linkDetail;
       });
 
@@ -416,10 +416,22 @@ export class DependencyLinker {
     const mainAspectPath = path.join(dir, this.aspectLoader.mainAspect.packageName);
     let aspectDir = path.join(mainAspectPath, 'dist', name);
     const target = path.join(dir, packageName);
-    const isTargetExists = fs.pathExistsSync(target);
-    // Do not override links created by other means
-    if (isTargetExists && !hasLocalInstallation) {
-      return undefined;
+    // TODO: change to fs.lstatSync(dest, {throwIfNoEntry: false});
+    // TODO: this requires to upgrade node to v15.3.0 to have the throwIfNoEntry property (maybe upgrade fs-extra will work as well)
+    // TODO: we don't use fs.pathExistsSync since it will return false in case the dest is a symlink which will result error on write
+    let targetStat: Stats | undefined;
+    try {
+      targetStat = fs.lstatSync(target);
+      // eslint-disable-next-line no-empty
+    } catch (e) {}
+    if (targetStat && !hasLocalInstallation) {
+      // Do not override links created by other means
+      if (!targetStat.isSymbolicLink()) {
+        this.logger.debug(`linkCoreAspect, target ${target} already exist. skipping it`);
+        return undefined;
+      }
+      // it's a symlink, remove is as it might point to an older version
+      fs.removeSync(target);
     }
     const isAspectDirExist = fs.pathExistsSync(aspectDir);
     if (!isAspectDirExist) {
@@ -437,7 +449,7 @@ export class DependencyLinker {
       if (fs.existsSync(target)) {
         return undefined;
       }
-      fs.symlinkSync(aspectPath, target);
+      createSymlinkOrCopy(aspectPath, target);
       return { aspectId: id, linkDetail: { from: aspectPath, to: target } };
     } catch (err) {
       throw new CoreAspectLinkError(id, err);
@@ -476,7 +488,7 @@ export class DependencyLinker {
       if (fs.existsSync(target)) {
         return undefined;
       }
-      fs.symlinkSync(harmonyPath, target);
+      createSymlinkOrCopy(harmonyPath, target);
       return { from: harmonyPath, to: target };
     } catch (err) {
       throw new HarmonyLinkError(err);

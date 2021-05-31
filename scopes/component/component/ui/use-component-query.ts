@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react';
-import { useDataQuery } from '@teambit/ui.hooks.use-data-query';
+import { useDataQuery } from '@teambit/ui-foundation.ui.hooks.use-data-query';
 import { gql } from '@apollo/client';
 
 import { ComponentModel } from './component-model';
@@ -23,6 +23,10 @@ const componentFields = gql`
     }
     tags {
       version
+    }
+    env {
+      id
+      icon
     }
   }
 `;
@@ -90,7 +94,7 @@ export function useComponentQuery(componentId: string, host: string) {
 
   return useMemo(() => {
     return {
-      component: rawComponent ? ComponentModel.from(rawComponent) : undefined,
+      component: rawComponent ? ComponentModel.from({ ...rawComponent, host }) : undefined,
       // eslint-disable-next-line
       error: error
         ? new ComponentError(500, error.message)
@@ -98,5 +102,5 @@ export function useComponentQuery(componentId: string, host: string) {
         ? new ComponentError(404)
         : undefined,
     };
-  }, [rawComponent, error]);
+  }, [rawComponent, host, error]);
 }

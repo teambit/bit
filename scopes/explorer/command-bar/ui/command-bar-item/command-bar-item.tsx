@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import { KeySequence } from '@teambit/ui.keycap';
+import { KeySequence } from '@teambit/ui-foundation.ui.keycap';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
 import { CommanderSearchResult } from '../../types';
 import styles from './command-bar-item.module.scss';

@@ -1,4 +1,5 @@
 import mapSeries from 'p-map-series';
+import { SlotRegistry, Slot } from '@teambit/harmony';
 import { CLIAspect, CLIMain, MainRuntime } from '@teambit/cli';
 import { LoggerAspect, LoggerMain, Logger } from '@teambit/logger';
 import { ScopeAspect, ScopeMain } from '@teambit/scope';
@@ -24,10 +25,18 @@ export type SignResult = {
   error: string | null;
 };
 
-export class SignMain {
-  constructor(private scope: ScopeMain, private logger: Logger, private builder: BuilderMain) {}
+type OnPostSign = (components: Component[]) => Promise<void>;
+type OnPostSignSlot = SlotRegistry<OnPostSign>;
 
-  async sign(ids: ComponentID[], isMultiple?: boolean): Promise<SignResult | null> {
+export class SignMain {
+  constructor(
+    private scope: ScopeMain,
+    private logger: Logger,
+    private builder: BuilderMain,
+    private onPostSignSlot: OnPostSignSlot
+  ) {}
+
+  async sign(ids: ComponentID[], isMultiple?: boolean, push?: boolean): Promise<SignResult | null> {
     if (isMultiple) await this.scope.import(ids);
     const { componentsToSkip, componentsToSign } = await this.getComponentIdsToSign(ids);
     if (componentsToSkip.length) {
@@ -51,18 +60,31 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     const publishedPackages = getPublishedPackages(legacyComponents);
     const pipeWithError = pipeResults.find((pipe) => pipe.hasErrors());
     const buildStatus = pipeWithError ? BuildStatus.Failed : BuildStatus.Succeed;
-    if (isMultiple) {
-      await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
-    } else {
-      await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+    if (push) {
+      if (isMultiple) {
+        await this.exportExtensionsDataIntoScopes(legacyComponents, buildStatus);
+      } else {
+        await this.saveExtensionsDataIntoScope(legacyComponents, buildStatus);
+      }
+      await this.clearScopesCaches(legacyComponents);
     }
-    await this.clearScopesCaches(legacyComponents);
+    await this.triggerOnPostSign(components);
 
     return {
       components,
       publishedPackages,
       error: pipeWithError ? pipeWithError.getErrorMessageFormatted() : null,
     };
+  }
+
+  public registerOnPostSign(fn: OnPostSign) {
+    this.onPostSignSlot.register(fn);
+  }
+
+  async triggerOnPostSign(components: Component[]) {
+    await Promise.all(this.onPostSignSlot.values().map((fn) => fn(components))).catch((err) => {
+      this.logger.error('failed running onPostSignSlot', err);
+    });
   }
 
   private async clearScopesCaches(components: ConsumerComponent[]) {
@@ -114,7 +136,7 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
     componentsToSign: ComponentID[];
   }> {
     // using `loadComponents` instead of `getMany` to make sure component aspects are loaded.
-    this.logger.setStatusLine(`loading ${ids.length} components and their extensions...`);
+    this.logger.setStatusLine(`loading ${ids.length} components and their aspects...`);
     const components = await this.scope.loadMany(ids);
     this.logger.clearStatusLine();
     const componentsToSign: ComponentID[] = [];
@@ -133,9 +155,15 @@ ${componentsToSkip.map((c) => c.toString()).join('\n')}\n`);
 
   static dependencies = [CLIAspect, ScopeAspect, LoggerAspect, BuilderAspect];
 
-  static async provider([cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain]) {
+  static slots = [Slot.withType<OnPostSignSlot>()];
+
+  static async provider(
+    [cli, scope, loggerMain, builder]: [CLIMain, ScopeMain, LoggerMain, BuilderMain],
+    _,
+    [onPostSignSlot]: [OnPostSignSlot]
+  ) {
     const logger = loggerMain.createLogger(SignAspect.id);
-    const signMain = new SignMain(scope, logger, builder);
+    const signMain = new SignMain(scope, logger, builder, onPostSignSlot);
     cli.register(new SignCmd(signMain, scope, logger));
     return signMain;
   }

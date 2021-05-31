@@ -7,7 +7,7 @@ import { Workspace, WorkspaceInstallOptions } from './workspace';
 
 type InstallCmdOptions = {
   variants: string;
-  lifecycleType: DependencyLifecycleType;
+  type: DependencyLifecycleType;
   skipDedupe: boolean;
   skipImport: boolean;
   updateExisting: boolean;
@@ -15,9 +15,9 @@ type InstallCmdOptions = {
 
 export default class InstallCmd implements Command {
   name = 'install [packages...]';
-  description = 'Install dependencies';
+  description = 'install development workspace dependencies';
   alias = 'in';
-  group = 'component';
+  group = 'development';
   shortDescription = '';
   options = [
     ['v', 'variants <variants>', 'add packages to specific variants'],
@@ -44,7 +44,7 @@ export default class InstallCmd implements Command {
     this.logger.console(`Resolving component dependencies for workspace: '${chalk.cyan(this.workspace.name)}'`);
     const installOpts: WorkspaceInstallOptions = {
       variants: options.variants,
-      lifecycleType: options.lifecycleType,
+      lifecycleType: options.type,
       dedupe: !options.skipDedupe,
       import: !options.skipImport,
       updateExisting: options.updateExisting,

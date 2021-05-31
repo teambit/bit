@@ -1,22 +1,60 @@
+import type { ComponentType } from 'react';
+import { domToFiber, toRootFiber } from './dom-to-fiber';
+import { FiberNode } from './fiber-node';
+
 /**
  * a function that returns the React component of a given
  * DOM node.
  * This supports React 15 and 16+.
  */
-export function domToReact(element: Element | null) {
-  if (!element) return null;
-  const reactInstanceKey = Object.keys(element).find((key) => key.startsWith('__reactInternalInstance$'));
+export function toRootElement(element: HTMLElement | null) {
+  const rootFiber = toRootFiber(domToFiber(element));
+  if (!rootFiber) return null;
 
-  if (!reactInstanceKey) return null;
-  const reactInstance = element[reactInstanceKey];
+  // bubble up the DOM to find the element matching the root fiber
+  for (let current = element; current; current = current.parentElement) {
+    const fiberNode = domToFiber(current);
+    if (!fiberNode) return null;
 
-  // React < 16
-  if (reactInstance._currentElement) {
-    let compFiber = reactInstance._currentElement._owner;
-    compFiber = compFiber._currentElement._owner;
-    // TODO: test on React 15.
-    return compFiber.type;
+    const parent = fiberNode.return;
+    const isRoot = fiberNode === rootFiber || parent === rootFiber;
+    if (isRoot) return current;
   }
 
-  return reactInstance.return.type;
+  return null;
+}
+
+export function domToReact(element: HTMLElement | null) {
+  if (element === null) return null;
+
+  const fiberNode = domToFiber(element);
+  const rootFiber = toRootFiber(fiberNode);
+
+  return rootFiber?.type || null;
+}
+
+export function domToReacts(element: HTMLElement | null): ComponentType[] {
+  if (element === null) return [];
+
+  const fiberNode = domToFiber(element);
+  const rootFiber = toRootFiber(fiberNode);
+
+  return componentsOf(rootFiber);
+}
+
+/**
+ * lists components that immediately rendered this element
+ */
+function componentsOf(fiberNode: FiberNode | null) {
+  const componentFibers: FiberNode[] = [];
+
+  let current = fiberNode;
+  while (current && typeof current.type === 'function') {
+    componentFibers.push(current);
+    current = current.return;
+  }
+
+  const components = componentFibers.map((x) => x.type);
+  // fibers type is already checked to be 'function'
+  return components as ComponentType[];
 }

@@ -1,4 +1,4 @@
-import { getIcon } from '@teambit/ui.get-icon-from-file-name';
+import { getIcon } from '@teambit/ui-foundation.ui.get-icon-from-file-name';
 
 export type FileIconMatch = (file: string) => string | undefined;
 

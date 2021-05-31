@@ -2,12 +2,15 @@ import { link } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { CodemodResult } from '../../../consumer/component-ops/codemod-components';
 import { LinksResult } from '../../../links/node-modules-linker';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 import { codemodTemplate } from '../../templates/codemod-template';
 import linkTemplate from '../../templates/link-template';
 
 export default class Link implements LegacyCommand {
   name = 'link [ids...]';
+  shortDescription = 'Generate symlinks for imported components absolute path resolution.';
+  group: Group = 'collaborate';
   description = `generate symlinks to resolve module paths for imported components.\n  https://${BASE_DOCS_DOMAIN}/docs/dependencies#missing-links`;
   alias = 'b';
   opts = [

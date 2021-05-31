@@ -85,7 +85,7 @@ export default async function provideWorkspace(
   const bitConfig: any = harmony.config.get('teambit.harmony/bit');
   const consumer = await getConsumer(bitConfig.cwd);
   if (!consumer) return undefined;
-  // TODO: get the 'worksacpe' name in a better way
+  // TODO: get the 'workspace' name in a better way
   const logger = loggerExt.createLogger(EXT_NAME);
   const workspace = new Workspace(
     pubsub,
@@ -107,6 +107,14 @@ export default async function provideWorkspace(
     onComponentRemoveSlot,
     graphql
   );
+
+  const getWorkspacePolicyFromPackageJson = () => {
+    const packageJson = workspace.consumer.packageJson?.packageJsonObject || {};
+    const policyFromPackageJson = dependencyResolver.getWorkspacePolicyFromPackageJson(packageJson);
+    return policyFromPackageJson;
+  };
+
+  dependencyResolver.registerRootPolicy(getWorkspacePolicyFromPackageJson());
 
   ManyComponentsWriter.registerExternalInstaller({
     install: async () => {
@@ -203,20 +211,7 @@ export default async function provideWorkspace(
  * is passed to the provider, so before using it, make sure it exists.
  * keep in mind that you can't verify it in the provider itself, because the provider is running
  * always for all commands before anything else is happening.
- *
- * the reason for the try/catch when loading the consumer is because some bit files (e.g. bit.json)
- * can be corrupted and in this case we do want to throw an error explaining this. the only command
- * allow in such a case is `bit init --reset`, which fixes the corrupted files. sadly, at this
- * stage we don't have the commands objects, so we can't check the command/flags from there. we
- * need to check the `process.argv.` directly instead, which is not 100% accurate.
  */
 async function getConsumer(path?: string): Promise<Consumer | undefined> {
-  try {
-    return await loadConsumerIfExist(path);
-  } catch (err) {
-    if (process.argv.includes('init') && !process.argv.includes('-r')) {
-      return undefined;
-    }
-    throw err;
-  }
+  return loadConsumerIfExist(path);
 }

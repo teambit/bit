@@ -11,14 +11,17 @@ import GeneralError from '../../../error/general-error';
 import { ComponentWithDependencies } from '../../../scope';
 import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
+import { Group } from '../../command-groups';
 import { CommandOptions, LegacyCommand } from '../../legacy-command';
 
 export default class Import implements LegacyCommand {
   name = 'import [ids...]';
+  shortDescription = 'import components into your current working area';
+  group: Group = 'collaborate';
   description = `import components into your current workspace.
   https://${BASE_DOCS_DOMAIN}/docs/sourcing-components
   ${WILDCARD_HELP('import')}`;
-  alias = 'i';
+  alias = '';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],

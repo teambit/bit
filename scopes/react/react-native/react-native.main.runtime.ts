@@ -1,16 +1,17 @@
-import { Configuration } from 'webpack';
-import { merge as webpackMerge } from 'webpack-merge';
 import { VariantPolicyConfigObject } from '@teambit/dependency-resolver';
+import { GeneratorAspect, GeneratorMain } from '@teambit/generator';
+import { TsConfigSourceFile } from 'typescript';
+import type { TsCompilerOptionsWithoutTsConfig } from '@teambit/typescript';
 import { merge } from 'lodash';
 import { MainRuntime } from '@teambit/cli';
 import { BuildTask } from '@teambit/builder';
 import { Aspect } from '@teambit/harmony';
 import { PackageJsonProps } from '@teambit/pkg';
 import { EnvsAspect, EnvsMain, EnvTransformer, Environment } from '@teambit/envs';
-import { ReactAspect, ReactMain } from '@teambit/react';
+import { ReactAspect, ReactMain, UseWebpackModifiers } from '@teambit/react';
 import { ReactNativeAspect } from './react-native.aspect';
-
-const webpackConfig = require('./webpack/webpack.config');
+import { reactNativeTemplate } from './templates/react-native-env';
+import { previewConfigTransformer, devServerConfigTransformer } from './webpack/webpack-transformers';
 
 const jestConfig = require.resolve('./jest/jest.config');
 
@@ -30,7 +31,11 @@ export class ReactNativeMain {
   /**
    * override the TS config of the environment.
    */
-  overrideTsConfig = this.react.overrideTsConfig.bind(this.react);
+  overrideTsConfig: (
+    tsconfig: TsConfigSourceFile,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>,
+    tsModule?: any
+  ) => EnvTransformer = this.react.overrideTsConfig.bind(this.react);
 
   /**
    * override the jest config of the environment.
@@ -45,7 +50,10 @@ export class ReactNativeMain {
   /**
    * override the build ts config.
    */
-  overrideBuildTsConfig = this.react.overrideBuildTsConfig.bind(this.react);
+  overrideBuildTsConfig: (
+    tsconfig: any,
+    compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
+  ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
   /**
    * override package json properties.
@@ -54,20 +62,12 @@ export class ReactNativeMain {
     this.react
   );
 
-  /**
-   * override the preview config in the env.
-   */
-  overridePreviewConfig(config: Configuration) {
-    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
-    return this.react.overridePreviewConfig(mergedConfig);
-  }
-
-  /**
-   * override the dev server configuration.
-   */
-  overrideDevServerConfig(config: Configuration) {
-    const mergedConfig = config ? webpackMerge(config as any, webpackConfig as any) : webpackConfig;
-    return this.react.overrideDevServerConfig(mergedConfig);
+  useWebpack(modifiers?: UseWebpackModifiers) {
+    const mergedModifiers: UseWebpackModifiers = {
+      previewConfig: (modifiers?.previewConfig ?? []).concat(previewConfigTransformer),
+      devServerConfig: (modifiers?.devServerConfig ?? []).concat(devServerConfigTransformer),
+    };
+    return this.react.useWebpack(mergedModifiers);
   }
 
   /**
@@ -86,16 +86,20 @@ export class ReactNativeMain {
     return this.envs.compose(this.envs.merge(targetEnv, this.reactNativeEnv), transformers);
   }
 
-  static dependencies: Aspect[] = [ReactAspect, EnvsAspect];
+  static dependencies: Aspect[] = [ReactAspect, EnvsAspect, GeneratorAspect];
   static runtime = MainRuntime;
-  static async provider([react, envs]: [ReactMain, EnvsMain]) {
+  static async provider([react, envs, generator]: [ReactMain, EnvsMain, GeneratorMain]) {
+    const webpackModifiers: UseWebpackModifiers = {
+      previewConfig: [previewConfigTransformer],
+      devServerConfig: [devServerConfigTransformer],
+    };
     const reactNativeEnv = react.compose([
-      react.overrideDevServerConfig(webpackConfig),
-      react.overridePreviewConfig(webpackConfig),
+      react.useWebpack(webpackModifiers),
       react.overrideJestConfig(jestConfig),
       react.overrideDependencies(getReactNativeDeps()),
     ]);
     envs.registerEnv(reactNativeEnv);
+    generator.registerComponentTemplate([reactNativeTemplate]);
     return new ReactNativeMain(react, reactNativeEnv, envs);
   }
 }
@@ -106,18 +110,23 @@ function getReactNativeDeps() {
   return {
     dependencies: {
       react: '-',
+      'react-dom': '-',
       'react-native': '-',
     },
     devDependencies: {
-      '@types/react-native': '^0.63.2',
-      '@types/jest': '~26.0.9',
       react: '-',
+      'react-dom': '-',
       'react-native': '-',
-      'react-native-web': '0.14.8',
+      '@types/jest': '^26.0.0',
+      '@types/react': '^16.8.0',
+      '@types/react-dom': '^16.8.0',
+      '@types/react-native': '^0.63.0',
     },
     peerDependencies: {
-      react: '^16.13.1',
-      'react-native': '^0.63.3',
+      react: '^16.8.0',
+      'react-dom': '^16.8.0',
+      'react-native': '^0.63.0',
+      'react-native-web': '^0.14.0',
     },
   };
 }

@@ -1,5 +1,5 @@
 import { AnyFS } from '@teambit/any-fs';
-import { capitalize } from '@teambit/string.capitalize';
+import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { SemVer } from 'semver';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
@@ -20,6 +20,8 @@ type SnapsIterableOpts = {
   firstParentOnly?: boolean;
   stopFn?: (snap: Snap) => Promise<boolean>;
 };
+
+export type InvalidComponent = { id: ComponentID; err: Error };
 
 /**
  * in-memory representation of a component.

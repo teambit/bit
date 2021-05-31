@@ -5,9 +5,15 @@ import { DefaultAvatar, OrgAvatar, UserAvatar } from './index';
 const accounts = {
   defAccount: { name: 'defaultAccount', type: 'default', profileImage: 'https://static.bit.dev/harmony/support.svg' },
   orgAccount: { name: 'defaultAccount', type: 'organization', profileImage: 'https://static.bit.dev/bit-logo.svg' },
-  userAccount: { name: 'defaultAccount', type: 'user', profileImage: 'https://static.bit.dev/harmony/github.svg' },
+  userAccount: {
+    displayName: 'display name',
+    name: 'defaultAccount',
+    type: 'user',
+    profileImage: 'https://static.bit.dev/harmony/github.svg',
+  },
   noPicOrgAccount: { name: 'defaultAccount', type: 'organization' },
   noPicUserAccount: { name: 'defaultAccount', type: 'user' },
+  noNameAccount: { name: '', type: 'user' },
 };
 
 export const DefaultAvatarExample = () => (
@@ -43,5 +49,17 @@ export const NoSetIconOrgAvatar = () => (
 export const NoSetIconUserAvatar = () => (
   <ThemeCompositions>
     <UserAvatar size={32} account={accounts.noPicUserAccount} />
+  </ThemeCompositions>
+);
+
+export const NoUserNameAvatarExample = () => (
+  <ThemeCompositions>
+    <UserAvatar size={32} account={accounts.noNameAccount} />
+  </ThemeCompositions>
+);
+
+export const UserAvatarWithTooltipExample = () => (
+  <ThemeCompositions>
+    <UserAvatar size={32} account={accounts.userAccount} showTooltip />
   </ThemeCompositions>
 );

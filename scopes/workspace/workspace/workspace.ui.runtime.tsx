@@ -2,17 +2,17 @@ import { ComponentAspect, ComponentUI, ComponentModel } from '@teambit/component
 import { ComponentTreeAspect, ComponentTreeUI, ComponentTreeNode } from '@teambit/component-tree';
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import ReactRouterAspect, { ReactRouterUI } from '@teambit/react-router';
-import { RouteSlot } from '@teambit/ui.react-router.slot-router';
-import { Menu } from '@teambit/ui.menu';
+import { RouteSlot } from '@teambit/ui-foundation.ui.react-router.slot-router';
+import { Menu } from '@teambit/ui-foundation.ui.menu';
 import SidebarAspect, { SidebarUI, SidebarItem, SidebarItemSlot } from '@teambit/sidebar';
-import { MenuItemSlot, MenuItem } from '@teambit/ui.main-dropdown';
+import { MenuItemSlot, MenuItem } from '@teambit/ui-foundation.ui.main-dropdown';
 import { UIAspect, UIRootUI as UIRoot, UIRuntime, UiUI } from '@teambit/ui';
 import { GraphAspect, GraphUI } from '@teambit/graph';
 import React from 'react';
 import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, ComponentSearcher, CommandHandler } from '@teambit/command-bar';
-import { MenuLinkItem } from '@teambit/ui.surfaces.menu.link-item';
-import { WorkspaceComponentsDrawer } from './workspace-components.drawer';
+import { MenuLinkItem } from '@teambit/design.ui.surfaces.menu.link-item';
+import { WorkspaceComponentsDrawer } from './ui/workspace-components-drawer';
 import { ComponentTreeWidget } from './component-tree.widget';
 import { Workspace } from './ui';
 import { WorkspaceAspect } from './workspace.aspect';
@@ -186,7 +186,7 @@ export class WorkspaceUI {
 
     workspaceUI.registerSidebarLink(() => (
       <MenuLinkItem exact href="/" icon="comps">
-        Overview
+        Gallery
       </MenuLinkItem>
     ));
 

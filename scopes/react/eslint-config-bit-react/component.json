@@ -7,7 +7,7 @@
   "extensions": {
     "teambit.pkg/pkg": {
       "packageJson": {
-        "name": "@teambit/{name}",
+        "name": "@teambit/{scope}.{name}",
         "private": false
       },
       "packageManagerPublishArgs": [
@@ -27,7 +27,7 @@
         },
         "peerDependencies": {
           "eslint": "> 7.0.0",
-          "@teambit/legacy": "1.0.2"
+          "@teambit/legacy": "1.0.91"
         }
       }
     }

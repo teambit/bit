@@ -1,10 +1,17 @@
 import fs from 'fs-extra';
 import glob from 'glob';
+import pMapSeries from 'p-map-series';
 import * as path from 'path';
 import R from 'ramda';
-
+import { IssuesClasses } from '@teambit/component-issues';
 import { BitId } from '../bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_BINDINGS_PREFIX, PACKAGE_JSON } from '../constants';
+import {
+  COMPONENT_ORIGINS,
+  DEFAULT_BINDINGS_PREFIX,
+  IS_WINDOWS,
+  PACKAGE_JSON,
+  SOURCE_DIR_SYMLINK_TO_NM,
+} from '../constants';
 import BitMap from '../consumer/bit-map/bit-map';
 import ComponentMap from '../consumer/bit-map/component-map';
 import ComponentsList from '../consumer/component/components-list';
@@ -56,24 +63,23 @@ export default class NodeModuleLinker {
   async getLinks(): Promise<DataToPersist> {
     this.dataToPersist = new DataToPersist();
     await this._populateShouldDependenciesSavedAsComponentsData();
-    await Promise.all(
-      this.components.map((component) => {
-        const componentId = component.id.toString();
-        logger.debug(`linking component to node_modules: ${componentId}`);
-        const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
-        component.componentMap = componentMap;
-        switch (componentMap.origin) {
-          case COMPONENT_ORIGINS.IMPORTED:
-            return this._populateImportedComponentsLinks(component);
-          case COMPONENT_ORIGINS.NESTED:
-            return this._populateNestedComponentsLinks(component);
-          case COMPONENT_ORIGINS.AUTHORED:
-            return this._populateAuthoredComponentsLinks(component);
-          default:
-            throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
-        }
-      })
-    );
+    // don't use Promise.all because down the road it calls transformPackageJson of pkg aspect, which loads components
+    await pMapSeries(this.components, (component) => {
+      const componentId = component.id.toString();
+      logger.debug(`linking component to node_modules: ${componentId}`);
+      const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
+      component.componentMap = componentMap;
+      switch (componentMap.origin) {
+        case COMPONENT_ORIGINS.IMPORTED:
+          return this._populateImportedComponentsLinks(component);
+        case COMPONENT_ORIGINS.NESTED:
+          return this._populateNestedComponentsLinks(component);
+        case COMPONENT_ORIGINS.AUTHORED:
+          return this._populateAuthoredComponentsLinks(component);
+        default:
+          throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
+      }
+    });
 
     return this.dataToPersist;
   }
@@ -141,7 +147,7 @@ export default class NodeModuleLinker {
       this.dataToPersist.addSymlink(distSymlink);
     } else if (srcTarget !== '.') {
       // avoid creating symlinks from node_modules to itself
-      this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
+      this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId, true));
     }
     await this._populateDependenciesAndMissingLinks(component);
   }
@@ -176,7 +182,7 @@ export default class NodeModuleLinker {
       const fileWithRootDir = componentMap.hasRootDir() ? path.join(componentMap.rootDir as string, file) : file;
       const dest = path.join(componentNodeModulesPath, file);
 
-      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId, true));
     });
     this._deleteExistingLinksRootIfSymlink(componentNodeModulesPath);
     // remove this for now, it should be handled by dependency-linker.addSymlinkFromComponentDirNMToWorkspaceDirNM
@@ -218,6 +224,17 @@ export default class NodeModuleLinker {
       defaultScope: this._getDefaultScope(component),
       extensions: component.extensions,
     });
+
+    component.isLegacy
+      ? this.symlinkFilesAuthorLegacy(component, linkPath)
+      : this.symlinkDirAuthorHarmony(component, linkPath);
+
+    this._deleteExistingLinksRootIfSymlink(linkPath);
+    this._deleteOldLinksOfIdWithoutScope(component);
+    await this._createPackageJsonForAuthor(component);
+  }
+
+  private symlinkFilesAuthorLegacy(component: Component, linkPath: PathOsBasedRelative) {
     const componentMap = component.componentMap as ComponentMap;
     const filesToBind = componentMap.getAllFilesPaths();
     // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
@@ -244,7 +261,7 @@ export default class NodeModuleLinker {
           filePath: dest,
           content: fileContent,
           srcPath: file,
-          componentId,
+          componentId: component.id,
           override: true,
           ignorePreviousSymlink: true, // in case the component didn't have a compiler before, this file was a symlink
         });
@@ -252,12 +269,33 @@ export default class NodeModuleLinker {
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, or it's Harmony version and above, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
       }
     });
-    this._deleteExistingLinksRootIfSymlink(linkPath);
-    this._deleteOldLinksOfIdWithoutScope(component);
-    await this._createPackageJsonForAuthor(component);
+  }
+
+  /**
+   * on Harmony, just symlink the entire source directory into "src" in node-modules.
+   */
+  private symlinkDirAuthorHarmony(component: Component, linkPath: PathOsBasedRelative) {
+    const componentMap = component.componentMap as ComponentMap;
+
+    const filesToBind = componentMap.getAllFilesPaths();
+    filesToBind.forEach((file) => {
+      const fileWithRootDir = path.join(componentMap.rootDir as string, file);
+      const dest = path.join(linkPath, file);
+      this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithRootDir, dest, component.id, true));
+    });
+
+    if (IS_WINDOWS) {
+      this.dataToPersist.addSymlink(
+        Symlink.makeInstance(
+          componentMap.rootDir as string,
+          path.join(linkPath, SOURCE_DIR_SYMLINK_TO_NM),
+          component.id
+        )
+      );
+    }
   }
 
   /**
@@ -303,14 +341,12 @@ export default class NodeModuleLinker {
    * for IMPORTED and NESTED components
    */
   async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
-    // $FlowFixMe loaded from FS, componentMap must be set
-    // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
+    // @ts-ignore loaded from FS, componentMap must be set
     const componentMap: ComponentMap = component.componentMap;
     if (
       component.issues &&
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      // @ts-ignore AUTO-ADDED-AFTER-MIGRATION-PLEASE-FIX!
-      (component.issues.missingLinks || component.issues.missingCustomModuleResolutionLinks) &&
+      (component.issues.getIssue(IssuesClasses.MissingLinks) ||
+        component.issues.getIssue(IssuesClasses.MissingCustomModuleResolutionLinks)) &&
       this.consumer &&
       component.componentFromModel
     ) {
@@ -425,9 +461,15 @@ export default class NodeModuleLinker {
         allowNonScope: true,
       })
     );
-    const packageJson = PackageJsonFile.createFromComponent(dest, component);
+    const packageJson = PackageJsonFile.createFromComponent(dest, component, undefined, true, true);
     if (!this.consumer?.isLegacy) {
       await this._applyTransformers(component, packageJson);
+      if (IS_WINDOWS) {
+        // in the workspace, override the "types" and add the "src" prefix.
+        // otherwise, the navigation and auto-complete won't work on the IDE.
+        // this is for Windows only. For Linux, we use symlinks for the files.
+        packageJson.addOrUpdateProperty('types', `${SOURCE_DIR_SYMLINK_TO_NM}/${component.mainFile}`);
+      }
     }
     if (packageJson.packageJsonObject.version === 'latest') {
       packageJson.packageJsonObject.version = '0.0.1-new';

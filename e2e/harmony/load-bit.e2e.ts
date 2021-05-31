@@ -11,10 +11,10 @@ describe('loadBit()', function () {
   before(() => {
     helper = new Helper();
     helper.command.setFeatures(HARMONY_FEATURE);
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
   });
 
   it('should return a valid workspace instance', async () => {
-    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
     const harmony = await loadBit(helper.scopes.localPath);
     const workspace = harmony.get<Workspace>(WorkspaceAspect.id);
     expect(workspace.path).to.eq(helper.scopes.localPath);
@@ -36,5 +36,20 @@ describe('loadBit()', function () {
     expect(scopeA.name).to.eq(scopeName);
     expect(scopeB.name).to.eq(helper.scopes.remote);
     expect(scopeC.name).to.eq(helper.scopes.local);
+  });
+
+  it('should throw when defaultScope is invalid', async () => {
+    helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
+    const bitJsonc = helper.bitJsonc.read();
+    bitJsonc['teambit.workspace/workspace'].defaultScope = 'hi/';
+    helper.bitJsonc.write(bitJsonc);
+    let error: Error;
+    try {
+      await loadBit(helper.scopes.localPath);
+    } catch (err) {
+      error = err;
+    }
+    // @ts-ignore
+    expect(error.name).to.equal('InvalidScopeName');
   });
 });

@@ -1,14 +1,13 @@
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { mutedText } from '@teambit/base-ui.text.muted-text';
-import { TimeAgo } from '@teambit/ui.time-ago';
+import { TimeAgo } from '@teambit/design.ui.time-ago';
 import { XButton } from '@teambit/evangelist.elements.x-button';
 import classNames from 'classnames';
 import React, { useCallback, useContext, useState } from 'react';
-
-import { NotificationContext } from '@teambit/ui.notifications.notification-context';
-import { Message } from '@teambit/ui.notifications.store';
+import { LevelIcon } from '@teambit/design.ui.elements.level-icon';
+import { NotificationContext } from '@teambit/ui-foundation.ui.notifications.notification-context';
+import { Message } from '@teambit/ui-foundation.ui.notifications.store';
 import styles from './notification.module.scss';
-import { LevelIcon } from './level-icon';
 
 const DISMISS_TIME = +styles.dismissTime;
 

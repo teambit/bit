@@ -112,7 +112,7 @@ describe('components that are not synced between the scope and the consumer', fu
       helper.fixtures.addComponentBarFooAsDir();
       const bitMap = helper.bitMap.read();
       helper.command.tagAllWithoutBuild();
-      helper.command.exportAllComponents();
+      helper.command.export();
       // the mimic and import here is to make sure the local doesn't have the symlink object
       helper.git.mimicGitCloneLocalProjectHarmony();
       helper.scopeHelper.addRemoteScope();
@@ -133,9 +133,7 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should sync .bitmap according to the scope', () => {
         helper.command.expectStatusToBeClean();
-        const bitMap = helper.bitMap.read();
-        const newId = `${helper.scopes.remote}/bar/foo@0.0.1`;
-        expect(bitMap).to.have.property(newId);
+        helper.bitMap.expectToHaveIdHarmony('bar/foo', '0.0.1', helper.scopes.remote);
       });
     });
   });
@@ -406,7 +404,7 @@ describe('components that are not synced between the scope and the consumer', fu
         const bitMap = helper.bitMap.read();
         helper.scopeHelper.getClonedLocalScope(scopeAfterV1);
         helper.bitMap.write(bitMap);
-        helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '-r -s');
+        helper.command.removeComponent(`${helper.scopes.remote}/bar/foo`, '-r');
         scopeOutOfSync = helper.scopeHelper.cloneLocalScope();
       });
       describe('bit status', () => {

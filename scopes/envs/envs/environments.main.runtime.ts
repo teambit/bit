@@ -148,18 +148,47 @@ export class EnvsMain {
   }
 
   /**
+   * Return the id of the env as configured in the envs data (without version by default)
+   * The reason it's not contain version by default is that we want to take the version from the aspect defined on the component itself
+   * As this version is stay up to date during tagging the env along with the component
+   * @param component
+   * @param ignoreVersion
+   */
+  private getEnvIdFromEnvsData(component: Component, ignoreVersion = true): string | undefined {
+    const envsData = this.getEnvData(component);
+    if (!envsData) return undefined;
+    const rawEnvId = envsData.id;
+    if (!rawEnvId) return undefined;
+    if (!ignoreVersion) return rawEnvId;
+    const envIdWithoutVersion = ComponentID.fromString(rawEnvId).toStringWithoutVersion();
+    return envIdWithoutVersion;
+  }
+
+  /**
    * get the env id of the given component.
    */
   getEnvId(component: Component): string {
-    const envsData = this.getEnvData(component);
-    const withVersion = this.resolveEnv(component, envsData.id);
+    const envIdFromEnvData = this.getEnvIdFromEnvsData(component);
+    if (!envIdFromEnvData) {
+      // This should never happen
+      throw new Error(`no env found for ${component.id.toString()}`);
+    }
+    const withVersion = this.resolveEnv(component, envIdFromEnvData);
+    const withVersionMatch = this.envSlot.toArray().find(([envId]) => {
+      return withVersion?.toString() === envId;
+    });
+    const withVersionMatchId = withVersionMatch?.[0];
+    if (withVersionMatchId) return withVersionMatchId;
+
+    // Handle core envs
     const exactMatch = this.envSlot.toArray().find(([envId]) => {
-      return envsData.id === envId;
+      return envIdFromEnvData === envId;
     });
 
     const exactMatchId = exactMatch?.[0];
     if (exactMatchId) return exactMatchId;
-    if (!withVersion) throw new EnvNotConfiguredForComponent(envsData.id, component.id.toString());
+
+    if (!withVersion) throw new EnvNotConfiguredForComponent(envIdFromEnvData, component.id.toString());
     return withVersion.toString();
   }
 
@@ -206,8 +235,10 @@ export class EnvsMain {
     // Search first for env configured via envs aspect itself
     const envsAspect = component.state.aspects.get(EnvsAspect.id);
     const envIdFromEnvsConfig = envsAspect?.config.env;
+    let envIdFromEnvsConfigWithoutVersion;
     if (envIdFromEnvsConfig) {
-      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
+      envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
       if (envDef) {
         return envDef;
       }
@@ -216,11 +247,11 @@ export class EnvsMain {
     // in some cases we have the id configured in the teambit.envs/envs but without the version
     // in such cases we won't find it in the slot
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
-    if (envIdFromEnvsConfig) {
+    if (envIdFromEnvsConfigWithoutVersion) {
       const matchedEntry = component.state.aspects.entries.find((aspectEntry) => {
         return (
-          envIdFromEnvsConfig === aspectEntry.id.toString() ||
-          envIdFromEnvsConfig === aspectEntry.id.toString({ ignoreVersion: true })
+          envIdFromEnvsConfigWithoutVersion === aspectEntry.id.toString() ||
+          envIdFromEnvsConfigWithoutVersion === aspectEntry.id.toString({ ignoreVersion: true })
         );
       });
       if (matchedEntry) {
@@ -237,10 +268,8 @@ export class EnvsMain {
         );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      this.printWarningIfFirstTime(
-        envIdFromEnvsConfig,
-        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component ${component.id.toString()}`
-      );
+      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig, component.id.toString()).message;
+      this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env
@@ -266,8 +295,11 @@ export class EnvsMain {
     // Search first for env configured via envs aspect itself
     const envsAspect = extensions.findCoreExtension(EnvsAspect.id);
     const envIdFromEnvsConfig = envsAspect?.config.env;
+    let envIdFromEnvsConfigWithoutVersion;
+
     if (envIdFromEnvsConfig) {
-      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfig);
+      envIdFromEnvsConfigWithoutVersion = ComponentID.fromString(envIdFromEnvsConfig).toStringWithoutVersion();
+      const envDef = this.getEnvDefinitionByStringId(envIdFromEnvsConfigWithoutVersion);
       if (envDef) {
         return envDef;
       }
@@ -283,15 +315,15 @@ export class EnvsMain {
     // in some cases we have the id configured in the teambit.envs/envs but without the version
     // in such cases we won't find it in the slot
     // we search in the component aspect list a matching aspect which is match the id from the teambit.envs/envs
-    if (envIdFromEnvsConfig) {
+    if (envIdFromEnvsConfigWithoutVersion) {
       const matchedEntry = extensions.find((extension) => {
         if (extension.newExtensionId) {
           return (
-            envIdFromEnvsConfig === extension.newExtensionId.toString() ||
-            envIdFromEnvsConfig === extension.newExtensionId.toString({ ignoreVersion: true })
+            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString() ||
+            envIdFromEnvsConfigWithoutVersion === extension.newExtensionId.toString({ ignoreVersion: true })
           );
         }
-        return envIdFromEnvsConfig === extension.stringId;
+        return envIdFromEnvsConfigWithoutVersion === extension.stringId;
       });
       if (matchedEntry) {
         // during the tag process, the version in the aspect-entry-id is changed and is not the
@@ -307,10 +339,8 @@ export class EnvsMain {
         );
       }
       // Do not allow configure teambit.envs/envs on the component without configure the env aspect itself
-      this.printWarningIfFirstTime(
-        envIdFromEnvsConfig,
-        `environment with ID: ${envIdFromEnvsConfig} is not configured as extension for the component`
-      );
+      const errMsg = new EnvNotConfiguredForComponent(envIdFromEnvsConfig).message;
+      this.printWarningIfFirstTime(envIdFromEnvsConfig, errMsg);
     }
 
     // in case there is no config in teambit.envs/envs search the aspects for the first env that registered as env

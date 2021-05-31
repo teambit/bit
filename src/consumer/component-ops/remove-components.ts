@@ -12,6 +12,7 @@ import { Remotes } from '../../remotes';
 import RemovedLocalObjects from '../../scope/removed-local-objects';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import deleteComponentsFiles from '../component-ops/delete-component-files';
+import ComponentsList from '../component/components-list';
 import Component from '../component/consumer-component';
 import * as packageJsonUtils from '../component/package-json-utils';
 
@@ -71,9 +72,8 @@ async function removeRemote(consumer: Consumer | null | undefined, bitIds: BitId
   const remotes = consumer ? await getScopeRemotes(consumer.scope) : await Remotes.getGlobalRemotes();
   const context = {};
   enrichContextFromGlobal(context);
-  const scope = consumer ? consumer.scope : null;
   const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
-    const resolvedRemote = await remotes.resolve(key, scope);
+    const resolvedRemote = await remotes.resolve(key, consumer?.scope);
     const idsStr = groupedBitsByScope[key].map((id) => id.toStringWithoutVersion());
     return resolvedRemote.deleteMany(idsStr, force, context);
   });
@@ -118,6 +118,14 @@ async function removeLocal(
     );
   }
   const idsToRemove = force ? bitIds : nonModifiedComponents;
+  const componentsList = new ComponentsList(consumer);
+  const newComponents = (await componentsList.listNewComponents(false)) as BitIds;
+  const idsToRemoveFromScope = BitIds.fromArray(
+    idsToRemove.filter((id) => !newComponents.hasWithoutScopeAndVersion(id))
+  );
+  const idsToCleanFromWorkspace = BitIds.fromArray(
+    idsToRemove.filter((id) => newComponents.hasWithoutScopeAndVersion(id))
+  );
   const { components: componentsToRemove, invalidComponents } = await consumer.loadComponents(idsToRemove, false);
   const {
     removedComponentIds,
@@ -125,24 +133,25 @@ async function removeLocal(
     dependentBits,
     removedFromLane,
     removedDependencies,
-  } = await consumer.scope.removeMany(idsToRemove, force, true, consumer);
+  } = await consumer.scope.removeMany(idsToRemoveFromScope, force, true, consumer);
+  idsToCleanFromWorkspace.push(...removedComponentIds);
 
-  if (!R.isEmpty(removedComponentIds) && !removedFromLane) {
-    const removedComponents = componentsToRemove.filter((c) => removedComponentIds.hasWithoutVersion(c.id));
-    await deleteComponentsFiles(consumer, removedComponentIds, deleteFiles);
+  if (!R.isEmpty(idsToCleanFromWorkspace) && !removedFromLane) {
+    await deleteComponentsFiles(consumer, idsToCleanFromWorkspace, deleteFiles);
     await deleteComponentsFiles(consumer, removedDependencies, false);
     if (!track) {
       const invalidComponentsIds = invalidComponents.map((i) => i.id);
+      const removedComponents = componentsToRemove.filter((c) => idsToCleanFromWorkspace.hasWithoutVersion(c.id));
       await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(
         consumer,
         removedComponents,
         invalidComponentsIds
       );
-      await consumer.cleanFromBitMap(removedComponentIds, removedDependencies);
+      await consumer.cleanFromBitMap(idsToCleanFromWorkspace, removedDependencies);
     }
   }
   return new RemovedLocalObjects(
-    removedComponentIds,
+    idsToCleanFromWorkspace,
     missingComponents,
     modifiedComponents,
     removedDependencies,

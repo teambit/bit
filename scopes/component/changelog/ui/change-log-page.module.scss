@@ -1,20 +1,21 @@
 .changeLogPage {
   padding: 50px 40px 0 40px;
   max-width: 1440px;
-  margin: 0 auto;
-  width: 100%;
+  margin: 0 auto 48px;
+  width: auto;
   overflow-y: scroll;
   @media screen and (max-width: 768px) {
     width: unset;
   }
   .title {
-    margin-bottom: 25px;
+    margin-bottom: 24px;
     font-size: var(--h-xs);
   }
   .separator {
     margin-bottom: 0;
   }
-  // .versions {
-  //     overflow-y: scroll;
-  // }
+}
+
+.separatorNoChangeLog {
+  margin-bottom: 41px;
 }

@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import * as path from 'path';
-
-import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
+import { IssuesClasses } from '@teambit/component-issues';
 import Helper from '../../src/e2e-helper/e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -24,12 +23,13 @@ describe('relative paths flow (components requiring each other by relative paths
     });
     it('bit status should show it as an invalid component', () => {
       const status = helper.command.statusJson();
-      expect(status.componentsWithMissingDeps).to.have.lengthOf(1);
-      expect(status.componentsWithMissingDeps[0]).to.equal('comp1');
+      expect(status.componentsWithIssues).to.have.lengthOf(1);
+      expect(status.componentsWithIssues[0].id).to.equal('comp1');
     });
     it('should block bit tag', () => {
       const output = helper.general.runWithTryCatch('bit tag -a');
-      expect(output).to.have.string(componentIssuesLabels.relativeComponentsAuthored);
+      const RelativeComponentAuthoredClass = IssuesClasses.relativeComponentsAuthored;
+      expect(output).to.have.string(new RelativeComponentAuthoredClass().description);
       expect(output).to.have.string('index.js -> "../comp2" (comp2)');
     });
     describe('replacing relative paths by module paths', () => {
@@ -47,6 +47,7 @@ describe('relative paths flow (components requiring each other by relative paths
       describe('tagging the component', () => {
         let tagOutput;
         before(() => {
+          helper.command.compile();
           tagOutput = helper.command.tagAllComponents();
         });
         it('should allow tagging the component', () => {
@@ -54,7 +55,7 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         it('bitmap record should have rootDir and files relative to the rootDir', () => {
           const bitMap = helper.bitMap.read();
-          const componentMap = bitMap['comp1@0.0.1'];
+          const componentMap = bitMap.comp1;
           expect(componentMap.rootDir).to.equal('comp1');
           expect(componentMap.mainFile).to.equal('index.js');
         });
@@ -64,13 +65,13 @@ describe('relative paths flow (components requiring each other by relative paths
         });
         describe('should work after importing to another workspace', () => {
           before(() => {
-            helper.command.exportAllComponentsAndRewire();
-            helper.scopeHelper.reInitLocalScope();
+            helper.command.exportToDefaultAndRewire();
+            helper.scopeHelper.reInitLocalScopeHarmony();
             helper.scopeHelper.addRemoteScope();
-            helper.command.importComponent('comp1');
+            helper.command.importComponent('*');
           });
           it('should write the component files with the short dirs (without rootDir)', () => {
-            expect(path.join(helper.scopes.localPath, 'components/comp1/index.js')).to.be.a.file();
+            expect(path.join(helper.scopes.localPath, helper.scopes.remote, 'comp1/index.js')).to.be.a.file();
           });
           it('should not generate link files', () => {
             expect(path.join(helper.scopes.localPath, 'components/comp1/comp2')).not.to.be.a.path();

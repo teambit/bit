@@ -38,14 +38,16 @@ export class EnvBundlingStrategy implements BundlingStrategy {
     const componentsResults: ComponentResult[] = result.components.map((component) => {
       return {
         component,
-        errors: result.errors,
+        errors: result.errors.map((err) => (typeof err === 'string' ? err : err.message)),
         warning: result.warnings,
       };
     });
 
+    const artifacts = this.getArtifactDef(context);
+
     return {
       componentsResults,
-      artifacts: this.getArtifactDef(context),
+      artifacts,
     };
   }
 
@@ -79,7 +81,7 @@ export class EnvBundlingStrategy implements BundlingStrategy {
   }
 
   private async computePaths(outputPath: string, defs: PreviewDefinition[], context: BuildContext): Promise<string[]> {
-    const previewMain = await this.preview.writePreviewRuntime();
+    const previewMain = await this.preview.writePreviewRuntime(context);
     const moduleMapsPromise = defs.map(async (previewDef) => {
       const moduleMap = await previewDef.getModuleMap(context.components);
 
