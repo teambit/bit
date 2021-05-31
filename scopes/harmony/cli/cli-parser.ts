@@ -1,5 +1,5 @@
 import didYouMean from 'didyoumean';
-import yargs from 'yargs';
+import yargs, { Arguments } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
@@ -8,7 +8,7 @@ import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
 import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
-import { YargsAdapter } from './yargs-adapter';
+import { GLOBAL_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandRunner } from './command-runner';
 
 export class CLIParser {
@@ -26,7 +26,11 @@ export class CLIParser {
     yargs(args);
     this.configureParser();
     this.commands.forEach((command: Command) => {
-      this.parseCommand(command);
+      if (command.commands && command.commands.length) {
+        this.parseCommandWithSubCommands(command);
+      } else {
+        this.parseCommand(command);
+      }
     });
     this.configureGlobalFlags();
 
@@ -61,18 +65,14 @@ export class CLIParser {
   }
 
   private parseCommand(command: Command) {
-    if (command.commands && command.commands.length) {
-      this.parseCommandWithSubCommands(command);
-      return;
-    }
     const yarnCommand = new YargsAdapter(command);
-    const handler = async function (argv) {
+    const handler = async function (argv: Arguments) {
       const enteredArgs: string[] = [];
       // @ts-ignore
       this.demanded.forEach((requireArg) => enteredArgs.push(requireArg.cmd[0]));
       // @ts-ignore
       this.optional.forEach((optionalArg) => enteredArgs.push(optionalArg.cmd[0]));
-      const argsValues = enteredArgs.map((a) => argv[a]);
+      const argsValues = enteredArgs.map((a) => argv[a]) as any[];
       // a workaround to get a flag syntax such as "--all [version]" work with yargs.
       const flags = Object.keys(argv).reduce((acc, current) => {
         if (current === '_' || current === '$0' || current === '--') return acc;
@@ -80,8 +80,8 @@ export class CLIParser {
         acc[flagName] = argv[current];
         return acc;
       }, {});
-      command._packageManagerArgs = argv['--'] || [];
-      const commandName = argv._[0];
+      command._packageManagerArgs = (argv['--'] || []) as string[];
+      const commandName = argv._[0] as string;
 
       Analytics.init(commandName, flags, argsValues);
       logger.info(`[*] started a new command: "${commandName}" with the following data:`, {
@@ -106,13 +106,13 @@ export class CLIParser {
       .option('help', {
         alias: 'h',
         describe: 'show help',
-        group: 'Global',
+        group: GLOBAL_GROUP,
       })
       .option('version', {
         global: false,
         alias: 'v',
         describe: 'show version',
-        group: 'Global',
+        group: GLOBAL_GROUP,
       });
   }
 
