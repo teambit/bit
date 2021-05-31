@@ -46,7 +46,7 @@ export default class Checkout implements LegacyCommand {
   loader = true;
 
   action(
-    [values]: [string[]],
+    [values = []]: [string[]],
     {
       interactiveMerge = false,
       ours = false,
