@@ -81,7 +81,7 @@ function printBitVersionIfAsked() {
 }
 
 /**
- * once commander and Harmony are fully loaded we have all commands instances and we are able to
+ * once Yargs and Harmony are fully loaded we have all commands instances and we are able to
  * determine whether or not the loader should be loaded.
  * in this phase, all we have are the args from the cli, so we can only guess when it's ok to start
  * the loader. the reason we start it here is to have the loader report the progress of bit

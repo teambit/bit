@@ -5,6 +5,9 @@ import { CLIArgs, Command, Flags } from '@teambit/legacy/dist/cli/command';
 import { parseCommandName } from '@teambit/legacy/dist/cli/command-registry';
 import loader from '@teambit/legacy/dist/cli/loader';
 import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
+import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
+import globalFlags from '@teambit/legacy/dist/cli/global-flags';
+import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
 
 export class CommandRunner {
   private commandName: string;
@@ -17,6 +20,7 @@ export class CommandRunner {
    */
   async runCommand() {
     try {
+      this.bootstrapCommand();
       await this.runMigrateIfNeeded();
       this.determineConsoleWritingDuringCommand();
       if (this.flags.json) {
@@ -33,6 +37,18 @@ export class CommandRunner {
     }
 
     throw new Error(`command "${this.commandName}" doesn't implement "render" nor "report" methods`);
+  }
+
+  private bootstrapCommand() {
+    Analytics.init(this.commandName, this.flags, this.args);
+    logger.info(`[*] started a new command: "${this.commandName}" with the following data:`, {
+      args: this.args,
+      flags: this.flags,
+    });
+    const token = this.flags[TOKEN_FLAG_NAME];
+    if (token) {
+      globalFlags.token = token.toString();
+    }
   }
 
   /**

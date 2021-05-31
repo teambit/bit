@@ -2,10 +2,6 @@ import didYouMean from 'didyoumean';
 import yargs, { Arguments } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
-import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
-import logger from '@teambit/legacy/dist/logger/logger';
-import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
-import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, YargsAdapter } from './yargs-adapter';
@@ -81,16 +77,6 @@ export class CLIParser {
         return acc;
       }, {});
       command._packageManagerArgs = (argv['--'] || []) as string[];
-      const commandName = argv._[0] as string;
-
-      Analytics.init(commandName, flags, argsValues);
-      logger.info(`[*] started a new command: "${commandName}" with the following data:`, {
-        args: argsValues,
-        flags,
-      });
-      if (flags[TOKEN_FLAG_NAME]) {
-        globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
-      }
 
       const commandRunner = new CommandRunner(command, argsValues, flags);
       return commandRunner.runCommand();
