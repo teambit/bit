@@ -1,5 +1,6 @@
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { CommandBuilder } from 'yargs';
+import { TOKEN_FLAG } from '@teambit/legacy/dist/constants';
 
 export class YargsAdapter {
   command: string;
@@ -21,6 +22,31 @@ export class YargsAdapter {
       };
       return acc;
     }, {});
-    return option;
+    const globalOptions = this.getGlobalOptions(command);
+
+    return { ...option, ...globalOptions };
+  }
+
+  private getGlobalOptions(command: Command): Record<string, any> {
+    const globalOptions: Record<string, any> = {};
+    if (command.remoteOp) {
+      globalOptions[TOKEN_FLAG] = {
+        describe: 'authentication token',
+        group: 'Global',
+      };
+    }
+    if (!command.internal) {
+      globalOptions.log = {
+        describe:
+          'print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info',
+        group: 'Global',
+      };
+      globalOptions['safe-mode'] = {
+        describe:
+          'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
+        group: 'Global',
+      };
+    }
+    return globalOptions;
   }
 }

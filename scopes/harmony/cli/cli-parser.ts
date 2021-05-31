@@ -1,7 +1,11 @@
 import didYouMean from 'didyoumean';
-import yargs, { CommandModule } from 'yargs';
+import yargs from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import { Analytics } from '@teambit/legacy/dist/analytics/analytics';
+import logger from '@teambit/legacy/dist/logger/logger';
+import { TOKEN_FLAG_NAME } from '@teambit/legacy/dist/constants';
+import globalFlags from '@teambit/legacy/dist/cli/global-flags';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { YargsAdapter } from './yargs-adapter';
@@ -17,40 +21,54 @@ export class CLIParser {
       return;
     }
 
-    // TODO IMPLEMENT
-    // const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
-    // if (packageManagerArgs && packageManagerArgs.length) {
-    //   packageManagerArgs.shift(); // remove the -- delimiter
-    // }
-
     // TODO IMPLEMENT SUB-COMMANDS
 
     this.throwForNonExistsCommand(args[0]);
 
     yargs(args);
+    yargs.parserConfiguration({
+      'strip-dashed': true,
+      'strip-aliased': true,
+      'boolean-negation': false,
+      'populate--': true,
+    });
     this.commands.forEach((command: Command) => {
       const yarnCommand = new YargsAdapter(command);
-      this.addGlobalFlags();
       const handler = async function (argv) {
         const enteredArgs: string[] = [];
+        // @ts-ignore
         this.demanded.forEach((requireArg) => enteredArgs.push(requireArg.cmd[0]));
+        // @ts-ignore
         this.optional.forEach((optionalArg) => enteredArgs.push(optionalArg.cmd[0]));
         const argsValues = enteredArgs.map((a) => argv[a]);
+        // a workaround to get a flag syntax such as "--all [version]" work with yargs.
+        const flags = Object.keys(argv).reduce((acc, current) => {
+          if (current === '_' || current === '$0' || current === '--') return acc;
+          const flagName = current.split(' ')[0];
+          acc[flagName] = argv[current];
+          return acc;
+        }, {});
+        const packageManagerArgs = argv['--'];
+        if (packageManagerArgs) {
+          command._packageManagerArgs = packageManagerArgs;
+        }
+        const commandName = argv._[0];
 
-        // console.log('yargs', yargs.demandCommand())
-        // Analytics.init(concrete.name(), flags, relevantArgs);
-        // logger.info(`[*] started a new command: "${parseCommandName(command.name)}" with the following data:`, {
-        //   args: relevantArgs,
-        //   flags,
-        // });
-        // if (flags[TOKEN_FLAG_NAME]) {
-        //   globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
-        // }
+        Analytics.init(commandName, flags, argsValues);
+        logger.info(`[*] started a new command: "${commandName}" with the following data:`, {
+          args: argsValues,
+          flags,
+        });
+        if (flags[TOKEN_FLAG_NAME]) {
+          globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
+        }
 
-        const commandRunner = new CommandRunner(command, argsValues, argv);
+        const commandRunner = new CommandRunner(command, argsValues, flags);
         return commandRunner.runCommand();
       };
+      // @ts-ignore
       yarnCommand.handler = handler;
+      // @ts-ignore
       yargs.command(yarnCommand);
     });
     await yargs
@@ -77,36 +95,11 @@ export class CLIParser {
     console.log(help);
   }
 
-  // TODO: IMPLEMENT
-  private addGlobalFlags() {
-    // const globalOptions: CommandOptions = [];
-    // if (command.remoteOp) {
-    //   globalOptions.push(['', TOKEN_FLAG, 'authentication token']);
-    // }
-    // if (!command.internal) {
-    //   globalOptions.push(
-    //     [
-    //       '',
-    //       'log [level]',
-    //       'print log messages to the screen, options are: [trace, debug, info, warn, error, fatal], the default is info',
-    //     ],
-    //     [
-    //       '',
-    //       'safe-mode',
-    //       'bootstrap the bare-minimum with only the CLI aspect. useful mainly for low-level commands when bit refuses to load',
-    //     ]
-    //   );
-    // }
-    // if (packageManagerArgs) {
-    //   command._packageManagerArgs = packageManagerArgs;
-    // }
-  }
-
   private throwForNonExistsCommand(commandName: string) {
     const commandsNames = this.commands.map((c) => getCommandId(c.name));
     const aliases = this.commands.map((c) => c.alias).filter((a) => a);
-    const globalFlags = ['-V', '--version'];
-    const validCommands = [...commandsNames, ...aliases, ...globalFlags];
+    const existingGlobalFlags = ['-V', '--version'];
+    const validCommands = [...commandsNames, ...aliases, ...existingGlobalFlags];
     const commandExist = validCommands.includes(commandName);
 
     if (!commandExist) {
