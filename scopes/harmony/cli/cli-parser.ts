@@ -50,7 +50,23 @@ export class CLIParser {
     });
   }
 
+  private parseCommandWithSubCommands(command: Command) {
+    const yarnCommand = new YargsAdapter(command);
+    yarnCommand.builder = (yargInstance) => {
+      command.commands?.forEach((cmd) => {
+        this.parseCommand(cmd);
+      });
+      return yargInstance;
+    };
+    // @ts-ignore
+    yargs.command(yarnCommand).demand(1);
+  }
+
   private parseCommand(command: Command) {
+    if (command.commands && command.commands.length) {
+      this.parseCommandWithSubCommands(command);
+      return;
+    }
     const yarnCommand = new YargsAdapter(command);
     const handler = async function (argv) {
       const enteredArgs: string[] = [];
