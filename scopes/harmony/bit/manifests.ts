@@ -13,7 +13,6 @@ import { DeprecationAspect } from '@teambit/deprecation';
 import { DocsAspect } from '@teambit/docs';
 import { EnvsAspect } from '@teambit/envs';
 import { ExpressAspect } from '@teambit/express';
-import { FlowsAspect } from '@teambit/flows';
 import { YarnAspect } from '@teambit/yarn';
 import { GeneratorAspect } from '@teambit/generator';
 import { HarmonyUiAppAspect } from '@teambit/harmony-ui-app';
