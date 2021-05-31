@@ -88,8 +88,8 @@
         "@teambit/component.instructions.exporting-components": "0.0.5",
         "@teambit/documenter.code.react-playground": "3.0.11",
         "@teambit/documenter.routing.external-link": "3.0.11",
-        "@teambit/documenter.theme.theme-compositions": "3.0.11",
-        "@teambit/documenter.theme.theme-context": "3.0.11",
+        "@teambit/documenter.theme.theme-compositions": "3.0.13",
+        "@teambit/documenter.theme.theme-context": "3.0.13",
         "@teambit/documenter.types.docs-file": "3.0.11",
         "@teambit/documenter.ui.block-quote": "3.0.11",
         "@teambit/documenter.ui.bold": "3.0.11",
@@ -318,7 +318,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.90",
+        "@teambit/legacy": "1.0.91",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -430,7 +430,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.90"
+            "@teambit/legacy": "1.0.91"
           }
         }
       },
@@ -593,7 +593,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.90",
+            "@teambit/legacy": "1.0.91",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
@@ -638,7 +638,7 @@
         }
       }
     },
-    "scopes/compilation/webpack": {
+    "scopes/webpack/webpack": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           // Used for webpack5 native modules fallbacks

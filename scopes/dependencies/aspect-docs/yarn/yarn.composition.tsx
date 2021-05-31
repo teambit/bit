@@ -1,12 +1,12 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Yarn } from './index';
 
 export const YarnDocs = () => (
-  <ThemeContext>
+  <ThemeCompositions>
     <MDXLayout>
       <Yarn />
     </MDXLayout>
-  </ThemeContext>
+  </ThemeCompositions>
 );

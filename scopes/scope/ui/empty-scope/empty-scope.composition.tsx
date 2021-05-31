@@ -1,11 +1,11 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { EmptyScope } from './empty-scope';
 
 export const EmptyScopeExample = () => {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <EmptyScope name="bit.scope" />
-    </ThemeContext>
+    </ThemeCompositions>
   );
 };

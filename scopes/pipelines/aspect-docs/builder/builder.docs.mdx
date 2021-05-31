@@ -22,13 +22,13 @@ import { Builder } from '@teambit/aspect-docs.builder';
 ### Render with theme and MDX providers
 
 ```jsx
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MDXLayout } from '@teambit/ui.mdx-layout';
 import { Builder } from '@teambit/aspect-docs.builder';
 
-<ThemeContext>
+<ThemeCompositions>
   <MDXLayout>
     <Builder />
   </MDXLayout>
-</ThemeContext>;
+</ThemeCompositions>;
 ```

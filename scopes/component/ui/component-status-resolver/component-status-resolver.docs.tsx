@@ -1,6 +1,6 @@
 import React from 'react';
 import { Section } from '@teambit/documenter.ui.section';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { ComponentID } from '@teambit/component';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
@@ -8,7 +8,7 @@ import { ComponentStatusResolver } from './component-status-resolver';
 
 export default function Overview() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <>
         <Section>
           This component wraps the component-status component and component-tooltip so descriptive tooltip is presented
@@ -16,7 +16,7 @@ export default function Overview() {
         </Section>
         <Separator />
       </>
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 

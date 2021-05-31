@@ -29,15 +29,15 @@ This is a simple MDX-file compiled by Bit to a reuseable component.
 ### Render with theme and MDX providers
 
 \`\`\`js
-import { ThemeContext } from '@teambit/documenter.theme.theme-context'
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions'
 import { MDXLayout } from '@teambit/ui.mdx-layout'
 import { ${Name} } from './index'
 
-<ThemeContext>
+<ThemeCompositions>
   <MDXLayout>
     <${Name} />
   </MDXLayout>
-</ThemeContext>
+</ThemeCompositions>
 \`\`\`
 `,
   };
