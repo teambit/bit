@@ -26,52 +26,72 @@ export class CLIParser {
     this.throwForNonExistsCommand(args[0]);
 
     yargs(args);
+    this.configureParser();
+    this.commands.forEach((command: Command) => {
+      this.parseCommand(command);
+    });
+    this.configureGlobalFlags();
+
+    await yargs.completion().recommendCommands().wrap(null).parse();
+  }
+
+  private printHelp() {
+    const help = formatHelp(this.commands, this.groups);
+    // eslint-disable-next-line no-console
+    console.log(help);
+  }
+
+  private configureParser() {
     yargs.parserConfiguration({
       'strip-dashed': true,
       'strip-aliased': true,
       'boolean-negation': false,
       'populate--': true,
     });
-    this.commands.forEach((command: Command) => {
-      const yarnCommand = new YargsAdapter(command);
-      const handler = async function (argv) {
-        const enteredArgs: string[] = [];
-        // @ts-ignore
-        this.demanded.forEach((requireArg) => enteredArgs.push(requireArg.cmd[0]));
-        // @ts-ignore
-        this.optional.forEach((optionalArg) => enteredArgs.push(optionalArg.cmd[0]));
-        const argsValues = enteredArgs.map((a) => argv[a]);
-        // a workaround to get a flag syntax such as "--all [version]" work with yargs.
-        const flags = Object.keys(argv).reduce((acc, current) => {
-          if (current === '_' || current === '$0' || current === '--') return acc;
-          const flagName = current.split(' ')[0];
-          acc[flagName] = argv[current];
-          return acc;
-        }, {});
-        const packageManagerArgs = argv['--'];
-        if (packageManagerArgs) {
-          command._packageManagerArgs = packageManagerArgs;
-        }
-        const commandName = argv._[0];
+  }
 
-        Analytics.init(commandName, flags, argsValues);
-        logger.info(`[*] started a new command: "${commandName}" with the following data:`, {
-          args: argsValues,
-          flags,
-        });
-        if (flags[TOKEN_FLAG_NAME]) {
-          globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
-        }
+  private parseCommand(command: Command) {
+    const yarnCommand = new YargsAdapter(command);
+    const handler = async function (argv) {
+      const enteredArgs: string[] = [];
+      // @ts-ignore
+      this.demanded.forEach((requireArg) => enteredArgs.push(requireArg.cmd[0]));
+      // @ts-ignore
+      this.optional.forEach((optionalArg) => enteredArgs.push(optionalArg.cmd[0]));
+      const argsValues = enteredArgs.map((a) => argv[a]);
+      // a workaround to get a flag syntax such as "--all [version]" work with yargs.
+      const flags = Object.keys(argv).reduce((acc, current) => {
+        if (current === '_' || current === '$0' || current === '--') return acc;
+        const flagName = current.split(' ')[0];
+        acc[flagName] = argv[current];
+        return acc;
+      }, {});
+      const packageManagerArgs = argv['--'];
+      if (packageManagerArgs) {
+        command._packageManagerArgs = packageManagerArgs;
+      }
+      const commandName = argv._[0];
 
-        const commandRunner = new CommandRunner(command, argsValues, flags);
-        return commandRunner.runCommand();
-      };
-      // @ts-ignore
-      yarnCommand.handler = handler;
-      // @ts-ignore
-      yargs.command(yarnCommand);
-    });
-    await yargs
+      Analytics.init(commandName, flags, argsValues);
+      logger.info(`[*] started a new command: "${commandName}" with the following data:`, {
+        args: argsValues,
+        flags,
+      });
+      if (flags[TOKEN_FLAG_NAME]) {
+        globalFlags.token = flags[TOKEN_FLAG_NAME].toString();
+      }
+
+      const commandRunner = new CommandRunner(command, argsValues, flags);
+      return commandRunner.runCommand();
+    };
+    // @ts-ignore
+    yarnCommand.handler = handler;
+    // @ts-ignore
+    yargs.command(yarnCommand);
+  }
+
+  private configureGlobalFlags() {
+    yargs
       .option('help', {
         alias: 'h',
         describe: 'show help',
@@ -82,17 +102,7 @@ export class CLIParser {
         alias: 'v',
         describe: 'show version',
         group: 'Global',
-      })
-      .completion()
-      .recommendCommands()
-      .wrap(null)
-      .parse();
-  }
-
-  private printHelp() {
-    const help = formatHelp(this.commands, this.groups);
-    // eslint-disable-next-line no-console
-    console.log(help);
+      });
   }
 
   private throwForNonExistsCommand(commandName: string) {

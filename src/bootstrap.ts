@@ -5,7 +5,7 @@ import fs from 'fs-extra';
 import semver from 'semver';
 
 import { Analytics } from './analytics/analytics';
-import { handleUnhandledRejection } from './cli/command-runner';
+import { handleUnhandledRejection } from './cli/handle-errors';
 import { BIT_VERSION, GLOBAL_CONFIG, GLOBAL_LOGS } from './constants';
 import HooksManager from './hooks';
 import { printWarning } from './logger/logger';
