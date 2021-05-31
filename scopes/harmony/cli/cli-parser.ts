@@ -1,4 +1,5 @@
 import didYouMean from 'didyoumean';
+import { camelCase } from 'lodash';
 import yargs, { Arguments } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
@@ -68,7 +69,7 @@ export class CLIParser {
       this.demanded.forEach((requireArg) => enteredArgs.push(requireArg.cmd[0]));
       // @ts-ignore
       this.optional.forEach((optionalArg) => enteredArgs.push(optionalArg.cmd[0]));
-      const argsValues = enteredArgs.map((a) => argv[a]) as any[];
+      const argsValues = enteredArgs.map((a) => argv[camelCase(a)]) as any[];
       // a workaround to get a flag syntax such as "--all [version]" work with yargs.
       const flags = Object.keys(argv).reduce((acc, current) => {
         if (current === '_' || current === '$0' || current === '--') return acc;
