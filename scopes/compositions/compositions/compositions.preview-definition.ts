@@ -11,6 +11,8 @@ export class CompositionPreviewDefinition implements PreviewDefinition {
   constructor(private compositions: CompositionsMain) {}
 
   async renderTemplatePath(context: ExecutionContext): Promise<string> {
+    console.log(context);
+    console.log(`compositions - ${context.env.getMounter()}`);
     return context.env.getMounter();
   }
 
