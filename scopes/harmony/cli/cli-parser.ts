@@ -1,6 +1,6 @@
 import didYouMean from 'didyoumean';
 import { camelCase } from 'lodash';
-import yargs, { Arguments } from 'yargs';
+import yargs, { Arguments, CommandModule } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { getCommandId } from './get-command-id';
@@ -26,7 +26,8 @@ export class CLIParser {
       if (command.commands && command.commands.length) {
         this.parseCommandWithSubCommands(command);
       } else {
-        this.parseCommand(command);
+        const yargsCommand = this.getYargsCommand(command);
+        yargs.command(yargsCommand);
       }
     });
     this.configureGlobalFlags();
@@ -50,18 +51,18 @@ export class CLIParser {
   }
 
   private parseCommandWithSubCommands(command: Command) {
-    const yarnCommand = new YargsAdapter(command);
-    yarnCommand.builder = (yargInstance) => {
+    const yarnCommand = this.getYargsCommand(command);
+    yarnCommand.builder = () => {
       command.commands?.forEach((cmd) => {
-        this.parseCommand(cmd);
+        const subCommand = this.getYargsCommand(cmd);
+        yargs.command(subCommand);
       });
-      return yargInstance;
+      return yargs;
     };
-    // @ts-ignore
-    yargs.command(yarnCommand).demand(1);
+    yargs.command(yarnCommand);
   }
 
-  private parseCommand(command: Command) {
+  private getYargsCommand(command: Command): CommandModule {
     const yarnCommand = new YargsAdapter(command);
     const handler = async function (argv: Arguments) {
       const enteredArgs: string[] = [];
@@ -85,7 +86,7 @@ export class CLIParser {
     // @ts-ignore
     yarnCommand.handler = handler;
     // @ts-ignore
-    yargs.command(yarnCommand);
+    return yarnCommand;
   }
 
   private configureGlobalFlags() {
