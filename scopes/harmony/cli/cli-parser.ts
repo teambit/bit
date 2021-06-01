@@ -65,12 +65,8 @@ export class CLIParser {
   private getYargsCommand(command: Command): CommandModule {
     const yarnCommand = new YargsAdapter(command);
     const handler = async function (argv: Arguments) {
-      const enteredArgs: string[] = [];
-      // @ts-ignore
-      this.demanded.forEach((requireArg) => enteredArgs.push(requireArg.cmd[0]));
-      // @ts-ignore
-      this.optional.forEach((optionalArg) => enteredArgs.push(optionalArg.cmd[0]));
-      const argsValues = enteredArgs.map((a) => argv[camelCase(a)]) as any[];
+      const enteredArgs = getArgsFromCommandName(command.name);
+      const argsValues = enteredArgs.map((a) => argv[a]) as any[];
       // a workaround to get a flag syntax such as "--all [version]" work with yargs.
       const flags = Object.keys(argv).reduce((acc, current) => {
         if (current === '_' || current === '$0' || current === '--') return acc;
@@ -122,4 +118,20 @@ export class CLIParser {
       throw new CommandNotFound(commandName, suggestion);
     }
   }
+}
+
+function getArgsFromCommandName(commandName: string) {
+  const commandSplit = commandName.split(' ');
+  commandSplit.shift(); // remove the first element, it's the command-name
+
+  return commandSplit.map((existArg) => {
+    const trimmed = existArg.trim();
+    if ((!trimmed.startsWith('<') && !trimmed.startsWith('[')) || (!trimmed.endsWith('>') && !trimmed.endsWith(']'))) {
+      throw new Error(`expect arg "${trimmed}" of "${commandName}" to be wrapped with "[]" or "<>"`);
+    }
+    // remove the opening and closing brackets
+    const withoutBrackets = trimmed.slice(1, -1);
+
+    return camelCase(withoutBrackets);
+  });
 }
