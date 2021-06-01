@@ -71,14 +71,22 @@ export class NodeMain {
   );
 
   /**
+   * @deprecated - use useWebpack
    * override the preview config in the env.
    */
   overridePreviewConfig = this.react.overridePreviewConfig.bind(this.react);
 
   /**
+   * @deprecated - use useWebpack
    * override the dev server configuration.
    */
   overrideDevServerConfig = this.react.overrideDevServerConfig.bind(this.react);
+
+  /**
+   * override the env's dev server and preview webpack configurations.
+   * Replaces both overrideDevServerConfig and overridePreviewConfig
+   */
+  useWebpack = this.react.useWebpack.bind(this.react);
 
   /**
    * override the dependency configuration of the component environment.

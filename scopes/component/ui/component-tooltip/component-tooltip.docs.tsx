@@ -1,18 +1,18 @@
 import React from 'react';
 import { Section } from '@teambit/documenter.ui.section';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { Separator } from '@teambit/documenter.ui.separator';
 import { ComponentStatus as StatusProps } from '@teambit/workspace';
 import { StatusTooltip } from './component-tooltip';
 
 export default function Overview() {
   return (
-    <ThemeContext>
+    <ThemeCompositions>
       <>
         <Section>The tooltip handles the presentation of the status as well (modified, errors etc.)</Section>
         <Separator />
       </>
-    </ThemeContext>
+    </ThemeCompositions>
   );
 }
 

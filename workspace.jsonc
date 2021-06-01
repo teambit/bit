@@ -88,8 +88,8 @@
         "@teambit/component.instructions.exporting-components": "0.0.5",
         "@teambit/documenter.code.react-playground": "3.0.11",
         "@teambit/documenter.routing.external-link": "3.0.11",
-        "@teambit/documenter.theme.theme-compositions": "3.0.11",
-        "@teambit/documenter.theme.theme-context": "3.0.11",
+        "@teambit/documenter.theme.theme-compositions": "3.0.13",
+        "@teambit/documenter.theme.theme-context": "3.0.13",
         "@teambit/documenter.types.docs-file": "3.0.11",
         "@teambit/documenter.ui.block-quote": "3.0.11",
         "@teambit/documenter.ui.bold": "3.0.11",
@@ -638,7 +638,7 @@
         }
       }
     },
-    "scopes/compilation/webpack": {
+    "scopes/webpack/webpack": {
       "teambit.dependencies/dependency-resolver": {
         "policy": {
           // Used for webpack5 native modules fallbacks

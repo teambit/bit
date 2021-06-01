@@ -1,3 +1,4 @@
+import 'reset-css';
 import React, { PropsWithChildren } from 'react';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { ThemeContext } from '@teambit/documenter.theme.theme-context';

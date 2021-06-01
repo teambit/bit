@@ -167,6 +167,8 @@ export default function (fileMapPath: string): Configuration {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
 
       alias: {
+        'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
@@ -176,6 +178,7 @@ export default function (fileMapPath: string): Configuration {
         'react-dom': require.resolve('react-dom'),
         'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
+
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
