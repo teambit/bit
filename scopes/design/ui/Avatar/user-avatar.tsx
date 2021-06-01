@@ -81,7 +81,11 @@ export class UserAvatar extends PureComponent<UserAvatarProps> {
           </span>
         )}
         {!displayName && !name && !profileImageWithParams && !firstLetter && (
-          <Icon of="solo-avatar" style={{ fontSize: `${size}px` }} className={classNames(styles.avatarImg)} />
+          <Icon
+            of="solo-avatar"
+            style={{ fontSize: `${size}px` }}
+            className={classNames(styles.avatarImg, styles.soloAvatarIcon)}
+          />
         )}
         {isTooltipOn && (
           <Tooltip className={classNames(styles.tooltip, ellipsis)} id={tooltipId} {...tooltipDefaultProps} />
