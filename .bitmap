@@ -349,12 +349,6 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/harmony/express"
     },
-    "flows": {
-        "scope": "teambit.pipelines",
-        "version": "0.0.406",
-        "mainFile": "index.ts",
-        "rootDir": "scopes/pipelines/flows"
-    },
     "generator": {
         "scope": "teambit.generator",
         "version": "0.0.406",
