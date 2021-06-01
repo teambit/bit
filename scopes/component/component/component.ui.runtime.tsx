@@ -11,7 +11,7 @@ import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import copy from 'copy-to-clipboard';
 import { ComponentAspect } from './component.aspect';
-import { Component, ComponentPageItem, ComponentPageSlot } from './ui/component';
+import { Component, ComponentPageElement, ComponentPageSlot } from './ui/component';
 import { Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
 import { AspectSection } from './aspect.section';
 import { ComponentModel } from './ui';
@@ -171,7 +171,7 @@ export class ComponentUI {
     this.menuItemSlot.register(menuItems);
   };
 
-  registerPageItem = (...items: ComponentPageItem[]) => {
+  registerPageItem = (...items: ComponentPageElement[]) => {
     this.pageItemSlot.register(items);
   };
 

@@ -8,8 +8,8 @@ import { ComponentProvider } from './context';
 import { useComponent } from './use-component';
 import { ComponentModel } from './component-model';
 
-export type ComponentPageSlot = SlotRegistry<ComponentPageItem[]>;
-export type ComponentPageItem = {
+export type ComponentPageSlot = SlotRegistry<ComponentPageElement[]>;
+export type ComponentPageElement = {
   type: 'before' | 'after';
   content: ReactNode;
 };
