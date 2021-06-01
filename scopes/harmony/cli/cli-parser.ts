@@ -2,6 +2,7 @@ import didYouMean from 'didyoumean';
 import yargs, { CommandModule } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
+import loader from '@teambit/legacy/dist/cli/loader';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, YargsAdapter } from './yargs-adapter';
@@ -29,7 +30,7 @@ export class CLIParser {
       }
     });
     this.configureGlobalFlags();
-
+    loader.off(); // stop the "loading bit..." before showing help if needed
     await yargs.completion().recommendCommands().wrap(null).parse();
   }
 
