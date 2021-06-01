@@ -1,12 +1,10 @@
 import didYouMean from 'didyoumean';
-import { camelCase } from 'lodash';
-import yargs, { Arguments, CommandModule } from 'yargs';
+import yargs, { CommandModule } from 'yargs';
 import { Command } from '@teambit/legacy/dist/cli/command';
 import { GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
 import { GLOBAL_GROUP, YargsAdapter } from './yargs-adapter';
-import { CommandRunner } from './command-runner';
 
 export class CLIParser {
   constructor(private commands: Command[], private groups: GroupsType) {}
@@ -64,24 +62,8 @@ export class CLIParser {
 
   private getYargsCommand(command: Command): CommandModule {
     const yarnCommand = new YargsAdapter(command);
-    const handler = async function (argv: Arguments) {
-      const enteredArgs = getArgsFromCommandName(command.name);
-      const argsValues = enteredArgs.map((a) => argv[a]) as any[];
-      // a workaround to get a flag syntax such as "--all [version]" work with yargs.
-      const flags = Object.keys(argv).reduce((acc, current) => {
-        if (current === '_' || current === '$0' || current === '--') return acc;
-        const flagName = current.split(' ')[0];
-        acc[flagName] = argv[current];
-        return acc;
-      }, {});
-      command._packageManagerArgs = (argv['--'] || []) as string[];
+    yarnCommand.handler = yarnCommand.handler.bind(yarnCommand);
 
-      const commandRunner = new CommandRunner(command, argsValues, flags);
-      return commandRunner.runCommand();
-    };
-    // @ts-ignore
-    yarnCommand.handler = handler;
-    // @ts-ignore
     return yarnCommand;
   }
 
@@ -118,20 +100,4 @@ export class CLIParser {
       throw new CommandNotFound(commandName, suggestion);
     }
   }
-}
-
-function getArgsFromCommandName(commandName: string) {
-  const commandSplit = commandName.split(' ');
-  commandSplit.shift(); // remove the first element, it's the command-name
-
-  return commandSplit.map((existArg) => {
-    const trimmed = existArg.trim();
-    if ((!trimmed.startsWith('<') && !trimmed.startsWith('[')) || (!trimmed.endsWith('>') && !trimmed.endsWith(']'))) {
-      throw new Error(`expect arg "${trimmed}" of "${commandName}" to be wrapped with "[]" or "<>"`);
-    }
-    // remove the opening and closing brackets
-    const withoutBrackets = trimmed.slice(1, -1);
-
-    return camelCase(withoutBrackets);
-  });
 }
