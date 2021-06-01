@@ -22,6 +22,7 @@ export class YargsAdapter {
         alias,
         describe: desc,
         group: STANDARD_GROUP,
+        type: opt.includes(' ') ? undefined : 'boolean',
       };
       return acc;
     }, {});
