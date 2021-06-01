@@ -11,7 +11,7 @@ import { RouteProps } from 'react-router-dom';
 import CommandBarAspect, { CommandBarUI, CommandEntry } from '@teambit/command-bar';
 import copy from 'copy-to-clipboard';
 import { ComponentAspect } from './component.aspect';
-import { Component } from './ui/component';
+import { Component, ComponentPageItem, ComponentPageSlot } from './ui/component';
 import { Menu, NavPlugin, OrderedNavigationSlot } from './ui/menu';
 import { AspectSection } from './aspect.section';
 import { ComponentModel } from './ui';
@@ -46,6 +46,8 @@ export class ComponentUI {
     private widgetSlot: OrderedNavigationSlot,
 
     private menuItemSlot: MenuItemSlot,
+
+    private pageItemSlot: ComponentPageSlot,
 
     private commandBarUI: CommandBarUI
   ) {
@@ -133,7 +135,14 @@ export class ComponentUI {
   };
 
   getComponentUI(host: string) {
-    return <Component routeSlot={this.routeSlot} onComponentChange={this.handleComponentChange} host={host} />;
+    return (
+      <Component
+        routeSlot={this.routeSlot}
+        containerSlot={this.pageItemSlot}
+        onComponentChange={this.handleComponentChange}
+        host={host}
+      />
+    );
   }
 
   getMenu(host: string) {
@@ -162,6 +171,10 @@ export class ComponentUI {
     this.menuItemSlot.register(menuItems);
   };
 
+  registerPageItem = (...items: ComponentPageItem[]) => {
+    this.pageItemSlot.register(items);
+  };
+
   static dependencies = [PubsubAspect, CommandBarAspect];
 
   static runtime = UIRuntime;
@@ -171,21 +184,23 @@ export class ComponentUI {
     Slot.withType<NavPlugin>(),
     Slot.withType<NavigationSlot>(),
     Slot.withType<MenuItemSlot>(),
+    Slot.withType<ComponentPageSlot>(),
   ];
 
   static async provider(
     [pubsub, commandBarUI]: [PubsubUI, CommandBarUI],
     config,
-    [routeSlot, navSlot, widgetSlot, menuItemSlot]: [
+    [routeSlot, navSlot, widgetSlot, menuItemSlot, pageSlot]: [
       RouteSlot,
       OrderedNavigationSlot,
       OrderedNavigationSlot,
-      MenuItemSlot
+      MenuItemSlot,
+      ComponentPageSlot
     ]
   ) {
     // TODO: refactor ComponentHost to a separate extension (including sidebar, host, graphql, etc.)
     // TODO: add contextual hook for ComponentHost @uri/@oded
-    const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot, menuItemSlot, commandBarUI);
+    const componentUI = new ComponentUI(pubsub, routeSlot, navSlot, widgetSlot, menuItemSlot, pageSlot, commandBarUI);
     const section = new AspectSection();
 
     componentUI.commandBarUI.addCommand(...componentUI.keyBindings);
