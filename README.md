@@ -34,7 +34,7 @@ Open infrastructure for component-driven applications to speed and scale develop
 <p align="left">
 Bit is an OSS Infrastructure for building and composing components. It is an extensible toolchain for component-driven applications / systems which are faster to develop, simpler to understand, test, and maintain, more resilient and performant, and easier to collaborate on.
 
-Instead of building an application that has many components, Bit lets us develop components outside of any application and use them to compose many applications from the bottom up. An application is just a deployed composition of components. You can add and remove components from applications to extend or change their functionality. All components can be reused in many different applications.  
+Instead of building an application that has many components, Bit lets you develop components outside of any application and use them to compose many applications from the bottom up. An application is just a deployed composition of components. You can add and remove components from applications to extend or change their functionality. All components can be reused in many different applications.  
 
 </p>
 
@@ -42,13 +42,11 @@ Instead of building an application that has many components, Bit lets us develop
 
 <p align="left">
 
-- **Workspace** is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a monolithic-like dev experience. Open the workspace UI to visually develop and manage your components with ease.  
+* **Workspace** is the foundation of Bit. It is where you develop and compose components. It lets you build fully distributed projects with a simple monolithic-like dev experience. Open the workspace UI to visually develop and manage your components with ease.  
  
-- **Scope** is where you push, version, and organize your components. It’s a component store.  
+* **Scope** is where you push, version, and organize your components. It’s a component store.  
  
-- **Bit OSS and Bit.dev platform**: Bit.dev connects all your scopes and components to give teams a streamlined cross-project collaboration experience. It is optional and you can setup and host remote scopes on your own servers.
- 
-</p>
+* **Remote Hosting**: Remote Scopes let you use components across projects. You can setup and host remote Scopes on any servers. [Bit.dev](https://bit.dev) is an optional enterprise-grade platform for hosting and connecting all scopes and components to give teams a streamlined cross-project collaboration experience. It is highly secure and trusted by Fortune-50 teams.</p>
 
 
 ### How to Start?
@@ -140,5 +138,7 @@ See [Contributing](CONTRIBUTING.md).
 
 Apache License, Version 2.0
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
+
+
 
 
