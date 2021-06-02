@@ -94,7 +94,7 @@
         "@teambit/documenter.ui.block-quote": "3.0.11",
         "@teambit/documenter.ui.bold": "3.0.11",
         "@teambit/documenter.ui.code-snippet": "3.0.11",
-        "@teambit/documenter.ui.consumable-link": "3.0.11",
+        "@teambit/documenter.ui.consumable-link": "3.0.14",
         "@teambit/documenter.ui.heading": "3.0.11",
         "@teambit/documenter.ui.highlighted-text": "3.0.11",
         "@teambit/documenter.ui.image": "3.0.11",
