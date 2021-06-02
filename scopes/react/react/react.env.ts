@@ -259,7 +259,6 @@ export class ReactEnv implements Environment {
         // '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
         '@babel/runtime': '7.12.18',
-        '@types/testing-library__jest-dom': '5.9.5',
       },
       // TODO: take version from config
       peerDependencies: {

@@ -26,6 +26,7 @@ import OverridesDependencies from './overrides-dependencies';
 import { ResolvedPackageData } from '../../../../utils/packages';
 import { DependenciesData } from './dependencies-data';
 import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
+import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 
 export type AllDependencies = {
   dependencies: Dependency[];
@@ -1220,7 +1221,7 @@ either, use the ignore file syntax or change the require statement to have a mod
     if (!depsHost) return;
     const addIfNeeded = (depField: string, packageName: string) => {
       if (!depsHost || !depsHost[depField]) return;
-      const typesPackage = `@types/${packageName}`;
+      const typesPackage = packageToDefinetlyTyped(packageName);
       if (!depsHost[depField][typesPackage]) return;
       Object.assign(this.allPackagesDependencies[this._pkgFieldMapping('devDependencies')], {
         [typesPackage]: depsHost[depField][typesPackage],
