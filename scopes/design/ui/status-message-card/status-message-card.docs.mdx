@@ -1,0 +1,23 @@
+---
+labels: ['react', 'typescript', 'message-card', 'status']
+---
+
+import { StatusMessageCard } from './status-message-card';
+
+StatusMessageCard examples:
+
+A passing status card
+
+```js live
+<StatusMessageCard status="SUCCESS" title="sueecess card">
+  this might take a minute
+</StatusMessageCard>
+```
+
+A failing status card
+
+```js live
+<StatusMessageCard status="FAILURE" title="failure card">
+  this might take a minute
+</StatusMessageCard>
+```

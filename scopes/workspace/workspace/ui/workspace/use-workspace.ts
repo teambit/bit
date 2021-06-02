@@ -26,6 +26,7 @@ const wcComponentFields = gql`
         hasModifiedFiles
         hasModifiedDependencies
       }
+      buildStatus
       isDeleted
     }
     deprecation {
@@ -139,6 +140,7 @@ export function useWorkspace() {
   const workspace = data?.workspace;
 
   return useMemo(() => {
+    debugger;
     return workspace ? Workspace.from(workspace) : undefined;
   }, [workspace]);
 }
