@@ -1,4 +1,4 @@
-const definetlyTypedRegex = /^(@([-\w]+)\/)/;
+const definetlyTypedRegex = /^(@([-\w]+)\/)?/;
 
 // it seems definetly typed are using this:
 // `const dtsName = packageName.replace("@", "").replace("/", "__")`
