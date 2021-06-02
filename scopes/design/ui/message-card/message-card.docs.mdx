@@ -2,6 +2,7 @@
 labels: ['react', 'typescript', 'message-card']
 ---
 
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MessageCard } from './message-card';
 
 MessageCard example:
@@ -9,13 +10,18 @@ MessageCard example:
 A simple MessageCard component with a title and text
 
 ```js live
-<MessageCard title="message card">message card content</MessageCard>
+<ThemeCompositions>
+  <MessageCard title="message card">message card content</MessageCard>
+<ThemeCompositions/>
 ```
 
 A simple MessageCard component with a title, text and icon
 
 ```js live
-<MessageCard title="message card" icon="Ripple-processing">
-  message card content
-</MessageCard>
+<ThemeCompositions>
+  <MessageCard title="message card" icon="Ripple-processing">
+    message card content
+  </MessageCard>
+<ThemeCompositions/>
+
 ```
