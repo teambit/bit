@@ -20,7 +20,7 @@ export function StatusMessageCard({ status, ...rest }: StatusMessageCardProps) {
 
 function getStatusIcon(status: string) {
   const iconPrefix = 'Ripple';
-  if (!status) return;
+  if (!status) return undefined;
   switch (status) {
     case 'success':
       return {
@@ -43,6 +43,11 @@ function getStatusIcon(status: string) {
         iconClass: colorStyles[status],
       };
     case 'skipped':
+      return {
+        icon: `${iconPrefix}-${status}`,
+        iconClass: colorStyles[status],
+      };
+    default:
       return {
         icon: `${iconPrefix}-${status}`,
         iconClass: colorStyles[status],

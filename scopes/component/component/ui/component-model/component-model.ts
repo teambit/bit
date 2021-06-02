@@ -18,7 +18,7 @@ export type ComponentModelProps = {
     scope?: string;
   };
   description: string;
-  buildStatus: string;
+  buildStatus?: string;
   server?: ComponentServer;
   displayName: string;
   packageName: string; // pkg aspect
