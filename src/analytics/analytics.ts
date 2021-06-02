@@ -10,6 +10,7 @@ import uniqid from 'uniqid';
 import yn from 'yn';
 
 import { getSync, setSync } from '../api/consumer/lib/global-config';
+import { CLIArgs } from '../cli/command';
 import {
   BIT_VERSION,
   CFG_ANALYTICS_ANONYMOUS_KEY,
@@ -46,7 +47,7 @@ class Analytics {
   static username: string;
   static command: string;
   static release: string;
-  static args: string[];
+  static args: CLIArgs;
   static flags: Record<string, any> = {};
   static success = true;
   static nodeVersion: string;
@@ -129,11 +130,11 @@ class Analytics {
     }
     return definedFlags;
   }
-  static _hashArgs(args: string[]): string[] {
+  static _hashArgs(args: CLIArgs): CLIArgs {
     if (!this.anonymous) return args;
     return args.map((arg) => this._hashLightly(arg));
   }
-  static init(command: string, flags: Record<string, any>, args: string[]) {
+  static init(command: string, flags: Record<string, any>, args: CLIArgs) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);

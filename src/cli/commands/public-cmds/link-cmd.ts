@@ -20,7 +20,7 @@ export default class Link implements LegacyCommand {
   private = false;
   loader = true;
 
-  action([ids]: [string[]], { rewire = false }: { rewire: boolean }): Promise<any> {
+  action([ids = []]: [string[]], { rewire = false }: { rewire: boolean }): Promise<any> {
     return link(ids, rewire);
   }
 

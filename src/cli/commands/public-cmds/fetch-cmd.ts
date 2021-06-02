@@ -25,7 +25,7 @@ export default class Fetch implements LegacyCommand {
   loader = true;
 
   action(
-    [ids]: [string[]],
+    [ids = []]: [string[]],
     {
       lanes = false,
       components = false,

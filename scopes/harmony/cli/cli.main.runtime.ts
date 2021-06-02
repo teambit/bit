@@ -1,19 +1,16 @@
 import { Slot, SlotRegistry } from '@teambit/harmony';
 import { buildRegistry } from '@teambit/legacy/dist/cli';
 import { Command } from '@teambit/legacy/dist/cli/command';
-import { register } from '@teambit/legacy/dist/cli/command-registry';
 import LegacyLoadExtensions from '@teambit/legacy/dist/legacy-extensions/extensions-loader';
-import commander from 'commander';
-import didYouMean from 'didyoumean';
-import { equals, splitWhen, flatten } from 'ramda';
+
+import { flatten } from 'ramda';
 import { groups, GroupsType } from '@teambit/legacy/dist/cli/command-groups';
 import { clone } from 'lodash';
 import { CLIAspect, MainRuntime } from './cli.aspect';
-import { formatHelp } from './help';
 import { AlreadyExistsError } from './exceptions/already-exists';
-import { CommandNotFound } from './exceptions/command-not-found';
 import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
+import { CLIParser } from './cli-parser';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean) => Promise<void>;
@@ -80,22 +77,8 @@ export class CLIMain {
    */
   async run(hasWorkspace: boolean) {
     await this.invokeOnStart(hasWorkspace);
-    const args = process.argv.slice(2); // remove the first two arguments, they're not relevant
-    if (!args[0] || ['-h', '--help'].includes(args[0])) {
-      this.printHelp();
-      return;
-    }
-
-    const [params, packageManagerArgs] = splitWhen(equals('--'), process.argv);
-    if (packageManagerArgs && packageManagerArgs.length) {
-      packageManagerArgs.shift(); // remove the -- delimiter
-    }
-
-    this.commands.forEach((command) => register(command as any, commander, packageManagerArgs));
-    this.throwForNonExistsCommand(args[0]);
-
-    // this is what runs the `execAction` of the specific command and eventually exits the process
-    commander.parse(params);
+    const CliParser = new CLIParser(this.commands, this.groups);
+    await CliParser.parse();
   }
 
   private async invokeOnStart(hasWorkspace: boolean) {
@@ -118,31 +101,6 @@ export class CLIMain {
       } else {
         command.loader = true;
       }
-    }
-  }
-
-  private printHelp() {
-    const help = formatHelp(this.commands, this.groups);
-    // eslint-disable-next-line no-console
-    console.log(help);
-  }
-
-  private throwForNonExistsCommand(commandName: string) {
-    const commandsNames = this.commands.map((c) => getCommandId(c.name));
-    const aliases = this.commands.map((c) => c.alias).filter((a) => a);
-    const globalFlags = ['-V', '--version'];
-    const validCommands = [...commandsNames, ...aliases, ...globalFlags];
-    const commandExist = validCommands.includes(commandName);
-
-    if (!commandExist) {
-      didYouMean.returnFirstMatch = true;
-      const suggestions = didYouMean(
-        commandName,
-        this.commands.filter((c) => !c.private).map((c) => getCommandId(c.name))
-      );
-      const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
-      // @ts-ignore
-      throw new CommandNotFound(commandName, suggestion);
     }
   }
 
