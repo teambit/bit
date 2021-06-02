@@ -12,7 +12,7 @@ export class CompositionPreviewDefinition implements PreviewDefinition {
 
   async renderTemplatePath(context: ExecutionContext): Promise<string> {
     console.log(context);
-    console.log(`compositions - ${context.env.getMounter()}`);
+    console.log(context.env);
     return context.env.getMounter();
   }
 
