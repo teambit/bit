@@ -5,16 +5,16 @@ import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-ca
 
 export function Overview() {
   const component = useContext(ComponentContext);
-  if (component.buildStatus === 'pending')
+  if (component?.buildStatus === 'pending')
     return (
-      <StatusMessageCard style={{ margin: '16px' }} status="PROCESSING" title="component preview pending">
+      <StatusMessageCard style={{ margin: '20px' }} status="PROCESSING" title="component preview pending">
         this might take some time
       </StatusMessageCard>
     );
-  if (component.buildStatus === 'failed')
+  if (component?.buildStatus === 'failed')
     return (
       <StatusMessageCard
-        style={{ margin: '16px' }}
+        style={{ margin: '20px' }}
         status="FAILURE"
         title="failed to get component preview "
       ></StatusMessageCard>
