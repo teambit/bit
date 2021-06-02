@@ -273,7 +273,7 @@ export class ReactExtension {
 #### `overridePreviewConfig(config: Configuration): EnvTransformer`
 
 Merges the Webpack configuration for the 'Preview' environment service, with the contents of your [webpack configuration file](https://webpack.js.org/configuration/).
-This webpack configuration is used for building and rendering your components on the local dev server.
+This webpack configuration is used for building and rendering your components for production (during `bit tag` or `bit build`).
 
 ```ts
 // ...
@@ -291,7 +291,7 @@ export class ReactExtension {
 #### `overrideDevServerConfig(config: Configuration): EnvTransformer`
 
 Merges the Webpack configuration for the 'DevServer' environment service, with the contents of your [webpack configuration file](https://webpack.js.org/configuration/).
-This configuration is used for building and rendering the dev server UI (but not your components, which use the PreviewConfig)
+This configuration is used for building and rendering your components in the local dev server.
 
 ```ts
 // ...
