@@ -150,7 +150,7 @@ export class CLIParser {
       );
       const suggestion = suggestions && Array.isArray(suggestions) ? suggestions[0] : suggestions;
 
-      throw new CommandNotFound(commandName, suggestion);
+      throw new CommandNotFound(commandName, suggestion as string);
     }
   }
 }
