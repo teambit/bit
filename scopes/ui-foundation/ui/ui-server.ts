@@ -172,7 +172,7 @@ export class UIServer {
     return flatten(await Promise.all(proxiesByPlugin));
   }
 
-  private async getProxy(port: number = 4000) {
+  private async getProxy(port = 4000) {
     const proxyEntries = await this.getProxyFromPlugins();
 
     const gqlProxies: ProxyEntry[] = [

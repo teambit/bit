@@ -1,14 +1,9 @@
+/* eslint-disable no-use-before-define */
 //based on : https://github.com/sindresorhus/get-port/blob/main/index.js
 import net from 'net';
-
-class Locked extends Error {
-  constructor(port: number) {
-    super(`${port} is locked`);
-  }
-}
+import {Locked} from './locked'
 
 export class Port {
-  constructor() {}
 
   async get(options: { port: number | Iterable<number>; usedPort?: number[] }): Promise<number> {
     const lockedPorts = {
