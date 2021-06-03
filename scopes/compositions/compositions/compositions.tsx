@@ -20,6 +20,7 @@ import { H1 } from '@teambit/documenter.ui.heading';
 import { AlertCard } from '@teambit/design.ui.alert-card';
 import { NativeLink } from '@teambit/base-ui.routing.native-link';
 import { OptionButton } from '@teambit/design.ui.input.option-button';
+import { StatusMessageCard } from '@teambit/design.ui.surfaces.status-message-card';
 import { EmptyStateSlot } from './compositions.ui.runtime';
 import { Composition } from './composition';
 import styles from './compositions.module.scss';
@@ -147,6 +148,21 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
       </div>
     );
   }
+
+  if (component?.buildStatus === 'pending')
+    return (
+      <StatusMessageCard className={styles.buildStatusMessage} status="PROCESSING" title="component preview pending">
+        this might take some time
+      </StatusMessageCard>
+    );
+  if (component?.buildStatus === 'failed')
+    return (
+      <StatusMessageCard
+        className={styles.buildStatusMessage}
+        status="FAILURE"
+        title="failed to get component preview "
+      ></StatusMessageCard>
+    );
 
   if (component.compositions.length === 0) {
     return (
