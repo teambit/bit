@@ -39,7 +39,7 @@ export default class Add implements LegacyCommand {
   migration = true;
 
   action(
-    [paths]: [string[]],
+    [paths = []]: [string[]],
     {
       id,
       main,

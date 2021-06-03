@@ -31,7 +31,7 @@ export class CompileCmd implements Command {
 
   constructor(private compile: WorkspaceCompiler, private logger: Logger, private pubsub: PubsubMain) {}
 
-  async report([components]: [string[]], compilerOptions: CompileOptions) {
+  async report([components = []]: [string[]], compilerOptions: CompileOptions) {
     const startTimestamp = process.hrtime();
     this.logger.setStatusLine('Compiling your components, hold tight.');
     this.pubsub.sub(CompilerAspect.id, this.onComponentCompilationDone.bind(this));

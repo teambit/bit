@@ -45,6 +45,7 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
       type Issue {
         type: String!
         description: String!
+        solution: String
         data: String
       }
 
