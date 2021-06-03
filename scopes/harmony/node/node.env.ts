@@ -7,6 +7,7 @@ export class NodeEnv implements Environment {
     return {
       devDependencies: {
         '@types/jest': '26.0.20',
+        '@types/testing-library__jest-dom': '5.9.5',
       },
     };
   }
