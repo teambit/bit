@@ -1,3 +1,4 @@
+import { expect } from 'chai';
 import { packageToDefinetlyTyped } from './package-to-definetly-typed';
 
 const scenarios = new Map([
@@ -43,11 +44,11 @@ const scenarios = new Map([
 ]);
 
 describe('packageToDefinetlyTyped()', () => {
-  scenarios.forEach((source, expected) => {
-    it(`should map to ${source}`, () => {
-      const result = packageToDefinetlyTyped(source);
+  scenarios.forEach((expected, input) => {
+    it(`should map to ${expected}`, () => {
+      const result = packageToDefinetlyTyped(input);
 
-      expect(result).toEqual(expected);
+      expect(result).to.equal(expected);
     });
   });
 });

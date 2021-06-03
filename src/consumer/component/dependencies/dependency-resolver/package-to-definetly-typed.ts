@@ -1,8 +1,10 @@
-const definetlyTypedRegex = /^(@([-\w]+)\/)?/;
+const scopedRegistryRegex = /^(@([-\w]+)\/)/;
+const scopedRegistryReplace = '$2__';
 
 // it seems definetly typed are using this:
 // `const dtsName = packageName.replace("@", "").replace("/", "__")`
 
 export function packageToDefinetlyTyped(pkgName: string) {
-  return pkgName.replace(definetlyTypedRegex, '@types/$2__');
+  const escaped = pkgName.replace(scopedRegistryRegex, scopedRegistryReplace);
+  return `@types/${escaped}`;
 }
