@@ -17,6 +17,7 @@ const wcComponentFields = gql`
     }
     description
     issuesCount
+    buildStatus
     status {
       isOutdated
       isNew
@@ -26,7 +27,6 @@ const wcComponentFields = gql`
         hasModifiedFiles
         hasModifiedDependencies
       }
-      buildStatus
       isDeleted
     }
     deprecation {
