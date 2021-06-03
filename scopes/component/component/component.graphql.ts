@@ -87,7 +87,7 @@ export function componentSchema(componentExtension: ComponentMain) {
         displayName: String!
 
         # component buildStatus
-        buildStatus: String!
+        buildStatus: String
 
         # list of component releases.
         tags: [Tag]!
