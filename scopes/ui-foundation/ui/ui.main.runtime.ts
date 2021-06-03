@@ -14,7 +14,7 @@ import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import PubsubAspect, { PubsubMain } from '@teambit/pubsub';
 import { sha1 } from '@teambit/legacy/dist/utils';
 import fs from 'fs-extra';
-import getPort from 'get-port';
+import { Port } from '@teambit/toolbox.network.get-port';
 import { join, resolve } from 'path';
 import { promisify } from 'util';
 import webpack from 'webpack';
@@ -254,16 +254,14 @@ export class UiMain {
       startPlugins: plugins,
     });
 
-    const targetPort = await this.getPort(port);
-
     if (dev) {
-      await uiServer.dev({ port: targetPort });
+      await uiServer.dev({ portRange: port || this.config.portRange });
     } else {
       await this.buildUI(name, uiRoot, rebuild);
-      await uiServer.start({ port: targetPort });
+      await uiServer.start({ portRange: port || this.config.portRange });
     }
 
-    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, targetPort, uiRoot));
+    this.pubsub.pub(UIAspect.id, this.createUiServerStartedEvent(this.config.host, uiServer.port, uiRoot));
 
     return uiServer;
   }
@@ -387,7 +385,11 @@ export class UiMain {
 
   private async selectPort() {
     const [from, to] = this.config.portRange;
-    return getPort({ port: getPort.makeRange(from, to) });
+    const usedPorts = (await this.cache.get<number[]>(`${from}${to}`)) || [];
+    const port = await Port.getPort(from, to, usedPorts);
+    // this will lock the port for 1 min to avoid race conditions
+    await this.cache.set(`${from}${to}`, usedPorts.concat(port), 60000);
+    return port;
   }
 
   private async buildUI(name: string, uiRoot: UIRoot, rebuild?: boolean): Promise<string> {

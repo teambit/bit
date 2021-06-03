@@ -517,6 +517,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/toolbox/network/agent"
     },
+    "network/get-port": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/toolbox/network/get-port"
+    },
     "network/proxy-agent": {
         "scope": "teambit.toolbox",
         "version": "0.0.100",

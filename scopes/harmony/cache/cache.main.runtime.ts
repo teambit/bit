@@ -30,22 +30,27 @@ export class CacheMain {
     cacheDirectory: CACHE_ROOT,
   };
 
-  async set(key: string, data: string): Promise<boolean> {
+  async set(key: string, data: any, ttl?: number): Promise<boolean> {
     this.logger.debug(`put cache to ${key} with data ${data}`);
+    const expiry = ttl ? new Date().getTime() + ttl : null;
     return cacache
-      .put(this.globalCacheFolder, key, data)
+      .put(this.globalCacheFolder, key, JSON.stringify({ data, expiry }))
       .then(() => true)
       .catch(() => false);
   }
 
-  async get(key: string): Promise<string | null> {
+  async get<T>(key: string): Promise<T | undefined> {
     this.logger.debug(`get cache for ${key}`);
     return cacache
       .get(this.globalCacheFolder, key)
-      .then((cacheObject) => {
-        return cacheObject.data.toString();
+      .then(async (cacheObject) => {
+        const { data, expiry } = JSON.parse(cacheObject.data.toString());
+        if (expiry && new Date().getTime() > expiry) {
+          return cacache.rm(this.globalCacheFolder, key);
+        }
+        return data;
       })
-      .catch(() => null);
+      .catch(() => undefined);
   }
 
   private get globalCacheFolder() {
