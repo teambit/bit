@@ -59,8 +59,6 @@ Instead of building an application that has many components, Bit lets you develo
 
 
 
-
-
 To get started follow the [quick-start guide](https://harmony-docs.bit.dev/getting-started/installing-bit) or try the official [Bit for React tutorial](https://harmony-docs.bit.dev/tutorials/react/create-and-consume-components).  
 
 Install [Bit Version Manager](https://harmony-docs.bit.dev/getting-started/installing-bit):
@@ -108,6 +106,7 @@ Start the dev server
 bit start
 ```
 
+Open-up your browser on localhost:3000, or any other available port, and display your workspace with your components.  
 
 ### Popular Onboarding Use-Cases
 

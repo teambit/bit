@@ -105,7 +105,7 @@ export class CommandRunner {
    * for internals commands, such as, _put, _fetch, the command.loader = false.
    */
   private determineConsoleWritingDuringCommand() {
-    if (this.command.loader && !this.flags.json) {
+    if (this.command.loader && !this.flags.json && !this.flags['get-yargs-completions']) {
       loader.on();
       loader.start(`running command "${this.commandName}"...`);
       logger.shouldWriteToConsole = true;
