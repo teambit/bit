@@ -1,5 +1,4 @@
-import { Text, Box } from 'ink';
-import React from 'react';
+import chalk from 'chalk';
 import { LinksResult as LegacyLinksResult } from '@teambit/legacy/dist/links/node-modules-linker';
 import { getPackageNameFromTarget } from './get-package-name-from-target';
 import { LinkRow, VerboseLinkRow } from './link-row';
@@ -11,18 +10,12 @@ type ComponentListLinksProps = {
 
 export function ComponentListLinks({ componentListLinks, verbose = false }: ComponentListLinksProps) {
   if (!componentListLinks || !componentListLinks.length) {
-    return <Text color="cyan">No components link were generated</Text>;
+    return chalk.cyan('No components link were generated');
   }
-  return (
-    <Box key="components-links" flexDirection="column">
-      <Text bold color="cyan">
-        Components links
-      </Text>
-      {componentListLinks.map((componentLinks) => (
-        <ComponentLinks key={componentLinks.id.toString()} componentLinks={componentLinks} verbose={verbose} />
-      ))}
-    </Box>
-  );
+  const title = chalk.bold.cyan('Components links');
+  const links = componentListLinks.map((componentLinks) => ComponentLinks({ componentLinks, verbose }));
+
+  return `${title}\n${links}`;
 }
 
 type ComponentLinksProps = {
@@ -30,9 +23,9 @@ type ComponentLinksProps = {
   verbose: boolean;
 };
 function ComponentLinks({ componentLinks, verbose = false }: ComponentLinksProps) {
-  if (!componentLinks.bound || componentLinks.bound.length < 1) return null;
-  if (verbose) return <VerboseComponentLinks componentLinks={componentLinks} />;
-  return <RegularComponentLinks componentLinks={componentLinks} />;
+  if (!componentLinks.bound || componentLinks.bound.length < 1) return '';
+  if (verbose) return VerboseComponentLinks({ componentLinks });
+  return RegularComponentLinks({ componentLinks });
 }
 
 type RegularComponentLinksProps = {
@@ -40,9 +33,9 @@ type RegularComponentLinksProps = {
 };
 function RegularComponentLinks({ componentLinks }: RegularComponentLinksProps) {
   const id = componentLinks.id.toString();
-  if (!componentLinks.bound || componentLinks.bound.length < 1) return null;
+  if (!componentLinks.bound || componentLinks.bound.length < 1) return '';
   const packagePath = getPackageNameFromTarget(componentLinks.bound[0].to);
-  return <LinkRow title={id} target={packagePath} padding={50} />;
+  return LinkRow({ title: id, target: packagePath, padding: 50 });
 }
 
 type VerboseComponentLinksProps = {
@@ -50,15 +43,8 @@ type VerboseComponentLinksProps = {
 };
 function VerboseComponentLinks({ componentLinks }: VerboseComponentLinksProps) {
   const id = componentLinks.id.toString();
-  if (!componentLinks.bound || componentLinks.bound.length < 1) return null;
-  return (
-    <Box key={id} flexDirection="column">
-      <Text bold color="cyan">
-        {id}
-      </Text>
-      {componentLinks.bound.map((link) => (
-        <VerboseLinkRow key={`${link.from}-${link.to}`} from={link.from} to={link.to} />
-      ))}
-    </Box>
-  );
+  if (!componentLinks.bound || componentLinks.bound.length < 1) return '';
+  const title = chalk.bold.cyan(id);
+  const links = componentLinks.bound.map((link) => VerboseLinkRow({ from: link.from, to: link.to })).join('\n');
+  return `${title}\n${links}\n`;
 }

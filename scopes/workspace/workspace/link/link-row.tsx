@@ -1,3 +1,4 @@
+import chalk from 'chalk';
 import { Text, Box, Newline } from 'ink';
 import React from 'react';
 
@@ -7,11 +8,7 @@ type LinkRowProps = {
   padding?: number;
 };
 export function LinkRow({ title, target, padding = 50 }: LinkRowProps) {
-  return (
-    <Text bold key={title}>
-      {title.padEnd(padding)} {'>'} {target}
-    </Text>
-  );
+  return chalk.bold(`${title.padEnd(padding)} ${'>'} ${target}`);
 }
 
 type VerboseLinkRowProps = {
@@ -19,11 +16,7 @@ type VerboseLinkRowProps = {
   to: string;
 };
 export function VerboseLinkRow({ from, to }: VerboseLinkRowProps) {
-  return (
-    <Box flexDirection="column">
-      <Text bold>from: {from}</Text>
-      <Text bold>to: {to} </Text>
-      <Newline />
-    </Box>
-  );
+  return `${chalk.bold('from')}: ${from}
+${chalk.bold('to')}: ${to}
+`;
 }

@@ -1,5 +1,4 @@
-import { Text, Box } from 'ink';
-import React from 'react';
+import chalk from 'chalk';
 import { NestedNMDepsLinksResult } from '@teambit/dependency-resolver';
 import { VerboseLinkRow } from './link-row';
 
@@ -9,24 +8,20 @@ type NestedComponentLinksLinksProps = {
 };
 
 export function NestedComponentLinksLinks({ nestedDepsInNmLinks, verbose = false }: NestedComponentLinksLinksProps) {
-  if (!verbose) return null;
+  if (!verbose) return '';
   if (!nestedDepsInNmLinks || !nestedDepsInNmLinks.length) {
-    return null;
+    return '';
   }
-  return (
-    <Box key="nested-links" flexDirection="column">
-      <Text bold color="cyan">
-        Nested dependencies links
-      </Text>
-      {nestedDepsInNmLinks.map((nestedComponentLinks) => (
-        <NestedComponentLinks
-          key={nestedComponentLinks.componentId.toString()}
-          nestedComponentLinks={nestedComponentLinks}
-          verbose={verbose}
-        />
-      ))}
-    </Box>
-  );
+  const title = chalk.bold.cyan('Nested dependencies links');
+  const links = nestedDepsInNmLinks
+    .map((nestedComponentLinks) =>
+      NestedComponentLinks({
+        nestedComponentLinks,
+        verbose,
+      })
+    )
+    .join('\n');
+  return `${title}\n${links}\n`;
 }
 
 type NestedComponentLinksProps = {
@@ -34,9 +29,9 @@ type NestedComponentLinksProps = {
   verbose: boolean;
 };
 function NestedComponentLinks({ nestedComponentLinks, verbose = false }: NestedComponentLinksProps) {
-  if (!nestedComponentLinks.linksDetail || nestedComponentLinks.linksDetail.length < 1) return null;
-  if (verbose) return <VerboseNestedComponentLinks nestedComponentLinks={nestedComponentLinks} />;
-  return null;
+  if (!nestedComponentLinks.linksDetail || nestedComponentLinks.linksDetail.length < 1) return '';
+  if (verbose) return VerboseNestedComponentLinks({ nestedComponentLinks });
+  return '';
 }
 
 type VerboseNestedComponentLinksProps = {
@@ -44,15 +39,9 @@ type VerboseNestedComponentLinksProps = {
 };
 function VerboseNestedComponentLinks({ nestedComponentLinks }: VerboseNestedComponentLinksProps) {
   const id = nestedComponentLinks.componentId.toString();
-  if (!nestedComponentLinks.linksDetail || nestedComponentLinks.linksDetail.length < 1) return null;
-  return (
-    <Box key={id} flexDirection="column">
-      <Text bold color="cyan">
-        {id}
-      </Text>
-      {nestedComponentLinks.linksDetail.map((link) => (
-        <VerboseLinkRow key={`${link.from}-${link.to}`} from={link.from} to={link.to} />
-      ))}
-    </Box>
-  );
+  const title = chalk.cyan.bold(id);
+  const links = nestedComponentLinks.linksDetail
+    .map((link) => VerboseLinkRow({ from: link.from, to: link.to }))
+    .join('\n');
+  return `${title}\n${links}\n`;
 }
