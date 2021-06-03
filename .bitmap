@@ -1039,6 +1039,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/menu-widget-icon"
     },
+    "ui/surfaces/message-card": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/message-card"
+    },
     "ui/notifications/notification": {
         "scope": "teambit.ui-foundation",
         "version": "0.0.377",
@@ -1194,6 +1200,12 @@
         "version": "0.0.375",
         "mainFile": "index.ts",
         "rootDir": "scopes/workspace/ui/status"
+    },
+    "ui/surfaces/status-message-card": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/design/ui/status-message-card"
     },
     "ui/styles/colors-by-letter": {
         "scope": "teambit.design",

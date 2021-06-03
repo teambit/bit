@@ -26,6 +26,7 @@ const wcComponentFields = gql`
         hasModifiedFiles
         hasModifiedDependencies
       }
+      buildStatus
       isDeleted
     }
     deprecation {
