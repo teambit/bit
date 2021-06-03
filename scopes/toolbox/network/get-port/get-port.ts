@@ -1,5 +1,5 @@
 /* eslint-disable no-use-before-define */
-//based on : https://github.com/sindresorhus/get-port/blob/main/index.js
+//  based on : https://github.com/sindresorhus/get-port/blob/main/index.js
 import net from 'net';
 import {Locked} from './locked'
 
@@ -98,8 +98,8 @@ export class Port {
       throw new RangeError('`to` must be greater than or equal to `from`');
     }
 
-    const generator = function* (from: number, to: number) {
-      for (let port = from; port <= to; port++) {
+    const generator = function* (f: number, t: number) {
+      for (let port = f; port <= t; port += 1) {
         yield port;
       }
     };
