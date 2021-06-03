@@ -16,6 +16,7 @@ import { HighlightedTextSpan } from '@teambit/mdx.ui.docs.highlighted-text-span'
 import { Snippet } from '@teambit/mdx.ui.docs.snippet';
 import { Link } from '@teambit/mdx.ui.docs.link';
 import { P } from '@teambit/mdx.ui.docs.paragraph';
+import styles from './mdx-layout.module.scss';
 
 const defaultMdxComponents = {
   h1: createHeading('lg'),
@@ -84,7 +85,11 @@ export type MDXLayoutProps = {
  */
 export function MDXLayout({ children, mdxComponents }: MDXLayoutProps) {
   const components = Object.assign(defaultMdxComponents, mdxComponents);
-  return <MDXProvider components={components}>{children}</MDXProvider>;
+  return (
+    <MDXProvider components={components}>
+      <div className={styles.mdxContent}>{children}</div>
+    </MDXProvider>
+  );
 }
 
 MDXLayout.defaultProps = {
