@@ -1,8 +1,6 @@
 import { Command, CommandOptions } from '@teambit/cli';
-import React from 'react';
 import { LinkResults } from '@teambit/dependency-resolver';
 import { Logger } from '@teambit/logger';
-import { Text, Box } from 'ink';
 import { BASE_DOCS_DOMAIN } from '@teambit/legacy/dist/constants';
 import { timeFormat } from '@teambit/toolbox.time.time-format';
 import chalk from 'chalk';
@@ -41,15 +39,7 @@ export class LinkCommand implements Command {
     private logger: Logger
   ) {}
 
-  // async report() {
-  //   const startTime = Date.now();
-  //   const linkResults = await this.json();
-  //   const endTime = Date.now();
-  //   const executionTime = calculateTime(startTime, endTime);
-  //   return JSON.stringify(linkResults, null, 2);
-  // }
-
-  async render([ids]: [string[]], opts: LinkCommandOpts) {
+  async report([ids]: [string[]], opts: LinkCommandOpts) {
     const startTime = Date.now();
     const linkResults = await this.json([ids], opts);
     const endTime = Date.now();
@@ -60,19 +50,20 @@ export class LinkCommand implements Command {
       coreAspectsLinksWithMainAspect.unshift(linkResults.teambitBitLink);
     }
     const numOfCoreAspects = coreAspectsLinksWithMainAspect.length;
-    return (
-      <Box key="all" flexDirection="column">
-        <Text>
-          Linked {numOfComponents} components and {numOfCoreAspects} core aspects to node_modules for workspace:{' '}
-          <Text color="cyan">{this.workspace.name}</Text>
-        </Text>
-        <CoreAspectsLinks coreAspectsLinks={coreAspectsLinksWithMainAspect} verbose={opts.verbose} />
-        <ComponentListLinks componentListLinks={linkResults.legacyLinkResults} verbose={opts.verbose} />
-        <RewireRow legacyCodemodResults={linkResults.legacyLinkCodemodResults} />
-        <NestedComponentLinksLinks nestedDepsInNmLinks={linkResults.nestedDepsInNmLinks} verbose={opts.verbose} />
-        <Text>Finished. {timeDiff}</Text>
-      </Box>
-    );
+
+    const title = `Linked ${numOfComponents} components and ${numOfCoreAspects} core aspects to node_modules for workspace: ${this.workspace.name}`;
+    const coreLinks = CoreAspectsLinks({
+      coreAspectsLinks: coreAspectsLinksWithMainAspect,
+      verbose: opts.verbose,
+    });
+    const listLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
+    const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
+    const nestedLinks = NestedComponentLinksLinks({
+      nestedDepsInNmLinks: linkResults.nestedDepsInNmLinks,
+      verbose: opts.verbose,
+    });
+    const footer = `Finished. ${timeDiff}`;
+    return `${title}\n${coreLinks}\n${listLinks}\n${rewireRow}${nestedLinks}${footer}`;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
