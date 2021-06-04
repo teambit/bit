@@ -56,14 +56,14 @@ export class LinkCommand implements Command {
       coreAspectsLinks: coreAspectsLinksWithMainAspect,
       verbose: opts.verbose,
     });
-    const listLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
+    const compsLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
     const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
     const nestedLinks = NestedComponentLinksLinks({
       nestedDepsInNmLinks: linkResults.nestedDepsInNmLinks,
       verbose: opts.verbose,
     });
     const footer = `Finished. ${timeDiff}`;
-    return `${title}\n${coreLinks}\n${listLinks}\n${rewireRow}${nestedLinks}${footer}`;
+    return `${title}\n${coreLinks}\n${compsLinks}\n${rewireRow}${nestedLinks}${footer}`;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

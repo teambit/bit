@@ -13,7 +13,7 @@ export function ComponentListLinks({ componentListLinks, verbose = false }: Comp
     return chalk.cyan('No components link were generated');
   }
   const title = chalk.bold.cyan('Components links');
-  const links = componentListLinks.map((componentLinks) => ComponentLinks({ componentLinks, verbose }));
+  const links = componentListLinks.map((componentLinks) => ComponentLinks({ componentLinks, verbose })).join('\n');
 
   return `${title}\n${links}`;
 }
