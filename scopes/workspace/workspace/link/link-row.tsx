@@ -1,6 +1,4 @@
 import chalk from 'chalk';
-import { Text, Box, Newline } from 'ink';
-import React from 'react';
 
 type LinkRowProps = {
   title: string;
