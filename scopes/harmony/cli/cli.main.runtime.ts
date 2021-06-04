@@ -131,6 +131,7 @@ export class CLIMain {
     const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
     const cliCmd = new CliCmd(cliMain);
     cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd);
+    
     return cliMain;
   }
 }
