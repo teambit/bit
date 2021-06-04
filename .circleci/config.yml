@@ -467,6 +467,9 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
