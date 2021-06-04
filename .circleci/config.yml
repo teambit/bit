@@ -478,21 +478,19 @@ jobs:
       - run:
           name: 'install husky globally'
           command: 'sudo npm i -g husky'
-      # - run:
-      #     name: 'install harmony'
-      #     command: 'cd bit && npm run install-harmony'
 
       - run: npm i -g @teambit/bvm
       - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm upgrade
-      # - run: bit
       - run: bbit
-      - run: bvm -h
-      - run: bbit Install
-      - run: npm run link-bit-legacy
-      - run: bbit compile
+      - run: cd bit && bbit install
+      - run: cd bit && npm run link-bit-legacy
+      - run: cd bit && bbit compile
 
+      # - run:
+      #     name: 'install harmony'
+      #     command: 'cd bit && npm run install-harmony'
       # - run:
       #     name: 'build harmony'
       #     command: 'cd bit && npm run build-harmony'
