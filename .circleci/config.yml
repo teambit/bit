@@ -475,19 +475,26 @@ jobs:
       - run:
           name: 'install husky globally'
           command: 'sudo npm i -g husky'
-      - run:
-          name: 'install harmony'
-          command: 'cd bit && npm run install-harmony'
       # - run:
-      #     name: 'import objects'
-      #     command: 'cd bit && npm run import-harmony'
-      - run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony'
-          no_output_timeout: '20m'
-      - run:
-          name: 'status harmony'
-          command: 'cd bit && npm run status-harmony'
+      #     name: 'install harmony'
+      #     command: 'cd bit && npm run install-harmony'
+
+      - run: npm i -g @teambit/bvm
+      - run: bvm upgrade
+      - run: bit
+      - run: bbit
+      - run: bvm -h
+      - run: bbit Install
+      - run: npm run link-bit-legacy
+      - run: bbit compile
+
+      # - run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony'
+      #     no_output_timeout: '20m'
+      # - run:
+      #     name: 'status harmony'
+      #     command: 'cd bit && npm run status-harmony'
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
