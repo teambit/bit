@@ -4,6 +4,7 @@ import { compact, flatten } from 'lodash';
 // import { runCLI } from 'jest';
 import { proxy } from 'comlink';
 import { Logger } from '@teambit/logger';
+import { Workspace } from '@teambit/workspace';
 import { HarmonyWorker } from '@teambit/worker';
 import { Tester, CallbackFn, TesterContext, Tests, ComponentPatternsMap } from '@teambit/tester';
 import { TestsFiles, TestResult, TestsResult } from '@teambit/tests-results';
@@ -22,6 +23,7 @@ export class JestTester implements Tester {
     readonly jestConfig: any,
     private jestModule: typeof jest,
     private jestWorker: HarmonyWorker<JestWorker>,
+    private workspace: Workspace,
     private logger: Logger
   ) {}
 
@@ -46,6 +48,23 @@ export class JestTester implements Tester {
   //     return acc;
   //   }, undefined);
   // }
+
+  private async shouldRunTest(context: TesterContext, specFile: string) {
+    const components = context.components.map((component) => context.patterns.get(component));
+    const component = components.find((comp) => {
+      if (!comp) return undefined;
+      const [, specs] = comp;
+      return specs.filter((pattern) => minimatch(specFile, pattern.path)).length > 0;
+    });
+    if (!component) return;
+
+    const [workspaceComponent] = component;
+    const componentStatus = await this.workspace?.getComponentStatus(workspaceComponent);
+    const { modifyInfo, isNew } = componentStatus;
+    if (modifyInfo?.hasModifiedFiles || isNew) return true;
+
+    return false;
+  }
 
   private attachTestsToComponent(testerContext: TesterContext, testResult: JestTestResult[]) {
     return ComponentMap.as(testerContext.components, (component) => {
@@ -190,8 +209,13 @@ export class JestTester implements Tester {
           resolve(watchTestResults);
         });
 
+        const cbIsModified = proxy((specFile: string) => this.shouldRunTest(context, specFile));
+
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         await workerApi.onTestComplete(cbFn);
+
+        // eslint-disable-next-line @typescript-eslint/no-floating-promises
+        await workerApi.registerIsModified(cbIsModified);
 
         // eslint-disable-next-line @typescript-eslint/no-floating-promises
         await workerApi.watch(this.jestConfig, this.patternsToArray(context.patterns), context.rootPath);

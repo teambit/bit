@@ -3,11 +3,15 @@ import { expose } from '@teambit/worker';
 import { runCLI } from 'jest';
 
 export class JestWorker {
-  private onTestCompleteCb;
+  private onTestCompleteCb: any;
+  private shouldRunTestSuite: any;
 
   onTestComplete(onTestComplete) {
     this.onTestCompleteCb = onTestComplete;
-    // return this;
+  }
+
+  registerIsModified(shouldRunTestSuite) {
+    this.shouldRunTestSuite = shouldRunTestSuite;
   }
 
   watch(jestConfigPath: string, testFiles: string[], rootPath: string): Promise<void> {
@@ -35,6 +39,10 @@ export class JestWorker {
             `${__dirname}/watch.js`,
             {
               specFiles: testFiles,
+              shouldRunTestSuite: async (specFile: string) => {
+                if (!this.shouldRunTestSuite) return true;
+                return this.shouldRunTestSuite(specFile);
+              },
               onComplete: (results) => {
                 if (!this.onTestCompleteCb) return;
                 try {
