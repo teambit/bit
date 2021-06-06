@@ -32,9 +32,9 @@ export class CacheMain {
 
   async set(key: string, data: any, ttl?: number): Promise<boolean> {
     this.logger.debug(`put cache to ${key} with data ${data}`);
-    const expiry = ttl ? new Date().getTime() + ttl : null;
+    const expire = ttl ? new Date().getTime() + ttl : null;
     return cacache
-      .put(this.globalCacheFolder, key, JSON.stringify({ data, expiry }))
+      .put(this.globalCacheFolder, key, JSON.stringify({ data, expire }))
       .then(() => true)
       .catch(() => false);
   }
@@ -44,8 +44,8 @@ export class CacheMain {
     return cacache
       .get(this.globalCacheFolder, key)
       .then(async (cacheObject) => {
-        const { data, expiry } = JSON.parse(cacheObject.data.toString());
-        if (expiry && new Date().getTime() > expiry) {
+        const { data, expire } = JSON.parse(cacheObject.data.toString());
+        if (expire && new Date().getTime() > expire) {
           return cacache.rm(this.globalCacheFolder, key);
         }
         return data;
