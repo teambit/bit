@@ -11,6 +11,8 @@ import { AlreadyExistsError } from './exceptions/already-exists';
 import { getCommandId } from './get-command-id';
 import { LegacyCommandAdapter } from './legacy-command-adapter';
 import { CLIParser } from './cli-parser';
+import { CompletionCmd } from './completion.cmd';
+import { CliCmd } from './cli.cmd';
 
 export type CommandList = Array<Command>;
 export type OnStart = (hasWorkspace: boolean) => Promise<void>;
@@ -50,7 +52,7 @@ export class CLIMain {
   /**
    * list of all registered commands. (legacy and new).
    */
-  get commands() {
+  get commands(): CommandList {
     return flatten(this.commandsSlot.values());
   }
 
@@ -125,10 +127,11 @@ export class CLIMain {
     }, []);
 
     const legacyRegistry = buildRegistry(extensionsCommands);
-    const allCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
-    const allCommandsAdapters = allCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
-    // @ts-ignore
-    cliMain.register(...allCommandsAdapters);
+    const legacyCommands = legacyRegistry.commands.concat(legacyRegistry.extensionsCommands || []);
+    const legacyCommandsAdapters = legacyCommands.map((command) => new LegacyCommandAdapter(command, cliMain));
+    const cliCmd = new CliCmd(cliMain);
+    cliMain.register(...legacyCommandsAdapters, new CompletionCmd(), cliCmd);
+    
     return cliMain;
   }
 }
