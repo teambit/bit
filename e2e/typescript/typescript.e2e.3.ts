@@ -630,17 +630,24 @@ export class List extends React.Component {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.npm.initNpm();
-      helper.fs.createFile('bar', 'foo.ts', "import { yo } from 'ninja';");
+      helper.fs.createFile('bar', 'foo.ts', "import { yo } from 'ninja';\n import { ya } from '@scoped/ninja");
       helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
       helper.npm.addNpmPackage('ninja', '13.0.0');
       helper.npm.addNpmPackage('@types/ninja', '1.0.0');
       helper.packageJson.addKeyValue({ dependencies: { ninja: '13.0.0' } });
       helper.packageJson.addKeyValue({ devDependencies: { '@types/ninja': '1.0.0' } });
+      helper.packageJson.addKeyValue({ dependencies: { '@scoped/ninja': '13.0.0' } });
+      helper.packageJson.addKeyValue({ devDependencies: { '@types/scoped__ninja': '1.0.5' } });
     });
     it('should find the @types in the package.json file and automatically add it to the dependencies', () => {
       const show = helper.command.showComponentParsed();
       expect(show.devPackageDependencies).to.deep.equal({ '@types/ninja': '1.0.0' });
     });
+    it('should find the @types in the package.json file and automatically add it to the dependencies, when using scoped dependenices', () => {
+      const show = helper.command.showComponentParsed();
+      expect(show.devPackageDependencies).to.deep.equal({ '@types/scoped__ninja': '1.0.5' });
+    });
+
     describe('when the types package set to be ignored in the overrides', () => {
       before(() => {
         const overrides = {
