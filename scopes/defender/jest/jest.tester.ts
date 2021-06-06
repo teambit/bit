@@ -49,22 +49,22 @@ export class JestTester implements Tester {
     return sha.digest('hex');
   }
 
-  private async shouldRunTest(context: TesterContext, specFile: string) {
+  private async shouldRunTest(context: TesterContext, specFile: string): Promise<boolean> {
     const components = context.components.map((component) => context.patterns.get(component));
     const component = components.find((comp) => {
       if (!comp) return undefined;
       const [, specs] = comp;
       return specs.filter((pattern) => minimatch(specFile, pattern.path)).length > 0;
     });
-    if (!component) return;
+    if (!component) return false;
     const [workspaceComponent] = component;
     const updatedComponent = await this.workspace.get(workspaceComponent.id);
-    if (!updatedComponent) return;
+    if (!updatedComponent) return false;
     const { files } = updatedComponent.state.filesystem;
     // TODO: fix hash on component filesystem
-    const hashes = files.map((file) => this.sha1(file.contents));
+    const hashes = sortBy(files, ['relative']).map((file) => this.sha1(file.contents));
     const hash = this.sha1(`${hashes.join(',')}_${specFile}`);
-    if (this.cacheHash[workspaceComponent.id.toString()] == hash) return false;
+    if (this.cacheHash[workspaceComponent.id.toString()] === hash) return false;
     this.cacheHash[workspaceComponent.id.toString()] = hash;
     return true;
   }
