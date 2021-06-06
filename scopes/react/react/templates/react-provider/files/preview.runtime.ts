@@ -9,7 +9,7 @@ export const previewRuntimeFile = (context: ComponentContext) => {
     content: `import React from 'react';
 import { PreviewRuntime } from '@teambit/preview';
 import { ReactAspect, ReactPreview } from '@teambit/react';
-import { Theme } from '@teambit/base-ui.theme.theme-provider'; // add your own theme component
+// import { Theme } from '@teambit/base-ui.theme.theme-provider'; // example import for adding your own theme component
 import { ${Name}, ${Name}Config } from './${name}.aspect';
 
 export class ${functionName} {
@@ -30,7 +30,7 @@ export class ${functionName} {
           return <div  style={{backgroundColor: "red"}}>{children}</ div> // will set bg color for all compositions to red
         },
         // apply your own theme here
-        Theme as any, // wraps all compositions in a theme component
+        Theme as any, // wraps all compositions in a theme component, as imported above (commented out - add you own theme import instead of the above)
       ]);
 
 
