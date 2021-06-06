@@ -94,7 +94,7 @@ export class ReactMain {
    * @param tsModule typeof `ts` module instance.
    */
   overrideTsConfig(
-    tsconfig: TsConfigSourceFile,
+    tsconfig?: TsConfigSourceFile,
     compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
     tsModule: any = ts
   ) {
