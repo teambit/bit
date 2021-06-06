@@ -484,10 +484,17 @@ jobs:
           command: 'sudo npm i -g husky'
 
       - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v1-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
+      - save_cache:
+          key: v1-linux-bvm-folder-{{ checksum "version.txt" }}
+          paths:
+            - /home/circleci/.bvm
       - run: cd bit && bbit install
       - run: cd bit && npm run link-bit-legacy
       - run: cd bit && bbit compile
@@ -513,10 +520,6 @@ jobs:
           paths:
             - bit
             - .pnpm-store
-      - persist_to_workspace:
-          root: /home/circleci
-          paths:
-            - .bvm
       - store_artifacts:
           path: ~/Library/Caches/Bit/logs
       - store_artifacts:
@@ -562,6 +565,9 @@ jobs:
           at: ./
       - bit_global_for_npm
       - install_bvm
+      - run: npm view @teambit/bit version > ./version.txt
+      - restore_cache:
+          key: v1-linux-bvm-folder-{{ checksum "version.txt" }}
       - bit_config:
           env: "hub"
       - restore_cache:
