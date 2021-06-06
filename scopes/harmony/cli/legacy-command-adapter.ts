@@ -14,6 +14,7 @@ export class LegacyCommandAdapter implements Command {
   private?: boolean;
   migration?: boolean;
   internal?: boolean;
+  skipWorkspace?: boolean;
   _packageManagerArgs?: string[];
   constructor(private cmd: LegacyCommand, cliExtension: CLIMain) {
     this.name = cmd.name;
@@ -21,9 +22,11 @@ export class LegacyCommandAdapter implements Command {
     this.options = cmd.opts || [];
     this.alias = cmd.alias;
     this.shortDescription = cmd.shortDescription;
+    this.skipWorkspace = cmd.skipWorkspace;
     this.group = cmd.group;
     this.loader = cmd.loader;
     this.private = cmd.private;
+
     this.migration = cmd.migration;
     this.internal = cmd.internal;
     this.commands = (cmd.commands || []).map((sub) => new LegacyCommandAdapter(sub, cliExtension));

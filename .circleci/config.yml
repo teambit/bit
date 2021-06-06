@@ -467,6 +467,9 @@ jobs:
   setup_harmony:
     resource_class: large
     <<: *defaults
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
     steps:
       - attach_workspace:
           at: ./
@@ -475,19 +478,26 @@ jobs:
       - run:
           name: 'install husky globally'
           command: 'sudo npm i -g husky'
-      - run:
-          name: 'install harmony'
-          command: 'cd bit && npm run install-harmony'
+
+      - run: npm i -g @teambit/bvm
+      - run: "echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV"
+      - run: bvm config set DEFAULT_LINK bbit
+      - run: bvm upgrade
+      - run: bbit
+      - run: cd bit && bbit install
+      - run: cd bit && npm run link-bit-legacy
+      - run: cd bit && bbit compile
+
       # - run:
-      #     name: 'import objects'
-      #     command: 'cd bit && npm run import-harmony'
-      - run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony'
-          no_output_timeout: '20m'
-      - run:
-          name: 'status harmony'
-          command: 'cd bit && npm run status-harmony'
+      #     name: 'install harmony'
+      #     command: 'cd bit && npm run install-harmony'
+      # - run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony'
+      #     no_output_timeout: '20m'
+      # - run:
+      #     name: 'status harmony'
+      #     command: 'cd bit && npm run status-harmony'
       - run:
           name: 'Build bit source code'
           command: 'cd bit && npm run build'
@@ -555,11 +565,14 @@ jobs:
           name: setting npmjs registry with publishing permission
           command: echo "//registry.npmjs.org/:_authToken=${npmjsRegistryToken}" >> ~/.npmrc
       - run: cd bit && node scripts/bump-bit-legacy-ver.js
-      - run: cd bit && build-harmony/node_modules/.bin/bbit status
+      # - run: cd bit && build-harmony/node_modules/.bin/bbit status
+      - run: cd bit && bbit status
       # temporarily. otherwise it fails on bit-checkout during Yarn installation with "Error: ENOENT: no such file or directory, chmod '/home/******ci/bit/bit/node_modules/@teambit/legacy/node_modules/@babel/core/node_modules/semver/bin/semver'""
       - run: cd bit && rm -rf node_modules
-      - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
+      - run: cd bit && bbit checkout latest --all --skip-npm-install
+      # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all --skip-npm-install
       # - run: cd bit && rm -rf node_modules/@teambit/legacy
+      # - run: cd bit && bbit checkout latest --all
       # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again

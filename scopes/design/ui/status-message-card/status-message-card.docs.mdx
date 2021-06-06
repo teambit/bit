@@ -1,0 +1,28 @@
+---
+labels: ['react', 'typescript', 'message-card', 'status']
+---
+
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { StatusMessageCard } from './status-message-card';
+
+StatusMessageCard examples:
+
+A passing status card
+
+```js live
+<ThemeCompositions>
+  <StatusMessageCard status="SUCCESS" title="sueecess card">
+    this might take a minute
+  </StatusMessageCard>
+</ThemeCompositions>
+```
+
+A failing status card
+
+```js live
+<ThemeCompositions>
+  <StatusMessageCard status="FAILURE" title="failure card">
+    this might take a minute
+  </StatusMessageCard>
+</ThemeCompositions>
+```
