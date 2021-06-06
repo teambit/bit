@@ -592,9 +592,12 @@ jobs:
       # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
-      - run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony-skip-import'
+      - run: cd bit && bbit install --skip-import
+      - run: cd bit && bbit compile
+      - run: cd bit && npm run link-bit-legacy
+      # - run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony-skip-import'
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist
