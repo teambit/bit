@@ -1,4 +1,3 @@
-import fs from 'fs';
 import { Prompt, WatchPlugin, JestHookSubscriber, UsageData } from 'jest-watcher';
 import { SpecFiles } from '@teambit/tester';
 
@@ -46,18 +45,6 @@ class Watch implements WatchPlugin {
   }
 
   apply(jestHooks: JestHookSubscriber) {
-    jestHooks.onFileChange(({ projects }) => {
-      projects.map((project) => {
-        const lastFile = project.testPaths.slice(-1).pop();
-        let changedModifiedTime = new Date();
-        let changedAccessTime = new Date();
-        if (!lastFile) return;
-        if (this._runRunCache != lastFile) fs.utimesSync(lastFile, changedAccessTime, changedModifiedTime);
-        this._runRunCache = lastFile;
-      });
-      //const lastFile = projects.slice(-1).pop()
-    });
-
     jestHooks.shouldRunTestSuite(async (testSuite) => {
       const shouldRun = await this._shouldRunTestSuite(testSuite.testPath);
       if (shouldRun) return true;
@@ -67,13 +54,6 @@ class Watch implements WatchPlugin {
     jestHooks.onTestRunComplete((results) => {
       this._onComplete(results);
     });
-  }
-
-  async run(globalConfig: any, updateConfigAndRun: any): Promise<void> {
-    debugger;
-    console.log(globalConfig);
-    console.log(updateConfigAndRun);
-    return;
   }
 }
 
