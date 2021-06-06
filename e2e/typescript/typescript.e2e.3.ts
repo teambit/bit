@@ -630,7 +630,12 @@ export class List extends React.Component {
     before(() => {
       helper.scopeHelper.reInitLocalScope();
       helper.npm.initNpm();
-      helper.fs.createFile('bar', 'foo.ts', "import { yo } from 'ninja';\n import { ya } from '@scoped/ninja");
+      helper.fs.createFile(
+        'bar',
+        'foo.ts',
+        `import { yo } from 'ninja';
+        import { ya } from '@scoped/ninja`
+      );
       helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
       helper.npm.addNpmPackage('ninja', '13.0.0');
       helper.npm.addNpmPackage('@types/ninja', '1.0.0');
