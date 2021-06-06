@@ -388,7 +388,7 @@ export class UiMain {
     const usedPorts = (await this.cache.get<number[]>(`${from}${to}`)) || [];
     const port = await Port.getPort(from, to, usedPorts);
     // this will lock the port for 1 min to avoid race conditions
-    await this.cache.set(`${from}${to}`, usedPorts.concat(port), 60000);
+    await this.cache.set(`${from}${to}`, usedPorts.concat(port), 5000);
     return port;
   }
 
