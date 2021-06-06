@@ -1,5 +1,5 @@
 import v4 from 'uuid';
-import { fs } from 'fs';
+import { rmdirSync } from 'fs';
 import { expect } from 'chai';
 import { Logger } from '@teambit/logger';
 import { CacheMain } from './cache.main.runtime';
@@ -7,7 +7,7 @@ import { CacheMain } from './cache.main.runtime';
 
 
 describe('Cache Aspect', () => {
-  let cacheDirectory = `/tmp/bit/${v4()}`;
+  const cacheDirectory = `/tmp/bit/${v4()}`;
   const cache = new CacheMain({ cacheDirectory }, new Logger('cache.main.runtime'));
   it('it should set cache with ttl', async () => {
     await cache.set('_foo', 'bar', 1000);
@@ -28,6 +28,6 @@ describe('Cache Aspect', () => {
   });
 
   afterAll(() => {
-    fs.rmdirSync(cacheDirectory, { recursive: true });
+    rmdirSync(cacheDirectory, { recursive: true });
   });
 });
