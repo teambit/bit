@@ -51,7 +51,7 @@ export class ReactNativeMain {
    * override the build ts config.
    */
   overrideBuildTsConfig: (
-    tsconfig: any,
+    tsconfig?: TsConfigSourceFile,
     compilerOptions?: Partial<TsCompilerOptionsWithoutTsConfig>
   ) => EnvTransformer = this.react.overrideBuildTsConfig.bind(this.react);
 
