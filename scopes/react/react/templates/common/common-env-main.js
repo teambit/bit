@@ -16,6 +16,5 @@ export const MainFileClass = ({ name, namePascalCase: Name, moduleName }) => {
       return new ${moduleName}();
     }
   }
-  ${Name}.addRuntime(${moduleName});
 `;
 };
