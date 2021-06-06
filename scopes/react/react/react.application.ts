@@ -3,7 +3,7 @@ import { Capsule } from '@teambit/isolator';
 import { Application, AppContext, DeployContext } from '@teambit/application';
 import { BuildContext } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
-import getPort from 'get-port';
+import { Port } from '@teambit/toolbox.network.get-port';
 import { ReactEnv } from './react.env';
 
 export class ReactApp implements Application {
@@ -27,7 +27,7 @@ export class ReactApp implements Application {
       },
     ]);
     const [from, to] = this.portRange;
-    const port = await getPort({ port: getPort.makeRange(from, to) });
+    const port = await Port.getPort(from, to);
     devServer.listen(port);
     return port;
   }
