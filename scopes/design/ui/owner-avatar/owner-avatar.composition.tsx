@@ -9,3 +9,9 @@ export const OwnerAvatarExample = () => (
     <OwnerAvatar size={32} account={userAccount} />
   </ThemeCompositions>
 );
+
+export const OwnerAvatarWithoutImageExample = () => (
+  <ThemeCompositions>
+    <OwnerAvatar size={32} account={{ ...userAccount, name: '', profileImage: '' }} />
+  </ThemeCompositions>
+);

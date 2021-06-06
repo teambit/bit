@@ -63,7 +63,7 @@ export default class Merge implements LegacyCommand {
   loader = true;
 
   action(
-    [values]: [string[]],
+    [values = []]: [string[]],
     {
       ours = false,
       theirs = false,

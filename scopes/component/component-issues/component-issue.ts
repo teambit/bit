@@ -7,13 +7,18 @@ export const ISSUE_FORMAT_SPACE_COUNT = 10;
 export const ISSUE_FORMAT_SPACE = ' '.repeat(ISSUE_FORMAT_SPACE_COUNT);
 
 export class ComponentIssue {
-  description: string;
+  description: string; // issue description
+  solution: string; // suggest how to fix the issue
   data: any;
   isTagBlocker = true; // if true, it stops the tag process and shows the issue
   isCacheBlocker = true; // if true, it doesn't cache the component in the filesystem
   formatDataFunction: FormatIssueFunc = componentIssueToString;
+  get descriptionWithSolution() {
+    const solution = this.solution ? ` (${this.solution})` : '';
+    return `${this.description}${solution}`;
+  }
   outputForCLI(): string {
-    return formatTitle(this.description) + chalk.white(this.dataToString());
+    return formatTitle(this.descriptionWithSolution) + chalk.white(this.dataToString());
   }
   dataToString(): string {
     return Object.keys(this.data)
@@ -26,6 +31,7 @@ export class ComponentIssue {
     return {
       type: this.constructor.name,
       description: this.description,
+      solution: this.solution,
       data: this.data,
     };
   }

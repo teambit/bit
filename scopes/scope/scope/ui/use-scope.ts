@@ -23,6 +23,7 @@ const SCOPE = gql`
           id
           icon
         }
+        buildStatus
         deprecation {
           isDeprecate
         }

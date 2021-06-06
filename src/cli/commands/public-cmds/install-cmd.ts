@@ -15,7 +15,7 @@ export default class Install implements LegacyCommand {
   loader = true;
 
   action(
-    [ids]: [string[]],
+    [ids = []]: [string[]],
     { verbose = false }: { verbose?: boolean },
     packageManagerArgs: string[]
   ): Promise<LinksResult[]> {
