@@ -5,7 +5,7 @@ import { Harmony, Slot, SlotRegistry } from '@teambit/harmony';
 import { Logger, LoggerAspect, LoggerMain } from '@teambit/logger';
 import express, { Express } from 'express';
 import { graphqlHTTP } from 'express-graphql';
-import getPort from 'get-port';
+import { Port } from '@teambit/toolbox.network.get-port';
 import { execute, subscribe } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { createServer, Server } from 'http';
@@ -157,7 +157,7 @@ export class GraphqlMain {
 
   private async getPort(range: number[]) {
     const [from, to] = range;
-    return getPort({ port: getPort.makeRange(from, to) });
+    return Port.getPort(from, to);
   }
 
   /** create Subscription server with different port */

@@ -7,7 +7,7 @@ import loader from '@teambit/legacy/dist/cli/loader';
 import chalk from 'chalk';
 import { getCommandId } from './get-command-id';
 import { formatHelp } from './help';
-import { GLOBAL_GROUP, YargsAdapter } from './yargs-adapter';
+import { GLOBAL_GROUP, STANDARD_GROUP, YargsAdapter } from './yargs-adapter';
 import { CommandNotFound } from './exceptions/command-not-found';
 
 export class CLIParser {
@@ -166,7 +166,7 @@ function logCommandHelp(help: string) {
   let passedOptions = false;
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
-    if (line.startsWith('Options')) {
+    if (line.startsWith(STANDARD_GROUP)) {
       passedOptions = true;
     } else if (passedOptions) {
       lines[i] = line.replace(/(--)([\w-]+)/, replacer).replace(/(-)([\w-]+)/, replacer);
