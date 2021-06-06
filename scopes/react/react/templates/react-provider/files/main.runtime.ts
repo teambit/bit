@@ -3,6 +3,7 @@ import { MainFileClass } from '../../common/common-env-main';
 
 export const mainRuntimeFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
+  const moduleName = Name + 'Main';
   return {
     relativePath: `${context.name}.main.runtime.tsx`,
     content: `
@@ -11,7 +12,9 @@ export const mainRuntimeFile = (context: ComponentContext) => {
     import { ReactAspect, ReactMain } from '@teambit/react';
     import { ${Name} } from './${name}.aspect';
 
-    ${MainFileClass({ ...context, moduleName: `${Name}Main ` })}
+    ${MainFileClass({ ...context, moduleName })}
+
+  ${Name}.addRuntime(${moduleName});
   `,
   };
 };

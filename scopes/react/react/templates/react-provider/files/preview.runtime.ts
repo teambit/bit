@@ -2,6 +2,7 @@ import { ComponentContext } from '@teambit/generator';
 
 export const previewRuntimeFile = (context: ComponentContext) => {
   const { name, namePascalCase: Name } = context;
+  const functionName = Name + 'Preview';
 
   return {
     relativePath: `${name}.preview.runtime.tsx`,
@@ -11,7 +12,7 @@ import { ReactAspect, ReactPreview } from '@teambit/react';
 import { Theme } from '@teambit/base-ui.theme.theme-provider'; // add your own theme component
 import { ${Name}, ${Name}Config } from './${name}.aspect';
 
-export class ${Name}Preview {
+export class ${functionName} {
 
     constructor(private config: ${Name}Config) {
 
@@ -20,7 +21,7 @@ export class ${Name}Preview {
   static dependencies = [ReactAspect];
   static runtime = PreviewRuntime;
   static async provider([react]: [ReactPreview], config: ${Name}Config) {
-      const ${name}Preview = new ${Name}Preview(config);
+      const ${name}Preview = new ${functionName}(config);
 
     // register a new provider to wrap all compositions of components using the ${name} environment.
     // You can register any number of providers, all of which will be wrapped around each composition
@@ -37,7 +38,7 @@ export class ${Name}Preview {
   }
 }
 
-${Name}.addRuntime(${Name}Preview);
+${Name}.addRuntime(${functionName});
 `,
   };
 };
