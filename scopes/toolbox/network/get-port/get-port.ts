@@ -106,7 +106,7 @@ export class Port {
     return generator(from, to);
   }
 
-  static getPort(from: number, to: number, usedPort?: number[], a?: any) {
+  static getPort(from: number, to: number, usedPort?: number[]) {
     const port = new Port();
     const range = port.makeRange(from, to);
     return port.get({ port: range, usedPort });
