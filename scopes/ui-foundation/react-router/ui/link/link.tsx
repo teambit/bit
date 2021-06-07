@@ -5,7 +5,7 @@ import { LinkAnchor } from '@teambit/ui-foundation.ui.react-router.link-anchor';
 
 export { LinkProps };
 
-// React Router equivalent of an <a/> tag, with the standard Anchor tag props.
+/** Adapter between React router's Link and our isomorphic link components. Learn more [Here](https://bit.dev/teambit/base-ui/routing/routing-provider) */
 export function Link({ href = '', ...rest }: LinkProps) {
   if (rest.external) {
     return <NativeLink {...rest} href={href} />;

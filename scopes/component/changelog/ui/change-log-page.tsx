@@ -28,6 +28,7 @@ export function ChangeLogPage({ className }: ChangeLogPageProps) {
           level="info"
           title="There is no change log as this component has not been exported yet.
           Learn how to export components:"
+          className={styles.changeLogCard}
         >
           <MDXLayout>
             <ExportingComponents />

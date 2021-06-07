@@ -176,7 +176,6 @@ export default function (fileMapPath: string): Configuration {
         '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
-        'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
 
         // Allows for better profiling with ReactDevTools

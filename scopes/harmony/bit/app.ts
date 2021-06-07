@@ -10,7 +10,7 @@ require('v8-compile-cache');
 
 import './hook-require';
 import { bootstrap } from '@teambit/legacy/dist/bootstrap';
-import { handleErrorAndExit } from '@teambit/legacy/dist/cli/command-runner';
+import { handleErrorAndExit } from '@teambit/legacy/dist/cli/handle-errors';
 import { runCLI } from './load-bit';
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
