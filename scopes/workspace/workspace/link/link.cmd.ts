@@ -9,10 +9,12 @@ import { ComponentListLinks } from './component-list-links';
 import { CoreAspectsLinks } from './core-aspects-links';
 import { NestedComponentLinksLinks } from './nested-deps-in-nm-links';
 import { RewireRow } from './rewire-row';
+import { linkToDir } from './link-to-dir';
 
 type LinkCommandOpts = {
   rewire: boolean;
   verbose: boolean;
+  target: string;
 };
 export class LinkCommand implements Command {
   name = 'link [ids...]';
@@ -24,7 +26,12 @@ export class LinkCommand implements Command {
   options = [
     ['j', 'json', 'return the output as JSON'],
     ['', 'verbose', 'verbose output'],
-    ['r', 'rewire', 'EXPERIMENTAL. Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")'],
+    ['r', 'rewire', 'Replace relative paths with module paths in code (e.g. "../foo" => "@bit/foo")'],
+    [
+      '',
+      'target <dir>',
+      'EXPERIMENTAL. link to an external directory (similar to npm-link) so other projects could use these components',
+    ],
   ] as CommandOptions;
 
   constructor(
@@ -56,14 +63,15 @@ export class LinkCommand implements Command {
       coreAspectsLinks: coreAspectsLinksWithMainAspect,
       verbose: opts.verbose,
     });
-    const listLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
+    const compsLinks = ComponentListLinks({ componentListLinks: linkResults.legacyLinkResults, verbose: opts.verbose });
     const rewireRow = RewireRow({ legacyCodemodResults: linkResults.legacyLinkCodemodResults });
     const nestedLinks = NestedComponentLinksLinks({
       nestedDepsInNmLinks: linkResults.nestedDepsInNmLinks,
       verbose: opts.verbose,
     });
+    const targetLinks = linkToDir(linkResults.linkToDirResults);
     const footer = `Finished. ${timeDiff}`;
-    return `${title}\n${coreLinks}\n${listLinks}\n${rewireRow}${nestedLinks}${footer}`;
+    return `${title}\n${coreLinks}\n${compsLinks}\n${rewireRow}${nestedLinks}${targetLinks}${footer}`;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -77,6 +85,7 @@ export class LinkCommand implements Command {
       rewire: opts.rewire,
       linkCoreAspects: true,
       linkTeambitBit: true,
+      linkToDir: opts.target,
     };
     const linkResults = await this.workspace.link(linkOpts);
     return linkResults;

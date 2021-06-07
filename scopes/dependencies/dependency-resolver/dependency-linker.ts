@@ -32,6 +32,12 @@ export type LinkingOptions = {
   linkCoreAspects?: boolean;
 
   linkNestedDepsInNM?: boolean;
+
+  /**
+   * link to another project, so that project could use components from this workspace.
+   * similar to npm/yarn link
+   */
+  linkToDir?: string;
 };
 
 const DEFAULT_LINKING_OPTIONS: LinkingOptions = {
@@ -59,6 +65,11 @@ export type NestedNMDepsLinksResult = {
   linksDetail: LinkDetail[];
 };
 
+export type LinkToDirResult = {
+  componentId: string;
+  linksDetail: LinkDetail;
+};
+
 export type LinkResults = {
   legacyLinkResults?: LegacyLinksResult[];
   legacyLinkCodemodResults?: CodemodResult[];
@@ -67,6 +78,7 @@ export type LinkResults = {
   harmonyLink?: LinkDetail;
   resolvedFromEnvLinks?: DepsLinkedToEnvResult[];
   nestedDepsInNmLinks?: NestedNMDepsLinksResult[];
+  linkToDirResults?: LinkToDirResult[];
 };
 
 type NestedModuleFolderEntry = {
@@ -104,6 +116,12 @@ export class DependencyLinker {
     const linkingOpts = Object.assign({}, DEFAULT_LINKING_OPTIONS, this.linkingOptions || {}, options || {});
     if (!finalRootDir) {
       throw new RootDirNotDefined();
+    }
+    if (options.linkToDir) {
+      const components = componentDirectoryMap.toArray().map(([component]) => component);
+      const linkToDirResults = await this.linkToDir(finalRootDir, options.linkToDir, components);
+      result.linkToDirResults = linkToDirResults;
+      return result;
     }
     if (linkingOpts.legacyLink) {
       const legacyStringIds = componentDirectoryMap.toArray().map(([component]) => component.id._legacy.toString());
@@ -152,6 +170,24 @@ export class DependencyLinker {
     result.harmonyLink = harmonyLink;
     this.logger.consoleSuccess('linking components');
     return result;
+  }
+
+  private async linkToDir(rootDir: string, targetDir: string, components: Component[]): Promise<LinkToDirResult[]> {
+    const results: LinkToDirResult[] = components.map((component) => {
+      const componentPackageName = componentIdToPackageName(component.state._consumer);
+      return {
+        componentId: component.id.toString(),
+        linksDetail: {
+          from: path.join(rootDir, 'node_modules', componentPackageName),
+          to: path.join(targetDir, 'node_modules', componentPackageName),
+        },
+      };
+    });
+    results.forEach(({ componentId, linksDetail }) => {
+      createSymlinkOrCopy(linksDetail.from, linksDetail.to, componentId);
+    });
+
+    return results;
   }
 
   /**

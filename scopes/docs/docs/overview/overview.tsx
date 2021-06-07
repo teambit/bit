@@ -7,14 +7,14 @@ export function Overview() {
   const component = useContext(ComponentContext);
   if (component?.buildStatus === 'pending')
     return (
-      <StatusMessageCard style={{ margin: '20px' }} status="PROCESSING" title="component preview pending">
+      <StatusMessageCard style={{ margin: 'auto' }} status="PROCESSING" title="component preview pending">
         this might take some time
       </StatusMessageCard>
     );
   if (component?.buildStatus === 'failed')
     return (
       <StatusMessageCard
-        style={{ margin: '20px' }}
+        style={{ margin: 'auto' }}
         status="FAILURE"
         title="failed to get component preview "
       ></StatusMessageCard>
