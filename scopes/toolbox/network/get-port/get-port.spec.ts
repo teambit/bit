@@ -18,7 +18,7 @@ describe('Get port', () => {
   });
 
   it('it should return port from range', async () => {
-    const port = await Port.getPortFromRange(3005);
-    expect(port).to.equal(3005);
+    const port = await Port.getPortFromRange([7000, 7100]);
+    expect(port).to.equal(7000);
   });
 });
