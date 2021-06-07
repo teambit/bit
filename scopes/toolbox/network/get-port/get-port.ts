@@ -1,10 +1,9 @@
 /* eslint-disable no-use-before-define */
 //  based on : https://github.com/sindresorhus/get-port/blob/main/index.js
 import net from 'net';
-import {Locked} from './locked'
+import { Locked } from './locked';
 
 export class Port {
-
   async get(options: { port: number | Iterable<number>; usedPort?: number[] }): Promise<number> {
     const lockedPorts = {
       old: new Set(),
@@ -107,15 +106,15 @@ export class Port {
     return generator(from, to);
   }
 
-  static getPort(from: number, to: number, usedPort?: number[]) {
+  static getPort(from: number, to: number, usedPort?: number[], a?: any) {
     const port = new Port();
     const range = port.makeRange(from, to);
     return port.get({ port: range, usedPort });
   }
 
   static getPortFromRange(range: number[] | number, usedPort?: number[]) {
-    const portsRange = typeof range === 'number' ? [range] : range;
     const port = new Port();
+    const portsRange = typeof range === 'number' ? [range] : port.makeRange(range[0], range[1]);
     return port.get({ port: portsRange, usedPort });
   }
 }
