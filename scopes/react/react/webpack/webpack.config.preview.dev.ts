@@ -118,25 +118,19 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           },
         },
 
-        // "url" loader works like "file" loader except that it embeds assets
-        // smaller than specified limit in bytes as data URLs to avoid requests.
-        // A missing `test` is equivalent to a match.
         {
           test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-          loader: require.resolve('url-loader'),
-          options: {
-            limit: imageInlineSizeLimit,
-            name: 'static/media/[name].[hash:8].[ext]',
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: imageInlineSizeLimit,
+            },
           },
         },
 
         {
-          test: [/\.svg$/],
-          loader: require.resolve('svg-url-loader'),
-          options: {
-            limit: imageInlineSizeLimit,
-            name: 'static/media/[name].[hash:8].[ext]',
-          },
+          test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+          type: 'asset',
         },
 
         // MDX support (move to the mdx aspect and extend from there)
