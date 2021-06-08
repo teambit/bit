@@ -1,0 +1,25 @@
+import React, { ReactNode } from 'react';
+import classnames from 'classnames';
+import type { FallbackProps } from 'react-error-boundary';
+import { IconButton } from '@teambit/design.ui.icon-button';
+import { flexCenter } from '@teambit/base-ui.styles.flex-center';
+
+import styles from './error-fallback.module.scss';
+
+export type ErrorFallbackProps = FallbackProps & { className?: string; children?: ReactNode; cta?: string };
+export function ErrorFallback({
+  /* error, */ resetErrorBoundary,
+  className,
+  children = 'Failed to render',
+  cta = 'try again',
+}: ErrorFallbackProps) {
+  return (
+    <div className={classnames(styles.errorFallback, flexCenter)}>
+      {children}
+      <br />
+      <IconButton onClick={resetErrorBoundary} className={classnames(styles.retryButton, className)}>
+        {cta}
+      </IconButton>
+    </div>
+  );
+}

@@ -1,10 +1,14 @@
-import React, { HTMLAttributes } from 'react';
-import { docsFile } from '@teambit/documenter.types.docs-file';
+import React, { HTMLAttributes, useMemo } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 import classNames from 'classnames';
+import flatten from 'lodash.flatten';
+import { docsFile } from '@teambit/documenter.types.docs-file';
 import { isFunction } from 'ramda-adjunct';
+import { Composer } from '@teambit/base-ui.utils.composer/dist/composer';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
+import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
-import { withProviders } from '../mount';
+// import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';
 import styles from './base.module.scss';
 import { ComponentOverview } from './component-overview';
@@ -32,6 +36,9 @@ const defaultDocs = {
 export function Base({ docs = defaultDocs, componentId, compositions, renderingContext, ...rest }: DocsSectionProps) {
   const { loading, error, data } = useFetchDocs(componentId);
 
+  const rawProviders = renderingContext.get(ReactAspect.id);
+  const reactContext = useMemo(() => flatten(Object.entries(rawProviders || {})), [rawProviders]);
+
   if (!data || loading) return null;
   if (loading) return null;
   if (error) throw error;
@@ -41,8 +48,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName, description } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
-  const reactContext = renderingContext.get(ReactAspect.id);
-  const Provider = withProviders(reactContext?.providers);
+  // const Provider = withProviders(reactContext?.providers);
 
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
@@ -54,23 +60,27 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
         packageName={packageName}
       />
 
-      <Provider>
-        {Content.isMDXComponent ? (
-          <MDXLayout>
-            <div className={styles.mdx}>
+      <ErrorBoundary FallbackComponent={ErrorFallback}>
+        <Composer components={reactContext}>
+          <ErrorBoundary FallbackComponent={ErrorFallback}>
+            {Content.isMDXComponent ? (
+              <MDXLayout>
+                <div className={styles.mdx}>
+                  <Content />
+                </div>
+              </MDXLayout>
+            ) : (
               <Content />
-            </div>
-          </MDXLayout>
-        ) : (
-          <Content />
-        )}
+            )}
+          </ErrorBoundary>
 
-        <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
+          <CompositionsSummary compositions={compositions} className={styles.compositionSection} />
 
-        <ExamplesOverview examples={Content.examples || examples} />
+          <ExamplesOverview examples={Content.examples || examples} />
 
-        <Properties properties={docsModel.properties} />
-      </Provider>
+          <Properties properties={docsModel.properties} />
+        </Composer>
+      </ErrorBoundary>
     </div>
   );
 }

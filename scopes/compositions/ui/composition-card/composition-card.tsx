@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
 import classNames from 'classnames';
-import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
-import { humanizeCompositionId } from '@teambit/compositions.model.composition-id';
-import { Icon } from '@teambit/evangelist.elements.icon';
-import { CompositionType } from '@teambit/compositions.model.composition-type';
+import { ErrorBoundary } from 'react-error-boundary';
 import { Card } from '@teambit/base-ui.surfaces.card';
 import { colorPalette } from '@teambit/base-ui.theme.color-palette';
+import { CompositionType } from '@teambit/compositions.model.composition-type';
+import { ErrorFallback, ErrorFallbackProps } from '@teambit/react.ui.error-fallback';
+import { humanizeCompositionId } from '@teambit/compositions.model.composition-id';
+import { Icon } from '@teambit/evangelist.elements.icon';
 import { themedText } from '@teambit/base-ui.text.themed-text';
 import styles from './composition-card.module.scss';
 
@@ -22,7 +23,7 @@ export function CompositionCard({ Composition, name, link }: CompositionCardProp
 
   return (
     <Card elevation="low" className={classNames(styles.compositionCard)}>
-      <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <ErrorBoundary FallbackComponent={CompositionErrorFallback}>
         <div style={canvas} className={styles.compositionContainer}>
           <Composition />
         </div>
@@ -39,25 +40,6 @@ export function CompositionCard({ Composition, name, link }: CompositionCardProp
   );
 }
 
-function ErrorFallback({ error, resetErrorBoundary }: FallbackProps) {
-  console.error(error);
-
-  return (
-    <div
-      style={{
-        height: '100%',
-        border: '4px solid #f086a0',
-        borderRadius: '4px 4px 0 0',
-        textAlign: 'center',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        flexDirection: 'column',
-      }}
-    >
-      Failed to render 😨
-      <br />
-      <button onClick={resetErrorBoundary}>retry</button>
-    </div>
-  );
+export function CompositionErrorFallback(props: ErrorFallbackProps) {
+  return <ErrorFallback {...props} className={classNames(props.className, styles.compositionCardError)} />;
 }
