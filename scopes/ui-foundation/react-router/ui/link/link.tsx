@@ -11,5 +11,6 @@ export function Link({ href = '', ...rest }: LinkProps) {
     return <NativeLink {...rest} href={href} />;
   }
 
+  // @ts-ignore (#4401)
   return <ReactRouterLink {...rest} to={href} component={LinkAnchor} />;
 }
