@@ -18,18 +18,22 @@ export default function createSymlinkOrCopy(
   componentId?: string | null | undefined = '',
   avoidHardLink = false
 ) {
-  logger.trace(`create-symlink-or-copy, deleting ${destPath}`);
+  logger.trace(`createSymlinkOrCopy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));
   try {
-    logger.trace(`generating a symlink on ${destPath} pointing to ${srcPath}`);
+    logger.trace(
+      `createSymlinkOrCopy, generating a symlink on ${destPath} pointing to ${srcPath}, avoidHardLink=${avoidHardLink}`
+    );
     if (avoidHardLink) symlink();
     else link();
   } catch (err) {
+    const winMsg = IS_WINDOWS ? ' (or maybe copy)' : '';
     const errorHeader = componentId ? `failed to link a component ${componentId}` : 'failed to generate a symlink';
     throw new ShowDoctorError(`${errorHeader}.
-         Symlink (or maybe copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
-         Original error: ${err}`);
+Symlink${winMsg} from: ${srcPath}, to: ${destPath} was failed.
+Please use "--log=trace" flag to get more info about the error.
+Original error: ${err}`);
   }
 
   function symlink() {
@@ -42,6 +46,7 @@ export default function createSymlinkOrCopy(
   function symlinkOrHardLink() {
     try {
       fs.symlinkSync(srcPath, destPath);
+      logger.trace(`createSymlinkOrCopy, symlinkOrHardLink() successfully created the symlink`);
     } catch (err) {
       // it can be a file or directory, we don't know. just run link(), it will junction for dirs and hard-link for files.
       link();
@@ -49,10 +54,13 @@ export default function createSymlinkOrCopy(
   }
 
   function link() {
+    logger.trace(`createSymlinkOrCopy, link()`);
     try {
       hardLinkOrJunction(srcPath);
+      logger.trace(`createSymlinkOrCopy, link() successfully created the link`);
     } catch (err) {
       if (err.code === 'EXDEV') {
+        logger.trace(`createSymlinkOrCopy, link() found EXDEV error, trying fs native`);
         // this is docker, which for some weird reason, throw error: "EXDEV: cross-device link not permitted"
         // only when using fs-extra. it doesn't happen with "fs".
         fsNative.symlinkSync(srcPath, destPath);
@@ -66,6 +74,7 @@ export default function createSymlinkOrCopy(
       }
       // the src is a relative-path of the dest, not of the cwd, that's why it got ENOENT
       if (IS_WINDOWS) {
+        logger.trace(`createSymlinkOrCopy, link() changing the path to be absolute on Windows`);
         const srcAbsolute = path.join(destPath, '..', srcPath);
         hardLinkOrJunction(srcAbsolute);
         return;
@@ -80,6 +89,7 @@ export default function createSymlinkOrCopy(
       fs.linkSync(src, destPath);
     } catch (err) {
       if (err.code === 'EPERM') {
+        logger.trace(`createSymlinkOrCopy, hardLinkOrJunction() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win
         fs.symlinkSync(srcPath, destPath, 'junction');
       } else {
