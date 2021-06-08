@@ -8,7 +8,6 @@ import { Composer } from '@teambit/base-ui.utils.composer/dist/composer';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
-// import { withProviders } from '../mount';
 import { ReactAspect } from '../react.aspect';
 import styles from './base.module.scss';
 import { ComponentOverview } from './component-overview';

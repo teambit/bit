@@ -1,11 +1,8 @@
-.compositionCardError {
-  border-radius: 4px 4px 0 0;
-}
-
 .errorFallback {
   height: 100%;
   padding: 8px;
   border: 4px solid var(--bit-error-light, #f086a0);
+  border-radius: 4px;
   line-height: 2;
   box-sizing: border-box;
 
