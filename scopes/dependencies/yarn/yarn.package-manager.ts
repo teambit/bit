@@ -125,6 +125,7 @@ export class YarnPackageManager implements PackageManager {
           cache,
           report,
         });
+        await project.persistLockfile();
       }
     );
 
