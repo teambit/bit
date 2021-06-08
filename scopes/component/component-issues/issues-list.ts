@@ -12,6 +12,7 @@ import { relativeComponents } from './relative-components';
 import { relativeComponentsAuthored } from './relative-components-authored';
 import { ResolveErrors } from './resolve-errors';
 import { UntrackedDependencies } from './untracked-dependencies';
+import { LegacyInsideHarmony } from './legacy-inside-harmony';
 
 export const IssuesClasses = {
   MissingPackagesDependenciesOnFs,
@@ -23,6 +24,7 @@ export const IssuesClasses = {
   ParseErrors,
   MissingLinks,
   MissingDists,
+  LegacyInsideHarmony,
   MissingDependenciesOnFs,
   MissingCustomModuleResolutionLinks,
   ImportNonMainFiles,
