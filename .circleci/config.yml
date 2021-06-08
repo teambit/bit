@@ -486,13 +486,13 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v1-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - run: bvm config set DEFAULT_LINK bbit
       - run: bvm upgrade
       - run: bvm link --verbose
       - run: bbit
       - save_cache:
-          key: v1-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
           paths:
             - /home/circleci/.bvm
       - run: cd bit && bbit install
@@ -567,7 +567,7 @@ jobs:
       - install_bvm
       - run: npm view @teambit/bit version > ./version.txt
       - restore_cache:
-          key: v1-linux-bvm-folder-{{ checksum "version.txt" }}
+          key: v2-linux-bvm-folder-{{ checksum "version.txt" }}
       - bit_config:
           env: "hub"
       - restore_cache:
@@ -592,9 +592,12 @@ jobs:
       # - run: cd bit && build-harmony/node_modules/.bin/bbit checkout latest --all
       # - run: cd bit && npm run link-bit-legacy
       # since we removed the node_modules we need to make sure we compile, install and link everything again
-      - run:
-          name: 'build harmony'
-          command: 'cd bit && npm run build-harmony-skip-import'
+      - run: cd bit && bbit install --skip-import
+      - run: cd bit && bbit compile
+      - run: cd bit && npm run link-bit-legacy
+      # - run:
+      #     name: 'build harmony'
+      #     command: 'cd bit && npm run build-harmony-skip-import'
       # - run: cd bit && node scripts/soft-tag-scope-teambit.js
       - run:
           name: tag persist

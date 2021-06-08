@@ -8,6 +8,7 @@ import { DevServer } from './dev-server';
 import { BindError } from './exceptions';
 import { ComponentsServerStartedEvent } from './events';
 import { BundlerAspect } from './bundler.aspect';
+import { selectPort } from './select-port';
 
 export class ComponentServer {
   // why is this here
@@ -24,9 +25,9 @@ export class ComponentServer {
     readonly context: ExecutionContext,
 
     /**
-     * port of the component server.
+     * port range of the component server.
      */
-    readonly port: number,
+    readonly portRange: number[],
 
     /**
      * env dev server.
@@ -43,17 +44,21 @@ export class ComponentServer {
     return this.context.components.find((contextComponent) => contextComponent.equals(component));
   }
 
+  get port() {
+    return this._port;
+  }
+
+  _port: number;
   async listen() {
-    const server = await this.devServer.listen(this.port);
+    const port = await selectPort(this.portRange);
+    this._port = port;
+    const server = await this.devServer.listen(port);
     const address = server.address();
     const hostname = this.getHostname(address);
     if (!address) throw new BindError();
     this.hostname = hostname;
 
-    this.pubsub.pub(
-      BundlerAspect.id,
-      this.createComponentsServerStartedEvent(server, this.context, hostname, this.port)
-    );
+    this.pubsub.pub(BundlerAspect.id, this.createComponentsServerStartedEvent(server, this.context, hostname, port));
   }
 
   private getHostname(address: string | AddressInfo | null) {
