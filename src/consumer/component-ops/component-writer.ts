@@ -116,7 +116,6 @@ export default class ComponentWriter {
   async write(): Promise<Component> {
     if (!this.consumer) throw new Error('ComponentWriter.write expect to have a consumer');
     await this.populateComponentsFilesToWrite();
-    // $FlowFixMe consumer is set
     this.component.dataToPersist.addBasePath(this.consumer.getPath());
     await this.component.dataToPersist.persistAllToFS();
     return this.component;
@@ -126,6 +125,7 @@ export default class ComponentWriter {
     if (!this.component.files || !this.component.files.length) {
       throw new ShowDoctorError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
+    this.throwForImportingLegacyIntoHarmony();
     this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
     this.component.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
@@ -140,6 +140,14 @@ export default class ComponentWriter {
     await this.populateFilesToWriteToComponentDir(packageManager);
     if (this.isolated) await this.populateArtifacts();
     return this.component;
+  }
+
+  private throwForImportingLegacyIntoHarmony() {
+    if (this.component.isLegacy && this.consumer && !this.consumer.isLegacy) {
+      throw new Error(
+        `unable to write component "${this.component.id.toString()}", it is a legacy component and this workspace is Harmony`
+      );
+    }
   }
 
   async populateFilesToWriteToComponentDir(packageManager?: string) {

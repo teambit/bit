@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.93",
+  "version": "1.0.95",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -273,6 +273,7 @@
     "@typescript-eslint/parser": "4.15.1",
     "@typescript-eslint/typescript-estree": "4.15.1",
     "babel-eslint": "9.0.0",
+    "babel-plugin-ramda": "2.0.0",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
     "chai": "4.3.0",
     "chai-arrays": "1.1.0",
@@ -287,7 +288,6 @@
     "eslint-plugin-react": "7.22.0",
     "eslint-plugin-react-hooks": "4.2.0",
     "eslint-plugin-simple-import-sort": "5.0.3",
-    "eslint-plugin-unicorn": "12.1.0",
     "gh-release": "3.5.0",
     "husky": "4.3.8",
     "lint-staged": ">=10",

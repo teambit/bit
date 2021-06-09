@@ -185,9 +185,6 @@ export default function createWebpackConfig(
             {
               test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
               type: 'asset',
-              generator: {
-                filename: 'static/media/[hash][ext][query]',
-              },
               parser: {
                 dataUrlCondition: {
                   maxSize: imageInlineSizeLimit,
@@ -331,12 +328,8 @@ export default function createWebpackConfig(
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
-              loader: require.resolve('file-loader'),
               exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.json$/, /\.css$/],
               type: 'asset/resource',
-              generator: {
-                filename: 'static/media/[hash][ext][query]',
-              },
             },
             // ** STOP ** Are you adding a new loader?
             // Make sure to add the new loader(s) before the "file" loader.
