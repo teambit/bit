@@ -30,7 +30,7 @@ export class CapsuleCreateCmd implements Command {
   constructor(private workspace: Workspace, private isolator: IsolatorMain) {}
 
   async create(
-    [componentIds]: [string[]],
+    [componentIds = []]: [string[]],
     { baseDir, alwaysNew = false, id, installPackages = false, seedersOnly = false }: CreateOpts
   ): Promise<CapsuleList> {
     // @todo: why it is not an array?

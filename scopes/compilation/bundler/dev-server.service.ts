@@ -6,7 +6,6 @@ import { ComponentServer } from './component-server';
 import { DevServer } from './dev-server';
 import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
-import { selectPort } from './select-port';
 
 export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
@@ -65,9 +64,8 @@ export class DevServerService implements EnvService<ComponentServer> {
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = devServerContext.envRuntime.env.getDevServer(devServerContext);
-        const port = await selectPort();
 
-        return new ComponentServer(this.pubsub, devServerContext, port, devServer);
+        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
       })
     );
 

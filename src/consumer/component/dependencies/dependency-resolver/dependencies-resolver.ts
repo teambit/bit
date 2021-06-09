@@ -119,6 +119,7 @@ export default class DependencyResolver {
     this.processedFiles = [];
     this.issues = new IssuesList();
     this.setMissingDistsIssue();
+    this.setLegacyInsideHarmonyIssue();
     this.overridesDependencies = new OverridesDependencies(component, consumer);
     this.debugDependenciesData = { components: [] };
   }
@@ -1192,6 +1193,13 @@ either, use the ignore file syntax or change the require statement to have a mod
     const isMissing = !this.isDistDirExists(pkgName);
     if (isMissing) {
       this.issues.getOrCreate(IssuesClasses.MissingDists).data = true;
+    }
+  }
+
+  private setLegacyInsideHarmonyIssue() {
+    if (this.consumer.isLegacy) return;
+    if (this.componentFromModel && this.componentFromModel.isLegacy) {
+      this.issues.getOrCreate(IssuesClasses.LegacyInsideHarmony).data = true;
     }
   }
 

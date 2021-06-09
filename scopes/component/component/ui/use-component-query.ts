@@ -18,6 +18,7 @@ const componentFields = gql`
       env
       url
     }
+    buildStatus
     compositions {
       identifier
     }
