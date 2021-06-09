@@ -273,6 +273,7 @@
     "@typescript-eslint/parser": "4.15.1",
     "@typescript-eslint/typescript-estree": "4.15.1",
     "babel-eslint": "9.0.0",
+    "babel-plugin-ramda": "2.0.0",
     "babel-plugin-transform-typescript-metadata": "0.3.1",
     "chai": "4.3.0",
     "chai-arrays": "1.1.0",
