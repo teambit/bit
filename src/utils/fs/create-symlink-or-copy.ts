@@ -102,7 +102,7 @@ Original error: ${err}`);
     try {
       fsNative.linkSync(src, destPath);
     } catch (err) {
-      if (err.code === 'EPERM') {
+      if (err.code === 'EPERM' || err.code === 'EXDEV') {
         logger.trace(`createSymlinkOrCopy, hardLinkOrJunctionByFsNative() using Junction option`);
         // it's a directory. use 'junction', it works on both Linux and Win
         fsNative.symlinkSync(srcPath, destPath, 'junction');
