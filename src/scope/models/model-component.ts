@@ -1,4 +1,5 @@
-import { clone, equals, forEachObjIndexed, isEmpty } from 'ramda';
+import { clone, equals, forEachObjIndexed } from 'ramda';
+import { isEmpty } from 'lodash';
 import * as semver from 'semver';
 import { versionParser, isHash, isTag } from '@teambit/component-version';
 import { v4 } from 'uuid';

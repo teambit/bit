@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { Graph } from 'cleargraph';
 import TesterAspect from '@teambit/tester';
 import { EnvDefinition, Environment } from '@teambit/envs';
@@ -66,7 +65,7 @@ export function calculatePipelineOrder(
     pipelineEnvs.push({ env: envDefinition, pipeline });
   });
 
-  const flattenedPipeline: BuildTask[] = R.flatten(pipelineEnvs.map((pipelineEnv) => pipelineEnv.pipeline));
+  const flattenedPipeline: BuildTask[] = pipelineEnvs.map((pipelineEnv) => pipelineEnv.pipeline).flat();
   flattenedPipeline.forEach((task) => addDependenciesToGraph(graphs, flattenedPipeline, task));
 
   const dataPerLocation: DataPerLocation[] = graphs.map(({ location, graph }) => {
@@ -176,7 +175,7 @@ which is invalid. the dependency must be located earlier or in the same location
 
 function getPipelineForEnv(taskSlot: TaskSlot, env: Environment, pipeNameOnEnv: string): BuildTask[] {
   const buildTasks: BuildTask[] = env[pipeNameOnEnv] ? env[pipeNameOnEnv]() : [];
-  const slotsTasks = R.flatten(taskSlot.values());
+  const slotsTasks = taskSlot.values().flat();
   const tasksAtStart: BuildTask[] = [];
   const tasksAtEnd: BuildTask[] = [];
   slotsTasks.forEach((task) => {
