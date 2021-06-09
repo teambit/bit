@@ -634,7 +634,7 @@ export class List extends React.Component {
         'bar',
         'foo.ts',
         `import { yo } from 'ninja';
-        import { ya } from '@scoped/ninja`
+        import { ya } from '@scoped/ninja';`
       );
       helper.command.addComponent('bar/foo.ts', { i: 'bar/foo' });
       helper.npm.addNpmPackage('ninja', '13.0.0');
