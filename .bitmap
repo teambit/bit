@@ -385,6 +385,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/ui-foundation/harmony-ui-app/harmony-ui-app"
     },
+    "html": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/html"
+    },
     "insights": {
         "scope": "teambit.explorer",
         "version": "0.0.406",
