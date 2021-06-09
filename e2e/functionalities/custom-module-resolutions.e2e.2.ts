@@ -152,8 +152,8 @@ describe('custom module resolutions', function () {
           helper.scopeHelper.reInitLocalScopeHarmony();
           helper.scopeHelper.addRemoteScope();
         });
-        it('should not throw an error on import', () => {
-          expect(() => helper.command.importComponent('bar/foo')).to.not.throw();
+        it('should throw an error on import', () => {
+          expect(() => helper.command.importComponent('bar/foo')).to.throw();
         });
       });
     });
