@@ -8,16 +8,17 @@ import styles from './error-fallback.module.scss';
 
 export type ErrorFallbackProps = FallbackProps & { className?: string; children?: ReactNode; cta?: string };
 export function ErrorFallback({
-  /* error, */ resetErrorBoundary,
+  /* error, */
+  resetErrorBoundary,
   className,
   children = 'Failed to render',
   cta = 'try again',
 }: ErrorFallbackProps) {
   return (
-    <div className={classnames(styles.errorFallback, flexCenter)}>
-      {children}
-      <br />
-      <IconButton onClick={resetErrorBoundary} className={classnames(styles.retryButton, className)}>
+    <div className={classnames(styles.errorFallback, flexCenter, className)}>
+      <div className={styles.icon} />
+      <div className={styles.message}>{children}</div>
+      <IconButton onClick={resetErrorBoundary} className={styles.retryButton}>
         {cta}
       </IconButton>
     </div>

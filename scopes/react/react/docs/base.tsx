@@ -36,7 +36,7 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { loading, error, data } = useFetchDocs(componentId);
 
   const rawProviders = renderingContext.get(ReactAspect.id);
-  const reactContext = useMemo(() => flatten(Object.entries(rawProviders || {})), [rawProviders]);
+  const reactContext = useMemo(() => flatten(Object.values(rawProviders || {})), [rawProviders]);
 
   if (!data || loading) return null;
   if (loading) return null;

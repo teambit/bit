@@ -48,3 +48,7 @@
   visibility: hidden;
   transition: opacity 300ms, visibility 300ms ease-in-out;
 }
+
+.compositionCardError {
+  border-radius: 4px 4px 0p 0p;
+}
