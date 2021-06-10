@@ -2,25 +2,37 @@
   // fail-safe inline image (with the color #e62e5c, $r5  0)
   background-image: url("data:image/svg+xml,%3Csvg version='1.1' xmlns='http://www.w3.org/2000/svg' width='512' height='512' viewBox='0 0 512 512'%3E%3Ctitle%3E%3C/title%3E%3Cpath fill='%23e62e5c' d='M256 512c141.385 0 256-114.615 256-256s-114.615-256-256-256c-141.385 0-256 114.615-256 256s114.615 256 256 256zM376.262 171.498l-86.038 84.5 86.038 84.511c10.451 10.275 10.183 25.962 0 35.968-10.077 9.891-25.68 10.17-36.038 0l-84.222-82.743-84.235 82.743c-10.345 10.17-25.949 9.891-36.026 0-10.182-10.007-10.461-25.693 0-35.968l86.038-84.511-86.038-84.501c-10.461-10.286-10.182-25.971 0-35.978 10.077-9.891 25.681-10.159 36.026 0l84.235 82.743 84.222-82.743c10.358-10.159 25.962-9.891 36.038 0 10.183 10.007 10.451 25.692 0 35.978z'%3E%3C/path%3E%3C/svg%3E%0A");
 
-  background-size: contain;
-  height: 20px;
-  width: 20px;
+  height: 24px;
+  width: 24px;
   background-color: white;
+  background-size: contain;
+  margin-bottom: 16px;
   border-radius: 100%;
 }
 
 .message {
   color: var(--bit-error-color, #e62e5c);
+  margin-bottom: 8px;
 }
 
 .errorFallback {
+  animation: enter 300ms ease-in forwards;
+
   height: 100%;
   padding: 8px;
   border: 4px solid var(--bit-error-light, #f086a0);
   border-radius: 4px;
-  line-height: 2;
   box-sizing: border-box;
 
   color: var(--bit-error-color, #e62e5c);
   font-family: sans-serif;
+}
+
+@keyframes enter {
+  0% {
+    opacity: 0.1;
+  }
+  100% {
+    opacity: 1;
+  }
 }

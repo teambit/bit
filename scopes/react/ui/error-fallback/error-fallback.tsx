@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useState } from 'react';
 import classnames from 'classnames';
 import type { FallbackProps } from 'react-error-boundary';
 import { IconButton } from '@teambit/design.ui.icon-button';
@@ -14,11 +14,16 @@ export function ErrorFallback({
   children = 'Failed to render',
   cta = 'try again',
 }: ErrorFallbackProps) {
+  const handleClick = async () => {
+    await new Promise((resolve) => setTimeout(resolve, 480));
+    resetErrorBoundary();
+  };
+
   return (
     <div className={classnames(styles.errorFallback, flexCenter, className)}>
       <div className={styles.icon} />
       <div className={styles.message}>{children}</div>
-      <IconButton onClick={resetErrorBoundary} className={styles.retryButton}>
+      <IconButton onClick={handleClick} className={styles.retryButton}>
         {cta}
       </IconButton>
     </div>
