@@ -153,16 +153,38 @@ jobs:
           paths:
             - bit
 
+  symphony_docker_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-symphony -t bitcli/bit-symphony:latest .
+      - run: cd bit && docker push bitcli/bit-symphony:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit-symphony:latest
+
   docker_build:
     machine: true
     steps:
       - attach_workspace:
           at: ./
       - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:`npm show @teambit/bit version` .
-      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile -t bitcli/bit:latest .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit -t bitcli/bit:latest .
       - run: cd bit && docker push bitcli/bit:`npm show @teambit/bit version`
       - run: cd bit && docker push bitcli/bit:latest
+
+  server_docker_build:
+    machine: true
+    steps:
+      - attach_workspace:
+          at: ./
+      - run: echo "$DOCKER_PASS" | docker login --username $DOCKER_USER --password-stdin
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t --build-arg BIT_VERSION=`npm show @teambit/bit version` bitcli/bit-server:`npm show @teambit/bit version` .
+      - run: cd bit/scripts && docker build -f ./docker-teambit-bit/Dockerfile-bit-server -t bitcli/bit-server:latest .
+      - run: cd bit && docker push bitcli/bit-server:`npm show @teambit/bit version`
+      - run: cd bit && docker push bitcli/bit-server:latest
 
   set_ssh_key:
     <<: *defaults
@@ -1507,9 +1529,15 @@ workflows:
           <<: *master_only_filter
           requires:
             - bit_tag
-      - docker_build:
+      - symphony_docker_build:
           requires:
             - bit_tag
+      - docker_build:
+          requires:
+            - harmony_publish_to_gcloud
+      - server_docker_build:
+          requires:
+            - docker_build
 
   windows-nightly:
     triggers:

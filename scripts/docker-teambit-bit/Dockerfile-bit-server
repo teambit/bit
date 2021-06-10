@@ -1,0 +1,5 @@
+ARG BIT_VERSION=latest
+FROM bitcli/bit:${BIT_VERSION}
+ARG SCOPE_PATH=/tmp/scope-fs
+WORKDIR ${SCOPE_PATH}
+CMD bit start
