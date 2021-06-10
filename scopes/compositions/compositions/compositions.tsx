@@ -149,13 +149,13 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
     );
   }
 
-  if (component?.buildStatus === 'pending')
+  if (getBuildStatus(component) === 'pending')
     return (
       <StatusMessageCard className={styles.buildStatusMessage} status="PROCESSING" title="component preview pending">
         this might take some time
       </StatusMessageCard>
     );
-  if (component?.buildStatus === 'failed')
+  if (getBuildStatus(component) === 'failed')
     return (
       <StatusMessageCard
         className={styles.buildStatusMessage}
@@ -182,4 +182,9 @@ function CompositionContent({ component, selected, queryParams, emptyState }: Co
       queryParams={queryParams}
     />
   );
+}
+
+function getBuildStatus(component: ComponentModel) {
+  if (component?.host === 'teambit.workspace/workspace') return;
+  return component.buildStatus;
 }

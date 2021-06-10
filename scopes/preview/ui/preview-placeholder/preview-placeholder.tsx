@@ -17,7 +17,7 @@ export function PreviewPlaceholder({
   }, [component, shouldShowPreview]);
 
   const name = component.id.toString();
-  if (component.buildStatus === 'pending')
+  if (getBuildStatus(component) === 'pending')
     return (
       <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
         <Icon of="Ripple-processing" />
@@ -43,4 +43,9 @@ function selectDefaultComposition(component: ComponentModel) {
   const { compositions } = component;
 
   return compositions.find((x) => x.identifier.endsWith(PREVIEW_COMPOSITION_SUFFIX));
+}
+
+function getBuildStatus(component: ComponentModel) {
+  if (component?.host === 'teambit.workspace/workspace') return;
+  return component.buildStatus;
 }
