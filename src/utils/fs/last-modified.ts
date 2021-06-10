@@ -1,4 +1,4 @@
-import glob from 'glob';
+import globby from 'globby';
 import fs, { Stats } from 'fs-extra';
 import { compact } from 'lodash';
 
@@ -6,7 +6,12 @@ import { compact } from 'lodash';
  * check recursively all the sub-directories as well
  */
 export async function getLastModifiedDirTimestampMs(rootDir: string): Promise<number> {
-  const allDirs = glob.sync(`${rootDir}/**/`); // the trailing slash instructs glob to show only dirs
+  const allDirs = await globby(rootDir, {
+    onlyDirectories: true,
+    ignore: ['**/node_modules/**'],
+    // stats: true // todo: consider retrieving the stats from here.
+  });
+  allDirs.push(rootDir);
   return getLastModifiedPathsTimestampMs(allDirs);
 }
 

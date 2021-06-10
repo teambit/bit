@@ -18,7 +18,6 @@ import { ComponentFsCache } from '../component/component-fs-cache';
 import ComponentMap, { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import { InvalidBitMap, MissingBitMapComponent, MultipleMatches } from './exceptions';
 import WorkspaceLane from './workspace-lane';
-import { getLastModifiedDirTimestampMs, getLastModifiedPathsTimestampMs } from '../../utils/fs/last-modified';
 import { DuplicateRootDir } from './exceptions/duplicate-root-dir';
 
 export type PathChangeResult = { id: BitId; changes: PathChange[] };
@@ -149,7 +148,7 @@ export default class BitMap {
 
     const bitMap = new BitMap(dirPath, currentLocation, schema, isLegacy, workspaceLane, remoteLaneName);
     bitMap.loadComponents(componentsJson);
-    await bitMap.loadFiles(consumer.componentFsCache);
+    await bitMap.loadFiles();
     return bitMap;
   }
 
@@ -159,30 +158,13 @@ export default class BitMap {
     delete componentsJson[LANE_KEY];
   }
 
-  async loadFiles(componentFsCache: ComponentFsCache) {
+  async loadFiles() {
     if (this.isLegacy) return;
     const gitIgnore = getGitIgnoreHarmony(this.projectRoot);
-    const { currentLocation } = BitMap.getBitMapLocation(this.projectRoot);
-    // .bitmap might changed manually and will be very confused for the end user
-    // as to why the files look the way they look.
-    // similar with .gitignore, if changed, some files may need to be removed/added
-    const impactFilesChanged = await getLastModifiedPathsTimestampMs([currentLocation as string, '.gitignore']);
     await Promise.all(
       this.components.map(async (componentMap) => {
-        const idStr = componentMap.id.toString();
         const rootDir = componentMap.rootDir;
         if (!rootDir) return;
-        const dataFromCache = await componentFsCache.getFilePathsFromCache(idStr);
-        if (dataFromCache) {
-          const lastModified = await getLastModifiedDirTimestampMs(rootDir);
-          const wasModifiedAfterLastTrack = lastModified > dataFromCache.timestamp;
-          const wereImpactFilesModifiedAfterLastTrack = impactFilesChanged > dataFromCache.timestamp;
-          if (!wasModifiedAfterLastTrack && !wereImpactFilesModifiedAfterLastTrack) {
-            const files = JSON.parse(dataFromCache.data);
-            componentMap.files = files;
-            return;
-          }
-        }
         try {
           componentMap.files = await getFilesByDir(rootDir, this.projectRoot, gitIgnore);
           componentMap.recentlyTracked = true;
@@ -891,16 +873,15 @@ export default class BitMap {
    * may result in a damaged file
    */
   async write(componentFsCache: ComponentFsCache): Promise<any> {
-    await Promise.all(
-      this.components.map(async (c) => {
-        if (c.recentlyTracked) {
-          await componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now());
-          if (!this.isLegacy) {
-            await componentFsCache.saveFilePathsInCache(c.id.toString(), c.files);
+    if (this.isLegacy) {
+      await Promise.all(
+        this.components.map(async (c) => {
+          if (c.recentlyTracked) {
+            await componentFsCache.setLastTrackTimestamp(c.id.toString(), Date.now());
           }
-        }
-      })
-    );
+        })
+      );
+    }
     if (!this.hasChanged) return;
     logger.debug('writing to bit.map');
     if (this.workspaceLane) await this.workspaceLane.write();
