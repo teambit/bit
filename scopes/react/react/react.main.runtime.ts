@@ -112,11 +112,12 @@ export class ReactMain {
    */
   overrideBuildTsConfig(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule: any = ts
   ) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions);
+        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions, tsModule);
       },
     });
   }

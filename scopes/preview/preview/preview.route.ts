@@ -28,7 +28,7 @@ export class PreviewRoute implements Route {
       const str = `${file.cwd}/${file.path}`;
       const contentType = mime.getType(str);
       if (contentType) res.set('Content-Type', contentType);
-      return res.send(contents.toString());
+      return res.send(contents);
     },
   ];
 }
