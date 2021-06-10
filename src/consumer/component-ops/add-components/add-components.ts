@@ -953,7 +953,7 @@ export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches = gitIgnore.filter(matches);
   if (!filteredMatches.length) throw new IgnoredDirectory(dir);
-  return matches.map((match: PathOsBased) => {
+  return filteredMatches.map((match: PathOsBased) => {
     const normalizedPath = pathNormalizeToLinux(match);
     // the path is relative to consumer. remove the rootDir.
     const relativePath = normalizedPath.replace(`${dir}/`, '');
