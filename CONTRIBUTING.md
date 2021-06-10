@@ -154,7 +154,7 @@ The bootstrap process (in Harmony) in general is as follows:
 2. Bit builds a graph of all core-aspects and aspects entered in the workspace.jsonc file.
 3. Once the graph is ready, it loads them all (calls their provider), so then all aspects instances are ready in-memory.
 4. An aspect can register to the CLI slot (`cli.register()`) and pass `Command` instances. (that's the main reason why all aspects must be loaded before anything else happen. Otherwise, commands won't be registered and the user will get an error about a non-exist command)
-5. `commander` package is used for parsing the commands. All `Command` instances are registered by `Commander`. It finds the currently entered command and runs either `report()` to return a result to the CLI as plain text or `render()` to paint the output as a React component using `Ink`.
+5. `yargs` package is used for parsing the commands. All `Command` instances are registered by `yargs`. It finds the currently entered command and runs either `report()` to return a result to the CLI as plain text or `render()` to paint the output as a React component using `Ink`.
 
 ### Workspace
 

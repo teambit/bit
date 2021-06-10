@@ -16,6 +16,7 @@ module.exports = function (api) {
     ],
   ];
   const plugins = [
+    'ramda',
     [
       '@babel/plugin-transform-modules-commonjs',
       {
@@ -32,7 +33,7 @@ module.exports = function (api) {
   return {
     presets,
     plugins,
-    only: ['**/*.ts', '**/*.tsx', 'src/extensions/flows/task/container-script.js'],
+    only: ['**/*.ts', '**/*.tsx'],
     ignore: ['components/*'],
   };
 };

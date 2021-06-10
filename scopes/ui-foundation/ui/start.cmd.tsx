@@ -12,7 +12,7 @@ export class StartCmd implements Command {
   shortDescription = '';
   options = [
     ['d', 'dev', 'start UI server in dev mode.'],
-    ['p', 'port', 'port of the UI server.'],
+    ['p', 'port [number]', 'port of the UI server.'],
     ['r', 'rebuild', 'rebuild the UI'],
     ['v', 'verbose', 'showing verbose output for inspection and prints stack trace'],
     ['', 'suppress-browser-launch', 'do not automatically open browser when ready'],

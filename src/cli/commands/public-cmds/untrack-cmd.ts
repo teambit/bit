@@ -17,7 +17,7 @@ export default class Untrack implements LegacyCommand {
   migration = true;
   private = true; // it's deprecated
 
-  action([components]: [string[]], { all }: { all: boolean | null | undefined }): Promise<any> {
+  action([components = []]: [string[]], { all }: { all: boolean | null | undefined }): Promise<any> {
     if ((!R.isEmpty(components) && all) || (R.isEmpty(components) && !all)) {
       throw new GeneralError(
         'you can use either a specific component [id] to untrack a particular component or --all flag to untrack them all'

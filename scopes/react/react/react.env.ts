@@ -254,7 +254,8 @@ export class ReactEnv implements Environment {
         'react-dom': '-',
         '@types/mocha': '-',
         '@types/node': '12.20.4',
-        '@types/react': '^16.8.0',
+        '@types/react': '^17.0.8',
+        '@types/react-dom': '^17.0.5',
         '@types/jest': '^26.0.0',
         // '@types/react-router-dom': '^5.0.0', // TODO - should not be here (!)
         // This is added as dev dep since our jest file transformer uses babel plugins that require this to be installed
@@ -274,17 +275,19 @@ export class ReactEnv implements Environment {
    */
   getBuildPipe(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
   ): BuildTask[] {
-    return [this.getCompilerTask(tsconfig, compilerOptions), this.tester.task];
+    return [this.getCompilerTask(tsconfig, compilerOptions, tsModule), this.tester.task];
   }
 
   private getCompilerTask(
     tsconfig?: TsConfigSourceFile,
-    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule = ts
   ) {
     const targetConfig = this.getBuildTsConfig(tsconfig);
-    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions));
+    return this.compiler.createTask('TSCompiler', this.getCompiler(targetConfig, compilerOptions, tsModule));
   }
 
   async __getDescriptor() {

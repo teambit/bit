@@ -14,7 +14,8 @@ export interface UntrackedFileDependencyEntry {
 }
 
 export class UntrackedDependencies extends ComponentIssue {
-  description = 'untracked file dependencies (use "bit add <file>" to track untracked files as components)';
+  description = 'untracked file dependencies';
+  solution = 'use "bit add <file>" to track untracked files as components';
   data: { [filePath: string]: UntrackedFileDependencyEntry } = {};
   dataToString() {
     return Object.keys(this.data)
