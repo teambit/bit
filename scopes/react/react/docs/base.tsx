@@ -47,7 +47,6 @@ export function Base({ docs = defaultDocs, componentId, compositions, renderingC
   const { examples = [], labels = [], abstract = docsModel.abstract } = docs;
   const { displayName, version, packageName, description } = component;
   const Content: any = isFunction(docs.default) ? docs.default : () => null;
-  // const Provider = withProviders(reactContext?.providers);
 
   return (
     <div className={classNames(styles.docsMainBlock)} {...rest}>
