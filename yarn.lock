@@ -505,6 +505,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/helper-module-imports@npm:^7.0.0":
+  version: 7.14.5
+  resolution: "@babel/helper-module-imports@npm:7.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-module-imports%2F-%2Fhelper-module-imports-7.14.5.tgz"
+  dependencies:
+    "@babel/types": ^7.14.5
+  checksum: b98279908698a50a22634e683924cb25eb93edf1bf28ac65691dfa82d7a1a4dae4e6b12b8ef9f9a50171ca484620bce544f270873c53505d8a45364c5b665c0c
+  languageName: node
+  linkType: hard
+
 "@babel/helper-module-imports@npm:^7.10.4, @babel/helper-module-imports@npm:^7.12.1, @babel/helper-module-imports@npm:^7.13.12":
   version: 7.13.12
   resolution: "@babel/helper-module-imports@npm:7.13.12::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-module-imports%2F-%2Fhelper-module-imports-7.13.12.tgz"
@@ -654,6 +663,13 @@ __metadata:
   version: 7.12.11
   resolution: "@babel/helper-validator-identifier@npm:7.12.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-validator-identifier%2F-%2Fhelper-validator-identifier-7.12.11.tgz"
   checksum: e604c6bf890704fc46c1ae13bf23afb242b810224ec3403bba67cdbf0d8dabfec4b82123d6dfb18135a0ee3f7f79218583c819363ebb5e04a0a49d8418db7fce
+  languageName: node
+  linkType: hard
+
+"@babel/helper-validator-identifier@npm:^7.14.5":
+  version: 7.14.5
+  resolution: "@babel/helper-validator-identifier@npm:7.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Fhelper-validator-identifier%2F-%2Fhelper-validator-identifier-7.14.5.tgz"
+  checksum: 6366bceab4498785defc083a1bd96344f788d90a1aa7a6f18d6813c1d3d134640bfc05690453c0b79bbfc820472cf5b29110dfddaca1f8e2763dfe1bd5df0b88
   languageName: node
   linkType: hard
 
@@ -2353,6 +2369,16 @@ __metadata:
     lodash: ^4.17.19
     to-fast-properties: ^2.0.0
   checksum: 4ffe8178e262ba6fdc179075bcaab642a41efc4e0cfcbc48dc26bcf1a8bd46470b1a135467c637c60a5a3ff7c36a402b765b5c33ea5286ea07de79b81329f799
+  languageName: node
+  linkType: hard
+
+"@babel/types@npm:^7.14.5":
+  version: 7.14.5
+  resolution: "@babel/types@npm:7.14.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40babel%2Ftypes%2F-%2Ftypes-7.14.5.tgz"
+  dependencies:
+    "@babel/helper-validator-identifier": ^7.14.5
+    to-fast-properties: ^2.0.0
+  checksum: 7c1ab6e8bdf438d44236034cab10f7d0f1971179bc405dca26733a9b89dd87dd692dc49a238a7495075bc41a9a17fb6f08b4d1da45ea6ddcce1e5c8593574aea
   languageName: node
   linkType: hard
 
@@ -6777,9 +6803,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.93, @teambit/legacy@npm:1.0.93::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.93.tgz":
-  version: 1.0.93
-  resolution: "@teambit/legacy@npm:1.0.93::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.93.tgz"
+"@teambit/legacy@npm:1.0.95, @teambit/legacy@npm:1.0.95::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.95.tgz":
+  version: 1.0.95
+  resolution: "@teambit/legacy@npm:1.0.95::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.95.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6901,7 +6927,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 30fe01ec1336fd0837ad3ad6da4374796e3c15e79cdf64fefeac90cb0bf5be222faa136d8c89303c8ea62c03a89854bf2958552bf5ae5f5c2d717b48d2b4fcc6
+  checksum: 648742138ff7bb323c04c45f9791d13da061884c646b8ab6be39d47a618bd9b31beacda51671319c58f734bdae3c4cfd1b99a8ecfe218b802cbdef1745dd6ca1
   languageName: node
   linkType: hard
 
@@ -7035,7 +7061,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 0.6.0
     "@teambit/evangelist.surfaces.tooltip": 0.6.0
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.93
+    "@teambit/legacy": 1.0.95
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7083,7 +7109,7 @@ __metadata:
     "@types/object-hash": 1.3.4
     "@types/pino": 6.3.6
     "@types/puppeteer": 3.0.5
-    "@types/react": 17.0.8
+    "@types/react": ^17.0.8
     "@types/react-dom": ^17.0.5
     "@types/react-router-dom": 5.1.7
     "@types/react-tabs": 2.3.2
@@ -7128,6 +7154,7 @@ __metadata:
     babel-jest: 26.6.3
     babel-loader: 8.2.2
     babel-plugin-named-asset-import: 0.3.7
+    babel-plugin-ramda: 2.0.0
     babel-plugin-transform-typescript-metadata: 0.3.1
     babel-preset-jest: 26.6.2
     babel-preset-react-app: 10.0.0
@@ -7429,7 +7456,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.93
+    "@teambit/legacy": 1.0.95
   bin:
     bit: bin/bit.js
   languageName: unknown
@@ -8611,14 +8638,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:17.0.8":
-  version: 17.0.8
-  resolution: "@types/react@npm:17.0.8::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.8.tgz"
+"@types/react@npm:^17.0.8":
+  version: 17.0.11
+  resolution: "@types/react@npm:17.0.11::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40types%2Freact%2F-%2Freact-17.0.11.tgz"
   dependencies:
     "@types/prop-types": "*"
     "@types/scheduler": "*"
     csstype: ^3.0.2
-  checksum: 6398dc200623dbf213747f3a1cf9f3c3bcac29b519e49c9fcb81d2665dadb21155c485381cddbb04b483a5bf3ddddefaff1a1a6ef4fa5080b1b9b144c789673e
+  checksum: 89e80ee8e08988abca0266e5e131f57b2e18f326bebfa0ed0a06b0bca29621a5a8202d617254a053f659b9c18090c52cae0aa475a6c6036b8858030f1d448e47
   languageName: node
   linkType: hard
 
@@ -11928,6 +11955,16 @@ __metadata:
   peerDependencies:
     "@babel/core": ^7.0.0-0
   checksum: 05d9222c33c248e6402589dfa1e007389605376d47d5c51224a3f4a0371a38e41039584968d6e061916dd221943d4f11f317fb187460fca87e446ee8bf73cfc8
+  languageName: node
+  linkType: hard
+
+"babel-plugin-ramda@npm:2.0.0":
+  version: 2.0.0
+  resolution: "babel-plugin-ramda@npm:2.0.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Fbabel-plugin-ramda%2F-%2Fbabel-plugin-ramda-2.0.0.tgz"
+  dependencies:
+    "@babel/helper-module-imports": ^7.0.0
+    ramda: "*"
+  checksum: 9715530ee08bef43575dd3e1f6b1870b5c377f2dd66ba7f10fb380ccd0b781d348603ec9dee8a800c02bb39d2ed9b186132d9c9d49d0e9f2a9301452283ce5a2
   languageName: node
   linkType: hard
 
@@ -27731,7 +27768,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ramda@npm:0.27.1, ramda@npm:^0.27.0, ramda@npm:^0.27.1":
+"ramda@npm:*, ramda@npm:0.27.1, ramda@npm:^0.27.0, ramda@npm:^0.27.1":
   version: 0.27.1
   resolution: "ramda@npm:0.27.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Framda%2F-%2Framda-0.27.1.tgz"
   checksum: 31a0c0ef739b2525d7615f84cbb5d3cb89ee0c795469b711f729ea1d8df0dccc3cd75d3717a1e9742d42315ce86435680b7c87743eb7618111c60c144a5b8059
