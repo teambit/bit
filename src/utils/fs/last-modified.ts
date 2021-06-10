@@ -8,7 +8,7 @@ import { compact } from 'lodash';
 export async function getLastModifiedDirTimestampMs(rootDir: string): Promise<number> {
   const allDirs = await globby(rootDir, {
     onlyDirectories: true,
-    ignore: ['**/node_modules/**'],
+    // ignore: ['**/node_modules/**'], // need to think about it more. sometimes we do want to invalidate cache upon node_modules changes inside component dir
     // stats: true // todo: consider retrieving the stats from here.
   });
   allDirs.push(rootDir);
