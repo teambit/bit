@@ -17,7 +17,8 @@ const plugins = [
     require.resolve('@babel/plugin-transform-modules-commonjs'),
     {
       lazy: (requirePath) => {
-        return !requirePath.includes('.ui') && !requirePath.includes('.preview');
+        return true;
+        // return !requirePath.includes('.ui') && !requirePath.includes('.preview');
       },
     },
   ],
