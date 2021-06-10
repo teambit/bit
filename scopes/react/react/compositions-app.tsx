@@ -1,5 +1,5 @@
 import React from 'react';
-import { Composer } from '@teambit/base-ui.utils.composer/dist/composer';
+import { Composer } from '@teambit/base-ui.utils.composer';
 import { StandaloneNotFoundPage } from '@teambit/design.ui.pages.standalone-not-found-page';
 import { RenderingContext } from '@teambit/preview';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';

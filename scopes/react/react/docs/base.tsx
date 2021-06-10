@@ -4,7 +4,7 @@ import classNames from 'classnames';
 import flatten from 'lodash.flatten';
 import { docsFile } from '@teambit/documenter.types.docs-file';
 import { isFunction } from 'ramda-adjunct';
-import { Composer } from '@teambit/base-ui.utils.composer/dist/composer';
+import { Composer } from '@teambit/base-ui.utils.composer';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { ErrorFallback } from '@teambit/react.ui.error-fallback';
 import { RenderingContext } from '@teambit/preview';
