@@ -74,8 +74,6 @@ describe('custom env', function () {
       });
       it('bit status should not throw ComponentNotFound error', () => {
         expect(() => helper.command.status()).not.to.throw();
-        const status = helper.command.statusJson();
-        expect(status.newComponents).to.have.lengthOf(4);
       });
     });
   });
