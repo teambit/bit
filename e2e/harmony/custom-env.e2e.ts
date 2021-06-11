@@ -64,6 +64,20 @@ describe('custom env', function () {
         expect(() => helper.command.untag('--all')).to.not.throw();
       });
     });
+    describe('out-of-sync scenario where the id is changed during the process', () => {
+      before(() => {
+        helper.scopeHelper.getClonedLocalScope(wsAllNew);
+        helper.command.tagAllWithoutBuild();
+        const bitMapBeforeExport = helper.bitMap.read();
+        helper.command.export();
+        helper.bitMap.write(bitMapBeforeExport);
+      });
+      it('bit status should not throw ComponentNotFound error', () => {
+        expect(() => helper.command.status()).not.to.throw();
+        const status = helper.command.statusJson();
+        expect(status.newComponents).to.have.lengthOf(4);
+      });
+    });
   });
   (supportNpmCiRegistryTesting ? describe : describe.skip)('custom env installed as a package', () => {
     let envId;
