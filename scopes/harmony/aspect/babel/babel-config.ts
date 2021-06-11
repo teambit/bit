@@ -16,10 +16,7 @@ const plugins = [
   [
     require.resolve('@babel/plugin-transform-modules-commonjs'),
     {
-      lazy: (requirePath) => {
-        return true;
-        // return !requirePath.includes('.ui') && !requirePath.includes('.preview');
-      },
+      lazy: () => true,
     },
   ],
   require.resolve('babel-plugin-transform-typescript-metadata'),
