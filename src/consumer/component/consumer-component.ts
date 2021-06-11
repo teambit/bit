@@ -1171,7 +1171,7 @@ async function getLoadedFilesLegacy(
 ): Promise<SourceFile[]> {
   const bitMap: BitMap = consumer.bitMap;
   const sourceFiles = [];
-  await componentMap.trackDirectoryChanges(consumer, id);
+  await componentMap.trackDirectoryChangesLegacy(consumer, id);
   const filesToDelete = [];
   componentMap.files.forEach((file) => {
     const filePath = path.join(bitDir, file.relativePath);

@@ -379,7 +379,7 @@ export default class ComponentMap {
    * so then they'll be tracked by bitmap.
    * this doesn't get called on Harmony, it's for legacy only.
    */
-  async trackDirectoryChanges(consumer: Consumer, id: BitId): Promise<void> {
+  async trackDirectoryChangesLegacy(consumer: Consumer, id: BitId): Promise<void> {
     const trackDir = this.getTrackDir();
     if (!trackDir) {
       return;

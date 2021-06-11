@@ -1,6 +1,6 @@
 {
   "name": "@teambit/legacy",
-  "version": "1.0.96",
+  "version": "1.0.97",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -153,6 +153,7 @@
     "firstline": "2.0.2",
     "fs-extra": "9.1.0",
     "glob": "7.1.6",
+    "globby": "11.0.1",
     "graphlib": "2.1.8",
     "graphql-request": "3.4.0",
     "graphviz": "0.0.9",
