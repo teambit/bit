@@ -213,7 +213,6 @@
         "flatted": "3.1.0",
         "fuse.js": "6.4.6",
         "get-port": "5.1.1",
-        "globby": "11.0.1",
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
