@@ -1,4 +1,5 @@
 import arrayDiff from 'array-difference';
+import globby from 'globby';
 import fs from 'fs-extra';
 import ignore from 'ignore';
 import assignwith from 'lodash.assignwith';
@@ -945,9 +946,9 @@ function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
 }
 
 export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
-  const matches = await glob(path.join(dir, '**'), {
+  const matches = await globby(dir, {
     cwd: consumerPath,
-    nodir: true,
+    onlyFiles: true,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches = gitIgnore.filter(matches);
