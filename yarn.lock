@@ -6803,9 +6803,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/legacy@npm:1.0.96, @teambit/legacy@npm:1.0.96::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.96.tgz":
-  version: 1.0.96
-  resolution: "@teambit/legacy@npm:1.0.96::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.96.tgz"
+"@teambit/legacy@npm:1.0.97, @teambit/legacy@npm:1.0.97::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.97.tgz":
+  version: 1.0.97
+  resolution: "@teambit/legacy@npm:1.0.97::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Flegacy%2F-%2Flegacy-1.0.97.tgz"
   dependencies:
     "@babel/core": 7.12.17
     "@babel/runtime": 7.12.18
@@ -6839,6 +6839,7 @@ __metadata:
     fs-extra: 9.1.0
     gitconfig: 2.0.8
     glob: 7.1.6
+    globby: 11.0.1
     graphlib: 2.1.8
     graphql-request: 3.4.0
     graphviz: 0.0.9
@@ -6927,7 +6928,7 @@ __metadata:
     yn: 2.0.0
   bin:
     bit: bin/bit.js
-  checksum: 96406c8d3a3f875c13562fc4e7e118947080344235e9b013b3c3fb54b4eed9699b090d33bf1904d3f190dc775f508c24f2f8b6aef44becc76c506b3d7e82e2d4
+  checksum: a220a03ecbdde048f93a29aba2f0546a25474442e0845d8779ddd1191769dc3b3e2c5db010ba1759f0e3f31664e3d30ec2a9a8364a9254f4a945652f0af54d92
   languageName: node
   linkType: hard
 
@@ -7061,7 +7062,7 @@ __metadata:
     "@teambit/evangelist.surfaces.dropdown": 0.6.0
     "@teambit/evangelist.surfaces.tooltip": 0.6.0
     "@teambit/harmony": 0.2.11
-    "@teambit/legacy": 1.0.96
+    "@teambit/legacy": 1.0.97
     "@teambit/mdx.ui.mdx-scope-context": 0.0.368
     "@teambit/network.agent": 0.0.1
     "@teambit/react.instructions.react.adding-compositions": 0.0.5
@@ -7456,7 +7457,7 @@ __metadata:
     yargs: 17.0.1
     yn: 2.0.0
   peerDependencies:
-    "@teambit/legacy": 1.0.96
+    "@teambit/legacy": 1.0.97
   bin:
     bit: bin/bit.js
   languageName: unknown
