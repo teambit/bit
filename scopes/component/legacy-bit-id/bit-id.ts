@@ -1,7 +1,7 @@
 import decamelize from 'decamelize';
 import * as path from 'path';
 import * as semver from 'semver';
-import { is, head, tail } from 'ramda';
+import { head, tail } from 'lodash';
 import { versionParser, isHash, LATEST_VERSION } from '@teambit/component-version';
 import isValidIdChunk from './utils/is-valid-id-chunk';
 import isValidScopeName from './utils/is-valid-scope-name';
@@ -153,7 +153,7 @@ export default class BitId {
   }
 
   static parse(id: BitIdStr, hasScope = true, version: string = LATEST_VERSION): BitId {
-    if (!is(String, id)) {
+    if (typeof id !== 'string') {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
 

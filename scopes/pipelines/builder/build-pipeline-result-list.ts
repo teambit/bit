@@ -1,5 +1,5 @@
 import { ComponentID, ComponentMap, Component } from '@teambit/component';
-import { isEmpty } from 'ramda';
+import { isEmpty } from 'lodash';
 import { compact } from 'lodash';
 import type { ArtifactObject } from '@teambit/legacy/dist/consumer/component/sources/artifact-files';
 import { Artifact, ArtifactList } from './artifact';

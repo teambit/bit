@@ -59,9 +59,8 @@ import componentIdToPackageName from '@teambit/legacy/dist/utils/bit/component-i
 import { PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/path';
 import findCacheDir from 'find-cache-dir';
 import fs from 'fs-extra';
-import { slice, uniqBy } from 'lodash';
+import { slice, uniqBy, difference } from 'lodash';
 import path, { join } from 'path';
-import { difference } from 'ramda';
 import ConsumerComponent from '@teambit/legacy/dist/consumer/component';
 import type { ComponentLog } from '@teambit/legacy/dist/scope/models/model-component';
 import { ComponentConfigFile } from './component-config-file';
