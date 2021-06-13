@@ -50,4 +50,21 @@ In case you want to change it you can pass the build arg called `SCOPE_PATH` lik
 
 ### using volume to make sure data is persisted
 
-TBD
+In order to persist the scope data, you want the scope folder to be live outside the container in the host machine.
+You can use [bind mounts](https://docs.docker.com/storage/bind-mounts/) to do so:
+`docker run -it -v {scope-path-on-host}:/tmp/remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
+
+### combing scope volume with scope name/location
+
+when combining change of the scope name/location and volume you have to make sure the location provided in the `SCOPE_PATH` in the build arg is matching the target in the volume:
+`docker run -it -v {scope-path-on-host}:/tmp/custom-remote-scope -build-arg SCOPE_PATH=/tmp/custom-remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
+See the `/tmp/custom-remote-scope` is used both in the `-v` arg after the `:` and as the `SCOPE_PATH` value.
+
+### watch bit server logs on host machine
+
+Since the `bit start` command at the moment can't be run as detached, you will need a way to run it as the main command and to monitor the logs at the same time.
+In order to do so, we will connect the logs dir on the container to a dir in the host using [bind mounts](https://docs.docker.com/storage/bind-mounts/).
+In order to watch the bit logs, you will need to mount the logs directory in the host machine. like this:
+`docker run -it -v {logs-dir-on-host}:/home/user/Library/Caches/Bit/logs -p {host-port}:3000 bitcli/bit-server:latest`
+An example with actual values (use `/tmp/bit-server-docker-logs` for logs on host and port 5000 on host):
+`docker run -it -v /tmp/bit-server-docker-logs:/home/user/Library/Caches/Bit/logs -p 5000:3000 bitcli/bit-server:latest`
