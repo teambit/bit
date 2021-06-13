@@ -877,6 +877,12 @@
         "mainFile": "index.ts",
         "rootDir": "scopes/envs/ui/env-icon"
     },
+    "ui/error-fallback": {
+        "scope": "",
+        "version": "",
+        "mainFile": "index.ts",
+        "rootDir": "scopes/react/ui/error-fallback"
+    },
     "ui/error-page": {
         "scope": "teambit.design",
         "version": "0.0.346",
