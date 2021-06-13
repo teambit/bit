@@ -1,0 +1,53 @@
+Docker containers for bit harmony.
+
+## Structure
+
+- Dockerfile-bit: A docker file which installs bvm and then use bvm to install bit. this docker is usually useful for runnig bit commands like tag and export on CI machine
+- Dcokerfil-bit-server: A docker file based on the `Dockerfile-bit` (using from) which create a bare scope, and initialized the bit server on it (bit start)
+- Dockerfile-symphony: for internal use only
+
+## Using from dockerhub
+
+The docker images hosted on dockerhub on those links [Dockerfile-bit](https://hub.docker.com/repository/docker/bitcli/bit) and [Dockerfile-bit-server](https://hub.docker.com/repository/docker/bitcli/bit-server)
+
+## Building locally
+
+1. `cd scripts/docker-teambit-bit`
+1. first build the bit docker - `docker build -f ./Dockerfile-bit -t bitcli/bit:latest .`
+1. second build the bit server docker - `docker build -f ./Dockerfile-bit-server -t bitcli/bit-server:latest .`
+
+## Running containers
+
+### Run the cli container
+
+1. `docker run -it bitcli/bit-server:latest /bin/sh`
+1. `bit -v` to see bit's version to make sure it works
+
+### Run the server container
+
+1. `docker run -it -p {host-port}:3000 bitcli/bit-server:latest` - replace the host port with the port you want to use on your host machine for example 5000
+1. browse `http://localhost:{host-port}` and make sure you see the bit's ui
+
+## Exporting components to bit server
+
+1. make sure you run the server container and validate it works
+1. on your local workspace run `bit remote add http://localhost:{host-port}` you should get a message saying remote-scope was added
+1. set `remote-scope` on your `workspace.jsonc` as `defaultScope`
+1. run `bit export`
+
+## Advanced usage
+
+### Using specific version of bit on the bit server
+
+Bit server is getting a `BIT_VERSION` argument which is used in the `FROM` statement. you can use it with `docker build -f ./Dockerfile-bit-server --build-arg BIT_VERSION={version} -t bitcli/bit-server:{version} .`
+This will make your to fetch the cli container from dockerhub with the specificed version
+
+### Change bare scope name and location on the server containter
+
+The scope name is defined by the folder name of the containing scope (`remote-scope` by default).
+This name is then later used for setting it up in the `workspace.jsonc` file.
+In case you want to change it you can pass the build arg called `SCOPE_PATH` like `--build-arg SCOPE_PATH=/tmp/custom-remote-scope`
+
+### using volume to make sure data is persisted
+
+TBD
