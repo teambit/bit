@@ -10,7 +10,7 @@ module.exports = function html(title) {
       try { window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.parent.__REACT_DEVTOOLS_GLOBAL_HOOK__; } catch {}
       </script>
       <!-- minimal css resets -->
-      <style> body { margin: 0; } </style>
+      <style> html { height: 100%; } body { margin: 0; height: 100%; } #root { height: 100%; } </style>
     </head>
     <body>
       <div id="root"></div>
