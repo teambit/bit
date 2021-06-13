@@ -13,7 +13,8 @@ describe('bit clear-cache', function () {
   after(() => {
     helper.scopeHelper.destroy();
   });
-  describe('fs cache corrupted', () => {
+  // not relevant now that we disabled this feature. revisit again later if needed
+  describe.skip('fs cache corrupted', () => {
     before(() => {
       helper.scopeHelper.setNewLocalAndRemoteScopesHarmony();
       helper.bitJsonc.setupDefault();

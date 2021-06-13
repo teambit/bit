@@ -182,6 +182,14 @@ export class ReactMain {
     });
   }
 
+  overrideMounter(mounterPath: string) {
+    return this.envs.override({
+      getMounter: () => {
+        return mounterPath;
+      },
+    });
+  }
+
   /**
    * create a new composition of the react environment.
    */
