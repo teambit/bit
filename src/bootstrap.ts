@@ -115,7 +115,7 @@ function enableLoaderIfPossible() {
     !process.argv.includes('-j')
   ) {
     loader.on();
-    loader.start('loading bit...');
+    // loader.start('loading bit...');
   }
 }
 

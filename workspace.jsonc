@@ -216,7 +216,6 @@
         "flatted": "3.1.0",
         "fuse.js": "6.4.6",
         "get-port": "5.1.1",
-        "globby": "11.0.1",
         "graceful-fs": "4.2.4",
         "graphql-subscriptions": "1.2.0",
         "graphql-tag": "2.12.1",
@@ -317,7 +316,7 @@
       },
       "peerDependencies": {
         "@apollo/client": "^3.0.0",
-        "@teambit/legacy": "1.0.96",
+        "@teambit/legacy": "1.0.98",
         "browserslist": "4.16.3",
         "core-js": "3.10.0",
         "graphql": "14.7.0",
@@ -429,7 +428,7 @@
             "@teambit/legacy": "-"
           },
           "peerDependencies": {
-            "@teambit/legacy": "1.0.96"
+            "@teambit/legacy": "1.0.98"
           }
         }
       },
@@ -592,7 +591,7 @@
         "policy": {
           "dependencies": {
             "@apollo/client": "3.3.6",
-            "@teambit/legacy": "1.0.96",
+            "@teambit/legacy": "1.0.98",
             "graphql": "14.7.0",
             "browserslist": "4.16.3",
             "reflect-metadata": "0.1.13",
