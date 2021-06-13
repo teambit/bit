@@ -50,7 +50,7 @@ The scope name is defined by the folder name of the containing scope (`remote-sc
 This name is then later used for setting it up in the `workspace.jsonc` file.
 In case you want to change it you can pass the build arg called `SCOPE_PATH` like `--build-arg SCOPE_PATH=/tmp/custom-remote-scope`
 
-### using volume to make sure data is persisted
+### Using volume to make sure data is persisted
 
 In order to persist the scope data, you want the scope folder to be live outside the container in the host machine.
 You can use [bind mounts](https://docs.docker.com/storage/bind-mounts/) to do so:
@@ -58,13 +58,13 @@ You can use [bind mounts](https://docs.docker.com/storage/bind-mounts/) to do so
 
 _Usually it's better to use volumes then bind mounts, or even handle the mounts by an orchestrator like kubernetees but this topics is out of the scope in this guide_
 
-### combing scope volume with scope name/location
+### Combining scope volume with scope name/location
 
-when combining change of the scope name/location and volume you have to make sure the location provided in the `SCOPE_PATH` in the build arg is matching the target in the volume:
+When combining change of the scope name/location and volume you have to make sure the location provided in the `SCOPE_PATH` in the build arg is matching the target in the volume:
 `docker run -it -v {scope-path-on-host}:/tmp/custom-remote-scope -build-arg SCOPE_PATH=/tmp/custom-remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
 See the `/tmp/custom-remote-scope` is used both in the `-v` arg after the `:` and as the `SCOPE_PATH` value.
 
-### watch bit server logs on host machine
+### Watch bit server logs on host machine
 
 Since the `bit start` command at the moment can't be run as detached, you will need a way to run it as the main command and to monitor the logs at the same time.
 In order to do so, we will connect the logs dir on the container to a dir in the host using [bind mounts](https://docs.docker.com/storage/bind-mounts/).
@@ -79,3 +79,8 @@ _In most cases it make sense to use [tmpfs-mounts](https://docs.docker.com/stora
 
 - Do not mount the same scope directory on the host to multiple bit-server containers.
   Bit is using different in memory cache mechanism, so mount the same dir into different servers instances, might produce unpredictable outcome.
+
+## Troubleshooting
+
+- **problem**: running bit start on the server containter is killed with code 137
+  **solution**: increase the memory provided by the host machine (usually 4GB should be enouth - this is also the value we provide for the node process by `NODE_OPTIONS=--max_old_space_size=4096`). for example in mac - [docker for mac resources](https://docs.docker.com/docker-for-mac/#resources)
