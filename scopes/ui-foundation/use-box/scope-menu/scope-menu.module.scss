@@ -1,0 +1,61 @@
+.top {
+  padding: 15px 24px;
+  color: var(--text-color);
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  font-size: var(--p-xs);
+  font-weight: bold;
+  > span {
+    &:first-child {
+      color: var(--text-highlight);
+      font-weight: bold;
+      margin-right: 7px;
+    }
+  }
+}
+
+.tabs {
+  display: flex;
+  padding: 0 24px;
+  line-height: 14px;
+  border-bottom: 1px solid var(--border-color, #ededed);
+}
+.npmTab {
+  color: #c7363a;
+}
+.yarnTab {
+  color: #2c8ebb;
+  font-size: 16px;
+  padding-bottom: 6px;
+}
+
+.link {
+  padding: 0 24px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  color: var(--text-highlight);
+  cursor: pointer;
+  text-decoration: unset;
+  &:hover {
+    background-color: var(--border-color);
+  }
+  > span {
+    &:first-child {
+      margin-right: 8px;
+      font-size: var(--p-md);
+    }
+  }
+}
+
+.importContent {
+  > div {
+    margin: 12px 0;
+  }
+  > div:nth-child(2) {
+    margin-bottom: 24px;
+  }
+}

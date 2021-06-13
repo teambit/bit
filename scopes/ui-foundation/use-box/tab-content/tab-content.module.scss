@@ -1,0 +1,12 @@
+.middle {
+  // margin-bottom: 15px;
+  margin: 0 24px 16px;
+  > div {
+    margin: 12px 0;
+  }
+}
+
+.bottom {
+  padding: 8px 0;
+  border-top: 1px solid var(--border-color);
+}

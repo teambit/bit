@@ -1,0 +1,18 @@
+.link {
+  padding: 0 24px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  color: var(--text-highlight);
+  cursor: pointer;
+  text-decoration: unset;
+  &:hover {
+    background-color: var(--border-color);
+  }
+  > span {
+    &:first-child {
+      margin-right: 8px;
+      font-size: var(--p-md);
+    }
+  }
+}
