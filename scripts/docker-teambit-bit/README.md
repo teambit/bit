@@ -1,5 +1,7 @@
 Docker containers for bit harmony.
 
+_This dockers are not dealing with legacy bit (pre-harmony) for legacy bit please refer to [bit-docker](https://github.com/teambit/bit-docker)_
+
 ## Structure
 
 - Dockerfile-bit: A docker file which installs bvm and then use bvm to install bit. this docker is usually useful for runnig bit commands like tag and export on CI machine
@@ -54,6 +56,8 @@ In order to persist the scope data, you want the scope folder to be live outside
 You can use [bind mounts](https://docs.docker.com/storage/bind-mounts/) to do so:
 `docker run -it -v {scope-path-on-host}:/tmp/remote-scope -p {host-port}:3000 bitcli/bit-server:latest`
 
+_Usually it's better to use volumes then bind mounts, or even handle the mounts by an orchestrator like kubernetees but this topics is out of the scope in this guide_
+
 ### combing scope volume with scope name/location
 
 when combining change of the scope name/location and volume you have to make sure the location provided in the `SCOPE_PATH` in the build arg is matching the target in the volume:
@@ -68,3 +72,10 @@ In order to watch the bit logs, you will need to mount the logs directory in the
 `docker run -it -v {logs-dir-on-host}:/home/user/Library/Caches/Bit/logs -p {host-port}:3000 bitcli/bit-server:latest`
 An example with actual values (use `/tmp/bit-server-docker-logs` for logs on host and port 5000 on host):
 `docker run -it -v /tmp/bit-server-docker-logs:/home/user/Library/Caches/Bit/logs -p 5000:3000 bitcli/bit-server:latest`
+
+_In most cases it make sense to use [tmpfs-mounts](https://docs.docker.com/storage/tmpfs/) for this, but this as well is out of the scope for this guide_
+
+## Important notes:
+
+- Do not mount the same scope directory on the host to multiple bit-server containers.
+  Bit is using different in memory cache mechanism, so mount the same dir into different servers instances, might produce unpredictable outcome.
