@@ -3,8 +3,8 @@ import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { TabContent } from '../tab-content';
-import { linkStyles } from '../bottom-link';
+import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './menu.module.scss';
 
 export type InstallProps = {

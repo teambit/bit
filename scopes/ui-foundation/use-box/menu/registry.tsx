@@ -1,14 +1,12 @@
 import React from 'react';
-import classNames from 'classnames';
 import { Icon } from '@teambit/evangelist.elements.icon';
-// import { Link } from "@teambit/ui.routing.link";
 import { HighlightedText } from '@teambit/documenter.ui.highlighted-text';
 import { links } from '@teambit/documenter.content.documentation-links';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { TabContent } from '../tab-content';
-import { linkStyles } from '../bottom-link';
-import { Back } from '../back-button';
-import styles from './menu.module.scss';
+import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
+import { Link } from '@teambit/base-ui.routing.link';
+import { Back } from '@teambit/ui-foundation.ui.use-box.back-button';
 
 export type RegistryProps = {
   registryName: string;
@@ -23,10 +21,10 @@ export function Registry({ registryName, copyString, setActive, prevTab }: Regis
       <Back setActive={setActive} prevTab={prevTab} />
       <TabContent
         bottom={
-          <a target="_blank" rel="noreferrer" href={links.scopedRegistry} className={classNames(linkStyles)}>
+          <Link external href={links.scopedRegistry} className={linkStyles}>
             <Icon of="information-sign" />
             <span>Learn more</span>
-          </a>
+          </Link>
         }
       >
         <div>

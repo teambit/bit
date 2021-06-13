@@ -1,14 +1,22 @@
 import React from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { TabContent } from '../tab-content/tab-content';
-import { linkStyles } from '../bottom-link';
+import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './menu.module.scss';
 
 export type ImportProps = {
-  // componentName: string;
+  /**
+   * component id
+   */
   componentId: string;
+  /**
+   * component package name
+   */
   packageName: string;
+  /**
+   * link to info
+   */
   back?: () => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 

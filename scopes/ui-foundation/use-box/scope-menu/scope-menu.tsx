@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
-import { BitInfo, TabContent } from '../tab-content';
+import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
+import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import styles from './scope-menu.module.scss';
-
-// export type TabOptions = "registry" | "import" | "install";
 
 export type MenuProps = {
   /**

@@ -1,8 +1,8 @@
 import React from 'react';
 import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
+import { Menu } from '@teambit/ui-foundation.ui.use-box.menu';
+import { Menu as ScopeMenu } from '@teambit/ui-foundation.ui.use-box.scope-menu';
 import { UseBoxDropdown } from './dropdown';
-import { Menu } from '../menu';
-import { Menu as ScopeMenu } from '../scope-menu';
 
 const styles = {
   width: '400px',

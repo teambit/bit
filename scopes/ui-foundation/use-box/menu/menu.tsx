@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Icon } from '@teambit/evangelist.elements.icon';
-import { BitInfo } from '../tab-content';
+import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
 import { Registry } from './registry';
 import { Install } from './install';
 import { Import } from './import';

@@ -16,7 +16,7 @@ export function UseBoxDropdown({ className, Menu, ...rest }: UseBoxDropdownProps
   return (
     <div className={classNames(styles.dropdown, className)} {...rest}>
       <Dropdown
-        onChange={(_e, open) => open && setActiveTab((x) => x + 1)} // to reset menu to initial state
+        onChange={(_e, open) => open && setActiveTab((x) => x + 1)} // to reset menu to initial state when toggling
         dropClass={styles.menu}
         placeholder={<Placeholder />}
         clickToggles={false}
