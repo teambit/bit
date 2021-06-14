@@ -94,7 +94,7 @@ export class ReactMain {
    * @param tsModule typeof `ts` module instance.
    */
   overrideTsConfig(
-    tsconfig: TsConfigSourceFile,
+    tsconfig?: TsConfigSourceFile,
     compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
     tsModule: any = ts
   ) {
@@ -110,10 +110,14 @@ export class ReactMain {
   /**
    * override the build tsconfig.
    */
-  overrideBuildTsConfig(tsconfig, compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {}) {
+  overrideBuildTsConfig(
+    tsconfig?: TsConfigSourceFile,
+    compilerOptions: Partial<TsCompilerOptionsWithoutTsConfig> = {},
+    tsModule: any = ts
+  ) {
     return this.envs.override({
       getBuildPipe: () => {
-        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions);
+        return this.reactEnv.getBuildPipe(tsconfig, compilerOptions, tsModule);
       },
     });
   }
@@ -126,8 +130,7 @@ export class ReactMain {
     this.application.registerApp(
       new ReactApp(
         options.name,
-        options.buildEntry,
-        options.runEntry,
+        options.entry,
         options.portRange || [3000, 4000],
         this.reactEnv,
         this.workspace.path,
@@ -176,6 +179,14 @@ export class ReactMain {
     };
     return this.envs.override({
       getBundler: (context: BundlerContext) => this.reactEnv.getBundler(context, [transformer]),
+    });
+  }
+
+  overrideMounter(mounterPath: string) {
+    return this.envs.override({
+      getMounter: () => {
+        return mounterPath;
+      },
     });
   }
 

@@ -328,7 +328,7 @@ export default class Repository {
     await this.persistMutex.runExclusive(async () => {
       logger.debug(`Repository.persist, validate = ${validate.toString()}, a lock has been acquired`);
       await this.deleteObjectsFromFS(this.objectsToRemove);
-      this._validateObjects(validate);
+      this.validateObjects(validate, Object.values(this.objects));
       await this.writeObjectsToTheFS(Object.values(this.objects));
       await this.writeRemoteLanes();
       await this.unmergedComponents.write();
@@ -368,9 +368,8 @@ export default class Repository {
    * can easily revert it by changing `bitObject.validateBeforePersist = false` line run regardless
    * the `validate` argument.
    */
-  _validateObjects(validate: boolean) {
-    Object.keys(this.objects).forEach((hash) => {
-      const bitObject = this.objects[hash];
+  validateObjects(validate: boolean, objects: BitObject[]) {
+    objects.forEach((bitObject) => {
       // @ts-ignore some BitObject classes have validate() method
       if (validate && bitObject.validate) {
         // @ts-ignore

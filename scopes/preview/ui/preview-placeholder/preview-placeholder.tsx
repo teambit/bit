@@ -16,11 +16,18 @@ export function PreviewPlaceholder({
     return selectDefaultComposition(component);
   }, [component, shouldShowPreview]);
 
+  const name = component.id.toString();
+  if (component.buildStatus === 'pending')
+    return (
+      <div className={styles.previewPlaceholder} data-tip="" data-for={name}>
+        <Icon of="Ripple-processing" />
+        <div>Processing preview</div>
+      </div>
+    );
+
   if (shouldShowPreview) {
     return <ComponentComposition component={component} hotReload={false} composition={selectedPreview} />;
   }
-
-  const name = component.id.toString();
 
   return (
     <div className={styles.previewPlaceholder} data-tip="" data-for={name}>

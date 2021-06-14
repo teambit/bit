@@ -119,16 +119,19 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
           },
         },
 
-        // "url" loader works like "file" loader except that it embeds assets
-        // smaller than specified limit in bytes as data URLs to avoid requests.
-        // A missing `test` is equivalent to a match.
         {
           test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-          loader: require.resolve('url-loader'),
-          options: {
-            limit: imageInlineSizeLimit,
-            name: 'static/media/[name].[hash:8].[ext]',
+          type: 'asset',
+          parser: {
+            dataUrlCondition: {
+              maxSize: imageInlineSizeLimit,
+            },
           },
+        },
+
+        {
+          test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
+          type: 'asset',
         },
 
         // MDX support (move to the mdx aspect and extend from there)
@@ -250,6 +253,8 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
 
       // this is for resolving react from env and not from consuming project
       alias: {
+        'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
         react: require.resolve('react'),
         '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
@@ -281,13 +286,13 @@ export default function ({ envId, fileMapPath, workDir }: Options): WebpackConfi
             // TODO: make sure we can remove the eager here by adding bootstrap for everything
             eager: true,
             singleton: true,
-            requiredVersion: '^16.14.0',
+            requiredVersion: '^17.0.0',
           },
           'react-dom': {
             // TODO: make sure we can remove the eager here by adding bootstrap for everything
             eager: true,
             singleton: true,
-            requiredVersion: '^16.14.0',
+            requiredVersion: '^17.0.0',
           },
         },
         remotes: {

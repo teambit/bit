@@ -3,6 +3,7 @@ import { capitalize } from '@teambit/toolbox.string.capitalize';
 import { SemVer } from 'semver';
 import { ComponentID } from '@teambit/component-id';
 import { BitError } from '@teambit/bit-error';
+import { BuildStatus } from '@teambit/legacy/dist/constants';
 
 import { ComponentFactory } from './component-factory';
 import ComponentFS from './component-fs';
@@ -20,6 +21,8 @@ type SnapsIterableOpts = {
   firstParentOnly?: boolean;
   stopFn?: (snap: Snap) => Promise<boolean>;
 };
+
+export type InvalidComponent = { id: ComponentID; err: Error };
 
 /**
  * in-memory representation of a component.
@@ -72,6 +75,13 @@ export class Component {
    */
   get filesystem(): ComponentFS {
     return this.state.filesystem;
+  }
+
+  /**
+   * build status of the component
+   */
+  get buildStatus(): BuildStatus {
+    return this._state._consumer.buildStatus;
   }
 
   get headTag() {

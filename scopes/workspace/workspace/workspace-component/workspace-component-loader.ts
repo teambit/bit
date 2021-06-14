@@ -1,4 +1,4 @@
-import { Component, ComponentFS, ComponentID, Config, State, TagMap } from '@teambit/component';
+import { Component, ComponentFS, ComponentID, Config, InvalidComponent, State, TagMap } from '@teambit/component';
 import { BitId } from '@teambit/legacy-bit-id';
 import { ExtensionDataList } from '@teambit/legacy/dist/consumer/config/extension-data';
 import mapSeries from 'p-map-series';
@@ -57,6 +57,28 @@ export class WorkspaceComponentLoader {
     const filteredComponents: Component[] = compact(components);
     longProcessLogger.end();
     return filteredComponents;
+  }
+
+  async getInvalid(ids: Array<ComponentID>): Promise<InvalidComponent[]> {
+    const idsWithoutEmpty = compact(ids);
+    const errors: InvalidComponent[] = [];
+    const longProcessLogger = this.logger.createLongProcessLogger('loading components', ids.length);
+    await mapSeries(idsWithoutEmpty, async (id: ComponentID) => {
+      longProcessLogger.logProgress(id.toString());
+      try {
+        await this.workspace.consumer.loadComponent(id._legacy);
+      } catch (err) {
+        if (ConsumerComponent.isComponentInvalidByErrorType(err)) {
+          errors.push({
+            id,
+            err,
+          });
+          return;
+        }
+        throw err;
+      }
+    });
+    return errors;
   }
 
   async get(
@@ -143,8 +165,21 @@ export class WorkspaceComponentLoader {
     }
   }
 
-  private getFromCache(id: ComponentID, forCapsule: boolean) {
-    return forCapsule ? this.componentsCacheForCapsule.get(id.toString()) : this.componentsCache.get(id.toString());
+  /**
+   * make sure that not only the id-str match, but also the legacy-id.
+   * this is needed because the ComponentID.toString() is the same whether or not the legacy-id has
+   * scope-name, as it includes the defaultScope if the scope is empty.
+   * as a result, when out-of-sync is happening and the id is changed to include scope-name in the
+   * legacy-id, the component is the cache has the old id.
+   */
+  private getFromCache(id: ComponentID, forCapsule: boolean): Component | undefined {
+    const fromCache = forCapsule
+      ? this.componentsCacheForCapsule.get(id.toString())
+      : this.componentsCache.get(id.toString());
+    if (fromCache && fromCache.id._legacy.isEqual(id._legacy)) {
+      return fromCache;
+    }
+    return undefined;
   }
 
   private async getConsumerComponent(id: ComponentID, forCapsule = false) {

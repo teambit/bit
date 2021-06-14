@@ -1,12 +1,12 @@
 import React from 'react';
-import { ThemeContext } from '@teambit/documenter.theme.theme-context';
+import { ThemeCompositions } from '@teambit/documenter.theme.theme-compositions';
 import { MDXLayout } from '@teambit/mdx.ui.mdx-layout';
 import { Pkg } from './index';
 
 export const PkgDocs = () => (
-  <ThemeContext>
+  <ThemeCompositions>
     <MDXLayout>
       <Pkg />
     </MDXLayout>
-  </ThemeContext>
+  </ThemeCompositions>
 );

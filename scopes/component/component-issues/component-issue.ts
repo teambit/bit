@@ -3,30 +3,35 @@ import { BitId } from '@teambit/legacy-bit-id';
 
 export type StringsPerFilePath = { [filePath: string]: string[] };
 
-export const MISSING_DEPS_SPACE_COUNT = 10;
-export const MISSING_DEPS_SPACE = ' '.repeat(MISSING_DEPS_SPACE_COUNT);
+export const ISSUE_FORMAT_SPACE_COUNT = 10;
+export const ISSUE_FORMAT_SPACE = ' '.repeat(ISSUE_FORMAT_SPACE_COUNT);
 
 export class ComponentIssue {
-  description: string;
+  description: string; // issue description
+  solution: string; // suggest how to fix the issue
   data: any;
   isTagBlocker = true; // if true, it stops the tag process and shows the issue
   isCacheBlocker = true; // if true, it doesn't cache the component in the filesystem
-  format(formatIssueFunc: FormatIssueFunc = componentIssueToString): string {
-    return (
-      formatTitle(this.description) +
-      chalk.white(
-        Object.keys(this.data)
-          .map((k) => {
-            return `${MISSING_DEPS_SPACE}${k} -> ${formatIssueFunc(this.data[k])}`;
-          })
-          .join('\n')
-      )
-    );
+  formatDataFunction: FormatIssueFunc = componentIssueToString;
+  get descriptionWithSolution() {
+    const solution = this.solution ? ` (${this.solution})` : '';
+    return `${this.description}${solution}`;
+  }
+  outputForCLI(): string {
+    return formatTitle(this.descriptionWithSolution) + chalk.white(this.dataToString());
+  }
+  dataToString(): string {
+    return Object.keys(this.data)
+      .map((k) => {
+        return `${ISSUE_FORMAT_SPACE}${k} -> ${this.formatDataFunction(this.data[k])}`;
+      })
+      .join('\n');
   }
   toObject() {
     return {
       type: this.constructor.name,
       description: this.description,
+      solution: this.solution,
       data: this.data,
     };
   }

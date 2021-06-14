@@ -10,12 +10,7 @@ export type ReactAppOptions = {
   /**
    * path to entry files of the application.
    */
-  buildEntry: string[];
-
-  /**
-   * absolute path to entry files of the application.
-   */
-  runEntry: string[];
+  entry: string[];
 
   /**
    * use server-side rendering for the app.

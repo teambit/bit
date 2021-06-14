@@ -61,7 +61,7 @@ export class ExportCmd implements Command {
   remoteOp = true;
 
   async report(
-    [remote, ids]: [string, string[]],
+    [remote, ids = []]: [string, string[]],
     {
       eject = false,
       includeDependencies = false,

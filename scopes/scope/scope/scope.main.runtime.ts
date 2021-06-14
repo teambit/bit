@@ -476,6 +476,15 @@ export class ScopeMain implements ComponentFactory {
   }
 
   /**
+   * for now, list of invalid components are mostly useful for the workspace.
+   * in the future, this can return components that failed to load in the scope due to objects file
+   * corruption or similar issues.
+   */
+  async listInvalid() {
+    return [];
+  }
+
+  /**
    * get ids of all scope components.
    */
   async listIds(includeCache = false): Promise<ComponentID[]> {

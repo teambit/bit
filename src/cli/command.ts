@@ -74,6 +74,12 @@ export interface Command {
   remoteOp?: boolean;
 
   /**
+   * if true, it indicates that it doesn't need the workspace to work and can be executed outside a
+   * workspace
+   */
+  skipWorkspace?: boolean;
+
+  /**
    * do not set this. it is being set once the command run.
    * the values are those followed `--` in the command line. (e.g. `bit import -- --no-optional`)
    */

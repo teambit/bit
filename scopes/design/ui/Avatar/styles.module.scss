@@ -38,6 +38,13 @@
   height: 100%;
 }
 
+.soloAvatarIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
 .default {
   background-color: var(--border-color, #ededed);
   border: 1px solid var(--border-color, #ededed);

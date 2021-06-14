@@ -1,4 +1,5 @@
 import arrayDiff from 'array-difference';
+import globby from 'globby';
 import fs from 'fs-extra';
 import ignore from 'ignore';
 import assignwith from 'lodash.assignwith';
@@ -49,6 +50,7 @@ import {
 import { AddingIndividualFiles } from './exceptions/adding-individual-files';
 import { IgnoredDirectory } from './exceptions/ignored-directory';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
+import { ParentDirTracked } from './exceptions/parent-dir-tracked';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
@@ -595,6 +597,7 @@ you can add the directory these files are located at and it'll change the root d
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
         this._throwForOutsideConsumer(relativeComponentPath);
+        this.throwForExistingParentDir(relativeComponentPath);
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
           nodir: true,
@@ -889,6 +892,26 @@ try to avoid excluding files and maybe put them in your .gitignore if it makes s
       throw new PathOutsideConsumer(relativeToConsumerPath);
     }
   }
+
+  private throwForExistingParentDir(relativeToConsumerPath: PathOsBased) {
+    if (this.isLegacy) {
+      return; // with legacy, you can add files inside dir to track them.
+    }
+    const isParentDir = (parent: string) => {
+      const relative = path.relative(parent, relativeToConsumerPath);
+      return relative && !relative.startsWith('..') && !path.isAbsolute(relative);
+    };
+    this.bitMap.components.forEach((componentMap) => {
+      if (!componentMap.rootDir) return;
+      if (isParentDir(componentMap.rootDir)) {
+        throw new ParentDirTracked(
+          componentMap.rootDir,
+          componentMap.id.toStringWithoutVersion(),
+          relativeToConsumerPath
+        );
+      }
+    });
+  }
 }
 
 /**
@@ -923,9 +946,9 @@ function validateNoDuplicateIds(addComponents: Record<string, any>[]) {
 }
 
 export async function getFilesByDir(dir: string, consumerPath: string, gitIgnore: any): Promise<ComponentMapFile[]> {
-  const matches = await glob(path.join(dir, '**'), {
+  const matches = await globby(dir, {
     cwd: consumerPath,
-    nodir: true,
+    onlyFiles: true,
   });
   if (!matches.length) throw new ComponentNotFoundInPath(dir);
   const filteredMatches = gitIgnore.filter(matches);

@@ -1,16 +1,15 @@
-import { join } from 'path';
+import { join, basename } from 'path';
+import { Capsule } from '@teambit/isolator';
 import { Application, AppContext, DeployContext } from '@teambit/application';
 import { BuildContext } from '@teambit/builder';
 import { Bundler, BundlerContext, DevServerContext } from '@teambit/bundler';
-import getPort from 'get-port';
-import { ComponentID } from '@teambit/component';
+import { Port } from '@teambit/toolbox.network.get-port';
 import { ReactEnv } from './react.env';
 
 export class ReactApp implements Application {
   constructor(
     readonly name: string,
-    readonly buildEntry: string[],
-    readonly runEntry: string[],
+    readonly entry: string[],
     readonly portRange: number[],
     private reactEnv: ReactEnv,
     private rootPath: string,
@@ -27,23 +26,18 @@ export class ReactApp implements Application {
         return configMutator;
       },
     ]);
-    const port = await getPort({ port: this.portRange });
+    const [from, to] = this.portRange;
+    const port = await Port.getPort(from, to);
     devServer.listen(port);
     return port;
   }
 
-  async build(context: BuildContext, aspectId: string): Promise<DeployContext> {
-    const capsules = context.capsuleNetwork.seedersCapsules;
-    const appCapsule = capsules.find(
-      (capsule) =>
-        capsule.component.id.toStringWithoutVersion() === ComponentID.fromString(aspectId).toStringWithoutVersion()
-    );
-
-    if (!appCapsule)
-      return Object.assign(context, { applicationType: this.applicationType, aspectId, publicDir: null });
+  async build(context: BuildContext, aspectId: string, appCapsule: Capsule): Promise<DeployContext> {
+    const reactEnv: ReactEnv = context.env;
     const publicDir = join('applications', this.name, 'build');
     const outputPath = join(appCapsule.path, publicDir);
-    const entries = this.buildEntry.map((entry) => require.resolve(`${appCapsule.path}/${entry}`));
+    const { distDir } = reactEnv.getCompiler();
+    const entries = this.entry.map((entry) => require.resolve(`${appCapsule.path}/${distDir}/${basename(entry)}`));
     const bundlerContext: BundlerContext = Object.assign(context, {
       targets: [
         {
@@ -55,7 +49,6 @@ export class ReactApp implements Application {
       entry: [],
       rootPath: '/',
     });
-    const reactEnv: ReactEnv = context.env;
     const bundler: Bundler = await reactEnv.getBundler(bundlerContext, [
       (configMutator) => {
         configMutator.addTopLevel('output', { path: join(outputPath, 'public'), publicPath: `/` });
@@ -66,14 +59,14 @@ export class ReactApp implements Application {
     const deployContext = Object.assign(context, {
       applicationType: this.applicationType,
       aspectId,
-      publicDir: join(publicDir, 'public'),
+      publicDir: join(appCapsule.path, publicDir, 'public'),
     });
     return deployContext;
   }
 
   private getDevServerContext(context: AppContext): DevServerContext {
     return Object.assign(context, {
-      entry: this.runEntry,
+      entry: this.entry,
       rootPath: '',
       publicPath: `public/${this.name}`,
       title: this.name,

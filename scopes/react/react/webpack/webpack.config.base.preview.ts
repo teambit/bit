@@ -165,6 +165,8 @@ export default function (): Configuration {
       extensions: moduleFileExtensions.map((ext) => `.${ext}`),
 
       alias: {
+        'react/jsx-dev-runtime': require.resolve('react/jsx-dev-runtime.js'),
+        'react/jsx-runtime': require.resolve('react/jsx-runtime.js'),
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
         // TODO: @uri please remember to remove after publishing evangelist and base-ui
@@ -172,9 +174,8 @@ export default function (): Configuration {
         '@teambit/mdx.ui.mdx-scope-context': require.resolve('@teambit/mdx.ui.mdx-scope-context'),
         'react-dom/server': require.resolve('react-dom/server'),
         'react-dom': require.resolve('react-dom'),
-        // TODO: move to react-native only
-        'react-native': 'react-native-web',
         '@mdx-js/react': require.resolve('@mdx-js/react'),
+
         // Allows for better profiling with ReactDevTools
         ...(isEnvProductionProfile && {
           'react-dom$': 'react-dom/profiling',
@@ -250,17 +251,6 @@ export default function (): Configuration {
                 // See #6846 for context on why cacheCompression is disabled
                 cacheCompression: false,
                 compact: isEnvProduction,
-              },
-            },
-            // "url" loader works like "file" loader except that it embeds assets
-            // smaller than specified limit in bytes as data URLs to avoid requests.
-            // A missing `test` is equivalent to a match.
-            {
-              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
-              loader: require.resolve('url-loader'),
-              options: {
-                limit: imageInlineSizeLimit,
-                name: 'static/media/[name].[hash:8].[ext]',
               },
             },
             // Process any JS outside of the app with Babel.
@@ -377,21 +367,29 @@ export default function (): Configuration {
                 'less-loader'
               ),
             },
+
+            {
+              test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+              type: 'asset',
+              parser: {
+                dataUrlCondition: {
+                  maxSize: imageInlineSizeLimit,
+                },
+              },
+            },
+
             // "file" loader makes sure those assets get served by WebpackDevServer.
             // When you `import` an asset, you get its (virtual) filename.
             // In production, they would get copied to the `build` folder.
             // This loader doesn't use a "test" so it will catch all modules
             // that fall through the other loaders.
             {
-              loader: require.resolve('file-loader'),
               // Exclude `js` files to keep "css" loader working as it injects
               // its runtime that would otherwise be processed through "file" loader.
               // Also exclude `html` and `json` extensions so they get processed
               // by webpacks internal loaders.
               exclude: [/\.(js|mjs|jsx|ts|tsx)$/, /\.html$/, /\.mdx?/, /\.json$/, /\.css$/],
-              options: {
-                name: 'static/media/[name].[hash:8].[ext]',
-              },
+              type: 'asset',
             },
             // ** STOP ** Are you adding a new loader?
             // Make sure to add the new loader(s) before the "file" loader.
@@ -414,12 +412,12 @@ export default function (): Configuration {
           react: {
             eager: true,
             singleton: true,
-            requiredVersion: '^16.14.0',
+            requiredVersion: '^17.0.0',
           },
           'react-dom': {
             eager: true,
             singleton: true,
-            requiredVersion: '^16.14.0',
+            requiredVersion: '^17.0.0',
           },
         },
       }),

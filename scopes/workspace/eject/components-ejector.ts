@@ -8,7 +8,6 @@
  * removing the component files, so then it's easier to rollback.
  */
 import { Workspace } from '@teambit/workspace';
-import R from 'ramda';
 import { Consumer } from '@teambit/legacy/dist/consumer';
 import { BitId, BitIds } from '@teambit/legacy/dist/bit-id';
 import defaultErrorHandler from '@teambit/legacy/dist/cli/default-error-handler';
@@ -86,7 +85,7 @@ export class ComponentsEjector {
 
   async decideWhichComponentsToEject(): Promise<void> {
     this.logger.setStatusLine('Eject: getting the components status');
-    if (R.isEmpty(this.componentsIds)) return;
+    if (!this.componentsIds.length) return;
     const remotes = await getScopeRemotes(this.consumer.scope);
     const hubExportedComponents = new BitIds();
     this.componentsIds.forEach((bitId) => {

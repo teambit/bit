@@ -41,7 +41,7 @@ export class WorkspaceComponent extends Component {
   /**
    * get all issues reported on the component.
    */
-  async getIssues(): Promise<IssuesList | null> {
+  getIssues(): IssuesList | null {
     return this.workspace.getComponentIssues(this);
   }
 

@@ -11,13 +11,12 @@ export type RelativeComponentsAuthoredEntry = {
 };
 
 export class relativeComponentsAuthored extends ComponentIssue {
-  description =
-    'components with relative import statements found (replace to module paths or use "bit link --rewire" to replace)';
+  description = 'components with relative import statements found';
+  solution = 'replace to module paths or use "bit link --rewire" to replace';
   data: { [fileName: string]: RelativeComponentsAuthoredEntry[] } = {};
-  isCacheBlocker: false;
-  format() {
-    return super.format(relativeComponentsAuthoredIssuesToString);
-  }
+  isCacheBlocker = false;
+  formatDataFunction = relativeComponentsAuthoredIssuesToString;
+
   deserialize(dataStr: string) {
     const data = JSON.parse(dataStr);
     Object.keys(data).forEach((fileName) => {

@@ -66,7 +66,7 @@ export default class Import implements LegacyCommand {
   remoteOp = true;
 
   action(
-    [ids]: [string[]],
+    [ids = []]: [string[]],
     {
       tester = false,
       compiler = false,

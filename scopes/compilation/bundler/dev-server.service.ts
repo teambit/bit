@@ -6,7 +6,8 @@ import { ComponentServer } from './component-server';
 import { DevServer } from './dev-server';
 import { DevServerContext } from './dev-server-context';
 import { getEntry } from './get-entry';
-import { selectPort } from './select-port';
+
+export type DevServerServiceOptions = { dedicatedEnvDevServers?: string[] };
 
 export class DevServerService implements EnvService<ComponentServer> {
   name = 'dev server';
@@ -31,10 +32,22 @@ export class DevServerService implements EnvService<ComponentServer> {
   //   return new ComponentServer(this.pubsub, context, port, devServer);
   // }
 
-  async runOnce(contexts: ExecutionContext[]): Promise<ComponentServer[]> {
+  async runOnce(
+    contexts: ExecutionContext[],
+    { dedicatedEnvDevServers }: DevServerServiceOptions
+  ): Promise<ComponentServer[]> {
+    const getEnvId = (context, dedicatedServers): string => {
+      const contextEnvId = context.id;
+      const contextEnvIdWithoutVersion = contextEnvId.split('@')[0];
+      if (dedicatedServers.includes(contextEnvIdWithoutVersion)) {
+        return contextEnvId;
+      }
+      return context.env?.getDevEnvId(context);
+    };
+
     // de-duping dev servers by the amount of type the dev server configuration was overridden by envs.
     const byOriginalEnv = contexts.reduce<{ [key: string]: ExecutionContext[] }>((acc, context) => {
-      const envId = context.env?.getDevEnvId(context);
+      const envId = getEnvId(context, dedicatedEnvDevServers);
       if (acc[envId]) {
         acc[envId].push(context);
         return acc;
@@ -51,9 +64,8 @@ export class DevServerService implements EnvService<ComponentServer> {
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
         const devServerContext = await this.buildContext(mainContext, additionalContexts);
         const devServer: DevServer = devServerContext.envRuntime.env.getDevServer(devServerContext);
-        const port = await selectPort();
 
-        return new ComponentServer(this.pubsub, devServerContext, port, devServer);
+        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
       })
     );
 

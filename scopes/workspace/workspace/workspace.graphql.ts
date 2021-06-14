@@ -42,9 +42,17 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         status: ComponentStatus
       }
 
+      type Issue {
+        type: String!
+        description: String!
+        solution: String
+        data: String
+      }
+
       extend type Component {
         # the count of errors in component in workspace
         issuesCount: Int
+        issues: [Issue]
       }
 
       type Workspace {
@@ -85,8 +93,11 @@ export default (workspace: Workspace, graphql: GraphqlMain) => {
         status: async (wsComponent: WorkspaceComponent) => {
           return wsComponent.getStatus();
         },
-        issuesCount: async (wsComponent: WorkspaceComponent): Promise<number> => {
-          return (await wsComponent.getIssues())?.count || 0;
+        issuesCount: (wsComponent: WorkspaceComponent): number => {
+          return wsComponent.getIssues()?.count || 0;
+        },
+        issues: (wsComponent: WorkspaceComponent) => {
+          return wsComponent.getIssues()?.toObjectWithDataAsString();
         },
       },
       Workspace: {

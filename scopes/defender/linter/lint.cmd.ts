@@ -22,7 +22,7 @@ export class LintCmd implements Command {
     private workspace: Workspace
   ) {}
 
-  async report([components]: [string[]], linterOptions: LinterOptions) {
+  async report([components = []]: [string[]], linterOptions: LinterOptions) {
     const timer = Timer.create();
     timer.start();
 

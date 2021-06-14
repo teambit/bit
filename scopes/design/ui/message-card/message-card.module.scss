@@ -1,0 +1,24 @@
+.messageCard {
+  border: 1px solid var(--border-color, #ededed);
+  padding: 20px;
+  display: flex;
+}
+.icon {
+  margin-right: 16px;
+  font-size: 25px;
+}
+
+.textBox {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-size: 14px;
+  > * {
+    text-overflow: ellipsis;
+    overflow: hidden;
+  }
+  > div:first-child {
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+}
