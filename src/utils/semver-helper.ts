@@ -40,7 +40,7 @@ export function getValidVersionOrReleaseType(str: string): { releaseType?: Relea
 }
 
 export function getLatestVersion(versions: string[]): string {
-  const max = maxSatisfying(versions, '*');
+  const max = maxSatisfying(versions, '*', { includePrerelease: true });
   if (!max) throw new Error(`unable to find the latest version from ${versions.join(', ')}`);
   return max;
 }
