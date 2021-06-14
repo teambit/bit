@@ -60,7 +60,8 @@ export interface IBitLogger {
  */
 class BitLogger implements IBitLogger {
   logger: PinoLogger;
-  profiler: Profiler;
+  private profiler: Profiler;
+  isDaemon = false; // 'bit cli' is a daemon as it should never exit the process, unless the user kills it
   /**
    * being set on command-registrar, once the flags are parsed. here, it's a workaround to have
    * it set before the command-registrar is loaded. at this stage we don't know for sure the "-j"
@@ -175,7 +176,7 @@ class BitLogger implements IBitLogger {
     // const finalLogger = pino.final(pinoLogger);
     // finalLogger[level](msg);
     this.logger[level](msg);
-    process.exit(code);
+    if (!this.isDaemon) process.exit(code);
   }
 
   debugAndAddBreadCrumb(
