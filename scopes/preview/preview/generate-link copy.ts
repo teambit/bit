@@ -1,6 +1,5 @@
 import { toWindowsCompatiblePath } from '@teambit/toolbox.path.to-windows-compatible-path';
 import type { ComponentMap } from '@teambit/component';
-import { camelCase } from 'lodash';
 
 // :TODO refactor to building an AST and generate source code based on it.
 export function generateLink(prefix: string, componentMap: ComponentMap<string[]>, defaultModule?: string): string {
@@ -17,9 +16,6 @@ linkModules('${prefix}', defaultModule, {
         .join(', ')}]`;
     })
     .join(',\n')}
-});
-// import("uiButton/uiButton").then(Module => console.log('dadsafasdf', Module))
-
-
+});  
 `;
 }

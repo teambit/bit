@@ -23,8 +23,11 @@ import { Configuration } from 'webpack';
 import { ReactMainConfig } from './react.main.runtime';
 import devPreviewConfigFactory from './webpack/webpack.config.preview.dev';
 import basePreviewConfigFactory from './webpack/webpack.config.base.preview';
-import envPreviewConfigFactory from './webpack/webpack.config.env.preview';
-import componentPreviewConfigFactory from './webpack/webpack.config.component.preview';
+import basePreviewProdConfigFactory from './webpack/webpack.config.base.preview.prod';
+import envPreviewProdConfigFactory from './webpack/webpack.config.env.base.preview';
+import componentPreviewProdConfigFactory from './webpack/webpack.config.component.preview.prod';
+import componentPreviewBaseConfigFactory from './webpack/webpack.config.component.base.preview';
+import componentPreviewDevConfigFactory from './webpack/webpack.config.component.preview.dev';
 import { eslintConfig } from './eslint/eslintrc';
 import { ReactAspect } from './react.aspect';
 
@@ -178,7 +181,20 @@ export class ReactEnv implements Environment {
   /**
    * returns and configures the React component dev server.
    */
-  getDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+  getEnvDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+    console.log('context.entry', context.entry);
+    const defaultConfig = this.getDevWebpackConfig(context);
+    const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
+      return configMutator.merge([defaultConfig]);
+    };
+
+    return this.webpack.createDevServer(context, [defaultTransformer, ...transformers]);
+  }
+
+  /**
+   * returns and configures the React component dev server.
+   */
+  getComponentsDevServers(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
     const defaultConfig = this.getDevWebpackConfig(context);
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
       return configMutator.merge([defaultConfig]);
@@ -188,9 +204,11 @@ export class ReactEnv implements Environment {
   }
 
   async getEnvBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
-    const defaultConfig = envPreviewConfigFactory();
+    const baseConfig = basePreviewConfigFactory(true);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    const defaultConfig = envPreviewProdConfigFactory();
     const defaultTransformer: WebpackConfigTransformer = (configMutator) => {
-      return configMutator.merge([defaultConfig]);
+      return configMutator.merge([baseConfig, baseProdConfig, defaultConfig]);
     };
 
     return this.webpack.createBundler(context, [defaultTransformer, ...transformers]);
@@ -198,41 +216,22 @@ export class ReactEnv implements Environment {
 
   async getComponentBundler(context: BundlerContext, transformers: WebpackConfigTransformer[] = []): Promise<Bundler> {
     const fileMapPath = this.writeFileMap(context.components);
-    const baseConfig = basePreviewConfigFactory();
+    const baseConfig = basePreviewConfigFactory(true);
+    const baseProdConfig = basePreviewProdConfigFactory();
+    const prodComponentConfig = componentPreviewProdConfigFactory(fileMapPath);
     const defaultTransformer: WebpackConfigTransformer = (configMutator, mutatorContext) => {
       if (!mutatorContext.target?.mfName) {
         throw new Error(`missing module federation name for ${mutatorContext.target?.components[0].id.toString()}`);
       }
-      const componentConfig = componentPreviewConfigFactory(
+      const baseComponentConfig = componentPreviewBaseConfigFactory(
         mutatorContext.target?.mfName,
-        mutatorContext.target?.mfExposes,
-        fileMapPath
+        mutatorContext.target?.mfExposes
       );
 
-      return configMutator.merge([baseConfig, componentConfig]);
+      return configMutator.merge([baseConfig, baseProdConfig, baseComponentConfig, prodComponentConfig]);
     };
 
     return this.webpack.createComponentsBundler(context, [defaultTransformer, ...transformers]);
-  }
-
-  private getEntriesFromWebpackConfig(config?: Configuration): string[] {
-    if (!config || !config.entry) {
-      return [];
-    }
-    if (typeof config.entry === 'string') {
-      return [config.entry];
-    }
-    if (Array.isArray(config.entry)) {
-      let entries: string[] = [];
-      entries = config.entry.reduce((acc, entry) => {
-        if (typeof entry === 'string') {
-          acc.push(entry);
-        }
-        return acc;
-      }, entries);
-      return entries;
-    }
-    return [];
   }
 
   /**

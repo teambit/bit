@@ -62,10 +62,12 @@ export class DevServerService implements EnvService<ComponentServer> {
         let mainContext = contextList.find((context) => context.envDefinition.id === id);
         if (!mainContext) mainContext = contextList[0];
         const additionalContexts = contextList.filter((context) => context.envDefinition.id !== id);
-        const devServerContext = await this.buildContext(mainContext, additionalContexts);
-        const devServer: DevServer = devServerContext.envRuntime.env.getDevServer(devServerContext);
+        this.enrichContextWithComponentsAndRelatedContext(mainContext, additionalContexts);
+        const envDevServerContext = await this.buildEnvServerContext(mainContext);
+        const envDevServer: DevServer = envDevServerContext.envRuntime.env.getEnvDevServer(envDevServerContext);
 
-        return new ComponentServer(this.pubsub, devServerContext, [3300, 3400], devServer);
+        // TODO: consider change this to a new class called EnvServer
+        return new ComponentServer(this.pubsub, envDevServerContext, [3300, 3400], envDevServer);
       })
     );
 
@@ -85,13 +87,18 @@ export class DevServerService implements EnvService<ComponentServer> {
   /**
    * builds the execution context for the dev server.
    */
-  private async buildContext(
+  private enrichContextWithComponentsAndRelatedContext(
     context: ExecutionContext,
     additionalContexts: ExecutionContext[] = []
-  ): Promise<DevServerContext> {
+  ): void {
     context.relatedContexts = additionalContexts.map((ctx) => ctx.envDefinition.id);
     context.components = context.components.concat(this.getComponentsFromContexts(additionalContexts));
+  }
 
+  /**
+   * builds the execution context for the dev server.
+   */
+  private async buildEnvServerContext(context: ExecutionContext): Promise<DevServerContext> {
     return Object.assign(context, {
       entry: await getEntry(context, this.runtimeSlot),
       rootPath: `/preview/${context.envRuntime.id}`,

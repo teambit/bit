@@ -77,6 +77,25 @@ export class WebpackMain {
     return new WebpackDevServer(afterMutation.raw);
   }
 
+  createComponentDevServer(context: DevServerContext, transformers: WebpackConfigTransformer[] = []): DevServer {
+    const config = this.createDevServerConfig(
+      context.entry,
+      this.workspace.path,
+      context.id,
+      context.rootPath,
+      context.publicPath,
+      context.title
+    ) as any;
+    const configMutator = new WebpackConfigMutator(config);
+    const transformerContext: WebpackConfigTransformContext = {
+      mode: 'dev',
+    };
+    const afterMutation = runTransformersWithContext(configMutator.clone(), transformers, transformerContext);
+    console.log(afterMutation.raw.entry);
+    // @ts-ignore - fix this
+    return new WebpackDevServer(afterMutation.raw);
+  }
+
   mergeConfig(target: any, source: any): any {
     return merge(target, source);
   }
