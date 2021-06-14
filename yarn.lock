@@ -4770,6 +4770,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.elements.icon@npm:0.6.2":
+  version: 0.6.2
+  resolution: "@teambit/base-ui.elements.icon@npm:0.6.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.elements.icon%2F-%2Fbase-ui.elements.icon-0.6.2.tgz"
+  dependencies:
+    classnames: ^2.2.6
+  peerDependencies:
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  checksum: 2c2c93a8976f0896c28cf76bed9927596e050c1258dbee5cf844f3e4a02ad5acadefa7515dfe355bde192a44ce3b2b2b261b8fa1d439365e5e2e5b0cfa009b3f
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.elements.icon@npm:0.6.3":
   version: 0.6.3
   resolution: "@teambit/base-ui.elements.icon@npm:0.6.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.elements.icon%2F-%2Fbase-ui.elements.icon-0.6.3.tgz"
@@ -5122,6 +5134,18 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 76f3cf0cf23b1e9a94c18cefa6aad875c9ec14a8fefacb71dcb0d13bcde10fdcc1ba3c48f3c318306951ecb0f8065cfc88ef8ab8256804d1f39ad5813e7e91cf
+  languageName: node
+  linkType: hard
+
+"@teambit/base-ui.styles.flex-center@npm:0.0.2":
+  version: 0.0.2
+  resolution: "@teambit/base-ui.styles.flex-center@npm:0.0.2::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.styles.flex-center%2F-%2Fbase-ui.styles.flex-center-0.0.2.tgz"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 917eee46948e22144cc5d663be69892711848beb0d15c4d87ed9ecc1d93a6a192ae4469c6a939d959ec2f781e76873c83c1f93754c1f5a9a232c03b549bb1531
   languageName: node
   linkType: hard
 
@@ -5845,6 +5869,18 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@teambit/base-ui.utils.composer@npm:0.0.5":
+  version: 0.0.5
+  resolution: "@teambit/base-ui.utils.composer@npm:0.0.5::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.utils.composer%2F-%2Fbase-ui.utils.composer-0.0.5.tgz"
+  dependencies:
+    core-js: ^3.0.0
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 708fd6ff73ad6c9c14492cc095c3ce3791ad4c5c7e2d3ff0021e07203c3b5fe6416993c7cd200abc0fb6b927ab5da91470aac370a5902a9e1a97e266a67e8294
+  languageName: node
+  linkType: hard
+
 "@teambit/base-ui.utils.is-browser@npm:0.0.1":
   version: 0.0.1
   resolution: "@teambit/base-ui.utils.is-browser@npm:0.0.1::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fbase-ui.utils.is-browser%2F-%2Fbase-ui.utils.is-browser-0.0.1.tgz"
@@ -5942,6 +5978,24 @@ __metadata:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
   checksum: 6d95aa3eca0020fe03bbfe66ff04af13a8d720c97427c347eb2e2f8044ebeb73e1fc727626cbbea999968647619e834146a2a52151497a02752cdfaca99a846a
+  languageName: node
+  linkType: hard
+
+"@teambit/design.ui.icon-button@npm:0.0.17":
+  version: 0.0.17
+  resolution: "@teambit/design.ui.icon-button@npm:0.0.17::__archiveUrl=https%3A%2F%2Fnode.bit.dev%2F%40teambit%2Fdesign.ui.icon-button%2F-%2F%40teambit-design.ui.icon-button-0.0.17.tgz"
+  dependencies:
+    "@teambit/base-ui.elements.icon": 0.6.2
+    "@teambit/base-ui.input.button": 0.7.1
+    "@testing-library/react": 11.2.2
+    classnames: ^2.2.6
+    core-js: ^3.0.0
+    react: ^16.13.1
+    react-dom: ^16.13.1
+  peerDependencies:
+    react: ^16.8.0 || ^17.0.0
+    react-dom: ^16.8.0 || ^17.0.0
+  checksum: 126b5e4fb3332b742fb5e174350988eb8e4a3593c6cd7d36d798842898d4a19b4c50c593e7c325bce37e6e1c072eba3dc4a543430618008ff7e0956c1050bd13
   languageName: node
   linkType: hard
 
@@ -7001,6 +7055,7 @@ __metadata:
     "@teambit/base-ui.routing.native-nav-link": 0.0.2
     "@teambit/base-ui.routing.nav-link": 0.1.0
     "@teambit/base-ui.routing.routing-provider": 0.0.2
+    "@teambit/base-ui.styles.flex-center": 0.0.2
     "@teambit/base-ui.surfaces.background": 0.6.3
     "@teambit/base-ui.surfaces.card": 0.7.0
     "@teambit/base-ui.surfaces.split-pane.hover-splitter": 0.7.4
@@ -7017,6 +7072,7 @@ __metadata:
     "@teambit/base-ui.theme.fonts.roboto": 0.6.10
     "@teambit/base-ui.theme.sizes": 0.6.10
     "@teambit/base-ui.theme.theme-provider": 0.6.13
+    "@teambit/base-ui.utils.composer": 0.0.5
     "@teambit/base-ui.utils.popper-js.ignore-popper-size": 0.6.11
     "@teambit/base-ui.utils.popper-js.resize-to-match-reference": 0.6.11
     "@teambit/base-ui.utils.string.affix": 0.6.10
@@ -7024,6 +7080,7 @@ __metadata:
     "@teambit/base-ui.utils.time-ago": 0.6.10
     "@teambit/capsule": 0.0.12
     "@teambit/component.instructions.exporting-components": 0.0.5
+    "@teambit/design.ui.icon-button": 0.0.17
     "@teambit/documenter.code.react-playground": 3.0.11
     "@teambit/documenter.routing.external-link": 3.0.12
     "@teambit/documenter.theme.theme-compositions": 2.0.3
@@ -7359,6 +7416,7 @@ __metadata:
     react-docgen: 5.3.1
     react-docgen-typescript: 1.21.0
     react-dom: 16.14.0
+    react-error-boundary: ^3.0.0
     react-error-overlay: 6.0.9
     react-flow-renderer: 8.3.7
     react-native-web: ^0.16.0
@@ -16402,6 +16460,12 @@ __metadata:
   checksum: c1c2b8b65f9c91b0f9d75f0debaa7ec5b35c266c2cac5de412c1a6de86d4cbae04ae44e510378cb14d032d0645a36925d0186f8bb7367bcc629db256b743a001
   languageName: node
   linkType: hard
+
+"error-fallback-dda211@workspace:scopes/react/ui/error-fallback":
+  version: 0.0.0-use.local
+  resolution: "error-fallback-dda211@workspace:scopes/react/ui/error-fallback"
+  languageName: unknown
+  linkType: soft
 
 "error-page-0389d1@workspace:scopes/design/ui/error-page":
   version: 0.0.0-use.local
@@ -27962,7 +28026,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:16.14.0":
+"react-dom@npm:16.14.0, react-dom@npm:^16.13.1":
   version: 16.14.0
   resolution: "react-dom@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-dom%2F-%2Freact-dom-16.14.0.tgz"
   dependencies:
@@ -27983,6 +28047,17 @@ __metadata:
     classnames: ^2.2.5
     prop-types: ^15.6.0
   checksum: 94d3d5f0e7fd5920894915f069e393d55b46de114570a613ca56bd1f46bb5fc8dc9dbd1a254d8e09153e8261589122d1c725f722b37d454da883d0ffcc1a68bf
+  languageName: node
+  linkType: hard
+
+"react-error-boundary@npm:^3.0.0":
+  version: 3.1.3
+  resolution: "react-error-boundary@npm:3.1.3::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact-error-boundary%2F-%2Freact-error-boundary-3.1.3.tgz"
+  dependencies:
+    "@babel/runtime": ^7.12.5
+  peerDependencies:
+    react: ">=16.13.1"
+  checksum: 0a05af404aa054c54d7bc65a1814810093bf136c3ad4b3576a51d8509ee8fc302adfb66405da501fc01e839db557dd0d994b487e651897e36293907bb61458cf
   languageName: node
   linkType: hard
 
@@ -28271,7 +28346,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:16.14.0":
+"react@npm:16.14.0, react@npm:^16.13.1":
   version: 16.14.0
   resolution: "react@npm:16.14.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2Freact%2F-%2Freact-16.14.0.tgz"
   dependencies:
