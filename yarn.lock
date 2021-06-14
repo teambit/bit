@@ -5981,13 +5981,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@teambit/design.ui.icon-button@npm:0.0.17":
-  version: 0.0.17
-  resolution: "@teambit/design.ui.icon-button@npm:0.0.17::__archiveUrl=https%3A%2F%2Fnode.bit.dev%2F%40teambit%2Fdesign.ui.icon-button%2F-%2F%40teambit-design.ui.icon-button-0.0.17.tgz"
+"@teambit/design.ui.icon-button@npm:0.1.0":
+  version: 0.1.0
+  resolution: "@teambit/design.ui.icon-button@npm:0.1.0::__archiveUrl=https%3A%2F%2Fregistry.npmjs.org%2F%40teambit%2Fdesign.ui.icon-button%2F-%2Fdesign.ui.icon-button-0.1.0.tgz"
   dependencies:
     "@teambit/base-ui.elements.icon": 0.6.2
     "@teambit/base-ui.input.button": 0.7.1
-    "@testing-library/react": 11.2.2
     classnames: ^2.2.6
     core-js: ^3.0.0
     react: ^16.13.1
@@ -5995,7 +5994,7 @@ __metadata:
   peerDependencies:
     react: ^16.8.0 || ^17.0.0
     react-dom: ^16.8.0 || ^17.0.0
-  checksum: 126b5e4fb3332b742fb5e174350988eb8e4a3593c6cd7d36d798842898d4a19b4c50c593e7c325bce37e6e1c072eba3dc4a543430618008ff7e0956c1050bd13
+  checksum: 0f3e34008dd2c06891bdfb327b7ce3789fc73bf511374507e23c93073d685e8fde3eb0367c82cde91175f407f3631af2dfcc3f5da8385f5f9615f02f9f1d955b
   languageName: node
   linkType: hard
 
@@ -7080,7 +7079,7 @@ __metadata:
     "@teambit/base-ui.utils.time-ago": 0.6.10
     "@teambit/capsule": 0.0.12
     "@teambit/component.instructions.exporting-components": 0.0.5
-    "@teambit/design.ui.icon-button": 0.0.17
+    "@teambit/design.ui.icon-button": 0.1.0
     "@teambit/documenter.code.react-playground": 3.0.11
     "@teambit/documenter.routing.external-link": 3.0.12
     "@teambit/documenter.theme.theme-compositions": 2.0.3
