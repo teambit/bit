@@ -14,10 +14,6 @@ RUN bbit config set interactive false
 RUN bbit config set error_reporting true
 RUN ln -s /usr/local/bin/bbit /usr/local/bin/bit
 
-RUN bit config set analytics_reporting false
-RUN bit config set no_warnings false
-RUN bit config set interactive false
-RUN bit config set error_reporting true
 RUN ln -s /tmp/symphony/etc/.bitrc.jsonc ~/.bitrc.jsonc
 WORKDIR /tmp/scope-fs
 CMD bit start
