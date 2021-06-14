@@ -1,5 +1,4 @@
-import { forEachObjIndexed } from 'ramda';
-
+import forEachObjIndexed from 'ramda/src/forEachObjIndexed';
 import { LIFECYCLE_TYPE_BY_KEY_NAME } from '../../dependencies/constants';
 import { ManifestDependenciesKeysNames, DepObjectValue } from '../manifest';
 import { DependencyLifecycleType, SemverVersion, PackageName } from '../../dependencies';

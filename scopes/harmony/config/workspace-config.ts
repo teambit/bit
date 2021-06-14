@@ -20,7 +20,7 @@ import { PathOsBased, PathOsBasedAbsolute } from '@teambit/legacy/dist/utils/pat
 import { assign, parse, stringify } from 'comment-json';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { isEmpty, omit } from 'ramda';
+import { isEmpty, omit } from 'lodash';
 
 import { SetExtensionOptions } from './config';
 import { ExtensionAlreadyConfigured } from './exceptions';
@@ -125,7 +125,7 @@ export class WorkspaceConfig implements HostConfig {
   }
 
   private loadExtensions() {
-    const withoutInternalConfig = omit(INTERNAL_CONFIG_PROPS, this.raw);
+    const withoutInternalConfig = omit(this.raw, INTERNAL_CONFIG_PROPS);
     this._extensions = ExtensionDataList.fromConfigObject(withoutInternalConfig);
   }
 
