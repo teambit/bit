@@ -20,13 +20,7 @@ export type ImportProps = {
   back?: () => void;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export function Import({
-  // componentName,
-  componentId,
-  packageName,
-  back,
-  ...rest
-}: ImportProps) {
+export function Import({ componentId, packageName, back, ...rest }: ImportProps) {
   return (
     <TabContent
       {...rest}

@@ -3,6 +3,7 @@ import { Icon } from '@teambit/evangelist.elements.icon';
 import { CopyBox } from '@teambit/documenter.ui.copy-box';
 import { TabContent } from '@teambit/ui-foundation.ui.use-box.tab-content';
 import { BitInfo } from '@teambit/ui-foundation.ui.use-box.bit-info';
+import { linkStyles } from '@teambit/ui-foundation.ui.use-box.bottom-link';
 import styles from './scope-menu.module.scss';
 
 export type MenuProps = {
@@ -28,7 +29,7 @@ export function Menu({ scopeName, ...rest }: MenuProps) {
       </div>
       <TabContent
         bottom={
-          <div className={styles.link} onClick={() => setActive('import')}>
+          <div className={linkStyles} onClick={() => setActive('import')}>
             <Icon of="download" />
             <span>Install Bit on your computer</span>
           </div>
