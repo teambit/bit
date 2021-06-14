@@ -17,7 +17,6 @@ const wcComponentFields = gql`
     }
     description
     issuesCount
-    buildStatus
     status {
       isOutdated
       isNew
