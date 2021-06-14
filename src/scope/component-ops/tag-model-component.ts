@@ -2,7 +2,7 @@ import mapSeries from 'p-map-series';
 import R from 'ramda';
 import { isNilOrEmpty, compact } from 'ramda-adjunct';
 import pMap from 'p-map';
-import { prerelease, ReleaseType } from 'semver';
+import { ReleaseType } from 'semver';
 import { v4 } from 'uuid';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Scope } from '..';
